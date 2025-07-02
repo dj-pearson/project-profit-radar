@@ -6,247 +6,187 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: any) => {
+  console.log(`[CHANGE-ORDERS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    logStep("Function started", { method: req.method });
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    // Get user from auth header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
     
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    const user = userData.user;
+    if (!user?.id) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id });
 
-    // Get user profile to check permissions
-    const { data: profile } = await supabaseClient
+    // Get user profile to check role
+    const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
-      .select('company_id, role')
+      .select('role, company_id')
       .eq('id', user.id)
       .single();
 
-    if (!profile?.company_id) {
-      throw new Error("User not associated with a company");
-    }
+    if (profileError) throw new Error(`Profile error: ${profileError.message}`);
 
-    const { method } = req;
     const url = new URL(req.url);
-    const changeOrderId = url.pathname.split('/').pop();
-    const action = url.searchParams.get("action");
+    const method = req.method;
+    const path = url.pathname.split('/').pop();
 
     switch (method) {
       case "GET":
-        const projectId = url.searchParams.get("project_id");
-        
-        let query = supabaseClient
-          .from('change_orders')
-          .select(`
-            *,
-            projects (name, company_id)
-          `);
-
-        if (changeOrderId && changeOrderId !== "change-orders") {
-          // Get single change order
-          const { data: changeOrder, error } = await query
-            .eq('id', changeOrderId)
-            .single();
-
-          if (error) throw error;
+        if (path === "list") {
+          const projectId = url.searchParams.get('project_id');
           
-          // Check if user has access to this change order's project
-          if (changeOrder.projects.company_id !== profile.company_id) {
-            throw new Error("Access denied");
-          }
+          let query = supabaseClient
+            .from('change_orders')
+            .select(`
+              *,
+              projects(name)
+            `)
+            .order('created_at', { ascending: false });
 
-          return new Response(JSON.stringify(changeOrder), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        } else {
-          // List change orders, optionally filtered by project
           if (projectId) {
             query = query.eq('project_id', projectId);
           }
+
+          const { data: changeOrders, error: ordersError } = await query;
+
+          if (ordersError) throw new Error(`Change orders fetch error: ${ordersError.message}`);
           
-          const { data: changeOrders, error } = await query
-            .order('created_at', { ascending: false });
-
-          if (error) throw error;
-
-          // Filter by company access
-          const filteredOrders = changeOrders.filter(co => 
-            co.projects.company_id === profile.company_id
-          );
-
-          return new Response(JSON.stringify(filteredOrders), {
+          logStep("Change orders retrieved", { count: changeOrders?.length });
+          return new Response(JSON.stringify({ changeOrders }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
           });
         }
 
+        break;
+
       case "POST":
-        const changeOrderData = await req.json();
-        
-        // Check if user can create change orders
-        if (!['admin', 'project_manager', 'root_admin'].includes(profile.role)) {
-          throw new Error("Insufficient permissions to create change orders");
-        }
+        if (path === "create") {
+          const body = await req.json();
+          logStep("Creating change order", body);
 
-        // Verify project belongs to user's company
-        const { data: project } = await supabaseClient
-          .from('projects')
-          .select('company_id')
-          .eq('id', changeOrderData.project_id)
-          .single();
+          // Verify user can create change orders
+          if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+            throw new Error("Insufficient permissions to create change orders");
+          }
 
-        if (!project || project.company_id !== profile.company_id) {
-          throw new Error("Invalid project or access denied");
-        }
+          // Generate change order number
+          const { data: existingOrders } = await supabaseClient
+            .from('change_orders')
+            .select('change_order_number')
+            .eq('project_id', body.project_id)
+            .order('change_order_number', { ascending: false })
+            .limit(1);
 
-        // Generate change order number
-        const { data: existingCOs } = await supabaseClient
-          .from('change_orders')
-          .select('change_order_number')
-          .eq('project_id', changeOrderData.project_id)
-          .order('change_order_number', { ascending: false })
-          .limit(1);
+          let changeOrderNumber = 'CO-001';
+          if (existingOrders && existingOrders.length > 0) {
+            const lastNumber = existingOrders[0].change_order_number;
+            const numberPart = parseInt(lastNumber.split('-')[1]) + 1;
+            changeOrderNumber = `CO-${numberPart.toString().padStart(3, '0')}`;
+          }
 
-        const nextNumber = existingCOs && existingCOs.length > 0 
-          ? (parseInt(existingCOs[0].change_order_number.replace(/\D/g, '')) || 0) + 1 
-          : 1;
-
-        const changeOrderNumber = `CO-${String(nextNumber).padStart(3, '0')}`;
-
-        const { data: newChangeOrder, error } = await supabaseClient
-          .from('change_orders')
-          .insert({
-            ...changeOrderData,
+          const changeOrderData = {
+            ...body,
             change_order_number: changeOrderNumber,
             created_by: user.id,
             status: 'pending'
-          })
-          .select()
-          .single();
+          };
 
-        if (error) throw error;
-
-        return new Response(JSON.stringify(newChangeOrder), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 201,
-        });
-
-      case "PUT":
-        if (!changeOrderId) {
-          throw new Error("Change order ID required for update");
-        }
-
-        const updateData = await req.json();
-        
-        // Check permissions and ownership
-        const { data: existingCO } = await supabaseClient
-          .from('change_orders')
-          .select(`
-            *,
-            projects (company_id)
-          `)
-          .eq('id', changeOrderId)
-          .single();
-
-        if (!existingCO || existingCO.projects.company_id !== profile.company_id) {
-          throw new Error("Change order not found or access denied");
-        }
-
-        // Check if user can update change orders
-        if (!['admin', 'project_manager', 'root_admin'].includes(profile.role)) {
-          throw new Error("Insufficient permissions to update change orders");
-        }
-
-        // Handle approval workflow
-        if (action === "approve" && updateData.status === "approved") {
-          // Update project budget if change order is approved
-          const { data: project } = await supabaseClient
-            .from('projects')
-            .select('budget')
-            .eq('id', existingCO.project_id)
+          const { data: newOrder, error: createError } = await supabaseClient
+            .from('change_orders')
+            .insert([changeOrderData])
+            .select(`
+              *,
+              projects(name)
+            `)
             .single();
 
-          if (project) {
-            const newBudget = (project.budget || 0) + (existingCO.amount || 0);
-            await supabaseClient
-              .from('projects')
-              .update({ budget: newBudget })
-              .eq('id', existingCO.project_id);
+          if (createError) throw new Error(`Change order creation error: ${createError.message}`);
+
+          logStep("Change order created", { orderId: newOrder.id, changeOrderNumber });
+          return new Response(JSON.stringify({ changeOrder: newOrder }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 201,
+          });
+        }
+
+        if (path === "approve") {
+          const body = await req.json();
+          const { orderId, approvalType, approved } = body;
+          logStep("Processing approval", { orderId, approvalType, approved });
+
+          // Verify user can approve change orders
+          if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+            throw new Error("Insufficient permissions to approve change orders");
           }
 
-          updateData.approved_at = new Date().toISOString();
-          updateData.approved_by = user.id;
+          let updateData: any = {};
+          
+          if (approvalType === 'internal') {
+            updateData = {
+              internal_approved: approved,
+              internal_approved_by: approved ? user.id : null,
+              internal_approved_date: approved ? new Date().toISOString() : null
+            };
+          } else if (approvalType === 'client') {
+            updateData = {
+              client_approved: approved,
+              client_approved_date: approved ? new Date().toISOString() : null
+            };
+          }
+
+          const { data: updatedOrder, error: updateError } = await supabaseClient
+            .from('change_orders')
+            .update(updateData)
+            .eq('id', orderId)
+            .select(`
+              *,
+              projects(name)
+            `)
+            .single();
+
+          if (updateError) throw new Error(`Change order approval error: ${updateError.message}`);
+
+          logStep("Change order approval processed", { orderId, approvalType, approved });
+          return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
         }
 
-        const { data: updatedChangeOrder, error } = await supabaseClient
-          .from('change_orders')
-          .update(updateData)
-          .eq('id', changeOrderId)
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        return new Response(JSON.stringify(updatedChangeOrder), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-
-      case "DELETE":
-        if (!changeOrderId) {
-          throw new Error("Change order ID required for deletion");
-        }
-
-        // Check permissions - only admins can delete change orders
-        if (!['admin', 'root_admin'].includes(profile.role)) {
-          throw new Error("Insufficient permissions to delete change orders");
-        }
-
-        // Verify ownership
-        const { data: coToDelete } = await supabaseClient
-          .from('change_orders')
-          .select(`
-            projects (company_id)
-          `)
-          .eq('id', changeOrderId)
-          .single();
-
-        if (!coToDelete || coToDelete.projects.company_id !== profile.company_id) {
-          throw new Error("Change order not found or access denied");
-        }
-
-        const { error: deleteError } = await supabaseClient
-          .from('change_orders')
-          .delete()
-          .eq('id', changeOrderId);
-
-        if (deleteError) throw deleteError;
-
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-
-      default:
-        throw new Error(`Method ${method} not allowed`);
+        break;
     }
 
+    // If no route matched
+    return new Response(JSON.stringify({ error: "Route not found" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 404,
+    });
+
   } catch (error) {
-    console.error("Error in change-orders function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });

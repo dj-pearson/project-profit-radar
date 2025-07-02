@@ -6,232 +6,152 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: any) => {
+  console.log(`[DAILY-REPORTS] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    logStep("Function started", { method: req.method });
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    // Get user from auth header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
     
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    const user = userData.user;
+    if (!user?.id) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id });
 
-    // Get user profile
-    const { data: profile } = await supabaseClient
+    // Get user profile to check role
+    const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
-      .select('company_id, role')
+      .select('role, company_id')
       .eq('id', user.id)
       .single();
 
-    if (!profile?.company_id) {
-      throw new Error("User not associated with a company");
-    }
+    if (profileError) throw new Error(`Profile error: ${profileError.message}`);
 
-    const { method } = req;
     const url = new URL(req.url);
-    const reportId = url.pathname.split('/').pop();
+    const method = req.method;
+    const path = url.pathname.split('/').pop();
 
     switch (method) {
       case "GET":
-        const projectId = url.searchParams.get("project_id");
-        const reportDate = url.searchParams.get("report_date");
-        
-        let query = supabaseClient
-          .from('daily_reports')
-          .select(`
-            *,
-            projects (name, company_id),
-            user_profiles!daily_reports_submitted_by_fkey (first_name, last_name)
-          `);
-
-        if (reportId && reportId !== "daily-reports") {
-          // Get single report
-          const { data: report, error } = await query
-            .eq('id', reportId)
-            .single();
-
-          if (error) throw error;
+        if (path === "list") {
+          const projectId = url.searchParams.get('project_id');
           
-          // Check access
-          if (report.projects.company_id !== profile.company_id) {
-            throw new Error("Access denied");
-          }
+          let query = supabaseClient
+            .from('daily_reports')
+            .select(`
+              *,
+              projects(name)
+            `)
+            .order('date', { ascending: false });
 
-          return new Response(JSON.stringify(report), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        } else {
-          // List reports with filters
           if (projectId) {
             query = query.eq('project_id', projectId);
           }
-          if (reportDate) {
-            query = query.eq('report_date', reportDate);
-          }
+
+          const { data: dailyReports, error: reportsError } = await query;
+
+          if (reportsError) throw new Error(`Daily reports fetch error: ${reportsError.message}`);
           
-          const { data: reports, error } = await query
-            .order('report_date', { ascending: false });
-
-          if (error) throw error;
-
-          // Filter by company access
-          const filteredReports = reports.filter(report => 
-            report.projects.company_id === profile.company_id
-          );
-
-          return new Response(JSON.stringify(filteredReports), {
+          logStep("Daily reports retrieved", { count: dailyReports?.length });
+          return new Response(JSON.stringify({ dailyReports }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
           });
         }
 
+        if (path === "today") {
+          const projectId = url.searchParams.get('project_id');
+          if (!projectId) throw new Error("Project ID is required");
+
+          const today = new Date().toISOString().split('T')[0];
+          
+          const { data: todaysReport, error: reportError } = await supabaseClient
+            .from('daily_reports')
+            .select(`
+              *,
+              projects(name)
+            `)
+            .eq('project_id', projectId)
+            .eq('date', today)
+            .maybeSingle();
+
+          logStep("Today's report retrieved", { projectId, hasReport: !!todaysReport });
+          return new Response(JSON.stringify({ dailyReport: todaysReport }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+
+        break;
+
       case "POST":
-        const reportData = await req.json();
-        
-        // Verify project belongs to user's company
-        const { data: project } = await supabaseClient
-          .from('projects')
-          .select('company_id')
-          .eq('id', reportData.project_id)
-          .single();
+        if (path === "create") {
+          const body = await req.json();
+          logStep("Creating daily report", body);
 
-        if (!project || project.company_id !== profile.company_id) {
-          throw new Error("Invalid project or access denied");
+          // Verify user can create daily reports
+          if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
+            throw new Error("Insufficient permissions to create daily reports");
+          }
+
+          const reportDate = body.date || new Date().toISOString().split('T')[0];
+          
+          const reportData = {
+            ...body,
+            date: reportDate,
+            created_by: user.id
+          };
+
+          const { data: newReport, error: createError } = await supabaseClient
+            .from('daily_reports')
+            .insert([reportData])
+            .select(`
+              *,
+              projects(name)
+            `)
+            .single();
+
+          if (createError) throw new Error(`Daily report creation error: ${createError.message}`);
+
+          logStep("Daily report created", { reportId: newReport.id, date: reportDate });
+          return new Response(JSON.stringify({ dailyReport: newReport }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 201,
+          });
         }
 
-        // Check if report already exists for this project and date
-        const { data: existingReport } = await supabaseClient
-          .from('daily_reports')
-          .select('id')
-          .eq('project_id', reportData.project_id)
-          .eq('report_date', reportData.report_date)
-          .single();
-
-        if (existingReport) {
-          throw new Error("Daily report already exists for this project and date");
-        }
-
-        // Create new daily report
-        const { data: newReport, error } = await supabaseClient
-          .from('daily_reports')
-          .insert({
-            ...reportData,
-            submitted_by: user.id
-          })
-          .select(`
-            *,
-            projects (name),
-            user_profiles!daily_reports_submitted_by_fkey (first_name, last_name)
-          `)
-          .single();
-
-        if (error) throw error;
-
-        return new Response(JSON.stringify(newReport), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 201,
-        });
-
-      case "PUT":
-        if (!reportId) {
-          throw new Error("Report ID required for update");
-        }
-
-        const updateData = await req.json();
-        
-        // Check permissions and ownership
-        const { data: existingReport } = await supabaseClient
-          .from('daily_reports')
-          .select(`
-            *,
-            projects (company_id)
-          `)
-          .eq('id', reportId)
-          .single();
-
-        if (!existingReport || existingReport.projects.company_id !== profile.company_id) {
-          throw new Error("Report not found or access denied");
-        }
-
-        // Only allow updates by the original submitter or admins
-        if (existingReport.submitted_by !== user.id && 
-            !['admin', 'project_manager', 'root_admin'].includes(profile.role)) {
-          throw new Error("Insufficient permissions to update this report");
-        }
-
-        const { data: updatedReport, error } = await supabaseClient
-          .from('daily_reports')
-          .update(updateData)
-          .eq('id', reportId)
-          .select(`
-            *,
-            projects (name),
-            user_profiles!daily_reports_submitted_by_fkey (first_name, last_name)
-          `)
-          .single();
-
-        if (error) throw error;
-
-        return new Response(JSON.stringify(updatedReport), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-
-      case "DELETE":
-        if (!reportId) {
-          throw new Error("Report ID required for deletion");
-        }
-
-        // Check permissions - only admins or original submitter can delete
-        const { data: reportToDelete } = await supabaseClient
-          .from('daily_reports')
-          .select(`
-            submitted_by,
-            projects (company_id)
-          `)
-          .eq('id', reportId)
-          .single();
-
-        if (!reportToDelete || reportToDelete.projects.company_id !== profile.company_id) {
-          throw new Error("Report not found or access denied");
-        }
-
-        if (reportToDelete.submitted_by !== user.id && 
-            !['admin', 'root_admin'].includes(profile.role)) {
-          throw new Error("Insufficient permissions to delete this report");
-        }
-
-        const { error: deleteError } = await supabaseClient
-          .from('daily_reports')
-          .delete()
-          .eq('id', reportId);
-
-        if (deleteError) throw deleteError;
-
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-
-      default:
-        throw new Error(`Method ${method} not allowed`);
+        break;
     }
 
+    // If no route matched
+    return new Response(JSON.stringify({ error: "Route not found" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 404,
+    });
+
   } catch (error) {
-    console.error("Error in daily-reports function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });

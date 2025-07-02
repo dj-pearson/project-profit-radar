@@ -6,304 +6,189 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: any) => {
+  console.log(`[TIME-TRACKING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    logStep("Function started", { method: req.method });
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    // Get user from auth header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
     
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    
+    const user = userData.user;
+    if (!user?.id) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id });
 
-    const { method } = req;
     const url = new URL(req.url);
-    const action = url.searchParams.get("action");
+    const method = req.method;
+    const path = url.pathname.split('/').pop();
 
     switch (method) {
       case "GET":
-        if (action === "active") {
-          // Get currently active time entry for user
-          const { data: activeEntry, error } = await supabaseClient
+        if (path === "entries") {
+          // Get time entries for the user
+          const { data: timeEntries, error: entriesError } = await supabaseClient
             .from('time_entries')
             .select(`
               *,
-              tasks (
-                name,
-                projects (name)
-              )
+              projects(name),
+              tasks(name),
+              cost_codes(code, name)
             `)
-            .eq('user_id', user.id)
-            .is('end_time', null)
-            .order('start_time', { ascending: false })
-            .limit(1)
-            .single();
-
-          if (error && error.code !== 'PGRST116') throw error; // Ignore "not found" errors
-          
-          return new Response(JSON.stringify(activeEntry || null), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        } else {
-          // Get time entries for date range
-          const startDate = url.searchParams.get("start_date") || new Date().toISOString().split('T')[0];
-          const endDate = url.searchParams.get("end_date") || startDate;
-
-          const { data: entries, error } = await supabaseClient
-            .from('time_entries')
-            .select(`
-              *,
-              tasks (
-                name,
-                project_phases (
-                  name,
-                  projects (name, id)
-                )
-              )
-            `)
-            .eq('user_id', user.id)
-            .gte('start_time', startDate)
-            .lte('start_time', endDate + 'T23:59:59')
             .order('start_time', { ascending: false });
 
-          if (error) throw error;
-          return new Response(JSON.stringify(entries), {
+          if (entriesError) throw new Error(`Time entries fetch error: ${entriesError.message}`);
+          
+          logStep("Time entries retrieved", { count: timeEntries?.length });
+          return new Response(JSON.stringify({ timeEntries }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
           });
         }
 
+        if (path === "active") {
+          // Get current active time entry for the user
+          const { data: activeEntry, error: activeError } = await supabaseClient
+            .from('time_entries')
+            .select(`
+              *,
+              projects(name),
+              tasks(name),
+              cost_codes(code, name)
+            `)
+            .eq('user_id', user.id)
+            .is('end_time', null)
+            .maybeSingle();
+
+          logStep("Active entry retrieved", { hasActive: !!activeEntry });
+          return new Response(JSON.stringify({ activeEntry }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+
+        break;
+
       case "POST":
-        const entryData = await req.json();
-        
-        if (action === "clock-in") {
-          // Check for existing active entry
+        if (path === "start") {
+          const body = await req.json();
+          logStep("Starting time entry", body);
+
+          // Check if user already has an active entry
           const { data: existingEntry } = await supabaseClient
             .from('time_entries')
             .select('id')
             .eq('user_id', user.id)
             .is('end_time', null)
-            .single();
+            .maybeSingle();
 
           if (existingEntry) {
-            throw new Error("You already have an active time entry. Please clock out first.");
+            throw new Error("User already has an active time entry. Please stop the current entry first.");
           }
 
-          // Create new time entry
-          const { data: newEntry, error } = await supabaseClient
+          const timeEntryData = {
+            ...body,
+            user_id: user.id,
+            start_time: new Date().toISOString()
+          };
+
+          const { data: newEntry, error: createError } = await supabaseClient
             .from('time_entries')
-            .insert({
-              user_id: user.id,
-              task_id: entryData.task_id,
-              start_time: new Date().toISOString(),
-              gps_location: entryData.gps_location,
-              notes: entryData.notes
-            })
+            .insert([timeEntryData])
             .select(`
               *,
-              tasks (
-                name,
-                project_phases (
-                  name,
-                  projects (name, id)
-                )
-              )
+              projects(name),
+              tasks(name),
+              cost_codes(code, name)
             `)
             .single();
 
-          if (error) throw error;
-          return new Response(JSON.stringify(newEntry), {
+          if (createError) throw new Error(`Time entry creation error: ${createError.message}`);
+
+          logStep("Time entry started", { entryId: newEntry.id });
+          return new Response(JSON.stringify({ timeEntry: newEntry }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 201,
           });
+        }
 
-        } else if (action === "clock-out") {
-          // Find active entry
-          const { data: activeEntry, error: findError } = await supabaseClient
-            .from('time_entries')
-            .select('*')
-            .eq('user_id', user.id)
-            .is('end_time', null)
-            .single();
-
-          if (findError) throw new Error("No active time entry found");
+        if (path === "stop") {
+          const body = await req.json();
+          const { entryId } = body;
+          logStep("Stopping time entry", { entryId });
 
           // Calculate total hours
-          const startTime = new Date(activeEntry.start_time);
-          const endTime = new Date();
-          const totalHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+          const { data: entry, error: fetchError } = await supabaseClient
+            .from('time_entries')
+            .select('start_time, break_duration')
+            .eq('id', entryId)
+            .eq('user_id', user.id)
+            .single();
 
-          // Update entry with end time
-          const { data: updatedEntry, error } = await supabaseClient
+          if (fetchError) throw new Error(`Time entry fetch error: ${fetchError.message}`);
+
+          const endTime = new Date();
+          const startTime = new Date(entry.start_time);
+          const totalMinutes = Math.floor((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+          const breakMinutes = entry.break_duration || 0;
+          const totalHours = Math.max(0, totalMinutes - breakMinutes) / 60;
+
+          const { data: updatedEntry, error: updateError } = await supabaseClient
             .from('time_entries')
             .update({
               end_time: endTime.toISOString(),
-              total_hours: Math.round(totalHours * 100) / 100, // Round to 2 decimal places
-              gps_location_end: entryData.gps_location,
-              notes: entryData.notes || activeEntry.notes
+              total_hours: Number(totalHours.toFixed(2))
             })
-            .eq('id', activeEntry.id)
+            .eq('id', entryId)
+            .eq('user_id', user.id)
             .select(`
               *,
-              tasks (
-                name,
-                project_phases (
-                  name,
-                  projects (name, id)
-                )
-              )
+              projects(name),
+              tasks(name),
+              cost_codes(code, name)
             `)
             .single();
 
-          if (error) throw error;
+          if (updateError) throw new Error(`Time entry update error: ${updateError.message}`);
 
-          // Update job costs with labor time
-          await updateJobCosts(supabaseClient, activeEntry.task_id, totalHours, user.id);
-
-          return new Response(JSON.stringify(updatedEntry), {
+          logStep("Time entry stopped", { entryId, totalHours });
+          return new Response(JSON.stringify({ timeEntry: updatedEntry }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-
-        } else {
-          // Manual time entry
-          const { data: newEntry, error } = await supabaseClient
-            .from('time_entries')
-            .insert({
-              user_id: user.id,
-              task_id: entryData.task_id,
-              start_time: entryData.start_time,
-              end_time: entryData.end_time,
-              total_hours: entryData.total_hours,
-              notes: entryData.notes,
-              is_manual_entry: true
-            })
-            .select(`
-              *,
-              tasks (
-                name,
-                project_phases (
-                  name,
-                  projects (name, id)
-                )
-              )
-            `)
-            .single();
-
-          if (error) throw error;
-
-          // Update job costs
-          await updateJobCosts(supabaseClient, entryData.task_id, entryData.total_hours, user.id);
-
-          return new Response(JSON.stringify(newEntry), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 201,
+            status: 200,
           });
         }
 
-      case "PUT":
-        const updateData = await req.json();
-        const entryId = url.pathname.split('/').pop();
-
-        if (!entryId) {
-          throw new Error("Time entry ID required for update");
-        }
-
-        const { data: updatedEntry, error } = await supabaseClient
-          .from('time_entries')
-          .update(updateData)
-          .eq('id', entryId)
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return new Response(JSON.stringify(updatedEntry), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-
-      default:
-        throw new Error(`Method ${method} not allowed`);
+        break;
     }
 
+    // If no route matched
+    return new Response(JSON.stringify({ error: "Route not found" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 404,
+    });
+
   } catch (error) {
-    console.error("Error in time-tracking function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });
-
-// Helper function to update job costs with labor hours
-async function updateJobCosts(supabaseClient: any, taskId: string, hours: number, userId: string) {
-  try {
-    // Get task details to find project
-    const { data: task } = await supabaseClient
-      .from('tasks')
-      .select(`
-        project_phases (
-          project_id
-        )
-      `)
-      .eq('id', taskId)
-      .single();
-
-    if (!task) return;
-
-    const projectId = task.project_phases.project_id;
-
-    // Get or create labor cost code entry for this project
-    const laborCostCode = "LABOR-GENERAL";
-    
-    const { data: existingCost, error: findError } = await supabaseClient
-      .from('job_costs')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('cost_code', laborCostCode)
-      .single();
-
-    const laborRate = 35.00; // Default labor rate - should come from user profile or company settings
-    const totalCost = hours * laborRate;
-
-    if (existingCost) {
-      // Update existing cost entry
-      await supabaseClient
-        .from('job_costs')
-        .update({
-          actual_quantity: (existingCost.actual_quantity || 0) + hours,
-          actual_amount: (existingCost.actual_amount || 0) + totalCost
-        })
-        .eq('id', existingCost.id);
-    } else {
-      // Create new cost entry
-      await supabaseClient
-        .from('job_costs')
-        .insert({
-          project_id: projectId,
-          cost_code: laborCostCode,
-          description: "General Labor",
-          category: "labor",
-          budgeted_quantity: 0,
-          budgeted_amount: 0,
-          actual_quantity: hours,
-          actual_amount: totalCost,
-          unit_of_measure: "hours"
-        });
-    }
-  } catch (error) {
-    console.error("Error updating job costs:", error);
-    // Don't throw - this is a background operation
-  }
-}

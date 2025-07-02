@@ -1,1 +1,13 @@
 project_id = "ilhzuvemiuyfuxfegtlv"
+
+[functions.projects]
+verify_jwt = true
+
+[functions.time-tracking]
+verify_jwt = true
+
+[functions.change-orders]
+verify_jwt = true
+
+[functions.daily-reports]
+verify_jwt = true
