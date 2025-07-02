@@ -64,7 +64,7 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-construction-blue">BuildTrack</h1>
+          <h1 className="text-3xl font-bold text-construction-blue">Build Desk</h1>
           <p className="text-muted-foreground mt-2">Construction Management Platform</p>
         </div>
 
@@ -78,7 +78,7 @@ const Auth = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Welcome Back</CardTitle>
-                <CardDescription>Sign in to your BuildTrack account</CardDescription>
+                <CardDescription>Sign in to your Build Desk account</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
@@ -114,7 +114,7 @@ const Auth = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Create Account</CardTitle>
-                <CardDescription>Get started with BuildTrack today</CardDescription>
+                <CardDescription>Get started with Build Desk today</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">

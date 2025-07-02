@@ -13,7 +13,7 @@ const Implementation = () => {
         "Team training sessions (2-hour sessions)",
         "Mobile app installation and setup"
       ],
-      outcome: "Your team is trained and ready to start using BuildTrack"
+      outcome: "Your team is trained and ready to start using Build Desk"
     },
     {
       week: "Week 3-4", 

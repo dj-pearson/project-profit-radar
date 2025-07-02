@@ -86,7 +86,7 @@ const ProblemSolution = () => {
           <div className="text-center mb-12">
             <h3 className="text-2xl font-bold text-construction-dark mb-4 flex items-center justify-center gap-2">
               <CheckCircle className="h-6 w-6 text-construction-orange" />
-              The BuildTrack Solution
+              The Build Desk Solution
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Purpose-built for SMB contractors who need enterprise-level insights without the complexity

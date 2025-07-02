@@ -139,7 +139,7 @@ const Pricing = () => {
             Calculate Your Potential Savings
           </h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            See how much you could save in administrative costs and project overruns with BuildTrack
+            See how much you could save in administrative costs and project overruns with Build Desk
           </p>
           <Button variant="outline" className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white">
             <Calculator className="mr-2 h-4 w-4" />

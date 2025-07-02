@@ -59,7 +59,7 @@ const Footer = () => {
             {/* Company Info */}
             <div className="lg:col-span-1">
               <div className="text-2xl font-bold mb-4">
-                Build<span className="text-construction-orange">Track</span>
+                Build<span className="text-construction-orange">Desk</span>
               </div>
               <p className="text-white/70 mb-6">
                 Construction management software built specifically for growing SMB contractors.
@@ -71,7 +71,7 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-2 text-white/70">
                   <Mail className="h-4 w-4" />
-                  hello@buildtrack.com
+                  hello@build-desk.com
                 </div>
                 <div className="flex items-center gap-2 text-white/70">
                   <MapPin className="h-4 w-4" />
@@ -142,7 +142,7 @@ const Footer = () => {
         <div className="py-8 border-t border-white/20">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-white/70 text-sm">
-              © 2024 BuildTrack. All rights reserved.
+              © 2024 Build Desk. All rights reserved.
             </div>
             <div className="flex items-center gap-6 text-sm text-white/70">
               <span>SOC 2 Certified</span>
