@@ -9,25 +9,39 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 27%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 27%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 27%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 17% 95%;
+    --secondary-foreground: 215 25% 27%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 17% 95%;
+    --muted-foreground: 215 13% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Construction-themed colors */
+    --construction-orange: 24 100% 50%;
+    --construction-blue: 210 100% 20%;
+    --construction-steel: 210 11% 71%;
+    --construction-dark: 215 25% 27%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--construction-orange)), hsl(24 100% 45%));
+    --gradient-feature: linear-gradient(135deg, hsl(var(--construction-blue)), hsl(210 100% 25%));
+    
+    /* Shadows */
+    --shadow-construction: 0 10px 30px -10px hsl(var(--construction-orange) / 0.3);
+    --shadow-card: 0 4px 20px -4px hsl(215 25% 27% / 0.15);
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
