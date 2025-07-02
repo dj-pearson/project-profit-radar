@@ -13,7 +13,12 @@ const Dashboard = () => {
     if (!loading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+    
+    // If user doesn't have a company, redirect to setup
+    if (!loading && user && userProfile && !userProfile.company_id) {
+      navigate('/setup');
+    }
+  }, [user, userProfile, loading, navigate]);
 
   if (loading) {
     return (
