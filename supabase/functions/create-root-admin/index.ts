@@ -32,8 +32,8 @@ serve(async (req) => {
       password: 'Infomax1!',
       email_confirm: true,
       user_metadata: {
-        first_name: 'Root',
-        last_name: 'Admin',
+        first_name: 'Dan',
+        last_name: 'Pearson',
         role: 'root_admin'
       }
     });
@@ -51,8 +51,8 @@ serve(async (req) => {
         .from('user_profiles')
         .update({
           role: 'root_admin',
-          first_name: 'Root',
-          last_name: 'Admin',
+          first_name: 'Dan',
+          last_name: 'Pearson',
           is_active: true
         })
         .eq('id', authData.user.id);
