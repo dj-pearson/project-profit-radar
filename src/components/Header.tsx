@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -17,11 +18,11 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
+          <Link to="/" className="flex items-center">
             <div className="text-2xl font-bold text-construction-dark">
               Build<span className="text-construction-orange">Track</span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -38,11 +39,11 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-construction-dark hover:text-construction-orange">
-              Sign In
+            <Button variant="ghost" className="text-construction-dark hover:text-construction-orange" asChild>
+              <Link to="/auth">Sign In</Link>
             </Button>
-            <Button variant="hero" size="sm">
-              Start Free Trial
+            <Button variant="hero" size="sm" asChild>
+              <Link to="/auth">Start Free Trial</Link>
             </Button>
           </div>
 
@@ -70,11 +71,11 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="ghost" className="text-construction-dark hover:text-construction-orange justify-start">
-                  Sign In
+                <Button variant="ghost" className="text-construction-dark hover:text-construction-orange justify-start" asChild>
+                  <Link to="/auth">Sign In</Link>
                 </Button>
-                <Button variant="hero" size="sm">
-                  Start Free Trial
+                <Button variant="hero" size="sm" asChild>
+                  <Link to="/auth">Start Free Trial</Link>
                 </Button>
               </div>
             </nav>
