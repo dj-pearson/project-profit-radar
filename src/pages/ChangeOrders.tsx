@@ -211,7 +211,7 @@ const ChangeOrders = () => {
     }
   };
 
-  const filteredOrders = selectedProject 
+  const filteredOrders = selectedProject && selectedProject !== 'all'
     ? changeOrders.filter(order => order.project_id === selectedProject)
     : changeOrders;
 
@@ -272,7 +272,7 @@ const ChangeOrders = () => {
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All projects</SelectItem>
+                    <SelectItem value="all">All projects</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}

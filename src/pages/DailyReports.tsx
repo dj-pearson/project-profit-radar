@@ -176,7 +176,7 @@ const DailyReports = () => {
     }
   };
 
-  const filteredReports = selectedProject 
+  const filteredReports = selectedProject && selectedProject !== 'all'
     ? dailyReports.filter(report => report.project_id === selectedProject)
     : dailyReports;
 
@@ -237,7 +237,7 @@ const DailyReports = () => {
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All projects</SelectItem>
+                    <SelectItem value="all">All projects</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}

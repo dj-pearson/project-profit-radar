@@ -308,8 +308,8 @@ const DocumentManagement = () => {
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !filterCategory || doc.category_id === filterCategory;
-    const matchesType = !filterType || doc.file_type.includes(filterType);
+    const matchesCategory = !filterCategory || filterCategory === 'all' || doc.category_id === filterCategory;
+    const matchesType = !filterType || filterType === 'all' || doc.file_type.includes(filterType);
     
     return matchesSearch && matchesCategory && matchesType;
   });
@@ -448,7 +448,7 @@ const DocumentManagement = () => {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -461,7 +461,7 @@ const DocumentManagement = () => {
                   <SelectValue placeholder="All file types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="image">Images</SelectItem>
                   <SelectItem value="pdf">PDFs</SelectItem>
                   <SelectItem value="video">Videos</SelectItem>
