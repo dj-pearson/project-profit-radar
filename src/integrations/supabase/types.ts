@@ -2645,6 +2645,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_identifier_type: string
+          p_endpoint: string
+          p_method: string
+          p_ip_address?: unknown
+        }
+        Returns: Json
+      }
       check_type_exists: {
         Args: { type_name: string }
         Returns: boolean

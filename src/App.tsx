@@ -32,6 +32,7 @@ import SecurityMonitoring from "./pages/SecurityMonitoring";
 import Safety from "./pages/Safety";
 import ComplianceAudit from "./pages/ComplianceAudit";
 import GDPRCompliance from "./pages/GDPRCompliance";
+import RateLimitingDashboard from "./pages/RateLimitingDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="/safety" element={<Safety />} />
             <Route path="/compliance-audit" element={<ComplianceAudit />} />
             <Route path="/gdpr-compliance" element={<GDPRCompliance />} />
+            <Route path="/rate-limiting" element={<RateLimitingDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
