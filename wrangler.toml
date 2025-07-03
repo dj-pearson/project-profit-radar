@@ -1,4 +1,4 @@
-name = "build-desk"
+name = "builddesk"
 compatibility_date = "2024-07-01"
 
 [env.production]
