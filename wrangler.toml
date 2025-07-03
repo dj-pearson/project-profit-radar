@@ -7,8 +7,8 @@ pages_build_output_dir = "dist"
 
 # Environment variables for build optimization
 [env.production.vars]
-NODE_VERSION = "18"
-NPM_FLAGS = "--omit=optional --prefer-offline"
+NODE_VERSION = "20"
+NPM_FLAGS = "--prefer-offline"
 NODE_OPTIONS = "--max-old-space-size=4096"
 SKIP_DEPENDENCY_INSTALL = "false"
 
@@ -17,7 +17,11 @@ SKIP_DEPENDENCY_INSTALL = "false"
 command = "npm run build:prod"
 publish = "dist"
 
-# Routes configuration (update with your actual domain)
+# Routes configuration for build-desk.com
 [[env.production.routes]]
-pattern = "your-domain.com/*"
-zone_name = "your-domain.com"
+pattern = "build-desk.com/*"
+zone_name = "build-desk.com"
+
+[[env.production.routes]]
+pattern = "www.build-desk.com/*"
+zone_name = "build-desk.com"
