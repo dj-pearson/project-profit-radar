@@ -259,6 +259,45 @@ export type Database = {
           },
         ]
       }
+      csp_violations: {
+        Row: {
+          blocked_uri: string | null
+          column_number: number | null
+          created_at: string
+          document_uri: string | null
+          id: string
+          line_number: number | null
+          original_policy: string | null
+          source_file: string | null
+          user_agent: string | null
+          violated_directive: string | null
+        }
+        Insert: {
+          blocked_uri?: string | null
+          column_number?: number | null
+          created_at?: string
+          document_uri?: string | null
+          id?: string
+          line_number?: number | null
+          original_policy?: string | null
+          source_file?: string | null
+          user_agent?: string | null
+          violated_directive?: string | null
+        }
+        Update: {
+          blocked_uri?: string | null
+          column_number?: number | null
+          created_at?: string
+          document_uri?: string | null
+          id?: string
+          line_number?: number | null
+          original_policy?: string | null
+          source_file?: string | null
+          user_agent?: string | null
+          violated_directive?: string | null
+        }
+        Relationships: []
+      }
       daily_reports: {
         Row: {
           created_at: string
@@ -648,6 +687,36 @@ export type Database = {
           },
         ]
       }
+      security_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           actual_hours: number | null
@@ -840,6 +909,51 @@ export type Database = {
           },
         ]
       }
+      user_security: {
+        Row: {
+          account_locked_until: string | null
+          backup_codes: string[] | null
+          created_at: string
+          failed_login_attempts: number | null
+          id: string
+          last_failed_attempt: string | null
+          last_login_ip: unknown | null
+          last_login_user_agent: string | null
+          two_factor_enabled: boolean | null
+          two_factor_secret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_locked_until?: string | null
+          backup_codes?: string[] | null
+          created_at?: string
+          failed_login_attempts?: number | null
+          id?: string
+          last_failed_attempt?: string | null
+          last_login_ip?: unknown | null
+          last_login_user_agent?: string | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_locked_until?: string | null
+          backup_codes?: string[] | null
+          created_at?: string
+          failed_login_attempts?: number | null
+          id?: string
+          last_failed_attempt?: string | null
+          last_login_ip?: unknown | null
+          last_login_user_agent?: string | null
+          two_factor_enabled?: boolean | null
+          two_factor_secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -860,6 +974,36 @@ export type Database = {
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      handle_failed_login: {
+        Args: {
+          p_user_id: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: boolean
+      }
+      is_account_locked: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_details?: Json
+        }
+        Returns: string
+      }
+      reset_failed_attempts: {
+        Args: {
+          p_user_id: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { validateEmail, validatePassword, sanitizeInput, generateCSRFToken, setCSRFToken, checkRateLimit } from '@/utils/security';
+import { Shield, AlertCircle } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -16,8 +19,14 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [passwordValidation, setPasswordValidation] = useState({ isValid: true, errors: [] as string[] });
+  const [csrfToken] = useState(() => generateCSRFToken());
   const { signIn, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setCSRFToken(csrfToken);
+  }, [csrfToken]);
 
   useEffect(() => {
     if (user) {
@@ -25,11 +34,38 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  const validatePasswordInput = (pwd: string) => {
+    const validation = validatePassword(pwd);
+    setPasswordValidation(validation);
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting check
+    if (!checkRateLimit('signin-attempts', 5, 300000)) { // 5 attempts per 5 minutes
+      toast({
+        variant: "destructive",
+        title: "Too Many Attempts",
+        description: "Please wait before trying again."
+      });
+      return;
+    }
+
+    // Input validation
+    if (!validateEmail(email)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Email",
+        description: "Please enter a valid email address."
+      });
+      return;
+    }
+
     setLoading(true);
     
-    const { error } = await signIn(email, password);
+    const sanitizedEmail = sanitizeInput(email);
+    const { error } = await signIn(sanitizedEmail, password);
     
     if (!error) {
       toast({
@@ -44,13 +80,46 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting check
+    if (!checkRateLimit('signup-attempts', 3, 3600000)) { // 3 attempts per hour
+      toast({
+        variant: "destructive",
+        title: "Too Many Attempts",
+        description: "Please wait before trying to create another account."
+      });
+      return;
+    }
+
+    // Input validation
+    if (!validateEmail(email)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Email",
+        description: "Please enter a valid email address."
+      });
+      return;
+    }
+
+    const passwordValid = validatePassword(password);
+    if (!passwordValid.isValid) {
+      toast({
+        variant: "destructive",
+        title: "Password Requirements Not Met",
+        description: passwordValid.errors[0]
+      });
+      return;
+    }
+
     setLoading(true);
     
-    const { error } = await signUp(email, password, {
-      first_name: firstName,
-      last_name: lastName,
+    const sanitizedData = {
+      first_name: sanitizeInput(firstName),
+      last_name: sanitizeInput(lastName),
       role: 'admin'
-    });
+    };
+
+    const { error } = await signUp(sanitizeInput(email), password, sanitizedData);
     
     if (!error) {
       toast({
@@ -64,9 +133,29 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting check
+    if (!checkRateLimit('reset-attempts', 3, 3600000)) { // 3 attempts per hour
+      toast({
+        variant: "destructive",
+        title: "Too Many Attempts",
+        description: "Please wait before requesting another password reset."
+      });
+      return;
+    }
+
+    if (!validateEmail(resetEmail)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Email",
+        description: "Please enter a valid email address."
+      });
+      return;
+    }
+
     setLoading(true);
     
-    await resetPassword(resetEmail);
+    await resetPassword(sanitizeInput(resetEmail));
     
     setLoading(false);
   };

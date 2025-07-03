@@ -97,20 +97,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    try {
+      // First check if account is locked
+      const { data: userData } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign In Failed",
-        description: error.message
+      if (userData) {
+        const { data: isLocked } = await supabase.rpc('is_account_locked', {
+          p_user_id: userData.id
+        });
+
+        if (isLocked) {
+          toast({
+            variant: "destructive",
+            title: "Account Locked",
+            description: "Your account has been temporarily locked due to too many failed login attempts. Please try again later."
+          });
+          return { error: { message: 'Account locked' } };
+        }
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-    }
 
-    return { error };
+      if (error) {
+        // Handle failed login attempt
+        if (userData) {
+          await supabase.rpc('handle_failed_login', {
+            p_user_id: userData.id,
+            p_ip_address: await getClientIP(),
+            p_user_agent: navigator.userAgent
+          });
+        }
+
+        toast({
+          variant: "destructive",
+          title: "Sign In Failed",
+          description: error.message
+        });
+      } else {
+        // Reset failed attempts on successful login
+        if (userData) {
+          await supabase.rpc('reset_failed_attempts', {
+            p_user_id: userData.id,
+            p_ip_address: await getClientIP(),
+            p_user_agent: navigator.userAgent
+          });
+        }
+      }
+
+      return { error };
+    } catch (err: any) {
+      console.error('Error during sign in:', err);
+      return { error: err };
+    }
+  };
+
+  const getClientIP = async (): Promise<string | null> => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error('Error getting client IP:', error);
+      return null;
+    }
   };
 
   const signUp = async (email: string, password: string, userData?: any) => {
