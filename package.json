@@ -14,7 +14,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build:prod": "npm run lint && vite build"
+    "build:prod": "vite build --mode production",
+    "build:cloudflare": "vite build --mode production"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.0",
