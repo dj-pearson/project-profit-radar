@@ -77,15 +77,20 @@ serve(async (req) => {
     let subscriptionTier = null;
     let subscriptionEnd = null;
 
+    let billingPeriod = 'monthly';
+    
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
-      // Determine subscription tier from price
+      // Determine subscription tier and billing period from price
       const priceId = subscription.items.data[0].price.id;
       const price = await stripe.prices.retrieve(priceId);
       const amount = price.unit_amount || 0;
+      
+      // Determine billing period
+      billingPeriod = price.recurring?.interval === 'year' ? 'annual' : 'monthly';
       
       if (amount >= 59900) {
         subscriptionTier = "enterprise";
@@ -94,7 +99,12 @@ serve(async (req) => {
       } else {
         subscriptionTier = "starter";
       }
-      logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
+      logStep("Determined subscription details", { 
+        priceId, 
+        amount, 
+        subscriptionTier, 
+        billingPeriod 
+      });
     } else {
       logStep("No active subscription found");
     }
@@ -106,6 +116,7 @@ serve(async (req) => {
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
+      billing_period: billingPeriod,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
@@ -113,7 +124,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      billing_period: billingPeriod
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

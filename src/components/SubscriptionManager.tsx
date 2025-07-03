@@ -11,6 +11,7 @@ interface SubscriptionData {
   subscribed: boolean;
   subscription_tier?: string;
   subscription_end?: string;
+  billing_period?: string;
 }
 
 const SubscriptionManager = () => {
@@ -113,9 +114,22 @@ const SubscriptionManager = () => {
       <CardContent>
         <div className="space-y-4">
           {subscriptionData.subscription_end && (
-            <p className="text-sm text-muted-foreground">
-              Next billing date: {new Date(subscriptionData.subscription_end).toLocaleDateString()}
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {subscriptionData.billing_period === 'annual' 
+                  ? `Subscription expires: ${new Date(subscriptionData.subscription_end).toLocaleDateString()}`
+                  : `Next billing date: ${new Date(subscriptionData.subscription_end).toLocaleDateString()}`
+                }
+              </p>
+              {subscriptionData.billing_period === 'annual' && (() => {
+                const daysLeft = Math.ceil((new Date(subscriptionData.subscription_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                return daysLeft > 0 && (
+                  <p className="text-sm font-medium text-construction-orange">
+                    {daysLeft} days remaining
+                  </p>
+                );
+              })()}
+            </div>
           )}
           
           {subscriptionData.subscribed ? (

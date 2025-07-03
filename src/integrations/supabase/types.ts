@@ -694,6 +694,41 @@ export type Database = {
           },
         ]
       }
+      renewal_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          notification_type: string
+          sent_at: string
+          subscriber_id: string | null
+          subscription_end_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_type: string
+          sent_at?: string
+          subscriber_id?: string | null
+          subscription_end_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_type?: string
+          sent_at?: string
+          subscriber_id?: string | null
+          subscription_end_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "renewal_notifications_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_logs: {
         Row: {
           created_at: string
@@ -930,9 +965,11 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          billing_period: string | null
           created_at: string
           email: string
           id: string
+          renewal_notification_sent_at: string | null
           stripe_customer_id: string | null
           subscribed: boolean
           subscription_end: string | null
@@ -941,9 +978,11 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          billing_period?: string | null
           created_at?: string
           email: string
           id?: string
+          renewal_notification_sent_at?: string | null
           stripe_customer_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
@@ -952,9 +991,11 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          billing_period?: string | null
           created_at?: string
           email?: string
           id?: string
+          renewal_notification_sent_at?: string | null
           stripe_customer_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
