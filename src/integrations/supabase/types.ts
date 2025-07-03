@@ -349,6 +349,84 @@ export type Database = {
           },
         ]
       }
+      consent_records: {
+        Row: {
+          company_id: string
+          consent_given: boolean
+          consent_method: string
+          consent_source: string | null
+          consent_type: string
+          consent_version: string | null
+          created_at: string
+          email: string | null
+          id: string
+          ip_address: unknown | null
+          lawful_basis: string
+          metadata: Json | null
+          purpose: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+          withdrawal_date: string | null
+          withdrawal_method: string | null
+        }
+        Insert: {
+          company_id: string
+          consent_given: boolean
+          consent_method: string
+          consent_source?: string | null
+          consent_type: string
+          consent_version?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip_address?: unknown | null
+          lawful_basis: string
+          metadata?: Json | null
+          purpose: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          withdrawal_date?: string | null
+          withdrawal_method?: string | null
+        }
+        Update: {
+          company_id?: string
+          consent_given?: boolean
+          consent_method?: string
+          consent_source?: string | null
+          consent_type?: string
+          consent_version?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip_address?: unknown | null
+          lawful_basis?: string
+          metadata?: Json | null
+          purpose?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          withdrawal_date?: string | null
+          withdrawal_method?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cost_codes: {
         Row: {
           category: string | null
@@ -554,6 +632,186 @@ export type Database = {
           {
             foreignKeyName: "data_access_logs_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_retention_policies: {
+        Row: {
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          data_category: string
+          deletion_criteria: Json | null
+          description: string
+          exceptions: Json | null
+          id: string
+          is_active: boolean | null
+          legal_basis: string
+          retention_period_months: number
+          review_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by: string
+          data_category: string
+          deletion_criteria?: Json | null
+          description: string
+          exceptions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          legal_basis: string
+          retention_period_months: number
+          review_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          data_category?: string
+          deletion_criteria?: Json | null
+          description?: string
+          exceptions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          legal_basis?: string
+          retention_period_months?: number
+          review_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_retention_policies_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_retention_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_retention_policies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_subject_requests: {
+        Row: {
+          actions_taken: Json | null
+          assigned_to: string | null
+          communication_log: Json | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          internal_notes: string | null
+          priority: string | null
+          rejection_reason: string | null
+          request_details: Json | null
+          request_type: string
+          requester_email: string
+          requester_name: string | null
+          response_data: Json | null
+          status: string | null
+          subject_user_id: string | null
+          updated_at: string
+          verification_method: string | null
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          actions_taken?: Json | null
+          assigned_to?: string | null
+          communication_log?: Json | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          priority?: string | null
+          rejection_reason?: string | null
+          request_details?: Json | null
+          request_type: string
+          requester_email: string
+          requester_name?: string | null
+          response_data?: Json | null
+          status?: string | null
+          subject_user_id?: string | null
+          updated_at?: string
+          verification_method?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          actions_taken?: Json | null
+          assigned_to?: string | null
+          communication_log?: Json | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          internal_notes?: string | null
+          priority?: string | null
+          rejection_reason?: string | null
+          request_details?: Json | null
+          request_type?: string
+          requester_email?: string
+          requester_name?: string | null
+          response_data?: Json | null
+          status?: string | null
+          subject_user_id?: string | null
+          updated_at?: string
+          verification_method?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_subject_requests_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_subject_user_id_fkey"
+            columns: ["subject_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_verified_by_fkey"
+            columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
@@ -845,6 +1103,201 @@ export type Database = {
           },
           {
             foreignKeyName: "osha_compliance_deadlines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      privacy_impact_assessments: {
+        Row: {
+          approved_by: string | null
+          assessment_name: string
+          company_id: string
+          conducted_by: string
+          consultation_details: string | null
+          consultation_required: boolean | null
+          created_at: string
+          description: string
+          dpo_opinion: string | null
+          id: string
+          mitigation_measures: Json
+          necessity_justification: string
+          processing_activity_id: string | null
+          proportionality_assessment: string
+          residual_risks: Json | null
+          review_date: string | null
+          reviewed_by: string | null
+          risks_identified: Json
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          assessment_name: string
+          company_id: string
+          conducted_by: string
+          consultation_details?: string | null
+          consultation_required?: boolean | null
+          created_at?: string
+          description: string
+          dpo_opinion?: string | null
+          id?: string
+          mitigation_measures: Json
+          necessity_justification: string
+          processing_activity_id?: string | null
+          proportionality_assessment: string
+          residual_risks?: Json | null
+          review_date?: string | null
+          reviewed_by?: string | null
+          risks_identified: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          assessment_name?: string
+          company_id?: string
+          conducted_by?: string
+          consultation_details?: string | null
+          consultation_required?: boolean | null
+          created_at?: string
+          description?: string
+          dpo_opinion?: string | null
+          id?: string
+          mitigation_measures?: Json
+          necessity_justification?: string
+          processing_activity_id?: string | null
+          proportionality_assessment?: string
+          residual_risks?: Json | null
+          review_date?: string | null
+          reviewed_by?: string | null
+          risks_identified?: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_impact_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_processing_activity_id_fkey"
+            columns: ["processing_activity_id"]
+            isOneToOne: false
+            referencedRelation: "processing_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processing_activities: {
+        Row: {
+          activity_name: string
+          company_id: string
+          controller_details: Json
+          created_at: string
+          created_by: string
+          data_subjects_categories: string[]
+          dpia_reference: string | null
+          dpia_required: boolean | null
+          id: string
+          is_active: boolean | null
+          last_reviewed: string | null
+          lawful_basis: string[]
+          personal_data_categories: string[]
+          processor_details: Json | null
+          purposes: string[]
+          recipients: Json | null
+          retention_schedule: string
+          risk_assessment: Json | null
+          security_measures: Json
+          special_categories: string[] | null
+          third_country_transfers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          activity_name: string
+          company_id: string
+          controller_details: Json
+          created_at?: string
+          created_by: string
+          data_subjects_categories: string[]
+          dpia_reference?: string | null
+          dpia_required?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          last_reviewed?: string | null
+          lawful_basis: string[]
+          personal_data_categories: string[]
+          processor_details?: Json | null
+          purposes: string[]
+          recipients?: Json | null
+          retention_schedule: string
+          risk_assessment?: Json | null
+          security_measures: Json
+          special_categories?: string[] | null
+          third_country_transfers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          activity_name?: string
+          company_id?: string
+          controller_details?: Json
+          created_at?: string
+          created_by?: string
+          data_subjects_categories?: string[]
+          dpia_reference?: string | null
+          dpia_required?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          last_reviewed?: string | null
+          lawful_basis?: string[]
+          personal_data_categories?: string[]
+          processor_details?: Json | null
+          purposes?: string[]
+          recipients?: Json | null
+          retention_schedule?: string
+          risk_assessment?: Json | null
+          security_measures?: Json
+          special_categories?: string[] | null
+          third_country_transfers?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processing_activities_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
