@@ -28,6 +28,7 @@ import {
   Wrench,
   Package,
   Truck,
+  Calendar,
   Shield,
   Settings,
   Globe,
@@ -60,6 +61,7 @@ const navigationCategories: NavigationCategory[] = [
     label: "Project Management",
     items: [
       { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
+      { title: "Crew Scheduling", url: "/crew-scheduling", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
       { title: "Time Tracking", url: "/time-tracking", icon: Clock, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
       { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
       { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] }

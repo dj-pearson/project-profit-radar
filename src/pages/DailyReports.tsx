@@ -20,7 +20,10 @@ import {
   PlusCircle,
   FileText,
   Truck,
-  Cloud
+  Cloud,
+  Camera,
+  X,
+  Upload
 } from 'lucide-react';
 
 interface Project {
@@ -65,6 +68,8 @@ const DailyReports = () => {
     delays_issues: '',
     safety_incidents: ''
   });
+  
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -163,6 +168,7 @@ const DailyReports = () => {
         delays_issues: '',
         safety_incidents: ''
       });
+      setSelectedPhotos([]);
       
       loadData();
     } catch (error: any) {
@@ -312,9 +318,68 @@ const DailyReports = () => {
                       value={newReport.safety_incidents}
                       onChange={(e) => setNewReport({...newReport, safety_incidents: e.target.value})}
                     />
-                  </div>
+                    </div>
 
-                  <div className="flex justify-end space-x-2">
+                    {/* Photo Upload Section */}
+                    <div>
+                      <Label>Photos</Label>
+                      <div className="space-y-4">
+                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                          <div className="text-center">
+                            <Camera className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Add photos to document progress
+                            </p>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files || []);
+                                setSelectedPhotos(prev => [...prev, ...files]);
+                              }}
+                              className="hidden"
+                              id="photo-upload"
+                            />
+                            <label htmlFor="photo-upload">
+                              <Button variant="outline" size="sm" asChild>
+                                <span>
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  Select Photos
+                                </span>
+                              </Button>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {/* Photo Preview */}
+                        {selectedPhotos.length > 0 && (
+                          <div className="grid grid-cols-3 gap-2">
+                            {selectedPhotos.map((photo, index) => (
+                              <div key={index} className="relative">
+                                <img
+                                  src={URL.createObjectURL(photo)}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-20 object-cover rounded border"
+                                />
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                                  onClick={() => {
+                                    setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                       Cancel
                     </Button>
@@ -444,6 +509,28 @@ const DailyReports = () => {
                       <div>
                         <h4 className="font-medium mb-1 text-red-600">Safety Incidents</h4>
                         <p className="text-sm text-muted-foreground">{report.safety_incidents}</p>
+                      </div>
+                    )}
+
+                    {/* Photo Gallery */}
+                    {report.photos && report.photos.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <Camera className="h-4 w-4 mr-1" />
+                          Photos ({report.photos.length})
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {report.photos.map((photo, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={photo}
+                                alt={`Report photo ${index + 1}`}
+                                className="w-full h-20 object-cover rounded border hover:opacity-75 transition-opacity cursor-pointer"
+                                onClick={() => window.open(photo, '_blank')}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </CardContent>

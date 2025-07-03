@@ -20,7 +20,8 @@ import {
   MessageSquare,
   Shield,
   Globe,
-  Lock
+  Lock,
+  CalendarDays
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -56,6 +57,13 @@ const Navigation = ({ userRole }: NavigationProps) => {
           icon: Building2,
           path: "/create-project",
           roles: ["admin", "project_manager", "root_admin"]
+        },
+        {
+          title: "Crew Scheduling",
+          description: "Schedule and dispatch crew members",
+          icon: CalendarDays,
+          path: "/crew-scheduling",
+          roles: ["admin", "project_manager", "field_supervisor", "root_admin"]
         },
         {
           title: "Time Tracking",
