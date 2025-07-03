@@ -100,7 +100,7 @@ const DocumentManagement = () => {
         .select(`
           *,
           document_categories(name),
-          user_profiles(first_name, last_name, email)
+          user_profiles!documents_uploaded_by_fkey(first_name, last_name, email)
         `)
         .eq('company_id', userProfile?.company_id);
 
