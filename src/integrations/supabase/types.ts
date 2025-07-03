@@ -917,9 +917,66 @@ export type Database = {
           },
         ]
       }
+      document_versions: {
+        Row: {
+          checksum: string | null
+          created_at: string
+          created_by: string | null
+          document_id: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_current: boolean | null
+          version_notes: string | null
+          version_number: number
+        }
+        Insert: {
+          checksum?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean | null
+          version_notes?: string | null
+          version_number: number
+        }
+        Update: {
+          checksum?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean | null
+          version_notes?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           category_id: string | null
+          checksum: string | null
           company_id: string
           created_at: string
           description: string | null
@@ -934,9 +991,13 @@ export type Database = {
           updated_at: string
           uploaded_by: string | null
           version: number | null
+          version_notes: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           category_id?: string | null
+          checksum?: string | null
           company_id: string
           created_at?: string
           description?: string | null
@@ -951,9 +1012,13 @@ export type Database = {
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
+          version_notes?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           category_id?: string | null
+          checksum?: string | null
           company_id?: string
           created_at?: string
           description?: string | null
@@ -968,8 +1033,16 @@ export type Database = {
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
+          version_notes?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_category_id_fkey"
             columns: ["category_id"]
@@ -1213,9 +1286,12 @@ export type Database = {
           id: string
           invoice_number: string
           issue_date: string
+          last_synced_to_qb: string | null
           notes: string | null
           paid_at: string | null
           project_id: string | null
+          qb_invoice_id: string | null
+          qb_sync_token: string | null
           sent_at: string | null
           status: string
           stripe_invoice_id: string | null
@@ -1240,9 +1316,12 @@ export type Database = {
           id?: string
           invoice_number: string
           issue_date?: string
+          last_synced_to_qb?: string | null
           notes?: string | null
           paid_at?: string | null
           project_id?: string | null
+          qb_invoice_id?: string | null
+          qb_sync_token?: string | null
           sent_at?: string | null
           status?: string
           stripe_invoice_id?: string | null
@@ -1267,9 +1346,12 @@ export type Database = {
           id?: string
           invoice_number?: string
           issue_date?: string
+          last_synced_to_qb?: string | null
           notes?: string | null
           paid_at?: string | null
           project_id?: string | null
+          qb_invoice_id?: string | null
+          qb_sync_token?: string | null
           sent_at?: string | null
           status?: string
           stripe_invoice_id?: string | null
@@ -2008,6 +2090,224 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quickbooks_customers: {
+        Row: {
+          address: Json | null
+          company_id: string
+          created_at: string
+          email: string | null
+          id: string
+          last_synced_at: string | null
+          name: string
+          phone: string | null
+          qb_customer_id: string
+          qb_sync_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: Json | null
+          company_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_synced_at?: string | null
+          name: string
+          phone?: string | null
+          qb_customer_id: string
+          qb_sync_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: Json | null
+          company_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_synced_at?: string | null
+          name?: string
+          phone?: string | null
+          qb_customer_id?: string
+          qb_sync_token?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quickbooks_customers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quickbooks_integrations: {
+        Row: {
+          access_token: string | null
+          company_id: string
+          connection_status: string | null
+          created_at: string
+          id: string
+          is_connected: boolean
+          last_error_message: string | null
+          last_sync_at: string | null
+          last_sync_status: string | null
+          oauth_state: string | null
+          qb_company_id: string | null
+          qb_company_name: string | null
+          refresh_token: string | null
+          sandbox_mode: boolean | null
+          sync_settings: Json | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          company_id: string
+          connection_status?: string | null
+          created_at?: string
+          id?: string
+          is_connected?: boolean
+          last_error_message?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          oauth_state?: string | null
+          qb_company_id?: string | null
+          qb_company_name?: string | null
+          refresh_token?: string | null
+          sandbox_mode?: boolean | null
+          sync_settings?: Json | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          company_id?: string
+          connection_status?: string | null
+          created_at?: string
+          id?: string
+          is_connected?: boolean
+          last_error_message?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          oauth_state?: string | null
+          qb_company_id?: string | null
+          qb_company_name?: string | null
+          refresh_token?: string | null
+          sandbox_mode?: boolean | null
+          sync_settings?: Json | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quickbooks_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quickbooks_items: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          last_synced_at: string | null
+          name: string
+          qb_item_id: string
+          qb_sync_token: string | null
+          type: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_synced_at?: string | null
+          name: string
+          qb_item_id: string
+          qb_sync_token?: string | null
+          type?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_synced_at?: string | null
+          name?: string
+          qb_item_id?: string
+          qb_sync_token?: string | null
+          type?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quickbooks_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quickbooks_sync_logs: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          duration_seconds: number | null
+          error_details: Json | null
+          errors_count: number | null
+          id: string
+          records_processed: Json | null
+          started_at: string
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          error_details?: Json | null
+          errors_count?: number | null
+          id?: string
+          records_processed?: Json | null
+          started_at: string
+          status?: string
+          sync_type: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          error_details?: Json | null
+          errors_count?: number | null
+          id?: string
+          records_processed?: Json | null
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quickbooks_sync_logs_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -3214,6 +3514,16 @@ export type Database = {
       check_type_exists: {
         Args: { type_name: string }
         Returns: boolean
+      }
+      create_document_version: {
+        Args: {
+          p_document_id: string
+          p_file_path: string
+          p_file_size: number
+          p_checksum?: string
+          p_version_notes?: string
+        }
+        Returns: string
       }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>

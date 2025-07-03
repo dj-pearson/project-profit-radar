@@ -12,39 +12,37 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DocumentCard } from '@/components/documents/DocumentCard';
 import { 
   ArrowLeft, 
   Upload,
   FileText,
-  File,
-  Download,
-  Trash2,
-  Eye,
   Plus,
   Search,
   Filter,
-  Calendar,
   User,
-  Folder,
-  Image,
-  Video,
-  Archive
+  Calendar
 } from 'lucide-react';
 
 interface Document {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   file_path: string;
   file_type: string;
   file_size: number;
   version: number;
   is_current_version: boolean;
-  category_id: string;
+  category_id?: string;
   uploaded_by: string;
   created_at: string;
-  document_categories: { name: string } | null;
-  user_profiles: { first_name: string; last_name: string; email: string } | null;
+  updated_at?: string;
+  version_notes?: string;
+  checksum?: string;
+  approved_by?: string;
+  approved_at?: string;
+  document_categories?: { name: string } | null;
+  user_profiles?: { first_name: string; last_name: string; email: string } | null;
 }
 
 interface DocumentCategory {
@@ -297,21 +295,6 @@ const DocumentManagement = () => {
     }
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="h-5 w-5" />;
-    if (fileType.startsWith('video/')) return <Video className="h-5 w-5" />;
-    if (fileType.includes('pdf')) return <FileText className="h-5 w-5" />;
-    if (fileType.includes('zip') || fileType.includes('rar')) return <Archive className="h-5 w-5" />;
-    return <File className="h-5 w-5" />;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 B';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100} ${sizes[i]}`;
-  };
-
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -507,68 +490,14 @@ const DocumentManagement = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDocuments.map((document) => (
-              <Card key={document.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-2">
-                      {getFileIcon(document.file_type)}
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm truncate">{document.name}</CardTitle>
-                        {document.document_categories && (
-                          <Badge variant="secondary" className="text-xs mt-1">
-                            {document.document_categories.name}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {document.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {document.description}
-                    </p>
-                  )}
-                  
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span>Size: {formatFileSize(document.file_size)}</span>
-                      <span>v{document.version}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(document.created_at).toLocaleDateString()}</span>
-                    </div>
-                    {document.user_profiles && (
-                      <div className="flex items-center space-x-2">
-                        <User className="h-3 w-3" />
-                        <span>
-                          {document.user_profiles.first_name} {document.user_profiles.last_name}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => downloadDocument(document)}
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteDocument(document)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <DocumentCard
+                key={document.id}
+                document={document}
+                onDownload={downloadDocument}
+                onDelete={deleteDocument}
+                onVersionUpdate={loadDocuments}
+                isProjectContext={isProjectContext}
+              />
             ))}
           </div>
         )}
