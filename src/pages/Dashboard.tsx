@@ -138,6 +138,9 @@ const Dashboard = () => {
       case 'create_project':
         navigate('/create-project');
         break;
+      case 'manage_team':
+        navigate('/team');
+        break;
       default:
         toast({
           title: "Feature Coming Soon",
@@ -147,10 +150,7 @@ const Dashboard = () => {
   };
 
   const handleViewProject = (projectId: string) => {
-    toast({
-      title: "Feature Coming Soon",
-      description: "Project detail view will be available soon."
-    });
+    navigate(`/project/${projectId}`);
   };
 
   if (loading) {
