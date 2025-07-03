@@ -761,6 +761,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_type_exists: {
+        Args: { type_name: string }
+        Returns: boolean
+      }
       get_user_company: {
         Args: { user_id: string }
         Returns: string
