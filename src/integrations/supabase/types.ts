@@ -1211,6 +1211,56 @@ export type Database = {
           },
         ]
       }
+      payment_failures: {
+        Row: {
+          attempt_count: number | null
+          created_at: string
+          dunning_status: string | null
+          failure_reason: string | null
+          id: string
+          max_retries: number | null
+          next_retry_at: string | null
+          resolved_at: string | null
+          stripe_invoice_id: string
+          subscriber_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string
+          dunning_status?: string | null
+          failure_reason?: string | null
+          id?: string
+          max_retries?: number | null
+          next_retry_at?: string | null
+          resolved_at?: string | null
+          stripe_invoice_id: string
+          subscriber_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string
+          dunning_status?: string | null
+          failure_reason?: string | null
+          id?: string
+          max_retries?: number | null
+          next_retry_at?: string | null
+          resolved_at?: string | null
+          stripe_invoice_id?: string
+          subscriber_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_failures_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       privacy_impact_assessments: {
         Row: {
           approved_by: string | null
@@ -2545,6 +2595,50 @@ export type Database = {
           },
         ]
       }
+      usage_metrics: {
+        Row: {
+          billing_period_end: string
+          billing_period_start: string
+          company_id: string | null
+          created_at: string
+          id: string
+          metric_type: string
+          metric_value: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          billing_period_end: string
+          billing_period_start: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          metric_type: string
+          metric_value?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          billing_period_end?: string
+          billing_period_start?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          metric_type?: string
+          metric_value?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_metrics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           company_id: string | null
@@ -2637,6 +2731,42 @@ export type Database = {
           two_factor_secret?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          created_at: string
+          event_data: Json
+          event_type: string
+          id: string
+          last_processing_error: string | null
+          processed: boolean | null
+          processed_at: string | null
+          processing_attempts: number | null
+          stripe_event_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_data: Json
+          event_type: string
+          id?: string
+          last_processing_error?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processing_attempts?: number | null
+          stripe_event_id: string
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json
+          event_type?: string
+          id?: string
+          last_processing_error?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processing_attempts?: number | null
+          stripe_event_id?: string
         }
         Relationships: []
       }

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import TrialStatusBanner from "@/components/TrialStatusBanner";
+import UsageDashboard from "@/components/billing/UsageDashboard";
+import PaymentFailureAlert from "@/components/billing/PaymentFailureAlert";
 
 const SubscriptionSettings = () => {
   const { user } = useAuth();
@@ -28,8 +30,14 @@ const SubscriptionSettings = () => {
           <p className="text-muted-foreground">Manage your subscription and billing information.</p>
         </div>
 
-        <div className="max-w-2xl">
-          <SubscriptionManager />
+        <div className="space-y-6">
+          <PaymentFailureAlert />
+          
+          <div className="max-w-2xl">
+            <SubscriptionManager />
+          </div>
+
+          <UsageDashboard />
         </div>
       </div>
     </div>
