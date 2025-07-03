@@ -36,51 +36,42 @@ export const useAnalytics = () => {
   const [metrics, setMetrics] = useState<AnalyticsMetric[]>([]);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
 
-  const calculateMetrics = useCallback(async (
-    table: string, 
-    valueField: string, 
-    filters: AnalyticsFilters
-  ) => {
+  const getFinancialMetrics = useCallback(async (filters: AnalyticsFilters) => {
     if (!userProfile?.company_id) return [];
 
     setLoading(true);
     try {
-      let query = supabase
-        .from(table)
-        .select(`${valueField}, created_at, project_id`)
+      const { data: expenses, error: expenseError } = await supabase
+        .from('expenses')
+        .select('amount, expense_date, created_at')
         .eq('company_id', userProfile.company_id)
-        .gte('created_at', filters.dateRange.start)
-        .lte('created_at', filters.dateRange.end);
+        .gte('expense_date', filters.dateRange.start)
+        .lte('expense_date', filters.dateRange.end);
 
-      if (filters.projectIds?.length) {
-        query = query.in('project_id', filters.projectIds);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
+      if (expenseError) throw expenseError;
 
       // Group by period and calculate metrics
       const periodData = new Map<string, number>();
       
-      data?.forEach(item => {
-        const period = new Date(item.created_at).toISOString().slice(0, 7); // YYYY-MM
+      expenses?.forEach(item => {
+        const period = new Date(item.expense_date).toISOString().slice(0, 7); // YYYY-MM
         const current = periodData.get(period) || 0;
-        periodData.set(period, current + (item[valueField] || 0));
+        periodData.set(period, current + (item.amount || 0));
       });
 
       const periods = Array.from(periodData.entries()).map(([period, value]) => ({
         period,
         value,
-        name: valueField
+        name: 'Expenses'
       }));
 
       return periods;
     } catch (error) {
-      console.error('Error calculating metrics:', error);
+      console.error('Error calculating financial metrics:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to calculate analytics metrics"
+        description: "Failed to calculate financial metrics"
       });
       return [];
     } finally {
@@ -136,20 +127,10 @@ export const useAnalytics = () => {
     if (!userProfile?.company_id) return [];
 
     try {
-      // Get time entries for labor utilization
-      const { data: timeEntries, error: timeError } = await supabase
-        .from('time_entries')
-        .select('hours, date, project_id')
-        .eq('company_id', userProfile.company_id)
-        .gte('date', filters.dateRange.start)
-        .lte('date', filters.dateRange.end);
-
-      if (timeError) throw timeError;
-
-      // Get equipment usage
+      // Get equipment usage data
       const { data: equipmentUsage, error: equipmentError } = await supabase
         .from('equipment_usage')
-        .select('hours_used, start_date')
+        .select('hours_used, start_date, project_id')
         .gte('start_date', filters.dateRange.start)
         .lte('start_date', filters.dateRange.end);
 
@@ -157,42 +138,27 @@ export const useAnalytics = () => {
 
       // Group by month
       const monthlyData = new Map<string, {
-        laborHours: number;
         equipmentHours: number;
         projects: Set<string>;
       }>();
 
-      timeEntries?.forEach(entry => {
-        const month = new Date(entry.date).toISOString().slice(0, 7);
-        const current = monthlyData.get(month) || { 
-          laborHours: 0, 
-          equipmentHours: 0, 
-          projects: new Set() 
-        };
-        
-        current.laborHours += entry.hours || 0;
-        if (entry.project_id) current.projects.add(entry.project_id);
-        monthlyData.set(month, current);
-      });
-
       equipmentUsage?.forEach(usage => {
         const month = new Date(usage.start_date).toISOString().slice(0, 7);
         const current = monthlyData.get(month) || { 
-          laborHours: 0, 
           equipmentHours: 0, 
           projects: new Set() 
         };
         
         current.equipmentHours += usage.hours_used || 0;
+        if (usage.project_id) current.projects.add(usage.project_id);
         monthlyData.set(month, current);
       });
 
       return Array.from(monthlyData.entries()).map(([period, data]) => ({
         period,
-        laborHours: data.laborHours,
         equipmentHours: data.equipmentHours,
         activeProjects: data.projects.size,
-        efficiency: data.laborHours > 0 ? Math.min(100, (data.laborHours / (160 * 10)) * 100) : 0 // Assuming 10 workers, 160 hours/month
+        efficiency: data.equipmentHours > 0 ? Math.min(100, (data.equipmentHours / (40 * 10)) * 100) : 0 // Assuming utilization target
       }));
     } catch (error) {
       console.error('Error getting resource utilization:', error);
@@ -306,7 +272,7 @@ export const useAnalytics = () => {
     loading,
     metrics,
     chartData,
-    calculateMetrics,
+    getFinancialMetrics,
     getProjectPerformance,
     getResourceUtilization,
     getFinancialTrends,

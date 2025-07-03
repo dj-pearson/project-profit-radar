@@ -104,17 +104,12 @@ const Analytics = () => {
       const { data: jobCosts, error: costsError } = await supabase
         .from('job_costs')
         .select('*, projects(name)')
-        .eq('project_id', 'in', `(${projects?.map(p => p.id).join(',')})`);
+        .in('project_id', projects?.map(p => p.id) || []);
 
       if (costsError) throw costsError;
 
-      // Load time entries
-      const { data: timeEntries, error: timeError } = await supabase
-        .from('time_entries')
-        .select('*, projects(name)')
-        .eq('project_id', 'in', `(${projects?.map(p => p.id).join(',')})`);
-
-      if (timeError) throw timeError;
+      // Create mock time entries data since table doesn't exist yet
+      const timeEntries: any[] = [];
 
       // Process data
       const processedData = processAnalyticsData(projects || [], jobCosts || [], timeEntries || []);

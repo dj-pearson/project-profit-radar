@@ -134,9 +134,9 @@ const Analytics = () => {
       }, 0) || 0;
 
       // Calculate average project value
-      const projectsWithBudget = projects?.filter(p => p.budget > 0) || [];
+      const projectsWithBudget = projects?.filter(p => p.budget && p.budget > 0) || [];
       const averageProjectValue = projectsWithBudget.length > 0
-        ? projectsWithBudget.reduce((sum, p) => sum + p.budget, 0) / projectsWithBudget.length
+        ? projectsWithBudget.reduce((sum, p) => sum + (p.budget || 0), 0) / projectsWithBudget.length
         : 0;
 
       // Calculate completion rate
