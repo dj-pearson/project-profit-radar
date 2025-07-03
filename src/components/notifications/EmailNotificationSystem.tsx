@@ -93,9 +93,9 @@ const EmailNotificationSystem = () => {
       content: `
         <h2>Budget Alert</h2>
         <p>Project <strong>{{project_name}}</strong> is approaching budget limits.</p>
-        <p>Budget: ${{budget}}</p>
-        <p>Spent: ${{spent_amount}}</p>
-        <p>Remaining: ${{remaining_amount}}</p>
+        <p>Budget: ${'{{budget}}'}</p>
+        <p>Spent: ${'{{spent_amount}}'}</p>
+        <p>Remaining: ${'{{remaining_amount}}'}</p>
       `,
       variables: ['project_name', 'budget', 'spent_amount', 'remaining_amount']
     }
