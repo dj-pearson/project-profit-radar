@@ -10,6 +10,7 @@ import { ProjectCard } from '@/components/dashboard/ProjectCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
+import ProjectWizard from '@/components/ProjectWizard';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -28,6 +29,7 @@ const Dashboard = () => {
   
   const [projects, setProjects] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [projectWizardOpen, setProjectWizardOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     activeProjects: 0,
     totalRevenue: 0,
@@ -138,7 +140,7 @@ const Dashboard = () => {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'create_project':
-        navigate('/create-project');
+        setProjectWizardOpen(true);
         break;
       case 'manage_team':
         navigate('/team');
@@ -308,7 +310,7 @@ const Dashboard = () => {
                       <Button 
                         variant="default" 
                         className="mt-4"
-                        onClick={() => navigate('/create-project')}
+                        onClick={() => setProjectWizardOpen(true)}
                       >
                         Create Your First Project
                       </Button>
@@ -453,6 +455,12 @@ const Dashboard = () => {
           </Card>
         )}
       </div>
+      
+      {/* Project Wizard */}
+      <ProjectWizard 
+        open={projectWizardOpen} 
+        onOpenChange={setProjectWizardOpen} 
+      />
     </div>
   );
 };

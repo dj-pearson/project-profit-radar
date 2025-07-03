@@ -13,6 +13,7 @@ import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamManagement from "./pages/TeamManagement";
 import TimeTracking from "./pages/TimeTracking";
+import JobCosting from "./pages/JobCosting";
 import DocumentManagement from "./pages/DocumentManagement";
 import FinancialDashboard from "./pages/FinancialDashboard";
 import DailyReports from "./pages/DailyReports";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/project/:projectId" element={<RouteGuard routePath="/dashboard"><ProjectDetail /></RouteGuard>} />
             <Route path="/team" element={<RouteGuard routePath="/team"><TeamManagement /></RouteGuard>} />
             <Route path="/time-tracking" element={<RouteGuard routePath="/time-tracking"><TimeTracking /></RouteGuard>} />
+            <Route path="/job-costing" element={<RouteGuard routePath="/job-costing"><JobCosting /></RouteGuard>} />
             <Route path="/documents" element={<RouteGuard routePath="/documents"><DocumentManagement /></RouteGuard>} />
             <Route path="/project/:projectId/documents" element={<RouteGuard routePath="/documents"><DocumentManagement /></RouteGuard>} />
             <Route path="/financial" element={<RouteGuard routePath="/financial"><FinancialDashboard /></RouteGuard>} />
