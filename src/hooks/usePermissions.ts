@@ -85,6 +85,7 @@ export const usePermissions = () => {
 
     // Define route permissions
     const routePermissions: Record<string, UserRole[]> = {
+      '/dashboard': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'],
       '/create-project': ['root_admin', 'admin', 'project_manager'],
       '/time-tracking': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
       '/daily-reports': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
@@ -93,6 +94,8 @@ export const usePermissions = () => {
       '/reports': ['root_admin', 'admin', 'project_manager', 'accounting'],
       '/team': ['root_admin', 'admin', 'project_manager'],
       '/documents': ['root_admin', 'admin', 'project_manager', 'office_staff'],
+      '/materials': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
+      '/equipment': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
       '/safety': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
       '/compliance-audit': ['root_admin', 'admin'],
       '/gdpr-compliance': ['root_admin', 'admin'],
