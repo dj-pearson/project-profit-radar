@@ -9,7 +9,7 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { ProjectCard } from '@/components/dashboard/ProjectCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import Navigation from '@/components/Navigation';
+import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -220,6 +220,8 @@ const Dashboard = () => {
       </nav>
 
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <TrialStatusBanner />
+        
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {userProfile?.role === 'root_admin' ? (

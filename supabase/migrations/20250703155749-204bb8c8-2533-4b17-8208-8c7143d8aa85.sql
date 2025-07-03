@@ -1,0 +1,2 @@
+-- Add STRIPE_SECRET_KEY to Supabase secrets
+-- This will be handled through the secrets management interface

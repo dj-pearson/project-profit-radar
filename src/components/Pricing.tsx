@@ -181,14 +181,24 @@ const Pricing = () => {
                     </div>
                   ))}
                 </div>
-                <Button 
-                  variant={plan.isPopular ? "hero" : "construction"} 
-                  className="w-full"
-                  onClick={() => handleCheckout(plan.tier)}
-                  disabled={loadingPlan === plan.tier}
-                >
-                  {loadingPlan === plan.tier ? "Processing..." : "Start Free Trial"}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    variant={plan.isPopular ? "hero" : "construction"} 
+                    className="w-full"
+                    onClick={() => handleCheckout(plan.tier)}
+                    disabled={loadingPlan === plan.tier}
+                  >
+                    {loadingPlan === plan.tier ? "Processing..." : "Start Free Trial"}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="w-full text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white"
+                    onClick={() => handleCheckout(plan.tier)}
+                    disabled={loadingPlan === plan.tier}
+                  >
+                    {loadingPlan === plan.tier ? "Processing..." : "Get Started Now"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -21,6 +21,7 @@ import Reports from "./pages/Reports";
 import BlogManager from "./pages/BlogManager";
 import Resources from "./pages/Resources";
 import ROICalculator from "./pages/ROICalculator";
+import SubscriptionSettings from "./pages/SubscriptionSettings";
 import Companies from "./pages/admin/Companies";
 import Users from "./pages/admin/Users";
 import Billing from "./pages/admin/Billing";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/admin/seo" element={<SEOManager />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/roi-calculator" element={<ROICalculator />} />
+            <Route path="/subscription" element={<SubscriptionSettings />} />
             <Route path="/client-portal" element={<ClientPortal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
