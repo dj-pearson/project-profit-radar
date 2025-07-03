@@ -3,9 +3,12 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  useGlobalShortcuts();
 
   const navItems = [
     { name: "Features", href: "#features", isSection: true },
@@ -52,6 +55,7 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-4 shrink-0">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" className="text-construction-dark hover:text-construction-orange hidden lg:flex" asChild>
               <Link to="/auth">Sign In</Link>
             </Button>
