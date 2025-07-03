@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
 import { 
   DollarSign, 
   Clock, 
@@ -12,7 +13,9 @@ import {
   Pause,
   BarChart3,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  RotateCcw,
+  Shuffle
 } from 'lucide-react';
 
 interface Project {
@@ -28,7 +31,9 @@ interface Project {
 const InteractiveDashboard = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [projects, setProjects] = useState<Project[]>([
+  const [currentScenario, setCurrentScenario] = useState(0);
+  
+  const initialProjects: Project[] = [
     {
       id: '1',
       name: 'Downtown Office Complex',
@@ -56,11 +61,48 @@ const InteractiveDashboard = () => {
       status: 'completed',
       crew: 0
     }
-  ]);
+  ];
+
+  const scenarios = [
+    {
+      name: "Standard Progress",
+      description: "Normal project advancement",
+      projects: initialProjects
+    },
+    {
+      name: "Budget Overruns",
+      description: "Projects facing financial challenges",
+      projects: [
+        { ...initialProjects[0], spent: 420000, status: 'at-risk' as const },
+        { ...initialProjects[1], spent: 275000, status: 'at-risk' as const },
+        { ...initialProjects[2] }
+      ]
+    },
+    {
+      name: "Ahead of Schedule",
+      description: "High-performing projects",
+      projects: [
+        { ...initialProjects[0], progress: 85, spent: 275000, status: 'on-track' as const },
+        { ...initialProjects[1], progress: 95, spent: 220000, status: 'on-track' as const },
+        { ...initialProjects[2] }
+      ]
+    },
+    {
+      name: "Critical Issues",
+      description: "Projects requiring immediate attention",
+      projects: [
+        { ...initialProjects[0], progress: 45, spent: 380000, status: 'at-risk' as const, crew: 12 },
+        { ...initialProjects[1], progress: 70, spent: 270000, status: 'at-risk' as const, crew: 8 },
+        { ...initialProjects[2] }
+      ]
+    }
+  ];
+
+  const [projects, setProjects] = useState<Project[]>(scenarios[0].projects);
 
   const demoSteps = [
     "Real-time project tracking",
-    "Budget monitoring alerts",
+    "Budget monitoring alerts", 
     "Crew utilization updates",
     "Progress milestone completion"
   ];
@@ -112,6 +154,38 @@ const InteractiveDashboard = () => {
     }
   };
 
+  const handleProgressChange = (projectId: string, newProgress: number) => {
+    setProjects(prev => prev.map(project => {
+      if (project.id === projectId && project.status !== 'completed') {
+        const updatedProgress = newProgress;
+        const newSpent = project.budget * (updatedProgress / 100) * (0.8 + Math.random() * 0.4);
+        const newStatus = newSpent > project.budget * 0.95 ? 'at-risk' : 'on-track';
+        return {
+          ...project,
+          progress: updatedProgress,
+          spent: Math.min(newSpent, project.budget * 1.2),
+          status: updatedProgress >= 100 ? 'completed' : newStatus,
+          crew: updatedProgress >= 100 ? 0 : project.crew
+        };
+      }
+      return project;
+    }));
+  };
+
+  const resetDemo = () => {
+    setIsPlaying(false);
+    setCurrentStep(0);
+    setProjects(scenarios[currentScenario].projects);
+  };
+
+  const cycleScenario = () => {
+    const nextScenario = (currentScenario + 1) % scenarios.length;
+    setCurrentScenario(nextScenario);
+    setProjects(scenarios[nextScenario].projects);
+    setIsPlaying(false);
+    setCurrentStep(0);
+  };
+
   const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
   const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
   const totalCrew = projects.reduce((sum, p) => sum + p.crew, 0);
@@ -120,32 +194,54 @@ const InteractiveDashboard = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Demo Control */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-construction-dark">
-            Live Dashboard Demo
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {isPlaying ? demoSteps[currentStep] : "Click play to see real-time updates"}
-          </p>
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-construction-dark">
+              Interactive Dashboard Demo
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {isPlaying ? demoSteps[currentStep] : `Scenario: ${scenarios[currentScenario].name} - ${scenarios[currentScenario].description}`}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={cycleScenario}
+              variant="outline"
+              size="sm"
+              className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white"
+            >
+              <Shuffle className="mr-2 h-4 w-4" />
+              Next Scenario
+            </Button>
+            <Button
+              onClick={resetDemo}
+              variant="outline"
+              size="sm"
+              className="text-construction-orange border-construction-orange hover:bg-construction-orange hover:text-white"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reset
+            </Button>
+            <Button
+              onClick={() => setIsPlaying(!isPlaying)}
+              variant="outline"
+              className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white"
+            >
+              {isPlaying ? (
+                <>
+                  <Pause className="mr-2 h-4 w-4" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-4 w-4" />
+                  Auto Play
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={() => setIsPlaying(!isPlaying)}
-          variant="outline"
-          className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white"
-        >
-          {isPlaying ? (
-            <>
-              <Pause className="mr-2 h-4 w-4" />
-              Pause Demo
-            </>
-          ) : (
-            <>
-              <Play className="mr-2 h-4 w-4" />
-              Start Demo
-            </>
-          )}
-        </Button>
       </div>
 
       {/* KPI Cards */}
@@ -234,14 +330,27 @@ const InteractiveDashboard = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm mb-2">
                     <span>Progress</span>
                     <span>{project.progress.toFixed(1)}%</span>
                   </div>
                   <Progress 
                     value={project.progress} 
-                    className="h-2"
+                    className="h-2 mb-3"
                   />
+                  
+                  {project.status !== 'completed' && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground">Adjust Progress:</div>
+                      <Slider
+                        value={[project.progress]}
+                        onValueChange={(value) => handleProgressChange(project.id, value[0])}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                   
                   <div className="flex justify-between text-sm mt-3">
                     <div className="flex items-center space-x-4">
