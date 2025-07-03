@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.process-dunning]
 verify_jwt = false
+
+[functions.generate-invoice]
+verify_jwt = true
+
+[functions.process-invoice-payment]
+verify_jwt = true
+
+[functions.change-subscription]
+verify_jwt = true
+
+[functions.customer-portal]
+verify_jwt = true
