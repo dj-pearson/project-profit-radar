@@ -392,202 +392,206 @@ const BlogManager = () => {
       </div>
 
       {/* Create Post Dialog */}
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Blog Post</DialogTitle>
-          <DialogDescription>
-            Write a new blog article with AI assistance or create manually
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs defaultValue="content" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="seo">SEO</TabsTrigger>
-            <TabsTrigger value="ai">AI Assistant</TabsTrigger>
-          </TabsList>
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Blog Post</DialogTitle>
+            <DialogDescription>
+              Write a new blog article with AI assistance or create manually
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs defaultValue="content" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="seo">SEO</TabsTrigger>
+              <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="content" className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                placeholder="Enter blog post title"
-                value={newPost.title}
-                onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="excerpt">Excerpt</Label>
-              <Textarea
-                id="excerpt"
-                placeholder="Brief summary of the post"
-                value={newPost.excerpt}
-                onChange={(e) => setNewPost({...newPost, excerpt: e.target.value})}
-                rows={2}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="featured_image">Featured Image URL</Label>
-              <Input
-                id="featured_image"
-                placeholder="https://example.com/image.jpg"
-                value={newPost.featured_image_url}
-                onChange={(e) => setNewPost({...newPost, featured_image_url: e.target.value})}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="body">Content *</Label>
-              <Textarea
-                id="body"
-                placeholder="Write your blog post content here (Markdown supported)"
-                value={newPost.body}
-                onChange={(e) => setNewPost({...newPost, body: e.target.value})}
-                rows={12}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select value={newPost.status} onValueChange={(value) => setNewPost({...newPost, status: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="seo" className="space-y-4">
-            <div>
-              <Label htmlFor="seo_title">SEO Title</Label>
-              <Input
-                id="seo_title"
-                placeholder="SEO optimized title (max 60 characters)"
-                value={newPost.seo_title}
-                onChange={(e) => setNewPost({...newPost, seo_title: e.target.value})}
-                maxLength={60}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {newPost.seo_title.length}/60 characters
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="seo_description">SEO Description</Label>
-              <Textarea
-                id="seo_description"
-                placeholder="Meta description for search engines (max 160 characters)"
-                value={newPost.seo_description}
-                onChange={(e) => setNewPost({...newPost, seo_description: e.target.value})}
-                maxLength={160}
-                rows={3}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {newPost.seo_description.length}/160 characters
-              </p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="ai" className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2 flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
-                AI Content Generation
-              </h4>
-              <p className="text-sm text-muted-foreground mb-4">
-                Enter a topic and let AI generate a complete blog article for you
-              </p>
-              
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="ai_topic">Blog Topic</Label>
-                  <Input
-                    id="ai_topic"
-                    placeholder="e.g., Benefits of Digital Project Management in Construction"
-                    value={aiTopic}
-                    onChange={(e) => setAiTopic(e.target.value)}
-                  />
-                </div>
-                
-                <Button 
-                  onClick={generateWithAI}
-                  disabled={generatingAI || !aiTopic.trim()}
-                  className="w-full"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  {generatingAI ? 'Generating...' : 'Generate with AI'}
-                </Button>
+            <TabsContent value="content" className="space-y-4">
+              <div>
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  placeholder="Enter blog post title"
+                  value={newPost.title}
+                  onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                />
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
 
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreatePost}>
-            <Save className="h-4 w-4 mr-2" />
-            Create Post
-          </Button>
-        </div>
-      </DialogContent>
+              <div>
+                <Label htmlFor="excerpt">Excerpt</Label>
+                <Textarea
+                  id="excerpt"
+                  placeholder="Brief summary of the post"
+                  value={newPost.excerpt}
+                  onChange={(e) => setNewPost({...newPost, excerpt: e.target.value})}
+                  rows={2}
+                />
+              </div>
 
-      {/* AI Settings Dialog */}
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>AI Settings</DialogTitle>
-          <DialogDescription>
-            Configure AI providers and instructions for content generation
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {aiSettings.map((setting) => (
-            <Card key={setting.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="capitalize">{setting.provider}</CardTitle>
-                  <Button
-                    size="sm"
-                    variant={setting.is_active ? "default" : "outline"}
-                    onClick={() => updateAISettings(setting.id, { is_active: !setting.is_active })}
+              <div>
+                <Label htmlFor="featured_image">Featured Image URL</Label>
+                <Input
+                  id="featured_image"
+                  placeholder="https://example.com/image.jpg"
+                  value={newPost.featured_image_url}
+                  onChange={(e) => setNewPost({...newPost, featured_image_url: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="body">Content *</Label>
+                <Textarea
+                  id="body"
+                  placeholder="Write your blog post content here (Markdown supported)"
+                  value={newPost.body}
+                  onChange={(e) => setNewPost({...newPost, body: e.target.value})}
+                  rows={12}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={newPost.status} onValueChange={(value) => setNewPost({...newPost, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="seo" className="space-y-4">
+              <div>
+                <Label htmlFor="seo_title">SEO Title</Label>
+                <Input
+                  id="seo_title"
+                  placeholder="SEO optimized title (max 60 characters)"
+                  value={newPost.seo_title}
+                  onChange={(e) => setNewPost({...newPost, seo_title: e.target.value})}
+                  maxLength={60}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {newPost.seo_title.length}/60 characters
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="seo_description">SEO Description</Label>
+                <Textarea
+                  id="seo_description"
+                  placeholder="Meta description for search engines (max 160 characters)"
+                  value={newPost.seo_description}
+                  onChange={(e) => setNewPost({...newPost, seo_description: e.target.value})}
+                  maxLength={160}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {newPost.seo_description.length}/160 characters
+                </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="ai" className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2 flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+                  AI Content Generation
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter a topic and let AI generate a complete blog article for you
+                </p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="ai_topic">Blog Topic</Label>
+                    <Input
+                      id="ai_topic"
+                      placeholder="e.g., Benefits of Digital Project Management in Construction"
+                      value={aiTopic}
+                      onChange={(e) => setAiTopic(e.target.value)}
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={generateWithAI}
+                    disabled={generatingAI || !aiTopic.trim()}
+                    className="w-full"
                   >
-                    {setting.is_active ? 'Active' : 'Inactive'}
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {generatingAI ? 'Generating...' : 'Generate with AI'}
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label>Model</Label>
-                  <Input value={setting.model} readOnly />
-                </div>
-                <div>
-                  <Label>Blog Instructions</Label>
-                  <Textarea 
-                    value={setting.blog_instructions}
-                    onChange={(e) => updateAISettings(setting.id, { blog_instructions: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
-        <div className="flex justify-end">
-          <Button onClick={() => setIsSettingsDialogOpen(false)}>
-            Close
-          </Button>
-        </div>
-      </DialogContent>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreatePost}>
+              <Save className="h-4 w-4 mr-2" />
+              Create Post
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Settings Dialog */}
+      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>AI Settings</DialogTitle>
+            <DialogDescription>
+              Configure AI providers and instructions for content generation
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {aiSettings.map((setting) => (
+              <Card key={setting.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="capitalize">{setting.provider}</CardTitle>
+                    <Button
+                      size="sm"
+                      variant={setting.is_active ? "default" : "outline"}
+                      onClick={() => updateAISettings(setting.id, { is_active: !setting.is_active })}
+                    >
+                      {setting.is_active ? 'Active' : 'Inactive'}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label>Model</Label>
+                    <Input value={setting.model} readOnly />
+                  </div>
+                  <div>
+                    <Label>Blog Instructions</Label>
+                    <Textarea 
+                      value={setting.blog_instructions}
+                      onChange={(e) => updateAISettings(setting.id, { blog_instructions: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={() => setIsSettingsDialogOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
