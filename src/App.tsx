@@ -64,6 +64,7 @@ const AppContent = () => {
       <Route path="/daily-reports" element={<RouteGuard routePath="/daily-reports"><DailyReports /></RouteGuard>} />
       <Route path="/change-orders" element={<RouteGuard routePath="/change-orders"><ChangeOrders /></RouteGuard>} />
       <Route path="/reports" element={<RouteGuard routePath="/reports"><Reports /></RouteGuard>} />
+      <Route path="/analytics" element={<RouteGuard routePath="/analytics"><Reports /></RouteGuard>} />
       <Route path="/blog-manager" element={<RouteGuard routePath="/blog-manager"><BlogManager /></RouteGuard>} />
       <Route path="/admin/companies" element={<RouteGuard routePath="/admin/companies"><Companies /></RouteGuard>} />
       <Route path="/admin/users" element={<RouteGuard routePath="/admin/users"><Users /></RouteGuard>} />

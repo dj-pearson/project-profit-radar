@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, FileSpreadsheet, FileText, Download } from 'lucide-react';
+import { CustomReportBuilder } from '@/components/reports/CustomReportBuilder';
+import ExecutiveDashboard from '@/components/analytics/ExecutiveDashboard';
+import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -236,8 +239,8 @@ const Reports = () => {
               </Button>
               <Separator orientation="vertical" className="h-6" />
               <div>
-                <h1 className="text-xl font-semibold">Advanced Reports</h1>
-                <p className="text-sm text-muted-foreground">Generate detailed project reports for export</p>
+                <h1 className="text-xl font-semibold">Analytics & Reports</h1>
+                <p className="text-sm text-muted-foreground">Executive dashboards, analytics, and custom report builder</p>
               </div>
             </div>
           </div>
@@ -245,7 +248,43 @@ const Reports = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="dashboard">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Executive Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="builder">
+              <Settings className="h-4 w-4 mr-2" />
+              Custom Reports
+            </TabsTrigger>
+            <TabsTrigger value="exports">
+              <Download className="h-4 w-4 mr-2" />
+              Export Center
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard">
+            <ExecutiveDashboard />
+          </TabsContent>
+
+          <TabsContent value="builder">
+            <CustomReportBuilder
+              onSave={(config) => {
+                console.log('Saving report config:', config);
+                toast({
+                  title: "Success",
+                  description: "Report configuration saved successfully"
+                });
+              }}
+              onExecute={(config) => {
+                console.log('Executing report:', config);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="exports" className="space-y-6">
         {/* Project Report Generator */}
         <Card>
           <CardHeader>
@@ -336,6 +375,8 @@ const Reports = () => {
             </CardContent>
           </Card>
         </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
