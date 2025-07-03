@@ -98,7 +98,7 @@ const CrewScheduling = () => {
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('id, name, location')
+        .select('id, name, description')
         .eq('company_id', userProfile?.company_id)
         .eq('status', 'active')
         .order('name');
@@ -167,7 +167,7 @@ const CrewScheduling = () => {
         date: newAssignment.date,
         start_time: newAssignment.start_time,
         end_time: newAssignment.end_time,
-        location: newAssignment.location || project?.location || '',
+        location: newAssignment.location || project?.description || '',
         status: 'scheduled',
         notes: newAssignment.notes
       };
