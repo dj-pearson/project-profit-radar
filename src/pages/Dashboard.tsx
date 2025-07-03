@@ -147,6 +147,10 @@ const Dashboard = () => {
       case 'documents':
         navigate('/documents');
         break;
+      case 'job_costing':
+      case 'financial_reports':
+        navigate('/financial');
+        break;
       default:
         toast({
           title: "Feature Coming Soon",
