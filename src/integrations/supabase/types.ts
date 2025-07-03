@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_settings: {
+        Row: {
+          api_key_name: string
+          blog_instructions: string | null
+          created_at: string
+          global_instructions: string | null
+          id: string
+          is_active: boolean
+          model: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          api_key_name: string
+          blog_instructions?: string | null
+          created_at?: string
+          global_instructions?: string | null
+          id?: string
+          is_active?: boolean
+          model: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          api_key_name?: string
+          blog_instructions?: string | null
+          created_at?: string
+          global_instructions?: string | null
+          id?: string
+          is_active?: boolean
+          model?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by: string
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       change_orders: {
         Row: {
           amount: number

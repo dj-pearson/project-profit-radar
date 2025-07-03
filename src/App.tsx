@@ -18,6 +18,7 @@ import DailyReports from "./pages/DailyReports";
 import ChangeOrders from "./pages/ChangeOrders";
 import ClientPortal from "./pages/ClientPortal";
 import Reports from "./pages/Reports";
+import BlogManager from "./pages/BlogManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/daily-reports" element={<DailyReports />} />
             <Route path="/change-orders" element={<ChangeOrders />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/blog-manager" element={<BlogManager />} />
             <Route path="/client-portal" element={<ClientPortal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

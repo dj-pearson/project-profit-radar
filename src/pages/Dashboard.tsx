@@ -415,6 +415,14 @@ const Dashboard = () => {
                 <Button 
                   variant="construction" 
                   className="h-24 flex-col"
+                  onClick={() => navigate('/blog-manager')}
+                >
+                  <span className="text-lg font-bold">Blog</span>
+                  <span className="text-sm">Content Management</span>
+                </Button>
+                <Button 
+                  variant="construction" 
+                  className="h-24 flex-col"
                   onClick={() => handleQuickAction('analytics')}
                 >
                   <span className="text-lg font-bold">Analytics</span>
