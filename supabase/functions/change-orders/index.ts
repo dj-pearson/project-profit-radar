@@ -50,7 +50,8 @@ serve(async (req) => {
 
     switch (method) {
       case "GET":
-        if (path === "list") {
+        // Default GET request or explicit list request
+        if (!path || path === "change-orders" || path === "list") {
           const projectId = url.searchParams.get('project_id');
           
           let query = supabaseClient
