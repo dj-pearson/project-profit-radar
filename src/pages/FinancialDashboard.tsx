@@ -92,13 +92,13 @@ const FinancialDashboard = () => {
     try {
       setLoadingData(true);
       
-      // Load job costs
+      // Load job costs with proper join
       const { data: jobCostsData, error: jobCostsError } = await supabase
         .from('job_costs')
         .select(`
           *,
           cost_codes(code, name),
-          projects(name)
+          projects!inner(name, company_id)
         `)
         .eq('projects.company_id', userProfile?.company_id)
         .order('date', { ascending: false })

@@ -1,0 +1,513 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  ArrowLeft, 
+  FileText,
+  DollarSign,
+  PlusCircle,
+  CheckCircle,
+  XCircle,
+  Clock
+} from 'lucide-react';
+
+interface Project {
+  id: string;
+  name: string;
+  client_name: string;
+  status: string;
+}
+
+interface ChangeOrder {
+  id: string;
+  project_id: string;
+  change_order_number: string;
+  title: string;
+  description: string;
+  amount: number;
+  status: string;
+  reason: string;
+  client_approved: boolean;
+  internal_approved: boolean;
+  client_approved_date: string;
+  internal_approved_date: string;
+  created_at: string;
+  projects: { name: string; client_name: string };
+}
+
+const ChangeOrders = () => {
+  const { user, userProfile, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  const [newOrder, setNewOrder] = useState({
+    project_id: '',
+    title: '',
+    description: '',
+    amount: 0,
+    reason: ''
+  });
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+    
+    if (!loading && user && userProfile && !userProfile.company_id) {
+      navigate('/setup');
+    }
+    
+    // Check role permissions
+    if (!loading && userProfile && !['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+      navigate('/dashboard');
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You don't have permission to access change orders."
+      });
+      return;
+    }
+    
+    if (userProfile?.company_id) {
+      loadData();
+    }
+  }, [user, userProfile, loading, navigate]);
+
+  const loadData = async () => {
+    try {
+      setLoadingOrders(true);
+      
+      // Load projects
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select('id, name, client_name, status')
+        .eq('company_id', userProfile?.company_id)
+        .order('name');
+
+      if (projectsError) throw projectsError;
+      setProjects(projectsData || []);
+
+      // Load change orders
+      const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
+        method: 'GET',
+        body: { path: 'list' }
+      });
+
+      if (ordersError) throw ordersError;
+      setChangeOrders(ordersData.changeOrders || []);
+
+    } catch (error: any) {
+      console.error('Error loading data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load change orders data"
+      });
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const handleCreateOrder = async () => {
+    if (!newOrder.project_id || !newOrder.title || !newOrder.amount) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields."
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
+        method: 'POST',
+        body: { 
+          path: 'create',
+          ...newOrder,
+          amount: Number(newOrder.amount)
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Change order created successfully"
+      });
+
+      setIsCreateDialogOpen(false);
+      setNewOrder({
+        project_id: '',
+        title: '',
+        description: '',
+        amount: 0,
+        reason: ''
+      });
+      
+      loadData();
+    } catch (error: any) {
+      console.error('Error creating change order:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create change order"
+      });
+    }
+  };
+
+  const handleApproval = async (orderId: string, approvalType: 'internal' | 'client', approved: boolean) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
+        method: 'POST',
+        body: { 
+          path: 'approve',
+          orderId,
+          approvalType,
+          approved
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Change order ${approved ? 'approved' : 'rejected'} successfully`
+      });
+      
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating approval:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update approval status"
+      });
+    }
+  };
+
+  const getStatusBadge = (order: ChangeOrder) => {
+    if (order.client_approved && order.internal_approved) {
+      return <Badge className="bg-green-500">Approved</Badge>;
+    } else if (!order.client_approved && !order.internal_approved) {
+      return <Badge variant="secondary">Pending</Badge>;
+    } else {
+      return <Badge variant="outline">Partial Approval</Badge>;
+    }
+  };
+
+  const filteredOrders = selectedProject 
+    ? changeOrders.filter(order => order.project_id === selectedProject)
+    : changeOrders;
+
+  if (loading || loadingOrders) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading change orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <Separator orientation="vertical" className="h-6" />
+              <div>
+                <h1 className="text-xl font-semibold">Change Orders</h1>
+                <p className="text-sm text-muted-foreground">Client approval workflows and project modifications</p>
+              </div>
+            </div>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create Change Order
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="flex-1">
+                <Label htmlFor="project-filter">Filter by Project</Label>
+                <Select value={selectedProject} onValueChange={setSelectedProject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All projects</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Change Orders List */}
+        <div className="space-y-6">
+          {filteredOrders.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Change Orders</h3>
+                <p className="text-muted-foreground mb-4">
+                  {selectedProject ? 'No change orders found for selected project' : 'No change orders have been created yet'}
+                </p>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create First Change Order
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6">
+              {filteredOrders.map((order) => (
+                <Card key={order.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center space-x-2">
+                          <FileText className="h-5 w-5 text-construction-blue" />
+                          <span>{order.title}</span>
+                          <Badge variant="outline">#{order.change_order_number}</Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          {order.projects?.name} - {order.projects?.client_name}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {getStatusBadge(order)}
+                        <Badge variant="outline" className="font-mono">
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          {order.amount.toLocaleString()}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Description</h4>
+                      <p className="text-sm text-muted-foreground">{order.description}</p>
+                    </div>
+                    
+                    {order.reason && (
+                      <div>
+                        <h4 className="font-medium mb-2">Reason</h4>
+                        <p className="text-sm text-muted-foreground">{order.reason}</p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center">
+                          Internal Approval
+                          {order.internal_approved ? (
+                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
+                          ) : (
+                            <Clock className="h-4 w-4 ml-2 text-yellow-500" />
+                          )}
+                        </h4>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Status: {order.internal_approved ? 'Approved' : 'Pending'}
+                          </p>
+                          {order.internal_approved_date && (
+                            <p className="text-xs text-muted-foreground">
+                              Approved: {new Date(order.internal_approved_date).toLocaleDateString()}
+                            </p>
+                          )}
+                          {!order.internal_approved && (
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleApproval(order.id, 'internal', true)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleApproval(order.id, 'internal', false)}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium mb-2 flex items-center">
+                          Client Approval
+                          {order.client_approved ? (
+                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
+                          ) : (
+                            <Clock className="h-4 w-4 ml-2 text-yellow-500" />
+                          )}
+                        </h4>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Status: {order.client_approved ? 'Approved' : 'Pending'}
+                          </p>
+                          {order.client_approved_date && (
+                            <p className="text-xs text-muted-foreground">
+                              Approved: {new Date(order.client_approved_date).toLocaleDateString()}
+                            </p>
+                          )}
+                          {!order.client_approved && (
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleApproval(order.id, 'client', true)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Client Approved
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleApproval(order.id, 'client', false)}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Client Rejected
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Create Change Order Dialog */}
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Create Change Order</DialogTitle>
+          <DialogDescription>
+            Create a new change order for project modifications that require client approval.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="project">Project *</Label>
+            <Select value={newOrder.project_id} onValueChange={(value) => setNewOrder({...newOrder, project_id: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name} - {project.client_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="title">Title *</Label>
+            <Input
+              id="title"
+              placeholder="Brief description of the change"
+              value={newOrder.title}
+              onChange={(e) => setNewOrder({...newOrder, title: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="amount">Amount *</Label>
+            <Input
+              id="amount"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={newOrder.amount}
+              onChange={(e) => setNewOrder({...newOrder, amount: Number(e.target.value)})}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Detailed description of the changes..."
+              value={newOrder.description}
+              onChange={(e) => setNewOrder({...newOrder, description: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="reason">Reason for Change</Label>
+            <Textarea
+              id="reason"
+              placeholder="Why is this change necessary?"
+              value={newOrder.reason}
+              onChange={(e) => setNewOrder({...newOrder, reason: e.target.value})}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateOrder}>
+              Create Change Order
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </div>
+  );
+};
+
+export default ChangeOrders;

@@ -151,6 +151,12 @@ const Dashboard = () => {
       case 'financial_reports':
         navigate('/financial');
         break;
+      case 'daily_reports':
+        navigate('/daily-reports');
+        break;
+      case 'change_orders':
+        navigate('/change-orders');
+        break;
       default:
         toast({
           title: "Feature Coming Soon",
