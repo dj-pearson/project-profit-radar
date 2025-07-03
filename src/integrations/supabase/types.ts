@@ -765,6 +765,10 @@ export type Database = {
         Args: { type_name: string }
         Returns: boolean
       }
+      get_smtp_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_user_company: {
         Args: { user_id: string }
         Returns: string
