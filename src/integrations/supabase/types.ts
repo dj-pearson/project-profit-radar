@@ -168,6 +168,62 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_flow_projections: {
+        Row: {
+          actual_balance: number | null
+          actual_expenses: number | null
+          actual_income: number | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          projected_balance: number | null
+          projected_expenses: number | null
+          projected_income: number | null
+          projection_date: string
+          updated_at: string
+        }
+        Insert: {
+          actual_balance?: number | null
+          actual_expenses?: number | null
+          actual_income?: number | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          projected_balance?: number | null
+          projected_expenses?: number | null
+          projected_income?: number | null
+          projection_date: string
+          updated_at?: string
+        }
+        Update: {
+          actual_balance?: number | null
+          actual_expenses?: number | null
+          actual_income?: number | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          projected_balance?: number | null
+          projected_expenses?: number | null
+          projected_income?: number | null
+          projection_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_cash_flow_projections_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       change_orders: {
         Row: {
           amount: number
@@ -423,6 +479,148 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractor_payments: {
+        Row: {
+          amount: number
+          company_id: string
+          contractor_id: string
+          cost_code_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_1099_reportable: boolean | null
+          payment_date: string
+          payment_method: string | null
+          project_id: string | null
+          reference_number: string | null
+          tax_year: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          contractor_id: string
+          cost_code_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_1099_reportable?: boolean | null
+          payment_date?: string
+          payment_method?: string | null
+          project_id?: string | null
+          reference_number?: string | null
+          tax_year?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          contractor_id?: string
+          cost_code_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_1099_reportable?: boolean | null
+          payment_date?: string
+          payment_method?: string | null
+          project_id?: string | null
+          reference_number?: string | null
+          tax_year?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_payments_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_payments_cost_code_id_fkey"
+            columns: ["cost_code_id"]
+            isOneToOne: false
+            referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_contractor_payments_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractors: {
+        Row: {
+          address: string | null
+          business_name: string
+          company_id: string
+          contact_person: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          phone: string | null
+          tax_id: string | null
+          tax_id_type: string | null
+          updated_at: string
+          w9_file_path: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          company_id: string
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          phone?: string | null
+          tax_id?: string | null
+          tax_id_type?: string | null
+          updated_at?: string
+          w9_file_path?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          company_id?: string
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          phone?: string | null
+          tax_id?: string | null
+          tax_id_type?: string | null
+          updated_at?: string
+          w9_file_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_contractors_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -1214,6 +1412,142 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_expense_categories_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          category_id: string | null
+          company_id: string
+          cost_code_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          expense_date: string
+          id: string
+          is_billable: boolean | null
+          payment_method: string | null
+          payment_status: string | null
+          project_id: string | null
+          receipt_file_path: string | null
+          tax_amount: number | null
+          updated_at: string
+          vendor_contact: string | null
+          vendor_name: string | null
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string | null
+          company_id: string
+          cost_code_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expense_date?: string
+          id?: string
+          is_billable?: boolean | null
+          payment_method?: string | null
+          payment_status?: string | null
+          project_id?: string | null
+          receipt_file_path?: string | null
+          tax_amount?: number | null
+          updated_at?: string
+          vendor_contact?: string | null
+          vendor_name?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string | null
+          company_id?: string
+          cost_code_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          is_billable?: boolean | null
+          payment_method?: string | null
+          payment_status?: string | null
+          project_id?: string | null
+          receipt_file_path?: string | null
+          tax_amount?: number | null
+          updated_at?: string
+          vendor_contact?: string | null
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_cost_code_id_fkey"
+            columns: ["cost_code_id"]
+            isOneToOne: false
+            referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_expenses_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_expenses_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           cost_code_id: string | null
@@ -1960,6 +2294,69 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_budgets: {
+        Row: {
+          budgeted_amount: number
+          cost_code_id: string
+          created_at: string
+          created_by: string | null
+          equipment_budget: number | null
+          id: string
+          labor_budget: number | null
+          material_budget: number | null
+          notes: string | null
+          other_budget: number | null
+          project_id: string
+          subcontractor_budget: number | null
+          updated_at: string
+        }
+        Insert: {
+          budgeted_amount?: number
+          cost_code_id: string
+          created_at?: string
+          created_by?: string | null
+          equipment_budget?: number | null
+          id?: string
+          labor_budget?: number | null
+          material_budget?: number | null
+          notes?: string | null
+          other_budget?: number | null
+          project_id: string
+          subcontractor_budget?: number | null
+          updated_at?: string
+        }
+        Update: {
+          budgeted_amount?: number
+          cost_code_id?: string
+          created_at?: string
+          created_by?: string | null
+          equipment_budget?: number | null
+          id?: string
+          labor_budget?: number | null
+          material_budget?: number | null
+          notes?: string | null
+          other_budget?: number | null
+          project_id?: string
+          subcontractor_budget?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budgets_cost_code_id_fkey"
+            columns: ["cost_code_id"]
+            isOneToOne: false
+            referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_budgets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
