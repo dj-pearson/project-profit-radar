@@ -62,7 +62,29 @@ This project is built with:
 
 ## How can I deploy this project?
 
+### Deploy to Lovable
 Simply open [Lovable](https://lovable.dev/projects/ed4c0428-159f-4b25-8136-15b119a75bd5) and click on Share -> Publish.
+
+### Deploy to Cloudflare Pages
+
+This project is optimized for Cloudflare Pages deployment:
+
+1. **Connect your repository** to Cloudflare Pages
+2. **Build settings**:
+   - Build command: `npm run build`
+   - Build output directory: `dist`
+   - Node.js version: `18` or higher
+3. **Environment variables** (if needed):
+   - Set any required environment variables in your Cloudflare Pages dashboard
+4. **Deploy**: Cloudflare will automatically build and deploy your app
+
+The project includes:
+- `_headers` file for security headers and caching
+- `_redirects` file for SPA routing
+- `wrangler.toml` for Cloudflare configuration
+- Optimized build process using npm instead of Bun
+
+For custom domains, configure them in your Cloudflare Pages dashboard.
 
 ## Can I connect a custom domain to my Lovable project?
 

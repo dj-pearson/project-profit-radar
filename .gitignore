@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Lock files (keep only npm)
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +27,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cloudflare
+.wrangler
+functions/api/_worker.js
+functions/api/_worker.js.map
