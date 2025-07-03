@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Clock, CreditCard, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import TrialConversion from './TrialConversion';
 
 const TrialStatusBanner = () => {
   const [trialData, setTrialData] = useState<{
@@ -14,6 +16,7 @@ const TrialStatusBanner = () => {
     isGracePeriod?: boolean;
     graceDaysLeft?: number;
   } | null>(null);
+  const [showConversionModal, setShowConversionModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -67,31 +70,16 @@ const TrialStatusBanner = () => {
     }
   };
 
-  const handleUpgrade = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
-        body: {
-          subscription_tier: 'professional',
-          billing_period: 'monthly'
-        }
-      });
+  const handleUpgrade = () => {
+    setShowConversionModal(true);
+  };
 
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      toast({
-        title: "Checkout Error",
-        description: "Failed to start checkout process",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleConversionStarted = () => {
+    setShowConversionModal(false);
+    // Refresh trial status after conversion starts
+    setTimeout(() => {
+      checkTrialStatus();
+    }, 1000);
   };
 
   if (!trialData || trialData.subscriptionStatus === 'active') {
@@ -100,113 +88,140 @@ const TrialStatusBanner = () => {
 
   const { daysLeft, isExpired, isGracePeriod, graceDaysLeft, subscriptionStatus } = trialData;
 
+  // Component for the modal to avoid repetition
+  const TrialConversionModal = () => (
+    <Dialog open={showConversionModal} onOpenChange={setShowConversionModal}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Upgrade Your Account</DialogTitle>
+        </DialogHeader>
+        <TrialConversion 
+          trialData={trialData}
+          onConversionStarted={handleConversionStarted}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+
   // Show suspended status
   if (subscriptionStatus === 'suspended') {
     return (
-      <Card className="border-destructive bg-destructive/10 mb-6">
-        <CardContent className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <div>
-              <h3 className="font-semibold text-destructive">Account Suspended</h3>
-              <p className="text-sm text-muted-foreground">
-                Your trial and grace period have expired. Upgrade to reactivate your account.
-              </p>
+      <>
+        <Card className="border-destructive bg-destructive/10 mb-6">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <div>
+                <h3 className="font-semibold text-destructive">Account Suspended</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your trial and grace period have expired. Upgrade to reactivate your account.
+                </p>
+              </div>
             </div>
-          </div>
-          <Button 
-            onClick={handleUpgrade}
-            disabled={loading}
-            className="bg-destructive hover:bg-destructive/90"
-          >
-            <CreditCard className="mr-2 h-4 w-4" />
-            {loading ? 'Processing...' : 'Reactivate Account'}
-          </Button>
-        </CardContent>
-      </Card>
+            <Button 
+              onClick={handleUpgrade}
+              disabled={loading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              {loading ? 'Processing...' : 'Reactivate Account'}
+            </Button>
+          </CardContent>
+        </Card>
+        <TrialConversionModal />
+      </>
     );
   }
 
   // Show grace period status
   if (isGracePeriod) {
     return (
-      <Card className="border-amber-500 bg-amber-50 mb-6">
-        <CardContent className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <Clock className="h-5 w-5 text-amber-600" />
-            <div>
-              <h3 className="font-semibold text-amber-700">Grace Period Active</h3>
-              <p className="text-sm text-amber-600">
-                {graceDaysLeft} day{graceDaysLeft !== 1 ? 's' : ''} left in your grace period. 
-                Limited features available.
-              </p>
+      <>
+        <Card className="border-amber-500 bg-amber-50 mb-6">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-3">
+              <Clock className="h-5 w-5 text-amber-600" />
+              <div>
+                <h3 className="font-semibold text-amber-700">Grace Period Active</h3>
+                <p className="text-sm text-amber-600">
+                  {graceDaysLeft} day{graceDaysLeft !== 1 ? 's' : ''} left in your grace period. 
+                  Limited features available.
+                </p>
+              </div>
             </div>
-          </div>
-          <Button 
-            onClick={handleUpgrade}
-            disabled={loading}
-            className="bg-amber-600 hover:bg-amber-700 text-white"
-          >
-            <CreditCard className="mr-2 h-4 w-4" />
-            {loading ? 'Processing...' : 'Upgrade Now'}
-          </Button>
-        </CardContent>
-      </Card>
+            <Button 
+              onClick={handleUpgrade}
+              disabled={loading}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              {loading ? 'Processing...' : 'Upgrade Now'}
+            </Button>
+          </CardContent>
+        </Card>
+        <TrialConversionModal />
+      </>
     );
   }
 
   // Show expired trial (before grace period)
   if (isExpired) {
     return (
-      <Card className="border-destructive bg-destructive/5 mb-6">
-        <CardContent className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <div>
-              <h3 className="font-semibold text-destructive">Trial Expired</h3>
-              <p className="text-sm text-muted-foreground">
-                Your trial has ended. Upgrade now to continue using all features.
-              </p>
+      <>
+        <Card className="border-destructive bg-destructive/5 mb-6">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <div>
+                <h3 className="font-semibold text-destructive">Trial Expired</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your trial has ended. Upgrade now to continue using all features.
+                </p>
+              </div>
             </div>
-          </div>
-          <Button 
-            onClick={handleUpgrade}
-            disabled={loading}
-            className="bg-destructive hover:bg-destructive/90"
-          >
-            <CreditCard className="mr-2 h-4 w-4" />
-            {loading ? 'Processing...' : 'Upgrade Now'}
-          </Button>
-        </CardContent>
-      </Card>
+            <Button 
+              onClick={handleUpgrade}
+              disabled={loading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              {loading ? 'Processing...' : 'Upgrade Now'}
+            </Button>
+          </CardContent>
+        </Card>
+        <TrialConversionModal />
+      </>
     );
   }
 
   if (daysLeft <= 7) {
     return (
-      <Card className="border-construction-orange bg-construction-orange/5 mb-6">
-        <CardContent className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <Clock className="h-5 w-5 text-construction-orange" />
-            <div>
-              <h3 className="font-semibold text-construction-orange">
-                Trial Ending Soon
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {daysLeft} day{daysLeft !== 1 ? 's' : ''} left in your free trial
-              </p>
+      <>
+        <Card className="border-construction-orange bg-construction-orange/5 mb-6">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-3">
+              <Clock className="h-5 w-5 text-construction-orange" />
+              <div>
+                <h3 className="font-semibold text-construction-orange">
+                  Trial Ending Soon
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {daysLeft} day{daysLeft !== 1 ? 's' : ''} left in your free trial
+                </p>
+              </div>
             </div>
-          </div>
-          <Button 
-            onClick={handleUpgrade}
-            disabled={loading}
-            variant="construction"
-          >
-            <CreditCard className="mr-2 h-4 w-4" />
-            {loading ? 'Processing...' : 'Upgrade Now'}
-          </Button>
-        </CardContent>
-      </Card>
+            <Button 
+              onClick={handleUpgrade}
+              disabled={loading}
+              variant="construction"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              {loading ? 'Processing...' : 'Upgrade Now'}
+            </Button>
+          </CardContent>
+        </Card>
+        <TrialConversionModal />
+      </>
     );
   }
 
