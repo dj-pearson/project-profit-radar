@@ -58,9 +58,11 @@ const Footer = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
             {/* Company Info */}
             <div className="lg:col-span-1">
-              <div className="text-2xl font-bold mb-4">
-                Build<span className="text-construction-orange">Desk</span>
-              </div>
+              <img 
+                src="/BuildDeskLogo.png" 
+                alt="BuildDesk" 
+                className="h-8 w-auto mb-4"
+              />
               <p className="text-white/70 mb-6">
                 Construction management software built specifically for growing SMB contractors.
               </p>

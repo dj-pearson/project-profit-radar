@@ -19,9 +19,11 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="text-2xl font-bold text-construction-dark">
-              Build<span className="text-construction-orange">Desk</span>
-            </div>
+            <img 
+              src="/BuildDeskLogo.png" 
+              alt="BuildDesk" 
+              className="h-8 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
