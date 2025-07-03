@@ -146,11 +146,9 @@ export const AppSidebar = () => {
       <SidebarHeader className="p-2">
         <div className="flex items-center justify-between">
           <SidebarTrigger />
-          {!collapsed && (
-            <div className="flex items-center space-x-2">
-              <ThemeToggle />
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarHeader>
       

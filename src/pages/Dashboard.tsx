@@ -20,6 +20,7 @@ import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/Respons
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
   Building2, 
   DollarSign, 
@@ -227,6 +228,7 @@ const Dashboard = () => {
                 <span className="text-sm text-muted-foreground">
                   Welcome, {userProfile?.first_name || user.email}
                 </span>
+                <ThemeToggle />
                 <Button variant="outline" onClick={signOut}>
                   Sign Out
                 </Button>
