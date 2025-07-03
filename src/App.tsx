@@ -41,6 +41,11 @@ import MaterialTracking from "./pages/MaterialTracking";
 import EquipmentTracking from "./pages/EquipmentTracking";
 import CrewScheduling from "./pages/CrewScheduling";
 import NotFound from "./pages/NotFound";
+import CustomerSupportChat from "./components/support/CustomerSupportChat";
+import KnowledgeBase from "./components/knowledge/KnowledgeBase";
+import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
+import EmailMarketingIntegration from "./components/marketing/EmailMarketingIntegration";
+import FeatureAnnouncementSystem from "./components/announcements/FeatureAnnouncementSystem";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +89,11 @@ const AppContent = () => {
       <Route path="/materials" element={<RouteGuard routePath="/materials"><MaterialTracking /></RouteGuard>} />
       <Route path="/equipment" element={<RouteGuard routePath="/equipment"><EquipmentTracking /></RouteGuard>} />
       <Route path="/crew-scheduling" element={<RouteGuard routePath="/crew-scheduling"><CrewScheduling /></RouteGuard>} />
+      <Route path="/support" element={<RouteGuard routePath="/support"><CustomerSupportChat /></RouteGuard>} />
+      <Route path="/knowledge-base" element={<KnowledgeBase />} />
+      <Route path="/tutorials" element={<VideoTutorialSystem />} />
+      <Route path="/email-marketing" element={<RouteGuard routePath="/email-marketing"><EmailMarketingIntegration /></RouteGuard>} />
+      <Route path="/announcements" element={<RouteGuard routePath="/announcements"><FeatureAnnouncementSystem /></RouteGuard>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -99,6 +109,7 @@ const App = () => (
         <BrowserRouter>
           <AppContent />
         </BrowserRouter>
+        <CustomerSupportChat />
       </TooltipProvider>
     </AuthProvider>
     </ThemeProvider>
