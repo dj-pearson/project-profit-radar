@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroImage from "../assets/hero-dashboard.jpg";
+import InteractiveDashboard from "@/components/InteractiveDashboard";
 
 const Hero = () => {
   return (
@@ -29,10 +29,6 @@ const Hero = () => {
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button variant="outline" className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white">
-                <Play className="mr-2 h-4 w-4" />
-                Watch 2-Minute Demo
-              </Button>
             </div>
             
             {/* Trial Info */}
@@ -41,17 +37,9 @@ const Hero = () => {
             </p>
           </div>
           
-          {/* Hero Image */}
+          {/* Interactive Dashboard */}
           <div className="relative">
-            <div className="relative z-10">
-              <img 
-                src={heroImage} 
-                alt="Construction management dashboard showing project timelines and cost tracking" 
-                className="rounded-lg shadow-2xl"
-              />
-            </div>
-            {/* Background decoration */}
-            <div className="absolute -top-4 -right-4 w-full h-full bg-construction-orange/20 rounded-lg -z-10"></div>
+            <InteractiveDashboard />
           </div>
         </div>
       </div>
