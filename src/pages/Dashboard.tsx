@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { ProjectCard } from '@/components/dashboard/ProjectCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
@@ -208,27 +210,32 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-construction-blue">Build Desk</h1>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background flex w-full">
+        <AppSidebar />
+        
+        <div className="flex-1">
+          {/* Header */}
+          <nav className="border-b bg-white">
+            <div className="flex justify-between h-16 px-4">
+              <div className="flex items-center">
+                <SidebarTrigger className="mr-4" />
+                <h1 className="text-2xl font-bold text-construction-blue">Build Desk</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-muted-foreground">
+                  Welcome, {userProfile?.first_name || user.email}
+                </span>
+                <Button variant="outline" onClick={signOut}>
+                  Sign Out
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
-                Welcome, {userProfile?.first_name || user.email}
-              </span>
-              <Button variant="outline" onClick={signOut}>
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+          </nav>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <TrialStatusBanner />
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <TrialStatusBanner />
         
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -460,14 +467,16 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
+          </div>
+        </div>
+        
+        {/* Project Wizard */}
+        <ProjectWizard 
+          open={projectWizardOpen} 
+          onOpenChange={setProjectWizardOpen} 
+        />
       </div>
-      
-      {/* Project Wizard */}
-      <ProjectWizard 
-        open={projectWizardOpen} 
-        onOpenChange={setProjectWizardOpen} 
-      />
-    </div>
+    </SidebarProvider>
   );
 };
 
