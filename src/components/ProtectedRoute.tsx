@@ -70,7 +70,6 @@ interface RouteGuardProps {
 
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) => {
   const { userProfile, loading } = useAuth();
-  const { canAccessRoute } = usePermissions();
 
   if (loading) {
     return (
@@ -84,6 +83,14 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) =
     return <Navigate to="/auth" replace />;
   }
 
+  // Root admin has access to everything - no restrictions
+  if (userProfile.role === 'root_admin') {
+    return <>{children}</>;
+  }
+
+  // For other roles, check permissions
+  const { canAccessRoute } = usePermissions();
+  
   if (!canAccessRoute(routePath)) {
     return (
       <div className="container mx-auto px-4 py-8">
