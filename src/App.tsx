@@ -19,6 +19,8 @@ import ChangeOrders from "./pages/ChangeOrders";
 import ClientPortal from "./pages/ClientPortal";
 import Reports from "./pages/Reports";
 import BlogManager from "./pages/BlogManager";
+import Resources from "./pages/Resources";
+import ROICalculator from "./pages/ROICalculator";
 import Companies from "./pages/admin/Companies";
 import Users from "./pages/admin/Users";
 import Billing from "./pages/admin/Billing";
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/admin/billing" element={<Billing />} />
             <Route path="/admin/analytics" element={<Analytics />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/roi-calculator" element={<ROICalculator />} />
             <Route path="/client-portal" element={<ClientPortal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

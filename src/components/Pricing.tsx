@@ -2,6 +2,7 @@ import { Check, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const Pricing = () => {
   const plans = [
@@ -54,7 +55,7 @@ const Pricing = () => {
   ];
 
   return (
-    <section className="py-20 bg-background">
+    <section id="pricing" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -107,8 +108,9 @@ const Pricing = () => {
                 <Button 
                   variant={plan.isPopular ? "hero" : "construction"} 
                   className="w-full"
+                  asChild
                 >
-                  Start Free Trial
+                  <Link to="/auth">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -141,9 +143,11 @@ const Pricing = () => {
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
             See how much you could save in administrative costs and project overruns with Build Desk
           </p>
-          <Button variant="outline" className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white">
-            <Calculator className="mr-2 h-4 w-4" />
-            ROI Calculator
+          <Button variant="outline" className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white" asChild>
+            <Link to="/roi-calculator">
+              <Calculator className="mr-2 h-4 w-4" />
+              ROI Calculator
+            </Link>
           </Button>
         </div>
       </div>

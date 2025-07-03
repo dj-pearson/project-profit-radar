@@ -7,10 +7,10 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "Industries", href: "#industries" },
-    { name: "Resources", href: "#resources" }
+    { name: "Features", href: "#features", isSection: true },
+    { name: "Pricing", href: "#pricing", isSection: true },
+    { name: "Industries", href: "#industries", isSection: true },
+    { name: "Resources", href: "/resources", isSection: false }
   ];
 
   return (
@@ -27,13 +27,23 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-construction-dark hover:text-construction-orange transition-colors font-medium"
-              >
-                {item.name}
-              </a>
+              item.isSection ? (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium"
+                >
+                  {item.name}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -61,14 +71,25 @@ const Header = () => {
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
+                item.isSection ? (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="text-construction-dark hover:text-construction-orange transition-colors font-medium"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="text-construction-dark hover:text-construction-orange transition-colors font-medium"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                )
               ))}
               <div className="flex flex-col space-y-2 pt-4">
                 <Button variant="ghost" className="text-construction-dark hover:text-construction-orange justify-start" asChild>

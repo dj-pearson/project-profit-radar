@@ -9,6 +9,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Features = () => {
   const features = [
@@ -57,7 +58,7 @@ const Features = () => {
   ];
 
   return (
-    <section className="py-20 bg-secondary/30">
+    <section id="features" className="py-20 bg-secondary/30">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -106,9 +107,11 @@ const Features = () => {
             Watch our 2-minute demo or start your free trial to experience the difference
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" className="bg-white text-construction-blue hover:bg-white/90">
-              Start Free Trial
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="hero" className="bg-white text-construction-blue hover:bg-white/90" asChild>
+              <Link to="/auth">
+                Start Free Trial
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
             <Button variant="outline" className="border-white text-white hover:bg-white hover:text-construction-blue">
               Watch Demo
