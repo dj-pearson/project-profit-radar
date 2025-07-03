@@ -19,6 +19,9 @@ Project creation wizard with templates
 Real-time job costing tracking
 Change order management workflow
 Material & equipment tracking
+
+Done
+
 Crew scheduling and dispatch
 Daily progress reports with photos
 QuickBooks integration (2-way sync)
