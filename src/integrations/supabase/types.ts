@@ -818,6 +818,57 @@ export type Database = {
           },
         ]
       }
+      ddos_detection_logs: {
+        Row: {
+          attack_type: string
+          confidence_score: number | null
+          created_at: string
+          detection_method: string
+          endpoint_targets: string[] | null
+          id: string
+          mitigation_actions: Json | null
+          request_count: number
+          request_patterns: Json | null
+          resolved_at: string | null
+          severity: string
+          source_ip: unknown
+          time_window_seconds: number
+          user_agent: string | null
+        }
+        Insert: {
+          attack_type: string
+          confidence_score?: number | null
+          created_at?: string
+          detection_method: string
+          endpoint_targets?: string[] | null
+          id?: string
+          mitigation_actions?: Json | null
+          request_count: number
+          request_patterns?: Json | null
+          resolved_at?: string | null
+          severity: string
+          source_ip: unknown
+          time_window_seconds: number
+          user_agent?: string | null
+        }
+        Update: {
+          attack_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          detection_method?: string
+          endpoint_targets?: string[] | null
+          id?: string
+          mitigation_actions?: Json | null
+          request_count?: number
+          request_patterns?: Json | null
+          resolved_at?: string | null
+          severity?: string
+          source_ip?: unknown
+          time_window_seconds?: number
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       document_categories: {
         Row: {
           company_id: string
@@ -950,6 +1001,56 @@ export type Database = {
           {
             foreignKeyName: "documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ip_access_control: {
+        Row: {
+          access_type: string
+          auto_generated: boolean | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          ip_address: unknown
+          ip_range: unknown | null
+          is_active: boolean | null
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_type: string
+          auto_generated?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: unknown
+          ip_range?: unknown | null
+          is_active?: boolean | null
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_type?: string
+          auto_generated?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          ip_range?: unknown | null
+          is_active?: boolean | null
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ip_access_control_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
@@ -1434,6 +1535,158 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_limit_rules: {
+        Row: {
+          block_duration_seconds: number | null
+          created_at: string
+          endpoint_pattern: string
+          id: string
+          is_active: boolean | null
+          max_requests: number
+          method: string | null
+          priority: number | null
+          rule_name: string
+          rule_type: string | null
+          time_window_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          block_duration_seconds?: number | null
+          created_at?: string
+          endpoint_pattern: string
+          id?: string
+          is_active?: boolean | null
+          max_requests: number
+          method?: string | null
+          priority?: number | null
+          rule_name: string
+          rule_type?: string | null
+          time_window_seconds: number
+          updated_at?: string
+        }
+        Update: {
+          block_duration_seconds?: number | null
+          created_at?: string
+          endpoint_pattern?: string
+          id?: string
+          is_active?: boolean | null
+          max_requests?: number
+          method?: string | null
+          priority?: number | null
+          rule_name?: string
+          rule_type?: string | null
+          time_window_seconds?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_limit_state: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          identifier_type: string
+          is_blocked: boolean | null
+          last_request: string
+          method: string
+          request_count: number | null
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          identifier_type: string
+          is_blocked?: boolean | null
+          last_request?: string
+          method: string
+          request_count?: number | null
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          is_blocked?: boolean | null
+          last_request?: string
+          method?: string
+          request_count?: number | null
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      rate_limit_violations: {
+        Row: {
+          action_taken: string
+          block_duration_seconds: number | null
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+          identifier_type: string
+          ip_address: unknown | null
+          limit_exceeded_by: number
+          method: string
+          referrer: string | null
+          requests_made: number
+          rule_id: string | null
+          time_window_seconds: number
+          user_agent: string | null
+        }
+        Insert: {
+          action_taken: string
+          block_duration_seconds?: number | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+          identifier_type: string
+          ip_address?: unknown | null
+          limit_exceeded_by: number
+          method: string
+          referrer?: string | null
+          requests_made: number
+          rule_id?: string | null
+          time_window_seconds: number
+          user_agent?: string | null
+        }
+        Update: {
+          action_taken?: string
+          block_duration_seconds?: number | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          ip_address?: unknown | null
+          limit_exceeded_by?: number
+          method?: string
+          referrer?: string | null
+          requests_made?: number
+          rule_id?: string | null
+          time_window_seconds?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limit_violations_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "rate_limit_rules"
             referencedColumns: ["id"]
           },
         ]
