@@ -8,19 +8,27 @@ import Pricing from "@/components/Pricing";
 import Implementation from "@/components/Implementation";
 import BlogSection from "@/components/BlogSection";
 import Footer from "@/components/Footer";
+import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SkipLink href="#main-content">Skip to main content</SkipLink>
+      <SkipLink href="#navigation">Skip to navigation</SkipLink>
+      
       <Header />
-      <Hero />
-      <SocialProof />
-      <ProblemSolution />
-      <Features />
-      <Industries />
-      <Pricing />
-      <Implementation />
-      <BlogSection />
+      
+      <main id="main-content" role="main">
+        <Hero />
+        <SocialProof />
+        <ProblemSolution />
+        <Features />
+        <Industries />
+        <Pricing />
+        <Implementation />
+        <BlogSection />
+      </main>
+      
       <Footer />
     </div>
   );
