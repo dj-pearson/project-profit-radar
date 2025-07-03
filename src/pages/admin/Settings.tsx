@@ -408,7 +408,7 @@ const AdminSettings = () => {
                 <div className="p-4 border rounded-lg">
                   <h4 className="font-medium mb-2">OpenAI Integration</h4>
                   <p className="text-sm text-muted-foreground mb-2">
-                    {process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}
+                    API configuration managed via Supabase secrets
                   </p>
                   <Button variant="outline" size="sm">
                     Manage API Keys
