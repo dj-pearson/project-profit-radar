@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,8 @@ import {
   Plus,
   TrendingUp,
   Clock,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +39,7 @@ const Safety = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -130,16 +133,34 @@ const Safety = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-construction-dark">Safety & OSHA Compliance</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage safety incidents, checklists, training, and compliance deadlines
-          </p>
+      <div className="border-b bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-16">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="mr-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <h1 className="text-xl font-semibold">Safety & OSHA Compliance</h1>
+          </div>
         </div>
-        <div className="flex gap-3">
+      </div>
+      
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground mt-2">
+              Manage safety incidents, checklists, training, and compliance deadlines
+            </p>
+          </div>
+          <div className="flex gap-3">
           <Button variant="outline">
             <FileText className="mr-2 h-4 w-4" />
             Generate OSHA 300 Log
@@ -299,6 +320,7 @@ const Safety = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };

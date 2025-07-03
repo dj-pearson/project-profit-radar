@@ -495,6 +495,347 @@ export type Database = {
           },
         ]
       }
+      equipment: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          current_value: number | null
+          description: string | null
+          equipment_type: string
+          id: string
+          is_active: boolean | null
+          last_maintenance_date: string | null
+          location: string | null
+          maintenance_schedule: string | null
+          model: string | null
+          name: string
+          next_maintenance_date: string | null
+          purchase_cost: number | null
+          purchase_date: string | null
+          serial_number: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          current_value?: number | null
+          description?: string | null
+          equipment_type: string
+          id?: string
+          is_active?: boolean | null
+          last_maintenance_date?: string | null
+          location?: string | null
+          maintenance_schedule?: string | null
+          model?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_value?: number | null
+          description?: string | null
+          equipment_type?: string
+          id?: string
+          is_active?: boolean | null
+          last_maintenance_date?: string | null
+          location?: string | null
+          maintenance_schedule?: string | null
+          model?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_usage: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          equipment_id: string
+          hourly_rate: number | null
+          hours_used: number | null
+          id: string
+          notes: string | null
+          operator_id: string | null
+          project_id: string
+          start_date: string
+          total_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          equipment_id: string
+          hourly_rate?: number | null
+          hours_used?: number | null
+          id?: string
+          notes?: string | null
+          operator_id?: string | null
+          project_id: string
+          start_date: string
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          equipment_id?: string
+          hourly_rate?: number | null
+          hours_used?: number | null
+          id?: string
+          notes?: string | null
+          operator_id?: string | null
+          project_id?: string
+          start_date?: string
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_usage_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_line_items: {
+        Row: {
+          cost_code_id: string | null
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          project_phase_id: string | null
+          quantity: number
+          total_price: number | null
+          unit_price: number
+        }
+        Insert: {
+          cost_code_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          project_phase_id?: string | null
+          quantity?: number
+          total_price?: number | null
+          unit_price: number
+        }
+        Update: {
+          cost_code_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          project_phase_id?: string | null
+          quantity?: number
+          total_price?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_cost_code_id_fkey"
+            columns: ["cost_code_id"]
+            isOneToOne: false
+            referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_project_phase_id_fkey"
+            columns: ["project_phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_due: number | null
+          amount_paid: number | null
+          client_email: string | null
+          client_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          discount_amount: number | null
+          due_date: string
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          paid_at: string | null
+          project_id: string | null
+          sent_at: string | null
+          status: string
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          subtotal: number
+          tax_amount: number | null
+          tax_rate: number | null
+          terms: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          amount_due?: number | null
+          amount_paid?: number | null
+          client_email?: string | null
+          client_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number | null
+          due_date: string
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          paid_at?: string | null
+          project_id?: string | null
+          sent_at?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          amount_due?: number | null
+          amount_paid?: number | null
+          client_email?: string | null
+          client_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number | null
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          paid_at?: string | null
+          project_id?: string | null
+          sent_at?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ip_access_control: {
+        Row: {
+          access_type: string
+          auto_generated: boolean | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          ip_address: unknown
+          ip_range: unknown | null
+          is_active: boolean | null
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_type: string
+          auto_generated?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: unknown
+          ip_range?: unknown | null
+          is_active?: boolean | null
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_type?: string
+          auto_generated?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          ip_range?: unknown | null
+          is_active?: boolean | null
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ip_access_control_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_costs: {
         Row: {
           cost_code_id: string
@@ -557,6 +898,474 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_usage: {
+        Row: {
+          created_at: string
+          date_used: string
+          id: string
+          material_id: string
+          notes: string | null
+          project_id: string
+          quantity_used: number
+          total_cost: number
+          unit_cost: number
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_used?: string
+          id?: string
+          material_id: string
+          notes?: string | null
+          project_id: string
+          quantity_used: number
+          total_cost: number
+          unit_cost: number
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_used?: string
+          id?: string
+          material_id?: string
+          notes?: string | null
+          project_id?: string
+          quantity_used?: number
+          total_cost?: number
+          unit_cost?: number
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_usage_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          category: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_ordered_date: string | null
+          location: string | null
+          material_code: string | null
+          minimum_stock_level: number | null
+          name: string
+          project_id: string | null
+          quantity_available: number | null
+          supplier_contact: string | null
+          supplier_name: string | null
+          unit: string
+          unit_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_ordered_date?: string | null
+          location?: string | null
+          material_code?: string | null
+          minimum_stock_level?: number | null
+          name: string
+          project_id?: string | null
+          quantity_available?: number | null
+          supplier_contact?: string | null
+          supplier_name?: string | null
+          unit?: string
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_ordered_date?: string | null
+          location?: string | null
+          material_code?: string | null
+          minimum_stock_level?: number | null
+          name?: string
+          project_id?: string | null
+          quantity_available?: number | null
+          supplier_contact?: string | null
+          supplier_name?: string | null
+          unit?: string
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      osha_compliance_deadlines: {
+        Row: {
+          company_id: string
+          completed_by: string | null
+          completed_date: string | null
+          created_at: string
+          created_by: string | null
+          deadline_type: string
+          description: string | null
+          due_date: string
+          id: string
+          notes: string | null
+          notification_days: number | null
+          priority: string | null
+          recurrence_interval: string | null
+          recurring: boolean | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completed_by?: string | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_type: string
+          description?: string | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          notification_days?: number | null
+          priority?: string | null
+          recurrence_interval?: string | null
+          recurring?: boolean | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completed_by?: string | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_type?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          notification_days?: number | null
+          priority?: string | null
+          recurrence_interval?: string | null
+          recurring?: boolean | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "osha_compliance_deadlines_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_failures: {
+        Row: {
+          attempt_count: number | null
+          created_at: string
+          dunning_status: string | null
+          failure_reason: string | null
+          id: string
+          max_retries: number | null
+          next_retry_at: string | null
+          resolved_at: string | null
+          stripe_invoice_id: string
+          subscriber_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string
+          dunning_status?: string | null
+          failure_reason?: string | null
+          id?: string
+          max_retries?: number | null
+          next_retry_at?: string | null
+          resolved_at?: string | null
+          stripe_invoice_id: string
+          subscriber_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string
+          dunning_status?: string | null
+          failure_reason?: string | null
+          id?: string
+          max_retries?: number | null
+          next_retry_at?: string | null
+          resolved_at?: string | null
+          stripe_invoice_id?: string
+          subscriber_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_failures_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      privacy_impact_assessments: {
+        Row: {
+          approved_by: string | null
+          assessment_name: string
+          company_id: string
+          conducted_by: string
+          consultation_details: string | null
+          consultation_required: boolean | null
+          created_at: string
+          description: string
+          dpo_opinion: string | null
+          id: string
+          mitigation_measures: Json
+          necessity_justification: string
+          processing_activity_id: string | null
+          proportionality_assessment: string
+          residual_risks: Json | null
+          review_date: string | null
+          reviewed_by: string | null
+          risks_identified: Json
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          assessment_name: string
+          company_id: string
+          conducted_by: string
+          consultation_details?: string | null
+          consultation_required?: boolean | null
+          created_at?: string
+          description: string
+          dpo_opinion?: string | null
+          id?: string
+          mitigation_measures: Json
+          necessity_justification: string
+          processing_activity_id?: string | null
+          proportionality_assessment: string
+          residual_risks?: Json | null
+          review_date?: string | null
+          reviewed_by?: string | null
+          risks_identified: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          assessment_name?: string
+          company_id?: string
+          conducted_by?: string
+          consultation_details?: string | null
+          consultation_required?: boolean | null
+          created_at?: string
+          description?: string
+          dpo_opinion?: string | null
+          id?: string
+          mitigation_measures?: Json
+          necessity_justification?: string
+          processing_activity_id?: string | null
+          proportionality_assessment?: string
+          residual_risks?: Json | null
+          review_date?: string | null
+          reviewed_by?: string | null
+          risks_identified?: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_impact_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_processing_activity_id_fkey"
+            columns: ["processing_activity_id"]
+            isOneToOne: false
+            referencedRelation: "processing_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processing_activities: {
+        Row: {
+          activity_name: string
+          company_id: string
+          controller_details: Json
+          created_at: string
+          created_by: string
+          data_subjects_categories: string[]
+          dpia_reference: string | null
+          dpia_required: boolean | null
+          id: string
+          is_active: boolean | null
+          last_reviewed: string | null
+          lawful_basis: string[]
+          personal_data_categories: string[]
+          processor_details: Json | null
+          purposes: string[]
+          recipients: Json | null
+          retention_schedule: string
+          risk_assessment: Json | null
+          security_measures: Json
+          special_categories: string[] | null
+          third_country_transfers: Json | null
+          updated_at: string
+        }
+        Insert: {
+          activity_name: string
+          company_id: string
+          controller_details: Json
+          created_at?: string
+          created_by: string
+          data_subjects_categories: string[]
+          dpia_reference?: string | null
+          dpia_required?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          last_reviewed?: string | null
+          lawful_basis: string[]
+          personal_data_categories: string[]
+          processor_details?: Json | null
+          purposes: string[]
+          recipients?: Json | null
+          retention_schedule: string
+          risk_assessment?: Json | null
+          security_measures: Json
+          special_categories?: string[] | null
+          third_country_transfers?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          activity_name?: string
+          company_id?: string
+          controller_details?: Json
+          created_at?: string
+          created_by?: string
+          data_subjects_categories?: string[]
+          dpia_reference?: string | null
+          dpia_required?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          last_reviewed?: string | null
+          lawful_basis?: string[]
+          personal_data_categories?: string[]
+          processor_details?: Json | null
+          purposes?: string[]
+          recipients?: Json | null
+          retention_schedule?: string
+          risk_assessment?: Json | null
+          security_measures?: Json
+          special_categories?: string[] | null
+          third_country_transfers?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processing_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]

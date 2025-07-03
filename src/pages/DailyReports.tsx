@@ -107,8 +107,7 @@ const DailyReports = () => {
 
       // Load daily reports
       const { data: reportsData, error: reportsError } = await supabase.functions.invoke('daily-reports', {
-        method: 'GET',
-        body: { path: 'list' }
+        method: 'GET'
       });
 
       if (reportsError) throw reportsError;
@@ -219,6 +218,112 @@ const DailyReports = () => {
                   Create Report
                 </Button>
               </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create Daily Report</DialogTitle>
+                  <DialogDescription>
+                    Record daily progress, crew activity, and any issues for the project.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="project">Project *</Label>
+                    <Select value={newReport.project_id} onValueChange={(value) => setNewReport({...newReport, project_id: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="work_performed">Work Performed *</Label>
+                    <Textarea
+                      id="work_performed"
+                      placeholder="Describe the work completed today..."
+                      value={newReport.work_performed}
+                      onChange={(e) => setNewReport({...newReport, work_performed: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="crew_count">Crew Count</Label>
+                      <Input
+                        id="crew_count"
+                        type="number"
+                        min="0"
+                        value={newReport.crew_count}
+                        onChange={(e) => setNewReport({...newReport, crew_count: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="weather_conditions">Weather Conditions</Label>
+                      <Input
+                        id="weather_conditions"
+                        placeholder="e.g., Sunny, 75°F"
+                        value={newReport.weather_conditions}
+                        onChange={(e) => setNewReport({...newReport, weather_conditions: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="materials_delivered">Materials Delivered</Label>
+                    <Textarea
+                      id="materials_delivered"
+                      placeholder="List materials delivered today..."
+                      value={newReport.materials_delivered}
+                      onChange={(e) => setNewReport({...newReport, materials_delivered: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="equipment_used">Equipment Used</Label>
+                    <Textarea
+                      id="equipment_used"
+                      placeholder="List equipment used today..."
+                      value={newReport.equipment_used}
+                      onChange={(e) => setNewReport({...newReport, equipment_used: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="delays_issues">Delays & Issues</Label>
+                    <Textarea
+                      id="delays_issues"
+                      placeholder="Any delays or issues encountered..."
+                      value={newReport.delays_issues}
+                      onChange={(e) => setNewReport({...newReport, delays_issues: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="safety_incidents">Safety Incidents</Label>
+                    <Textarea
+                      id="safety_incidents"
+                      placeholder="Any safety incidents or concerns..."
+                      value={newReport.safety_incidents}
+                      onChange={(e) => setNewReport({...newReport, safety_incidents: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateReport}>
+                      Create Report
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
             </Dialog>
           </div>
         </div>
@@ -348,114 +453,6 @@ const DailyReports = () => {
           )}
         </div>
       </div>
-
-      {/* Create Report Dialog */}
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Create Daily Report</DialogTitle>
-          <DialogDescription>
-            Record daily progress, crew activity, and any issues for the project.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="project">Project *</Label>
-            <Select value={newReport.project_id} onValueChange={(value) => setNewReport({...newReport, project_id: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="work_performed">Work Performed *</Label>
-            <Textarea
-              id="work_performed"
-              placeholder="Describe the work completed today..."
-              value={newReport.work_performed}
-              onChange={(e) => setNewReport({...newReport, work_performed: e.target.value})}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="crew_count">Crew Count</Label>
-              <Input
-                id="crew_count"
-                type="number"
-                min="0"
-                value={newReport.crew_count}
-                onChange={(e) => setNewReport({...newReport, crew_count: Number(e.target.value)})}
-              />
-            </div>
-            <div>
-              <Label htmlFor="weather_conditions">Weather Conditions</Label>
-              <Input
-                id="weather_conditions"
-                placeholder="e.g., Sunny, 75°F"
-                value={newReport.weather_conditions}
-                onChange={(e) => setNewReport({...newReport, weather_conditions: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="materials_delivered">Materials Delivered</Label>
-            <Textarea
-              id="materials_delivered"
-              placeholder="List materials delivered today..."
-              value={newReport.materials_delivered}
-              onChange={(e) => setNewReport({...newReport, materials_delivered: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="equipment_used">Equipment Used</Label>
-            <Textarea
-              id="equipment_used"
-              placeholder="List equipment used today..."
-              value={newReport.equipment_used}
-              onChange={(e) => setNewReport({...newReport, equipment_used: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="delays_issues">Delays & Issues</Label>
-            <Textarea
-              id="delays_issues"
-              placeholder="Any delays or issues encountered..."
-              value={newReport.delays_issues}
-              onChange={(e) => setNewReport({...newReport, delays_issues: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="safety_incidents">Safety Incidents</Label>
-            <Textarea
-              id="safety_incidents"
-              placeholder="Any safety incidents or concerns..."
-              value={newReport.safety_incidents}
-              onChange={(e) => setNewReport({...newReport, safety_incidents: e.target.value})}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateReport}>
-              Create Report
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
     </div>
   );
 };

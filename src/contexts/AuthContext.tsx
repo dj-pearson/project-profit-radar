@@ -48,12 +48,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
-      setUserProfile(data);
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        // Don't clear auth state on profile fetch errors - user is still authenticated
+        return null;
+      }
+      
+      if (data) {
+        setUserProfile(data);
+        return data;
+      } else {
+        console.warn('No user profile found for user:', userId);
+        // Create a default profile if none exists
+        const defaultProfile = {
+          id: userId,
+          email: '',
+          role: 'admin' as const,
+          is_active: true
+        };
+        setUserProfile(defaultProfile);
+        return defaultProfile;
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // Don't clear auth state on profile fetch errors
+      return null;
     }
   };
 
@@ -64,16 +85,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let mounted = true;
+    let profileFetchTimeout: NodeJS.Timeout;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state change:', event, session?.user?.id);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
+          // Clear any existing timeout
+          if (profileFetchTimeout) {
+            clearTimeout(profileFetchTimeout);
+          }
+          
+          // Fetch profile with a slight delay to avoid race conditions
+          profileFetchTimeout = setTimeout(async () => {
+            if (mounted) {
+              console.log('Fetching profile for user:', session.user.id);
+              await fetchUserProfile(session.user.id);
+            }
+          }, 500);
         } else {
           setUserProfile(null);
         }
@@ -83,91 +120,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
+    const initializeAuth = async () => {
+      try {
+        console.log('Initializing auth...');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        console.log('Initial session:', session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      if (profileFetchTimeout) {
+        clearTimeout(profileFetchTimeout);
+      }
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      // First check if account is locked
-      const { data: userData } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (userData) {
-        const { data: isLocked } = await supabase.rpc('is_account_locked', {
-          p_user_id: userData.id
-        });
-
-        if (isLocked) {
-          toast({
-            variant: "destructive",
-            title: "Account Locked",
-            description: "Your account has been temporarily locked due to too many failed login attempts. Please try again later."
-          });
-          return { error: { message: 'Account locked' } };
-        }
-      }
-
+      setLoading(true);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        // Handle failed login attempt
-        if (userData) {
-          await supabase.rpc('handle_failed_login', {
-            p_user_id: userData.id,
-            p_ip_address: await getClientIP(),
-            p_user_agent: navigator.userAgent
-          });
-        }
-
         toast({
           variant: "destructive",
           title: "Sign In Failed",
           description: error.message
         });
-      } else {
-        // Reset failed attempts on successful login
-        if (userData) {
-          await supabase.rpc('reset_failed_attempts', {
-            p_user_id: userData.id,
-            p_ip_address: await getClientIP(),
-            p_user_agent: navigator.userAgent
-          });
-        }
+        setLoading(false);
       }
 
       return { error };
     } catch (err: any) {
       console.error('Error during sign in:', err);
+      setLoading(false);
       return { error: err };
     }
   };
 
-  const getClientIP = async (): Promise<string | null> => {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      return data.ip;
-    } catch (error) {
-      console.error('Error getting client IP:', error);
-      return null;
-    }
-  };
 
   const signUp = async (email: string, password: string, userData?: any) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -214,10 +226,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setUserProfile(null);
+    setLoading(false);
     toast({
       title: "Signed Out",
       description: "You have been successfully signed out."

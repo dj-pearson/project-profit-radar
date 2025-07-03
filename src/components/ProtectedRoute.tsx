@@ -70,9 +70,11 @@ interface RouteGuardProps {
 
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) => {
   const { userProfile, loading } = useAuth();
-  const { canAccessRoute } = usePermissions();
+
+  console.log('RouteGuard check:', { routePath, userProfile: userProfile?.role, loading });
 
   if (loading) {
+    console.log('RouteGuard: Still loading, showing spinner');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse">Loading...</div>
@@ -81,9 +83,19 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) =
   }
 
   if (!userProfile) {
+    console.log('RouteGuard: No user profile, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
+  // Root admin has access to everything - no restrictions
+  if (userProfile.role === 'root_admin') {
+    console.log('RouteGuard: Root admin detected, allowing access');
+    return <>{children}</>;
+  }
+
+  // For other roles, check permissions
+  const { canAccessRoute } = usePermissions();
+  
   if (!canAccessRoute(routePath)) {
     return (
       <div className="container mx-auto px-4 py-8">

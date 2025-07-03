@@ -105,8 +105,7 @@ const ChangeOrders = () => {
 
       // Load change orders
       const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
-        method: 'GET',
-        body: { path: 'list' }
+        method: 'GET'
       });
 
       if (ordersError) throw ordersError;
@@ -254,6 +253,93 @@ const ChangeOrders = () => {
                   Create Change Order
                 </Button>
               </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create Change Order</DialogTitle>
+                  <DialogDescription>
+                    Create a new change order for project modifications that require client approval.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="project">Project *</Label>
+                    <Select value={newOrder.project_id} onValueChange={(value) => setNewOrder({...newOrder, project_id: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      placeholder="Brief description of the change"
+                      value={newOrder.title}
+                      onChange={(e) => setNewOrder({...newOrder, title: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Detailed description of the change order..."
+                      value={newOrder.description}
+                      onChange={(e) => setNewOrder({...newOrder, description: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="amount">Amount ($) *</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={newOrder.amount}
+                        onChange={(e) => setNewOrder({...newOrder, amount: Number(e.target.value)})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="reason">Reason</Label>
+                      <Select value={newOrder.reason} onValueChange={(value) => setNewOrder({...newOrder, reason: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select reason" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="scope_change">Scope Change</SelectItem>
+                          <SelectItem value="material_upgrade">Material Upgrade</SelectItem>
+                          <SelectItem value="design_change">Design Change</SelectItem>
+                          <SelectItem value="unforeseen_conditions">Unforeseen Conditions</SelectItem>
+                          <SelectItem value="client_request">Client Request</SelectItem>
+                          <SelectItem value="code_requirement">Code Requirement</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateOrder}>
+                      Create Change Order
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
             </Dialog>
           </div>
         </div>
@@ -427,85 +513,6 @@ const ChangeOrders = () => {
           )}
         </div>
       </div>
-
-      {/* Create Change Order Dialog */}
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Create Change Order</DialogTitle>
-          <DialogDescription>
-            Create a new change order for project modifications that require client approval.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="project">Project *</Label>
-            <Select value={newOrder.project_id} onValueChange={(value) => setNewOrder({...newOrder, project_id: value})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name} - {project.client_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              placeholder="Brief description of the change"
-              value={newOrder.title}
-              onChange={(e) => setNewOrder({...newOrder, title: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="amount">Amount *</Label>
-            <Input
-              id="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={newOrder.amount}
-              onChange={(e) => setNewOrder({...newOrder, amount: Number(e.target.value)})}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Detailed description of the changes..."
-              value={newOrder.description}
-              onChange={(e) => setNewOrder({...newOrder, description: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="reason">Reason for Change</Label>
-            <Textarea
-              id="reason"
-              placeholder="Why is this change necessary?"
-              value={newOrder.reason}
-              onChange={(e) => setNewOrder({...newOrder, reason: e.target.value})}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateOrder}>
-              Create Change Order
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
     </div>
   );
 };
