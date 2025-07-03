@@ -724,6 +724,210 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_analytics: {
+        Row: {
+          average_position: number | null
+          clicks: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          id: string
+          impressions: number | null
+          search_engine: string
+          top_pages: Json | null
+          top_queries: Json | null
+        }
+        Insert: {
+          average_position?: number | null
+          clicks?: number | null
+          created_at?: string
+          ctr?: number | null
+          date: string
+          id?: string
+          impressions?: number | null
+          search_engine: string
+          top_pages?: Json | null
+          top_queries?: Json | null
+        }
+        Update: {
+          average_position?: number | null
+          clicks?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          search_engine?: string
+          top_pages?: Json | null
+          top_queries?: Json | null
+        }
+        Relationships: []
+      }
+      seo_configurations: {
+        Row: {
+          bing_webmaster_id: string | null
+          canonical_domain: string | null
+          created_at: string
+          default_og_image: string | null
+          facebook_pixel_id: string | null
+          google_ads_id: string | null
+          google_analytics_id: string | null
+          google_search_console_id: string | null
+          id: string
+          robots_txt: string | null
+          schema_org_enabled: boolean | null
+          site_description: string | null
+          site_keywords: string[] | null
+          site_name: string
+          sitemap_enabled: boolean | null
+          twitter_site: string | null
+          updated_at: string
+          yandex_webmaster_id: string | null
+        }
+        Insert: {
+          bing_webmaster_id?: string | null
+          canonical_domain?: string | null
+          created_at?: string
+          default_og_image?: string | null
+          facebook_pixel_id?: string | null
+          google_ads_id?: string | null
+          google_analytics_id?: string | null
+          google_search_console_id?: string | null
+          id?: string
+          robots_txt?: string | null
+          schema_org_enabled?: boolean | null
+          site_description?: string | null
+          site_keywords?: string[] | null
+          site_name: string
+          sitemap_enabled?: boolean | null
+          twitter_site?: string | null
+          updated_at?: string
+          yandex_webmaster_id?: string | null
+        }
+        Update: {
+          bing_webmaster_id?: string | null
+          canonical_domain?: string | null
+          created_at?: string
+          default_og_image?: string | null
+          facebook_pixel_id?: string | null
+          google_ads_id?: string | null
+          google_analytics_id?: string | null
+          google_search_console_id?: string | null
+          id?: string
+          robots_txt?: string | null
+          schema_org_enabled?: boolean | null
+          site_description?: string | null
+          site_keywords?: string[] | null
+          site_name?: string
+          sitemap_enabled?: boolean | null
+          twitter_site?: string | null
+          updated_at?: string
+          yandex_webmaster_id?: string | null
+        }
+        Relationships: []
+      }
+      seo_meta_tags: {
+        Row: {
+          canonical_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          keywords: string[] | null
+          no_follow: boolean | null
+          no_index: boolean | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          og_type: string | null
+          page_path: string
+          schema_markup: Json | null
+          title: string | null
+          twitter_description: string | null
+          twitter_image: string | null
+          twitter_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          canonical_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          keywords?: string[] | null
+          no_follow?: boolean | null
+          no_index?: boolean | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          og_type?: string | null
+          page_path: string
+          schema_markup?: Json | null
+          title?: string | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canonical_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          keywords?: string[] | null
+          no_follow?: boolean | null
+          no_index?: boolean | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          og_type?: string | null
+          page_path?: string
+          schema_markup?: Json | null
+          title?: string | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          last_checked: string | null
+          response_data: Json | null
+          search_engine: string
+          status: string
+          submission_type: string
+          submitted_at: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_checked?: string | null
+          response_data?: Json | null
+          search_engine: string
+          status?: string
+          submission_type: string
+          submitted_at?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_checked?: string | null
+          response_data?: Json | null
+          search_engine?: string
+          status?: string
+          submission_type?: string
+          submitted_at?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string

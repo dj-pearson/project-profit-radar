@@ -438,6 +438,14 @@ const Dashboard = () => {
                   <span className="text-lg font-bold">Settings</span>
                   <span className="text-sm">System Configuration</span>
                 </Button>
+                <Button 
+                  variant="construction" 
+                  className="h-24 flex-col"
+                  onClick={() => navigate('/admin/seo')}
+                >
+                  <span className="text-lg font-bold">SEO Manager</span>
+                  <span className="text-sm">Search Optimization</span>
+                </Button>
               </div>
             </CardContent>
           </Card>

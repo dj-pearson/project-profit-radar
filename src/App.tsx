@@ -26,6 +26,7 @@ import Users from "./pages/admin/Users";
 import Billing from "./pages/admin/Billing";
 import Analytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
+import SEOManager from "./pages/admin/SEOManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/admin/billing" element={<Billing />} />
             <Route path="/admin/analytics" element={<Analytics />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/seo" element={<SEOManager />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/roi-calculator" element={<ROICalculator />} />
             <Route path="/client-portal" element={<ClientPortal />} />
