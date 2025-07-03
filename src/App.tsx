@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RouteGuard } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Setup from "./pages/Setup";
@@ -48,33 +49,33 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/setup" element={<Setup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/create-project" element={<CreateProject />} />
-            <Route path="/project/:projectId" element={<ProjectDetail />} />
-            <Route path="/team" element={<TeamManagement />} />
-            <Route path="/time-tracking" element={<TimeTracking />} />
-            <Route path="/documents" element={<DocumentManagement />} />
-            <Route path="/project/:projectId/documents" element={<DocumentManagement />} />
-            <Route path="/financial" element={<FinancialDashboard />} />
-            <Route path="/daily-reports" element={<DailyReports />} />
-            <Route path="/change-orders" element={<ChangeOrders />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/blog-manager" element={<BlogManager />} />
-            <Route path="/admin/companies" element={<Companies />} />
-            <Route path="/admin/users" element={<Users />} />
-            <Route path="/admin/billing" element={<Billing />} />
-            <Route path="/admin/analytics" element={<Analytics />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-            <Route path="/admin/seo" element={<SEOManager />} />
+            <Route path="/dashboard" element={<RouteGuard routePath="/dashboard"><Dashboard /></RouteGuard>} />
+            <Route path="/create-project" element={<RouteGuard routePath="/create-project"><CreateProject /></RouteGuard>} />
+            <Route path="/project/:projectId" element={<RouteGuard routePath="/dashboard"><ProjectDetail /></RouteGuard>} />
+            <Route path="/team" element={<RouteGuard routePath="/team"><TeamManagement /></RouteGuard>} />
+            <Route path="/time-tracking" element={<RouteGuard routePath="/time-tracking"><TimeTracking /></RouteGuard>} />
+            <Route path="/documents" element={<RouteGuard routePath="/documents"><DocumentManagement /></RouteGuard>} />
+            <Route path="/project/:projectId/documents" element={<RouteGuard routePath="/documents"><DocumentManagement /></RouteGuard>} />
+            <Route path="/financial" element={<RouteGuard routePath="/financial"><FinancialDashboard /></RouteGuard>} />
+            <Route path="/daily-reports" element={<RouteGuard routePath="/daily-reports"><DailyReports /></RouteGuard>} />
+            <Route path="/change-orders" element={<RouteGuard routePath="/change-orders"><ChangeOrders /></RouteGuard>} />
+            <Route path="/reports" element={<RouteGuard routePath="/reports"><Reports /></RouteGuard>} />
+            <Route path="/blog-manager" element={<RouteGuard routePath="/blog-manager"><BlogManager /></RouteGuard>} />
+            <Route path="/admin/companies" element={<RouteGuard routePath="/admin/companies"><Companies /></RouteGuard>} />
+            <Route path="/admin/users" element={<RouteGuard routePath="/admin/users"><Users /></RouteGuard>} />
+            <Route path="/admin/billing" element={<RouteGuard routePath="/admin/billing"><Billing /></RouteGuard>} />
+            <Route path="/admin/analytics" element={<RouteGuard routePath="/admin/analytics"><Analytics /></RouteGuard>} />
+            <Route path="/admin/settings" element={<RouteGuard routePath="/admin/settings"><AdminSettings /></RouteGuard>} />
+            <Route path="/admin/seo" element={<RouteGuard routePath="/admin/seo"><SEOManager /></RouteGuard>} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/roi-calculator" element={<ROICalculator />} />
             <Route path="/subscription" element={<SubscriptionSettings />} />
             <Route path="/client-portal" element={<ClientPortal />} />
-            <Route path="/security-monitoring" element={<SecurityMonitoring />} />
-            <Route path="/safety" element={<Safety />} />
-            <Route path="/compliance-audit" element={<ComplianceAudit />} />
-            <Route path="/gdpr-compliance" element={<GDPRCompliance />} />
-            <Route path="/rate-limiting" element={<RateLimitingDashboard />} />
+            <Route path="/security-monitoring" element={<RouteGuard routePath="/security-monitoring"><SecurityMonitoring /></RouteGuard>} />
+            <Route path="/safety" element={<RouteGuard routePath="/safety"><Safety /></RouteGuard>} />
+            <Route path="/compliance-audit" element={<RouteGuard routePath="/compliance-audit"><ComplianceAudit /></RouteGuard>} />
+            <Route path="/gdpr-compliance" element={<RouteGuard routePath="/gdpr-compliance"><GDPRCompliance /></RouteGuard>} />
+            <Route path="/rate-limiting" element={<RouteGuard routePath="/rate-limiting"><RateLimitingDashboard /></RouteGuard>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

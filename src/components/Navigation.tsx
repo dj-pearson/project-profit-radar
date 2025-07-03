@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { usePermissions } from '@/hooks/usePermissions';
 import { 
   Building2,
   FileText,
@@ -18,7 +19,8 @@ import {
   Wrench,
   MessageSquare,
   Shield,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -41,6 +43,7 @@ interface NavigationCategory {
 
 const Navigation = ({ userRole }: NavigationProps) => {
   const navigate = useNavigate();
+  const { canAccessRoute } = usePermissions();
 
   const navigationItems: NavigationCategory[] = [
     // Core Project Management
@@ -214,34 +217,53 @@ const Navigation = ({ userRole }: NavigationProps) => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {category.items.map((item) => (
-                <div
-                  key={item.path}
-                  className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer group"
-                  onClick={() => navigate(item.path)}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <item.icon className="h-8 w-8 text-construction-blue group-hover:text-construction-blue/80" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-medium text-sm group-hover:text-construction-blue">
-                          {item.title}
-                        </h3>
-                        {item.badge && (
-                          <Badge variant="destructive" className="text-xs px-1 py-0">
-                            {item.badge}
-                          </Badge>
+              {category.items.map((item) => {
+                const hasAccess = canAccessRoute(item.path);
+                return (
+                  <div
+                    key={item.path}
+                    className={`border rounded-lg p-4 transition-colors group ${
+                      hasAccess 
+                        ? 'hover:bg-muted/50 cursor-pointer' 
+                        : 'opacity-50 cursor-not-allowed bg-muted/20'
+                    }`}
+                    onClick={() => hasAccess && navigate(item.path)}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        {hasAccess ? (
+                          <item.icon className="h-8 w-8 text-construction-blue group-hover:text-construction-blue/80" />
+                        ) : (
+                          <Lock className="h-8 w-8 text-muted-foreground" />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {item.description}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className={`font-medium text-sm ${
+                            hasAccess ? 'group-hover:text-construction-blue' : 'text-muted-foreground'
+                          }`}>
+                            {item.title}
+                          </h3>
+                          {item.badge && (
+                            <Badge variant="destructive" className="text-xs px-1 py-0">
+                              {item.badge}
+                            </Badge>
+                          )}
+                          {!hasAccess && (
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              <Lock className="h-2 w-2 mr-1" />
+                              Restricted
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
