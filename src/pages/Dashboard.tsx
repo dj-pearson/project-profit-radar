@@ -13,6 +13,11 @@ import { QuickActions } from '@/components/dashboard/QuickActions';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import ProjectWizard from '@/components/ProjectWizard';
+import { LoadingState } from '@/components/ui/loading-spinner';
+import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
+import { KPISkeleton, ProjectCardSkeleton } from '@/components/ui/skeleton-loader';
+import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -29,10 +34,15 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [projects, setProjects] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [projectWizardOpen, setProjectWizardOpen] = useState(false);
-  const [dashboardData, setDashboardData] = useState({
+  const { 
+    data: dashboardData, 
+    loading: dashboardLoading, 
+    error: dashboardError, 
+    execute: loadDashboard 
+  } = useLoadingState({
+    projects: [],
+    companies: [],
     activeProjects: 0,
     totalRevenue: 0,
     totalUsers: 0,
@@ -51,24 +61,15 @@ const Dashboard = () => {
     
     // Load dashboard data once user is authenticated
     if (!loading && user && userProfile) {
-      loadDashboardData();
+      loadDashboard(loadDashboardData);
     }
   }, [user, userProfile, loading, navigate]);
 
   const loadDashboardData = async () => {
-    try {
-      if (userProfile?.role === 'root_admin') {
-        await loadRootAdminData();
-      } else {
-        await loadCompanyData();
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load dashboard data"
-      });
+    if (userProfile?.role === 'root_admin') {
+      return await loadRootAdminData();
+    } else {
+      return await loadCompanyData();
     }
   };
 
@@ -81,8 +82,6 @@ const Dashboard = () => {
 
     if (companiesError) throw companiesError;
     
-    setCompanies(companiesData || []);
-    
     // Load all projects for overview
     const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
@@ -91,8 +90,6 @@ const Dashboard = () => {
       .limit(10);
 
     if (projectsError) throw projectsError;
-    
-    setProjects(projectsData || []);
     
     // Load aggregated stats
     const { data: userCount } = await supabase
@@ -104,16 +101,27 @@ const Dashboard = () => {
       .select('id', { count: 'exact', head: true })
       .in('status', ['active', 'in_progress']);
 
-    setDashboardData({
+    return {
+      companies: companiesData || [],
+      projects: projectsData || [],
       activeProjects: activeProjectCount?.length || 0,
       totalRevenue: 0, // TODO: Calculate from projects/billing
       totalUsers: userCount?.length || 0,
       projectsCompleted: 0 // TODO: Calculate completed projects
-    });
+    };
   };
 
   const loadCompanyData = async () => {
-    if (!userProfile?.company_id) return;
+    if (!userProfile?.company_id) {
+      return {
+        companies: [],
+        projects: [],
+        activeProjects: 0,
+        totalRevenue: 0,
+        totalUsers: 0,
+        projectsCompleted: 0
+      };
+    }
 
     // Load company projects
     const { data: projectsData, error: projectsError } = await supabase
@@ -124,19 +132,19 @@ const Dashboard = () => {
 
     if (projectsError) throw projectsError;
     
-    setProjects(projectsData || []);
-    
     // Calculate company stats
     const activeProjects = projectsData?.filter(p => ['active', 'in_progress'].includes(p.status)) || [];
     const completedProjects = projectsData?.filter(p => p.status === 'completed') || [];
     const totalBudget = projectsData?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
 
-    setDashboardData({
+    return {
+      companies: [],
+      projects: projectsData || [],
       activeProjects: activeProjects.length,
       totalRevenue: totalBudget,
       totalUsers: 0, // TODO: Load team members count
       projectsCompleted: completedProjects.length
-    });
+    };
   };
 
   const handleQuickAction = (action: string) => {
@@ -182,14 +190,7 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading dashboard..." />;
   }
 
   if (!user) {
@@ -234,72 +235,88 @@ const Dashboard = () => {
           </nav>
 
           {/* Main Content */}
-          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <ResponsiveContainer className="py-6">
             <TrialStatusBanner />
         
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {userProfile?.role === 'root_admin' ? (
-            <>
-              <KPICard
-                title="Total Companies"
-                value={companies.length}
-                icon={Building2}
-                subtitle="Registered organizations"
-              />
-              <KPICard
-                title="Active Projects"
-                value={dashboardData.activeProjects}
-                icon={BarChart3}
-                subtitle="Across all companies"
-              />
-              <KPICard
-                title="Total Users"
-                value={dashboardData.totalUsers}
-                icon={Users}
-                subtitle="Platform users"
-              />
-              <KPICard
-                title="System Health"
-                value="99.9%"
-                icon={TrendingUp}
-                subtitle="Uptime"
-                change="+0.1%"
-                changeType="positive"
-              />
-            </>
+        <ErrorBoundary>
+          {dashboardLoading ? (
+            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-8">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <KPISkeleton key={i} />
+              ))}
+            </ResponsiveGrid>
+          ) : dashboardError ? (
+            <ErrorState 
+              error={dashboardError} 
+              onRetry={() => loadDashboard(loadDashboardData)}
+              className="mb-8"
+            />
           ) : (
-            <>
-              <KPICard
-                title="Active Projects"
-                value={dashboardData.activeProjects}
-                icon={Building2}
-                subtitle="In progress"
-              />
-              <KPICard
-                title="Total Budget"
-                value={`$${(dashboardData.totalRevenue / 1000).toFixed(0)}K`}
-                icon={DollarSign}
-                subtitle="All projects"
-              />
-              <KPICard
-                title="Completed"
-                value={dashboardData.projectsCompleted}
-                icon={BarChart3}
-                subtitle="Projects finished"
-              />
-              <KPICard
-                title="This Month"
-                value="$0"
-                icon={Calendar}
-                subtitle="Revenue"
-              />
-            </>
+            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-8">
+              {userProfile?.role === 'root_admin' ? (
+                <>
+                  <KPICard
+                    title="Total Companies"
+                    value={dashboardData?.companies?.length || 0}
+                    icon={Building2}
+                    subtitle="Registered organizations"
+                  />
+                  <KPICard
+                    title="Active Projects"
+                    value={dashboardData?.activeProjects || 0}
+                    icon={BarChart3}
+                    subtitle="Across all companies"
+                  />
+                  <KPICard
+                    title="Total Users"
+                    value={dashboardData?.totalUsers || 0}
+                    icon={Users}
+                    subtitle="Platform users"
+                  />
+                  <KPICard
+                    title="System Health"
+                    value="99.9%"
+                    icon={TrendingUp}
+                    subtitle="Uptime"
+                    change="+0.1%"
+                    changeType="positive"
+                  />
+                </>
+              ) : (
+                <>
+                  <KPICard
+                    title="Active Projects"
+                    value={dashboardData?.activeProjects || 0}
+                    icon={Building2}
+                    subtitle="In progress"
+                  />
+                  <KPICard
+                    title="Total Budget"
+                    value={`$${((dashboardData?.totalRevenue || 0) / 1000).toFixed(0)}K`}
+                    icon={DollarSign}
+                    subtitle="All projects"
+                  />
+                  <KPICard
+                    title="Completed"
+                    value={dashboardData?.projectsCompleted || 0}
+                    icon={BarChart3}
+                    subtitle="Projects finished"
+                  />
+                  <KPICard
+                    title="This Month"
+                    value="$0"
+                    icon={Calendar}
+                    subtitle="Revenue"
+                  />
+                </>
+              )}
+            </ResponsiveGrid>
           )}
-        </div>
+        </ErrorBoundary>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <ResponsiveGrid cols={{ default: 1, lg: 3 }} className="mb-8">
           {/* Projects Section */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
@@ -315,31 +332,39 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {projects.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No projects found</p>
-                    {(userProfile?.role === 'admin' || userProfile?.role === 'project_manager') && (
-                      <Button 
-                        variant="default" 
-                        className="mt-4"
-                        onClick={() => setProjectWizardOpen(true)}
-                      >
-                        Create Your First Project
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {projects.slice(0, 4).map((project) => (
-                      <ProjectCard
-                        key={project.id}
-                        project={project}
-                        onViewProject={handleViewProject}
-                      />
-                    ))}
-                  </div>
-                )}
+                <ErrorBoundary>
+                  {dashboardLoading ? (
+                    <ResponsiveGrid cols={{ default: 1, md: 2 }} className="gap-4">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <ProjectCardSkeleton key={i} />
+                      ))}
+                    </ResponsiveGrid>
+                  ) : !dashboardData?.projects?.length ? (
+                    <EmptyState
+                      icon={Building2}
+                      title="No projects found"
+                      description={userProfile?.role === 'root_admin' 
+                        ? "No projects have been created yet across all companies."
+                        : "Get started by creating your first project."
+                      }
+                      action={
+                        (userProfile?.role === 'admin' || userProfile?.role === 'project_manager') 
+                          ? { label: "Create Your First Project", onClick: () => setProjectWizardOpen(true) }
+                          : undefined
+                      }
+                    />
+                  ) : (
+                    <ResponsiveGrid cols={{ default: 1, md: 2 }} className="gap-4">
+                      {dashboardData.projects.slice(0, 4).map((project) => (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          onViewProject={handleViewProject}
+                        />
+                      ))}
+                    </ResponsiveGrid>
+                  )}
+                </ErrorBoundary>
               </CardContent>
             </Card>
           </div>
@@ -396,7 +421,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </ResponsiveGrid>
 
         {/* Root Admin Panel */}
         {userProfile?.role === 'root_admin' && (
@@ -467,7 +492,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
-          </div>
+          </ResponsiveContainer>
         </div>
         
         {/* Project Wizard */}
