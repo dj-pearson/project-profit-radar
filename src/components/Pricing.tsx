@@ -3,12 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Pricing = () => {
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { toast } = useToast();
+
   const plans = [
     {
       name: "Starter",
-      price: "$149",
+      tier: "starter" as const,
+      monthlyPrice: 149,
+      annualPrice: 1490,
       description: "Perfect for small teams (1-5 users)",
       features: [
         "Up to 5 active projects",
@@ -22,7 +31,9 @@ const Pricing = () => {
     },
     {
       name: "Professional",
-      price: "$299",
+      tier: "professional" as const,
+      monthlyPrice: 299,
+      annualPrice: 2990,
       description: "Most popular for growing contractors (5-15 users)",
       features: [
         "Unlimited projects",
@@ -39,7 +50,9 @@ const Pricing = () => {
     },
     {
       name: "Enterprise",
-      price: "$599",
+      tier: "enterprise" as const,
+      monthlyPrice: 599,
+      annualPrice: 5990,
       description: "For established contractors (15+ users)",
       features: [
         "Everything in Professional",
@@ -54,6 +67,47 @@ const Pricing = () => {
     }
   ];
 
+  const handleCheckout = async (tier: 'starter' | 'professional' | 'enterprise') => {
+    try {
+      setLoadingPlan(tier);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to subscribe to a plan.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: {
+          subscription_tier: tier,
+          billing_period: billingPeriod
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast({
+        title: "Checkout Error",
+        description: error instanceof Error ? error.message : "Failed to start checkout process",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <section id="pricing" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -65,9 +119,22 @@ const Pricing = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Choose the plan that fits your team size. All plans include unlimited users in their tier.
           </p>
+          
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <span className={billingPeriod === 'monthly' ? 'font-semibold' : 'text-muted-foreground'}>Monthly</span>
+            <button
+              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
+              className="relative w-12 h-6 bg-gray-200 rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-construction-orange focus:ring-offset-2"
+            >
+              <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${billingPeriod === 'annual' ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
+            <span className={billingPeriod === 'annual' ? 'font-semibold' : 'text-muted-foreground'}>Annual</span>
+          </div>
+          
           <div className="flex items-center justify-center gap-2 text-construction-orange font-semibold">
             <Calculator className="h-5 w-5" />
-            Save 20% with annual billing
+            {billingPeriod === 'annual' ? 'Save 20% with annual billing' : 'Switch to annual for 20% savings'}
           </div>
         </div>
 
@@ -83,8 +150,17 @@ const Pricing = () => {
               <CardHeader className="text-center pb-8">
                 <CardTitle className="text-2xl text-construction-dark">{plan.name}</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-construction-dark">{plan.price}</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-4xl font-bold text-construction-dark">
+                    ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice}
+                  </span>
+                  <span className="text-muted-foreground">
+                    /{billingPeriod === 'monthly' ? 'month' : 'year'}
+                  </span>
+                  {billingPeriod === 'annual' && (
+                    <div className="text-sm text-construction-orange font-medium mt-1">
+                      Save ${(plan.monthlyPrice * 12) - plan.annualPrice}
+                    </div>
+                  )}
                 </div>
                 <CardDescription className="text-base mt-2">{plan.description}</CardDescription>
               </CardHeader>
@@ -108,9 +184,10 @@ const Pricing = () => {
                 <Button 
                   variant={plan.isPopular ? "hero" : "construction"} 
                   className="w-full"
-                  asChild
+                  onClick={() => handleCheckout(plan.tier)}
+                  disabled={loadingPlan === plan.tier}
                 >
-                  <Link to="/auth">Start Free Trial</Link>
+                  {loadingPlan === plan.tier ? "Processing..." : "Start Free Trial"}
                 </Button>
               </CardContent>
             </Card>

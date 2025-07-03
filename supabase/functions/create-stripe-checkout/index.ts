@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -8,8 +9,15 @@ const corsHeaders = {
 
 interface CheckoutRequest {
   subscription_tier: 'starter' | 'professional' | 'enterprise';
+  billing_period: 'monthly' | 'annual';
   company_id?: string;
 }
+
+// Helper logging function for enhanced debugging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,29 +25,87 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client
+    logStep("Function started");
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
+
+    // Create Supabase client using the anon key for user authentication
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
     // Get user from auth header
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
     
-    if (!user?.email) {
-      throw new Error("User not authenticated");
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    const { subscription_tier, billing_period = 'monthly', company_id }: CheckoutRequest = await req.json();
+    logStep("Request parsed", { subscription_tier, billing_period, company_id });
+
+    // Initialize Stripe
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    // Check if a Stripe customer record exists for this user
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+      logStep("Found existing Stripe customer", { customerId });
+    } else {
+      logStep("No existing customer found, will create during checkout");
     }
 
-    const { subscription_tier, company_id }: CheckoutRequest = await req.json();
+    // Define pricing based on tier and billing period
+    const pricing = {
+      starter: { monthly: 14900, annual: 149000 }, // $149/month, $1490/year (save $298)
+      professional: { monthly: 29900, annual: 299000 }, // $299/month, $2990/year (save $598)
+      enterprise: { monthly: 59900, annual: 599000 } // $599/month, $5990/year (save $1198)
+    };
 
-    console.log(`Creating checkout for user ${user.email}, tier: ${subscription_tier}`);
+    const amount = pricing[subscription_tier][billing_period];
+    const interval = billing_period === 'annual' ? 'year' : 'month';
+    logStep("Pricing calculated", { amount, interval });
 
-    // STUB: In a real implementation, this would create a Stripe checkout session
-    // For now, we'll just simulate the response
-    const stubCheckoutUrl = `https://checkout.stripe.com/pay/cs_test_stub_${subscription_tier}_${Date.now()}`;
+    // Create checkout session
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { 
+              name: `${subscription_tier.charAt(0).toUpperCase() + subscription_tier.slice(1)} Plan`,
+              description: `Build Desk ${subscription_tier} subscription - ${billing_period} billing`
+            },
+            unit_amount: amount,
+            recurring: { interval },
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "subscription",
+      success_url: `${origin}/setup?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/?canceled=true`,
+      metadata: {
+        user_id: user.id,
+        subscription_tier,
+        billing_period,
+        company_id: company_id || ''
+      }
+    });
+
+    logStep("Stripe checkout session created", { sessionId: session.id, url: session.url });
 
     // Update company subscription status to 'pending' if company_id provided
     if (company_id) {
@@ -57,15 +123,14 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq("id", company_id);
-    }
 
-    console.log(`Checkout session created: ${stubCheckoutUrl}`);
+      logStep("Updated company subscription status", { company_id, status: "pending" });
+    }
 
     return new Response(
       JSON.stringify({ 
-        url: stubCheckoutUrl,
-        session_id: `cs_test_stub_${subscription_tier}_${Date.now()}`,
-        message: "STUB: This is a placeholder checkout URL. Integrate with real Stripe later."
+        url: session.url,
+        session_id: session.id
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -74,9 +139,11 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in create-checkout", { message: errorMessage });
     console.error("Error creating checkout:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
