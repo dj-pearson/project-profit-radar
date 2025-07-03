@@ -321,6 +321,94 @@ const MaterialTracking = () => {
                     Record Usage
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Record Material Usage</DialogTitle>
+                    <DialogDescription>
+                      Log material usage for a project and update inventory.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="usage-material">Material *</Label>
+                        <Select value={newUsage.material_id} onValueChange={(value) => setNewUsage({...newUsage, material_id: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select material" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {materials.map((material) => (
+                              <SelectItem key={material.id} value={material.id}>
+                                {material.name} (Available: {material.quantity_available} {material.unit})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="usage-project">Project *</Label>
+                        <Select value={newUsage.project_id} onValueChange={(value) => setNewUsage({...newUsage, project_id: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select project" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projects.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="quantity_used">Quantity Used *</Label>
+                        <Input
+                          id="quantity_used"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newUsage.quantity_used}
+                          onChange={(e) => setNewUsage({...newUsage, quantity_used: Number(e.target.value)})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="usage_unit_cost">Unit Cost (leave blank to use default)</Label>
+                        <Input
+                          id="usage_unit_cost"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newUsage.unit_cost}
+                          onChange={(e) => setNewUsage({...newUsage, unit_cost: Number(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="usage_notes">Notes</Label>
+                      <Textarea
+                        id="usage_notes"
+                        placeholder="Additional notes about this usage..."
+                        value={newUsage.notes}
+                        onChange={(e) => setNewUsage({...newUsage, notes: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsUsageDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateUsage}>
+                        Record Usage
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
               </Dialog>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
@@ -329,6 +417,153 @@ const MaterialTracking = () => {
                     Add Material
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Add New Material</DialogTitle>
+                    <DialogDescription>
+                      Add a new material to your inventory management system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Name *</Label>
+                        <Input
+                          id="name"
+                          placeholder="Material name"
+                          value={newMaterial.name}
+                          onChange={(e) => setNewMaterial({...newMaterial, name: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="category">Category *</Label>
+                        <Input
+                          id="category"
+                          placeholder="e.g., Lumber, Hardware, Tools"
+                          value={newMaterial.category}
+                          onChange={(e) => setNewMaterial({...newMaterial, category: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Material description..."
+                        value={newMaterial.description}
+                        onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="unit">Unit</Label>
+                        <Select value={newMaterial.unit} onValueChange={(value) => setNewMaterial({...newMaterial, unit: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unit">Unit</SelectItem>
+                            <SelectItem value="ft">Feet</SelectItem>
+                            <SelectItem value="lbs">Pounds</SelectItem>
+                            <SelectItem value="pcs">Pieces</SelectItem>
+                            <SelectItem value="gal">Gallons</SelectItem>
+                            <SelectItem value="sqft">Square Feet</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="unit_cost">Unit Cost</Label>
+                        <Input
+                          id="unit_cost"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newMaterial.unit_cost}
+                          onChange={(e) => setNewMaterial({...newMaterial, unit_cost: Number(e.target.value)})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="quantity_available">Current Quantity</Label>
+                        <Input
+                          id="quantity_available"
+                          type="number"
+                          min="0"
+                          value={newMaterial.quantity_available}
+                          onChange={(e) => setNewMaterial({...newMaterial, quantity_available: Number(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="minimum_stock_level">Minimum Stock Level</Label>
+                        <Input
+                          id="minimum_stock_level"
+                          type="number"
+                          min="0"
+                          value={newMaterial.minimum_stock_level}
+                          onChange={(e) => setNewMaterial({...newMaterial, minimum_stock_level: Number(e.target.value)})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          placeholder="Storage location"
+                          value={newMaterial.location}
+                          onChange={(e) => setNewMaterial({...newMaterial, location: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="supplier_name">Supplier Name</Label>
+                        <Input
+                          id="supplier_name"
+                          placeholder="Supplier name"
+                          value={newMaterial.supplier_name}
+                          onChange={(e) => setNewMaterial({...newMaterial, supplier_name: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="supplier_contact">Supplier Contact</Label>
+                        <Input
+                          id="supplier_contact"
+                          placeholder="Phone or email"
+                          value={newMaterial.supplier_contact}
+                          onChange={(e) => setNewMaterial({...newMaterial, supplier_contact: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="material_code">Material Code</Label>
+                      <Input
+                        id="material_code"
+                        placeholder="SKU or material code"
+                        value={newMaterial.material_code}
+                        onChange={(e) => setNewMaterial({...newMaterial, material_code: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateMaterial}>
+                        Add Material
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
@@ -527,231 +762,6 @@ const MaterialTracking = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Create Material Dialog */}
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add New Material</DialogTitle>
-          <DialogDescription>
-            Add a new material to your inventory.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="name">Name *</Label>
-            <Input
-              id="name"
-              placeholder="Material name"
-              value={newMaterial.name}
-              onChange={(e) => setNewMaterial({...newMaterial, name: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="category">Category *</Label>
-            <Input
-              id="category"
-              placeholder="e.g., Lumber, Hardware, etc."
-              value={newMaterial.category}
-              onChange={(e) => setNewMaterial({...newMaterial, category: e.target.value})}
-            />
-          </div>
-          <div className="col-span-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Material description..."
-              value={newMaterial.description}
-              onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="unit">Unit</Label>
-            <Select value={newMaterial.unit} onValueChange={(value) => setNewMaterial({...newMaterial, unit: value})}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unit">Unit</SelectItem>
-                <SelectItem value="ft">Feet</SelectItem>
-                <SelectItem value="yd">Yards</SelectItem>
-                <SelectItem value="lb">Pounds</SelectItem>
-                <SelectItem value="kg">Kilograms</SelectItem>
-                <SelectItem value="sqft">Square Feet</SelectItem>
-                <SelectItem value="board">Board</SelectItem>
-                <SelectItem value="bag">Bag</SelectItem>
-                <SelectItem value="box">Box</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="unit_cost">Unit Cost</Label>
-            <Input
-              id="unit_cost"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={newMaterial.unit_cost}
-              onChange={(e) => setNewMaterial({...newMaterial, unit_cost: Number(e.target.value)})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="quantity">Initial Quantity</Label>
-            <Input
-              id="quantity"
-              type="number"
-              min="0"
-              placeholder="0"
-              value={newMaterial.quantity_available}
-              onChange={(e) => setNewMaterial({...newMaterial, quantity_available: Number(e.target.value)})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="min_stock">Minimum Stock Level</Label>
-            <Input
-              id="min_stock"
-              type="number"
-              min="0"
-              placeholder="0"
-              value={newMaterial.minimum_stock_level}
-              onChange={(e) => setNewMaterial({...newMaterial, minimum_stock_level: Number(e.target.value)})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="Storage location"
-              value={newMaterial.location}
-              onChange={(e) => setNewMaterial({...newMaterial, location: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="material_code">Material Code</Label>
-            <Input
-              id="material_code"
-              placeholder="Optional code/SKU"
-              value={newMaterial.material_code}
-              onChange={(e) => setNewMaterial({...newMaterial, material_code: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="supplier">Supplier Name</Label>
-            <Input
-              id="supplier"
-              placeholder="Supplier name"
-              value={newMaterial.supplier_name}
-              onChange={(e) => setNewMaterial({...newMaterial, supplier_name: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="supplier_contact">Supplier Contact</Label>
-            <Input
-              id="supplier_contact"
-              placeholder="Phone or email"
-              value={newMaterial.supplier_contact}
-              onChange={(e) => setNewMaterial({...newMaterial, supplier_contact: e.target.value})}
-            />
-          </div>
-        </div>
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreateMaterial}>
-            Add Material
-          </Button>
-        </div>
-      </DialogContent>
-
-      {/* Record Usage Dialog */}
-      <Dialog open={isUsageDialogOpen} onOpenChange={setIsUsageDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Record Material Usage</DialogTitle>
-            <DialogDescription>
-              Track material consumption for a project.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="material">Material *</Label>
-              <Select value={newUsage.material_id} onValueChange={(value) => setNewUsage({...newUsage, material_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select material" />
-                </SelectTrigger>
-                <SelectContent>
-                  {materials.map((material) => (
-                    <SelectItem key={material.id} value={material.id}>
-                      {material.name} ({material.quantity_available} {material.unit} available)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="project">Project *</Label>
-              <Select value={newUsage.project_id} onValueChange={(value) => setNewUsage({...newUsage, project_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="quantity_used">Quantity Used *</Label>
-              <Input
-                id="quantity_used"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0"
-                value={newUsage.quantity_used}
-                onChange={(e) => setNewUsage({...newUsage, quantity_used: Number(e.target.value)})}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="unit_cost_override">Unit Cost (leave blank to use default)</Label>
-              <Input
-                id="unit_cost_override"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={newUsage.unit_cost}
-                onChange={(e) => setNewUsage({...newUsage, unit_cost: Number(e.target.value)})}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="usage_notes">Notes</Label>
-              <Textarea
-                id="usage_notes"
-                placeholder="Optional notes about usage..."
-                value={newUsage.notes}
-                onChange={(e) => setNewUsage({...newUsage, notes: e.target.value})}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsUsageDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateUsage}>
-              Record Usage
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

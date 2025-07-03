@@ -335,6 +335,116 @@ const EquipmentTracking = () => {
                     Log Usage
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Log Equipment Usage</DialogTitle>
+                    <DialogDescription>
+                      Record equipment usage for a project.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="usage-equipment">Equipment *</Label>
+                        <Select value={newUsage.equipment_id} onValueChange={(value) => setNewUsage({...newUsage, equipment_id: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select equipment" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {equipment.filter(eq => eq.status === 'available').map((eq) => (
+                              <SelectItem key={eq.id} value={eq.id}>
+                                {eq.name} - {eq.equipment_type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="usage-project">Project *</Label>
+                        <Select value={newUsage.project_id} onValueChange={(value) => setNewUsage({...newUsage, project_id: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select project" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projects.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="start_date">Start Date *</Label>
+                        <Input
+                          id="start_date"
+                          type="date"
+                          value={newUsage.start_date}
+                          onChange={(e) => setNewUsage({...newUsage, start_date: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="end_date">End Date</Label>
+                        <Input
+                          id="end_date"
+                          type="date"
+                          value={newUsage.end_date}
+                          onChange={(e) => setNewUsage({...newUsage, end_date: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="hours_used">Hours Used</Label>
+                        <Input
+                          id="hours_used"
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={newUsage.hours_used}
+                          onChange={(e) => setNewUsage({...newUsage, hours_used: Number(e.target.value)})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="hourly_rate">Hourly Rate</Label>
+                        <Input
+                          id="hourly_rate"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newUsage.hourly_rate}
+                          onChange={(e) => setNewUsage({...newUsage, hourly_rate: Number(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="usage_notes">Notes</Label>
+                      <Textarea
+                        id="usage_notes"
+                        placeholder="Additional notes about equipment usage..."
+                        value={newUsage.notes}
+                        onChange={(e) => setNewUsage({...newUsage, notes: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsUsageDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateUsage}>
+                        Log Usage
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
               </Dialog>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
@@ -343,6 +453,163 @@ const EquipmentTracking = () => {
                     Add Equipment
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Add New Equipment</DialogTitle>
+                    <DialogDescription>
+                      Add new equipment to your inventory management system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="equipment_name">Name *</Label>
+                        <Input
+                          id="equipment_name"
+                          placeholder="Equipment name"
+                          value={newEquipment.name}
+                          onChange={(e) => setNewEquipment({...newEquipment, name: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="equipment_type">Type *</Label>
+                        <Input
+                          id="equipment_type"
+                          placeholder="e.g., Excavator, Generator, etc."
+                          value={newEquipment.equipment_type}
+                          onChange={(e) => setNewEquipment({...newEquipment, equipment_type: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="equipment_description">Description</Label>
+                      <Textarea
+                        id="equipment_description"
+                        placeholder="Equipment description..."
+                        value={newEquipment.description}
+                        onChange={(e) => setNewEquipment({...newEquipment, description: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="model">Model</Label>
+                        <Input
+                          id="model"
+                          placeholder="Equipment model"
+                          value={newEquipment.model}
+                          onChange={(e) => setNewEquipment({...newEquipment, model: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="serial_number">Serial Number</Label>
+                        <Input
+                          id="serial_number"
+                          placeholder="Serial number"
+                          value={newEquipment.serial_number}
+                          onChange={(e) => setNewEquipment({...newEquipment, serial_number: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="purchase_date">Purchase Date</Label>
+                        <Input
+                          id="purchase_date"
+                          type="date"
+                          value={newEquipment.purchase_date}
+                          onChange={(e) => setNewEquipment({...newEquipment, purchase_date: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="purchase_cost">Purchase Cost</Label>
+                        <Input
+                          id="purchase_cost"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newEquipment.purchase_cost}
+                          onChange={(e) => setNewEquipment({...newEquipment, purchase_cost: Number(e.target.value)})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="current_value">Current Value</Label>
+                        <Input
+                          id="current_value"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newEquipment.current_value}
+                          onChange={(e) => setNewEquipment({...newEquipment, current_value: Number(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="equipment_location">Location</Label>
+                        <Input
+                          id="equipment_location"
+                          placeholder="Current location"
+                          value={newEquipment.location}
+                          onChange={(e) => setNewEquipment({...newEquipment, location: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="status">Status</Label>
+                        <Select value={newEquipment.status} onValueChange={(value) => setNewEquipment({...newEquipment, status: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="in_use">In Use</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="retired">Retired</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="maintenance_schedule">Maintenance Schedule</Label>
+                        <Input
+                          id="maintenance_schedule"
+                          placeholder="e.g., Every 6 months"
+                          value={newEquipment.maintenance_schedule}
+                          onChange={(e) => setNewEquipment({...newEquipment, maintenance_schedule: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="next_maintenance_date">Next Maintenance Date</Label>
+                        <Input
+                          id="next_maintenance_date"
+                          type="date"
+                          value={newEquipment.next_maintenance_date}
+                          onChange={(e) => setNewEquipment({...newEquipment, next_maintenance_date: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateEquipment}>
+                        Add Equipment
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
@@ -570,264 +837,6 @@ const EquipmentTracking = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Create Equipment Dialog */}
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add New Equipment</DialogTitle>
-          <DialogDescription>
-            Add new equipment to your inventory.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="name">Name *</Label>
-            <Input
-              id="name"
-              placeholder="Equipment name"
-              value={newEquipment.name}
-              onChange={(e) => setNewEquipment({...newEquipment, name: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="equipment_type">Type *</Label>
-            <Input
-              id="equipment_type"
-              placeholder="e.g., Excavator, Crane, etc."
-              value={newEquipment.equipment_type}
-              onChange={(e) => setNewEquipment({...newEquipment, equipment_type: e.target.value})}
-            />
-          </div>
-          <div className="col-span-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Equipment description..."
-              value={newEquipment.description}
-              onChange={(e) => setNewEquipment({...newEquipment, description: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="model">Model</Label>
-            <Input
-              id="model"
-              placeholder="Model number"
-              value={newEquipment.model}
-              onChange={(e) => setNewEquipment({...newEquipment, model: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="serial_number">Serial Number</Label>
-            <Input
-              id="serial_number"
-              placeholder="Serial number"
-              value={newEquipment.serial_number}
-              onChange={(e) => setNewEquipment({...newEquipment, serial_number: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="purchase_date">Purchase Date</Label>
-            <Input
-              id="purchase_date"
-              type="date"
-              value={newEquipment.purchase_date}
-              onChange={(e) => setNewEquipment({...newEquipment, purchase_date: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="purchase_cost">Purchase Cost</Label>
-            <Input
-              id="purchase_cost"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={newEquipment.purchase_cost}
-              onChange={(e) => setNewEquipment({...newEquipment, purchase_cost: Number(e.target.value)})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="current_value">Current Value</Label>
-            <Input
-              id="current_value"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={newEquipment.current_value}
-              onChange={(e) => setNewEquipment({...newEquipment, current_value: Number(e.target.value)})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="Current location"
-              value={newEquipment.location}
-              onChange={(e) => setNewEquipment({...newEquipment, location: e.target.value})}
-            />
-          </div>
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Select value={newEquipment.status} onValueChange={(value) => setNewEquipment({...newEquipment, status: value})}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="in_use">In Use</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-                <SelectItem value="retired">Retired</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="next_maintenance">Next Maintenance Date</Label>
-            <Input
-              id="next_maintenance"
-              type="date"
-              value={newEquipment.next_maintenance_date}
-              onChange={(e) => setNewEquipment({...newEquipment, next_maintenance_date: e.target.value})}
-            />
-          </div>
-          <div className="col-span-2">
-            <Label htmlFor="maintenance_schedule">Maintenance Schedule</Label>
-            <Textarea
-              id="maintenance_schedule"
-              placeholder="Describe maintenance requirements..."
-              value={newEquipment.maintenance_schedule}
-              onChange={(e) => setNewEquipment({...newEquipment, maintenance_schedule: e.target.value})}
-            />
-          </div>
-        </div>
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreateEquipment}>
-            Add Equipment
-          </Button>
-        </div>
-      </DialogContent>
-
-      {/* Log Usage Dialog */}
-      <Dialog open={isUsageDialogOpen} onOpenChange={setIsUsageDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Log Equipment Usage</DialogTitle>
-            <DialogDescription>
-              Record equipment usage for a project.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="equipment">Equipment *</Label>
-              <Select value={newUsage.equipment_id} onValueChange={(value) => setNewUsage({...newUsage, equipment_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select equipment" />
-                </SelectTrigger>
-                <SelectContent>
-                  {equipment.map((eq) => (
-                    <SelectItem key={eq.id} value={eq.id}>
-                      {eq.name} ({eq.equipment_type})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="project">Project *</Label>
-              <Select value={newUsage.project_id} onValueChange={(value) => setNewUsage({...newUsage, project_id: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start_date">Start Date *</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={newUsage.start_date}
-                  onChange={(e) => setNewUsage({...newUsage, start_date: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="end_date">End Date</Label>
-                <Input
-                  id="end_date"
-                  type="date"
-                  value={newUsage.end_date}
-                  onChange={(e) => setNewUsage({...newUsage, end_date: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="hours_used">Hours Used</Label>
-                <Input
-                  id="hours_used"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  placeholder="0"
-                  value={newUsage.hours_used}
-                  onChange={(e) => setNewUsage({...newUsage, hours_used: Number(e.target.value)})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="hourly_rate">Hourly Rate</Label>
-                <Input
-                  id="hourly_rate"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={newUsage.hourly_rate}
-                  onChange={(e) => setNewUsage({...newUsage, hourly_rate: Number(e.target.value)})}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="usage_notes">Notes</Label>
-              <Textarea
-                id="usage_notes"
-                placeholder="Optional notes about usage..."
-                value={newUsage.notes}
-                onChange={(e) => setNewUsage({...newUsage, notes: e.target.value})}
-              />
-            </div>
-
-            {newUsage.hours_used > 0 && newUsage.hourly_rate > 0 && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm font-medium">
-                  Total Cost: ${(newUsage.hours_used * newUsage.hourly_rate).toFixed(2)}
-                </p>
-              </div>
-            )}
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsUsageDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateUsage}>
-              Log Usage
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
