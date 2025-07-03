@@ -6,6 +6,7 @@ pages_build_output_dir = "dist"
 
 [env.production.vars]
 NODE_VERSION = "18"
+NPM_FLAGS = "--omit=optional"
 
 [[env.production.routes]]
 pattern = "your-domain.com/*"

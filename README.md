@@ -67,22 +67,35 @@ Simply open [Lovable](https://lovable.dev/projects/ed4c0428-159f-4b25-8136-15b11
 
 ### Deploy to Cloudflare Pages
 
-This project is optimized for Cloudflare Pages deployment:
+This project is optimized for Cloudflare Pages deployment and **uses npm only**:
 
 1. **Connect your repository** to Cloudflare Pages
-2. **Build settings**:
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-   - Node.js version: `18` or higher
-3. **Environment variables** (if needed):
-   - Set any required environment variables in your Cloudflare Pages dashboard
+2. **Build settings** (IMPORTANT - Set these exactly):
+   - **Build command**: `npm ci && npm run build`
+   - **Build output directory**: `dist`
+   - **Node.js version**: `18` or higher
+   - **Environment variables**: 
+     - `NODE_VERSION` = `18`
+     - `NPM_CONFIG_PRODUCTION` = `false`
+3. **Force npm usage** (if build still tries to use Bun):
+   - In your Cloudflare Pages project settings, go to "Build & Deploy"
+   - Under "Build configurations", set:
+     - **Build command**: `rm -f bun.lockb && npm ci && npm run build`
+     - This ensures any cached Bun files are removed
 4. **Deploy**: Cloudflare will automatically build and deploy your app
+
+⚠️ **Important**: If you see "bun install" in the build logs, it means Cloudflare detected Bun. Make sure:
+- No `bun.lockb` file exists in your repository
+- The `package.json` has `"packageManager": "npm@10.9.2"`
+- Use the build command with `npm ci` (not just `npm install`)
 
 The project includes:
 - `_headers` file for security headers and caching
 - `_redirects` file for SPA routing
 - `wrangler.toml` for Cloudflare configuration
-- Optimized build process using npm instead of Bun
+- `.nvmrc` for Node.js version specification
+- `.npmrc` for npm configuration
+- **Explicit npm configuration** to prevent Bun usage
 
 For custom domains, configure them in your Cloudflare Pages dashboard.
 
