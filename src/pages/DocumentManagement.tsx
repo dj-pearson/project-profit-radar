@@ -97,16 +97,23 @@ const DocumentManagement = () => {
     try {
       setLoadingDocs(true);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('documents')
         .select(`
           *,
           document_categories(name),
           user_profiles(first_name, last_name, email)
         `)
-        .eq('company_id', userProfile?.company_id)
-        .eq(isProjectContext ? 'project_id' : 'project_id', isProjectContext ? projectId : null)
-        .order('created_at', { ascending: false });
+        .eq('company_id', userProfile?.company_id);
+
+      // Apply project filter based on context
+      if (isProjectContext) {
+        query = query.eq('project_id', projectId);
+      } else {
+        query = query.is('project_id', null);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setDocuments((data as any) || []);
