@@ -561,6 +561,94 @@ export type Database = {
           },
         ]
       }
+      osha_compliance_deadlines: {
+        Row: {
+          company_id: string
+          completed_by: string | null
+          completed_date: string | null
+          created_at: string
+          created_by: string | null
+          deadline_type: string
+          description: string | null
+          due_date: string
+          id: string
+          notes: string | null
+          notification_days: number | null
+          priority: string | null
+          recurrence_interval: string | null
+          recurring: boolean | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completed_by?: string | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_type: string
+          description?: string | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          notification_days?: number | null
+          priority?: string | null
+          recurrence_interval?: string | null
+          recurring?: boolean | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completed_by?: string | null
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_type?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          notification_days?: number | null
+          priority?: string | null
+          recurrence_interval?: string | null
+          recurring?: boolean | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "osha_compliance_deadlines_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_phases: {
         Row: {
           actual_cost: number | null
@@ -725,6 +813,259 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_checklist_responses: {
+        Row: {
+          checklist_id: string
+          company_id: string
+          completed_by: string
+          corrective_actions: string | null
+          created_at: string
+          id: string
+          issues_identified: string | null
+          notes: string | null
+          photos: string[] | null
+          project_id: string | null
+          response_date: string
+          responses: Json
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          checklist_id: string
+          company_id: string
+          completed_by: string
+          corrective_actions?: string | null
+          created_at?: string
+          id?: string
+          issues_identified?: string | null
+          notes?: string | null
+          photos?: string[] | null
+          project_id?: string | null
+          response_date?: string
+          responses: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checklist_id?: string
+          company_id?: string
+          completed_by?: string
+          corrective_actions?: string | null
+          created_at?: string
+          id?: string
+          issues_identified?: string | null
+          notes?: string | null
+          photos?: string[] | null
+          project_id?: string | null
+          response_date?: string
+          responses?: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_checklist_responses_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "safety_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_checklist_responses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_checklist_responses_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_checklist_responses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_checklists: {
+        Row: {
+          checklist_items: Json
+          checklist_type: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          industry_type: string | null
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          checklist_items: Json
+          checklist_type: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry_type?: string | null
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          checklist_items?: Json
+          checklist_type?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry_type?: string | null
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_checklists_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_checklists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_incidents: {
+        Row: {
+          body_part_affected: string | null
+          company_id: string
+          corrective_actions: string | null
+          created_at: string
+          created_by: string | null
+          days_away_from_work: number | null
+          description: string
+          id: string
+          immediate_actions: string | null
+          incident_date: string
+          incident_time: string | null
+          incident_type: string
+          injured_person_job_title: string | null
+          injured_person_name: string | null
+          location: string | null
+          lost_time: boolean | null
+          medical_attention_required: boolean | null
+          osha_recordable: boolean | null
+          photos: string[] | null
+          project_id: string | null
+          reported_by: string | null
+          root_cause_analysis: string | null
+          severity: string
+          status: string | null
+          updated_at: string
+          witnesses: string[] | null
+        }
+        Insert: {
+          body_part_affected?: string | null
+          company_id: string
+          corrective_actions?: string | null
+          created_at?: string
+          created_by?: string | null
+          days_away_from_work?: number | null
+          description: string
+          id?: string
+          immediate_actions?: string | null
+          incident_date: string
+          incident_time?: string | null
+          incident_type: string
+          injured_person_job_title?: string | null
+          injured_person_name?: string | null
+          location?: string | null
+          lost_time?: boolean | null
+          medical_attention_required?: boolean | null
+          osha_recordable?: boolean | null
+          photos?: string[] | null
+          project_id?: string | null
+          reported_by?: string | null
+          root_cause_analysis?: string | null
+          severity: string
+          status?: string | null
+          updated_at?: string
+          witnesses?: string[] | null
+        }
+        Update: {
+          body_part_affected?: string | null
+          company_id?: string
+          corrective_actions?: string | null
+          created_at?: string
+          created_by?: string | null
+          days_away_from_work?: number | null
+          description?: string
+          id?: string
+          immediate_actions?: string | null
+          incident_date?: string
+          incident_time?: string | null
+          incident_type?: string
+          injured_person_job_title?: string | null
+          injured_person_name?: string | null
+          location?: string | null
+          lost_time?: boolean | null
+          medical_attention_required?: boolean | null
+          osha_recordable?: boolean | null
+          photos?: string[] | null
+          project_id?: string | null
+          reported_by?: string | null
+          root_cause_analysis?: string | null
+          severity?: string
+          status?: string | null
+          updated_at?: string
+          witnesses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_incidents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1143,6 +1484,85 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_certifications: {
+        Row: {
+          certification_name: string
+          certification_number: string | null
+          certification_type: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          expiration_date: string | null
+          id: string
+          issue_date: string | null
+          issuing_organization: string | null
+          notes: string | null
+          renewal_required: boolean | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          certification_name: string
+          certification_number?: string | null
+          certification_type: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          expiration_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_organization?: string | null
+          notes?: string | null
+          renewal_required?: boolean | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          certification_name?: string
+          certification_number?: string | null
+          certification_type?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          expiration_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_organization?: string | null
+          notes?: string | null
+          renewal_required?: boolean | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_certifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
