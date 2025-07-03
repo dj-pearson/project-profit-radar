@@ -284,7 +284,7 @@ const VisualScheduler = () => {
 
             {/* Resource Rows */}
             {resources.map(resource => (
-              <React.Fragment key={resource.id}>
+              <div key={resource.id} className="contents">
                 <div className="border-r border-b p-4 bg-background">
                   <div className="flex items-center gap-2">
                     {resource.type === 'crew' ? <Users className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
@@ -316,7 +316,7 @@ const VisualScheduler = () => {
                       ))}
                   </div>
                 ))}
-              </React.Fragment>
+              </div>
             ))}
           </div>
         </CardContent>
