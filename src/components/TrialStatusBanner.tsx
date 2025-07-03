@@ -11,6 +11,8 @@ const TrialStatusBanner = () => {
     daysLeft: number;
     isExpired: boolean;
     subscriptionStatus?: string;
+    isGracePeriod?: boolean;
+    graceDaysLeft?: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -42,10 +44,21 @@ const TrialStatusBanner = () => {
           const today = new Date();
           const daysLeft = Math.ceil((trialEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           
+          // Calculate grace period if applicable
+          const isGracePeriod = company.subscription_status === 'grace_period';
+          let graceDaysLeft = 0;
+          if (isGracePeriod) {
+            const gracePeriodEnd = new Date(trialEnd.getTime() + 7 * 24 * 60 * 60 * 1000);
+            graceDaysLeft = Math.ceil((gracePeriodEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            graceDaysLeft = Math.max(0, graceDaysLeft);
+          }
+          
           setTrialData({
             daysLeft: Math.max(0, daysLeft),
             isExpired: daysLeft <= 0,
-            subscriptionStatus: company.subscription_status
+            subscriptionStatus: company.subscription_status,
+            isGracePeriod,
+            graceDaysLeft
           });
         }
       }
@@ -85,8 +98,64 @@ const TrialStatusBanner = () => {
     return null;
   }
 
-  const { daysLeft, isExpired } = trialData;
+  const { daysLeft, isExpired, isGracePeriod, graceDaysLeft, subscriptionStatus } = trialData;
 
+  // Show suspended status
+  if (subscriptionStatus === 'suspended') {
+    return (
+      <Card className="border-destructive bg-destructive/10 mb-6">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center space-x-3">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <div>
+              <h3 className="font-semibold text-destructive">Account Suspended</h3>
+              <p className="text-sm text-muted-foreground">
+                Your trial and grace period have expired. Upgrade to reactivate your account.
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleUpgrade}
+            disabled={loading}
+            className="bg-destructive hover:bg-destructive/90"
+          >
+            <CreditCard className="mr-2 h-4 w-4" />
+            {loading ? 'Processing...' : 'Reactivate Account'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show grace period status
+  if (isGracePeriod) {
+    return (
+      <Card className="border-amber-500 bg-amber-50 mb-6">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center space-x-3">
+            <Clock className="h-5 w-5 text-amber-600" />
+            <div>
+              <h3 className="font-semibold text-amber-700">Grace Period Active</h3>
+              <p className="text-sm text-amber-600">
+                {graceDaysLeft} day{graceDaysLeft !== 1 ? 's' : ''} left in your grace period. 
+                Limited features available.
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleUpgrade}
+            disabled={loading}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            <CreditCard className="mr-2 h-4 w-4" />
+            {loading ? 'Processing...' : 'Upgrade Now'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show expired trial (before grace period)
   if (isExpired) {
     return (
       <Card className="border-destructive bg-destructive/5 mb-6">
