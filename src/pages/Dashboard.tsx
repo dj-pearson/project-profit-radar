@@ -391,7 +391,7 @@ const Dashboard = () => {
                 <Button 
                   variant="construction" 
                   className="h-24 flex-col"
-                  onClick={() => handleQuickAction('companies')}
+                  onClick={() => navigate('/admin/companies')}
                 >
                   <span className="text-lg font-bold">Companies</span>
                   <span className="text-sm">Manage Organizations</span>
@@ -399,7 +399,7 @@ const Dashboard = () => {
                 <Button 
                   variant="construction" 
                   className="h-24 flex-col"
-                  onClick={() => handleQuickAction('users')}
+                  onClick={() => navigate('/admin/users')}
                 >
                   <span className="text-lg font-bold">Users</span>
                   <span className="text-sm">User Management</span>
@@ -407,7 +407,7 @@ const Dashboard = () => {
                 <Button 
                   variant="construction" 
                   className="h-24 flex-col"
-                  onClick={() => handleQuickAction('billing')}
+                  onClick={() => navigate('/admin/billing')}
                 >
                   <span className="text-lg font-bold">Billing</span>
                   <span className="text-sm">Subscription Overview</span>
@@ -423,10 +423,18 @@ const Dashboard = () => {
                 <Button 
                   variant="construction" 
                   className="h-24 flex-col"
-                  onClick={() => handleQuickAction('analytics')}
+                  onClick={() => navigate('/admin/analytics')}
                 >
                   <span className="text-lg font-bold">Analytics</span>
                   <span className="text-sm">Platform Metrics</span>
+                </Button>
+                <Button 
+                  variant="construction" 
+                  className="h-24 flex-col"
+                  onClick={() => navigate('/admin/settings')}
+                >
+                  <span className="text-lg font-bold">Settings</span>
+                  <span className="text-sm">System Configuration</span>
                 </Button>
               </div>
             </CardContent>
