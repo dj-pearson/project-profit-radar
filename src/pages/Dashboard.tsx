@@ -161,6 +161,12 @@ const Dashboard = () => {
       case 'change_orders':
         navigate('/change-orders');
         break;
+      case 'materials':
+        navigate('/materials');
+        break;
+      case 'equipment':
+        navigate('/equipment');
+        break;
       default:
         toast({
           title: "Feature Coming Soon",

@@ -1007,6 +1007,140 @@ export type Database = {
           },
         ]
       }
+      equipment: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          current_value: number | null
+          description: string | null
+          equipment_type: string
+          id: string
+          is_active: boolean | null
+          last_maintenance_date: string | null
+          location: string | null
+          maintenance_schedule: string | null
+          model: string | null
+          name: string
+          next_maintenance_date: string | null
+          purchase_cost: number | null
+          purchase_date: string | null
+          serial_number: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          current_value?: number | null
+          description?: string | null
+          equipment_type: string
+          id?: string
+          is_active?: boolean | null
+          last_maintenance_date?: string | null
+          location?: string | null
+          maintenance_schedule?: string | null
+          model?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_value?: number | null
+          description?: string | null
+          equipment_type?: string
+          id?: string
+          is_active?: boolean | null
+          last_maintenance_date?: string | null
+          location?: string | null
+          maintenance_schedule?: string | null
+          model?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_usage: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          equipment_id: string
+          hourly_rate: number | null
+          hours_used: number | null
+          id: string
+          notes: string | null
+          operator_id: string | null
+          project_id: string
+          start_date: string
+          total_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          equipment_id: string
+          hourly_rate?: number | null
+          hours_used?: number | null
+          id?: string
+          notes?: string | null
+          operator_id?: string | null
+          project_id: string
+          start_date: string
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          equipment_id?: string
+          hourly_rate?: number | null
+          hours_used?: number | null
+          id?: string
+          notes?: string | null
+          operator_id?: string | null
+          project_id?: string
+          start_date?: string
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_usage_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           cost_code_id: string | null
@@ -1273,6 +1407,141 @@ export type Database = {
           },
           {
             foreignKeyName: "job_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_usage: {
+        Row: {
+          created_at: string
+          date_used: string
+          id: string
+          material_id: string
+          notes: string | null
+          project_id: string
+          quantity_used: number
+          total_cost: number
+          unit_cost: number
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_used?: string
+          id?: string
+          material_id: string
+          notes?: string | null
+          project_id: string
+          quantity_used: number
+          total_cost: number
+          unit_cost: number
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_used?: string
+          id?: string
+          material_id?: string
+          notes?: string | null
+          project_id?: string
+          quantity_used?: number
+          total_cost?: number
+          unit_cost?: number
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_usage_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          category: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_ordered_date: string | null
+          location: string | null
+          material_code: string | null
+          minimum_stock_level: number | null
+          name: string
+          project_id: string | null
+          quantity_available: number | null
+          supplier_contact: string | null
+          supplier_name: string | null
+          unit: string
+          unit_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_ordered_date?: string | null
+          location?: string | null
+          material_code?: string | null
+          minimum_stock_level?: number | null
+          name: string
+          project_id?: string | null
+          quantity_available?: number | null
+          supplier_contact?: string | null
+          supplier_name?: string | null
+          unit?: string
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_ordered_date?: string | null
+          location?: string | null
+          material_code?: string | null
+          minimum_stock_level?: number | null
+          name?: string
+          project_id?: string | null
+          quantity_available?: number | null
+          supplier_contact?: string | null
+          supplier_name?: string | null
+          unit?: string
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materials_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
