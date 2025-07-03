@@ -45,6 +45,81 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action_type: string
+          company_id: string | null
+          compliance_category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          resource_id: string | null
+          resource_name: string | null
+          resource_type: string
+          risk_level: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          company_id?: string | null
+          compliance_category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          resource_id?: string | null
+          resource_name?: string | null
+          resource_type: string
+          risk_level?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          company_id?: string | null
+          compliance_category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          resource_id?: string | null
+          resource_name?: string | null
+          resource_type?: string
+          risk_level?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           body: string
@@ -215,6 +290,65 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_reports: {
+        Row: {
+          compliance_score: number | null
+          created_at: string
+          file_path: string | null
+          findings: Json | null
+          generated_by: string
+          id: string
+          recommendations: Json | null
+          report_data: Json
+          report_type: string
+          reporting_period_end: string
+          reporting_period_start: string
+          risk_assessment: Json | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          compliance_score?: number | null
+          created_at?: string
+          file_path?: string | null
+          findings?: Json | null
+          generated_by: string
+          id?: string
+          recommendations?: Json | null
+          report_data: Json
+          report_type: string
+          reporting_period_end: string
+          reporting_period_start: string
+          risk_assessment?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          compliance_score?: number | null
+          created_at?: string
+          file_path?: string | null
+          findings?: Json | null
+          generated_by?: string
+          id?: string
+          recommendations?: Json | null
+          report_data?: Json
+          report_type?: string
+          reporting_period_end?: string
+          reporting_period_start?: string
+          risk_assessment?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_reports_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cost_codes: {
         Row: {
           category: string | null
@@ -353,6 +487,75 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_access_logs: {
+        Row: {
+          access_method: string
+          access_purpose: string | null
+          company_id: string | null
+          created_at: string
+          data_classification: string
+          data_type: string
+          id: string
+          ip_address: unknown | null
+          lawful_basis: string | null
+          resource_id: string
+          resource_name: string | null
+          retention_applied: boolean | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          access_method: string
+          access_purpose?: string | null
+          company_id?: string | null
+          created_at?: string
+          data_classification: string
+          data_type: string
+          id?: string
+          ip_address?: unknown | null
+          lawful_basis?: string | null
+          resource_id: string
+          resource_name?: string | null
+          retention_applied?: boolean | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          access_method?: string
+          access_purpose?: string | null
+          company_id?: string | null
+          created_at?: string
+          data_classification?: string
+          data_type?: string
+          id?: string
+          ip_address?: unknown | null
+          lawful_basis?: string | null
+          resource_id?: string
+          resource_name?: string | null
+          retention_applied?: boolean | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_access_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_access_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1346,6 +1549,75 @@ export type Database = {
         }
         Relationships: []
       }
+      system_config_changes: {
+        Row: {
+          approval_required: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          change_reason: string | null
+          change_type: string
+          component: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          new_value: string | null
+          old_value: string | null
+          rollback_data: Json | null
+          rollback_possible: boolean | null
+          setting_name: string
+          user_id: string
+        }
+        Insert: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          change_type: string
+          component: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_value?: string | null
+          old_value?: string | null
+          rollback_data?: Json | null
+          rollback_possible?: boolean | null
+          setting_name: string
+          user_id: string
+        }
+        Update: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          change_type?: string
+          component?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_value?: string | null
+          old_value?: string | null
+          rollback_data?: Json | null
+          rollback_possible?: boolean | null
+          setting_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_config_changes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_config_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           actual_hours: number | null
@@ -1694,6 +1966,43 @@ export type Database = {
       is_account_locked: {
         Args: { p_user_id: string }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          p_company_id: string
+          p_user_id: string
+          p_action_type: string
+          p_resource_type: string
+          p_resource_id?: string
+          p_resource_name?: string
+          p_old_values?: Json
+          p_new_values?: Json
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_session_id?: string
+          p_risk_level?: string
+          p_compliance_category?: string
+          p_description?: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
+      log_data_access: {
+        Args: {
+          p_company_id: string
+          p_user_id: string
+          p_data_type: string
+          p_data_classification: string
+          p_resource_id: string
+          p_resource_name?: string
+          p_access_method?: string
+          p_access_purpose?: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_session_id?: string
+          p_lawful_basis?: string
+        }
+        Returns: string
       }
       log_security_event: {
         Args: {

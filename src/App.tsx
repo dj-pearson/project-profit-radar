@@ -28,6 +28,9 @@ import Billing from "./pages/admin/Billing";
 import Analytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
 import SEOManager from "./pages/admin/SEOManager";
+import SecurityMonitoring from "./pages/SecurityMonitoring";
+import Safety from "./pages/Safety";
+import ComplianceAudit from "./pages/ComplianceAudit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +68,9 @@ const App = () => (
             <Route path="/roi-calculator" element={<ROICalculator />} />
             <Route path="/subscription" element={<SubscriptionSettings />} />
             <Route path="/client-portal" element={<ClientPortal />} />
+            <Route path="/security-monitoring" element={<SecurityMonitoring />} />
+            <Route path="/safety" element={<Safety />} />
+            <Route path="/compliance-audit" element={<ComplianceAudit />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
