@@ -105,8 +105,7 @@ const ChangeOrders = () => {
 
       // Load change orders
       const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
-        method: 'GET',
-        body: { path: 'list' }
+        method: 'GET'
       });
 
       if (ordersError) throw ordersError;

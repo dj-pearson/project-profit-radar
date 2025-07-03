@@ -107,8 +107,7 @@ const DailyReports = () => {
 
       // Load daily reports
       const { data: reportsData, error: reportsError } = await supabase.functions.invoke('daily-reports', {
-        method: 'GET',
-        body: { path: 'list' }
+        method: 'GET'
       });
 
       if (reportsError) throw reportsError;
