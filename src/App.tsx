@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamManagement from "./pages/TeamManagement";
+import TimeTracking from "./pages/TimeTracking";
+import DocumentManagement from "./pages/DocumentManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,9 @@ const App = () => (
             <Route path="/create-project" element={<CreateProject />} />
             <Route path="/project/:projectId" element={<ProjectDetail />} />
             <Route path="/team" element={<TeamManagement />} />
+            <Route path="/time-tracking" element={<TimeTracking />} />
+            <Route path="/documents" element={<DocumentManagement />} />
+            <Route path="/project/:projectId/documents" element={<DocumentManagement />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

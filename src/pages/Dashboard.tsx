@@ -141,6 +141,12 @@ const Dashboard = () => {
       case 'manage_team':
         navigate('/team');
         break;
+      case 'time_tracking':
+        navigate('/time-tracking');
+        break;
+      case 'documents':
+        navigate('/documents');
+        break;
       default:
         toast({
           title: "Feature Coming Soon",

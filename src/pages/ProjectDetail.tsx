@@ -523,16 +523,16 @@ const ProjectDetail = () => {
           <TabsContent value="documents" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Documents</h2>
-              <Button>
+              <Button onClick={() => navigate(`/project/${projectId}/documents`)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Upload Document
+                Manage Documents
               </Button>
             </div>
             
             <Card>
               <CardContent className="text-center py-8">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Document management coming soon</p>
+                <p className="text-muted-foreground">Click "Manage Documents" to view and upload project files</p>
               </CardContent>
             </Card>
           </TabsContent>
