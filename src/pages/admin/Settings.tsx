@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import RenewalNotificationPanel from '@/components/RenewalNotificationPanel';
 import { 
   ArrowLeft, 
   Settings,
@@ -391,6 +392,9 @@ const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+
+          
+          <RenewalNotificationPanel />
 
           {/* API Settings */}
           <Card>
