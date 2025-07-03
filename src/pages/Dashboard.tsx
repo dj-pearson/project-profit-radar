@@ -134,10 +134,16 @@ const Dashboard = () => {
   };
 
   const handleQuickAction = (action: string) => {
-    toast({
-      title: "Feature Coming Soon",
-      description: `${action.replace('_', ' ')} functionality will be available soon.`
-    });
+    switch (action) {
+      case 'create_project':
+        navigate('/create-project');
+        break;
+      default:
+        toast({
+          title: "Feature Coming Soon",
+          description: `${action.replace('_', ' ')} functionality will be available soon.`
+        });
+    }
   };
 
   const handleViewProject = (projectId: string) => {
@@ -280,9 +286,9 @@ const Dashboard = () => {
                     <p className="text-muted-foreground">No projects found</p>
                     {(userProfile?.role === 'admin' || userProfile?.role === 'project_manager') && (
                       <Button 
-                        variant="outline" 
+                        variant="default" 
                         className="mt-4"
-                        onClick={() => handleQuickAction('create_project')}
+                        onClick={() => navigate('/create-project')}
                       >
                         Create Your First Project
                       </Button>
