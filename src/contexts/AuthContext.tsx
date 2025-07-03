@@ -52,14 +52,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Error fetching user profile:', error);
-        return;
+        // Don't clear auth state on profile fetch errors - user is still authenticated
+        return null;
       }
       
       if (data) {
         setUserProfile(data);
+        return data;
+      } else {
+        console.warn('No user profile found for user:', userId);
+        // Create a default profile if none exists
+        const defaultProfile = {
+          id: userId,
+          email: '',
+          role: 'admin' as const,
+          is_active: true
+        };
+        setUserProfile(defaultProfile);
+        return defaultProfile;
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // Don't clear auth state on profile fetch errors
+      return null;
     }
   };
 
@@ -71,22 +86,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
+    let profileFetchTimeout: NodeJS.Timeout;
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted) return;
         
+        console.log('Auth state change:', event, session?.user?.id);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Use setTimeout to avoid blocking the auth state change
-          setTimeout(() => {
+          // Clear any existing timeout
+          if (profileFetchTimeout) {
+            clearTimeout(profileFetchTimeout);
+          }
+          
+          // Fetch profile with a slight delay to avoid race conditions
+          profileFetchTimeout = setTimeout(async () => {
             if (mounted) {
-              fetchUserProfile(session.user.id);
+              console.log('Fetching profile for user:', session.user.id);
+              await fetchUserProfile(session.user.id);
             }
-          }, 100);
+          }, 500);
         } else {
           setUserProfile(null);
         }
@@ -98,10 +122,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
+        console.log('Initial session:', session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -121,6 +147,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
+      if (profileFetchTimeout) {
+        clearTimeout(profileFetchTimeout);
+      }
       subscription.unsubscribe();
     };
   }, []);
