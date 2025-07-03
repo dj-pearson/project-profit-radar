@@ -13,8 +13,11 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
+  SidebarHeader,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   Home,
   Building2,
@@ -140,7 +143,16 @@ export const AppSidebar = () => {
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
-      <SidebarTrigger className="m-2 self-end" />
+      <SidebarHeader className="p-2">
+        <div className="flex items-center justify-between">
+          <SidebarTrigger />
+          {!collapsed && (
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
       
       <SidebarContent>
         {visibleCategories.map((category) => (
