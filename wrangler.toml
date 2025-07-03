@@ -17,12 +17,16 @@ SKIP_DEPENDENCY_INSTALL = "false"
 command = "npm run build:prod"
 publish = "dist"
 
-# wrangler.toml (wrangler v3.88.0^)
+# Enable logging for debugging
 [observability.logs]
 enabled = true
 
+# Custom domain configuration
+# Note: Update these with your actual domains
+[[env.production.routes]]
+pattern = "builddesk.pearsonperformance.workers.dev/*"
+zone_name = "pearsonperformance.workers.dev"
 
-# Routes configuration for build-desk.com
 [[env.production.routes]]
 pattern = "build-desk.com/*"
 zone_name = "build-desk.com"
