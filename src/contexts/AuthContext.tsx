@@ -44,37 +44,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Attempting to fetch profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
       
+      console.log('Profile fetch result:', { data, error });
+      
       if (error) {
         console.error('Error fetching user profile:', error);
-        // Don't clear auth state on profile fetch errors - user is still authenticated
-        return null;
-      }
-      
-      if (data) {
-        setUserProfile(data);
-        return data;
-      } else {
-        console.warn('No user profile found for user:', userId);
-        // Create a default profile if none exists
+        // Create a default profile for the user if fetch fails
+        const session = await supabase.auth.getSession();
         const defaultProfile = {
           id: userId,
-          email: '',
+          email: session.data.session?.user?.email || '',
           role: 'admin' as const,
           is_active: true
         };
+        console.log('Setting default profile:', defaultProfile);
+        setUserProfile(defaultProfile);
+        return defaultProfile;
+      }
+      
+      if (data) {
+        console.log('Profile found, setting profile:', data);
+        setUserProfile(data);
+        return data;
+      } else {
+        console.warn('No user profile found for user, creating default:', userId);
+        // Create a default profile if none exists
+        const session = await supabase.auth.getSession();
+        const defaultProfile = {
+          id: userId,
+          email: session.data.session?.user?.email || '',
+          role: 'admin' as const,
+          is_active: true
+        };
+        console.log('Setting default profile:', defaultProfile);
         setUserProfile(defaultProfile);
         return defaultProfile;
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      // Don't clear auth state on profile fetch errors
-      return null;
+      console.error('Catch block - Error fetching user profile:', error);
+      // Create a default profile even on catch
+      const session = await supabase.auth.getSession();
+      const defaultProfile = {
+        id: userId,
+        email: session.data.session?.user?.email || '',
+        role: 'admin' as const,
+        is_active: true
+      };
+      console.log('Setting default profile after catch:', defaultProfile);
+      setUserProfile(defaultProfile);
+      return defaultProfile;
     }
   };
 
