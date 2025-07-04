@@ -93,8 +93,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state change:', event, session?.user?.id);
-        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -110,7 +108,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Fetch profile immediately without delay
           profileFetchTimeout = setTimeout(async () => {
             if (mounted) {
-              console.log('Fetching profile for user:', session.user.id);
               await fetchUserProfile(session.user.id);
             }
           }, 0);

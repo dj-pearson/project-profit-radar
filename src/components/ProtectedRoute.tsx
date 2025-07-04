@@ -71,10 +71,8 @@ interface RouteGuardProps {
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) => {
   const { userProfile, loading, user } = useAuth();
 
-  console.log('RouteGuard check:', { routePath, userProfile: userProfile?.role, loading, hasUser: !!user });
-
+  // Only log once during initial load or significant state changes
   if (loading) {
-    console.log('RouteGuard: Still loading, showing spinner');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse">Loading...</div>
@@ -82,21 +80,22 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) =
     );
   }
 
-  // If user is authenticated but no profile, allow access (profile will load async)
-  if (!userProfile && !user) {
-    console.log('RouteGuard: No user profile and no authenticated user, redirecting to auth');
+  // If no user at all, redirect to auth
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Root admin has access to everything - no restrictions
-  if (userProfile?.role === 'root_admin') {
-    console.log('RouteGuard: Root admin detected, allowing access');
-    return <>{children}</>;
+  // If user exists but profile is still loading, show loading instead of redirecting
+  if (!userProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse">Loading profile...</div>
+      </div>
+    );
   }
 
-  // If user is authenticated but profile is still loading, allow access
-  if (user && !userProfile) {
-    console.log('RouteGuard: User authenticated but profile loading, allowing access');
+  // Root admin has access to everything
+  if (userProfile.role === 'root_admin') {
     return <>{children}</>;
   }
 
