@@ -109,13 +109,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (mounted) {
               console.log('Fetching profile for user:', session.user.id);
               await fetchUserProfile(session.user.id);
+              setLoading(false);
             }
-          }, 500);
+          }, 100);
         } else {
           setUserProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
@@ -133,10 +133,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           await fetchUserProfile(session.user.id);
+        } else {
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
         if (mounted) {
           setLoading(false);
         }
