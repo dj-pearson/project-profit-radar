@@ -12,13 +12,13 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/BuildDeskLogo.png",
+      "src": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/BuildDeskLogo.png", 
+      "src": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png", 
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -30,19 +30,19 @@
       "short_name": "Dashboard",
       "description": "Go to your dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png", "sizes": "192x192" }]
     },
     {
       "name": "Create Project",
       "short_name": "New Project", 
       "description": "Create a new project",
       "url": "/create-project",
-      "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
     {
-      "src": "/BuildDeskLogo.png",
+      "src": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide"

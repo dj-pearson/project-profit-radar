@@ -24,7 +24,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0">
             <img 
-              src="/BuildDeskLogo.png" 
+              src="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png" 
               alt="BuildDesk" 
               className="h-8 w-auto"
             />
