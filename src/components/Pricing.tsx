@@ -6,11 +6,13 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePromotions } from "@/hooks/usePromotions";
 
 const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { toast } = useToast();
+  const { promotions, getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('homepage');
 
   const plans = [
     {
@@ -84,7 +86,8 @@ const Pricing = () => {
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
         body: {
           subscription_tier: tier,
-          billing_period: billingPeriod
+          billing_period: billingPeriod,
+          promotion_code: getPromotionForPlan(tier)?.id || null
         }
       });
 
@@ -140,30 +143,62 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => (
-            <Card key={index} className={`relative ${plan.isPopular ? 'border-construction-orange shadow-xl scale-105' : 'border'}`}>
-              {plan.isPopular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-construction-orange text-white">
-                  Most Popular
-                </Badge>
-              )}
-              <CardHeader className="text-center pb-8">
-                <CardTitle className="text-2xl text-construction-dark">{plan.name}</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-construction-dark">
-                    ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice}
-                  </span>
-                  <span className="text-muted-foreground">
-                    /{billingPeriod === 'monthly' ? 'month' : 'year'}
-                  </span>
-                  {billingPeriod === 'annual' && (
-                    <div className="text-sm text-construction-orange font-medium mt-1">
-                      Save ${(plan.monthlyPrice * 12) - plan.annualPrice}
-                    </div>
-                  )}
-                </div>
-                <CardDescription className="text-base mt-2">{plan.description}</CardDescription>
-              </CardHeader>
+          {plans.map((plan, index) => {
+            const promotion = getPromotionForPlan(plan.tier);
+            const originalPrice = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+            const discountedPrice = promotion ? calculateDiscountedPrice(originalPrice, plan.tier) : originalPrice;
+            const discountAmount = promotion ? getDiscountAmount(originalPrice, plan.tier) : 0;
+            
+            return (
+              <Card key={index} className={`relative ${plan.isPopular ? 'border-construction-orange shadow-xl scale-105' : 'border'}`}>
+                {plan.isPopular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-construction-orange text-white">
+                    Most Popular
+                  </Badge>
+                )}
+                {promotion && (
+                  <Badge className="absolute -top-3 right-4 bg-red-500 text-white">
+                    {promotion.name}
+                  </Badge>
+                )}
+                <CardHeader className="text-center pb-8">
+                  <CardTitle className="text-2xl text-construction-dark">{plan.name}</CardTitle>
+                  <div className="mt-4">
+                    {promotion ? (
+                      <div className="space-y-1">
+                        <div className="text-lg text-muted-foreground line-through">
+                          ${originalPrice}
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-4xl font-bold text-construction-dark">
+                            ${discountedPrice}
+                          </span>
+                          <Badge variant="destructive" className="text-xs">
+                            Save ${discountAmount}
+                          </Badge>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-4xl font-bold text-construction-dark">
+                        ${originalPrice}
+                      </span>
+                    )}
+                    <span className="text-muted-foreground">
+                      /{billingPeriod === 'monthly' ? 'month' : 'year'}
+                    </span>
+                    {billingPeriod === 'annual' && !promotion && (
+                      <div className="text-sm text-construction-orange font-medium mt-1">
+                        Save ${(plan.monthlyPrice * 12) - plan.annualPrice}
+                      </div>
+                    )}
+                    {promotion && (
+                      <div className="text-sm text-red-600 font-medium mt-1">
+                        {promotion.discount_percentage}% OFF - Limited Time!
+                      </div>
+                    )}
+                  </div>
+                  <CardDescription className="text-base mt-2">{plan.description}</CardDescription>
+                </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
                   {plan.features.map((feature, featureIndex) => (
@@ -201,7 +236,8 @@ const Pricing = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          );
+        })}
         </div>
 
         {/* Value Props */}

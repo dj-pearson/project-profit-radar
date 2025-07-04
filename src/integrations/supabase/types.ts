@@ -2494,6 +2494,51 @@ export type Database = {
           },
         ]
       }
+      promotions: {
+        Row: {
+          applies_to: string[] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_percentage: number
+          display_on: string[] | null
+          end_date: string
+          id: string
+          is_active: boolean
+          name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_percentage: number
+          display_on?: string[] | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          name: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_percentage?: number
+          display_on?: string[] | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quickbooks_customers: {
         Row: {
           address: Json | null
@@ -3925,6 +3970,19 @@ export type Database = {
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_active_promotions: {
+        Args: { p_display_location?: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          discount_percentage: number
+          start_date: string
+          end_date: string
+          applies_to: string[]
+          display_on: string[]
+        }[]
       }
       get_smtp_config: {
         Args: Record<PropertyKey, never>

@@ -28,6 +28,7 @@ import Resources from "./pages/Resources";
 import ROICalculator from "./pages/ROICalculator";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
 import Upgrade from "./pages/Upgrade";
+import Promotions from "./pages/admin/Promotions";
 import Companies from "./pages/admin/Companies";
 import Users from "./pages/admin/Users";
 import Billing from "./pages/admin/Billing";
@@ -79,6 +80,7 @@ const AppContent = () => {
       <Route path="/admin/billing" element={<RouteGuard routePath="/admin/billing"><Billing /></RouteGuard>} />
       <Route path="/admin/analytics" element={<RouteGuard routePath="/admin/analytics"><Analytics /></RouteGuard>} />
       <Route path="/admin/settings" element={<RouteGuard routePath="/admin/settings"><AdminSettings /></RouteGuard>} />
+      <Route path="/admin/promotions" element={<RouteGuard routePath="/admin/promotions"><Promotions /></RouteGuard>} />
       <Route path="/admin/seo" element={<RouteGuard routePath="/admin/seo"><SEOManager /></RouteGuard>} />
       <Route path="/resources" element={<Resources />} />
       <Route path="/roi-calculator" element={<ROICalculator />} />

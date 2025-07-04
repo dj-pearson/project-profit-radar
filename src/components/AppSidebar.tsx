@@ -39,7 +39,8 @@ import {
   MessageSquare,
   TrendingUp,
   Lock,
-  Zap
+  Zap,
+  Tag
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -106,6 +107,7 @@ const navigationCategories: NavigationCategory[] = [
       { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" },
       { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
       { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ["root_admin"], badge: "Admin" },
+      { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Admin" },
       { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Admin" },
       { title: "Security Monitoring", url: "/security-monitoring", icon: Shield, roles: ["root_admin"], badge: "Admin" },
       { title: "Rate Limiting", url: "/rate-limiting", icon: Settings, roles: ["root_admin"], badge: "Admin" }
