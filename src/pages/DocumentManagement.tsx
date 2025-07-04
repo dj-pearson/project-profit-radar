@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentCard } from '@/components/documents/DocumentCard';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   ArrowLeft, 
   Upload,
@@ -53,7 +53,7 @@ interface DocumentCategory {
 
 const DocumentManagement = () => {
   const { projectId } = useParams<{ projectId?: string }>();
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile } = useAuth();
   const navigate = useNavigate();
   
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -77,19 +77,11 @@ const DocumentManagement = () => {
   const pageTitle = isProjectContext ? 'Project Documents' : 'Company Documents';
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-    
-    if (!loading && user && userProfile && !userProfile.company_id) {
-      navigate('/setup');
-    }
-    
     if (userProfile?.company_id) {
       loadDocuments();
       loadCategories();
     }
-  }, [user, userProfile, loading, navigate, projectId]);
+  }, [userProfile, projectId]);
 
   const loadDocuments = async () => {
     try {
@@ -304,11 +296,11 @@ const DocumentManagement = () => {
     return matchesSearch && matchesCategory && matchesType;
   });
 
-  if (loading || loadingDocs) {
+  if (!userProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading documents...</p>
         </div>
       </div>

@@ -1,6 +1,4 @@
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
@@ -16,31 +14,10 @@ import { CashFlowForecasting } from '@/components/financial/CashFlowForecasting'
 import { ExpenseTracker } from '@/components/financial/ExpenseTracker';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
 
 const FinancialDashboard = () => {
-  const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
-
-  if (!loading && !user) {
-    navigate('/auth');
-    return null;
-  }
-
-  if (!loading && user && userProfile && !userProfile.company_id) {
-    navigate('/setup');
-    return null;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading financial dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">

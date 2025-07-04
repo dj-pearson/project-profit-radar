@@ -1,63 +1,40 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions, UserRole } from '@/hooks/usePermissions';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, Shield } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRoles?: UserRole[];
   requireAuth?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRoles, 
   requireAuth = true 
 }) => {
-  const { userProfile, loading } = useAuth();
-  const { hasRole, canAccessRoute } = usePermissions();
+  const { user, userProfile, loading } = useAuth();
 
-  // Show loading while checking auth
+  // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  // Redirect to auth if not authenticated and auth is required
-  if (requireAuth && !userProfile) {
+  // Redirect to auth if authentication is required but user is not logged in
+  if (requireAuth && !user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Check role-based access
-  if (requiredRoles && userProfile && !hasRole(requiredRoles)) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-md mx-auto">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Shield className="h-16 w-16 text-destructive" />
-            </div>
-            <CardTitle className="text-destructive">Access Denied</CardTitle>
-            <CardDescription>
-              You don't have permission to access this page
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Your current role: <span className="font-medium">{userProfile.role}</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Required roles: {requiredRoles.join(', ')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  // Redirect to setup if user is authenticated but has no profile/company
+  if (requireAuth && user && (!userProfile || !userProfile.company_id)) {
+    return <Navigate to="/setup" replace />;
   }
 
   return <>{children}</>;
@@ -65,64 +42,32 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
 interface RouteGuardProps {
   children: React.ReactNode;
-  routePath: string;
+  routePath?: string;
 }
 
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) => {
-  const { userProfile, loading, user } = useAuth();
+  const { user, userProfile, loading } = useAuth();
 
-  // Only log once during initial load or significant state changes
+  // Show loading while auth is being determined
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  // If no user at all, redirect to auth
+  // Redirect to auth if not authenticated
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // If user exists but profile is still loading, show loading instead of redirecting
-  if (!userProfile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading profile...</div>
-      </div>
-    );
-  }
-
-  // Root admin has access to everything
-  if (userProfile.role === 'root_admin') {
-    return <>{children}</>;
-  }
-
-  // For other roles, check permissions
-  const { canAccessRoute } = usePermissions();
-  
-  if (!canAccessRoute(routePath)) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-md mx-auto">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <AlertTriangle className="h-16 w-16 text-destructive" />
-            </div>
-            <CardTitle className="text-destructive">Access Restricted</CardTitle>
-            <CardDescription>
-              This page is not available for your current role
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Current role: <span className="font-medium">{userProfile.role}</span>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  // Redirect to setup if no profile or company
+  if (!userProfile || !userProfile.company_id) {
+    return <Navigate to="/setup" replace />;
   }
 
   return <>{children}</>;
