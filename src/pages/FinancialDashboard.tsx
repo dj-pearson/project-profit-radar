@@ -46,36 +46,46 @@ const FinancialDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center h-16">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="mr-4"
+              className="mr-2 sm:mr-4"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
             </Button>
-            <h1 className="text-xl font-semibold">Financial Dashboard</h1>
+            <h1 className="text-lg sm:text-xl font-semibold">Financial Dashboard</h1>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-2 sm:px-4 lg:px-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="budgets">Budget Tracking</TabsTrigger>
-            <TabsTrigger value="cash-flow">Cash Flow</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
-            <TabsTrigger value="invoices">Invoices</TabsTrigger>
-            <TabsTrigger value="reports">P&L Reports</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="budgets" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Budget Tracking</span>
+              <span className="sm:hidden">Budget</span>
+            </TabsTrigger>
+            <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Cash Flow</span>
+              <span className="sm:hidden">Cash</span>
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
+            <TabsTrigger value="invoices" className="text-xs sm:text-sm">Invoices</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">P&L Reports</span>
+              <span className="sm:hidden">P&L</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Top Row - Key Metrics */}
               <div className="lg:col-span-2">
                 <CashFlowSnapshot />

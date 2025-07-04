@@ -66,19 +66,20 @@ export const QuickActions = ({ userRole, onAction }: QuickActionsProps) => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
+      <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-6 pb-2 sm:pb-6">
+        <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2 px-3 sm:px-6 pb-3 sm:pb-6">
         {actions.map((action) => (
           <Button
             key={action.key}
             variant="outline"
-            className="w-full justify-start"
+            size="sm"
+            className="w-full justify-start text-xs sm:text-sm"
             onClick={() => onAction(action.key)}
           >
-            <action.icon className="h-4 w-4 mr-2" />
-            {action.label}
+            <action.icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="truncate">{action.label}</span>
           </Button>
         ))}
       </CardContent>

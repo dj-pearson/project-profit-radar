@@ -219,25 +219,28 @@ const Dashboard = () => {
         <div className="flex-1">
           {/* Header */}
           <nav className="border-b bg-white">
-            <div className="flex justify-between h-16 px-4">
+            <div className="flex justify-between h-16 px-2 sm:px-4">
               <div className="flex items-center">
-                <SidebarTrigger className="mr-4" />
-                <h1 className="text-2xl font-bold text-construction-blue">Build Desk</h1>
+                <SidebarTrigger className="mr-2 sm:mr-4" />
+                <h1 className="text-lg sm:text-2xl font-bold text-construction-blue">Build Desk</h1>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-center space-x-1 sm:space-x-4">
+                <span className="hidden sm:block text-sm text-muted-foreground">
                   Welcome, {userProfile?.first_name || user.email}
                 </span>
                 <ThemeToggle />
-                <Button variant="outline" onClick={signOut}>
+                <Button variant="outline" size="sm" className="hidden sm:flex" onClick={signOut}>
                   Sign Out
+                </Button>
+                <Button variant="outline" size="sm" className="sm:hidden" onClick={signOut}>
+                  Exit
                 </Button>
               </div>
             </div>
           </nav>
 
           {/* Main Content */}
-          <ResponsiveContainer className="py-6">
+          <ResponsiveContainer className="py-4 sm:py-6" padding="sm">
             <TrialStatusBanner />
         
         {/* KPI Cards */}
@@ -318,7 +321,7 @@ const Dashboard = () => {
         </ErrorBoundary>
 
         {/* Main Content Grid */}
-        <ResponsiveGrid cols={{ default: 1, lg: 3 }} className="mb-8">
+        <ResponsiveGrid cols={{ default: 1, lg: 3 }} gap="sm" className="mb-8">
           {/* Projects Section */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
@@ -433,61 +436,61 @@ const Dashboard = () => {
               <CardDescription>System-wide management and oversight</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/admin/companies')}
                 >
-                  <span className="text-lg font-bold">Companies</span>
-                  <span className="text-sm">Manage Organizations</span>
+                  <span className="text-sm sm:text-lg font-bold">Companies</span>
+                  <span className="text-xs sm:text-sm text-center">Manage Organizations</span>
                 </Button>
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/admin/users')}
                 >
-                  <span className="text-lg font-bold">Users</span>
-                  <span className="text-sm">User Management</span>
+                  <span className="text-sm sm:text-lg font-bold">Users</span>
+                  <span className="text-xs sm:text-sm text-center">User Management</span>
                 </Button>
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/admin/billing')}
                 >
-                  <span className="text-lg font-bold">Billing</span>
-                  <span className="text-sm">Subscription Overview</span>
+                  <span className="text-sm sm:text-lg font-bold">Billing</span>
+                  <span className="text-xs sm:text-sm text-center">Subscription Overview</span>
                 </Button>
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/blog-manager')}
                 >
-                  <span className="text-lg font-bold">Blog</span>
-                  <span className="text-sm">Content Management</span>
+                  <span className="text-sm sm:text-lg font-bold">Blog</span>
+                  <span className="text-xs sm:text-sm text-center">Content Management</span>
                 </Button>
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/admin/analytics')}
                 >
-                  <span className="text-lg font-bold">Analytics</span>
-                  <span className="text-sm">Platform Metrics</span>
+                  <span className="text-sm sm:text-lg font-bold">Analytics</span>
+                  <span className="text-xs sm:text-sm text-center">Platform Metrics</span>
                 </Button>
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/admin/settings')}
                 >
-                  <span className="text-lg font-bold">Settings</span>
-                  <span className="text-sm">System Configuration</span>
+                  <span className="text-sm sm:text-lg font-bold">Settings</span>
+                  <span className="text-xs sm:text-sm text-center">System Configuration</span>
                 </Button>
                 <Button 
                   variant="construction" 
-                  className="h-24 flex-col"
+                  className="h-20 sm:h-24 flex-col p-2"
                   onClick={() => navigate('/admin/seo')}
                 >
-                  <span className="text-lg font-bold">SEO Manager</span>
+                  <span className="text-sm sm:text-lg font-bold">SEO Manager</span>
                   <span className="text-sm">Search Optimization</span>
                 </Button>
               </div>

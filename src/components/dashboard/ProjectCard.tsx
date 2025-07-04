@@ -47,30 +47,30 @@ export const ProjectCard = ({ project, onViewProject }: ProjectCardProps) => {
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg">{project.name}</CardTitle>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <User className="h-3 w-3 mr-1" />
-              {project.client_name}
+      <CardHeader className="pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <CardTitle className="text-base sm:text-lg truncate">{project.name}</CardTitle>
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <User className="h-3 w-3 mr-1 shrink-0" />
+              <span className="truncate">{project.client_name}</span>
             </div>
           </div>
-          <Badge variant={getStatusColor(project.status)}>
+          <Badge variant={getStatusColor(project.status)} className="text-xs shrink-0">
             {project.status.replace('_', ' ')}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
         {project.site_address && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3 mr-1" />
-            {project.site_address}
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+            <MapPin className="h-3 w-3 mr-1 shrink-0" />
+            <span className="truncate">{project.site_address}</span>
           </div>
         )}
         
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <span>Progress</span>
             <span className={getHealthColor(project.completion_percentage, project.status)}>
               {project.completion_percentage}%
@@ -80,18 +80,18 @@ export const ProjectCard = ({ project, onViewProject }: ProjectCardProps) => {
         </div>
 
         {project.budget && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <DollarSign className="h-3 w-3 mr-1" />
-            Budget: ${project.budget.toLocaleString()}
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+            <DollarSign className="h-3 w-3 mr-1 shrink-0" />
+            <span className="truncate">Budget: ${project.budget.toLocaleString()}</span>
           </div>
         )}
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center">
-            <Calendar className="h-3 w-3 mr-1" />
-            {new Date(project.start_date).toLocaleDateString()}
+            <Calendar className="h-3 w-3 mr-1 shrink-0" />
+            <span className="truncate">{new Date(project.start_date).toLocaleDateString()}</span>
           </div>
-          <div>
+          <div className="truncate ml-2">
             Due: {new Date(project.end_date).toLocaleDateString()}
           </div>
         </div>
@@ -99,7 +99,7 @@ export const ProjectCard = ({ project, onViewProject }: ProjectCardProps) => {
         <Button 
           variant="outline" 
           size="sm" 
-          className="w-full"
+          className="w-full text-xs sm:text-sm"
           onClick={() => onViewProject(project.id)}
         >
           View Project

@@ -247,28 +247,31 @@ const TeamManagement = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
+                className="shrink-0"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
               </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h1 className="text-xl font-semibold">Team Management</h1>
-                <p className="text-sm text-muted-foreground">Manage your team members and their roles</p>
+              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-semibold truncate">Team Management</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Manage your team members and their roles</p>
               </div>
             </div>
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Invite User
+                <Button size="sm" className="shrink-0">
+                  <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Invite User</span>
+                  <span className="sm:hidden">Invite</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
@@ -361,55 +364,55 @@ const TeamManagement = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-2 sm:px-4 lg:px-8">
         {/* Team Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Members</p>
-                  <p className="text-2xl font-bold">{teamMembers.length}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Members</p>
+                  <p className="text-lg sm:text-2xl font-bold">{teamMembers.length}</p>
                 </div>
-                <Users className="h-8 w-8 text-construction-blue" />
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active</p>
-                  <p className="text-2xl font-bold">{teamMembers.filter(m => m.is_active).length}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active</p>
+                  <p className="text-lg sm:text-2xl font-bold">{teamMembers.filter(m => m.is_active).length}</p>
                 </div>
-                <UserCheck className="h-8 w-8 text-green-600" />
+                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Inactive</p>
-                  <p className="text-2xl font-bold">{teamMembers.filter(m => !m.is_active).length}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Inactive</p>
+                  <p className="text-lg sm:text-2xl font-bold">{teamMembers.filter(m => !m.is_active).length}</p>
                 </div>
-                <UserX className="h-8 w-8 text-red-600" />
+                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Admins</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Admins</p>
+                  <p className="text-lg sm:text-2xl font-bold">
                     {teamMembers.filter(m => ['admin', 'root_admin'].includes(m.role)).length}
                   </p>
                 </div>
-                <Shield className="h-8 w-8 text-construction-blue" />
+                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" />
               </div>
             </CardContent>
           </Card>
@@ -432,46 +435,46 @@ const TeamManagement = () => {
             ) : (
               <div className="space-y-4">
                 {teamMembers.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-construction-blue rounded-full flex items-center justify-center text-white font-semibold">
+                  <div key={member.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-0">
+                    <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-construction-blue rounded-full flex items-center justify-center text-white font-semibold shrink-0">
                         {member.first_name?.charAt(0) || member.email.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h3 className="font-medium text-sm sm:text-base truncate">
                             {member.first_name && member.last_name 
                               ? `${member.first_name} ${member.last_name}`
                               : member.email
                             }
                           </h3>
-                          <Badge variant={getRoleBadgeVariant(member.role)}>
+                          <Badge variant={getRoleBadgeVariant(member.role)} className="text-xs">
                             {getRoleDisplayName(member.role)}
                           </Badge>
-                          <Badge variant={member.is_active ? "default" : "secondary"}>
+                          <Badge variant={member.is_active ? "default" : "secondary"} className="text-xs">
                             {member.is_active ? "Active" : "Inactive"}
                           </Badge>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                          <span className="flex items-center">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {member.email}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                          <span className="flex items-center truncate">
+                            <Mail className="h-3 w-3 mr-1 shrink-0" />
+                            <span className="truncate">{member.email}</span>
                           </span>
                           {member.phone && (
                             <span className="flex items-center">
-                              <Phone className="h-3 w-3 mr-1" />
+                              <Phone className="h-3 w-3 mr-1 shrink-0" />
                               {member.phone}
                             </span>
                           )}
                           <span className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
+                            <Calendar className="h-3 w-3 mr-1 shrink-0" />
                             Joined {new Date(member.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
                       <Button
                         variant="outline"
                         size="sm"
