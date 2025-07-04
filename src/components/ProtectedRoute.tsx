@@ -1,60 +1,15 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, Loader2 } from 'lucide-react';
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requireAuth?: boolean;
-}
-
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requireAuth = true 
-}) => {
-  const { user, userProfile, loading } = useAuth();
-
-  // Show loading spinner while checking auth
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to auth if authentication is required but user is not logged in
-  if (requireAuth && !user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  // Redirect to setup if user is authenticated but has no profile/company
-  if (requireAuth && user && (!userProfile || !userProfile.company_id)) {
-    return <Navigate to="/setup" replace />;
-  }
-
-  return <>{children}</>;
-};
+import { Loader2 } from 'lucide-react';
 
 interface RouteGuardProps {
   children: React.ReactNode;
   routePath?: string;
 }
 
-export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) => {
+export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const { user, userProfile, loading } = useAuth();
-
-  console.log('RouteGuard check:', { 
-    routePath, 
-    hasUser: !!user, 
-    hasProfile: !!userProfile, 
-    hasCompany: !!userProfile?.company_id, 
-    loading 
-  });
 
   // Show loading while auth is being determined
   if (loading) {
@@ -70,15 +25,16 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) =
 
   // Redirect to auth if not authenticated
   if (!user) {
-    console.log('RouteGuard: No user profile, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
   // Redirect to setup if no profile or company
   if (!userProfile || !userProfile.company_id) {
-    console.log('RouteGuard: No user profile or company, redirecting to setup');
     return <Navigate to="/setup" replace />;
   }
 
   return <>{children}</>;
 };
+
+// Legacy alias for backward compatibility
+export const ProtectedRoute = RouteGuard;

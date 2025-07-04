@@ -41,15 +41,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
 
-  // Prevent multiple simultaneous profile fetches
+  // Separate profile fetching - never called from auth state change
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    if (profileLoading) return null;
-    
-    setProfileLoading(true);
     try {
-      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -61,78 +56,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
       
-      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Profile fetch failed:', error);
       return null;
-    } finally {
-      setProfileLoading(false);
     }
   };
 
-  // Handle auth state changes - simplified and non-async
+  // CRITICAL: Auth state change handler must be synchronous
   const handleAuthChange = (event: string, session: Session | null) => {
-    console.log('Auth state change:', event, !!session?.user);
     setSession(session);
     setUser(session?.user ?? null);
     
-    if (session?.user) {
-      // Defer profile fetching to avoid blocking auth state change
-      setTimeout(() => {
-        fetchUserProfile(session.user.id).then(profile => {
-          setUserProfile(profile);
-          setLoading(false);
-        });
-      }, 0);
-    } else {
+    // Reset profile when user logs out
+    if (!session?.user) {
       setUserProfile(null);
-      setLoading(false);
     }
+    
+    setLoading(false);
   };
 
+  // Separate effect for profile fetching when user changes
   useEffect(() => {
-    let mounted = true;
-    
-    console.log('Initializing auth...');
+    if (user && !loading) {
+      fetchUserProfile(user.id).then(setUserProfile);
+    }
+  }, [user, loading]);
 
-    const initializeAuth = async () => {
-      try {
-        // Get initial session
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session:', !!session?.user);
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            const profile = await fetchUserProfile(session.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-            }
-          }
-          
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Set up auth listener
+  useEffect(() => {
+    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Initialize
-    initializeAuth();
+    // THEN get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {

@@ -28,11 +28,7 @@ const Auth = () => {
     setCSRFToken(csrfToken);
   }, [csrfToken]);
 
-  useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
+  // Remove automatic navigation - let route protection handle it
 
   const validatePasswordInput = (pwd: string) => {
     const validation = validatePassword(pwd);
@@ -72,7 +68,7 @@ const Auth = () => {
         title: "Welcome back!",
         description: "You've been successfully signed in."
       });
-      navigate('/dashboard');
+      // Navigation will be handled by route protection
     }
     
     setLoading(false);
