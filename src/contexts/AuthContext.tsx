@@ -99,19 +99,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Set loading to false immediately when user is authenticated
+          setLoading(false);
+          
           // Clear any existing timeout
           if (profileFetchTimeout) {
             clearTimeout(profileFetchTimeout);
           }
           
-          // Fetch profile with a slight delay to avoid race conditions
+          // Fetch profile immediately without delay
           profileFetchTimeout = setTimeout(async () => {
             if (mounted) {
               console.log('Fetching profile for user:', session.user.id);
               await fetchUserProfile(session.user.id);
-              setLoading(false);
             }
-          }, 100);
+          }, 0);
         } else {
           setUserProfile(null);
           setLoading(false);
