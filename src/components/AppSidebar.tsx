@@ -63,6 +63,7 @@ const navigationCategories: NavigationCategory[] = [
   {
     label: "Project Management",
     items: [
+      { title: "All Projects", url: "/projects", icon: Building2, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
       { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
       { title: "Crew Scheduling", url: "/crew-scheduling", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
       { title: "Time Tracking", url: "/time-tracking", icon: Clock, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },

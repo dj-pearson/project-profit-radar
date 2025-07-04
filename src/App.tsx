@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Setup from "./pages/Setup";
 import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
 import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamManagement from "./pages/TeamManagement";
@@ -58,6 +59,7 @@ const AppContent = () => {
       <Route path="/auth" element={<Auth />} />
       <Route path="/setup" element={<Setup />} />
       <Route path="/dashboard" element={<RouteGuard routePath="/dashboard"><Dashboard /></RouteGuard>} />
+      <Route path="/projects" element={<RouteGuard routePath="/projects"><Projects /></RouteGuard>} />
       <Route path="/create-project" element={<RouteGuard routePath="/create-project"><CreateProject /></RouteGuard>} />
       <Route path="/project/:projectId" element={<RouteGuard routePath="/dashboard"><ProjectDetail /></RouteGuard>} />
       <Route path="/team" element={<RouteGuard routePath="/team"><TeamManagement /></RouteGuard>} />
