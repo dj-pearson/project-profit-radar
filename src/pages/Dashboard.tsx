@@ -218,21 +218,21 @@ const Dashboard = () => {
         
         <div className="flex-1">
           {/* Header */}
-          <nav className="border-b bg-white">
-            <div className="flex justify-between h-16 px-2 sm:px-4">
-              <div className="flex items-center">
-                <SidebarTrigger className="mr-2 sm:mr-4" />
-                <h1 className="text-lg sm:text-2xl font-bold text-construction-blue">Build Desk</h1>
+          <nav className="border-b bg-background/95 backdrop-blur-sm">
+            <div className="flex justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
+              <div className="flex items-center min-w-0 flex-1">
+                <SidebarTrigger className="mr-2 sm:mr-3 flex-shrink-0" />
+                <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-foreground truncate">Build Desk</h1>
               </div>
-              <div className="flex items-center space-x-1 sm:space-x-4">
-                <span className="hidden sm:block text-sm text-muted-foreground">
+              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-shrink-0">
+                <span className="hidden md:block text-xs sm:text-sm text-muted-foreground truncate max-w-32 lg:max-w-none">
                   Welcome, {userProfile?.first_name || user.email}
                 </span>
                 <ThemeToggle />
-                <Button variant="outline" size="sm" className="hidden sm:flex" onClick={signOut}>
+                <Button variant="outline" size="sm" className="hidden sm:flex text-xs lg:text-sm px-2 lg:px-3" onClick={signOut}>
                   Sign Out
                 </Button>
-                <Button variant="outline" size="sm" className="sm:hidden" onClick={signOut}>
+                <Button variant="outline" size="sm" className="sm:hidden text-xs px-2" onClick={signOut}>
                   Exit
                 </Button>
               </div>
