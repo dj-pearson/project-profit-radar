@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Slider } from '@/components/ui/slider';
+
 import { 
   DollarSign, 
   Clock, 
@@ -154,23 +154,6 @@ const InteractiveDashboard = () => {
     }
   };
 
-  const handleProgressChange = (projectId: string, newProgress: number) => {
-    setProjects(prev => prev.map(project => {
-      if (project.id === projectId && project.status !== 'completed') {
-        const updatedProgress = newProgress;
-        const newSpent = project.budget * (updatedProgress / 100) * (0.8 + Math.random() * 0.4);
-        const newStatus = newSpent > project.budget * 0.95 ? 'at-risk' : 'on-track';
-        return {
-          ...project,
-          progress: updatedProgress,
-          spent: Math.min(newSpent, project.budget * 1.2),
-          status: updatedProgress >= 100 ? 'completed' : newStatus,
-          crew: updatedProgress >= 100 ? 0 : project.crew
-        };
-      }
-      return project;
-    }));
-  };
 
   const resetDemo = () => {
     setIsPlaying(false);
@@ -192,9 +175,9 @@ const InteractiveDashboard = () => {
   const avgProgress = projects.reduce((sum, p) => sum + p.progress, 0) / projects.length;
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-4">
       {/* Demo Control */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold text-construction-dark">
@@ -339,18 +322,6 @@ const InteractiveDashboard = () => {
                     className="h-2 mb-3"
                   />
                   
-                  {project.status !== 'completed' && (
-                    <div className="space-y-2">
-                      <div className="text-xs text-muted-foreground">Adjust Progress:</div>
-                      <Slider
-                        value={[project.progress]}
-                        onValueChange={(value) => handleProgressChange(project.id, value[0])}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
                   
                   <div className="flex justify-between text-sm mt-3">
                     <div className="flex items-center space-x-4">
