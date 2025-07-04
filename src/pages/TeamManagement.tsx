@@ -246,10 +246,10 @@ const TeamManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+      <div className="border-b bg-background/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
+            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -260,9 +260,9 @@ const TeamManagement = () => {
                 <span className="hidden sm:inline">Back to Dashboard</span>
                 <span className="sm:hidden">Back</span>
               </Button>
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+              <Separator orientation="vertical" className="h-4 sm:h-6 hidden sm:block" />
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-semibold truncate">Team Management</h1>
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">Team Management</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Manage your team members and their roles</p>
               </div>
             </div>

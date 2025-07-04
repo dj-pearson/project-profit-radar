@@ -318,21 +318,23 @@ const DocumentManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+      <div className="border-b bg-background/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
+            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 min-w-0 flex-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(isProjectContext ? `/project/${projectId}` : '/dashboard')}
+                className="flex-shrink-0"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                {isProjectContext ? 'Back to Project' : 'Back to Dashboard'}
+                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{isProjectContext ? 'Back to Project' : 'Back to Dashboard'}</span>
+                <span className="sm:hidden">Back</span>
               </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h1 className="text-xl font-semibold">{pageTitle}</h1>
+              <Separator orientation="vertical" className="h-4 sm:h-6" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">{pageTitle}</h1>
                 <p className="text-sm text-muted-foreground">
                   {isProjectContext ? 'Project-specific documents and files' : 'Company-wide documents and files'}
                 </p>

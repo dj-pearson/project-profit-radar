@@ -45,20 +45,20 @@ const FinancialDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="flex items-center h-16">
+      <div className="border-b bg-background/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center h-14 sm:h-16 lg:h-18">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="mr-2 sm:mr-4"
+              className="mr-2 sm:mr-3 lg:mr-4 flex-shrink-0"
             >
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Back to Dashboard</span>
               <span className="sm:hidden">Back</span>
             </Button>
-            <h1 className="text-lg sm:text-xl font-semibold">Financial Dashboard</h1>
+            <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">Financial Dashboard</h1>
           </div>
         </div>
       </div>

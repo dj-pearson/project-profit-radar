@@ -321,16 +321,17 @@ const Projects = () => {
         
         <div className="flex-1">
           {/* Header */}
-          <nav className="border-b bg-white">
-            <div className="flex justify-between h-16 px-4">
-              <div className="flex items-center">
-                <SidebarTrigger className="mr-4" />
-                <h1 className="text-2xl font-bold text-construction-blue">Projects</h1>
+          <nav className="border-b bg-background/95 backdrop-blur-sm">
+            <div className="flex justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
+              <div className="flex items-center min-w-0 flex-1">
+                <SidebarTrigger className="mr-2 sm:mr-3 lg:mr-4 flex-shrink-0" />
+                <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-foreground truncate">Projects</h1>
               </div>
-              <div className="flex items-center space-x-4">
-                <Button onClick={() => navigate('/create-project')}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Project
+              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-shrink-0">
+                <Button onClick={() => navigate('/create-project')} size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">New Project</span>
+                  <span className="sm:hidden">New</span>
                 </Button>
               </div>
             </div>
