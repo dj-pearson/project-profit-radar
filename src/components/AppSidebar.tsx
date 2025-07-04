@@ -17,6 +17,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   Home,
@@ -37,7 +38,8 @@ import {
   Globe,
   MessageSquare,
   TrendingUp,
-  Lock
+  Lock,
+  Zap
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -186,6 +188,26 @@ export const AppSidebar = () => {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      
+      <SidebarFooter className="p-4">
+        {!collapsed && (
+          <div className="space-y-2">
+            <NavLink to="/upgrade">
+              <Button variant="default" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+                <Zap className="h-4 w-4 mr-2" />
+                Upgrade Plan
+              </Button>
+            </NavLink>
+          </div>
+        )}
+        {collapsed && (
+          <NavLink to="/upgrade">
+            <Button variant="default" size="icon" className="w-full">
+              <Zap className="h-4 w-4" />
+            </Button>
+          </NavLink>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 };

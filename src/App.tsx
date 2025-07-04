@@ -27,6 +27,7 @@ import BlogManager from "./pages/BlogManager";
 import Resources from "./pages/Resources";
 import ROICalculator from "./pages/ROICalculator";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
+import Upgrade from "./pages/Upgrade";
 import Companies from "./pages/admin/Companies";
 import Users from "./pages/admin/Users";
 import Billing from "./pages/admin/Billing";
@@ -82,6 +83,7 @@ const AppContent = () => {
       <Route path="/resources" element={<Resources />} />
       <Route path="/roi-calculator" element={<ROICalculator />} />
       <Route path="/subscription" element={<SubscriptionSettings />} />
+      <Route path="/upgrade" element={<RouteGuard routePath="/upgrade"><Upgrade /></RouteGuard>} />
       <Route path="/client-portal" element={<ClientPortal />} />
       <Route path="/security-monitoring" element={<RouteGuard routePath="/security-monitoring"><SecurityMonitoring /></RouteGuard>} />
       <Route path="/safety" element={<RouteGuard routePath="/safety"><Safety /></RouteGuard>} />
