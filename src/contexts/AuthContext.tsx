@@ -119,21 +119,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Check for existing session
+    // Check for existing session only once
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
-        console.log('Initial session:', session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
+        // Only set initial state if we don't already have a session
+        if (!session && !user) {
           setLoading(false);
         }
       } catch (error) {
