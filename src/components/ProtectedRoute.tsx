@@ -48,6 +48,14 @@ interface RouteGuardProps {
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) => {
   const { user, userProfile, loading } = useAuth();
 
+  console.log('RouteGuard check:', { 
+    routePath, 
+    hasUser: !!user, 
+    hasProfile: !!userProfile, 
+    hasCompany: !!userProfile?.company_id, 
+    loading 
+  });
+
   // Show loading while auth is being determined
   if (loading) {
     return (
@@ -62,11 +70,13 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, routePath }) =
 
   // Redirect to auth if not authenticated
   if (!user) {
+    console.log('RouteGuard: No user profile, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
   // Redirect to setup if no profile or company
   if (!userProfile || !userProfile.company_id) {
+    console.log('RouteGuard: No user profile or company, redirecting to setup');
     return <Navigate to="/setup" replace />;
   }
 

@@ -41,11 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  // Single function to fetch user profile
+  // Prevent multiple simultaneous profile fetches
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    if (profileLoading) return null;
+    
+    setProfileLoading(true);
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -57,39 +61,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
       
+      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Profile fetch failed:', error);
       return null;
+    } finally {
+      setProfileLoading(false);
     }
   };
 
-  // Handle auth state changes
-  const handleAuthChange = async (event: string, session: Session | null) => {
+  // Handle auth state changes - simplified and non-async
+  const handleAuthChange = (event: string, session: Session | null) => {
+    console.log('Auth state change:', event, !!session?.user);
     setSession(session);
     setUser(session?.user ?? null);
     
     if (session?.user) {
-      // User is authenticated, fetch profile
-      const profile = await fetchUserProfile(session.user.id);
-      setUserProfile(profile);
+      // Defer profile fetching to avoid blocking auth state change
+      setTimeout(() => {
+        fetchUserProfile(session.user.id).then(profile => {
+          setUserProfile(profile);
+          setLoading(false);
+        });
+      }, 0);
     } else {
-      // User is not authenticated
       setUserProfile(null);
-    }
-    
-    if (initialized) {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    
+    console.log('Initializing auth...');
 
     const initializeAuth = async () => {
       try {
         // Get initial session
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', !!session?.user);
         
         if (mounted) {
           setSession(session);
@@ -102,13 +113,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
           
-          setInitialized(true);
           setLoading(false);
         }
       } catch (error) {
         console.error('Auth initialization failed:', error);
         if (mounted) {
-          setInitialized(true);
           setLoading(false);
         }
       }
