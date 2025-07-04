@@ -28,8 +28,20 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect to setup if no profile or company
-  if (!userProfile || !userProfile.company_id) {
+  // Show loading while profile is being fetched
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to setup if no company
+  if (!userProfile.company_id) {
     return <Navigate to="/setup" replace />;
   }
 
