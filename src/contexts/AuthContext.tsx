@@ -106,28 +106,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up auth state listener
+    // Set up auth state listener - COMPLETELY SYNCHRONOUS
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
 
         console.log('Auth event:', event, session?.user?.id);
 
-        // Update auth state
+        // Only synchronous state updates
         setSession(session);
         setUser(session?.user ?? null);
 
-        // Handle profile based on event
-        if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-          }
-        } else if (event === 'SIGNED_OUT') {
+        // Clear profile on sign out
+        if (event === 'SIGNED_OUT') {
           setUserProfile(null);
         }
 
-        if (mounted && initialized) {
+        // Set loading to false after initialization
+        if (initialized) {
           setLoading(false);
         }
       }
@@ -141,6 +137,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  // Separate effect to handle profile fetching when user changes
+  useEffect(() => {
+    if (user && initialized && !userProfile) {
+      let isMounted = true;
+      
+      fetchUserProfile(user.id).then((profile) => {
+        if (isMounted) {
+          setUserProfile(profile);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [user?.id, initialized]); // Only depend on user ID, not the whole user object
+
+  const refreshProfile = async () => {
+    if (user) {
+      const profile = await fetchUserProfile(user.id);
+      setUserProfile(profile);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -206,13 +226,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return { error };
-  };
-
-  const refreshProfile = async () => {
-    if (user) {
-      const profile = await fetchUserProfile(user.id);
-      setUserProfile(profile);
-    }
   };
 
   const signOut = async () => {
