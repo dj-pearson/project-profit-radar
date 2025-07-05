@@ -71,8 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleAuthChange = (event: string, session: Session | null) => {
       if (!mounted) return;
 
-      console.log('Auth event:', event, session?.user?.id);
-
       // Update session and user immediately (synchronous)
       setSession(session);
       setUser(session?.user ?? null);
@@ -85,7 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Only fetch if we don't already have profile for this user
           if (!userProfile || userProfile.id !== session.user.id) {
-            console.log('Fetching profile for user:', session.user.id);
             fetchUserProfile(session.user.id).then(profile => {
               if (mounted) {
                 setUserProfile(profile);
