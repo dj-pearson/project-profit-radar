@@ -3,23 +3,155 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/x-icon" href="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//favicon.ico" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//favicon.ico"
+    />
     <meta name="theme-color" content="#ff6b00" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png" />
-    
+    <link
+      rel="apple-touch-icon"
+      href="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
+    />
+
     <title>BuildDesk - Construction Management Platform</title>
-    <meta name="description" content="Construction management platform built for growing teams. Real-time project visibility without enterprise complexity." />
+    <meta
+      name="description"
+      content="Construction management platform built for growing teams. Real-time project visibility without enterprise complexity."
+    />
     <meta name="author" content="BuildDesk" />
 
-    <meta property="og:title" content="BuildDesk - Construction Management Platform" />
-    <meta property="og:description" content="Construction management platform built for growing teams. Real-time project visibility without enterprise complexity." />
+    <meta
+      property="og:title"
+      content="BuildDesk - Construction Management Platform"
+    />
+    <meta
+      property="og:description"
+      content="Construction management platform built for growing teams. Real-time project visibility without enterprise complexity."
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png" />
+    <meta
+      property="og:image"
+      content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
+    />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@builddesk" />
-    <meta name="twitter:image" content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png" />
+    <meta
+      name="twitter:image"
+      content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
+    />
+
+    <!-- Emergency Infinite Loop Prevention Script -->
+    <script>
+      (function () {
+        // Emergency infinite loop detection
+        let routeGuardCount = 0;
+        let lastRouteGuardTime = Date.now();
+        let emergencyTriggered = false;
+
+        // Override console.log to detect RouteGuard infinite loop
+        const originalLog = console.log;
+        console.log = function (...args) {
+          const logStr = args.join(" ");
+
+          // Detect RouteGuard infinite loop pattern
+          if (
+            logStr.includes("RouteGuard") &&
+            logStr.includes("redirecting to auth")
+          ) {
+            routeGuardCount++;
+            const now = Date.now();
+
+            // If more than 10 RouteGuard redirects in 5 seconds = infinite loop
+            if (now - lastRouteGuardTime < 5000 && routeGuardCount > 10) {
+              if (!emergencyTriggered) {
+                emergencyTriggered = true;
+                console.error(
+                  "🚨 EMERGENCY: Infinite RouteGuard loop detected! Force clearing cache..."
+                );
+
+                // Clear all storage
+                try {
+                  localStorage.clear();
+                  sessionStorage.clear();
+
+                  // Clear service worker cache
+                  if ("caches" in window) {
+                    caches.keys().then((names) => {
+                      names.forEach((name) => {
+                        caches.delete(name);
+                      });
+                    });
+                  }
+
+                  // Force reload with cache bust
+                  const timestamp = Date.now();
+                  const newURL =
+                    window.location.origin +
+                    "/auth?" +
+                    "cache_bust=" +
+                    timestamp +
+                    "&emergency_reload=true" +
+                    "&clear_cache=true";
+
+                  console.log("🔄 EMERGENCY: Redirecting to:", newURL);
+                  window.location.href = newURL;
+                } catch (e) {
+                  console.error("🚨 EMERGENCY: Error clearing cache:", e);
+                  // Fallback: simple reload
+                  window.location.reload(true);
+                }
+              }
+              return;
+            }
+
+            // Reset counter if enough time has passed
+            if (now - lastRouteGuardTime > 5000) {
+              routeGuardCount = 1;
+            }
+            lastRouteGuardTime = now;
+          }
+
+          originalLog.apply(console, args);
+        };
+
+        // Additional protection: detect throttling messages
+        const originalError = console.error;
+        console.error = function (...args) {
+          const errorStr = args.join(" ");
+
+          if (
+            errorStr.includes("Throttling navigation") &&
+            !emergencyTriggered
+          ) {
+            emergencyTriggered = true;
+            console.error(
+              "🚨 EMERGENCY: Navigation throttling detected! Force clearing cache..."
+            );
+
+            setTimeout(() => {
+              try {
+                localStorage.clear();
+                sessionStorage.clear();
+                const timestamp = Date.now();
+                window.location.href =
+                  window.location.origin +
+                  "/auth?emergency_throttle=" +
+                  timestamp;
+              } catch (e) {
+                window.location.reload(true);
+              }
+            }, 1000);
+          }
+
+          originalError.apply(console, args);
+        };
+
+        console.log("🛡️ EMERGENCY: Infinite loop protection active");
+      })();
+    </script>
   </head>
 
   <body>
