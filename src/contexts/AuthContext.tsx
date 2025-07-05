@@ -77,26 +77,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('Fetching profile for user:', session.user.id);
         // Fetch profile for authenticated user
         try {
-          const profile = await fetchUserProfile(session.user.id);
+          const { data: profile, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          console.log('Profile query result:', { profile, error });
+          
           if (mounted) {
-            console.log('Profile fetched:', !!profile, profile?.role);
-            setUserProfile(profile);
+            if (error) {
+              console.error('Profile fetch error:', error);
+              setUserProfile(null);
+            } else {
+              console.log('Setting profile:', profile);
+              setUserProfile(profile);
+            }
           }
         } catch (error) {
-          console.error('Profile fetch error:', error);
+          console.error('Profile fetch exception:', error);
           if (mounted) {
             setUserProfile(null);
           }
         }
       } else {
+        console.log('No user, clearing profile');
         // Clear profile for unauthenticated user
         setUserProfile(null);
       }
       
       // Always set loading to false after handling auth change
       if (mounted) {
+        console.log('Setting loading to false');
         setLoading(false);
       }
     };
@@ -104,7 +119,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initialize auth
     const initAuth = async () => {
       try {
+        console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', !!session?.user);
         await handleAuthChange('INITIAL', session);
       } catch (error) {
         console.error('Auth init error:', error);
