@@ -68,11 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const fetchUserProfile = useCallback(
     async (userId: string, retryCount = 0): Promise<UserProfile | null> => {
       try {
-        console.log(
-          `FIXED AuthContext: Fetching profile for user: ${userId}, attempt: ${
-            retryCount + 1
-          }`
-        );
+        console.log(`Fetching profile for user: ${userId}`);
         setProfileFetching(true);
 
         const { data, error } = await supabase
@@ -82,25 +78,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           .single();
 
         if (error) {
-          console.error("FIXED AuthContext: Profile fetch error:", error);
+          console.error("Profile fetch error:", error);
           if (retryCount < 2) {
             // Retry up to 3 times
-            console.log(
-              `FIXED AuthContext: Retrying profile fetch (${retryCount + 1}/3)`
-            );
+            console.log(`Retrying profile fetch (${retryCount + 1}/3)`);
             await new Promise((resolve) => setTimeout(resolve, 1000));
             return await fetchUserProfile(userId, retryCount + 1);
           }
           return null;
         }
 
-        console.log(
-          "FIXED AuthContext: Profile fetched successfully:",
-          data?.role
-        );
+        console.log("Profile fetched successfully:", data?.role);
         return data as UserProfile;
       } catch (error) {
-        console.error("FIXED AuthContext: Profile fetch exception:", error);
+        console.error("Profile fetch exception:", error);
         if (retryCount < 2) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           return await fetchUserProfile(userId, retryCount + 1);
@@ -115,14 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Handle auth state changes
   useEffect(() => {
-    console.log("FIXED AuthContext: Initializing auth...");
+    console.log("Initializing authentication...");
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log(
-        "FIXED AuthContext: Initial session:",
-        session?.user?.id || "none"
-      );
+      console.log("Initial session:", session?.user?.id || "none");
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -141,11 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(
-        "FIXED AuthContext: Auth state change:",
-        event,
-        session?.user?.id || "none"
-      );
+      console.log("Auth state change:", event, session?.user?.id || "none");
 
       setSession(session);
       setUser(session?.user ?? null);
@@ -170,9 +154,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Ensure loading remains true while profile is being fetched
   const effectiveLoading = loading || profileFetching || (user && !userProfile);
 
+  // Log current state for debugging
+  const logCurrentState = useCallback(() => {
+    console.log("Auth state:", {
+      hasUser: !!user,
+      hasProfile: !!userProfile,
+      loading: effectiveLoading,
+      profileFetching,
+    });
+  }, [user, userProfile, effectiveLoading, profileFetching]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      console.log("FIXED AuthContext: Signing in...");
+      console.log("Signing in...");
       setLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -181,16 +175,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (error) {
-        console.error("FIXED AuthContext: Sign in error:", error);
+        console.error("Sign in error:", error);
         setLoading(false);
         return { error: error.message };
       }
 
-      console.log("FIXED AuthContext: Sign in successful");
+      console.log("Sign in successful");
       // Loading will be set to false by the auth state change listener
       return {};
     } catch (error) {
-      console.error("FIXED AuthContext: Sign in exception:", error);
+      console.error("Sign in exception:", error);
       setLoading(false);
       return { error: "An unexpected error occurred" };
     }
@@ -324,12 +318,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     ]
   );
 
-  console.log("FIXED AuthContext: Current state:", {
-    hasUser: !!user,
-    hasProfile: !!userProfile,
-    loading: effectiveLoading,
-    profileFetching,
-  });
+  logCurrentState();
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -43,29 +43,24 @@
       content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
     />
 
-    <!-- IMMEDIATE Cache Clear Script -->
+    <!-- Cache Management & Loop Protection -->
     <script>
       (function () {
-        // FORCE immediate cache clear if we detect old behavior
-        const CURRENT_VERSION = "2025.01.03.002";
+        const CURRENT_VERSION = "2025.01.03.003";
         const lastCacheClear = localStorage.getItem("last_cache_clear");
         const now = Date.now();
 
-        // Force cache clear if more than 30 seconds since last clear or version mismatch
-        const shouldForceClear =
+        // Periodic cache refresh (once per hour)
+        const shouldRefreshCache =
           !lastCacheClear ||
-          now - parseInt(lastCacheClear) > 30000 ||
-          localStorage.getItem("builddesk_version") !== CURRENT_VERSION;
+          now - parseInt(lastCacheClear) > 3600000 ||
+          localStorage.getItem("app_version") !== CURRENT_VERSION;
 
-        if (shouldForceClear) {
-          console.log("🚨 IMMEDIATE CACHE CLEAR v" + CURRENT_VERSION);
-
-          // Clear everything immediately
+        if (shouldRefreshCache) {
           try {
             localStorage.clear();
             sessionStorage.clear();
 
-            // Clear service worker and caches
             if ("serviceWorker" in navigator) {
               navigator.serviceWorker.getRegistrations().then((regs) => {
                 regs.forEach((reg) => reg.unregister());
@@ -78,144 +73,91 @@
               });
             }
 
-            // Set new timestamp
             localStorage.setItem("last_cache_clear", now.toString());
-            localStorage.setItem("builddesk_version", CURRENT_VERSION);
+            localStorage.setItem("app_version", CURRENT_VERSION);
 
-            // Force reload with aggressive cache busting
             const params = new URLSearchParams(window.location.search);
-            params.set("v", CURRENT_VERSION);
-            params.set("t", now.toString());
-            params.set("cache_clear", "immediate");
-
-            const newURL =
-              window.location.origin +
-              window.location.pathname +
-              "?" +
-              params.toString();
-
-            // Only reload if we're not already in a cache clear reload
-            if (!params.has("cache_clear")) {
-              console.log("🔄 IMMEDIATE RELOAD:", newURL);
+            if (!params.has("refreshed")) {
+              params.set("v", CURRENT_VERSION);
+              params.set("refreshed", "true");
+              const newURL =
+                window.location.origin +
+                window.location.pathname +
+                "?" +
+                params.toString();
               window.location.href = newURL;
-              return; // Stop execution
+              return;
             }
           } catch (e) {
-            console.error("Cache clear error:", e);
+            console.error("Cache refresh error:", e);
           }
         }
 
-        // Enhanced protection against infinite renders
+        // Silent protection against infinite renders
         let accessGrantedCount = 0;
         let lastAccessGranted = 0;
-        let emergencyTriggered = false;
+        let protectionActive = false;
 
-        // Override console.log to catch infinite renders immediately
         const originalLog = console.log;
         console.log = function (...args) {
           const logStr = args.join(" ");
 
           // Detect infinite access granted messages
-          if (logStr.includes("✅ EMERGENCY: Access granted for role:")) {
+          if (logStr.includes("Access granted for role:")) {
             accessGrantedCount++;
             const now = Date.now();
 
-            // If more than 5 access granted messages in 2 seconds = infinite render
             if (now - lastAccessGranted < 2000 && accessGrantedCount > 5) {
-              if (!emergencyTriggered) {
-                emergencyTriggered = true;
-                console.error(
-                  "🚨 INFINITE RENDER DETECTED! Force clearing cache immediately..."
-                );
+              if (!protectionActive) {
+                protectionActive = true;
 
-                // Show immediate warning
-                document.body.innerHTML = `
-                  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #dc2626; color: white; z-index: 99999; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif;">
-                    <div style="text-align: center; padding: 20px;">
-                      <h1 style="margin: 0 0 20px 0; font-size: 24px;">🚨 EMERGENCY CACHE CLEAR</h1>
-                      <p style="margin: 0; font-size: 18px;">Infinite render detected - clearing cache...</p>
-                      <div style="margin-top: 20px; width: 200px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px;">
-                        <div style="width: 100%; height: 100%; background: white; animation: pulse 1s infinite;"></div>
-                      </div>
-                      <style>
-                        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-                      </style>
-                    </div>
-                  </div>
-                `;
-
-                // Force immediate cache clear and reload
+                // Silent cache clear and reload
                 setTimeout(() => {
                   try {
                     localStorage.clear();
                     sessionStorage.clear();
-
-                    if ("caches" in window) {
-                      caches.keys().then((names) => {
-                        names.forEach((name) => caches.delete(name));
-                      });
-                    }
-
                     const timestamp = Date.now();
-                    const newURL =
-                      window.location.origin +
-                      "/auth?emergency_render_fix=" +
-                      timestamp +
-                      "&force_new_session=true";
-                    window.location.href = newURL;
+                    window.location.href =
+                      window.location.origin + "/auth?refresh=" + timestamp;
                   } catch (e) {
                     window.location.reload(true);
                   }
-                }, 1000);
+                }, 500);
 
-                return; // Don't log the problematic message
+                return;
               }
             }
 
-            // Reset counter after time period
             if (now - lastAccessGranted > 2000) {
               accessGrantedCount = 1;
             }
             lastAccessGranted = now;
           }
 
-          // Check for auth navigation fix
-          if (
-            logStr.includes(
-              "✅ FIXED AUTH: User authenticated, navigating to dashboard"
-            )
-          ) {
-            console.log("✅ NEW VERSION DETECTED: Navigation fix active!");
-          }
-
           originalLog.apply(console, args);
         };
 
-        // Detect React error 301 and force reload
+        // Silent React error handling
         const originalError = console.error;
         console.error = function (...args) {
           const errorStr = args.join(" ");
 
           if (
             errorStr.includes("Minified React error #301") &&
-            !emergencyTriggered
+            !protectionActive
           ) {
-            emergencyTriggered = true;
-            console.error("🚨 REACT ERROR 301 DETECTED! Clearing cache...");
-
+            protectionActive = true;
             setTimeout(() => {
               localStorage.clear();
               sessionStorage.clear();
               const timestamp = Date.now();
               window.location.href =
-                window.location.origin + "/auth?react_error_fix=" + timestamp;
-            }, 500);
+                window.location.origin + "/auth?error_recovery=" + timestamp;
+            }, 300);
           }
 
           originalError.apply(console, args);
         };
-
-        console.log("🛡️ IMMEDIATE PROTECTION v" + CURRENT_VERSION + ": Active");
       })();
     </script>
   </head>

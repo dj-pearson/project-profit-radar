@@ -47,9 +47,7 @@ const Auth = () => {
   // Navigate to dashboard after successful authentication
   useEffect(() => {
     if (user) {
-      console.log(
-        "✅ FIXED AUTH: User authenticated, navigating to dashboard..."
-      );
+      console.log("User authenticated, navigating to dashboard...");
       navigate("/dashboard");
     }
   }, [user, navigate]);

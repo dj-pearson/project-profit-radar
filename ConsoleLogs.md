@@ -1,112 +1,33 @@
 inject.js:1 Port connected
 inject.js:1 Port connected
-VM34:19 🚀 BUILDDESK VERSION: 2025.01.03.001
-VM34:71 🛡️ EMERGENCY v2025.01.03.001: Advanced cache protection active
-VM34:71 FIXED AuthContext: Current state: Object
-VM34:71 FIXED AuthContext: Initializing auth...
-VM34:71 FIXED AuthContext: Initial session: none
-VM34:71 FIXED AuthContext: Current state: Object
-VM34:71 FIXED AuthContext: Auth state change: INITIAL_SESSION none
-VM34:71 FIXED AuthContext: Current state: Object
+VM34:15 🚨 IMMEDIATE CACHE CLEAR v2025.01.03.002
+VM34:145 🛡️ IMMEDIATE PROTECTION v2025.01.03.002: Active
+VM34:145 FIXED AuthContext: Current state: Object
+VM34:145 FIXED AuthContext: Initializing auth...
+VM34:145 FIXED AuthContext: Initial session: none
+VM34:145 FIXED AuthContext: Current state: Object
+VM34:145 FIXED AuthContext: Auth state change: INITIAL_SESSION none
+VM34:145 FIXED AuthContext: Current state: Object
 sw.js:15 [SW] Installing service worker
 sw.js:20 [SW] Caching static assets
-VM34:71 SW registered: ServiceWorkerRegistration
-build-desk.com/:1 Unchecked runtime.lastError: The message port closed before a response was received.
 sw.js:34 [SW] Activating service worker
-VM34:71 🔄 VERSION CHANGE DETECTED: Checking for new features...
+VM34:145 SW registered: ServiceWorkerRegistration
+build-desk.com/:1 Unchecked runtime.lastError: The message port closed before a response was received.
+VM34:145 FIXED AuthContext: Signing in...
+VM34:145 FIXED AuthContext: Current state: Object
 gethtml.js:8 success
 auth:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.
-VM34:71 FIXED AuthContext: Signing in...
-VM34:71 FIXED AuthContext: Current state: Object
-VM34:71 FIXED AuthContext: Auth state change: SIGNED_IN 0f91e0b7-ddd2-4dad-ad7b-3d339ffaee19
-VM34:71 FIXED AuthContext: Fetching profile for user: 0f91e0b7-ddd2-4dad-ad7b-3d339ffaee19, attempt: 1
-VM34:71 FIXED AuthContext: Current state: Object
-VM34:71 ✅ AUTH FIX DETECTED: Navigation working!
-VM34:71 ✅ FIXED AUTH: User authenticated, navigating to dashboard...
-VM34:71 🔄 EMERGENCY: Loading auth state, showing spinner
-VM34:71 ✅ ROUTEGUARD DETECTED: Protection active!
-VM34:71 🚨 EMERGENCY ROUTEGUARD - State: Object
+VM34:145 FIXED AuthContext: Auth state change: SIGNED_IN 0f91e0b7-ddd2-4dad-ad7b-3d339ffaee19
+VM34:145 FIXED AuthContext: Fetching profile for user: 0f91e0b7-ddd2-4dad-ad7b-3d339ffaee19, attempt: 1
+VM34:145 FIXED AuthContext: Current state: Object
+VM34:145 ✅ NEW VERSION DETECTED: Navigation fix active!
+VM34:145 ✅ FIXED AUTH: User authenticated, navigating to dashboard...
+VM34:145 🔄 EMERGENCY: Loading auth state, showing spinner
+VM34:145 🚨 EMERGENCY ROUTEGUARD - State: Object
+VM34:145 FIXED AuthContext: Profile fetched successfully: root_admin
+VM34:145 FIXED AuthContext: Sign in successful
+VM34:145 FIXED AuthContext: Current state: Object
+VM34:145 ✅ EMERGENCY: Access granted for role: root_admin
+VM34:145 🚨 EMERGENCY ROUTEGUARD - State: Object
 inject.bundle.js:71 WebSocket connection to 'ws://localhost:8098/' failed:
-e @ inject.bundle.js:71
-VM34:71 FIXED AuthContext: Profile fetched successfully: root_admin
-VM34:71 📊 AUTH SUCCESS COUNT: 1
-VM34:71 FIXED AuthContext: Sign in successful
-VM34:71 FIXED AuthContext: Current state: Object
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 FIXED AuthContext: Current state: Object
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:71 ✅ EMERGENCY: Access granted for role: root_admin
-VM34:199 Error: Minified React error #301; visit https://reactjs.org/docs/error-decoder.html?invariant=301 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
-at mo (vendor-CSmKP8en.js:30:17003)
-at Su (vendor-CSmKP8en.js:32:3134)
-at Wa (vendor-CSmKP8en.js:32:44454)
-at Va (vendor-CSmKP8en.js:32:39486)
-at ud (vendor-CSmKP8en.js:32:39417)
-at Zr (vendor-CSmKP8en.js:32:39276)
-at Ou (vendor-CSmKP8en.js:32:35697)
-at Ua (vendor-CSmKP8en.js:32:34653)
-at E (vendor-CSmKP8en.js:17:1562)
-at MessagePort.ot (vendor-CSmKP8en.js:17:1930)
-console.error @ VM34:199
-vendor-CSmKP8en.js:32 Uncaught Error: Minified React error #301; visit https://reactjs.org/docs/error-decoder.html?invariant=301 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
-at mo (vendor-CSmKP8en.js:30:17003)
-at Su (vendor-CSmKP8en.js:32:3134)
-at Wa (vendor-CSmKP8en.js:32:44454)
-at Va (vendor-CSmKP8en.js:32:39486)
-at ud (vendor-CSmKP8en.js:32:39417)
-at Zr (vendor-CSmKP8en.js:32:39276)
-at Ou (vendor-CSmKP8en.js:32:35697)
-at Ua (vendor-CSmKP8en.js:32:34653)
-at E (vendor-CSmKP8en.js:17:1562)
-at MessagePort.ot (vendor-CSmKP8en.js:17:1930)
-WebSocket connection to 'ws://localhost:8098/' failed:
 e @ inject.bundle.js:71
