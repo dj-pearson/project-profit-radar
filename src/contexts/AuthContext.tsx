@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setProfileFetching(true);
 
         const { data, error } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .select("*")
           .eq("id", userId)
           .single();
@@ -211,7 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const { error } = await supabase
-          .from("profiles")
+          .from("user_profiles")
           .update(updates)
           .eq("id", user.id);
 
