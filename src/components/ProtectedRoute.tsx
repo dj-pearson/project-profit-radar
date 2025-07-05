@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
@@ -14,109 +14,115 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
 }) => {
   const authState = useAuth();
   const { user, userProfile, loading } = authState;
-  const redirectedRef = useRef(false);
-  const lastStateRef = useRef({ user: null, userProfile: null, loading: true });
+  const [redirectCount, setRedirectCount] = useState(0);
+  const [isStableLoading, setIsStableLoading] = useState(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastStateRef = useRef<string>("");
 
-  // Debug logging to track state changes
+  // Create a stable loading state to prevent race conditions
   useEffect(() => {
-    const currentState = {
-      user: !!user,
-      userProfile: userProfile?.role || "undefined",
-      loading,
-    };
-    const lastState = lastStateRef.current;
+    const currentState = `${!!user}-${!!userProfile}-${loading}`;
 
-    if (
-      currentState.user !== !!lastState.user ||
-      currentState.userProfile !==
-        (lastState.userProfile?.role || "undefined") ||
-      currentState.loading !== lastState.loading
-    ) {
-      console.log("RouteGuard check:", {
-        routePath,
-        userProfile: userProfile?.role || "undefined",
-        loading,
-        hasUser: !!user,
-        hasCompany: !!userProfile?.company_id,
-      });
+    if (currentState !== lastStateRef.current) {
+      lastStateRef.current = currentState;
+      setIsStableLoading(true);
 
-      lastStateRef.current = { user, userProfile, loading };
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Set a minimum loading time to prevent rapid state changes
+      timeoutRef.current = setTimeout(() => {
+        setIsStableLoading(false);
+      }, 500);
     }
-  }, [user, userProfile, loading, routePath]);
 
-  // Show loading while auth is being determined
-  if (loading) {
-    console.log("RouteGuard: Loading auth state");
-    redirectedRef.current = false;
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [user, userProfile, loading]);
+
+  // Emergency redirect limit to prevent infinite loops
+  useEffect(() => {
+    if (redirectCount >= 3) {
+      console.error("RouteGuard: Too many redirects, forcing auth page");
+      window.location.href = "/auth";
+      return;
+    }
+  }, [redirectCount]);
+
+  // Log current state for debugging
+  useEffect(() => {
+    console.log("RouteGuard FIXED VERSION - State:", {
+      routePath,
+      hasUser: !!user,
+      hasProfile: !!userProfile,
+      profileRole: userProfile?.role || "none",
+      loading,
+      isStableLoading,
+      redirectCount,
+    });
+  }, [user, userProfile, loading, isStableLoading, redirectCount, routePath]);
+
+  // Show loading while auth state is being determined
+  if (loading || isStableLoading) {
+    console.log("RouteGuard: Loading auth state, showing spinner");
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-construction-orange" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Critical fix: If we have a user but no profile, AND we haven't already redirected,
-  // wait for profile to load instead of redirecting
-  if (user && !userProfile && !redirectedRef.current) {
-    console.log("RouteGuard: User authenticated, waiting for profile...");
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Setting up your account...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Only redirect to auth if we're absolutely sure there's no user
+  // If no user, redirect to auth
   if (!user) {
-    if (!redirectedRef.current) {
-      console.log("RouteGuard: No user, redirecting to auth");
-      redirectedRef.current = true;
-      return <Navigate to="/auth" replace />;
-    }
-    return null; // Prevent multiple redirects
+    console.log("RouteGuard: No user, redirecting to auth");
+    setRedirectCount((prev) => prev + 1);
+    return <Navigate to="/auth" replace />;
   }
 
-  // At this point we should have both user and userProfile
-  if (userProfile) {
-    // Check for root admin access
-    if (userProfile.role === "root_admin") {
-      console.log("RouteGuard: Root admin detected, allowing access");
-      redirectedRef.current = false;
-      return <>{children}</>;
-    }
-
-    // Redirect to setup if no company for non-root admins
-    if (!userProfile.company_id) {
-      if (!redirectedRef.current) {
-        console.log("RouteGuard: No company, redirecting to setup");
-        redirectedRef.current = true;
-        return <Navigate to="/setup" replace />;
-      }
+  // If user exists but no profile, wait or redirect based on attempts
+  if (!userProfile) {
+    console.log(
+      "RouteGuard: User exists but no profile, redirect attempt:",
+      redirectCount
+    );
+    if (redirectCount < 2) {
+      setRedirectCount((prev) => prev + 1);
+      return <Navigate to="/auth" replace />;
+    } else {
+      // Force hard refresh to clear any cached state
+      console.error("RouteGuard: Profile fetch failed, forcing page refresh");
+      window.location.reload();
       return null;
     }
-
-    // All checks passed, allow access
-    console.log("RouteGuard: Access granted");
-    redirectedRef.current = false;
-    return <>{children}</>;
   }
 
-  // Fallback: if we somehow get here, show loading
-  console.log("RouteGuard: Fallback loading state");
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Please wait...</p>
-      </div>
-    </div>
-  );
+  // Check user role permissions
+  const allowedRoles = [
+    "root_admin",
+    "admin",
+    "project_manager",
+    "field_supervisor",
+    "office_staff",
+    "accounting",
+    "client_portal",
+  ];
+
+  if (!allowedRoles.includes(userProfile.role)) {
+    console.log("RouteGuard: Invalid role, redirecting to auth");
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Success - allow access
+  console.log("RouteGuard: Access granted for role:", userProfile.role);
+  return <>{children}</>;
 };
 
 // Legacy alias for backward compatibility

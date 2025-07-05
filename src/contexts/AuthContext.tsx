@@ -33,14 +33,9 @@ interface AuthContextType {
   session: Session | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (
-    email: string,
-    password: string,
-    userData?: any
-  ) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -48,7 +43,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
@@ -61,265 +56,216 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileFetching, setProfileFetching] = useState(false);
 
-  // Centralized auth initialization effect
-  useEffect(() => {
-    let mounted = true;
-    let profileCache = new Map<string, UserProfile | null>();
-    let pendingFetches = new Set<string>();
-
-    const handleAuthChange = async (event: string, session: Session | null) => {
-      if (!mounted) return;
-
-      console.log("Auth state change:", event, session?.user?.id);
-
-      if (session?.user) {
-        const userId = session.user.id;
-
-        // Set user and session immediately
-        setUser(session.user);
-        setSession(session);
-
-        // Check cache first
-        if (profileCache.has(userId)) {
-          console.log("Using cached profile for user:", userId);
-          const cachedProfile = profileCache.get(userId);
-          setUserProfile(cachedProfile);
-          setLoading(false);
-          return;
-        }
-
-        // Check if fetch is already pending
-        if (pendingFetches.has(userId)) {
-          console.log("Profile fetch already pending for user:", userId);
-          // Keep loading true while profile fetch is pending
-          setLoading(true);
-          return;
-        }
-
-        // Start profile fetch - KEEP LOADING TRUE until complete
-        pendingFetches.add(userId);
-        setLoading(true);
-
-        console.log("Fetching profile for user:", userId);
-
-        try {
-          const { data: profile, error } = await supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("id", userId)
-            .maybeSingle();
-
-          console.log("Profile query result:", { profile, error });
-
-          if (mounted) {
-            const profileData = error ? null : profile;
-            profileCache.set(userId, profileData);
-            setUserProfile(profileData);
-            // Only set loading false AFTER profile is set
-            setLoading(false);
-
-            if (error) {
-              console.error("Profile fetch error:", error);
-            }
-          }
-        } catch (error) {
-          console.error("Profile fetch exception:", error);
-          if (mounted) {
-            profileCache.set(userId, null);
-            setUserProfile(null);
-            setLoading(false);
-          }
-        } finally {
-          pendingFetches.delete(userId);
-        }
-      } else {
-        // No session - clear everything immediately
-        console.log("No session, clearing auth state");
-        profileCache.clear();
-        pendingFetches.clear();
-        setUser(null);
-        setSession(null);
-        setUserProfile(null);
-        setLoading(false);
-      }
-    };
-
-    // Initialize auth
-    const initAuth = async () => {
+  // Fetch user profile with retry logic
+  const fetchUserProfile = useCallback(
+    async (userId: string, retryCount = 0): Promise<UserProfile | null> => {
       try {
-        console.log("Initializing auth...");
+        console.log(
+          `FIXED AuthContext: Fetching profile for user: ${userId}, attempt: ${
+            retryCount + 1
+          }`
+        );
+        setProfileFetching(true);
 
-        // Set up listener first
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(handleAuthChange);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-        // Get initial session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        console.log("Initial session:", session?.user?.id || "none");
-
-        // Handle initial session
-        if (session && mounted) {
-          await handleAuthChange("INITIAL_SESSION", session);
-        } else if (mounted) {
-          setLoading(false);
+        if (error) {
+          console.error("FIXED AuthContext: Profile fetch error:", error);
+          if (retryCount < 2) {
+            // Retry up to 3 times
+            console.log(
+              `FIXED AuthContext: Retrying profile fetch (${retryCount + 1}/3)`
+            );
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            return await fetchUserProfile(userId, retryCount + 1);
+          }
+          return null;
         }
 
-        return subscription;
+        console.log(
+          "FIXED AuthContext: Profile fetched successfully:",
+          data?.role
+        );
+        return data as UserProfile;
       } catch (error) {
-        console.error("Auth init error:", error);
-        if (mounted) {
-          setLoading(false);
+        console.error("FIXED AuthContext: Profile fetch exception:", error);
+        if (retryCount < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          return await fetchUserProfile(userId, retryCount + 1);
         }
         return null;
+      } finally {
+        setProfileFetching(false);
       }
-    };
-
-    let subscription: any = null;
-    initAuth().then((sub) => (subscription = sub));
-
-    return () => {
-      mounted = false;
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, []);
-
-  // Debug effect to track profile changes
-  useEffect(() => {
-    console.log("Profile state changed:", {
-      hasProfile: !!userProfile,
-      role: userProfile?.role,
-      companyId: userProfile?.company_id,
-      loading,
-    });
-  }, [userProfile, loading]);
-
-  const refreshProfile = useCallback(async () => {
-    if (user) {
-      setLoading(true);
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
-      setUserProfile(profile);
-      setLoading(false);
-    }
-  }, [user]);
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Sign In Failed",
-          description: error.message,
-        });
-      }
-      // Don't set loading false here - let the auth state change handler do it
-
-      return { error };
-    } catch (err: any) {
-      console.error("Error during sign in:", err);
-      setLoading(false);
-      return { error: err };
-    }
-  }, []);
-
-  const signUp = useCallback(
-    async (email: string, password: string, userData?: any) => {
-      const redirectUrl = `${window.location.origin}/`;
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: userData,
-        },
-      });
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Sign Up Failed",
-          description: error.message,
-        });
-      }
-
-      return { error };
     },
     []
   );
 
-  const resetPassword = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth`,
+  // Handle auth state changes
+  useEffect(() => {
+    console.log("FIXED AuthContext: Initializing auth...");
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log(
+        "FIXED AuthContext: Initial session:",
+        session?.user?.id || "none"
+      );
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        fetchUserProfile(session.user.id).then((profile) => {
+          setUserProfile(profile);
+          setLoading(false);
+        });
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
     });
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Reset Password Failed",
-        description: error.message,
-      });
-    } else {
-      toast({
-        title: "Reset Email Sent",
-        description: "Check your email for a password reset link.",
-      });
-    }
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(
+        "FIXED AuthContext: Auth state change:",
+        event,
+        session?.user?.id || "none"
+      );
 
-    return { error };
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        // Keep loading true until profile is fetched
+        setLoading(true);
+        const profile = await fetchUserProfile(session.user.id);
+        setUserProfile(profile);
+        setLoading(false);
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchUserProfile]);
+
+  // Ensure loading remains true while profile is being fetched
+  const effectiveLoading = loading || profileFetching || (user && !userProfile);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    try {
+      console.log("FIXED AuthContext: Signing in...");
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("FIXED AuthContext: Sign in error:", error);
+        setLoading(false);
+        return { error: error.message };
+      }
+
+      console.log("FIXED AuthContext: Sign in successful");
+      // Loading will be set to false by the auth state change listener
+      return {};
+    } catch (error) {
+      console.error("FIXED AuthContext: Sign in exception:", error);
+      setLoading(false);
+      return { error: "An unexpected error occurred" };
+    }
   }, []);
 
   const signOut = useCallback(async () => {
-    setLoading(true);
-    await supabase.auth.signOut();
-    // Auth state change will handle clearing state and setting loading false
-    toast({
-      title: "Signed Out",
-      description: "You have been successfully signed out.",
-    });
+    try {
+      console.log("FIXED AuthContext: Signing out...");
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      setLoading(false);
+    } catch (error) {
+      console.error("FIXED AuthContext: Sign out error:", error);
+      setLoading(false);
+    }
   }, []);
 
-  // Memoize context value to prevent unnecessary re-renders
+  const updateProfile = useCallback(
+    async (updates: Partial<UserProfile>) => {
+      if (!user) return;
+
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("id", user.id);
+
+        if (error) throw error;
+
+        setUserProfile((prev) => (prev ? { ...prev, ...updates } : null));
+      } catch (error) {
+        console.error("FIXED AuthContext: Update profile error:", error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const profile = await fetchUserProfile(user.id);
+      setUserProfile(profile);
+    } catch (error) {
+      console.error("FIXED AuthContext: Refresh profile error:", error);
+    }
+  }, [user, fetchUserProfile]);
+
   const value = useMemo(
     () => ({
       user,
       session,
       userProfile,
-      loading,
+      loading: effectiveLoading,
       signIn,
-      signUp,
       signOut,
-      resetPassword,
+      updateProfile,
       refreshProfile,
     }),
     [
       user,
       session,
       userProfile,
-      loading,
+      effectiveLoading,
       signIn,
-      signUp,
       signOut,
-      resetPassword,
+      updateProfile,
       refreshProfile,
     ]
   );
+
+  console.log("FIXED AuthContext: Current state:", {
+    hasUser: !!user,
+    hasProfile: !!userProfile,
+    loading: effectiveLoading,
+    profileFetching,
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
