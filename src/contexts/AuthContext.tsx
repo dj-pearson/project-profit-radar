@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -41,10 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authReady, setAuthReady] = useState(false);
 
   // Fetch user profile function
-  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const fetchUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
@@ -62,11 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Profile fetch failed:', error);
       return null;
     }
-  };
+  }, []);
 
   // Initialize auth state - SINGLE useEffect to prevent race conditions
   useEffect(() => {
     let mounted = true;
+    let profileFetchInProgress = false;
 
     const handleAuthChange = (event: string, session: Session | null) => {
       if (!mounted) return;
@@ -76,33 +76,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
 
       // Handle profile fetch separately to avoid auth loops
-      if (session?.user) {
+      if (session?.user && !profileFetchInProgress) {
+        profileFetchInProgress = true;
+        
         // Defer profile fetch to prevent auth state loops
         setTimeout(() => {
           if (!mounted) return;
           
-          // Only fetch if we don't already have profile for this user
-          if (!userProfile || userProfile.id !== session.user.id) {
-            fetchUserProfile(session.user.id).then(profile => {
-              if (mounted) {
-                setUserProfile(profile);
-              }
-            }).catch(error => {
-              console.error('Profile fetch error:', error);
-              if (mounted) {
-                setUserProfile(null);
-              }
-            });
-          }
+          fetchUserProfile(session.user.id).then(profile => {
+            if (mounted) {
+              setUserProfile(profile);
+              profileFetchInProgress = false;
+            }
+          }).catch(error => {
+            console.error('Profile fetch error:', error);
+            if (mounted) {
+              setUserProfile(null);
+              profileFetchInProgress = false;
+            }
+          });
         }, 0);
-      } else {
+      } else if (!session?.user) {
         // No user, clear profile immediately
         setUserProfile(null);
+        profileFetchInProgress = false;
       }
 
       // Mark as ready and stop loading
       if (mounted) {
-        setAuthReady(true);
         setLoading(false);
       }
     };
@@ -121,7 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
-          setAuthReady(true);
           setLoading(false);
         }
       }
@@ -139,14 +139,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []); // No dependencies to prevent re-initialization
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       const profile = await fetchUserProfile(user.id);
       setUserProfile(profile);
     }
-  };
+  }, [user, fetchUserProfile]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -166,9 +166,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during sign in:', err);
       return { error: err };
     }
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string, userData?: any) => {
+  const signUp = useCallback(async (email: string, password: string, userData?: any) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -189,9 +189,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return { error };
-  };
+  }, []);
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth`
     });
@@ -210,17 +210,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return { error };
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     toast({
       title: "Signed Out",
       description: "You have been successfully signed out."
     });
-  };
+  }, []);
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     user,
     session,
     userProfile,
@@ -230,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     resetPassword,
     refreshProfile
-  };
+  }), [user, session, userProfile, loading, signIn, signUp, signOut, resetPassword, refreshProfile]);
 
   return (
     <AuthContext.Provider value={value}>
