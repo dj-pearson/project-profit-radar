@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Centralized auth initialization effect
   useEffect(() => {
     let mounted = true;
+    let currentUserId: string | null = null;
 
     const handleAuthChange = async (event: string, session: Session | null) => {
       if (!mounted) return;
@@ -52,7 +53,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth state change:', event, session?.user?.id);
       
       if (session?.user) {
-        // CRITICAL: Set loading to true IMMEDIATELY when we have a user but need to fetch profile
+        // Prevent duplicate profile fetches for the same user
+        if (currentUserId === session.user.id && userProfile) {
+          console.log('Same user, skipping profile fetch');
+          setUser(session.user);
+          setSession(session);
+          setLoading(false);
+          return;
+        }
+
+        currentUserId = session.user.id;
         setLoading(true);
         setUser(session.user);
         setSession(session);
@@ -68,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
           console.log('Profile query result:', { profile, error });
           
-          if (mounted) {
+          if (mounted && currentUserId === session.user.id) {
             if (error) {
               console.error('Profile fetch error:', error);
               setUserProfile(null);
@@ -76,12 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('Setting profile state:', profile);
               setUserProfile(profile);
             }
-            // Only set loading to false after profile is handled
             setLoading(false);
           }
         } catch (error) {
           console.error('Profile fetch exception:', error);
-          if (mounted) {
+          if (mounted && currentUserId === session.user.id) {
             setUserProfile(null);
             setLoading(false);
           }
@@ -89,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // No session - clear everything
         console.log('No session, clearing auth state');
+        currentUserId = null;
         setUser(null);
         setSession(null);
         setUserProfile(null);
@@ -101,21 +111,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         console.log('Initializing auth...');
         
-        // Set up auth listener FIRST to catch all events
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-        
-        // Then get the current session
+        // Get current session first
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Initial session:', !!session?.user);
         
+        // Set up auth listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+        
         // Handle initial session if it exists
-        if (session) {
+        if (session && mounted) {
           await handleAuthChange('INITIAL_SESSION', session);
         } else if (mounted) {
           setLoading(false);
         }
         
-        // Store subscription for cleanup
         return subscription;
       } catch (error) {
         console.error('Auth init error:', error);
