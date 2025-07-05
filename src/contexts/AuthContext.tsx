@@ -65,6 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [profileFetching, setProfileFetching] = useState(false);
   const [isProfileFetchInProgress, setIsProfileFetchInProgress] =
     useState(false);
+  const [lastFetchedUserId, setLastFetchedUserId] = useState<string | null>(
+    null
+  );
 
   // Fetch user profile with retry logic
   const fetchUserProfile = useCallback(
@@ -138,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           console.log("Initial session: Fetching profile for user");
           setIsProfileFetchInProgress(true);
+          setLastFetchedUserId(session.user.id);
           fetchUserProfile(session.user.id)
             .then((profile) => {
               setUserProfile(profile);
@@ -158,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } else {
         setUserProfile(null);
+        setLastFetchedUserId(null);
         setLoading(false);
       }
     });
@@ -177,41 +182,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const newUserId = session.user.id;
 
         // More robust check - don't refetch if we already have a profile for this user
-        if (currentUserId === newUserId && userProfile) {
+        if (userProfile && userProfile.id === newUserId) {
           console.log("Profile already loaded for user, skipping fetch");
           setLoading(false);
-        } else if (isProfileFetchInProgress) {
-          console.log("Profile fetch already in progress, waiting...");
+        } else if (
+          isProfileFetchInProgress &&
+          lastFetchedUserId === newUserId
+        ) {
+          console.log(
+            "Profile fetch already in progress for this user, waiting..."
+          );
           // Don't start another fetch, just wait for the current one
-        } else if (!userProfile || currentUserId !== newUserId) {
-          console.log("Fetching profile for new/missing user");
+        } else if (lastFetchedUserId === newUserId && !userProfile) {
+          console.log(
+            "Already attempted fetch for this user and failed, skipping"
+          );
+          setLoading(false);
+        } else {
+          console.log("Fetching profile for user:", newUserId);
           setLoading(true);
           setIsProfileFetchInProgress(true);
+          setLastFetchedUserId(newUserId);
 
           try {
             const profile = await fetchUserProfile(session.user.id);
-            setUserProfile(profile);
 
             if (profile) {
+              setUserProfile(profile);
+              setLastFetchedUserId(profile.id); // Update with successful profile ID
               console.log("Profile loaded successfully, user ready");
             } else {
               console.warn(
                 "Profile fetch failed, user may have limited access"
               );
+              // Don't set to null, keep any existing profile
+              if (!userProfile) {
+                setUserProfile(null);
+              }
             }
           } catch (error) {
             console.error("Profile fetch failed:", error);
-            setUserProfile(null);
+            // If profile fetch fails, don't clear existing profile
+            // Only set to null if we never had one
+            if (!userProfile) {
+              console.log("No existing profile, setting to null");
+              setUserProfile(null);
+            } else {
+              console.log("Keeping existing profile after fetch failure");
+            }
           } finally {
             setLoading(false);
             setIsProfileFetchInProgress(false);
           }
-        } else {
-          console.log("Profile state unchanged, keeping current profile");
-          setLoading(false);
         }
       } else {
         setUserProfile(null);
+        setLastFetchedUserId(null);
         setLoading(false);
       }
     });
@@ -222,7 +248,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [fetchUserProfile]);
 
   // Ensure loading remains true while profile is being fetched
-  const effectiveLoading = loading || profileFetching || (user && !userProfile);
+  // But don't get stuck if profile fetch failed and we're not actively fetching
+  const effectiveLoading =
+    loading ||
+    profileFetching ||
+    (user && !userProfile && isProfileFetchInProgress);
 
   // Log current state for debugging when it changes
   useEffect(() => {
