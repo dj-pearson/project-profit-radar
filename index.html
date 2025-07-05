@@ -43,83 +43,194 @@
       content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
     />
 
-    <!-- Emergency Infinite Loop Prevention Script -->
+    <!-- Enhanced Emergency Cache-Busting Script -->
     <script>
       (function () {
-        // Emergency infinite loop detection
-        let routeGuardCount = 0;
-        let lastRouteGuardTime = Date.now();
-        let emergencyTriggered = false;
+        // Version check - expected features in the new code
+        const EXPECTED_VERSION = "2025.01.03.001";
+        const EXPECTED_FEATURES = [
+          "✅ FIXED AUTH: User authenticated, navigating to dashboard...",
+          "🚨 EMERGENCY ROUTEGUARD - State:",
+          "✅ EMERGENCY: Access granted for role:",
+        ];
 
-        // Override console.log to detect RouteGuard infinite loop
+        let authFixDetected = false;
+        let routeGuardDetected = false;
+        let emergencyTriggered = false;
+        let authSuccessCount = 0;
+        let versionCheckTimer;
+
+        // Store version info
+        localStorage.setItem("builddesk_version", EXPECTED_VERSION);
+        console.log("🚀 BUILDDESK VERSION:", EXPECTED_VERSION);
+
+        // Override console.log to detect new features
         const originalLog = console.log;
         console.log = function (...args) {
           const logStr = args.join(" ");
 
-          // Detect RouteGuard infinite loop pattern (both old and new patterns)
+          // Check for auth navigation fix
+          if (
+            logStr.includes(
+              "✅ FIXED AUTH: User authenticated, navigating to dashboard"
+            )
+          ) {
+            authFixDetected = true;
+            console.log("✅ AUTH FIX DETECTED: Navigation working!");
+          }
+
+          // Check for RouteGuard working
+          if (logStr.includes("🚨 EMERGENCY ROUTEGUARD - State:")) {
+            routeGuardDetected = true;
+            console.log("✅ ROUTEGUARD DETECTED: Protection active!");
+          }
+
+          // Count successful auth attempts without navigation
+          if (logStr.includes("Sign in successful")) {
+            authSuccessCount++;
+            console.log("📊 AUTH SUCCESS COUNT:", authSuccessCount);
+
+            // If we have successful auth but no navigation after 3 seconds, force cache clear
+            if (authSuccessCount >= 1 && !authFixDetected) {
+              setTimeout(() => {
+                if (!authFixDetected && !emergencyTriggered) {
+                  console.error(
+                    "🚨 CACHE EMERGENCY: Auth works but no navigation detected!"
+                  );
+                  triggerCacheClear("auth_navigation_missing");
+                }
+              }, 3000);
+            }
+          }
+
+          // Detect infinite loop patterns
           if (
             (logStr.includes("RouteGuard") &&
               logStr.includes("redirecting to auth")) ||
             (logStr.includes("EMERGENCY") &&
               logStr.includes("redirecting to auth"))
           ) {
-            routeGuardCount++;
-            const now = Date.now();
-
-            // If more than 15 RouteGuard redirects in 10 seconds = infinite loop
-            if (now - lastRouteGuardTime < 10000 && routeGuardCount > 15) {
-              if (!emergencyTriggered) {
-                emergencyTriggered = true;
-                console.error(
-                  "🚨 EMERGENCY: Infinite RouteGuard loop detected! Force clearing cache..."
-                );
-
-                // Clear all storage
-                try {
-                  localStorage.clear();
-                  sessionStorage.clear();
-
-                  // Clear service worker cache
-                  if ("caches" in window) {
-                    caches.keys().then((names) => {
-                      names.forEach((name) => {
-                        caches.delete(name);
-                      });
-                    });
-                  }
-
-                  // Force reload with cache bust
-                  const timestamp = Date.now();
-                  const newURL =
-                    window.location.origin +
-                    "/auth?" +
-                    "cache_bust=" +
-                    timestamp +
-                    "&emergency_reload=true" +
-                    "&clear_cache=true";
-
-                  console.log("🔄 EMERGENCY: Redirecting to:", newURL);
-                  window.location.href = newURL;
-                } catch (e) {
-                  console.error("🚨 EMERGENCY: Error clearing cache:", e);
-                  // Fallback: simple reload
-                  window.location.reload(true);
-                }
-              }
-              return;
-            }
-
-            // Reset counter if enough time has passed
-            if (now - lastRouteGuardTime > 10000) {
-              routeGuardCount = 1;
-            }
-            lastRouteGuardTime = now;
+            triggerCacheClear("infinite_loop_detected");
+            return;
           }
 
           originalLog.apply(console, args);
         };
 
-        // Additional protection: detect throttling messages
+        // Emergency cache clearing function
+        function triggerCacheClear(reason) {
+          if (emergencyTriggered) return;
+          emergencyTriggered = true;
+
+          console.error("🚨 EMERGENCY CACHE CLEAR:", reason);
+
+          try {
+            // Clear all storage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Clear service worker cache
+            if ("caches" in window) {
+              caches.keys().then((names) => {
+                names.forEach((name) => {
+                  caches.delete(name);
+                });
+              });
+            }
+
+            // Unregister service worker
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker
+                .getRegistrations()
+                .then((registrations) => {
+                  registrations.forEach((registration) => {
+                    registration.unregister();
+                  });
+                });
+            }
+
+            // Force reload with cache bust
+            const timestamp = Date.now();
+            const params = new URLSearchParams();
+            params.set("cache_bust", timestamp.toString());
+            params.set("emergency", reason);
+            params.set("version", EXPECTED_VERSION);
+            params.set("force_reload", "true");
+
+            const newURL =
+              window.location.origin +
+              window.location.pathname +
+              "?" +
+              params.toString();
+            console.log("🔄 EMERGENCY RELOAD:", newURL);
+
+            // Show loading message
+            document.body.innerHTML = `
+              <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #fff; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; font-family: Arial, sans-serif;">
+                <div style="text-align: center; padding: 20px; max-width: 500px;">
+                  <h2 style="color: #dc2626; margin-bottom: 20px;">🚨 Emergency Cache Clear</h2>
+                  <p style="color: #374151; margin-bottom: 20px;">Clearing cached files to load latest updates...</p>
+                  <div style="width: 100%; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden;">
+                    <div style="width: 0%; height: 100%; background: #dc2626; animation: progress 3s linear forwards;"></div>
+                  </div>
+                  <p style="color: #6b7280; margin-top: 10px; font-size: 14px;">Reason: ${reason}</p>
+                </div>
+                <style>
+                  @keyframes progress {
+                    to { width: 100%; }
+                  }
+                </style>
+              </div>
+            `;
+
+            // Force reload after showing message
+            setTimeout(() => {
+              window.location.href = newURL;
+            }, 3000);
+          } catch (e) {
+            console.error("🚨 EMERGENCY: Error clearing cache:", e);
+            // Fallback: simple reload
+            window.location.reload(true);
+          }
+        }
+
+        // Version check after page load
+        window.addEventListener("load", () => {
+          setTimeout(() => {
+            if (
+              !authFixDetected &&
+              !routeGuardDetected &&
+              !emergencyTriggered
+            ) {
+              const lastVersion = localStorage.getItem(
+                "builddesk_last_version"
+              );
+              const currentVersion = localStorage.getItem("builddesk_version");
+
+              if (lastVersion !== currentVersion) {
+                console.log(
+                  "🔄 VERSION CHANGE DETECTED: Checking for new features..."
+                );
+
+                // Check if we're on auth page with no expected features
+                if (window.location.pathname === "/auth") {
+                  setTimeout(() => {
+                    if (!authFixDetected && !emergencyTriggered) {
+                      console.warn(
+                        "⚠️  AUTH PAGE: New version not detected, clearing cache..."
+                      );
+                      triggerCacheClear("version_update_auth_page");
+                    }
+                  }, 2000);
+                }
+              }
+
+              localStorage.setItem("builddesk_last_version", currentVersion);
+            }
+          }, 1000);
+        });
+
+        // Detect throttling messages
         const originalError = console.error;
         console.error = function (...args) {
           const errorStr = args.join(" ");
@@ -128,30 +239,17 @@
             errorStr.includes("Throttling navigation") &&
             !emergencyTriggered
           ) {
-            emergencyTriggered = true;
-            console.error(
-              "🚨 EMERGENCY: Navigation throttling detected! Force clearing cache..."
-            );
-
-            setTimeout(() => {
-              try {
-                localStorage.clear();
-                sessionStorage.clear();
-                const timestamp = Date.now();
-                window.location.href =
-                  window.location.origin +
-                  "/auth?emergency_throttle=" +
-                  timestamp;
-              } catch (e) {
-                window.location.reload(true);
-              }
-            }, 1000);
+            triggerCacheClear("navigation_throttling");
           }
 
           originalError.apply(console, args);
         };
 
-        console.log("🛡️ EMERGENCY: Infinite loop protection active");
+        console.log(
+          "🛡️ EMERGENCY v" +
+            EXPECTED_VERSION +
+            ": Advanced cache protection active"
+        );
       })();
     </script>
   </head>
