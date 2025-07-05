@@ -66,9 +66,13 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     lastRenderTime.current = now;
   });
 
-  // Emergency circuit breaker
-  useEffect(() => {
+  // Emergency circuit breaker - only count actual redirects
+  const incrementRedirectCount = () => {
     globalRedirectCount++;
+    console.log(
+      "🔄 EMERGENCY: Redirect count incremented to:",
+      globalRedirectCount
+    );
 
     if (globalRedirectCount > 5) {
       console.error(
@@ -82,7 +86,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
         window.location.href = "/auth";
       }, 3000);
     }
-  }, [user, userProfile, loading]);
+  };
 
   // Enhanced logging with EMERGENCY prefix for visibility
   useEffect(() => {
@@ -155,6 +159,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
       localRedirectCount + 1,
       ")"
     );
+    incrementRedirectCount();
     setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
   }
@@ -171,6 +176,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
       "🔄 EMERGENCY: User exists but no profile, redirect attempt:",
       localRedirectCount + 1
     );
+    incrementRedirectCount();
     setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
   }
@@ -188,6 +194,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
 
   if (!allowedRoles.includes(userProfile.role)) {
     console.log("🚨 EMERGENCY: Invalid role, redirecting to auth");
+    incrementRedirectCount();
     return <Navigate to="/auth" replace />;
   }
 

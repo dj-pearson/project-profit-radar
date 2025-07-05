@@ -56,16 +56,18 @@
         console.log = function (...args) {
           const logStr = args.join(" ");
 
-          // Detect RouteGuard infinite loop pattern
+          // Detect RouteGuard infinite loop pattern (both old and new patterns)
           if (
-            logStr.includes("RouteGuard") &&
-            logStr.includes("redirecting to auth")
+            (logStr.includes("RouteGuard") &&
+              logStr.includes("redirecting to auth")) ||
+            (logStr.includes("EMERGENCY") &&
+              logStr.includes("redirecting to auth"))
           ) {
             routeGuardCount++;
             const now = Date.now();
 
-            // If more than 10 RouteGuard redirects in 5 seconds = infinite loop
-            if (now - lastRouteGuardTime < 5000 && routeGuardCount > 10) {
+            // If more than 15 RouteGuard redirects in 10 seconds = infinite loop
+            if (now - lastRouteGuardTime < 10000 && routeGuardCount > 15) {
               if (!emergencyTriggered) {
                 emergencyTriggered = true;
                 console.error(
@@ -108,7 +110,7 @@
             }
 
             // Reset counter if enough time has passed
-            if (now - lastRouteGuardTime > 5000) {
+            if (now - lastRouteGuardTime > 10000) {
               routeGuardCount = 1;
             }
             lastRouteGuardTime = now;
