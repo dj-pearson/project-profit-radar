@@ -11,37 +11,28 @@ interface RouteGuardProps {
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
   const { user, userProfile, loading } = useAuth();
 
-  // Show loading while auth is being determined
-  if (loading) {
+  // Show loading while auth is being determined OR while we have a user but no profile yet
+  if (loading || (user && !userProfile)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">
+            {loading ? "Loading..." : "Setting up your account..."}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Only redirect if we're absolutely sure there's no user
+  // Only redirect to auth if we're sure there's no user AND not loading
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // If we have a user but no profile yet, show loading (don't redirect)
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Setting up your account...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // At this point we have both user and userProfile
   // Redirect to setup if no company
-  if (!userProfile.company_id) {
+  if (!userProfile?.company_id) {
     return <Navigate to="/setup" replace />;
   }
 
