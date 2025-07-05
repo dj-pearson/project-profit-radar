@@ -9,10 +9,11 @@ interface RouteGuardProps {
 }
 
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
-  const authState = useAuth();
-  const { user, userProfile, loading } = authState;
+  const { user, userProfile, loading } = useAuth();
 
-  // Show loading while auth is being determined OR while we have a user but no profile yet
+  console.log('RouteGuard render:', { user: !!user, userProfile: !!userProfile, loading });
+
+  // Show loading while auth is initializing
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -24,8 +25,13 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     );
   }
 
-  // If we have a user but no profile, keep showing loading
-  if (user && !userProfile) {
+  // No user - redirect to auth
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // User exists but no profile yet - wait for profile
+  if (!userProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
@@ -36,17 +42,12 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     );
   }
 
-  // Only redirect to auth if we're sure there's no user
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  // At this point we should have both user and userProfile
-  // Redirect to setup if no company
-  if (!userProfile?.company_id) {
+  // User and profile exist - check company setup
+  if (!userProfile.company_id && userProfile.role !== 'root_admin') {
     return <Navigate to="/setup" replace />;
   }
 
+  // All good - render children
   return <>{children}</>;
 };
 

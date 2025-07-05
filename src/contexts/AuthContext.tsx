@@ -41,122 +41,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
-  // Centralized auth initialization effect
+  // Single auth initialization effect
   useEffect(() => {
     let mounted = true;
-    let profileCache = new Map<string, UserProfile | null>();
-    let pendingFetches = new Set<string>();
-
-    const handleAuthChange = async (event: string, session: Session | null) => {
+    
+    const handleAuth = async (session: Session | null) => {
       if (!mounted) return;
       
-      console.log('Auth state change:', event, session?.user?.id);
+      console.log('Auth handler:', session?.user?.id || 'no session');
       
       if (session?.user) {
-        const userId = session.user.id;
-        
-        // Check cache first
-        if (profileCache.has(userId)) {
-          console.log('Using cached profile for user:', userId);
-          setUser(session.user);
-          setSession(session);
-          setUserProfile(profileCache.get(userId) || null);
-          setLoading(false);
-          return;
-        }
-
-        // Check if fetch is already pending
-        if (pendingFetches.has(userId)) {
-          console.log('Profile fetch already pending for user:', userId);
-          setUser(session.user);
-          setSession(session);
-          return;
-        }
-
-        pendingFetches.add(userId);
-        setLoading(true);
         setUser(session.user);
         setSession(session);
         
-        console.log('Fetching profile for user:', userId);
-        
+        // Fetch profile once
         try {
           const { data: profile, error } = await supabase
             .from('user_profiles')
             .select('*')
-            .eq('id', userId)
+            .eq('id', session.user.id)
             .maybeSingle();
             
-          console.log('Profile query result:', { profile, error });
-          
           if (mounted) {
-            const profileData = error ? null : profile;
-            profileCache.set(userId, profileData);
-            setUserProfile(profileData);
-            setLoading(false);
-            
-            if (error) {
-              console.error('Profile fetch error:', error);
-            }
+            setUserProfile(profile || null);
+            if (error) console.error('Profile error:', error);
           }
         } catch (error) {
-          console.error('Profile fetch exception:', error);
-          if (mounted) {
-            profileCache.set(userId, null);
-            setUserProfile(null);
-            setLoading(false);
-          }
-        } finally {
-          pendingFetches.delete(userId);
+          console.error('Profile fetch failed:', error);
+          if (mounted) setUserProfile(null);
         }
       } else {
-        // No session - clear everything
-        console.log('No session, clearing auth state');
-        profileCache.clear();
-        pendingFetches.clear();
         setUser(null);
         setSession(null);
         setUserProfile(null);
+      }
+      
+      if (mounted) {
         setLoading(false);
+        setInitialized(true);
       }
     };
 
-    // Initialize auth
-    const initAuth = async () => {
+    const init = async () => {
       try {
-        console.log('Initializing auth...');
+        // Get initial session
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session:', session?.user?.id || 'none');
+        await handleAuth(session);
         
-        // Set up listener first
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-        
-        // Handle initial session
-        if (session && mounted) {
-          await handleAuthChange('INITIAL_SESSION', session);
-        } else if (mounted) {
-          setLoading(false);
-        }
+        // Set up listener for changes only
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
+            await handleAuth(session);
+          }
+        });
         
         return subscription;
       } catch (error) {
-        console.error('Auth init error:', error);
+        console.error('Auth init failed:', error);
         if (mounted) {
           setLoading(false);
+          setInitialized(true);
         }
         return null;
       }
     };
 
     let subscription: any = null;
-    initAuth().then(sub => subscription = sub);
+    init().then(sub => subscription = sub);
 
     return () => {
       mounted = false;
-      if (subscription) {
-        subscription.unsubscribe();
-      }
+      subscription?.unsubscribe();
     };
   }, []);
 
