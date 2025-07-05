@@ -22,6 +22,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
   const [localRedirectCount, setLocalRedirectCount] = useState(0);
   const [forceLoading, setForceLoading] = useState(false);
   const [emergencyMode, setEmergencyMode] = useState(false);
+  const [profileWaitTime, setProfileWaitTime] = useState(0);
   const lastRenderTime = useRef(Date.now());
   const renderCount = useRef(0);
   const accessGrantedLogged = useRef(false);
@@ -87,6 +88,20 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     accessGrantedLogged.current = false;
   }, [user?.id]);
 
+  // Profile wait timer for authenticated users without profiles
+  useEffect(() => {
+    if (user && !userProfile && !loading) {
+      const timer = setTimeout(() => {
+        setProfileWaitTime((prev) => prev + 1);
+      }, 2000); // Wait 2 seconds before considering profile fetch failed
+
+      return () => clearTimeout(timer);
+    } else {
+      // Reset wait time when user changes or profile loads
+      setProfileWaitTime(0);
+    }
+  }, [user, userProfile, loading, profileWaitTime]);
+
   // Circuit breaker is open - force loading state
   if (isCircuitOpen || emergencyMode || forceLoading) {
     return (
@@ -126,15 +141,31 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
-  // If user exists but no profile, handle carefully
+  // If user exists but no profile, give time for profile to load
   if (!userProfile) {
+    // Don't redirect immediately - profile might still be loading
+    // Only redirect if we've waited a reasonable amount of time
+
+    if (profileWaitTime < 3) {
+      // Still waiting for profile to load
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-construction-orange" />
+            <p className="text-muted-foreground">Loading profile...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Profile failed to load after waiting
     if (localRedirectCount >= 1) {
-      console.error("Profile not loaded, forcing page refresh");
+      console.error("Profile not loaded after waiting, forcing page refresh");
       window.location.reload();
       return null;
     }
 
-    console.log("User exists but no profile, redirecting to auth");
+    console.log("User exists but profile failed to load, redirecting to auth");
     incrementRedirectCount();
     setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;

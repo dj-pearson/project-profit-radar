@@ -71,11 +71,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log(`Fetching profile for user: ${userId}`);
         setProfileFetching(true);
 
-        const { data, error } = await supabase
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("Profile fetch timeout")), 10000);
+        });
+
+        const fetchPromise = supabase
           .from("user_profiles")
           .select("*")
           .eq("id", userId)
           .single();
+
+        const { data, error } = await Promise.race([
+          fetchPromise,
+          timeoutPromise,
+        ]);
 
         if (error) {
           console.error("Profile fetch error:", error);
@@ -92,7 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return data as UserProfile;
       } catch (error) {
         console.error("Profile fetch exception:", error);
-        if (retryCount < 2) {
+        const isTimeout =
+          error instanceof Error && error.message === "Profile fetch timeout";
+        if (retryCount < 2 && !isTimeout) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           return await fetchUserProfile(userId, retryCount + 1);
         }
@@ -115,10 +127,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        fetchUserProfile(session.user.id).then((profile) => {
-          setUserProfile(profile);
-          setLoading(false);
-        });
+        fetchUserProfile(session.user.id)
+          .then((profile) => {
+            setUserProfile(profile);
+            if (profile) {
+              console.log("Initial profile loaded successfully");
+            } else {
+              console.warn("Initial profile fetch failed");
+            }
+          })
+          .catch((error) => {
+            console.error("Initial profile fetch error:", error);
+            setUserProfile(null);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
       } else {
         setUserProfile(null);
         setLoading(false);
@@ -142,9 +166,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!userProfile || currentUserId !== newUserId) {
           console.log("Fetching profile for new/missing user");
           setLoading(true);
-          const profile = await fetchUserProfile(session.user.id);
-          setUserProfile(profile);
-          setLoading(false);
+
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            setUserProfile(profile);
+
+            if (profile) {
+              console.log("Profile loaded successfully, user ready");
+            } else {
+              console.warn(
+                "Profile fetch failed, user may have limited access"
+              );
+            }
+          } catch (error) {
+            console.error("Profile fetch failed:", error);
+            setUserProfile(null);
+          } finally {
+            setLoading(false);
+          }
         } else {
           console.log("Profile already loaded for user, skipping fetch");
           setLoading(false);
