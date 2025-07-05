@@ -71,38 +71,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleAuthChange = (event: string, session: Session | null) => {
       if (!mounted) return;
 
-      // Update session and user immediately (synchronous)
+      console.log('Auth event:', event, 'User:', session?.user?.id, 'Session exists:', !!session);
+
+      // Update session and user immediately
       setSession(session);
       setUser(session?.user ?? null);
 
-      // Handle profile fetch separately to avoid auth loops
+      // Handle profile fetch for authenticated users
       if (session?.user && !profileFetchInProgress) {
         profileFetchInProgress = true;
         
-        // Defer profile fetch to prevent auth state loops
-        setTimeout(() => {
-          if (!mounted) return;
-          
-          fetchUserProfile(session.user.id).then(profile => {
+        console.log('Fetching profile for authenticated user:', session.user.id);
+        // Fetch profile immediately, not deferred
+        fetchUserProfile(session.user.id)
+          .then(profile => {
             if (mounted) {
+              console.log('Profile loaded:', !!profile);
               setUserProfile(profile);
               profileFetchInProgress = false;
             }
-          }).catch(error => {
+          })
+          .catch(error => {
             console.error('Profile fetch error:', error);
             if (mounted) {
               setUserProfile(null);
               profileFetchInProgress = false;
             }
           });
-        }, 0);
       } else if (!session?.user) {
-        // No user, clear profile immediately
+        // No user, clear profile
+        console.log('No user, clearing profile');
         setUserProfile(null);
         profileFetchInProgress = false;
       }
 
-      // Mark as ready and stop loading
+      // Stop loading after handling auth change
       if (mounted) {
         setLoading(false);
       }

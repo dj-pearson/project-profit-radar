@@ -64,11 +64,13 @@ const Auth = () => {
     const { error } = await signIn(sanitizedEmail, password);
     
     if (!error) {
+      console.log('Sign in successful, waiting for auth context to handle navigation');
       toast({
         title: "Welcome back!",
         description: "You've been successfully signed in."
       });
-      // Navigation will be handled by route protection
+      // DON'T set loading to false - let auth context handle it
+      return;
     }
     
     setLoading(false);
