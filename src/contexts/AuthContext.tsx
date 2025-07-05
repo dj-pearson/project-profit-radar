@@ -45,7 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Centralized auth initialization effect
   useEffect(() => {
     let mounted = true;
-    let currentUserId: string | null = null;
+    let profileCache = new Map<string, UserProfile | null>();
+    let pendingFetches = new Set<string>();
 
     const handleAuthChange = async (event: string, session: Session | null) => {
       if (!mounted) return;
@@ -53,52 +54,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth state change:', event, session?.user?.id);
       
       if (session?.user) {
-        // Prevent duplicate profile fetches for the same user
-        if (currentUserId === session.user.id && userProfile) {
-          console.log('Same user, skipping profile fetch');
+        const userId = session.user.id;
+        
+        // Check cache first
+        if (profileCache.has(userId)) {
+          console.log('Using cached profile for user:', userId);
           setUser(session.user);
           setSession(session);
+          setUserProfile(profileCache.get(userId) || null);
           setLoading(false);
           return;
         }
 
-        currentUserId = session.user.id;
+        // Check if fetch is already pending
+        if (pendingFetches.has(userId)) {
+          console.log('Profile fetch already pending for user:', userId);
+          setUser(session.user);
+          setSession(session);
+          return;
+        }
+
+        pendingFetches.add(userId);
         setLoading(true);
         setUser(session.user);
         setSession(session);
         
-        console.log('Fetching profile for user:', session.user.id);
+        console.log('Fetching profile for user:', userId);
         
         try {
           const { data: profile, error } = await supabase
             .from('user_profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', userId)
             .maybeSingle();
             
           console.log('Profile query result:', { profile, error });
           
-          if (mounted && currentUserId === session.user.id) {
+          if (mounted) {
+            const profileData = error ? null : profile;
+            profileCache.set(userId, profileData);
+            setUserProfile(profileData);
+            setLoading(false);
+            
             if (error) {
               console.error('Profile fetch error:', error);
-              setUserProfile(null);
-            } else {
-              console.log('Setting profile state:', profile);
-              setUserProfile(profile);
             }
-            setLoading(false);
           }
         } catch (error) {
           console.error('Profile fetch exception:', error);
-          if (mounted && currentUserId === session.user.id) {
+          if (mounted) {
+            profileCache.set(userId, null);
             setUserProfile(null);
             setLoading(false);
           }
+        } finally {
+          pendingFetches.delete(userId);
         }
       } else {
         // No session - clear everything
         console.log('No session, clearing auth state');
-        currentUserId = null;
+        profileCache.clear();
+        pendingFetches.clear();
         setUser(null);
         setSession(null);
         setUserProfile(null);
@@ -106,19 +122,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Get initial session and set up listener
+    // Initialize auth
     const initAuth = async () => {
       try {
         console.log('Initializing auth...');
-        
-        // Get current session first
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session:', !!session?.user);
+        console.log('Initial session:', session?.user?.id || 'none');
         
-        // Set up auth listener
+        // Set up listener first
         const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
         
-        // Handle initial session if it exists
+        // Handle initial session
         if (session && mounted) {
           await handleAuthChange('INITIAL_SESSION', session);
         } else if (mounted) {
@@ -136,10 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     let subscription: any = null;
-    
-    initAuth().then((sub) => {
-      subscription = sub;
-    });
+    initAuth().then(sub => subscription = sub);
 
     return () => {
       mounted = false;
