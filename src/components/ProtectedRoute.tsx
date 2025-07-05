@@ -194,10 +194,12 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     accessGrantedLogged.current = true;
   }
 
-  // Reset counters on successful access (only if needed to prevent re-renders)
+  // Reset global counter on successful access
   if (globalRedirectCount > 0) {
     globalRedirectCount = 0;
   }
+
+  // Reset local counter on successful access (only if needed to prevent re-renders)
   if (localRedirectCount > 0) {
     setLocalRedirectCount(0);
   }

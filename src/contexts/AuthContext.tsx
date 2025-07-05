@@ -66,9 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [profileFetching, setProfileFetching] = useState(false);
   const [isProfileFetchInProgress, setIsProfileFetchInProgress] =
     useState(false);
-  const [lastFetchedUserId, setLastFetchedUserId] = useState<string | null>(
-    null
-  );
+
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
 
   // Fetch user profile with retry logic
@@ -134,10 +132,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // ALWAYS check cache first for initial session too
+        // Check cache first for instant access
         const cachedProfile = successfulProfiles.current.get(session.user.id);
         if (cachedProfile) {
-          console.log("🚀 INITIAL: Using cached profile, instant load");
+          console.log("Initial session: Using cached profile");
           setUserProfile(cachedProfile);
           setLoading(false);
           return;
@@ -145,28 +143,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Check current profile
         if (userProfile?.id === session.user.id) {
-          console.log("🚀 INITIAL: Profile already exists, skipping fetch");
+          console.log(
+            "Initial session: Profile already exists, skipping fetch"
+          );
           setLoading(false);
           return;
         }
 
-        // Only fetch if needed
-        console.log("🚀 INITIAL: Fetching profile for user");
+        // Fetch profile for initial session
+        console.log("Initial session: Fetching profile for user");
         setIsProfileFetchInProgress(true);
-        setLastFetchedUserId(session.user.id);
         fetchUserProfile(session.user.id)
           .then((profile) => {
             if (profile) {
               setUserProfile(profile);
-              successfulProfiles.current.set(profile.id, profile); // Cache successful profile
-              console.log("🚀 INITIAL: Profile loaded and cached successfully");
+              successfulProfiles.current.set(profile.id, profile);
+              console.log("Initial profile loaded successfully");
             } else {
               setUserProfile(null);
-              console.warn("🚀 INITIAL: Profile fetch failed");
+              console.warn("Initial profile fetch failed");
             }
           })
           .catch((error) => {
-            console.error("🚀 INITIAL: Profile fetch error:", error);
+            console.error("Initial profile fetch error:", error);
             setUserProfile(null);
           })
           .finally(() => {
@@ -175,7 +174,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           });
       } else {
         setUserProfile(null);
-        setLastFetchedUserId(null);
         successfulProfiles.current.clear(); // Clear cache when signing out
         setLoading(false);
       }
@@ -195,49 +193,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const currentUserId = userProfile?.id;
         const newUserId = session.user.id;
 
-        // ALWAYS check cache first - this is our primary protection
+        // Check cache first for instant access
         const cachedProfile = successfulProfiles.current.get(newUserId);
         if (cachedProfile) {
-          console.log(
-            "✅ CACHE HIT: Using cached profile for user, skipping fetch"
-          );
+          console.log("Using cached profile for user, skipping fetch");
           setUserProfile(cachedProfile);
           setLoading(false);
-          return; // Exit early to prevent any other logic
+          return;
         }
 
-        // If no cache and profile fetch is in progress, wait
+        // If profile fetch is in progress, wait
         if (isProfileFetchInProgress) {
-          console.log("⏳ Profile fetch already in progress, waiting...");
-          return; // Exit early
+          console.log("Profile fetch already in progress, waiting...");
+          return;
         }
 
         // If current profile matches user, keep it
         if (userProfile?.id === newUserId) {
-          console.log("✅ Current profile matches user, skipping fetch");
+          console.log("Profile already loaded for user, skipping fetch");
           setLoading(false);
-          return; // Exit early
+          return;
         }
 
-        // Only fetch if we truly don't have a profile for this user
-        console.log("🔄 FETCHING: Need to fetch profile for user:", newUserId);
+        // Fetch profile for new user
+        console.log("Fetching profile for user:", newUserId);
         setLoading(true);
         setIsProfileFetchInProgress(true);
-        setLastFetchedUserId(newUserId);
 
         try {
           const profile = await fetchUserProfile(session.user.id);
 
           if (profile) {
             setUserProfile(profile);
-            successfulProfiles.current.set(profile.id, profile); // Cache successful profile
-            console.log("✅ SUCCESS: Profile loaded and cached for user");
+            successfulProfiles.current.set(profile.id, profile);
+            console.log("Profile loaded successfully, user ready");
           } else {
-            console.warn("❌ FAILED: Profile fetch returned null");
+            console.warn("Profile fetch failed, user may have limited access");
             setUserProfile(null);
           }
         } catch (error) {
-          console.error("❌ ERROR: Profile fetch failed:", error);
+          console.error("Profile fetch failed:", error);
           setUserProfile(null);
         } finally {
           setLoading(false);
@@ -245,7 +240,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } else {
         setUserProfile(null);
-        setLastFetchedUserId(null);
         successfulProfiles.current.clear(); // Clear cache when signing out
         setLoading(false);
       }
@@ -263,27 +257,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     profileFetching ||
     (user && !userProfile && isProfileFetchInProgress);
 
-  // Debug loading state
-  if (effectiveLoading !== loading) {
-    console.log("🔄 LOADING STATE:", {
-      effectiveLoading,
-      loading,
-      profileFetching,
-      hasUser: !!user,
-      hasProfile: !!userProfile,
-      fetchInProgress: isProfileFetchInProgress,
-    });
-  }
-
-  // Log current state for debugging when it changes
+  // Log authentication state changes
   useEffect(() => {
-    console.log("Auth state:", {
-      hasUser: !!user,
-      hasProfile: !!userProfile,
-      loading: effectiveLoading,
-      profileFetching,
-    });
-  }, [user?.id, !!userProfile, effectiveLoading, profileFetching]);
+    if (user && userProfile) {
+      console.log("Authentication complete:", {
+        userId: user.id,
+        role: userProfile.role,
+      });
+    }
+  }, [user?.id, userProfile?.role]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
