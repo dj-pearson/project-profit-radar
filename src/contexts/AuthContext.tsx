@@ -99,7 +99,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Initial session:', !!session?.user);
-        await handleAuthChange('INITIAL_SESSION', session);
+        
+        // Handle initial session first
+        if (session) {
+          await handleAuthChange('INITIAL_SESSION', session);
+        } else {
+          if (mounted) {
+            setLoading(false);
+          }
+        }
       } catch (error) {
         console.error('Auth init error:', error);
         if (mounted) {
@@ -108,8 +116,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+    // Set up listener AFTER initial auth check
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Ignore rapid state changes during initialization
+      setTimeout(() => {
+        handleAuthChange(event, session);
+      }, 100);
+    });
     
     // Start initialization
     initAuth();
