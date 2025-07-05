@@ -129,24 +129,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        setIsProfileFetchInProgress(true);
-        fetchUserProfile(session.user.id)
-          .then((profile) => {
-            setUserProfile(profile);
-            if (profile) {
-              console.log("Initial profile loaded successfully");
-            } else {
-              console.warn("Initial profile fetch failed");
-            }
-          })
-          .catch((error) => {
-            console.error("Initial profile fetch error:", error);
-            setUserProfile(null);
-          })
-          .finally(() => {
-            setLoading(false);
-            setIsProfileFetchInProgress(false);
-          });
+        // Check if we already have a profile for this user
+        if (userProfile?.id === session.user.id) {
+          console.log(
+            "Initial session: Profile already exists, skipping fetch"
+          );
+          setLoading(false);
+        } else {
+          console.log("Initial session: Fetching profile for user");
+          setIsProfileFetchInProgress(true);
+          fetchUserProfile(session.user.id)
+            .then((profile) => {
+              setUserProfile(profile);
+              if (profile) {
+                console.log("Initial profile loaded successfully");
+              } else {
+                console.warn("Initial profile fetch failed");
+              }
+            })
+            .catch((error) => {
+              console.error("Initial profile fetch error:", error);
+              setUserProfile(null);
+            })
+            .finally(() => {
+              setLoading(false);
+              setIsProfileFetchInProgress(false);
+            });
+        }
       } else {
         setUserProfile(null);
         setLoading(false);
@@ -210,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, userProfile]);
+  }, [fetchUserProfile]);
 
   // Ensure loading remains true while profile is being fetched
   const effectiveLoading = loading || profileFetching || (user && !userProfile);
