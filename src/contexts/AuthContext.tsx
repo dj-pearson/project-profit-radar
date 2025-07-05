@@ -63,84 +63,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Initialize auth state - SINGLE useEffect to prevent race conditions
+  // Single initialization effect
   useEffect(() => {
     let mounted = true;
-    let profileFetchInProgress = false;
 
     const handleAuthChange = (event: string, session: Session | null) => {
       if (!mounted) return;
-
-      console.log('Auth event:', event, 'User:', session?.user?.id, 'Session exists:', !!session);
-
-      // Update session and user immediately
+      
+      console.log('Auth change:', event, !!session?.user);
+      
+      // Update state immediately
       setSession(session);
       setUser(session?.user ?? null);
-
-      // Handle profile fetch for authenticated users
-      if (session?.user && !profileFetchInProgress) {
-        profileFetchInProgress = true;
-        
-        console.log('Fetching profile for authenticated user:', session.user.id);
-        // Fetch profile immediately, not deferred
-        fetchUserProfile(session.user.id)
-          .then(profile => {
-            if (mounted) {
-              console.log('Profile loaded:', !!profile);
-              setUserProfile(profile);
-              profileFetchInProgress = false;
-            }
-          })
-          .catch(error => {
-            console.error('Profile fetch error:', error);
-            if (mounted) {
-              setUserProfile(null);
-              profileFetchInProgress = false;
-            }
-          });
-      } else if (!session?.user) {
-        // No user, clear profile
-        console.log('No user, clearing profile');
+      
+      if (session?.user) {
+        // Fetch profile for authenticated user
+        fetchUserProfile(session.user.id).then(profile => {
+          if (mounted) {
+            setUserProfile(profile);
+            setLoading(false);
+          }
+        });
+      } else {
+        // Clear profile for unauthenticated user
         setUserProfile(null);
-        profileFetchInProgress = false;
-      }
-
-      // Stop loading after handling auth change
-      if (mounted) {
         setLoading(false);
       }
     };
 
-    const initializeAuth = async () => {
-      try {
-        // Get current session first
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-        }
-
-        // Handle initial session
-        handleAuthChange('INITIAL_SESSION', session);
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+    // Initialize auth
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      handleAuthChange('INITIAL', session);
     };
 
-    // Set up auth state listener
+    // Set up listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    // Initialize
-    initializeAuth();
+    
+    // Start initialization
+    initAuth();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // No dependencies to prevent re-initialization
+  }, [fetchUserProfile]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
