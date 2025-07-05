@@ -42,27 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile function
-  const fetchUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Profile fetch failed:', error);
-      return null;
-    }
-  }, []);
-
   // Single initialization effect
   useEffect(() => {
     let mounted = true;
@@ -70,11 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleAuthChange = async (event: string, session: Session | null) => {
       if (!mounted) return;
       
-      // Update state immediately
+      console.log('Auth change:', event, !!session?.user);
+      
+      // Update session and user first
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('Fetching profile for user:', session.user.id);
         // Fetch profile for authenticated user
         try {
           const { data: profile, error } = await supabase
@@ -83,27 +65,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', session.user.id)
             .maybeSingle();
             
+          console.log('Profile query result:', { profile, error });
+          
           if (mounted) {
             if (error) {
               console.error('Profile fetch error:', error);
               setUserProfile(null);
+              setLoading(false);
             } else {
+              console.log('Setting profile state:', profile);
               setUserProfile(profile);
+              setLoading(false);
             }
           }
         } catch (error) {
           console.error('Profile fetch exception:', error);
           if (mounted) {
             setUserProfile(null);
+            setLoading(false);
           }
         }
       } else {
-        // Clear profile for unauthenticated user
+        console.log('No user, clearing profile');
         setUserProfile(null);
-      }
-      
-      // Always set loading to false after handling auth change
-      if (mounted) {
         setLoading(false);
       }
     };
@@ -111,7 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initialize auth
     const initAuth = async () => {
       try {
+        console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', !!session?.user);
         await handleAuthChange('INITIAL', session);
       } catch (error) {
         console.error('Auth init error:', error);
@@ -133,12 +119,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Debug effect to track profile changes
+  useEffect(() => {
+    console.log('Profile state changed:', { 
+      hasProfile: !!userProfile, 
+      role: userProfile?.role,
+      companyId: userProfile?.company_id 
+    });
+  }, [userProfile]);
+
   const refreshProfile = useCallback(async () => {
     if (user) {
-      const profile = await fetchUserProfile(user.id);
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
       setUserProfile(profile);
     }
-  }, [user, fetchUserProfile]);
+  }, [user]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
