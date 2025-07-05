@@ -1,25 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
-import { validateEmail, validatePassword, sanitizeInput, generateCSRFToken, setCSRFToken, checkRateLimit } from '@/utils/security';
-import { Shield, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import {
+  validateEmail,
+  validatePassword,
+  sanitizeInput,
+  generateCSRFToken,
+  setCSRFToken,
+  checkRateLimit,
+} from "@/utils/security";
+import { Shield, AlertCircle } from "lucide-react";
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [resetEmail, setResetEmail] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('signin');
-  const [passwordValidation, setPasswordValidation] = useState({ isValid: true, errors: [] as string[] });
+  const [activeTab, setActiveTab] = useState("signin");
+  const [passwordValidation, setPasswordValidation] = useState({
+    isValid: true,
+    errors: [] as string[],
+  });
   const [csrfToken] = useState(() => generateCSRFToken());
   const { signIn, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +44,15 @@ const Auth = () => {
     setCSRFToken(csrfToken);
   }, [csrfToken]);
 
-  // Remove automatic navigation - let route protection handle it
+  // Navigate to dashboard after successful authentication
+  useEffect(() => {
+    if (user) {
+      console.log(
+        "✅ FIXED AUTH: User authenticated, navigating to dashboard..."
+      );
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const validatePasswordInput = (pwd: string) => {
     const validation = validatePassword(pwd);
@@ -37,13 +61,14 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Rate limiting check
-    if (!checkRateLimit('signin-attempts', 5, 300000)) { // 5 attempts per 5 minutes
+    if (!checkRateLimit("signin-attempts", 5, 300000)) {
+      // 5 attempts per 5 minutes
       toast({
         variant: "destructive",
         title: "Too Many Attempts",
-        description: "Please wait before trying again."
+        description: "Please wait before trying again.",
       });
       return;
     }
@@ -53,36 +78,37 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "Invalid Email",
-        description: "Please enter a valid email address."
+        description: "Please enter a valid email address.",
       });
       return;
     }
 
     setLoading(true);
-    
+
     const sanitizedEmail = sanitizeInput(email);
     const { error } = await signIn(sanitizedEmail, password);
-    
+
     if (!error) {
       toast({
         title: "Welcome back!",
-        description: "You've been successfully signed in."
+        description: "You've been successfully signed in.",
       });
       // Navigation will be handled by route protection
     }
-    
+
     setLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Rate limiting check
-    if (!checkRateLimit('signup-attempts', 3, 3600000)) { // 3 attempts per hour
+    if (!checkRateLimit("signup-attempts", 3, 3600000)) {
+      // 3 attempts per hour
       toast({
         variant: "destructive",
         title: "Too Many Attempts",
-        description: "Please wait before trying to create another account."
+        description: "Please wait before trying to create another account.",
       });
       return;
     }
@@ -92,7 +118,7 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "Invalid Email",
-        description: "Please enter a valid email address."
+        description: "Please enter a valid email address.",
       });
       return;
     }
@@ -102,40 +128,45 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "Password Requirements Not Met",
-        description: passwordValid.errors[0]
+        description: passwordValid.errors[0],
       });
       return;
     }
 
     setLoading(true);
-    
+
     const sanitizedData = {
       first_name: sanitizeInput(firstName),
       last_name: sanitizeInput(lastName),
-      role: 'admin'
+      role: "admin",
     };
 
-    const { error } = await signUp(sanitizeInput(email), password, sanitizedData);
-    
+    const { error } = await signUp(
+      sanitizeInput(email),
+      password,
+      sanitizedData
+    );
+
     if (!error) {
       toast({
         title: "Account Created!",
-        description: "Please check your email to verify your account."
+        description: "Please check your email to verify your account.",
       });
     }
-    
+
     setLoading(false);
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Rate limiting check
-    if (!checkRateLimit('reset-attempts', 3, 3600000)) { // 3 attempts per hour
+    if (!checkRateLimit("reset-attempts", 3, 3600000)) {
+      // 3 attempts per hour
       toast({
         variant: "destructive",
         title: "Too Many Attempts",
-        description: "Please wait before requesting another password reset."
+        description: "Please wait before requesting another password reset.",
       });
       return;
     }
@@ -144,15 +175,15 @@ const Auth = () => {
       toast({
         variant: "destructive",
         title: "Invalid Email",
-        description: "Please enter a valid email address."
+        description: "Please enter a valid email address.",
       });
       return;
     }
 
     setLoading(true);
-    
+
     await resetPassword(sanitizeInput(resetEmail));
-    
+
     setLoading(false);
   };
 
@@ -165,7 +196,9 @@ const Auth = () => {
               Build Desk
             </h1>
           </Link>
-          <p className="text-muted-foreground mt-2">Construction Management Platform</p>
+          <p className="text-muted-foreground mt-2">
+            Construction Management Platform
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -174,12 +207,14 @@ const Auth = () => {
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
             <TabsTrigger value="forgot">Reset Password</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="signin">
             <Card>
               <CardHeader>
                 <CardTitle>Welcome Back</CardTitle>
-                <CardDescription>Sign in to your Build Desk account</CardDescription>
+                <CardDescription>
+                  Sign in to your Build Desk account
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
@@ -204,12 +239,12 @@ const Auth = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing In...' : 'Sign In'}
+                    {loading ? "Signing In..." : "Sign In"}
                   </Button>
                   <div className="text-center">
                     <button
                       type="button"
-                      onClick={() => setActiveTab('forgot')}
+                      onClick={() => setActiveTab("forgot")}
                       className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
                     >
                       Forgot your password?
@@ -219,12 +254,14 @@ const Auth = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="signup">
             <Card>
               <CardHeader>
                 <CardTitle>Create Account</CardTitle>
-                <CardDescription>Get started with Build Desk today</CardDescription>
+                <CardDescription>
+                  Get started with Build Desk today
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
@@ -270,18 +307,20 @@ const Auth = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Creating Account...' : 'Create Account'}
+                    {loading ? "Creating Account..." : "Create Account"}
                   </Button>
                 </form>
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="forgot">
             <Card>
               <CardHeader>
                 <CardTitle>Reset Password</CardTitle>
-                <CardDescription>Enter your email to receive a password reset link</CardDescription>
+                <CardDescription>
+                  Enter your email to receive a password reset link
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleForgotPassword} className="space-y-4">
@@ -296,12 +335,12 @@ const Auth = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Sending Reset Link...' : 'Send Reset Link'}
+                    {loading ? "Sending Reset Link..." : "Send Reset Link"}
                   </Button>
                   <div className="text-center">
                     <button
                       type="button"
-                      onClick={() => setActiveTab('signin')}
+                      onClick={() => setActiveTab("signin")}
                       className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
                     >
                       Back to Sign In
@@ -312,10 +351,10 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
-        
+
         <div className="text-center mt-6">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-sm text-muted-foreground hover:text-construction-blue transition-colors"
           >
             ← Back to Homepage
