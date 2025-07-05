@@ -23,24 +23,25 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     );
   }
 
-  // Redirect to auth if not authenticated
+  // Only redirect if we're absolutely sure there's no user
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Show loading while profile is being fetched
+  // If we have a user but no profile yet, show loading (don't redirect)
+  // This prevents the redirect loop when profile is still being fetched
   if (!userProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading profile...</p>
+          <p className="text-muted-foreground">Setting up your account...</p>
         </div>
       </div>
     );
   }
 
-  // Redirect to setup if no company
+  // Redirect to setup if no company (only after we have both user and profile)
   if (!userProfile.company_id) {
     return <Navigate to="/setup" replace />;
   }

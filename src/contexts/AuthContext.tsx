@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   // Fetch user profile function
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -64,70 +64,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Initialize auth state
+  // Initialize auth state - SINGLE useEffect to prevent race conditions
   useEffect(() => {
     let mounted = true;
+    let profileFetchPromise: Promise<void> | null = null;
+
+    const handleAuthChange = async (event: string, session: Session | null) => {
+      if (!mounted) return;
+
+      console.log('Auth event:', event, session?.user?.id);
+
+      // Update session and user immediately
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      // Handle profile based on auth state
+      if (session?.user) {
+        // Only fetch profile if we don't already have one for this user
+        if (!userProfile || userProfile.id !== session.user.id) {
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+            }
+          } catch (error) {
+            console.error('Profile fetch error:', error);
+            if (mounted) {
+              setUserProfile(null);
+            }
+          }
+        }
+      } else {
+        // No user, clear profile
+        setUserProfile(null);
+      }
+
+      // Mark as ready and stop loading
+      if (mounted) {
+        setAuthReady(true);
+        setLoading(false);
+      }
+    };
 
     const initializeAuth = async () => {
       try {
-        // Get current session
+        // Get current session first
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session error:', error);
         }
 
-        if (!mounted) return;
-
-        // Set auth state
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        // Fetch profile if user exists
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) {
-            setUserProfile(profile);
-          }
-        } else {
-          setUserProfile(null);
-        }
-
-        if (mounted) {
-          setLoading(false);
-          setInitialized(true);
-        }
+        // Handle initial session
+        await handleAuthChange('INITIAL_SESSION', session);
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          setAuthReady(true);
           setLoading(false);
-          setInitialized(true);
         }
       }
     };
 
-    // Set up auth state listener - COMPLETELY SYNCHRONOUS
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!mounted) return;
-
-        console.log('Auth event:', event, session?.user?.id);
-
-        // Only synchronous state updates
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        // Clear profile on sign out
-        if (event === 'SIGNED_OUT') {
-          setUserProfile(null);
-        }
-
-        // Set loading to false after initialization
-        if (initialized) {
-          setLoading(false);
-        }
-      }
-    );
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     // Initialize
     initializeAuth();
@@ -136,24 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-  // Separate effect to handle profile fetching when user changes
-  useEffect(() => {
-    if (user && initialized && !userProfile) {
-      let isMounted = true;
-      
-      fetchUserProfile(user.id).then((profile) => {
-        if (isMounted) {
-          setUserProfile(profile);
-        }
-      });
-
-      return () => {
-        isMounted = false;
-      };
-    }
-  }, [user?.id, initialized]); // Only depend on user ID, not the whole user object
+  }, []); // No dependencies to prevent re-initialization
 
   const refreshProfile = async () => {
     if (user) {
