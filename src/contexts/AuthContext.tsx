@@ -63,6 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
+  const [isProfileFetchInProgress, setIsProfileFetchInProgress] =
+    useState(false);
 
   // Fetch user profile with retry logic
   const fetchUserProfile = useCallback(
@@ -127,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        setIsProfileFetchInProgress(true);
         fetchUserProfile(session.user.id)
           .then((profile) => {
             setUserProfile(profile);
@@ -142,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           })
           .finally(() => {
             setLoading(false);
+            setIsProfileFetchInProgress(false);
           });
       } else {
         setUserProfile(null);
@@ -163,9 +167,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const currentUserId = userProfile?.id;
         const newUserId = session.user.id;
 
-        if (!userProfile || currentUserId !== newUserId) {
+        // More robust check - don't refetch if we already have a profile for this user
+        if (currentUserId === newUserId && userProfile) {
+          console.log("Profile already loaded for user, skipping fetch");
+          setLoading(false);
+        } else if (isProfileFetchInProgress) {
+          console.log("Profile fetch already in progress, waiting...");
+          // Don't start another fetch, just wait for the current one
+        } else if (!userProfile || currentUserId !== newUserId) {
           console.log("Fetching profile for new/missing user");
           setLoading(true);
+          setIsProfileFetchInProgress(true);
 
           try {
             const profile = await fetchUserProfile(session.user.id);
@@ -183,9 +195,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             setUserProfile(null);
           } finally {
             setLoading(false);
+            setIsProfileFetchInProgress(false);
           }
         } else {
-          console.log("Profile already loaded for user, skipping fetch");
+          console.log("Profile state unchanged, keeping current profile");
           setLoading(false);
         }
       } else {
@@ -197,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, [fetchUserProfile, userProfile]);
 
   // Ensure loading remains true while profile is being fetched
   const effectiveLoading = loading || profileFetching || (user && !userProfile);
