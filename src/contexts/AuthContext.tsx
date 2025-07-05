@@ -135,11 +135,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Keep loading true until profile is fetched
-        setLoading(true);
-        const profile = await fetchUserProfile(session.user.id);
-        setUserProfile(profile);
-        setLoading(false);
+        // Only fetch profile if we don't have one or the user changed
+        const currentUserId = userProfile?.id;
+        const newUserId = session.user.id;
+
+        if (!userProfile || currentUserId !== newUserId) {
+          console.log("Fetching profile for new/missing user");
+          setLoading(true);
+          const profile = await fetchUserProfile(session.user.id);
+          setUserProfile(profile);
+          setLoading(false);
+        } else {
+          console.log("Profile already loaded for user, skipping fetch");
+          setLoading(false);
+        }
       } else {
         setUserProfile(null);
         setLoading(false);
@@ -154,15 +163,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Ensure loading remains true while profile is being fetched
   const effectiveLoading = loading || profileFetching || (user && !userProfile);
 
-  // Log current state for debugging
-  const logCurrentState = useCallback(() => {
+  // Log current state for debugging when it changes
+  useEffect(() => {
     console.log("Auth state:", {
       hasUser: !!user,
       hasProfile: !!userProfile,
       loading: effectiveLoading,
       profileFetching,
     });
-  }, [user, userProfile, effectiveLoading, profileFetching]);
+  }, [user?.id, !!userProfile, effectiveLoading, profileFetching]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
@@ -317,8 +326,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       refreshProfile,
     ]
   );
-
-  logCurrentState();
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
