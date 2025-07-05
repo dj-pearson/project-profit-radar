@@ -51,13 +51,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('Auth change:', event, !!session?.user);
       
-      // Update session and user first
-      setSession(session);
-      setUser(session?.user ?? null);
-      
       if (session?.user) {
         console.log('Fetching profile for user:', session.user.id);
-        // Fetch profile for authenticated user
+        // Keep loading state true while fetching profile
+        setLoading(true);
+        setUser(session.user);
+        setSession(session);
+        
         try {
           const { data: profile, error } = await supabase
             .from('user_profiles')
@@ -71,12 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) {
               console.error('Profile fetch error:', error);
               setUserProfile(null);
-              setLoading(false);
             } else {
               console.log('Setting profile state:', profile);
               setUserProfile(profile);
-              setLoading(false);
             }
+            setLoading(false);
           }
         } catch (error) {
           console.error('Profile fetch exception:', error);
@@ -87,6 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else {
         console.log('No user, clearing profile');
+        setUser(null);
+        setSession(null);
         setUserProfile(null);
         setLoading(false);
       }
@@ -98,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Initializing auth...');
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Initial session:', !!session?.user);
-        await handleAuthChange('INITIAL', session);
+        await handleAuthChange('INITIAL_SESSION', session);
       } catch (error) {
         console.error('Auth init error:', error);
         if (mounted) {
