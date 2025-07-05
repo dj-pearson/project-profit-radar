@@ -67,35 +67,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize auth state - SINGLE useEffect to prevent race conditions
   useEffect(() => {
     let mounted = true;
-    let profileFetchPromise: Promise<void> | null = null;
 
-    const handleAuthChange = async (event: string, session: Session | null) => {
+    const handleAuthChange = (event: string, session: Session | null) => {
       if (!mounted) return;
 
       console.log('Auth event:', event, session?.user?.id);
 
-      // Update session and user immediately
+      // Update session and user immediately (synchronous)
       setSession(session);
       setUser(session?.user ?? null);
 
-      // Handle profile based on auth state
+      // Handle profile fetch separately to avoid auth loops
       if (session?.user) {
-        // Only fetch profile if we don't already have one for this user
-        if (!userProfile || userProfile.id !== session.user.id) {
-          try {
-            const profile = await fetchUserProfile(session.user.id);
-            if (mounted) {
-              setUserProfile(profile);
-            }
-          } catch (error) {
-            console.error('Profile fetch error:', error);
-            if (mounted) {
-              setUserProfile(null);
-            }
+        // Defer profile fetch to prevent auth state loops
+        setTimeout(() => {
+          if (!mounted) return;
+          
+          // Only fetch if we don't already have profile for this user
+          if (!userProfile || userProfile.id !== session.user.id) {
+            console.log('Fetching profile for user:', session.user.id);
+            fetchUserProfile(session.user.id).then(profile => {
+              if (mounted) {
+                setUserProfile(profile);
+              }
+            }).catch(error => {
+              console.error('Profile fetch error:', error);
+              if (mounted) {
+                setUserProfile(null);
+              }
+            });
           }
-        }
+        }, 0);
       } else {
-        // No user, clear profile
+        // No user, clear profile immediately
         setUserProfile(null);
       }
 
@@ -116,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Handle initial session
-        await handleAuthChange('INITIAL_SESSION', session);
+        handleAuthChange('INITIAL_SESSION', session);
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
