@@ -34,7 +34,13 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (
+    email: string,
+    password: string,
+    userData?: any
+  ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -190,6 +196,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const signUp = useCallback(
+    async (email: string, password: string, userData?: any) => {
+      try {
+        console.log("FIXED AuthContext: Signing up...");
+        setLoading(true);
+
+        const redirectUrl = `${window.location.origin}/`;
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: userData,
+          },
+        });
+
+        if (error) {
+          console.error("FIXED AuthContext: Sign up error:", error);
+          setLoading(false);
+          return { error: error.message };
+        }
+
+        console.log("FIXED AuthContext: Sign up successful");
+        setLoading(false);
+        return {};
+      } catch (error) {
+        console.error("FIXED AuthContext: Sign up exception:", error);
+        setLoading(false);
+        return { error: "An unexpected error occurred" };
+      }
+    },
+    []
+  );
+
   const signOut = useCallback(async () => {
     try {
       console.log("FIXED AuthContext: Signing out...");
@@ -202,6 +242,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error("FIXED AuthContext: Sign out error:", error);
       setLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      console.log("FIXED AuthContext: Resetting password...");
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        console.error("FIXED AuthContext: Reset password error:", error);
+        return { error: error.message };
+      }
+
+      console.log("FIXED AuthContext: Password reset email sent");
+      return {};
+    } catch (error) {
+      console.error("FIXED AuthContext: Reset password exception:", error);
+      return { error: "An unexpected error occurred" };
     }
   }, []);
 
@@ -244,7 +304,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       userProfile,
       loading: effectiveLoading,
       signIn,
+      signUp,
       signOut,
+      resetPassword,
       updateProfile,
       refreshProfile,
     }),
@@ -254,7 +316,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       userProfile,
       effectiveLoading,
       signIn,
+      signUp,
       signOut,
+      resetPassword,
       updateProfile,
       refreshProfile,
     ]
