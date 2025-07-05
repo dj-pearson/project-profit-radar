@@ -24,6 +24,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
   const [emergencyMode, setEmergencyMode] = useState(false);
   const lastRenderTime = useRef(Date.now());
   const renderCount = useRef(0);
+  const accessGrantedLogged = useRef(false);
 
   // Reset global circuit breaker every 30 seconds
   useEffect(() => {
@@ -112,6 +113,11 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     routePath,
   ]);
 
+  // Reset access granted log when user changes
+  useEffect(() => {
+    accessGrantedLogged.current = false;
+  }, [user?.id]);
+
   // Circuit breaker is open - force loading state
   if (isCircuitOpen || emergencyMode || forceLoading) {
     return (
@@ -198,12 +204,19 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
-  // Success - allow access
-  console.log("✅ EMERGENCY: Access granted for role:", userProfile.role);
+  // Success - allow access (log only once per session)
+  if (!accessGrantedLogged.current) {
+    console.log("✅ EMERGENCY: Access granted for role:", userProfile.role);
+    accessGrantedLogged.current = true;
+  }
 
-  // Reset counters on successful access
-  globalRedirectCount = 0;
-  setLocalRedirectCount(0);
+  // Reset counters on successful access (only if needed to prevent re-renders)
+  if (globalRedirectCount > 0) {
+    globalRedirectCount = 0;
+  }
+  if (localRedirectCount > 0) {
+    setLocalRedirectCount(0);
+  }
 
   return <>{children}</>;
 };
