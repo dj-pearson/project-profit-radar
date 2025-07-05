@@ -8,68 +8,128 @@ interface RouteGuardProps {
   routePath?: string;
 }
 
+// Global circuit breaker to prevent infinite loops across all instances
+let globalRedirectCount = 0;
+let lastResetTime = Date.now();
+let isCircuitOpen = false;
+
 export const RouteGuard: React.FC<RouteGuardProps> = ({
   children,
   routePath,
 }) => {
   const authState = useAuth();
   const { user, userProfile, loading } = authState;
-  const [redirectCount, setRedirectCount] = useState(0);
-  const [isStableLoading, setIsStableLoading] = useState(true);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastStateRef = useRef<string>("");
+  const [localRedirectCount, setLocalRedirectCount] = useState(0);
+  const [forceLoading, setForceLoading] = useState(false);
+  const [emergencyMode, setEmergencyMode] = useState(false);
+  const lastRenderTime = useRef(Date.now());
+  const renderCount = useRef(0);
 
-  // Create a stable loading state to prevent race conditions
+  // Reset global circuit breaker every 30 seconds
   useEffect(() => {
-    const currentState = `${!!user}-${!!userProfile}-${loading}`;
+    const now = Date.now();
+    if (now - lastResetTime > 30000) {
+      console.log("🔄 EMERGENCY: Resetting global circuit breaker");
+      globalRedirectCount = 0;
+      lastResetTime = now;
+      isCircuitOpen = false;
+    }
+  }, []);
 
-    if (currentState !== lastStateRef.current) {
-      lastStateRef.current = currentState;
-      setIsStableLoading(true);
+  // Detect rapid re-renders (sign of infinite loop)
+  useEffect(() => {
+    const now = Date.now();
+    renderCount.current++;
 
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+    if (now - lastRenderTime.current < 100) {
+      // More than 10 renders per second = infinite loop
+      if (renderCount.current > 10) {
+        console.error(
+          "🚨 EMERGENCY: Infinite render loop detected, activating emergency mode"
+        );
+        setEmergencyMode(true);
+        setForceLoading(true);
+
+        // Force a 2-second delay before any action
+        setTimeout(() => {
+          setForceLoading(false);
+          if (user && !userProfile) {
+            // Force page reload to clear state
+            window.location.reload();
+          }
+        }, 2000);
       }
-
-      // Set a minimum loading time to prevent rapid state changes
-      timeoutRef.current = setTimeout(() => {
-        setIsStableLoading(false);
-      }, 500);
+    } else {
+      renderCount.current = 0;
     }
 
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    lastRenderTime.current = now;
+  });
+
+  // Emergency circuit breaker
+  useEffect(() => {
+    globalRedirectCount++;
+
+    if (globalRedirectCount > 5) {
+      console.error(
+        "🚨 EMERGENCY: Global redirect limit reached, opening circuit breaker"
+      );
+      isCircuitOpen = true;
+
+      // Force emergency reload after delay
+      setTimeout(() => {
+        console.log("🔄 EMERGENCY: Force reloading page to clear state");
+        window.location.href = "/auth";
+      }, 3000);
+    }
   }, [user, userProfile, loading]);
 
-  // Emergency redirect limit to prevent infinite loops
+  // Enhanced logging with EMERGENCY prefix for visibility
   useEffect(() => {
-    if (redirectCount >= 3) {
-      console.error("RouteGuard: Too many redirects, forcing auth page");
-      window.location.href = "/auth";
-      return;
-    }
-  }, [redirectCount]);
-
-  // Log current state for debugging
-  useEffect(() => {
-    console.log("RouteGuard FIXED VERSION - State:", {
+    console.log("🚨 EMERGENCY ROUTEGUARD - State:", {
       routePath,
       hasUser: !!user,
       hasProfile: !!userProfile,
       profileRole: userProfile?.role || "none",
       loading,
-      isStableLoading,
-      redirectCount,
+      localRedirectCount,
+      globalRedirectCount,
+      isCircuitOpen,
+      emergencyMode,
+      forceLoading,
     });
-  }, [user, userProfile, loading, isStableLoading, redirectCount, routePath]);
+  }, [
+    user,
+    userProfile,
+    loading,
+    localRedirectCount,
+    emergencyMode,
+    forceLoading,
+    routePath,
+  ]);
+
+  // Circuit breaker is open - force loading state
+  if (isCircuitOpen || emergencyMode || forceLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg border-2 border-red-200">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-red-500" />
+          <h2 className="text-xl font-bold text-red-700 mb-2">
+            Emergency Recovery Mode
+          </h2>
+          <p className="text-red-600 mb-4">Resolving authentication issue...</p>
+          <div className="text-sm text-gray-600">
+            <p>Global redirects: {globalRedirectCount}</p>
+            <p>Circuit breaker: {isCircuitOpen ? "OPEN" : "CLOSED"}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading while auth state is being determined
-  if (loading || isStableLoading) {
-    console.log("RouteGuard: Loading auth state, showing spinner");
+  if (loading) {
+    console.log("🔄 EMERGENCY: Loading auth state, showing spinner");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -80,28 +140,39 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  // If no user, redirect to auth
+  // If no user, redirect with circuit breaker protection
   if (!user) {
-    console.log("RouteGuard: No user, redirecting to auth");
-    setRedirectCount((prev) => prev + 1);
+    if (localRedirectCount >= 2) {
+      console.error(
+        "🚨 EMERGENCY: Local redirect limit reached, forcing auth page"
+      );
+      window.location.href = "/auth";
+      return null;
+    }
+
+    console.log(
+      "🔄 EMERGENCY: No user, redirecting to auth (attempt:",
+      localRedirectCount + 1,
+      ")"
+    );
+    setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
   }
 
-  // If user exists but no profile, wait or redirect based on attempts
+  // If user exists but no profile, handle carefully
   if (!userProfile) {
-    console.log(
-      "RouteGuard: User exists but no profile, redirect attempt:",
-      redirectCount
-    );
-    if (redirectCount < 2) {
-      setRedirectCount((prev) => prev + 1);
-      return <Navigate to="/auth" replace />;
-    } else {
-      // Force hard refresh to clear any cached state
-      console.error("RouteGuard: Profile fetch failed, forcing page refresh");
+    if (localRedirectCount >= 1) {
+      console.error("🚨 EMERGENCY: Profile not loaded, forcing page refresh");
       window.location.reload();
       return null;
     }
+
+    console.log(
+      "🔄 EMERGENCY: User exists but no profile, redirect attempt:",
+      localRedirectCount + 1
+    );
+    setLocalRedirectCount((prev) => prev + 1);
+    return <Navigate to="/auth" replace />;
   }
 
   // Check user role permissions
@@ -116,12 +187,17 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
   ];
 
   if (!allowedRoles.includes(userProfile.role)) {
-    console.log("RouteGuard: Invalid role, redirecting to auth");
+    console.log("🚨 EMERGENCY: Invalid role, redirecting to auth");
     return <Navigate to="/auth" replace />;
   }
 
   // Success - allow access
-  console.log("RouteGuard: Access granted for role:", userProfile.role);
+  console.log("✅ EMERGENCY: Access granted for role:", userProfile.role);
+
+  // Reset counters on successful access
+  globalRedirectCount = 0;
+  setLocalRedirectCount(0);
+
   return <>{children}</>;
 };
 
