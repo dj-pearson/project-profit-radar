@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    const handleAuthChange = (event: string, session: Session | null) => {
+    const handleAuthChange = async (event: string, session: Session | null) => {
       if (!mounted) return;
       
       console.log('Auth change:', event, !!session?.user);
@@ -78,23 +78,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         // Fetch profile for authenticated user
-        fetchUserProfile(session.user.id).then(profile => {
+        try {
+          const profile = await fetchUserProfile(session.user.id);
           if (mounted) {
+            console.log('Profile fetched:', !!profile, profile?.role);
             setUserProfile(profile);
-            setLoading(false);
           }
-        });
+        } catch (error) {
+          console.error('Profile fetch error:', error);
+          if (mounted) {
+            setUserProfile(null);
+          }
+        }
       } else {
         // Clear profile for unauthenticated user
         setUserProfile(null);
+      }
+      
+      // Always set loading to false after handling auth change
+      if (mounted) {
         setLoading(false);
       }
     };
 
     // Initialize auth
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      handleAuthChange('INITIAL', session);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await handleAuthChange('INITIAL', session);
+      } catch (error) {
+        console.error('Auth init error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
     };
 
     // Set up listener
@@ -107,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     if (user) {

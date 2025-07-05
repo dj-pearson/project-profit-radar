@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -8,7 +8,7 @@ interface RouteGuardProps {
   routePath?: string;
 }
 
-export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
+const RouteGuardComponent: React.FC<RouteGuardProps> = ({ children }) => {
   const { user, userProfile, loading } = useAuth();
 
   // Show loading while auth is being determined OR while we have a user but no profile yet
@@ -38,6 +38,9 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
 
   return <>{children}</>;
 };
+
+// Memoize to prevent unnecessary re-renders
+export const RouteGuard = memo(RouteGuardComponent);
 
 // Legacy alias for backward compatibility
 export const ProtectedRoute = RouteGuard;
