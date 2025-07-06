@@ -49,6 +49,9 @@ import KnowledgeBase from "./components/knowledge/KnowledgeBase";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
 import EmailMarketingIntegration from "./components/marketing/EmailMarketingIntegration";
 import FeatureAnnouncementSystem from "./components/announcements/FeatureAnnouncementSystem";
+import AutomatedWorkflows from "./components/workflows/AutomatedWorkflows";
+import EnhancedEmailIntegration from "./components/integrations/EnhancedEmailIntegration";
+import CalendarIntegration from "./components/calendar/CalendarIntegration";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +103,9 @@ const AppContent = () => {
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route path="/email-marketing" element={<RouteGuard routePath="/email-marketing"><EmailMarketingIntegration /></RouteGuard>} />
       <Route path="/announcements" element={<RouteGuard routePath="/announcements"><FeatureAnnouncementSystem /></RouteGuard>} />
+      <Route path="/workflows" element={<RouteGuard routePath="/workflows"><AutomatedWorkflows /></RouteGuard>} />
+      <Route path="/enhanced-email" element={<RouteGuard routePath="/enhanced-email"><EnhancedEmailIntegration /></RouteGuard>} />
+      <Route path="/calendar" element={<RouteGuard routePath="/calendar"><CalendarIntegration /></RouteGuard>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
