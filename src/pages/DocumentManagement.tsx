@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentCard } from '@/components/documents/DocumentCard';
+import DocumentOCRProcessor from '@/components/ocr/DocumentOCRProcessor';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   ArrowLeft, 
@@ -21,7 +22,9 @@ import {
   Search,
   Filter,
   User,
-  Calendar
+  Calendar,
+  Brain,
+  Zap
 } from 'lucide-react';
 
 interface Document {
@@ -51,6 +54,12 @@ interface DocumentCategory {
   description: string;
 }
 
+interface Project {
+  id: string;
+  name: string;
+  client_name: string;
+}
+
 const DocumentManagement = () => {
   const { projectId } = useParams<{ projectId?: string }>();
   const { user, userProfile } = useAuth();
@@ -58,6 +67,7 @@ const DocumentManagement = () => {
   
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -67,6 +77,11 @@ const DocumentManagement = () => {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [uploadDescription, setUploadDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  
+  // OCR processing state
+  const [showOCRProcessor, setShowOCRProcessor] = useState(false);
+  const [currentProcessingFile, setCurrentProcessingFile] = useState<File | null>(null);
+  const [useSmartProcessing, setUseSmartProcessing] = useState(true);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,6 +95,7 @@ const DocumentManagement = () => {
     if (userProfile?.company_id) {
       loadDocuments();
       loadCategories();
+      loadProjects();
     }
   }, [userProfile, projectId]);
 
@@ -137,6 +153,23 @@ const DocumentManagement = () => {
     }
   };
 
+  const loadProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, client_name')
+        .eq('company_id', userProfile?.company_id)
+        .eq('status', 'active')
+        .order('name');
+
+      if (error) throw error;
+      setProjects(data || []);
+
+    } catch (error: any) {
+      console.error('Error loading projects:', error);
+    }
+  };
+
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -149,13 +182,36 @@ const DocumentManagement = () => {
       return;
     }
 
+    // Check if smart processing is enabled and file is an image/PDF
+    const file = selectedFiles[0];
+    const isImageOrPDF = file.type.startsWith('image/') || file.type === 'application/pdf';
+    
+    if (useSmartProcessing && isImageOrPDF && selectedFiles.length === 1) {
+      // Use OCR processing for single image/PDF files
+      setCurrentProcessingFile(file);
+      setShowOCRProcessor(true);
+      setIsUploadOpen(false);
+      return;
+    }
+
+    // Regular upload process
+    await performRegularUpload();
+  };
+
+  const performRegularUpload = async (ocrData?: {
+    ocrText: string;
+    aiClassification: any;
+    suggestedProjectId?: string;
+    suggestedCostCenter?: string;
+  }) => {
     setIsUploading(true);
-    const totalFiles = selectedFiles.length;
+    const files = currentProcessingFile ? [currentProcessingFile] : Array.from(selectedFiles || []);
+    const totalFiles = files.length;
     let uploadedCount = 0;
 
     try {
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         
         // Create file path
         const fileExt = file.name.split('.').pop();
@@ -171,22 +227,30 @@ const DocumentManagement = () => {
 
         if (uploadError) throw uploadError;
 
-        // Create document record
+        // Create document record with OCR data if available
+        const documentData = {
+          name: file.name,
+          description: uploadDescription || null,
+          file_path: filePath,
+          file_type: file.type || 'application/octet-stream',
+          file_size: file.size,
+          category_id: selectedCategory || null,
+          project_id: ocrData?.suggestedProjectId || (isProjectContext ? projectId : null),
+          company_id: userProfile?.company_id,
+          uploaded_by: user?.id,
+          version: 1,
+          is_current_version: true,
+          ...(ocrData && {
+            ocr_text: ocrData.ocrText,
+            ai_classification: ocrData.aiClassification,
+            auto_routed: true,
+            routing_confidence: ocrData.aiClassification.confidence
+          })
+        };
+
         const { error: docError } = await supabase
           .from('documents')
-          .insert([{
-            name: file.name,
-            description: uploadDescription || null,
-            file_path: filePath,
-            file_type: file.type || 'application/octet-stream',
-            file_size: file.size,
-            category_id: selectedCategory || null,
-            project_id: isProjectContext ? projectId : null,
-            company_id: userProfile?.company_id,
-            uploaded_by: user?.id,
-            version: 1,
-            is_current_version: true
-          }]);
+          .insert([documentData]);
 
         if (docError) throw docError;
 
@@ -196,10 +260,13 @@ const DocumentManagement = () => {
 
       toast({
         title: "Upload Complete",
-        description: `Successfully uploaded ${uploadedCount} file(s).`
+        description: `Successfully uploaded ${uploadedCount} file(s).${ocrData ? ' Smart processing applied!' : ''}`
       });
 
+      // Reset all states
       setIsUploadOpen(false);
+      setShowOCRProcessor(false);
+      setCurrentProcessingFile(null);
       setSelectedFiles(null);
       setUploadDescription('');
       setSelectedCategory('');
@@ -216,6 +283,21 @@ const DocumentManagement = () => {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleOCRProcessingComplete = (result: {
+    ocrText: string;
+    aiClassification: any;
+    suggestedProjectId?: string;
+    suggestedCostCenter?: string;
+  }) => {
+    performRegularUpload(result);
+  };
+
+  const handleOCRCancel = () => {
+    setShowOCRProcessor(false);
+    setCurrentProcessingFile(null);
+    setIsUploadOpen(true);
   };
 
   const downloadDocument = async (document: Document) => {
@@ -356,6 +438,24 @@ const DocumentManagement = () => {
                       onChange={(e) => setSelectedFiles(e.target.files)}
                       required
                     />
+                    <div className="flex items-center space-x-2 mt-2">
+                      <input
+                        type="checkbox"
+                        id="smart-processing"
+                        checked={useSmartProcessing}
+                        onChange={(e) => setUseSmartProcessing(e.target.checked)}
+                        className="rounded"
+                      />
+                      <Label htmlFor="smart-processing" className="text-sm flex items-center space-x-1">
+                        <Brain className="h-3 w-3" />
+                        <span>Enable Smart Processing (OCR + AI Classification)</span>
+                      </Label>
+                    </div>
+                    {useSmartProcessing && (
+                      <p className="text-xs text-muted-foreground">
+                        Single images and PDFs will be processed with OCR and AI for automatic routing
+                      </p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -496,6 +596,29 @@ const DocumentManagement = () => {
           </div>
         )}
       </div>
+
+      {/* OCR Processing Dialog */}
+      <Dialog open={showOCRProcessor} onOpenChange={setShowOCRProcessor}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Brain className="h-5 w-5" />
+              <span>Smart Document Processing</span>
+            </DialogTitle>
+            <DialogDescription>
+              Processing your document with OCR and AI classification
+            </DialogDescription>
+          </DialogHeader>
+          {currentProcessingFile && (
+            <DocumentOCRProcessor
+              file={currentProcessingFile}
+              projects={projects}
+              onProcessingComplete={handleOCRProcessingComplete}
+              onCancel={handleOCRCancel}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

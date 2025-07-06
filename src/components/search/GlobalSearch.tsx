@@ -120,25 +120,63 @@ const GlobalSearch = () => {
         }
       }
 
-      // Search documents
+      // Search documents (enhanced with OCR text search)
       if (filters.type === 'all' || filters.type === 'document') {
         const { data: documentResults, error: documentError } = await supabase
           .from('documents')
-          .select('id, name, description, created_at, project_id')
+          .select(`
+            id, name, description, created_at, project_id, ocr_text, 
+            ai_classification, file_type, auto_routed, routing_confidence,
+            projects(name, client_name)
+          `)
           .eq('company_id', userProfile.company_id)
-          .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+          .or(`name.ilike.%${query}%,description.ilike.%${query}%,ocr_text.ilike.%${query}%`);
 
         if (!documentError && documentResults) {
-          searchResults.push(...documentResults.map(doc => ({
-            id: `document-${doc.id}`,
-            title: doc.name,
-            description: doc.description || 'Document',
-            type: 'document' as const,
-            url: `/documents?id=${doc.id}`,
-            lastModified: doc.created_at,
-            relevanceScore: calculateRelevance(query, doc.name + ' ' + (doc.description || '')),
-            metadata: { projectId: doc.project_id }
-          })));
+          searchResults.push(...documentResults.map(doc => {
+            // Extract AI classification data for enhanced search results
+            const aiData = doc.ai_classification as any;
+            const vendorName = aiData?.vendor_name || '';
+            const amount = aiData?.amount || 0;
+            const docType = aiData?.document_type || '';
+            
+            // Enhanced description with OCR context
+            let enhancedDescription = doc.description || 'Document';
+            if (doc.ocr_text) {
+              const searchContext = extractSearchContext(doc.ocr_text, query);
+              if (searchContext) {
+                enhancedDescription += ` - "${searchContext}"`;
+              }
+            }
+            
+            // Add vendor and amount info if available
+            if (vendorName || amount) {
+              const extras = [];
+              if (vendorName) extras.push(`Vendor: ${vendorName}`);
+              if (amount) extras.push(`Amount: $${amount.toLocaleString()}`);
+              enhancedDescription += ` (${extras.join(', ')})`;
+            }
+
+            return {
+              id: `document-${doc.id}`,
+              title: doc.name,
+              description: enhancedDescription,
+              type: 'document' as const,
+              url: `/documents?id=${doc.id}`,
+              lastModified: doc.created_at,
+              relevanceScore: calculateDocumentRelevance(query, doc),
+              metadata: { 
+                projectId: doc.project_id,
+                hasOCR: !!doc.ocr_text,
+                docType,
+                vendorName,
+                amount,
+                autoRouted: doc.auto_routed,
+                confidence: doc.routing_confidence,
+                projectName: doc.projects?.name
+              }
+            };
+          }));
         }
       }
 
@@ -224,6 +262,63 @@ const GlobalSearch = () => {
     });
     
     return score;
+  };
+
+  const calculateDocumentRelevance = (searchQuery: string, doc: any): number => {
+    let score = 0;
+    const query = searchQuery.toLowerCase();
+    
+    // Title match (highest priority)
+    if (doc.name.toLowerCase().includes(query)) {
+      score += 10;
+    }
+    
+    // Description match
+    if (doc.description && doc.description.toLowerCase().includes(query)) {
+      score += 5;
+    }
+    
+    // OCR text match (medium priority)
+    if (doc.ocr_text && doc.ocr_text.toLowerCase().includes(query)) {
+      score += 7;
+    }
+    
+    // AI classification matches
+    const aiData = doc.ai_classification as any;
+    if (aiData) {
+      if (aiData.vendor_name && aiData.vendor_name.toLowerCase().includes(query)) {
+        score += 8;
+      }
+      if (aiData.document_type && aiData.document_type.toLowerCase().includes(query)) {
+        score += 6;
+      }
+      if (aiData.amount && query.includes(aiData.amount.toString())) {
+        score += 9;
+      }
+    }
+    
+    // Project name match
+    if (doc.projects?.name && doc.projects.name.toLowerCase().includes(query)) {
+      score += 4;
+    }
+    
+    return score;
+  };
+
+  const extractSearchContext = (text: string, query: string): string => {
+    if (!text || !query) return '';
+    
+    const words = query.toLowerCase().split(' ');
+    const sentences = text.split('.').map(s => s.trim());
+    
+    for (const sentence of sentences) {
+      const lowerSentence = sentence.toLowerCase();
+      if (words.some(word => lowerSentence.includes(word))) {
+        return sentence.substring(0, 100) + (sentence.length > 100 ? '...' : '');
+      }
+    }
+    
+    return '';
   };
 
   const getTypeColor = (type: SearchResult['type']) => {
@@ -408,10 +503,23 @@ const GlobalSearch = () => {
                           </Badge>
                         </div>
                         <p className="text-muted-foreground mb-2">{result.description}</p>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>Modified: {new Date(result.lastModified).toLocaleDateString()}</span>
-                          <span>Relevance: {Math.round(result.relevanceScore * 100)}%</span>
-                        </div>
+                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                           <span>Modified: {new Date(result.lastModified).toLocaleDateString()}</span>
+                           <span>Relevance: {Math.round(result.relevanceScore * 100)}%</span>
+                           {result.metadata?.hasOCR && (
+                             <Badge variant="outline" className="text-xs">
+                               OCR Searchable
+                             </Badge>
+                           )}
+                           {result.metadata?.autoRouted && (
+                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                               AI Classified ({result.metadata.confidence})
+                             </Badge>
+                           )}
+                           {result.metadata?.projectName && (
+                             <span>Project: {result.metadata.projectName}</span>
+                           )}
+                         </div>
                       </div>
                     </div>
                   </div>

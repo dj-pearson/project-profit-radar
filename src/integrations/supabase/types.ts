@@ -1171,8 +1171,10 @@ export type Database = {
       }
       documents: {
         Row: {
+          ai_classification: Json | null
           approved_at: string | null
           approved_by: string | null
+          auto_routed: boolean | null
           category_id: string | null
           checksum: string | null
           company_id: string
@@ -1184,16 +1186,20 @@ export type Database = {
           id: string
           is_current_version: boolean | null
           name: string
+          ocr_text: string | null
           parent_document_id: string | null
           project_id: string | null
+          routing_confidence: string | null
           updated_at: string
           uploaded_by: string | null
           version: number | null
           version_notes: string | null
         }
         Insert: {
+          ai_classification?: Json | null
           approved_at?: string | null
           approved_by?: string | null
+          auto_routed?: boolean | null
           category_id?: string | null
           checksum?: string | null
           company_id: string
@@ -1205,16 +1211,20 @@ export type Database = {
           id?: string
           is_current_version?: boolean | null
           name: string
+          ocr_text?: string | null
           parent_document_id?: string | null
           project_id?: string | null
+          routing_confidence?: string | null
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
           version_notes?: string | null
         }
         Update: {
+          ai_classification?: Json | null
           approved_at?: string | null
           approved_by?: string | null
+          auto_routed?: boolean | null
           category_id?: string | null
           checksum?: string | null
           company_id?: string
@@ -1226,8 +1236,10 @@ export type Database = {
           id?: string
           is_current_version?: boolean | null
           name?: string
+          ocr_text?: string | null
           parent_document_id?: string | null
           project_id?: string | null
+          routing_confidence?: string | null
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
