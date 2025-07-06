@@ -371,6 +371,46 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
+      <Route
+        path="/purchase-orders"
+        element={
+          <RouteGuard routePath="/purchase-orders">
+            <PurchaseOrders />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/purchase-orders/new"
+        element={
+          <RouteGuard routePath="/purchase-orders">
+            <PurchaseOrderForm />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/purchase-orders/:id"
+        element={
+          <RouteGuard routePath="/purchase-orders">
+            <PurchaseOrderForm />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/purchase-orders/:id/edit"
+        element={
+          <RouteGuard routePath="/purchase-orders">
+            <PurchaseOrderForm />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/vendors"
+        element={
+          <RouteGuard routePath="/vendors">
+            <Vendors />
+          </RouteGuard>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
