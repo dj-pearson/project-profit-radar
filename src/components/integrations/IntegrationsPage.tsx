@@ -42,6 +42,24 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ companyId })
       component: <QuickBooksIntegration />
     },
     {
+      id: 'calendar',
+      title: 'Calendar Sync',
+      description: 'Sync project schedules with Google/Outlook Calendar',
+      icon: <DollarSign className="h-8 w-8 text-purple-600" />,
+      status: 'available',
+      features: ['Google Calendar', 'Outlook Calendar', 'Auto Sync', 'Event Management'],
+      component: null
+    },
+    {
+      id: 'marketplace',
+      title: 'API Marketplace',
+      description: 'Connect to 1000+ third-party services and APIs',
+      icon: <Database className="h-8 w-8 text-green-600" />,
+      status: 'available',
+      features: ['Custom APIs', 'Webhooks', 'Automation', 'Easy Setup'],
+      component: null
+    },
+    {
       id: 'box',
       title: 'Box Storage',
       description: 'Enhanced document storage and collaboration',

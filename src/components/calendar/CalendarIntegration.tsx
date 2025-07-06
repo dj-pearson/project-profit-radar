@@ -1,337 +1,470 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { Calendar, Settings, Bell } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  Calendar,
+  RefreshCw,
+  Settings,
+  CheckCircle,
+  AlertCircle,
+  Plus,
+  Trash2,
+  ExternalLink
+} from 'lucide-react';
+
+interface CalendarIntegration {
+  id: string;
+  provider: 'google' | 'outlook';
+  account_email: string;
+  is_active: boolean;
+  sync_enabled: boolean;
+  last_sync: string | null;
+  created_at: string;
+}
 
 interface CalendarEvent {
   id: string;
   title: string;
-  start: string;
-  end: string;
+  start_time: string;
+  end_time: string;
   description?: string;
-  type: 'project_deadline' | 'meeting' | 'inspection' | 'delivery';
-  projectId?: string;
-}
-
-interface CalendarConnection {
-  provider: 'google' | 'outlook';
-  connected: boolean;
-  email?: string;
-  lastSync?: string;
+  project_id?: string;
+  calendar_provider: string;
+  external_id: string;
 }
 
 const CalendarIntegration = () => {
-  const [connections, setConnections] = useState<CalendarConnection[]>([
-    { provider: 'google', connected: false },
-    { provider: 'outlook', connected: false }
-  ]);
+  const { userProfile } = useAuth();
+  const [integrations, setIntegrations] = useState<CalendarIntegration[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [newEvent, setNewEvent] = useState({
-    title: '',
-    start: '',
-    end: '',
-    type: 'meeting' as const,
-    description: ''
-  });
-
-  const sampleEvents: CalendarEvent[] = [
-    {
-      id: '1',
-      title: 'Project Milestone Review',
-      start: '2024-12-20T09:00:00',
-      end: '2024-12-20T10:00:00',
-      type: 'meeting',
-      description: 'Review progress on current projects'
-    },
-    {
-      id: '2',
-      title: 'Safety Inspection',
-      start: '2024-12-22T14:00:00',
-      end: '2024-12-22T16:00:00',
-      type: 'inspection',
-      description: 'Monthly safety inspection of construction site'
-    }
-  ];
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
-    setEvents(sampleEvents);
-  }, []);
+    if (userProfile?.company_id) {
+      loadIntegrations();
+      loadEvents();
+    }
+  }, [userProfile]);
 
-  const connectCalendar = async (provider: 'google' | 'outlook') => {
-    // This would implement OAuth flow in a real app
-    toast({
-      title: "Calendar Integration",
-      description: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Calendar integration would be configured here. This requires API keys and OAuth setup.`
-    });
-
-    // Simulate connection
-    setConnections(connections.map(conn => 
-      conn.provider === provider 
-        ? { ...conn, connected: true, email: `user@${provider}.com`, lastSync: new Date().toISOString() }
-        : conn
-    ));
-  };
-
-  const disconnectCalendar = (provider: 'google' | 'outlook') => {
-    setConnections(connections.map(conn => 
-      conn.provider === provider 
-        ? { ...conn, connected: false, email: undefined, lastSync: undefined }
-        : conn
-    ));
-
-    toast({
-      title: "Calendar Disconnected",
-      description: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Calendar has been disconnected.`
-    });
-  };
-
-  const syncCalendar = async (provider: 'google' | 'outlook') => {
-    toast({
-      title: "Syncing Calendar",
-      description: `Syncing with ${provider} Calendar...`
-    });
-
-    // Simulate sync
-    setTimeout(() => {
-      setConnections(connections.map(conn => 
-        conn.provider === provider 
-          ? { ...conn, lastSync: new Date().toISOString() }
-          : conn
-      ));
-
-      toast({
-        title: "Sync Complete",
-        description: `Calendar synced successfully with ${provider}.`
-      });
-    }, 2000);
-  };
-
-  const addEvent = () => {
-    if (!newEvent.title || !newEvent.start || !newEvent.end) {
+  const loadIntegrations = async () => {
+    try {
+      // Mock data for now - replace with actual API calls
+      const mockIntegrations: CalendarIntegration[] = [
+        {
+          id: '1',
+          provider: 'google',
+          account_email: 'user@company.com',
+          is_active: true,
+          sync_enabled: true,
+          last_sync: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        }
+      ];
+      setIntegrations(mockIntegrations);
+    } catch (error) {
+      console.error('Error loading integrations:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please fill in all required fields"
+        description: "Failed to load calendar integrations"
       });
+    }
+  };
+
+  const loadEvents = async () => {
+    try {
+      // Mock calendar events - replace with actual API calls
+      const mockEvents: CalendarEvent[] = [
+        {
+          id: '1',
+          title: 'Project Kickoff Meeting',
+          start_time: new Date(Date.now() + 86400000).toISOString(),
+          end_time: new Date(Date.now() + 86400000 + 3600000).toISOString(),
+          description: 'Initial project planning and team introductions',
+          project_id: 'proj-1',
+          calendar_provider: 'google',
+          external_id: 'google-event-123'
+        },
+        {
+          id: '2',
+          title: 'Site Inspection',
+          start_time: new Date(Date.now() + 172800000).toISOString(),
+          end_time: new Date(Date.now() + 172800000 + 7200000).toISOString(),
+          description: 'Quarterly safety and progress inspection',
+          calendar_provider: 'outlook',
+          external_id: 'outlook-event-456'
+        }
+      ];
+      setEvents(mockEvents);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      // Call edge function to initiate Google OAuth
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { company_id: userProfile?.company_id }
+      });
+
+      if (error) throw error;
+
+      // Redirect to Google OAuth
+      window.location.href = data.auth_url;
+    } catch (error) {
+      console.error('Google auth error:', error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: "Failed to connect to Google Calendar"
+      });
+    }
+  };
+
+  const handleOutlookAuth = async () => {
+    try {
+      // Call edge function to initiate Microsoft OAuth
+      const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
+        body: { company_id: userProfile?.company_id }
+      });
+
+      if (error) throw error;
+
+      // Redirect to Microsoft OAuth
+      window.location.href = data.auth_url;
+    } catch (error) {
+      console.error('Outlook auth error:', error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: "Failed to connect to Outlook Calendar"
+      });
+    }
+  };
+
+  const handleSyncCalendar = async (integrationId: string) => {
+    try {
+      setSyncing(true);
+      
+      const { error } = await supabase.functions.invoke('sync-calendar', {
+        body: { 
+          integration_id: integrationId,
+          company_id: userProfile?.company_id 
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sync Complete",
+        description: "Calendar events have been synchronized successfully"
+      });
+
+      loadEvents();
+      loadIntegrations();
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        variant: "destructive",
+        title: "Sync Failed",
+        description: "Failed to sync calendar events"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const toggleIntegration = async (integrationId: string, enabled: boolean) => {
+    try {
+      // Update integration status
+      const integration = integrations.find(i => i.id === integrationId);
+      if (integration) {
+        integration.sync_enabled = enabled;
+        setIntegrations([...integrations]);
+      }
+
+      toast({
+        title: enabled ? "Integration Enabled" : "Integration Disabled",
+        description: `Calendar sync has been ${enabled ? 'enabled' : 'disabled'}`
+      });
+    } catch (error) {
+      console.error('Toggle error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update integration settings"
+      });
+    }
+  };
+
+  const removeIntegration = async (integrationId: string) => {
+    if (!confirm('Are you sure you want to remove this calendar integration?')) {
       return;
     }
 
-    const event: CalendarEvent = {
-      id: Date.now().toString(),
-      ...newEvent
-    };
-
-    setEvents([...events, event]);
-    setNewEvent({
-      title: '',
-      start: '',
-      end: '',
-      type: 'meeting',
-      description: ''
-    });
-
-    toast({
-      title: "Event Added",
-      description: "Calendar event has been created successfully."
-    });
+    try {
+      setIntegrations(integrations.filter(i => i.id !== integrationId));
+      
+      toast({
+        title: "Integration Removed",
+        description: "Calendar integration has been removed successfully"
+      });
+    } catch (error) {
+      console.error('Remove error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove integration"
+      });
+    }
   };
 
-  const getEventTypeColor = (type: CalendarEvent['type']) => {
-    const colors = {
-      project_deadline: 'bg-red-100 text-red-800',
-      meeting: 'bg-blue-100 text-blue-800',
-      inspection: 'bg-yellow-100 text-yellow-800',
-      delivery: 'bg-green-100 text-green-800'
-    };
-    return colors[type];
+  const formatDateTime = (dateTime: string) => {
+    return new Date(dateTime).toLocaleString();
+  };
+
+  const getProviderIcon = (provider: string) => {
+    switch (provider) {
+      case 'google':
+        return '📅';
+      case 'outlook':
+        return '📆';
+      default:
+        return '📋';
+    }
   };
 
   const getProviderName = (provider: string) => {
-    return provider === 'google' ? 'Google Calendar' : 'Outlook Calendar';
+    switch (provider) {
+      case 'google':
+        return 'Google Calendar';
+      case 'outlook':
+        return 'Outlook Calendar';
+      default:
+        return 'Unknown';
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <Calendar className="h-5 w-5" />
-        <h2 className="text-2xl font-semibold">Calendar Integration</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-5 w-5" />
+          <h2 className="text-2xl font-semibold">Calendar Integration</h2>
+        </div>
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Calendar
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Connect Calendar</DialogTitle>
+              <DialogDescription>
+                Choose a calendar provider to connect with your projects
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Card className="cursor-pointer hover:bg-accent" onClick={handleGoogleAuth}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">📅</span>
+                    <div>
+                      <h3 className="font-medium">Google Calendar</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Sync with Google Calendar events
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:bg-accent" onClick={handleOutlookAuth}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">📆</span>
+                    <div>
+                      <h3 className="font-medium">Outlook Calendar</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Sync with Microsoft Outlook events
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Calendar Connections */}
+      {/* Connected Integrations */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Settings className="h-4 w-4" />
-            <span>Calendar Connections</span>
-          </CardTitle>
+          <CardTitle>Connected Calendars</CardTitle>
           <CardDescription>
-            Connect your calendar providers for seamless scheduling
+            Manage your calendar integrations and sync settings
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {connections.map((connection) => (
-            <div key={connection.provider} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center">
-                  <Calendar className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="font-medium">{getProviderName(connection.provider)}</h4>
-                  {connection.connected && connection.email && (
-                    <p className="text-sm text-muted-foreground">{connection.email}</p>
-                  )}
-                  {connection.lastSync && (
-                    <p className="text-xs text-muted-foreground">
-                      Last sync: {new Date(connection.lastSync).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant={connection.connected ? "default" : "secondary"}>
-                  {connection.connected ? "Connected" : "Not Connected"}
-                </Badge>
-                {connection.connected ? (
-                  <>
+        <CardContent>
+          {integrations.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No calendar integrations connected</p>
+              <p className="text-sm">Connect your calendar to sync project events</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {integrations.map((integration) => (
+                <div key={integration.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl">{getProviderIcon(integration.provider)}</span>
+                    <div>
+                      <h4 className="font-medium">{getProviderName(integration.provider)}</h4>
+                      <p className="text-sm text-muted-foreground">{integration.account_email}</p>
+                      {integration.last_sync && (
+                        <p className="text-xs text-muted-foreground">
+                          Last sync: {formatDateTime(integration.last_sync)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor={`sync-${integration.id}`} className="text-sm">
+                        Auto Sync
+                      </Label>
+                      <Switch
+                        id={`sync-${integration.id}`}
+                        checked={integration.sync_enabled}
+                        onCheckedChange={(checked) => toggleIntegration(integration.id, checked)}
+                      />
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => syncCalendar(connection.provider)}
+                      onClick={() => handleSyncCalendar(integration.id)}
+                      disabled={syncing}
                     >
-                      Sync
+                      <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                      Sync Now
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => disconnectCalendar(connection.provider)}
+                      onClick={() => removeIntegration(integration.id)}
                     >
-                      Disconnect
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => connectCalendar(connection.provider)}
-                  >
-                    Connect
-                  </Button>
-                )}
-              </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Add New Event */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Calendar Event</CardTitle>
-          <CardDescription>
-            Create new events that will sync with your connected calendars
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="event-title">Event Title</Label>
-              <Input
-                id="event-title"
-                value={newEvent.title}
-                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                placeholder="Enter event title"
-              />
-            </div>
-            <div>
-              <Label htmlFor="event-type">Event Type</Label>
-              <Select
-                value={newEvent.type}
-                onValueChange={(type: any) => setNewEvent({ ...newEvent, type })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="meeting">Meeting</SelectItem>
-                  <SelectItem value="project_deadline">Project Deadline</SelectItem>
-                  <SelectItem value="inspection">Inspection</SelectItem>
-                  <SelectItem value="delivery">Delivery</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="event-start">Start Date & Time</Label>
-              <Input
-                id="event-start"
-                type="datetime-local"
-                value={newEvent.start}
-                onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="event-end">End Date & Time</Label>
-              <Input
-                id="event-end"
-                type="datetime-local"
-                value={newEvent.end}
-                onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="event-description">Description</Label>
-            <Input
-              id="event-description"
-              value={newEvent.description}
-              onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-              placeholder="Event description (optional)"
-            />
-          </div>
-          <Button onClick={addEvent}>Add Event</Button>
+          )}
         </CardContent>
       </Card>
 
       {/* Upcoming Events */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Bell className="h-4 w-4" />
-            <span>Upcoming Events</span>
-          </CardTitle>
+          <CardTitle>Upcoming Project Events</CardTitle>
           <CardDescription>
-            Events from your connected calendars and project timeline
+            Events synchronized from your connected calendars
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {events.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                No upcoming events. Add an event to get started.
-              </p>
-            ) : (
-              events.map((event) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : events.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No upcoming events</p>
+              <p className="text-sm">Events from your calendar will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {events.map((event) => (
                 <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg">{getProviderIcon(event.calendar_provider)}</span>
+                    <div>
                       <h4 className="font-medium">{event.title}</h4>
-                      <Badge className={getEventTypeColor(event.type)}>
-                        {event.type.replace('_', ' ')}
-                      </Badge>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDateTime(event.start_time)} - {formatDateTime(event.end_time)}
+                      </p>
+                      {event.description && (
+                        <p className="text-sm text-muted-foreground">{event.description}</p>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(event.start).toLocaleString()} - {new Date(event.end).toLocaleString()}
-                    </p>
-                    {event.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline">
+                      {getProviderName(event.calendar_provider)}
+                    </Badge>
+                    {event.project_id && (
+                      <Badge variant="secondary">Project Event</Badge>
                     )}
                   </div>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Sync Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Settings className="h-5 w-5" />
+            <span>Sync Settings</span>
+          </CardTitle>
+          <CardDescription>
+            Configure how calendar events are synchronized
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h4 className="font-medium">Sync Frequency</h4>
+              <p className="text-sm text-muted-foreground">
+                Events are synchronized every 15 minutes when auto-sync is enabled
+              </p>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-medium">Event Creation</h4>
+              <p className="text-sm text-muted-foreground">
+                Project milestones and deadlines can be automatically added to your calendar
+              </p>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-medium">Conflict Detection</h4>
+              <p className="text-sm text-muted-foreground">
+                Get notified when project schedules conflict with calendar events
+              </p>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-medium">Team Coordination</h4>
+              <p className="text-sm text-muted-foreground">
+                Share project calendars with team members for better coordination
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
