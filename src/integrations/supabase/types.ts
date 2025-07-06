@@ -289,6 +289,63 @@ export type Database = {
           },
         ]
       }
+      chargeback_fees: {
+        Row: {
+          chargeback_amount: number
+          charged_at: string | null
+          charged_by: string | null
+          company_id: string
+          created_at: string
+          fee_amount: number
+          id: string
+          payment_intent_id: string
+          reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          chargeback_amount: number
+          charged_at?: string | null
+          charged_by?: string | null
+          company_id: string
+          created_at?: string
+          fee_amount: number
+          id?: string
+          payment_intent_id: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          chargeback_amount?: number
+          charged_at?: string | null
+          charged_by?: string | null
+          company_id?: string
+          created_at?: string
+          fee_amount?: number
+          id?: string
+          payment_intent_id?: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chargeback_fees_charged_by_fkey"
+            columns: ["charged_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chargeback_fees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -345,6 +402,62 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      company_payment_settings: {
+        Row: {
+          chargeback_fee: number | null
+          company_id: string
+          configured_at: string | null
+          configured_by: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          processing_fee_percentage: number | null
+          processor_type: string
+          stripe_publishable_key: string | null
+          stripe_secret_key_encrypted: string | null
+          stripe_webhook_secret_encrypted: string | null
+          updated_at: string
+        }
+        Insert: {
+          chargeback_fee?: number | null
+          company_id: string
+          configured_at?: string | null
+          configured_by?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          processing_fee_percentage?: number | null
+          processor_type: string
+          stripe_publishable_key?: string | null
+          stripe_secret_key_encrypted?: string | null
+          stripe_webhook_secret_encrypted?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chargeback_fee?: number | null
+          company_id?: string
+          configured_at?: string | null
+          configured_by?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          processing_fee_percentage?: number | null
+          processor_type?: string
+          stripe_publishable_key?: string | null
+          stripe_secret_key_encrypted?: string | null
+          stripe_webhook_secret_encrypted?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_payment_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       compliance_reports: {
         Row: {
