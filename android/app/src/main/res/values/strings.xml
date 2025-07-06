@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">project-profit-radar</string>
+    <string name="title_activity_main">project-profit-radar</string>
+    <string name="package_name">app.lovable.ed4c0428159f4b25813615b119a75bd5</string>
+    <string name="custom_url_scheme">app.lovable.ed4c0428159f4b25813615b119a75bd5</string>
+</resources>
