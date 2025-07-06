@@ -31,6 +31,7 @@ import * as z from 'zod';
 
 const certificationSchema = z.object({
   employee_id: z.string().min(1, "Please select an employee"),
+  certification_name: z.string().min(1, "Certification name is required"),
   certification_type: z.string().min(1, "Certification type is required"),
   training_provider: z.string().optional(),
   completion_date: z.date({ required_error: "Completion date is required" }),
@@ -40,13 +41,14 @@ const certificationSchema = z.object({
 
 interface Certification {
   id: string;
-  employee_id: string;
+  user_id: string;
   employee_name?: string;
+  certification_name: string;
   certification_type: string;
-  training_provider?: string;
-  completion_date: string;
+  issuing_organization?: string;
+  issue_date: string;
   expiration_date?: string;
-  certificate_url?: string;
+  document_url?: string;
   status: 'active' | 'expired' | 'revoked';
   created_at: string;
 }
@@ -62,6 +64,7 @@ const TrainingCertificationManager = () => {
   const form = useForm<z.infer<typeof certificationSchema>>({
     resolver: zodResolver(certificationSchema),
     defaultValues: {
+      certification_name: '',
       certification_type: '',
       training_provider: '',
     },
@@ -104,7 +107,7 @@ const TrainingCertificationManager = () => {
         employee_name: 'Employee'
       }));
       
-      setCertifications(certificationsWithNames);
+      setCertifications(certificationsWithNames as Certification[]);
     } catch (error) {
       console.error('Error loading training data:', error);
       toast({
@@ -131,12 +134,13 @@ const TrainingCertificationManager = () => {
 
       const certificationData = {
         company_id: profile.company_id,
-        employee_id: values.employee_id,
+        user_id: values.employee_id,
+        certification_name: values.certification_name,
         certification_type: values.certification_type,
-        training_provider: values.training_provider || null,
-        completion_date: values.completion_date.toISOString().split('T')[0],
+        issuing_organization: values.training_provider || null,
+        issue_date: values.completion_date.toISOString().split('T')[0],
         expiration_date: values.expiration_date ? values.expiration_date.toISOString().split('T')[0] : null,
-        certificate_url: values.certificate_url || null,
+        document_url: values.certificate_url || null,
         created_by: user?.id,
       };
 
@@ -321,12 +325,26 @@ const TrainingCertificationManager = () => {
 
                       <FormField
                         control={form.control}
+                        name="certification_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Certification Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., OSHA 30-Hour Construction Safety" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
                         name="certification_type"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Certification Type *</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., OSHA 30-Hour Construction" {...field} />
+                              <Input placeholder="e.g., Safety, Equipment, Training" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -475,20 +493,21 @@ const TrainingCertificationManager = () => {
                       {getStatusBadge(certification)}
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p><strong>Certification:</strong> {certification.certification_type}</p>
-                      {certification.training_provider && (
-                        <p><strong>Provider:</strong> {certification.training_provider}</p>
+                      <p><strong>Certification:</strong> {certification.certification_name}</p>
+                      <p><strong>Type:</strong> {certification.certification_type}</p>
+                      {certification.issuing_organization && (
+                        <p><strong>Provider:</strong> {certification.issuing_organization}</p>
                       )}
-                      <p><strong>Completed:</strong> {new Date(certification.completion_date).toLocaleDateString()}</p>
+                      <p><strong>Issued:</strong> {new Date(certification.issue_date).toLocaleDateString()}</p>
                       {certification.expiration_date && (
                         <p><strong>Expires:</strong> {new Date(certification.expiration_date).toLocaleDateString()}</p>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {certification.certificate_url && (
+                    {certification.document_url && (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={certification.certificate_url} target="_blank" rel="noopener noreferrer">
+                        <a href={certification.document_url} target="_blank" rel="noopener noreferrer">
                           <Download className="h-4 w-4 mr-2" />
                           Certificate
                         </a>

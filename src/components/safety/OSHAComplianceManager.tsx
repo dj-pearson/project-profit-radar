@@ -41,13 +41,14 @@ interface ComplianceDeadline {
   title: string;
   description?: string;
   due_date: string;
-  compliance_type: string;
+  deadline_type: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
   status: 'pending' | 'completed' | 'overdue';
   assigned_to?: string;
   assigned_user_name?: string;
-  completion_date?: string;
-  completion_notes?: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  completed_date?: string;
+  completed_by?: string;
+  notes?: string;
   created_at: string;
 }
 
@@ -103,7 +104,7 @@ const OSHAComplianceManager = () => {
         assigned_user_name: undefined
       }));
       
-      setDeadlines(deadlinesWithNames);
+      setDeadlines(deadlinesWithNames as ComplianceDeadline[]);
     } catch (error) {
       console.error('Error loading compliance data:', error);
       toast({
@@ -133,7 +134,7 @@ const OSHAComplianceManager = () => {
         title: values.title,
         description: values.description || null,
         due_date: values.due_date.toISOString().split('T')[0],
-        compliance_type: values.compliance_type,
+        deadline_type: values.compliance_type,
         priority: values.priority,
         assigned_to: values.assigned_to || null,
         created_by: user?.id,
@@ -169,8 +170,9 @@ const OSHAComplianceManager = () => {
         .from('osha_compliance_deadlines')
         .update({ 
           status: 'completed',
-          completion_date: new Date().toISOString().split('T')[0],
-          completion_notes: notes || null
+          completed_date: new Date().toISOString().split('T')[0],
+          completed_by: user?.id,
+          notes: notes || null
         })
         .eq('id', deadlineId);
 
@@ -505,7 +507,7 @@ const OSHAComplianceManager = () => {
                       {getPriorityBadge(deadline.priority)}
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p><strong>Type:</strong> {deadline.compliance_type.replace('_', ' ').toUpperCase()}</p>
+                      <p><strong>Type:</strong> {deadline.deadline_type.replace('_', ' ').toUpperCase()}</p>
                       <p><strong>Due Date:</strong> {new Date(deadline.due_date).toLocaleDateString()}</p>
                       {deadline.assigned_user_name && (
                         <p><strong>Assigned to:</strong> {deadline.assigned_user_name}</p>
@@ -513,8 +515,8 @@ const OSHAComplianceManager = () => {
                       {deadline.description && (
                         <p><strong>Description:</strong> {deadline.description}</p>
                       )}
-                      {deadline.completion_date && (
-                        <p><strong>Completed:</strong> {new Date(deadline.completion_date).toLocaleDateString()}</p>
+                      {deadline.completed_date && (
+                        <p><strong>Completed:</strong> {new Date(deadline.completed_date).toLocaleDateString()}</p>
                       )}
                     </div>
                   </div>
