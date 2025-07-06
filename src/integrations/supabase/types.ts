@@ -2439,6 +2439,7 @@ export type Database = {
           description: string | null
           end_date: string | null
           estimated_hours: number | null
+          geofence_radius_meters: number | null
           id: string
           name: string
           permit_numbers: string[] | null
@@ -2446,6 +2447,8 @@ export type Database = {
           project_manager_id: string | null
           project_type: string | null
           site_address: string | null
+          site_latitude: number | null
+          site_longitude: number | null
           start_date: string | null
           status: string | null
           updated_at: string
@@ -2462,6 +2465,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           estimated_hours?: number | null
+          geofence_radius_meters?: number | null
           id?: string
           name: string
           permit_numbers?: string[] | null
@@ -2469,6 +2473,8 @@ export type Database = {
           project_manager_id?: string | null
           project_type?: string | null
           site_address?: string | null
+          site_latitude?: number | null
+          site_longitude?: number | null
           start_date?: string | null
           status?: string | null
           updated_at?: string
@@ -2485,6 +2491,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           estimated_hours?: number | null
+          geofence_radius_meters?: number | null
           id?: string
           name?: string
           permit_numbers?: string[] | null
@@ -2492,6 +2499,8 @@ export type Database = {
           project_manager_id?: string | null
           project_type?: string | null
           site_address?: string | null
+          site_latitude?: number | null
+          site_longitude?: number | null
           start_date?: string | null
           status?: string | null
           updated_at?: string
@@ -3633,8 +3642,11 @@ export type Database = {
           created_at: string
           description: string | null
           end_time: string | null
+          gps_latitude: number | null
+          gps_longitude: number | null
           id: string
           location: string | null
+          location_accuracy: number | null
           project_id: string
           start_time: string
           task_id: string | null
@@ -3648,8 +3660,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_time?: string | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
           location?: string | null
+          location_accuracy?: number | null
           project_id: string
           start_time: string
           task_id?: string | null
@@ -3663,8 +3678,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_time?: string | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
           location?: string | null
+          location_accuracy?: number | null
           project_id?: string
           start_time?: string
           task_id?: string | null

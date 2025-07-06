@@ -29,6 +29,10 @@ interface Project {
   id: string;
   name: string;
   client_name: string;
+  site_address: string;
+  site_latitude?: number;
+  site_longitude?: number;
+  geofence_radius_meters?: number;
 }
 
 interface Task {
@@ -84,6 +88,12 @@ const TimeTracking = () => {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   
+  // GPS tracking state
+  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [watchId, setWatchId] = useState<number | null>(null);
+  const [isInGeofence, setIsInGeofence] = useState<boolean | null>(null);
+  
   // Manual entry dialog
   const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
   const [manualDate, setManualDate] = useState(new Date().toISOString().split('T')[0]);
@@ -106,6 +116,21 @@ const TimeTracking = () => {
     }
   }, [user, userProfile, loading, navigate]);
 
+  // Effect to handle project selection and geofence checking
+  useEffect(() => {
+    if (selectedProject && currentPosition) {
+      checkGeofence(currentPosition);
+    }
+  }, [selectedProject, currentPosition]);
+
+  // Effect to start location watching when component mounts
+  useEffect(() => {
+    getCurrentLocation();
+    return () => {
+      stopLocationWatching();
+    };
+  }, [user, userProfile, loading, navigate]);
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -124,7 +149,7 @@ const TimeTracking = () => {
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('id, name, client_name')
+        .select('id, name, client_name, site_address, site_latitude, site_longitude, geofence_radius_meters')
         .eq('company_id', userProfile?.company_id)
         .eq('status', 'active');
 
@@ -185,14 +210,100 @@ const TimeTracking = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
+          const coords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          };
+          setCurrentPosition(coords);
+          setLocation(`${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
+          setLocationError(null);
         },
         (error) => {
           console.warn('Could not get location:', error);
+          setLocationError(error.message);
           setLocation('Location unavailable');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
         }
       );
     }
+  };
+
+  const startLocationWatching = () => {
+    if (navigator.geolocation && !watchId) {
+      const id = navigator.geolocation.watchPosition(
+        (position) => {
+          const coords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          };
+          setCurrentPosition(coords);
+          setLocation(`${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
+          setLocationError(null);
+          
+          // Check geofence if project is selected
+          if (selectedProject) {
+            checkGeofence(coords);
+          }
+        },
+        (error) => {
+          console.warn('Location watch error:', error);
+          setLocationError(error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 60000 // 1 minute
+        }
+      );
+      setWatchId(id);
+    }
+  };
+
+  const stopLocationWatching = () => {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+  };
+
+  // Calculate distance between two GPS points using Haversine formula
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lng2-lng1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  };
+
+  const checkGeofence = (coords: { lat: number; lng: number }) => {
+    const project = projects.find(p => p.id === selectedProject);
+    if (!project || !project.site_latitude || !project.site_longitude) {
+      setIsInGeofence(null);
+      return;
+    }
+
+    const distance = calculateDistance(
+      coords.lat,
+      coords.lng,
+      project.site_latitude,
+      project.site_longitude
+    );
+
+    const allowedRadius = project.geofence_radius_meters || 100;
+    setIsInGeofence(distance <= allowedRadius);
   };
 
   const loadTasksForProject = async (projectId: string) => {
@@ -205,6 +316,11 @@ const TimeTracking = () => {
 
       if (error) throw error;
       setTasks(data || []);
+      
+      // Check geofence when project changes
+      if (currentPosition) {
+        checkGeofence(currentPosition);
+      }
     } catch (error) {
       console.error('Error loading tasks:', error);
     }
@@ -216,6 +332,27 @@ const TimeTracking = () => {
         variant: "destructive",
         title: "Project Required",
         description: "Please select a project before starting time tracking."
+      });
+      return;
+    }
+
+    // Check if GPS is available and location is known
+    if (!currentPosition) {
+      toast({
+        variant: "destructive",
+        title: "Location Required",
+        description: "Please wait for GPS location to be detected before starting."
+      });
+      return;
+    }
+
+    // Check geofence if project has GPS coordinates set
+    const project = projects.find(p => p.id === selectedProject);
+    if (project?.site_latitude && project?.site_longitude && isInGeofence === false) {
+      toast({
+        variant: "destructive",
+        title: "Location Verification Failed",
+        description: `You must be within ${project.geofence_radius_meters || 100}m of the job site to start time tracking.`
       });
       return;
     }
@@ -233,6 +370,9 @@ const TimeTracking = () => {
           start_time: startTime,
           description: description || null,
           location: location || null,
+          gps_latitude: currentPosition.lat,
+          gps_longitude: currentPosition.lng,
+          location_accuracy: currentPosition.accuracy,
           break_duration: 0
         }])
         .select()
@@ -243,10 +383,11 @@ const TimeTracking = () => {
       setCurrentEntry(data);
       setIsTracking(true);
       setElapsedTime(0);
+      startLocationWatching(); // Start continuous location tracking
       
       toast({
         title: "Time Tracking Started",
-        description: "Your time is now being tracked."
+        description: "Your time is now being tracked with GPS verification."
       });
 
       loadData();
@@ -284,6 +425,7 @@ const TimeTracking = () => {
       setElapsedTime(0);
       setOnBreak(false);
       setBreakStartTime(null);
+      stopLocationWatching(); // Stop continuous location tracking
       
       toast({
         title: "Time Tracking Stopped",
@@ -615,6 +757,27 @@ const TimeTracking = () => {
                         <MapPin className="h-4 w-4" />
                       </Button>
                     </div>
+                    {/* GPS Status Indicators */}
+                    <div className="space-y-1">
+                      {currentPosition && (
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 mr-1 text-green-500" />
+                          GPS Active (±{currentPosition.accuracy.toFixed(0)}m)
+                        </div>
+                      )}
+                      {locationError && (
+                        <div className="flex items-center text-xs text-destructive">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          GPS Error: {locationError}
+                        </div>
+                      )}
+                      {selectedProject && isInGeofence !== null && (
+                        <div className={`flex items-center text-xs ${isInGeofence ? 'text-green-600' : 'text-red-600'}`}>
+                          <Building2 className="h-3 w-3 mr-1" />
+                          {isInGeofence ? 'Within job site boundary' : `Outside job site boundary (${projects.find(p => p.id === selectedProject)?.geofence_radius_meters || 100}m required)`}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -632,10 +795,12 @@ const TimeTracking = () => {
                   onClick={startTracking} 
                   className="w-full" 
                   size="lg"
-                  disabled={!selectedProject}
+                  disabled={!selectedProject || !currentPosition || (isInGeofence === false)}
                 >
                   <Play className="h-5 w-5 mr-2" />
-                  Start Tracking
+                  {!currentPosition ? 'Waiting for GPS...' : 
+                   isInGeofence === false ? 'Move closer to job site' : 
+                   'Start Tracking'}
                 </Button>
               </>
             ) : (
