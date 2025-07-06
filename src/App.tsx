@@ -26,6 +26,7 @@ import Reports from "./pages/Reports";
 import BlogManager from "./pages/BlogManager";
 import Resources from "./pages/Resources";
 import ROICalculator from "./pages/ROICalculator";
+import LogoShowcase from "./components/LogoShowcase";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
 import Upgrade from "./pages/Upgrade";
 import ComplimentarySubscriptionManager from "./components/admin/ComplimentarySubscriptionManager";
@@ -58,55 +59,315 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   usePWA();
-  
+
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/setup" element={<Setup />} />
-      <Route path="/dashboard" element={<RouteGuard routePath="/dashboard"><Dashboard /></RouteGuard>} />
-      <Route path="/projects" element={<RouteGuard routePath="/projects"><Projects /></RouteGuard>} />
-      <Route path="/create-project" element={<RouteGuard routePath="/create-project"><CreateProject /></RouteGuard>} />
-      <Route path="/project/:projectId" element={<RouteGuard routePath="/dashboard"><ProjectDetail /></RouteGuard>} />
-      <Route path="/team" element={<RouteGuard routePath="/team"><TeamManagement /></RouteGuard>} />
-      <Route path="/time-tracking" element={<RouteGuard routePath="/time-tracking"><TimeTracking /></RouteGuard>} />
-      <Route path="/job-costing" element={<RouteGuard routePath="/job-costing"><JobCosting /></RouteGuard>} />
-      <Route path="/documents" element={<RouteGuard routePath="/documents"><DocumentManagement /></RouteGuard>} />
-      <Route path="/project/:projectId/documents" element={<RouteGuard routePath="/documents"><DocumentManagement /></RouteGuard>} />
-      <Route path="/financial" element={<RouteGuard routePath="/financial"><FinancialDashboard /></RouteGuard>} />
-      <Route path="/daily-reports" element={<RouteGuard routePath="/daily-reports"><DailyReports /></RouteGuard>} />
-      <Route path="/change-orders" element={<RouteGuard routePath="/change-orders"><ChangeOrders /></RouteGuard>} />
-      <Route path="/reports" element={<RouteGuard routePath="/reports"><Reports /></RouteGuard>} />
-      <Route path="/analytics" element={<RouteGuard routePath="/analytics"><Reports /></RouteGuard>} />
-      <Route path="/blog-manager" element={<RouteGuard routePath="/blog-manager"><BlogManager /></RouteGuard>} />
-      <Route path="/admin/companies" element={<RouteGuard routePath="/admin/companies"><Companies /></RouteGuard>} />
-      <Route path="/admin/users" element={<RouteGuard routePath="/admin/users"><Users /></RouteGuard>} />
-      <Route path="/admin/complimentary" element={<RouteGuard routePath="/admin/complimentary"><ComplimentarySubscriptionManager /></RouteGuard>} />
-      <Route path="/admin/analytics" element={<RouteGuard routePath="/admin/analytics"><Analytics /></RouteGuard>} />
-      <Route path="/admin/settings" element={<RouteGuard routePath="/admin/settings"><AdminSettings /></RouteGuard>} />
-      <Route path="/admin/promotions" element={<RouteGuard routePath="/admin/promotions"><Promotions /></RouteGuard>} />
-      <Route path="/admin/seo" element={<RouteGuard routePath="/admin/seo"><SEOManager /></RouteGuard>} />
+      <Route
+        path="/dashboard"
+        element={
+          <RouteGuard routePath="/dashboard">
+            <Dashboard />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <RouteGuard routePath="/projects">
+            <Projects />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/create-project"
+        element={
+          <RouteGuard routePath="/create-project">
+            <CreateProject />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/project/:projectId"
+        element={
+          <RouteGuard routePath="/dashboard">
+            <ProjectDetail />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/team"
+        element={
+          <RouteGuard routePath="/team">
+            <TeamManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/time-tracking"
+        element={
+          <RouteGuard routePath="/time-tracking">
+            <TimeTracking />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/job-costing"
+        element={
+          <RouteGuard routePath="/job-costing">
+            <JobCosting />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/documents"
+        element={
+          <RouteGuard routePath="/documents">
+            <DocumentManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/project/:projectId/documents"
+        element={
+          <RouteGuard routePath="/documents">
+            <DocumentManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/financial"
+        element={
+          <RouteGuard routePath="/financial">
+            <FinancialDashboard />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/daily-reports"
+        element={
+          <RouteGuard routePath="/daily-reports">
+            <DailyReports />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/change-orders"
+        element={
+          <RouteGuard routePath="/change-orders">
+            <ChangeOrders />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <RouteGuard routePath="/reports">
+            <Reports />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <RouteGuard routePath="/analytics">
+            <Reports />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/blog-manager"
+        element={
+          <RouteGuard routePath="/blog-manager">
+            <BlogManager />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/companies"
+        element={
+          <RouteGuard routePath="/admin/companies">
+            <Companies />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <RouteGuard routePath="/admin/users">
+            <Users />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/complimentary"
+        element={
+          <RouteGuard routePath="/admin/complimentary">
+            <ComplimentarySubscriptionManager />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <RouteGuard routePath="/admin/analytics">
+            <Analytics />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <RouteGuard routePath="/admin/settings">
+            <AdminSettings />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/promotions"
+        element={
+          <RouteGuard routePath="/admin/promotions">
+            <Promotions />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/seo"
+        element={
+          <RouteGuard routePath="/admin/seo">
+            <SEOManager />
+          </RouteGuard>
+        }
+      />
       <Route path="/resources" element={<Resources />} />
       <Route path="/roi-calculator" element={<ROICalculator />} />
+      <Route path="/logo-showcase" element={<LogoShowcase />} />
       <Route path="/subscription" element={<SubscriptionSettings />} />
-      <Route path="/upgrade" element={<RouteGuard routePath="/upgrade"><Upgrade /></RouteGuard>} />
+      <Route
+        path="/upgrade"
+        element={
+          <RouteGuard routePath="/upgrade">
+            <Upgrade />
+          </RouteGuard>
+        }
+      />
       <Route path="/client-portal" element={<ClientPortal />} />
-      <Route path="/security-monitoring" element={<RouteGuard routePath="/security-monitoring"><SecurityMonitoring /></RouteGuard>} />
-      <Route path="/safety" element={<RouteGuard routePath="/safety"><Safety /></RouteGuard>} />
-      <Route path="/compliance-audit" element={<RouteGuard routePath="/compliance-audit"><ComplianceAudit /></RouteGuard>} />
-      <Route path="/gdpr-compliance" element={<RouteGuard routePath="/gdpr-compliance"><GDPRCompliance /></RouteGuard>} />
-      <Route path="/rate-limiting" element={<RouteGuard routePath="/rate-limiting"><RateLimitingDashboard /></RouteGuard>} />
-      <Route path="/materials" element={<RouteGuard routePath="/materials"><MaterialTracking /></RouteGuard>} />
-      <Route path="/equipment" element={<RouteGuard routePath="/equipment"><EquipmentTracking /></RouteGuard>} />
-      <Route path="/crew-scheduling" element={<RouteGuard routePath="/crew-scheduling"><CrewScheduling /></RouteGuard>} />
-      <Route path="/support" element={<RouteGuard routePath="/support"><CustomerSupportChat /></RouteGuard>} />
+      <Route
+        path="/security-monitoring"
+        element={
+          <RouteGuard routePath="/security-monitoring">
+            <SecurityMonitoring />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/safety"
+        element={
+          <RouteGuard routePath="/safety">
+            <Safety />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/compliance-audit"
+        element={
+          <RouteGuard routePath="/compliance-audit">
+            <ComplianceAudit />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/gdpr-compliance"
+        element={
+          <RouteGuard routePath="/gdpr-compliance">
+            <GDPRCompliance />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/rate-limiting"
+        element={
+          <RouteGuard routePath="/rate-limiting">
+            <RateLimitingDashboard />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/materials"
+        element={
+          <RouteGuard routePath="/materials">
+            <MaterialTracking />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/equipment"
+        element={
+          <RouteGuard routePath="/equipment">
+            <EquipmentTracking />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crew-scheduling"
+        element={
+          <RouteGuard routePath="/crew-scheduling">
+            <CrewScheduling />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/support"
+        element={
+          <RouteGuard routePath="/support">
+            <CustomerSupportChat />
+          </RouteGuard>
+        }
+      />
       <Route path="/knowledge-base" element={<KnowledgeBase />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
-      <Route path="/email-marketing" element={<RouteGuard routePath="/email-marketing"><EmailMarketingIntegration /></RouteGuard>} />
-      <Route path="/announcements" element={<RouteGuard routePath="/announcements"><FeatureAnnouncementSystem /></RouteGuard>} />
-      <Route path="/workflows" element={<RouteGuard routePath="/workflows"><AutomatedWorkflows /></RouteGuard>} />
-      <Route path="/enhanced-email" element={<RouteGuard routePath="/enhanced-email"><EnhancedEmailIntegration /></RouteGuard>} />
-      <Route path="/calendar" element={<RouteGuard routePath="/calendar"><CalendarIntegration /></RouteGuard>} />
+      <Route
+        path="/email-marketing"
+        element={
+          <RouteGuard routePath="/email-marketing">
+            <EmailMarketingIntegration />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/announcements"
+        element={
+          <RouteGuard routePath="/announcements">
+            <FeatureAnnouncementSystem />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/workflows"
+        element={
+          <RouteGuard routePath="/workflows">
+            <AutomatedWorkflows />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/enhanced-email"
+        element={
+          <RouteGuard routePath="/enhanced-email">
+            <EnhancedEmailIntegration />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/calendar"
+        element={
+          <RouteGuard routePath="/calendar">
+            <CalendarIntegration />
+          </RouteGuard>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -116,15 +377,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-        <CustomerSupportChat />
-      </TooltipProvider>
-    </AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+          <CustomerSupportChat />
+        </TooltipProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

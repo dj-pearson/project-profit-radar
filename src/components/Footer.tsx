@@ -1,33 +1,34 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, Phone, MapPin } from "lucide-react";
+import SmartLogo from "@/components/ui/smart-logo";
 
 const Footer = () => {
   const companyLinks = [
     { name: "About Us", href: "#" },
     { name: "Careers", href: "#" },
     { name: "Press", href: "#" },
-    { name: "Contact", href: "#" }
+    { name: "Contact", href: "#" },
   ];
 
   const productLinks = [
     { name: "Features", href: "#" },
     { name: "Pricing", href: "#" },
     { name: "Integrations", href: "#" },
-    { name: "API", href: "#" }
+    { name: "API", href: "#" },
   ];
 
   const resourceLinks = [
     { name: "Help Center", href: "#" },
     { name: "Webinars", href: "#" },
     { name: "Case Studies", href: "#" },
-    { name: "Blog", href: "#" }
+    { name: "Blog", href: "#" },
   ];
 
   const legalLinks = [
     { name: "Privacy Policy", href: "#" },
     { name: "Terms of Service", href: "#" },
     { name: "Security", href: "#" },
-    { name: "GDPR", href: "#" }
+    { name: "GDPR", href: "#" },
   ];
 
   return (
@@ -41,14 +42,18 @@ const Footer = () => {
               Ready to Transform Your Construction Business?
             </h2>
             <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-              Join 500+ contractors who've increased their profit margins by 23% in the first year
+              Join 500+ contractors who've increased their profit margins by 23%
+              in the first year
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="hero">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-construction-dark">
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-construction-dark"
+              >
                 Schedule Demo
               </Button>
             </div>
@@ -58,13 +63,15 @@ const Footer = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
             {/* Company Info */}
             <div className="lg:col-span-1">
-              <img 
-                src="/BuildDeskLogo.png" 
-                alt="BuildDesk" 
-                className="h-8 w-auto mb-4"
+              <SmartLogo
+                size="md"
+                priority="local"
+                className="mb-4"
+                textClassName="text-white"
               />
               <p className="text-white/70 mb-6">
-                Construction management software built specifically for growing SMB contractors.
+                Construction management software built specifically for growing
+                SMB contractors.
               </p>
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-white/70">
@@ -88,7 +95,10 @@ const Footer = () => {
               <ul className="space-y-2">
                 {companyLinks.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="text-white/70 hover:text-construction-orange transition-colors">
+                    <a
+                      href={link.href}
+                      className="text-white/70 hover:text-construction-orange transition-colors"
+                    >
                       {link.name}
                     </a>
                   </li>
@@ -102,7 +112,10 @@ const Footer = () => {
               <ul className="space-y-2">
                 {productLinks.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="text-white/70 hover:text-construction-orange transition-colors">
+                    <a
+                      href={link.href}
+                      className="text-white/70 hover:text-construction-orange transition-colors"
+                    >
                       {link.name}
                     </a>
                   </li>
@@ -116,7 +129,10 @@ const Footer = () => {
               <ul className="space-y-2">
                 {resourceLinks.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="text-white/70 hover:text-construction-orange transition-colors">
+                    <a
+                      href={link.href}
+                      className="text-white/70 hover:text-construction-orange transition-colors"
+                    >
                       {link.name}
                     </a>
                   </li>
@@ -130,7 +146,10 @@ const Footer = () => {
               <ul className="space-y-2">
                 {legalLinks.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="text-white/70 hover:text-construction-orange transition-colors">
+                    <a
+                      href={link.href}
+                      className="text-white/70 hover:text-construction-orange transition-colors"
+                    >
                       {link.name}
                     </a>
                   </li>
