@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { 
   Mic, 
   MicOff, 
@@ -618,12 +618,12 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
         </CardContent>
       </Card>
 
-      {/* Note Details Dialog */}
-      <Dialog open={showNoteDialog} onOpenChange={setShowNoteDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Voice Note Details</DialogTitle>
-          </DialogHeader>
+      {/* Note Details Sheet for Mobile */}
+      <Sheet open={showNoteDialog} onOpenChange={setShowNoteDialog}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Voice Note Details</SheetTitle>
+          </SheetHeader>
           
           <div className="space-y-4">
             {/* Duration */}
@@ -695,8 +695,8 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Saved Voice Notes */}
       {voiceNotes.length > 0 && (

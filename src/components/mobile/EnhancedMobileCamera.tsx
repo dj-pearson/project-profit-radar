@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Camera as CameraIcon, MapPin, Tag, Upload, X, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -411,12 +411,12 @@ const EnhancedMobileCamera: React.FC<EnhancedMobileCameraProps> = ({
         </CardContent>
       </Card>
 
-      {/* Photo Dialog */}
-      <Dialog open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add Photo Details</DialogTitle>
-          </DialogHeader>
+      {/* Photo Sheet for Mobile */}
+      <Sheet open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
+        <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Add Photo Details</SheetTitle>
+          </SheetHeader>
           
           {currentPhoto && (
             <div className="space-y-4">
@@ -483,8 +483,8 @@ const EnhancedMobileCamera: React.FC<EnhancedMobileCameraProps> = ({
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Saved Photos */}
       {photos.length > 0 && (

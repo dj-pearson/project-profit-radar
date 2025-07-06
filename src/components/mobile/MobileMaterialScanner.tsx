@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { 
   Package, 
   Minus, 
@@ -223,12 +223,12 @@ const MobileMaterialScanner: React.FC<MobileMaterialScannerProps> = ({
         )}
       </div>
 
-      {/* Usage Dialog */}
-      <Dialog open={showUsageDialog} onOpenChange={setShowUsageDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Record Usage</DialogTitle>
-          </DialogHeader>
+      {/* Usage Sheet for Mobile */}
+      <Sheet open={showUsageDialog} onOpenChange={setShowUsageDialog}>
+        <SheetContent side="bottom" className="max-h-[70vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Record Usage</SheetTitle>
+          </SheetHeader>
           
           {selectedMaterial && (
             <div className="space-y-4">
@@ -305,8 +305,8 @@ const MobileMaterialScanner: React.FC<MobileMaterialScannerProps> = ({
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
