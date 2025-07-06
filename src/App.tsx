@@ -57,6 +57,7 @@ import CalendarIntegration from "./components/calendar/CalendarIntegration";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import Vendors from "./pages/Vendors";
 import PurchaseOrderForm from "./components/purchasing/PurchaseOrderForm";
+import WarrantyManagement from "./pages/WarrantyManagement";
 
 const queryClient = new QueryClient();
 
@@ -408,6 +409,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/vendors">
             <Vendors />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/warranty-management"
+        element={
+          <RouteGuard routePath="/warranty-management">
+            <WarrantyManagement />
           </RouteGuard>
         }
       />

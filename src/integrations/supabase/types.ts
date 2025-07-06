@@ -5070,6 +5070,328 @@ export type Database = {
           },
         ]
       }
+      warranties: {
+        Row: {
+          company_id: string
+          coverage_details: string | null
+          coverage_limitations: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          installation_date: string | null
+          is_transferable: boolean
+          is_transferred_to_customer: boolean
+          item_description: string | null
+          item_name: string
+          manufacturer: string | null
+          model_number: string | null
+          notes: string | null
+          project_id: string | null
+          purchase_order_id: string | null
+          serial_number: string | null
+          status: string
+          transferred_at: string | null
+          transferred_by: string | null
+          updated_at: string
+          vendor_id: string | null
+          warranty_contact_email: string | null
+          warranty_contact_name: string | null
+          warranty_contact_phone: string | null
+          warranty_document_path: string | null
+          warranty_duration_months: number
+          warranty_end_date: string | null
+          warranty_start_date: string
+          warranty_type: string
+        }
+        Insert: {
+          company_id: string
+          coverage_details?: string | null
+          coverage_limitations?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          installation_date?: string | null
+          is_transferable?: boolean
+          is_transferred_to_customer?: boolean
+          item_description?: string | null
+          item_name: string
+          manufacturer?: string | null
+          model_number?: string | null
+          notes?: string | null
+          project_id?: string | null
+          purchase_order_id?: string | null
+          serial_number?: string | null
+          status?: string
+          transferred_at?: string | null
+          transferred_by?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+          warranty_contact_email?: string | null
+          warranty_contact_name?: string | null
+          warranty_contact_phone?: string | null
+          warranty_document_path?: string | null
+          warranty_duration_months: number
+          warranty_end_date?: string | null
+          warranty_start_date?: string
+          warranty_type: string
+        }
+        Update: {
+          company_id?: string
+          coverage_details?: string | null
+          coverage_limitations?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          installation_date?: string | null
+          is_transferable?: boolean
+          is_transferred_to_customer?: boolean
+          item_description?: string | null
+          item_name?: string
+          manufacturer?: string | null
+          model_number?: string | null
+          notes?: string | null
+          project_id?: string | null
+          purchase_order_id?: string | null
+          serial_number?: string | null
+          status?: string
+          transferred_at?: string | null
+          transferred_by?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+          warranty_contact_email?: string | null
+          warranty_contact_name?: string | null
+          warranty_contact_phone?: string | null
+          warranty_document_path?: string | null
+          warranty_duration_months?: number
+          warranty_end_date?: string | null
+          warranty_start_date?: string
+          warranty_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warranties_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranties_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranties_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "warranties_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranties_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranties_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranties_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warranty_claims: {
+        Row: {
+          claim_date: string
+          claim_number: string
+          claim_photos: string[] | null
+          claimant_contact: string | null
+          claimant_email: string | null
+          claimant_name: string
+          correspondence_log: Json | null
+          created_at: string
+          created_by: string | null
+          id: string
+          inspection_report_path: string | null
+          issue_category: string | null
+          issue_description: string
+          resolution_cost: number | null
+          resolution_details: string | null
+          resolution_type: string | null
+          resolved_by: string | null
+          resolved_date: string | null
+          severity: string
+          status: string
+          updated_at: string
+          warranty_id: string
+        }
+        Insert: {
+          claim_date?: string
+          claim_number: string
+          claim_photos?: string[] | null
+          claimant_contact?: string | null
+          claimant_email?: string | null
+          claimant_name: string
+          correspondence_log?: Json | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inspection_report_path?: string | null
+          issue_category?: string | null
+          issue_description: string
+          resolution_cost?: number | null
+          resolution_details?: string | null
+          resolution_type?: string | null
+          resolved_by?: string | null
+          resolved_date?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          warranty_id: string
+        }
+        Update: {
+          claim_date?: string
+          claim_number?: string
+          claim_photos?: string[] | null
+          claimant_contact?: string | null
+          claimant_email?: string | null
+          claimant_name?: string
+          correspondence_log?: Json | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inspection_report_path?: string | null
+          issue_category?: string | null
+          issue_description?: string
+          resolution_cost?: number | null
+          resolution_details?: string | null
+          resolution_type?: string | null
+          resolved_by?: string | null
+          resolved_date?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          warranty_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warranty_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranty_claims_warranty_id_fkey"
+            columns: ["warranty_id"]
+            isOneToOne: false
+            referencedRelation: "warranties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warranty_transfers: {
+        Row: {
+          created_at: string
+          customer_acknowledged: boolean | null
+          customer_acknowledged_at: string | null
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          transfer_date: string
+          transfer_document_path: string | null
+          transfer_reason: string | null
+          transferred_by: string
+          warranty_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_acknowledged?: boolean | null
+          customer_acknowledged_at?: string | null
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          transfer_date?: string
+          transfer_document_path?: string | null
+          transfer_reason?: string | null
+          transferred_by: string
+          warranty_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_acknowledged?: boolean | null
+          customer_acknowledged_at?: string | null
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          transfer_date?: string
+          transfer_document_path?: string | null
+          transfer_reason?: string | null
+          transferred_by?: string
+          warranty_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warranty_transfers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "warranty_transfers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranty_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranty_transfers_warranty_id_fkey"
+            columns: ["warranty_id"]
+            isOneToOne: false
+            referencedRelation: "warranties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_events: {
         Row: {
           created_at: string
@@ -5157,6 +5479,10 @@ export type Database = {
           p_checksum?: string
           p_version_notes?: string
         }
+        Returns: string
+      }
+      generate_claim_number: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_invoice_number: {
