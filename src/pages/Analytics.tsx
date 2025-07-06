@@ -9,6 +9,10 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import PredictiveAnalytics from '@/components/analytics/PredictiveAnalytics';
+import RiskAssessment from '@/components/analytics/RiskAssessment';
+import TimelineOptimization from '@/components/analytics/TimelineOptimization';
+import PerformanceBenchmarking from '@/components/analytics/PerformanceBenchmarking';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
 import { 
   TrendingUp, 
@@ -281,11 +285,15 @@ const Analytics = () => {
       {/* Main Content */}
       <ResponsiveContainer className="py-6">
         <Tabs value={selectedView} onValueChange={setSelectedView} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Executive Overview</TabsTrigger>
             <TabsTrigger value="projects">Project Performance</TabsTrigger>
             <TabsTrigger value="resources">Resource Utilization</TabsTrigger>
             <TabsTrigger value="trends">Trend Analysis</TabsTrigger>
+            <TabsTrigger value="predictive">Predictive</TabsTrigger>
+            <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
+            <TabsTrigger value="optimization">Timeline Opt.</TabsTrigger>
+            <TabsTrigger value="benchmarks">Benchmarks</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -586,6 +594,22 @@ const Analytics = () => {
                 </ResponsiveGrid>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="predictive">
+            <PredictiveAnalytics />
+          </TabsContent>
+
+          <TabsContent value="risk">
+            <RiskAssessment />
+          </TabsContent>
+
+          <TabsContent value="optimization">
+            <TimelineOptimization />
+          </TabsContent>
+
+          <TabsContent value="benchmarks">
+            <PerformanceBenchmarking />
           </TabsContent>
         </Tabs>
       </ResponsiveContainer>
