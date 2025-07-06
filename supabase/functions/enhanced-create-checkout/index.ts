@@ -72,7 +72,8 @@ serve(async (req) => {
       // Default to Pearson Stripe if no settings configured
       paymentSettings = {
         processor_type: 'pearson_stripe',
-        processing_fee_percentage: 2.9,
+        processing_fee_percentage: 3.5,
+        per_transaction_fee: 0.50,
         chargeback_fee: 15.00
       };
     }
@@ -88,13 +89,15 @@ serve(async (req) => {
       stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || "";
       if (!stripeSecretKey) throw new Error("Pearson Stripe secret key not configured");
 
-      // Add processing fee
-      const processingFee = Math.round(amount * (paymentSettings.processing_fee_percentage / 100));
-      finalAmount = amount + processingFee;
+      // Add processing fee: percentage fee + fixed fee
+      const percentageFee = Math.round(amount * (paymentSettings.processing_fee_percentage / 100));
+      const fixedFee = Math.round((paymentSettings.per_transaction_fee || 0.50) * 100); // Convert to cents
+      finalAmount = amount + percentageFee + fixedFee;
 
       logStep("Using Pearson Stripe", { 
         originalAmount: amount, 
-        processingFee, 
+        percentageFee, 
+        fixedFee,
         finalAmount 
       });
     } else {

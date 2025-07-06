@@ -23,6 +23,7 @@ interface PaymentSettings {
   id?: string;
   processor_type: 'pearson_stripe' | 'own_stripe';
   processing_fee_percentage: number;
+  per_transaction_fee: number;
   chargeback_fee: number;
   stripe_publishable_key?: string;
   is_active: boolean;
@@ -31,8 +32,9 @@ interface PaymentSettings {
 export const PaymentSettings = () => {
   const [settings, setSettings] = useState<PaymentSettings>({
     processor_type: 'pearson_stripe',
-    processing_fee_percentage: 2.9,
+    processing_fee_percentage: 3.5,
     chargeback_fee: 15.00,
+    per_transaction_fee: 0.50,
     is_active: true
   });
   const [stripeKeys, setStripeKeys] = useState({
@@ -66,7 +68,8 @@ export const PaymentSettings = () => {
         setSettings({
           id: data.id,
           processor_type: data.processor_type as 'pearson_stripe' | 'own_stripe',
-          processing_fee_percentage: data.processing_fee_percentage || 2.9,
+          processing_fee_percentage: data.processing_fee_percentage || 3.5,
+          per_transaction_fee: data.per_transaction_fee || 0.50,
           chargeback_fee: data.chargeback_fee || 15.00,
           stripe_publishable_key: data.stripe_publishable_key,
           is_active: data.is_active
@@ -113,6 +116,7 @@ export const PaymentSettings = () => {
         company_id: userProfile.company_id,
         processor_type: settings.processor_type,
         processing_fee_percentage: settings.processing_fee_percentage,
+        per_transaction_fee: settings.per_transaction_fee,
         chargeback_fee: settings.chargeback_fee,
         stripe_publishable_key: settings.processor_type === 'own_stripe' ? stripeKeys.publishable_key : null,
         configured_by: userProfile.id,
@@ -216,7 +220,7 @@ export const PaymentSettings = () => {
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span>Processing Fee:</span>
-                      <span className="font-medium">{settings.processing_fee_percentage}% per transaction</span>
+                      <span className="font-medium">{settings.processing_fee_percentage}% + ${settings.per_transaction_fee}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span>Chargeback Fee:</span>

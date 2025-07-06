@@ -412,6 +412,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          per_transaction_fee: number | null
           processing_fee_percentage: number | null
           processor_type: string
           stripe_publishable_key: string | null
@@ -427,6 +428,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          per_transaction_fee?: number | null
           processing_fee_percentage?: number | null
           processor_type: string
           stripe_publishable_key?: string | null
@@ -442,6 +444,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          per_transaction_fee?: number | null
           processing_fee_percentage?: number | null
           processor_type?: string
           stripe_publishable_key?: string | null
