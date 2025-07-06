@@ -17,6 +17,8 @@ interface SubscriptionData {
   subscription_end: string;
   subscribed: boolean;
   stripe_customer_id: string;
+  is_complimentary?: boolean;
+  complimentary_type?: string;
 }
 
 const SubscriptionManager = () => {
@@ -119,6 +121,32 @@ const SubscriptionManager = () => {
         badge: <Badge variant="outline" className="border-red-500 text-red-700">Inactive</Badge>,
         description: 'No active subscription'
       };
+    }
+
+    // Handle complimentary subscriptions
+    if (subscriptionData.is_complimentary) {
+      const complimentaryType = subscriptionData.complimentary_type;
+      
+      if (complimentaryType === 'permanent' || complimentaryType === 'root_admin') {
+        return {
+          status: 'complimentary',
+          badge: <Badge className="bg-green-500 text-white">Complimentary</Badge>,
+          description: complimentaryType === 'root_admin' ? 'Root Admin Access' : 'Permanent Complimentary'
+        };
+      }
+      
+      // Temporary complimentary
+      if (subscriptionData.subscription_end) {
+        const endDate = new Date(subscriptionData.subscription_end);
+        const now = new Date();
+        const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        return {
+          status: 'complimentary',
+          badge: <Badge className="bg-blue-500 text-white">Complimentary</Badge>,
+          description: `Expires in ${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''}`
+        };
+      }
     }
 
     const endDate = new Date(subscriptionData.subscription_end);

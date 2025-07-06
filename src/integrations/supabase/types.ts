@@ -405,6 +405,59 @@ export type Database = {
           },
         ]
       }
+      complimentary_subscription_history: {
+        Row: {
+          complimentary_type: string
+          created_at: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
+          status: string
+          subscriber_id: string | null
+        }
+        Insert: {
+          complimentary_type: string
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          subscriber_id?: string | null
+        }
+        Update: {
+          complimentary_type?: string
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          subscriber_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complimentary_subscription_history_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consent_records: {
         Row: {
           company_id: string
@@ -3630,9 +3683,15 @@ export type Database = {
       subscribers: {
         Row: {
           billing_period: string | null
+          complimentary_expires_at: string | null
+          complimentary_granted_at: string | null
+          complimentary_granted_by: string | null
+          complimentary_reason: string | null
+          complimentary_type: string | null
           created_at: string
           email: string
           id: string
+          is_complimentary: boolean | null
           renewal_notification_sent_at: string | null
           stripe_customer_id: string | null
           subscribed: boolean
@@ -3643,9 +3702,15 @@ export type Database = {
         }
         Insert: {
           billing_period?: string | null
+          complimentary_expires_at?: string | null
+          complimentary_granted_at?: string | null
+          complimentary_granted_by?: string | null
+          complimentary_reason?: string | null
+          complimentary_type?: string | null
           created_at?: string
           email: string
           id?: string
+          is_complimentary?: boolean | null
           renewal_notification_sent_at?: string | null
           stripe_customer_id?: string | null
           subscribed?: boolean
@@ -3656,9 +3721,15 @@ export type Database = {
         }
         Update: {
           billing_period?: string | null
+          complimentary_expires_at?: string | null
+          complimentary_granted_at?: string | null
+          complimentary_granted_by?: string | null
+          complimentary_reason?: string | null
+          complimentary_type?: string | null
           created_at?: string
           email?: string
           id?: string
+          is_complimentary?: boolean | null
           renewal_notification_sent_at?: string | null
           stripe_customer_id?: string | null
           subscribed?: boolean

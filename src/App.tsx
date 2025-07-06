@@ -28,6 +28,7 @@ import Resources from "./pages/Resources";
 import ROICalculator from "./pages/ROICalculator";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
 import Upgrade from "./pages/Upgrade";
+import ComplimentarySubscriptionManager from "./components/admin/ComplimentarySubscriptionManager";
 import Promotions from "./pages/admin/Promotions";
 import Companies from "./pages/admin/Companies";
 import Users from "./pages/admin/Users";
@@ -80,7 +81,7 @@ const AppContent = () => {
       <Route path="/blog-manager" element={<RouteGuard routePath="/blog-manager"><BlogManager /></RouteGuard>} />
       <Route path="/admin/companies" element={<RouteGuard routePath="/admin/companies"><Companies /></RouteGuard>} />
       <Route path="/admin/users" element={<RouteGuard routePath="/admin/users"><Users /></RouteGuard>} />
-      <Route path="/admin/billing" element={<RouteGuard routePath="/admin/billing"><Billing /></RouteGuard>} />
+      <Route path="/admin/complimentary" element={<RouteGuard routePath="/admin/complimentary"><ComplimentarySubscriptionManager /></RouteGuard>} />
       <Route path="/admin/analytics" element={<RouteGuard routePath="/admin/analytics"><Analytics /></RouteGuard>} />
       <Route path="/admin/settings" element={<RouteGuard routePath="/admin/settings"><AdminSettings /></RouteGuard>} />
       <Route path="/admin/promotions" element={<RouteGuard routePath="/admin/promotions"><Promotions /></RouteGuard>} />

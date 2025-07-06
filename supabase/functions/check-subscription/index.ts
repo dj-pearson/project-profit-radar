@@ -45,6 +45,68 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check for complimentary subscription first
+    const { data: existingSubscriber } = await supabaseClient
+      .from('subscribers')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingSubscriber?.is_complimentary) {
+      logStep("Found complimentary subscription", { 
+        type: existingSubscriber.complimentary_type,
+        expiresAt: existingSubscriber.complimentary_expires_at 
+      });
+
+      // Check if complimentary subscription has expired
+      const now = new Date();
+      const isExpired = existingSubscriber.complimentary_expires_at && 
+        new Date(existingSubscriber.complimentary_expires_at) <= now;
+
+      if (isExpired) {
+        logStep("Complimentary subscription expired, checking regular subscription");
+        // Complimentary expired, remove complimentary status and check regular subscription
+        await supabaseClient
+          .from('subscribers')
+          .update({
+            is_complimentary: false,
+            complimentary_type: null,
+            complimentary_granted_by: null,
+            complimentary_granted_at: null,
+            complimentary_expires_at: null,
+            complimentary_reason: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingSubscriber.id);
+
+        // Update history
+        await supabaseClient
+          .from('complimentary_subscription_history')
+          .update({ status: 'expired' })
+          .eq('subscriber_id', existingSubscriber.id)
+          .eq('status', 'active');
+      } else {
+        // Active complimentary subscription
+        const tier = existingSubscriber.subscription_tier || 'professional';
+        const endDate = existingSubscriber.complimentary_type === 'permanent' 
+          ? null 
+          : existingSubscriber.complimentary_expires_at;
+
+        logStep("Active complimentary subscription confirmed", { tier, endDate });
+        return new Response(JSON.stringify({
+          subscribed: true,
+          subscription_tier: tier,
+          subscription_end: endDate,
+          billing_period: 'complimentary',
+          is_complimentary: true,
+          complimentary_type: existingSubscriber.complimentary_type
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
