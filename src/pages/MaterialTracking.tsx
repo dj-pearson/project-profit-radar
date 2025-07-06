@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import MobileMaterialScanner from '@/components/mobile/MobileMaterialScanner';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   ArrowLeft, 
   Package,
@@ -20,7 +22,8 @@ import {
   Search,
   AlertTriangle,
   TrendingDown,
-  Calendar
+  Calendar,
+  Smartphone
 } from 'lucide-react';
 
 interface Material {
@@ -57,6 +60,7 @@ interface MaterialUsage {
 const MaterialTracking = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialUsage, setMaterialUsage] = useState<MaterialUsage[]>([]);
@@ -88,6 +92,8 @@ const MaterialTracking = () => {
     unit_cost: 0,
     notes: ''
   });
+  
+  const [showMobileScanner, setShowMobileScanner] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -314,6 +320,15 @@ const MaterialTracking = () => {
               </div>
             </div>
             <div className="flex space-x-2">
+              {isMobile && (
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowMobileScanner(true)}
+                >
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Quick Scan
+                </Button>
+              )}
               <Dialog open={isUsageDialogOpen} onOpenChange={setIsUsageDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">
@@ -762,6 +777,30 @@ const MaterialTracking = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Mobile Scanner Modal */}
+      {showMobileScanner && (
+        <div className="fixed inset-0 bg-background z-50 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Quick Material Scanner</h2>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowMobileScanner(false)}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          <MobileMaterialScanner
+            onUsageRecorded={() => {
+              setShowMobileScanner(false);
+              loadData();
+            }}
+            projectId={projects[0]?.id || ''}
+            companyId={userProfile?.company_id || ''}
+          />
+        </div>
+      )}
     </div>
   );
 };

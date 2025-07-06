@@ -12,6 +12,8 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import MobileDailyReport from '@/components/mobile/MobileDailyReport';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   ArrowLeft, 
   Calendar,
@@ -23,7 +25,8 @@ import {
   Cloud,
   Camera,
   X,
-  Upload
+  Upload,
+  Smartphone
 } from 'lucide-react';
 
 interface Project {
@@ -51,6 +54,7 @@ interface DailyReport {
 const DailyReports = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
@@ -70,6 +74,7 @@ const DailyReports = () => {
   });
   
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [showMobileReport, setShowMobileReport] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -217,13 +222,23 @@ const DailyReports = () => {
                 <p className="text-sm text-muted-foreground">Field supervisor daily progress reports</p>
               </div>
             </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Report
+            <div className="flex space-x-2">
+              {isMobile && (
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowMobileReport(true)}
+                >
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Mobile Report
                 </Button>
-              </DialogTrigger>
+              )}
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Report
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create Daily Report</DialogTitle>
@@ -389,7 +404,8 @@ const DailyReports = () => {
                   </div>
                 </div>
               </DialogContent>
-            </Dialog>
+              </Dialog>
+            </div>
           </div>
         </div>
       </div>
@@ -540,6 +556,36 @@ const DailyReports = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Report Modal */}
+      {showMobileReport && (
+        <div className="fixed inset-0 bg-background z-50">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-xl font-semibold">Mobile Daily Report</h2>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowMobileReport(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-auto p-4">
+            <MobileDailyReport
+              companyId={userProfile?.company_id || ''}
+              userId={user?.id || ''}
+              onReportSaved={() => {
+                setShowMobileReport(false);
+                loadData();
+                toast({
+                  title: "Report Saved",
+                  description: "Daily report has been saved successfully"
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
