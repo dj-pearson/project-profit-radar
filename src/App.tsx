@@ -54,6 +54,9 @@ import FeatureAnnouncementSystem from "./components/announcements/FeatureAnnounc
 import AutomatedWorkflows from "./components/workflows/AutomatedWorkflows";
 import EnhancedEmailIntegration from "./components/integrations/EnhancedEmailIntegration";
 import CalendarIntegration from "./components/calendar/CalendarIntegration";
+import PurchaseOrders from "./pages/PurchaseOrders";
+import Vendors from "./pages/Vendors";
+import PurchaseOrderForm from "./components/purchasing/PurchaseOrderForm";
 
 const queryClient = new QueryClient();
 
