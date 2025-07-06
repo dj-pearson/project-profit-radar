@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import type { ReactNode, FC } from "react";
 
 interface RouteGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   routePath?: string;
 }
 
@@ -13,10 +14,7 @@ let globalRedirectCount = 0;
 let lastResetTime = Date.now();
 let isCircuitOpen = false;
 
-export const RouteGuard: React.FC<RouteGuardProps> = ({
-  children,
-  routePath,
-}) => {
+export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
   const authState = useAuth();
   const { user, userProfile, loading } = authState;
   const [localRedirectCount, setLocalRedirectCount] = useState(0);
