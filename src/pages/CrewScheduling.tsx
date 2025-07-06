@@ -19,7 +19,10 @@ import {
   Plus,
   MapPin,
   Clock,
-  Phone
+  Phone,
+  Edit,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 interface CrewMember {
@@ -41,7 +44,7 @@ interface CrewAssignment {
   start_time: string;
   end_time: string;
   location: string;
-  status: 'scheduled' | 'dispatched' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'dispatched' | 'in_progress' | 'completed' | 'cancelled';
   notes?: string;
 }
 
@@ -98,7 +101,7 @@ const CrewScheduling = () => {
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('id, name, description')
+        .select('id, name, description, site_address')
         .eq('company_id', userProfile?.company_id)
         .eq('status', 'active')
         .order('name');
@@ -111,7 +114,7 @@ const CrewScheduling = () => {
         .from('user_profiles')
         .select('id, first_name, last_name, role, phone')
         .eq('company_id', userProfile?.company_id)
-        .in('role', ['field_supervisor'])
+        .in('role', ['field_supervisor', 'admin', 'project_manager'])
         .order('first_name');
 
       if (crewError) throw crewError;
@@ -127,8 +130,8 @@ const CrewScheduling = () => {
       
       setCrewMembers(formattedCrew);
 
-      // Load today's assignments (simulated for now)
-      setAssignments([]);
+      // Load crew assignments for selected date
+      await loadAssignments();
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -142,6 +145,48 @@ const CrewScheduling = () => {
     }
   };
 
+  const loadAssignments = async () => {
+    try {
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('crew_assignments')
+        .select(`
+          *,
+          projects(name, site_address),
+          crew_member:user_profiles!crew_member_id(first_name, last_name)
+        `)
+        .eq('company_id', userProfile?.company_id)
+        .eq('assigned_date', selectedDate)
+        .order('start_time');
+
+      if (assignmentsError) throw assignmentsError;
+
+      const formattedAssignments = (assignmentsData || []).map(assignment => ({
+        id: assignment.id,
+        project_id: assignment.project_id,
+        project_name: assignment.projects?.name || '',
+        crew_member_id: assignment.crew_member_id,
+        crew_member_name: `${assignment.crew_member?.first_name} ${assignment.crew_member?.last_name}`,
+        date: assignment.assigned_date,
+        start_time: assignment.start_time,
+        end_time: assignment.end_time,
+        location: assignment.location || assignment.projects?.site_address || '',
+        status: assignment.status as 'scheduled' | 'dispatched' | 'in_progress' | 'completed' | 'cancelled',
+        notes: assignment.notes
+      }));
+
+      setAssignments(formattedAssignments);
+    } catch (error: any) {
+      console.error('Error loading assignments:', error);
+    }
+  };
+
+  // Effect to reload assignments when date changes
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadAssignments();
+    }
+  }, [selectedDate, userProfile?.company_id]);
+
   const handleCreateAssignment = async () => {
     if (!newAssignment.project_id || !newAssignment.crew_member_id) {
       toast({
@@ -152,27 +197,42 @@ const CrewScheduling = () => {
       return;
     }
 
-    try {
-      // For now, we'll store in local state
-      // In a real implementation, this would go to a crew_assignments table
-      const project = projects.find((p: any) => p.id === newAssignment.project_id);
-      const crewMember = crewMembers.find(c => c.id === newAssignment.crew_member_id);
-      
-      const assignment: CrewAssignment = {
-        id: `temp-${Date.now()}`,
-        project_id: newAssignment.project_id,
-        project_name: project?.name || '',
-        crew_member_id: newAssignment.crew_member_id,
-        crew_member_name: crewMember?.name || '',
-        date: newAssignment.date,
-        start_time: newAssignment.start_time,
-        end_time: newAssignment.end_time,
-        location: newAssignment.location || project?.description || '',
-        status: 'scheduled',
-        notes: newAssignment.notes
-      };
+    // Check for conflicts
+    const existingAssignment = assignments.find(a => 
+      a.crew_member_id === newAssignment.crew_member_id &&
+      a.date === newAssignment.date &&
+      ((newAssignment.start_time >= a.start_time && newAssignment.start_time < a.end_time) ||
+       (newAssignment.end_time > a.start_time && newAssignment.end_time <= a.end_time) ||
+       (newAssignment.start_time <= a.start_time && newAssignment.end_time >= a.end_time))
+    );
 
-      setAssignments(prev => [...prev, assignment]);
+    if (existingAssignment) {
+      toast({
+        variant: "destructive",
+        title: "Scheduling Conflict",
+        description: `${crewMembers.find(c => c.id === newAssignment.crew_member_id)?.name} is already assigned during this time period.`
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('crew_assignments')
+        .insert([{
+          company_id: userProfile?.company_id,
+          project_id: newAssignment.project_id,
+          crew_member_id: newAssignment.crew_member_id,
+          assigned_date: newAssignment.date,
+          start_time: newAssignment.start_time,
+          end_time: newAssignment.end_time,
+          location: newAssignment.location,
+          notes: newAssignment.notes,
+          created_by: user?.id
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -189,6 +249,9 @@ const CrewScheduling = () => {
         location: '',
         notes: ''
       });
+
+      // Reload assignments
+      await loadAssignments();
       
     } catch (error: any) {
       console.error('Error creating assignment:', error);
@@ -196,6 +259,56 @@ const CrewScheduling = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to create crew assignment"
+      });
+    }
+  };
+
+  const handleUpdateAssignmentStatus = async (assignmentId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('crew_assignments')
+        .update({ status: newStatus })
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Assignment status updated to ${newStatus}`
+      });
+
+      await loadAssignments();
+    } catch (error: any) {
+      console.error('Error updating assignment:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update assignment status"
+      });
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('crew_assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Assignment deleted successfully"
+      });
+
+      await loadAssignments();
+    } catch (error: any) {
+      console.error('Error deleting assignment:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete assignment"
       });
     }
   };
@@ -414,15 +527,54 @@ const CrewScheduling = () => {
                               )}
                             </div>
                           </div>
-                          <Badge className={`${getStatusColor(assignment.status)} text-white`}>
-                            {assignment.status}
-                          </Badge>
+                          <div className="flex items-center space-x-2">
+                            <Badge className={`${getStatusColor(assignment.status)} text-white`}>
+                              {assignment.status}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteAssignment(assignment.id)}
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                         {assignment.notes && (
                           <p className="text-sm text-muted-foreground mt-2 border-t pt-2">
                             {assignment.notes}
                           </p>
                         )}
+                        <div className="flex space-x-2 mt-3">
+                          {assignment.status === 'scheduled' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleUpdateAssignmentStatus(assignment.id, 'dispatched')}
+                            >
+                              Dispatch
+                            </Button>
+                          )}
+                          {assignment.status === 'dispatched' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleUpdateAssignmentStatus(assignment.id, 'in_progress')}
+                            >
+                              Start Work
+                            </Button>
+                          )}
+                          {assignment.status === 'in_progress' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleUpdateAssignmentStatus(assignment.id, 'completed')}
+                            >
+                              Complete
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -462,9 +614,13 @@ const CrewScheduling = () => {
             </Card>
           </div>
 
-          {/* Visual Scheduler */}
+          {/* Enhanced Visual Scheduler */}
           <div className="lg:col-span-2">
-            <VisualScheduler />
+            <VisualScheduler 
+              selectedDate={selectedDate} 
+              onAssignmentChange={loadAssignments}
+              companyId={userProfile?.company_id || ''}
+            />
           </div>
         </div>
       </div>

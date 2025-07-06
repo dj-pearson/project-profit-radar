@@ -16,11 +16,18 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+interface VisualSchedulerProps {
+  selectedDate: string;
+  onAssignmentChange: () => void;
+  companyId: string;
+}
+
 interface Resource {
   id: string;
   name: string;
   type: 'crew' | 'equipment';
-  availability: string[];
+  role: string;
+  phone?: string;
 }
 
 interface ScheduleItem {
@@ -29,107 +36,144 @@ interface ScheduleItem {
   project_name: string;
   resource_id: string;
   resource_name: string;
-  start_date: string;
-  end_date: string;
-  status: 'scheduled' | 'in_progress' | 'completed';
+  assigned_date: string;
+  start_time: string;
+  end_time: string;
+  status: 'scheduled' | 'dispatched' | 'in_progress' | 'completed' | 'cancelled';
+  location?: string;
+  notes?: string;
 }
 
 interface Conflict {
   resource_id: string;
   resource_name: string;
   conflicting_items: ScheduleItem[];
+  conflict_type: 'time_overlap' | 'double_booking';
 }
 
-const VisualScheduler = () => {
+const VisualScheduler: React.FC<VisualSchedulerProps> = ({ selectedDate, onAssignmentChange, companyId }) => {
   const { userProfile } = useAuth();
   const [resources, setResources] = useState<Resource[]>([]);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [conflicts, setConflicts] = useState<Conflict[]>([]);
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
+  const [selectedWeek, setSelectedWeek] = useState(new Date(selectedDate));
   const [draggedItem, setDraggedItem] = useState<ScheduleItem | null>(null);
 
   useEffect(() => {
-    if (userProfile?.company_id) {
+    setSelectedWeek(new Date(selectedDate));
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (companyId) {
       loadResources();
       loadScheduleItems();
     }
-  }, [userProfile?.company_id, selectedWeek]);
+  }, [companyId, selectedWeek]);
 
   useEffect(() => {
     detectConflicts();
   }, [scheduleItems]);
 
   const loadResources = async () => {
-    // Simulate loading resources
-    setResources([
-      { id: '1', name: 'Construction Crew A', type: 'crew', availability: ['mon', 'tue', 'wed', 'thu', 'fri'] },
-      { id: '2', name: 'Construction Crew B', type: 'crew', availability: ['mon', 'tue', 'wed', 'thu', 'fri'] },
-      { id: '3', name: 'Excavator', type: 'equipment', availability: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'] },
-      { id: '4', name: 'Crane', type: 'equipment', availability: ['mon', 'tue', 'wed', 'thu', 'fri'] },
-    ]);
+    try {
+      const { data: crewData, error } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, role, phone')
+        .eq('company_id', companyId)
+        .in('role', ['field_supervisor', 'admin', 'project_manager'])
+        .order('first_name');
+
+      if (error) throw error;
+
+      const formattedResources = (crewData || []).map(member => ({
+        id: member.id,
+        name: `${member.first_name} ${member.last_name}`,
+        type: 'crew' as const,
+        role: member.role,
+        phone: member.phone
+      }));
+
+      setResources(formattedResources);
+    } catch (error) {
+      console.error('Error loading resources:', error);
+    }
   };
 
   const loadScheduleItems = async () => {
-    // Simulate loading schedule items for the selected week
-    setScheduleItems([
-      {
-        id: '1',
-        project_id: 'proj1',
-        project_name: 'Kitchen Renovation',
-        resource_id: '1',
-        resource_name: 'Construction Crew A',
-        start_date: '2024-01-15',
-        end_date: '2024-01-17',
-        status: 'scheduled'
-      },
-      {
-        id: '2',
-        project_id: 'proj2',
-        project_name: 'Office Buildout',
-        resource_id: '1',
-        resource_name: 'Construction Crew A',
-        start_date: '2024-01-16',
-        end_date: '2024-01-18',
-        status: 'scheduled'
-      },
-      {
-        id: '3',
-        project_id: 'proj3',
-        project_name: 'Warehouse Construction',
-        resource_id: '3',
-        resource_name: 'Excavator',
-        start_date: '2024-01-15',
-        end_date: '2024-01-16',
-        status: 'in_progress'
-      }
-    ]);
+    try {
+      const weekStart = new Date(selectedWeek);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Monday
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
+
+      const { data: assignmentsData, error } = await supabase
+        .from('crew_assignments')
+        .select(`
+          *,
+          projects(name),
+          crew_member:user_profiles!crew_member_id(first_name, last_name)
+        `)
+        .eq('company_id', companyId)
+        .gte('assigned_date', weekStart.toISOString().split('T')[0])
+        .lte('assigned_date', weekEnd.toISOString().split('T')[0])
+        .order('assigned_date')
+        .order('start_time');
+
+      if (error) throw error;
+
+      const formattedItems = (assignmentsData || []).map(assignment => ({
+        id: assignment.id,
+        project_id: assignment.project_id,
+        project_name: assignment.projects?.name || 'Unknown Project',
+        resource_id: assignment.crew_member_id,
+        resource_name: `${assignment.crew_member?.first_name} ${assignment.crew_member?.last_name}`,
+        assigned_date: assignment.assigned_date,
+        start_time: assignment.start_time,
+        end_time: assignment.end_time,
+        status: assignment.status as 'scheduled' | 'dispatched' | 'in_progress' | 'completed' | 'cancelled',
+        location: assignment.location,
+        notes: assignment.notes
+      }));
+
+      setScheduleItems(formattedItems);
+    } catch (error) {
+      console.error('Error loading schedule items:', error);
+    }
   };
 
   const detectConflicts = () => {
-    const conflictMap = new Map<string, ScheduleItem[]>();
+    const conflictMap = new Map<string, { items: ScheduleItem[], type: string }>();
     
     scheduleItems.forEach(item => {
+      const itemStart = new Date(`${item.assigned_date}T${item.start_time}`);
+      const itemEnd = new Date(`${item.assigned_date}T${item.end_time}`);
+      
       const overlapping = scheduleItems.filter(other => 
         other.id !== item.id &&
         other.resource_id === item.resource_id &&
-        new Date(other.start_date) <= new Date(item.end_date) &&
-        new Date(other.end_date) >= new Date(item.start_date)
+        other.assigned_date === item.assigned_date &&
+        new Date(`${other.assigned_date}T${other.start_time}`) < itemEnd &&
+        new Date(`${other.assigned_date}T${other.end_time}`) > itemStart
       );
 
       if (overlapping.length > 0) {
-        const key = item.resource_id;
+        const key = `${item.resource_id}-${item.assigned_date}`;
         if (!conflictMap.has(key)) {
-          conflictMap.set(key, []);
+          conflictMap.set(key, { items: [], type: 'time_overlap' });
         }
-        conflictMap.get(key)?.push(item, ...overlapping);
+        conflictMap.get(key)?.items.push(item, ...overlapping);
       }
     });
 
-    const conflictsArray = Array.from(conflictMap.entries()).map(([resourceId, items]) => ({
-      resource_id: resourceId,
-      resource_name: resources.find(r => r.id === resourceId)?.name || 'Unknown',
-      conflicting_items: [...new Set(items)] // Remove duplicates
-    }));
+    const conflictsArray = Array.from(conflictMap.entries()).map(([key, data]) => {
+      const resourceId = key.split('-')[0];
+      return {
+        resource_id: resourceId,
+        resource_name: resources.find(r => r.id === resourceId)?.name || 'Unknown',
+        conflicting_items: [...new Set(data.items)], // Remove duplicates
+        conflict_type: data.type as 'time_overlap' | 'double_booking'
+      };
+    });
 
     setConflicts(conflictsArray);
   };
@@ -157,52 +201,62 @@ const VisualScheduler = () => {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, targetResourceId: string, targetDate: Date) => {
+  const handleDrop = async (e: React.DragEvent, targetResourceId: string, targetDate: Date) => {
     e.preventDefault();
     
     if (!draggedItem) return;
 
-    const updatedItems = scheduleItems.map(item => {
-      if (item.id === draggedItem.id) {
-        const daysDiff = Math.ceil((new Date(item.end_date).getTime() - new Date(item.start_date).getTime()) / (1000 * 3600 * 24));
-        const newEndDate = new Date(targetDate);
-        newEndDate.setDate(targetDate.getDate() + daysDiff);
+    const targetDateStr = targetDate.toISOString().split('T')[0];
 
-        return {
-          ...item,
-          resource_id: targetResourceId,
-          resource_name: resources.find(r => r.id === targetResourceId)?.name || '',
-          start_date: targetDate.toISOString().split('T')[0],
-          end_date: newEndDate.toISOString().split('T')[0]
-        };
-      }
-      return item;
-    });
+    try {
+      const { error } = await supabase
+        .from('crew_assignments')
+        .update({
+          crew_member_id: targetResourceId,
+          assigned_date: targetDateStr
+        })
+        .eq('id', draggedItem.id);
 
-    setScheduleItems(updatedItems);
-    setDraggedItem(null);
-    
-    toast({
-      title: "Schedule Updated",
-      description: "Resource assignment has been updated.",
-    });
+      if (error) throw error;
+
+      setDraggedItem(null);
+      
+      toast({
+        title: "Schedule Updated",
+        description: "Resource assignment has been updated.",
+      });
+
+      // Reload data
+      await loadScheduleItems();
+      onAssignmentChange();
+      
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update assignment.",
+        variant: "destructive"
+      });
+    }
   };
 
   const isItemInDay = (item: ScheduleItem, day: Date) => {
-    const itemStart = new Date(item.start_date);
-    const itemEnd = new Date(item.end_date);
+    const itemDate = new Date(item.assigned_date);
     const dayStart = new Date(day);
+    dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(day);
-    dayEnd.setHours(23, 59, 59);
+    dayEnd.setHours(23, 59, 59, 999);
 
-    return itemStart <= dayEnd && itemEnd >= dayStart;
+    return itemDate >= dayStart && itemDate <= dayEnd;
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled': return 'bg-blue-500';
+      case 'dispatched': return 'bg-yellow-500';
       case 'in_progress': return 'bg-orange-500';
       case 'completed': return 'bg-green-500';
+      case 'cancelled': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
   };
@@ -287,12 +341,12 @@ const VisualScheduler = () => {
               <div key={resource.id} className="contents">
                 <div className="border-r border-b p-4 bg-background">
                   <div className="flex items-center gap-2">
-                    {resource.type === 'crew' ? <Users className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
-                    <span className="font-medium">{resource.name}</span>
+                    <Users className="h-4 w-4" />
+                    <div>
+                      <span className="font-medium">{resource.name}</span>
+                      <div className="text-xs text-muted-foreground">{resource.role}</div>
+                    </div>
                   </div>
-                  <Badge variant="secondary" className="mt-1">
-                    {resource.type}
-                  </Badge>
                 </div>
                 {weekDays.map(day => (
                   <div
@@ -308,10 +362,14 @@ const VisualScheduler = () => {
                           key={item.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, item)}
-                          className={`p-2 rounded text-white text-xs cursor-move mb-1 ${getStatusColor(item.status)}`}
+                          className={`p-2 rounded text-white text-xs cursor-move mb-1 ${getStatusColor(item.status)} hover:opacity-80 transition-opacity`}
+                          title={`${item.project_name} - ${item.start_time} to ${item.end_time}${item.notes ? `\n${item.notes}` : ''}`}
                         >
                           <div className="font-medium truncate">{item.project_name}</div>
-                          <div className="opacity-75">{item.status}</div>
+                          <div className="opacity-75 text-xs">
+                            {item.start_time} - {item.end_time}
+                          </div>
+                          <div className="opacity-75 text-xs capitalize">{item.status}</div>
                         </div>
                       ))}
                   </div>
@@ -334,12 +392,20 @@ const VisualScheduler = () => {
               <span className="text-sm">Scheduled</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+              <span className="text-sm">Dispatched</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-orange-500 rounded"></div>
               <span className="text-sm">In Progress</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
               <span className="text-sm">Completed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-500 rounded"></div>
+              <span className="text-sm">Cancelled</span>
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-2">

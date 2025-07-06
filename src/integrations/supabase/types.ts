@@ -669,6 +669,83 @@ export type Database = {
           },
         ]
       }
+      crew_assignments: {
+        Row: {
+          assigned_date: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          crew_member_id: string
+          end_time: string
+          id: string
+          location: string | null
+          notes: string | null
+          project_id: string
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_date: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          crew_member_id: string
+          end_time: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          project_id: string
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_date?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          crew_member_id?: string
+          end_time?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          project_id?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       csp_violations: {
         Row: {
           blocked_uri: string | null
