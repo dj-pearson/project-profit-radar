@@ -40,7 +40,8 @@ import {
   TrendingUp,
   Lock,
   Zap,
-  Tag
+  Tag,
+  Gift
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -104,6 +105,7 @@ const navigationCategories: NavigationCategory[] = [
       { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Admin" },
       { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Admin" },
       { title: "Billing", url: "/admin/billing", icon: DollarSign, roles: ["root_admin"], badge: "Admin" },
+      { title: "Complimentary Subscriptions", url: "/admin/complimentary", icon: Gift, roles: ["root_admin"], badge: "Admin" },
       { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" },
       { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
       { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ["root_admin"], badge: "Admin" },
