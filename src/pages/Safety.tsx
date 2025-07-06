@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   AlertTriangle, 
   Shield, 
@@ -19,6 +20,10 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import SafetyIncidentForm from '@/components/safety/SafetyIncidentForm';
+import SafetyChecklistBuilder from '@/components/safety/SafetyChecklistBuilder';
+import TrainingCertificationManager from '@/components/safety/TrainingCertificationManager';
+import OSHAComplianceManager from '@/components/safety/OSHAComplianceManager';
 
 interface SafetyStats {
   totalIncidents: number;
@@ -26,6 +31,21 @@ interface SafetyStats {
   checklistsCompleted: number;
   expiringCertifications: number;
   upcomingDeadlines: number;
+}
+
+interface RecentIncident {
+  id: string;
+  incident_type: string;
+  severity: string;
+  incident_date: string;
+  status: string;
+}
+
+interface SafetyChecklist {
+  id: string;
+  name: string;
+  checklist_type: string;
+  is_active: boolean;
 }
 
 const Safety = () => {
@@ -36,7 +56,11 @@ const Safety = () => {
     expiringCertifications: 0,
     upcomingDeadlines: 0
   });
+  const [recentIncidents, setRecentIncidents] = useState<RecentIncident[]>([]);
+  const [checklists, setChecklists] = useState<SafetyChecklist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showIncidentDialog, setShowIncidentDialog] = useState(false);
+  const [showChecklistDialog, setShowChecklistDialog] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -63,7 +87,9 @@ const Safety = () => {
         incidentsResult,
         checklistsResult,
         certificationsResult,
-        deadlinesResult
+        deadlinesResult,
+        recentIncidentsResult,
+        safetyChecklistsResult
       ] = await Promise.all([
         // Total and open incidents
         supabase
@@ -92,7 +118,22 @@ const Safety = () => {
           .select('id')
           .eq('company_id', profile.company_id)
           .lte('due_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-          .eq('status', 'pending')
+          .eq('status', 'pending'),
+
+        // Recent incidents
+        supabase
+          .from('safety_incidents')
+          .select('id, incident_type, severity, incident_date, status')
+          .eq('company_id', profile.company_id)
+          .order('incident_date', { ascending: false })
+          .limit(5),
+
+        // Safety checklists
+        supabase
+          .from('safety_checklists')
+          .select('id, name, checklist_type, is_active')
+          .eq('company_id', profile.company_id)
+          .eq('is_active', true)
       ]);
 
       const incidents = incidentsResult.data || [];
@@ -105,6 +146,9 @@ const Safety = () => {
         expiringCertifications: certificationsResult.data?.length || 0,
         upcomingDeadlines: deadlinesResult.data?.length || 0
       });
+
+      setRecentIncidents(recentIncidentsResult.data || []);
+      setChecklists(safetyChecklistsResult.data || []);
     } catch (error) {
       console.error('Error fetching safety stats:', error);
       toast({
@@ -161,15 +205,31 @@ const Safety = () => {
             </p>
           </div>
           <div className="flex gap-3">
-          <Button variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-            Generate OSHA 300 Log
-          </Button>
-          <Button variant="construction">
-            <Plus className="mr-2 h-4 w-4" />
-            Report Incident
-          </Button>
-        </div>
+            <Button variant="outline">
+              <FileText className="mr-2 h-4 w-4" />
+              Generate OSHA 300 Log
+            </Button>
+            <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-construction-orange hover:bg-construction-orange/90">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Report Incident
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Report Safety Incident</DialogTitle>
+                </DialogHeader>
+                <SafetyIncidentForm 
+                  onSuccess={() => {
+                    setShowIncidentDialog(false);
+                    fetchSafetyStats();
+                  }}
+                  onCancel={() => setShowIncidentDialog(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
       </div>
 
       {/* Statistics Cards */}
@@ -239,20 +299,59 @@ const Safety = () => {
         <TabsContent value="incidents" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Safety Incidents</CardTitle>
-              <CardDescription>
-                Track and manage workplace safety incidents and near misses
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Safety Incidents</CardTitle>
+                  <CardDescription>
+                    Track and manage workplace safety incidents and near misses
+                  </CardDescription>
+                </div>
+                <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-construction-orange hover:bg-construction-orange/90">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Report Incident
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Report Safety Incident</DialogTitle>
+                    </DialogHeader>
+                    <SafetyIncidentForm 
+                      onSuccess={() => {
+                        setShowIncidentDialog(false);
+                        fetchSafetyStats();
+                      }}
+                      onCancel={() => setShowIncidentDialog(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <AlertTriangle className="mx-auto h-12 w-12 mb-4" />
-                <p>No incidents reported yet</p>
-                <Button className="mt-4" variant="construction">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Report First Incident
-                </Button>
-              </div>
+              {recentIncidents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" />
+                  <p className="text-lg font-medium mb-2">No Recent Incidents</p>
+                  <p>Great job maintaining a safe workplace!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentIncidents.map(incident => (
+                    <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(incident.incident_date).toLocaleDateString()} • Severity: {incident.severity}
+                        </p>
+                      </div>
+                      <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'}>
+                        {incident.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -260,64 +359,67 @@ const Safety = () => {
         <TabsContent value="checklists" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Safety Checklists</CardTitle>
-              <CardDescription>
-                Daily safety checks and inspection forms
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Safety Checklists</CardTitle>
+                  <CardDescription>
+                    Daily safety checks and inspection forms
+                  </CardDescription>
+                </div>
+                <Dialog open={showChecklistDialog} onOpenChange={setShowChecklistDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-construction-orange hover:bg-construction-orange/90">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Checklist
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create Safety Checklist</DialogTitle>
+                    </DialogHeader>
+                    <SafetyChecklistBuilder 
+                      onSuccess={() => {
+                        setShowChecklistDialog(false);
+                        fetchSafetyStats();
+                      }}
+                      onCancel={() => setShowChecklistDialog(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Shield className="mx-auto h-12 w-12 mb-4" />
-                <p>No safety checklists configured</p>
-                <Button className="mt-4" variant="construction">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Safety Checklist
-                </Button>
-              </div>
+              {checklists.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Shield className="mx-auto h-12 w-12 mb-4" />
+                  <p className="text-lg font-medium mb-2">No Safety Checklists</p>
+                  <p>Create your first safety checklist to get started</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {checklists.map(checklist => (
+                    <div key={checklist.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">{checklist.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Type: {checklist.checklist_type.replace('_', ' ').toUpperCase()}
+                        </p>
+                      </div>
+                      <Badge variant="default">Active</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="training" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Training & Certifications</CardTitle>
-              <CardDescription>
-                Track OSHA training, certifications, and renewal dates
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="mx-auto h-12 w-12 mb-4" />
-                <p>No training records found</p>
-                <Button className="mt-4" variant="construction">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Certification
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <TrainingCertificationManager />
         </TabsContent>
 
         <TabsContent value="compliance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>OSHA Compliance Deadlines</CardTitle>
-              <CardDescription>
-                Track important compliance deadlines and requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="mx-auto h-12 w-12 mb-4" />
-                <p>No compliance deadlines set</p>
-                <Button className="mt-4" variant="construction">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Compliance Deadline
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <OSHAComplianceManager />
         </TabsContent>
       </Tabs>
       </div>
