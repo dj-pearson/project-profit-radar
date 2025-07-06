@@ -13,6 +13,8 @@ import { BudgetVsActualTracking } from '@/components/financial/BudgetVsActualTra
 import { CashFlowForecasting } from '@/components/financial/CashFlowForecasting';
 import { ExpenseTracker } from '@/components/financial/ExpenseTracker';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
+import Form1099Manager from '@/components/financial/Form1099Manager';
+import StripePaymentProcessor from '@/components/financial/StripePaymentProcessor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 
@@ -55,6 +57,8 @@ const FinancialDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
             <TabsTrigger value="invoices" className="text-xs sm:text-sm">Invoices</TabsTrigger>
+            <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
+            <TabsTrigger value="1099s" className="text-xs sm:text-sm">1099s</TabsTrigger>
             <TabsTrigger value="reports" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">P&L Reports</span>
               <span className="sm:hidden">P&L</span>
@@ -114,6 +118,14 @@ const FinancialDashboard = () => {
               <InvoiceGenerator />
               <InvoicingPayments />
             </div>
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-6">
+            <StripePaymentProcessor />
+          </TabsContent>
+
+          <TabsContent value="1099s" className="space-y-6">
+            <Form1099Manager />
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-6">

@@ -1637,6 +1637,104 @@ export type Database = {
           },
         ]
       }
+      forms_1099: {
+        Row: {
+          box1_nonemployee_compensation: number
+          box2_payer_made_direct_sales: number
+          box4_federal_income_tax_withheld: number
+          box5_state_tax_withheld: number
+          box6_state_payers_state_no: string | null
+          box7_state_income: number
+          company_id: string
+          contractor_address: string
+          contractor_id: string
+          contractor_name: string
+          contractor_tax_id: string
+          created_at: string
+          filed_by: string | null
+          filed_date: string | null
+          generated_by: string | null
+          generated_date: string
+          id: string
+          status: string
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          box1_nonemployee_compensation?: number
+          box2_payer_made_direct_sales?: number
+          box4_federal_income_tax_withheld?: number
+          box5_state_tax_withheld?: number
+          box6_state_payers_state_no?: string | null
+          box7_state_income?: number
+          company_id: string
+          contractor_address: string
+          contractor_id: string
+          contractor_name: string
+          contractor_tax_id: string
+          created_at?: string
+          filed_by?: string | null
+          filed_date?: string | null
+          generated_by?: string | null
+          generated_date?: string
+          id?: string
+          status?: string
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          box1_nonemployee_compensation?: number
+          box2_payer_made_direct_sales?: number
+          box4_federal_income_tax_withheld?: number
+          box5_state_tax_withheld?: number
+          box6_state_payers_state_no?: string | null
+          box7_state_income?: number
+          company_id?: string
+          contractor_address?: string
+          contractor_id?: string
+          contractor_name?: string
+          contractor_tax_id?: string
+          created_at?: string
+          filed_by?: string | null
+          filed_date?: string | null
+          generated_by?: string | null
+          generated_date?: string
+          id?: string
+          status?: string
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forms_1099_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forms_1099_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forms_1099_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forms_1099_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           cost_code_id: string | null
