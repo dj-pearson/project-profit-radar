@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
 import { 
   ArrowLeft, 
   Building2,
@@ -314,6 +315,7 @@ const ClientPortal = () => {
                   <TabsList>
                     <TabsTrigger value="progress">Progress Updates</TabsTrigger>
                     <TabsTrigger value="change-orders">Change Orders</TabsTrigger>
+                    <TabsTrigger value="communication">Communication</TabsTrigger>
                     <TabsTrigger value="documents">Documents</TabsTrigger>
                   </TabsList>
 
@@ -409,6 +411,13 @@ const ClientPortal = () => {
                         )}
                       </CardContent>
                     </Card>
+                  </TabsContent>
+
+                  <TabsContent value="communication" className="space-y-4">
+                    <ProjectCommunication 
+                      projectId={selectedProject.id}
+                      userType="client"
+                    />
                   </TabsContent>
 
                   <TabsContent value="documents" className="space-y-4">
