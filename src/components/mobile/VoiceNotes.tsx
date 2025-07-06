@@ -126,7 +126,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
                 directory: Directory.Data,
                 encoding: Encoding.UTF8
               });
-              return JSON.parse(data);
+              return JSON.parse(data as string);
             } catch {
               return null;
             }

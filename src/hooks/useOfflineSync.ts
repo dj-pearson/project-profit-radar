@@ -101,7 +101,7 @@ export const useOfflineSync = () => {
                 directory: Directory.Data,
                 encoding: Encoding.UTF8
               });
-              return JSON.parse(data) as OfflineData;
+              return JSON.parse(data as string) as OfflineData;
             } catch {
               return null;
             }
