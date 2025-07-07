@@ -125,6 +125,252 @@ export type Database = {
           },
         ]
       }
+      bid_documents: {
+        Row: {
+          bid_submission_id: string | null
+          created_at: string
+          description: string | null
+          document_name: string
+          document_type: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_current_version: boolean | null
+          is_required: boolean | null
+          is_submitted: boolean | null
+          notes: string | null
+          opportunity_id: string | null
+          submission_date: string | null
+          supersedes_document_id: string | null
+          updated_at: string
+          uploaded_by: string | null
+          version_number: number | null
+        }
+        Insert: {
+          bid_submission_id?: string | null
+          created_at?: string
+          description?: string | null
+          document_name: string
+          document_type: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_current_version?: boolean | null
+          is_required?: boolean | null
+          is_submitted?: boolean | null
+          notes?: string | null
+          opportunity_id?: string | null
+          submission_date?: string | null
+          supersedes_document_id?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          version_number?: number | null
+        }
+        Update: {
+          bid_submission_id?: string | null
+          created_at?: string
+          description?: string | null
+          document_name?: string
+          document_type?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_current_version?: boolean | null
+          is_required?: boolean | null
+          is_submitted?: boolean | null
+          notes?: string | null
+          opportunity_id?: string | null
+          submission_date?: string | null
+          supersedes_document_id?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_documents_bid_submission_id_fkey"
+            columns: ["bid_submission_id"]
+            isOneToOne: false
+            referencedRelation: "bid_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_documents_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_documents_supersedes_document_id_fkey"
+            columns: ["supersedes_document_id"]
+            isOneToOne: false
+            referencedRelation: "bid_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bid_submissions: {
+        Row: {
+          addenda_acknowledged: string[] | null
+          allowances: Json | null
+          alternate_amounts: Json | null
+          award_amount: number | null
+          award_notification_date: string | null
+          base_bid_amount: number | null
+          bid_amount: number
+          bid_bond_amount: number | null
+          bid_documents_path: string | null
+          bid_number: string | null
+          company_id: string
+          confirmation_number: string | null
+          cost_proposal_path: string | null
+          created_at: string
+          created_by: string | null
+          debriefing_date: string | null
+          debriefing_requested: boolean | null
+          equipment_list: Json | null
+          exceptions_taken: string | null
+          id: string
+          key_personnel: Json | null
+          lessons_learned: string | null
+          notes: string | null
+          opportunity_id: string
+          payment_bond_percentage: number | null
+          performance_bond_percentage: number | null
+          project_duration_days: number | null
+          project_manager_name: string | null
+          proposed_completion_date: string | null
+          proposed_start_date: string | null
+          protest_filed: boolean | null
+          protest_outcome: string | null
+          ranking: number | null
+          status: string
+          submission_method: string | null
+          submitted_at: string | null
+          substitutions_requested: Json | null
+          technical_proposal_path: string | null
+          unit_prices: Json | null
+          updated_at: string
+        }
+        Insert: {
+          addenda_acknowledged?: string[] | null
+          allowances?: Json | null
+          alternate_amounts?: Json | null
+          award_amount?: number | null
+          award_notification_date?: string | null
+          base_bid_amount?: number | null
+          bid_amount: number
+          bid_bond_amount?: number | null
+          bid_documents_path?: string | null
+          bid_number?: string | null
+          company_id: string
+          confirmation_number?: string | null
+          cost_proposal_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          debriefing_date?: string | null
+          debriefing_requested?: boolean | null
+          equipment_list?: Json | null
+          exceptions_taken?: string | null
+          id?: string
+          key_personnel?: Json | null
+          lessons_learned?: string | null
+          notes?: string | null
+          opportunity_id: string
+          payment_bond_percentage?: number | null
+          performance_bond_percentage?: number | null
+          project_duration_days?: number | null
+          project_manager_name?: string | null
+          proposed_completion_date?: string | null
+          proposed_start_date?: string | null
+          protest_filed?: boolean | null
+          protest_outcome?: string | null
+          ranking?: number | null
+          status?: string
+          submission_method?: string | null
+          submitted_at?: string | null
+          substitutions_requested?: Json | null
+          technical_proposal_path?: string | null
+          unit_prices?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          addenda_acknowledged?: string[] | null
+          allowances?: Json | null
+          alternate_amounts?: Json | null
+          award_amount?: number | null
+          award_notification_date?: string | null
+          base_bid_amount?: number | null
+          bid_amount?: number
+          bid_bond_amount?: number | null
+          bid_documents_path?: string | null
+          bid_number?: string | null
+          company_id?: string
+          confirmation_number?: string | null
+          cost_proposal_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          debriefing_date?: string | null
+          debriefing_requested?: boolean | null
+          equipment_list?: Json | null
+          exceptions_taken?: string | null
+          id?: string
+          key_personnel?: Json | null
+          lessons_learned?: string | null
+          notes?: string | null
+          opportunity_id?: string
+          payment_bond_percentage?: number | null
+          performance_bond_percentage?: number | null
+          project_duration_days?: number | null
+          project_manager_name?: string | null
+          proposed_completion_date?: string | null
+          proposed_start_date?: string | null
+          protest_filed?: boolean | null
+          protest_outcome?: string | null
+          ranking?: number | null
+          status?: string
+          submission_method?: string | null
+          submitted_at?: string | null
+          substitutions_requested?: Json | null
+          technical_proposal_path?: string | null
+          unit_prices?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_submissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_submissions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_submissions_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           body: string
@@ -3511,6 +3757,235 @@ export type Database = {
           },
         ]
       }
+      procurement_opportunities: {
+        Row: {
+          addenda_urls: string[] | null
+          agency_contact_email: string | null
+          agency_contact_name: string | null
+          agency_contact_phone: string | null
+          award_date: string | null
+          bond_requirements: Json | null
+          certification_requirements: string[] | null
+          company_id: string
+          contract_duration_months: number | null
+          contract_start_date: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimated_value: number | null
+          id: string
+          insurance_requirements: Json | null
+          is_watched: boolean | null
+          issuing_agency: string
+          license_requirements: string[] | null
+          mbe_wbe_requirements: Json | null
+          minimum_experience_years: number | null
+          notes: string | null
+          opportunity_number: string
+          pre_bid_meeting_date: string | null
+          procurement_type: string
+          project_category: string | null
+          project_location: string | null
+          published_date: string | null
+          questions_due_date: string | null
+          solicitation_document_url: string | null
+          special_requirements: string | null
+          status: string
+          submission_deadline: string
+          submission_portal_url: string | null
+          title: string
+          updated_at: string
+          work_scope: string | null
+        }
+        Insert: {
+          addenda_urls?: string[] | null
+          agency_contact_email?: string | null
+          agency_contact_name?: string | null
+          agency_contact_phone?: string | null
+          award_date?: string | null
+          bond_requirements?: Json | null
+          certification_requirements?: string[] | null
+          company_id: string
+          contract_duration_months?: number | null
+          contract_start_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_value?: number | null
+          id?: string
+          insurance_requirements?: Json | null
+          is_watched?: boolean | null
+          issuing_agency: string
+          license_requirements?: string[] | null
+          mbe_wbe_requirements?: Json | null
+          minimum_experience_years?: number | null
+          notes?: string | null
+          opportunity_number: string
+          pre_bid_meeting_date?: string | null
+          procurement_type: string
+          project_category?: string | null
+          project_location?: string | null
+          published_date?: string | null
+          questions_due_date?: string | null
+          solicitation_document_url?: string | null
+          special_requirements?: string | null
+          status?: string
+          submission_deadline: string
+          submission_portal_url?: string | null
+          title: string
+          updated_at?: string
+          work_scope?: string | null
+        }
+        Update: {
+          addenda_urls?: string[] | null
+          agency_contact_email?: string | null
+          agency_contact_name?: string | null
+          agency_contact_phone?: string | null
+          award_date?: string | null
+          bond_requirements?: Json | null
+          certification_requirements?: string[] | null
+          company_id?: string
+          contract_duration_months?: number | null
+          contract_start_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_value?: number | null
+          id?: string
+          insurance_requirements?: Json | null
+          is_watched?: boolean | null
+          issuing_agency?: string
+          license_requirements?: string[] | null
+          mbe_wbe_requirements?: Json | null
+          minimum_experience_years?: number | null
+          notes?: string | null
+          opportunity_number?: string
+          pre_bid_meeting_date?: string | null
+          procurement_type?: string
+          project_category?: string | null
+          project_location?: string | null
+          published_date?: string | null
+          questions_due_date?: string | null
+          solicitation_document_url?: string | null
+          special_requirements?: string | null
+          status?: string
+          submission_deadline?: string
+          submission_portal_url?: string | null
+          title?: string
+          updated_at?: string
+          work_scope?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_opportunities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_opportunities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_requirements: {
+        Row: {
+          bid_submission_id: string | null
+          compliance_date: string | null
+          compliance_notes: string | null
+          correction_deadline: string | null
+          corrective_action_taken: string | null
+          created_at: string
+          created_by: string | null
+          deficiency_description: string | null
+          description: string
+          evidence_document_path: string | null
+          id: string
+          is_met: boolean | null
+          is_required: boolean | null
+          opportunity_id: string
+          requirement_name: string
+          requirement_type: string
+          status: string | null
+          updated_at: string
+          verification_date: string | null
+          verification_method: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          bid_submission_id?: string | null
+          compliance_date?: string | null
+          compliance_notes?: string | null
+          correction_deadline?: string | null
+          corrective_action_taken?: string | null
+          created_at?: string
+          created_by?: string | null
+          deficiency_description?: string | null
+          description: string
+          evidence_document_path?: string | null
+          id?: string
+          is_met?: boolean | null
+          is_required?: boolean | null
+          opportunity_id: string
+          requirement_name: string
+          requirement_type: string
+          status?: string | null
+          updated_at?: string
+          verification_date?: string | null
+          verification_method?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          bid_submission_id?: string | null
+          compliance_date?: string | null
+          compliance_notes?: string | null
+          correction_deadline?: string | null
+          corrective_action_taken?: string | null
+          created_at?: string
+          created_by?: string | null
+          deficiency_description?: string | null
+          description?: string
+          evidence_document_path?: string | null
+          id?: string
+          is_met?: boolean | null
+          is_required?: boolean | null
+          opportunity_id?: string
+          requirement_name?: string
+          requirement_type?: string
+          status?: string | null
+          updated_at?: string
+          verification_date?: string | null
+          verification_method?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_requirements_bid_submission_id_fkey"
+            columns: ["bid_submission_id"]
+            isOneToOne: false
+            referencedRelation: "bid_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_requirements_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_bond_requirements: {
         Row: {
           bond_id: string | null
@@ -5329,6 +5804,153 @@ export type Database = {
         }
         Relationships: []
       }
+      subcontractor_disclosures: {
+        Row: {
+          approval_date: string | null
+          bid_submission_id: string
+          bonding_capacity: number | null
+          business_address: string | null
+          business_structure: string | null
+          certification_documents_path: string | null
+          certification_numbers: string[] | null
+          contact_person: string | null
+          created_at: string
+          created_by: string | null
+          duns_number: string | null
+          email: string | null
+          has_required_insurance: boolean | null
+          id: string
+          insurance_carrier: string | null
+          insurance_certificate_path: string | null
+          insurance_expiry_date: string | null
+          insurance_policy_number: string | null
+          is_dbe_certified: boolean | null
+          is_mbe_certified: boolean | null
+          is_small_business: boolean | null
+          is_veteran_owned: boolean | null
+          is_wbe_certified: boolean | null
+          license_classification: string | null
+          license_copy_path: string | null
+          license_number: string | null
+          notes: string | null
+          percentage_of_total: number | null
+          phone: string | null
+          previous_work_description: string | null
+          proposed_completion_date: string | null
+          proposed_start_date: string | null
+          reference_contacts: Json | null
+          status: string
+          subcontract_amount: number
+          subcontractor_name: string
+          tax_id: string | null
+          updated_at: string
+          w9_form_path: string | null
+          work_category: string
+          work_description: string
+        }
+        Insert: {
+          approval_date?: string | null
+          bid_submission_id: string
+          bonding_capacity?: number | null
+          business_address?: string | null
+          business_structure?: string | null
+          certification_documents_path?: string | null
+          certification_numbers?: string[] | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          duns_number?: string | null
+          email?: string | null
+          has_required_insurance?: boolean | null
+          id?: string
+          insurance_carrier?: string | null
+          insurance_certificate_path?: string | null
+          insurance_expiry_date?: string | null
+          insurance_policy_number?: string | null
+          is_dbe_certified?: boolean | null
+          is_mbe_certified?: boolean | null
+          is_small_business?: boolean | null
+          is_veteran_owned?: boolean | null
+          is_wbe_certified?: boolean | null
+          license_classification?: string | null
+          license_copy_path?: string | null
+          license_number?: string | null
+          notes?: string | null
+          percentage_of_total?: number | null
+          phone?: string | null
+          previous_work_description?: string | null
+          proposed_completion_date?: string | null
+          proposed_start_date?: string | null
+          reference_contacts?: Json | null
+          status?: string
+          subcontract_amount: number
+          subcontractor_name: string
+          tax_id?: string | null
+          updated_at?: string
+          w9_form_path?: string | null
+          work_category: string
+          work_description: string
+        }
+        Update: {
+          approval_date?: string | null
+          bid_submission_id?: string
+          bonding_capacity?: number | null
+          business_address?: string | null
+          business_structure?: string | null
+          certification_documents_path?: string | null
+          certification_numbers?: string[] | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          duns_number?: string | null
+          email?: string | null
+          has_required_insurance?: boolean | null
+          id?: string
+          insurance_carrier?: string | null
+          insurance_certificate_path?: string | null
+          insurance_expiry_date?: string | null
+          insurance_policy_number?: string | null
+          is_dbe_certified?: boolean | null
+          is_mbe_certified?: boolean | null
+          is_small_business?: boolean | null
+          is_veteran_owned?: boolean | null
+          is_wbe_certified?: boolean | null
+          license_classification?: string | null
+          license_copy_path?: string | null
+          license_number?: string | null
+          notes?: string | null
+          percentage_of_total?: number | null
+          phone?: string | null
+          previous_work_description?: string | null
+          proposed_completion_date?: string | null
+          proposed_start_date?: string | null
+          reference_contacts?: Json | null
+          status?: string
+          subcontract_amount?: number
+          subcontractor_name?: string
+          tax_id?: string | null
+          updated_at?: string
+          w9_form_path?: string | null
+          work_category?: string
+          work_description?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_disclosures_bid_submission_id_fkey"
+            columns: ["bid_submission_id"]
+            isOneToOne: false
+            referencedRelation: "bid_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_disclosures_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscribers: {
         Row: {
           billing_period: string | null
@@ -6320,6 +6942,10 @@ export type Database = {
           p_checksum?: string
           p_version_notes?: string
         }
+        Returns: string
+      }
+      generate_bid_number: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_claim_number: {
