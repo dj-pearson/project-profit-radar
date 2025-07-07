@@ -58,6 +58,7 @@ import PurchaseOrders from "./pages/PurchaseOrders";
 import Vendors from "./pages/Vendors";
 import PurchaseOrderForm from "./components/purchasing/PurchaseOrderForm";
 import WarrantyManagement from "./pages/WarrantyManagement";
+import PermitManagement from "./pages/PermitManagement";
 
 const queryClient = new QueryClient();
 
@@ -417,6 +418,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/warranty-management">
             <WarrantyManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/permit-management"
+        element={
+          <RouteGuard routePath="/permit-management">
+            <PermitManagement />
           </RouteGuard>
         }
       />
