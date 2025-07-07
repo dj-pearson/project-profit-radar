@@ -2804,6 +2804,361 @@ export type Database = {
           },
         ]
       }
+      equipment_maintenance_records: {
+        Row: {
+          actual_completion_date: string | null
+          actual_start_date: string | null
+          approval_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          compliance_notes: string | null
+          compliance_verified: boolean | null
+          condition_after: string | null
+          condition_before: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          downtime_hours: number | null
+          equipment_id: string
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          hour_meter_reading: number | null
+          id: string
+          inspection_report_path: string | null
+          issues_found: string | null
+          labor_cost: number | null
+          maintenance_schedule_id: string | null
+          maintenance_type: string
+          parts_cost: number | null
+          parts_used: Json | null
+          performed_by: string | null
+          photos_after: Json | null
+          photos_before: Json | null
+          procedures_followed: string | null
+          quality_check_passed: boolean | null
+          quality_notes: string | null
+          receipts_path: string | null
+          recommendations: string | null
+          safety_incidents: string | null
+          safety_protocols_followed: boolean | null
+          scheduled_date: string | null
+          supervisor: string | null
+          task_name: string
+          technician_names: string[] | null
+          tools_used: string[] | null
+          total_cost: number | null
+          total_labor_hours: number | null
+          updated_at: string
+          vendor_cost: number | null
+          vendor_name: string | null
+          warranty_claim_number: string | null
+          warranty_work: boolean | null
+          work_order_number: string | null
+          work_performed: string
+        }
+        Insert: {
+          actual_completion_date?: string | null
+          actual_start_date?: string | null
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          compliance_notes?: string | null
+          compliance_verified?: boolean | null
+          condition_after?: string | null
+          condition_before?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          downtime_hours?: number | null
+          equipment_id: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          hour_meter_reading?: number | null
+          id?: string
+          inspection_report_path?: string | null
+          issues_found?: string | null
+          labor_cost?: number | null
+          maintenance_schedule_id?: string | null
+          maintenance_type: string
+          parts_cost?: number | null
+          parts_used?: Json | null
+          performed_by?: string | null
+          photos_after?: Json | null
+          photos_before?: Json | null
+          procedures_followed?: string | null
+          quality_check_passed?: boolean | null
+          quality_notes?: string | null
+          receipts_path?: string | null
+          recommendations?: string | null
+          safety_incidents?: string | null
+          safety_protocols_followed?: boolean | null
+          scheduled_date?: string | null
+          supervisor?: string | null
+          task_name: string
+          technician_names?: string[] | null
+          tools_used?: string[] | null
+          total_cost?: number | null
+          total_labor_hours?: number | null
+          updated_at?: string
+          vendor_cost?: number | null
+          vendor_name?: string | null
+          warranty_claim_number?: string | null
+          warranty_work?: boolean | null
+          work_order_number?: string | null
+          work_performed: string
+        }
+        Update: {
+          actual_completion_date?: string | null
+          actual_start_date?: string | null
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          compliance_notes?: string | null
+          compliance_verified?: boolean | null
+          condition_after?: string | null
+          condition_before?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          downtime_hours?: number | null
+          equipment_id?: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          hour_meter_reading?: number | null
+          id?: string
+          inspection_report_path?: string | null
+          issues_found?: string | null
+          labor_cost?: number | null
+          maintenance_schedule_id?: string | null
+          maintenance_type?: string
+          parts_cost?: number | null
+          parts_used?: Json | null
+          performed_by?: string | null
+          photos_after?: Json | null
+          photos_before?: Json | null
+          procedures_followed?: string | null
+          quality_check_passed?: boolean | null
+          quality_notes?: string | null
+          receipts_path?: string | null
+          recommendations?: string | null
+          safety_incidents?: string | null
+          safety_protocols_followed?: boolean | null
+          scheduled_date?: string | null
+          supervisor?: string | null
+          task_name?: string
+          technician_names?: string[] | null
+          tools_used?: string[] | null
+          total_cost?: number | null
+          total_labor_hours?: number | null
+          updated_at?: string
+          vendor_cost?: number | null
+          vendor_name?: string | null
+          warranty_claim_number?: string | null
+          warranty_work?: boolean | null
+          work_order_number?: string | null
+          work_performed?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_maintenance_records_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_maintenance_schedule_id_fkey"
+            columns: ["maintenance_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_maintenance_schedule"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_supervisor_fkey"
+            columns: ["supervisor"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_maintenance_schedule: {
+        Row: {
+          assigned_technician: string | null
+          assigned_vendor_contact: string | null
+          certification_required: boolean | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          equipment_id: string
+          estimated_cost: number | null
+          estimated_duration_hours: number | null
+          frequency_type: string | null
+          frequency_value: number
+          hours_at_last_service: number | null
+          id: string
+          is_active: boolean | null
+          last_completed_date: string | null
+          lead_time_days: number | null
+          maintenance_category: string | null
+          maintenance_checklist: Json | null
+          maintenance_type: string
+          next_due_date: string
+          next_due_hours: number | null
+          parts_required: Json | null
+          priority: string | null
+          procedure_document_path: string | null
+          regulation_reference: string | null
+          regulatory_requirement: boolean | null
+          safety_procedures: string | null
+          safety_requirements: string[] | null
+          skills_required: string[] | null
+          status: string | null
+          task_name: string
+          tools_required: string[] | null
+          updated_at: string
+          vendor_name: string | null
+          vendor_required: boolean | null
+        }
+        Insert: {
+          assigned_technician?: string | null
+          assigned_vendor_contact?: string | null
+          certification_required?: boolean | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          equipment_id: string
+          estimated_cost?: number | null
+          estimated_duration_hours?: number | null
+          frequency_type?: string | null
+          frequency_value: number
+          hours_at_last_service?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_completed_date?: string | null
+          lead_time_days?: number | null
+          maintenance_category?: string | null
+          maintenance_checklist?: Json | null
+          maintenance_type: string
+          next_due_date: string
+          next_due_hours?: number | null
+          parts_required?: Json | null
+          priority?: string | null
+          procedure_document_path?: string | null
+          regulation_reference?: string | null
+          regulatory_requirement?: boolean | null
+          safety_procedures?: string | null
+          safety_requirements?: string[] | null
+          skills_required?: string[] | null
+          status?: string | null
+          task_name: string
+          tools_required?: string[] | null
+          updated_at?: string
+          vendor_name?: string | null
+          vendor_required?: boolean | null
+        }
+        Update: {
+          assigned_technician?: string | null
+          assigned_vendor_contact?: string | null
+          certification_required?: boolean | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          equipment_id?: string
+          estimated_cost?: number | null
+          estimated_duration_hours?: number | null
+          frequency_type?: string | null
+          frequency_value?: number
+          hours_at_last_service?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_completed_date?: string | null
+          lead_time_days?: number | null
+          maintenance_category?: string | null
+          maintenance_checklist?: Json | null
+          maintenance_type?: string
+          next_due_date?: string
+          next_due_hours?: number | null
+          parts_required?: Json | null
+          priority?: string | null
+          procedure_document_path?: string | null
+          regulation_reference?: string | null
+          regulatory_requirement?: boolean | null
+          safety_procedures?: string | null
+          safety_requirements?: string[] | null
+          skills_required?: string[] | null
+          status?: string | null
+          task_name?: string
+          tools_required?: string[] | null
+          updated_at?: string
+          vendor_name?: string | null
+          vendor_required?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_maintenance_schedule_assigned_technician_fkey"
+            columns: ["assigned_technician"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment_usage: {
         Row: {
           created_at: string
@@ -2867,6 +3222,182 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_utilization_detailed: {
+        Row: {
+          activity_description: string | null
+          activity_type: string | null
+          billable_amount: number | null
+          billable_hours: number | null
+          calculated_hours: number | null
+          company_id: string
+          created_at: string
+          daily_rate: number | null
+          date: string
+          downtime_hours: number | null
+          downtime_reason: string | null
+          end_hour_reading: number | null
+          end_time: string | null
+          equipment_id: string
+          fuel_consumed: number | null
+          fuel_cost: number | null
+          hourly_rate: number | null
+          id: string
+          issues_reported: string | null
+          location: string | null
+          maintenance_required: boolean | null
+          operating_efficiency: number | null
+          operator_id: string | null
+          photos: Json | null
+          productivity_metric: string | null
+          productivity_unit: string | null
+          productivity_value: number | null
+          project_id: string | null
+          recorded_by: string | null
+          start_hour_reading: number | null
+          start_time: string | null
+          terrain_type: string | null
+          total_cost: number | null
+          total_hours: number
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          weather_conditions: string | null
+          work_order_reference: string | null
+        }
+        Insert: {
+          activity_description?: string | null
+          activity_type?: string | null
+          billable_amount?: number | null
+          billable_hours?: number | null
+          calculated_hours?: number | null
+          company_id: string
+          created_at?: string
+          daily_rate?: number | null
+          date: string
+          downtime_hours?: number | null
+          downtime_reason?: string | null
+          end_hour_reading?: number | null
+          end_time?: string | null
+          equipment_id: string
+          fuel_consumed?: number | null
+          fuel_cost?: number | null
+          hourly_rate?: number | null
+          id?: string
+          issues_reported?: string | null
+          location?: string | null
+          maintenance_required?: boolean | null
+          operating_efficiency?: number | null
+          operator_id?: string | null
+          photos?: Json | null
+          productivity_metric?: string | null
+          productivity_unit?: string | null
+          productivity_value?: number | null
+          project_id?: string | null
+          recorded_by?: string | null
+          start_hour_reading?: number | null
+          start_time?: string | null
+          terrain_type?: string | null
+          total_cost?: number | null
+          total_hours: number
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          weather_conditions?: string | null
+          work_order_reference?: string | null
+        }
+        Update: {
+          activity_description?: string | null
+          activity_type?: string | null
+          billable_amount?: number | null
+          billable_hours?: number | null
+          calculated_hours?: number | null
+          company_id?: string
+          created_at?: string
+          daily_rate?: number | null
+          date?: string
+          downtime_hours?: number | null
+          downtime_reason?: string | null
+          end_hour_reading?: number | null
+          end_time?: string | null
+          equipment_id?: string
+          fuel_consumed?: number | null
+          fuel_cost?: number | null
+          hourly_rate?: number | null
+          id?: string
+          issues_reported?: string | null
+          location?: string | null
+          maintenance_required?: boolean | null
+          operating_efficiency?: number | null
+          operator_id?: string | null
+          photos?: Json | null
+          productivity_metric?: string | null
+          productivity_unit?: string | null
+          productivity_value?: number | null
+          project_id?: string | null
+          recorded_by?: string | null
+          start_hour_reading?: number | null
+          start_time?: string | null
+          terrain_type?: string | null
+          total_cost?: number | null
+          total_hours?: number
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          weather_conditions?: string | null
+          work_order_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_utilization_detailed_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -8397,6 +8928,10 @@ export type Database = {
         Returns: string
       }
       generate_service_call_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_work_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
