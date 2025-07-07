@@ -236,6 +236,14 @@ const AppContent = () => {
         }
       />
       <Route
+        path="/admin/billing"
+        element={
+          <RouteGuard routePath="/admin/billing">
+            <Billing />
+          </RouteGuard>
+        }
+      />
+      <Route
         path="/admin/promotions"
         element={
           <RouteGuard routePath="/admin/promotions">
