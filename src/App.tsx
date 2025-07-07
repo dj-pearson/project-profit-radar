@@ -62,6 +62,7 @@ import PermitManagement from "./pages/PermitManagement";
 import BondInsuranceManagement from "./pages/BondInsuranceManagement";
 import PublicProcurement from "./pages/PublicProcurement";
 import ServiceDispatch from "./pages/ServiceDispatch";
+import EnvironmentalPermitting from "./pages/EnvironmentalPermitting";
 
 const queryClient = new QueryClient();
 
@@ -453,6 +454,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/service-dispatch">
             <ServiceDispatch />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/environmental-permitting"
+        element={
+          <RouteGuard routePath="/environmental-permitting">
+            <EnvironmentalPermitting />
           </RouteGuard>
         }
       />

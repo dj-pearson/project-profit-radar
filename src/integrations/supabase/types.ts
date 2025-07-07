@@ -14,6 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
+      agency_coordination: {
+        Row: {
+          agency_name: string
+          agency_position: string | null
+          agency_type: string | null
+          assigned_to: string | null
+          company_id: string
+          conditions_or_requirements: Json | null
+          contact_email: string | null
+          contact_person: string | null
+          contact_phone: string | null
+          coordination_type: string
+          correspondence_log: Json | null
+          created_at: string
+          department_division: string | null
+          description: string | null
+          documents_exchanged: Json | null
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          initial_contact_date: string | null
+          initiated_by: string | null
+          last_contact_date: string | null
+          meeting_notes: string | null
+          next_milestone: string | null
+          outcome: string | null
+          permit_id: string
+          response_deadline: string | null
+          response_received_date: string | null
+          status: string | null
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          agency_name: string
+          agency_position?: string | null
+          agency_type?: string | null
+          assigned_to?: string | null
+          company_id: string
+          conditions_or_requirements?: Json | null
+          contact_email?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          coordination_type: string
+          correspondence_log?: Json | null
+          created_at?: string
+          department_division?: string | null
+          description?: string | null
+          documents_exchanged?: Json | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          initial_contact_date?: string | null
+          initiated_by?: string | null
+          last_contact_date?: string | null
+          meeting_notes?: string | null
+          next_milestone?: string | null
+          outcome?: string | null
+          permit_id: string
+          response_deadline?: string | null
+          response_received_date?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          agency_name?: string
+          agency_position?: string | null
+          agency_type?: string | null
+          assigned_to?: string | null
+          company_id?: string
+          conditions_or_requirements?: Json | null
+          contact_email?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          coordination_type?: string
+          correspondence_log?: Json | null
+          created_at?: string
+          department_division?: string | null
+          description?: string | null
+          documents_exchanged?: Json | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          initial_contact_date?: string | null
+          initiated_by?: string | null
+          last_contact_date?: string | null
+          meeting_notes?: string | null
+          next_milestone?: string | null
+          outcome?: string | null
+          permit_id?: string
+          response_deadline?: string | null
+          response_received_date?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_coordination_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_permits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_settings: {
         Row: {
           api_key_name: string
@@ -2058,6 +2186,550 @@ export type Database = {
           },
         ]
       }
+      environmental_assessments: {
+        Row: {
+          adaptive_management_plan: string | null
+          adaptive_management_triggers: Json | null
+          air_quality_impact: string | null
+          alternatives_considered: Json | null
+          approved_by: string | null
+          assessment_document_path: string | null
+          assessment_type: string
+          comment_response_document_path: string | null
+          comments_received: number | null
+          company_id: string
+          cooperating_agencies: string[] | null
+          created_at: string
+          cultural_resources_impact: string | null
+          cumulative_impact: string | null
+          decision_date: string | null
+          decision_rationale: string | null
+          finding: string | null
+          gis_data_path: string | null
+          id: string
+          lead_agency: string
+          mitigation_measures: Json | null
+          monitoring_commitments: Json | null
+          nepa_process_stage: string | null
+          no_action_alternative: string | null
+          noise_impact: string | null
+          permit_id: string
+          photos_path: string | null
+          post_decision_monitoring: string | null
+          preferred_alternative: string | null
+          prepared_by: string | null
+          project_id: string | null
+          public_meetings_held: Json | null
+          purpose_and_need: string | null
+          reviewed_by: string | null
+          scoping_period_end: string | null
+          scoping_period_start: string | null
+          socioeconomic_impact: string | null
+          soil_impact: string | null
+          stakeholder_engagement_plan: string | null
+          supporting_studies: Json | null
+          updated_at: string
+          vegetation_impact: string | null
+          visual_impact: string | null
+          water_quality_impact: string | null
+          wildlife_impact: string | null
+        }
+        Insert: {
+          adaptive_management_plan?: string | null
+          adaptive_management_triggers?: Json | null
+          air_quality_impact?: string | null
+          alternatives_considered?: Json | null
+          approved_by?: string | null
+          assessment_document_path?: string | null
+          assessment_type: string
+          comment_response_document_path?: string | null
+          comments_received?: number | null
+          company_id: string
+          cooperating_agencies?: string[] | null
+          created_at?: string
+          cultural_resources_impact?: string | null
+          cumulative_impact?: string | null
+          decision_date?: string | null
+          decision_rationale?: string | null
+          finding?: string | null
+          gis_data_path?: string | null
+          id?: string
+          lead_agency: string
+          mitigation_measures?: Json | null
+          monitoring_commitments?: Json | null
+          nepa_process_stage?: string | null
+          no_action_alternative?: string | null
+          noise_impact?: string | null
+          permit_id: string
+          photos_path?: string | null
+          post_decision_monitoring?: string | null
+          preferred_alternative?: string | null
+          prepared_by?: string | null
+          project_id?: string | null
+          public_meetings_held?: Json | null
+          purpose_and_need?: string | null
+          reviewed_by?: string | null
+          scoping_period_end?: string | null
+          scoping_period_start?: string | null
+          socioeconomic_impact?: string | null
+          soil_impact?: string | null
+          stakeholder_engagement_plan?: string | null
+          supporting_studies?: Json | null
+          updated_at?: string
+          vegetation_impact?: string | null
+          visual_impact?: string | null
+          water_quality_impact?: string | null
+          wildlife_impact?: string | null
+        }
+        Update: {
+          adaptive_management_plan?: string | null
+          adaptive_management_triggers?: Json | null
+          air_quality_impact?: string | null
+          alternatives_considered?: Json | null
+          approved_by?: string | null
+          assessment_document_path?: string | null
+          assessment_type?: string
+          comment_response_document_path?: string | null
+          comments_received?: number | null
+          company_id?: string
+          cooperating_agencies?: string[] | null
+          created_at?: string
+          cultural_resources_impact?: string | null
+          cumulative_impact?: string | null
+          decision_date?: string | null
+          decision_rationale?: string | null
+          finding?: string | null
+          gis_data_path?: string | null
+          id?: string
+          lead_agency?: string
+          mitigation_measures?: Json | null
+          monitoring_commitments?: Json | null
+          nepa_process_stage?: string | null
+          no_action_alternative?: string | null
+          noise_impact?: string | null
+          permit_id?: string
+          photos_path?: string | null
+          post_decision_monitoring?: string | null
+          preferred_alternative?: string | null
+          prepared_by?: string | null
+          project_id?: string | null
+          public_meetings_held?: Json | null
+          purpose_and_need?: string | null
+          reviewed_by?: string | null
+          scoping_period_end?: string | null
+          scoping_period_start?: string | null
+          socioeconomic_impact?: string | null
+          soil_impact?: string | null
+          stakeholder_engagement_plan?: string | null
+          supporting_studies?: Json | null
+          updated_at?: string
+          vegetation_impact?: string | null
+          visual_impact?: string | null
+          water_quality_impact?: string | null
+          wildlife_impact?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_permits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_prepared_by_fkey"
+            columns: ["prepared_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environmental_monitoring: {
+        Row: {
+          calibration_date: string | null
+          certified_lab: boolean | null
+          chain_of_custody_number: string | null
+          collected_by: string | null
+          company_id: string
+          corrective_action_triggered: boolean | null
+          created_at: string
+          data_file_path: string | null
+          equipment_used: string | null
+          exceedance_level: number | null
+          field_notes: string | null
+          frequency_required: string | null
+          gps_coordinates: unknown | null
+          humidity: number | null
+          id: string
+          lab_name: string | null
+          measured_value: number | null
+          measurement_date: string
+          measurement_method: string | null
+          measurement_unit: string | null
+          monitoring_location: string | null
+          monitoring_type: string
+          parameter_measured: string
+          permit_id: string
+          permit_limit: number | null
+          photos: Json | null
+          qa_qc_notes: string | null
+          regulatory_limit: number | null
+          temperature: number | null
+          updated_at: string
+          verified_by: string | null
+          weather_conditions: string | null
+          wind_direction: string | null
+          wind_speed: number | null
+          within_limits: boolean | null
+        }
+        Insert: {
+          calibration_date?: string | null
+          certified_lab?: boolean | null
+          chain_of_custody_number?: string | null
+          collected_by?: string | null
+          company_id: string
+          corrective_action_triggered?: boolean | null
+          created_at?: string
+          data_file_path?: string | null
+          equipment_used?: string | null
+          exceedance_level?: number | null
+          field_notes?: string | null
+          frequency_required?: string | null
+          gps_coordinates?: unknown | null
+          humidity?: number | null
+          id?: string
+          lab_name?: string | null
+          measured_value?: number | null
+          measurement_date: string
+          measurement_method?: string | null
+          measurement_unit?: string | null
+          monitoring_location?: string | null
+          monitoring_type: string
+          parameter_measured: string
+          permit_id: string
+          permit_limit?: number | null
+          photos?: Json | null
+          qa_qc_notes?: string | null
+          regulatory_limit?: number | null
+          temperature?: number | null
+          updated_at?: string
+          verified_by?: string | null
+          weather_conditions?: string | null
+          wind_direction?: string | null
+          wind_speed?: number | null
+          within_limits?: boolean | null
+        }
+        Update: {
+          calibration_date?: string | null
+          certified_lab?: boolean | null
+          chain_of_custody_number?: string | null
+          collected_by?: string | null
+          company_id?: string
+          corrective_action_triggered?: boolean | null
+          created_at?: string
+          data_file_path?: string | null
+          equipment_used?: string | null
+          exceedance_level?: number | null
+          field_notes?: string | null
+          frequency_required?: string | null
+          gps_coordinates?: unknown | null
+          humidity?: number | null
+          id?: string
+          lab_name?: string | null
+          measured_value?: number | null
+          measurement_date?: string
+          measurement_method?: string | null
+          measurement_unit?: string | null
+          monitoring_location?: string | null
+          monitoring_type?: string
+          parameter_measured?: string
+          permit_id?: string
+          permit_limit?: number | null
+          photos?: Json | null
+          qa_qc_notes?: string | null
+          regulatory_limit?: number | null
+          temperature?: number | null
+          updated_at?: string
+          verified_by?: string | null
+          weather_conditions?: string | null
+          wind_direction?: string | null
+          wind_speed?: number | null
+          within_limits?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_monitoring_collected_by_fkey"
+            columns: ["collected_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_permits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environmental_permits: {
+        Row: {
+          agency_contact_email: string | null
+          agency_contact_name: string | null
+          agency_contact_phone: string | null
+          annual_fee: number | null
+          application_date: string | null
+          application_document_path: string | null
+          application_fee: number | null
+          assigned_to: string | null
+          company_id: string
+          compliance_bond_amount: number | null
+          compliance_status: string | null
+          created_at: string
+          created_by: string | null
+          decision_date: string | null
+          description: string | null
+          effective_date: string | null
+          environmental_impact_summary: string | null
+          expiration_date: string | null
+          id: string
+          interagency_coordination: Json | null
+          internal_notes: string | null
+          issuing_agency: string
+          last_inspection_date: string | null
+          mitigation_measures: Json | null
+          monitoring_plan: string | null
+          monitoring_requirements: Json | null
+          nepa_category: string | null
+          nepa_class_of_action: string | null
+          nepa_document_type: string | null
+          next_inspection_date: string | null
+          permit_conditions: Json | null
+          permit_document_path: string | null
+          permit_name: string
+          permit_number: string
+          permit_type: string
+          priority: string | null
+          project_id: string | null
+          public_comment_period_end: string | null
+          public_comment_period_start: string | null
+          public_hearing_date: string | null
+          public_hearing_scheduled: boolean | null
+          regulatory_framework: string | null
+          renewal_application_deadline: string | null
+          renewal_notice_date: string | null
+          renewal_required: boolean | null
+          reporting_requirements: Json | null
+          review_start_date: string | null
+          status: string
+          supporting_documents: Json | null
+          target_decision_date: string | null
+          tribal_consultation_required: boolean | null
+          tribal_consultation_status: string | null
+          updated_at: string
+          violations: Json | null
+        }
+        Insert: {
+          agency_contact_email?: string | null
+          agency_contact_name?: string | null
+          agency_contact_phone?: string | null
+          annual_fee?: number | null
+          application_date?: string | null
+          application_document_path?: string | null
+          application_fee?: number | null
+          assigned_to?: string | null
+          company_id: string
+          compliance_bond_amount?: number | null
+          compliance_status?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision_date?: string | null
+          description?: string | null
+          effective_date?: string | null
+          environmental_impact_summary?: string | null
+          expiration_date?: string | null
+          id?: string
+          interagency_coordination?: Json | null
+          internal_notes?: string | null
+          issuing_agency: string
+          last_inspection_date?: string | null
+          mitigation_measures?: Json | null
+          monitoring_plan?: string | null
+          monitoring_requirements?: Json | null
+          nepa_category?: string | null
+          nepa_class_of_action?: string | null
+          nepa_document_type?: string | null
+          next_inspection_date?: string | null
+          permit_conditions?: Json | null
+          permit_document_path?: string | null
+          permit_name: string
+          permit_number: string
+          permit_type: string
+          priority?: string | null
+          project_id?: string | null
+          public_comment_period_end?: string | null
+          public_comment_period_start?: string | null
+          public_hearing_date?: string | null
+          public_hearing_scheduled?: boolean | null
+          regulatory_framework?: string | null
+          renewal_application_deadline?: string | null
+          renewal_notice_date?: string | null
+          renewal_required?: boolean | null
+          reporting_requirements?: Json | null
+          review_start_date?: string | null
+          status?: string
+          supporting_documents?: Json | null
+          target_decision_date?: string | null
+          tribal_consultation_required?: boolean | null
+          tribal_consultation_status?: string | null
+          updated_at?: string
+          violations?: Json | null
+        }
+        Update: {
+          agency_contact_email?: string | null
+          agency_contact_name?: string | null
+          agency_contact_phone?: string | null
+          annual_fee?: number | null
+          application_date?: string | null
+          application_document_path?: string | null
+          application_fee?: number | null
+          assigned_to?: string | null
+          company_id?: string
+          compliance_bond_amount?: number | null
+          compliance_status?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision_date?: string | null
+          description?: string | null
+          effective_date?: string | null
+          environmental_impact_summary?: string | null
+          expiration_date?: string | null
+          id?: string
+          interagency_coordination?: Json | null
+          internal_notes?: string | null
+          issuing_agency?: string
+          last_inspection_date?: string | null
+          mitigation_measures?: Json | null
+          monitoring_plan?: string | null
+          monitoring_requirements?: Json | null
+          nepa_category?: string | null
+          nepa_class_of_action?: string | null
+          nepa_document_type?: string | null
+          next_inspection_date?: string | null
+          permit_conditions?: Json | null
+          permit_document_path?: string | null
+          permit_name?: string
+          permit_number?: string
+          permit_type?: string
+          priority?: string | null
+          project_id?: string | null
+          public_comment_period_end?: string | null
+          public_comment_period_start?: string | null
+          public_hearing_date?: string | null
+          public_hearing_scheduled?: boolean | null
+          regulatory_framework?: string | null
+          renewal_application_deadline?: string | null
+          renewal_notice_date?: string | null
+          renewal_required?: boolean | null
+          reporting_requirements?: Json | null
+          review_start_date?: string | null
+          status?: string
+          supporting_documents?: Json | null
+          target_decision_date?: string | null
+          tribal_consultation_required?: boolean | null
+          tribal_consultation_status?: string | null
+          updated_at?: string
+          violations?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_permits_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment: {
         Row: {
           company_id: string
@@ -3276,6 +3948,121 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permit_compliance_events: {
+        Row: {
+          areas_inspected: string[] | null
+          assigned_to: string | null
+          compliance_rating: string | null
+          corrective_action_completion_date: string | null
+          corrective_action_deadline: string | null
+          corrective_actions_completed: boolean | null
+          corrective_actions_required: Json | null
+          created_at: string
+          event_date: string
+          event_type: string
+          findings: string | null
+          fine_paid_date: string | null
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          inspection_report_path: string | null
+          inspection_type: string | null
+          inspector_agency: string | null
+          inspector_name: string | null
+          internal_notes: string | null
+          penalty_amount: number | null
+          permit_id: string
+          photos: Json | null
+          reported_by: string | null
+          resolution_status: string | null
+          supporting_documents: Json | null
+          updated_at: string
+          violations_found: Json | null
+        }
+        Insert: {
+          areas_inspected?: string[] | null
+          assigned_to?: string | null
+          compliance_rating?: string | null
+          corrective_action_completion_date?: string | null
+          corrective_action_deadline?: string | null
+          corrective_actions_completed?: boolean | null
+          corrective_actions_required?: Json | null
+          created_at?: string
+          event_date: string
+          event_type: string
+          findings?: string | null
+          fine_paid_date?: string | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          inspection_report_path?: string | null
+          inspection_type?: string | null
+          inspector_agency?: string | null
+          inspector_name?: string | null
+          internal_notes?: string | null
+          penalty_amount?: number | null
+          permit_id: string
+          photos?: Json | null
+          reported_by?: string | null
+          resolution_status?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string
+          violations_found?: Json | null
+        }
+        Update: {
+          areas_inspected?: string[] | null
+          assigned_to?: string | null
+          compliance_rating?: string | null
+          corrective_action_completion_date?: string | null
+          corrective_action_deadline?: string | null
+          corrective_actions_completed?: boolean | null
+          corrective_actions_required?: Json | null
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          findings?: string | null
+          fine_paid_date?: string | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          inspection_report_path?: string | null
+          inspection_type?: string | null
+          inspector_agency?: string | null
+          inspector_name?: string | null
+          internal_notes?: string | null
+          penalty_amount?: number | null
+          permit_id?: string
+          photos?: Json | null
+          reported_by?: string | null
+          resolution_status?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string
+          violations_found?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_compliance_events_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_compliance_events_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_permits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_compliance_events_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -7598,6 +8385,10 @@ export type Database = {
         Returns: string
       }
       generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_permit_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
