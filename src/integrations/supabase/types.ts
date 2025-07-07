@@ -173,6 +173,149 @@ export type Database = {
         }
         Relationships: []
       }
+      bonds: {
+        Row: {
+          agent_company: string | null
+          agent_email: string | null
+          agent_name: string | null
+          agent_phone: string | null
+          bond_amount: number
+          bond_document_path: string | null
+          bond_name: string
+          bond_number: string
+          bond_percentage: number | null
+          bond_type: string
+          certificate_path: string | null
+          claim_amount: number | null
+          claim_date: string | null
+          claim_made: boolean | null
+          claim_notes: string | null
+          claim_status: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          effective_date: string
+          expiry_date: string
+          id: string
+          issued_date: string | null
+          notes: string | null
+          obligee_name: string
+          premium_amount: number | null
+          principal_name: string
+          project_id: string | null
+          status: string
+          surety_company: string
+          surety_contact_email: string | null
+          surety_contact_name: string | null
+          surety_contact_phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_company?: string | null
+          agent_email?: string | null
+          agent_name?: string | null
+          agent_phone?: string | null
+          bond_amount: number
+          bond_document_path?: string | null
+          bond_name: string
+          bond_number: string
+          bond_percentage?: number | null
+          bond_type: string
+          certificate_path?: string | null
+          claim_amount?: number | null
+          claim_date?: string | null
+          claim_made?: boolean | null
+          claim_notes?: string | null
+          claim_status?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          effective_date: string
+          expiry_date: string
+          id?: string
+          issued_date?: string | null
+          notes?: string | null
+          obligee_name: string
+          premium_amount?: number | null
+          principal_name: string
+          project_id?: string | null
+          status?: string
+          surety_company: string
+          surety_contact_email?: string | null
+          surety_contact_name?: string | null
+          surety_contact_phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_company?: string | null
+          agent_email?: string | null
+          agent_name?: string | null
+          agent_phone?: string | null
+          bond_amount?: number
+          bond_document_path?: string | null
+          bond_name?: string
+          bond_number?: string
+          bond_percentage?: number | null
+          bond_type?: string
+          certificate_path?: string | null
+          claim_amount?: number | null
+          claim_date?: string | null
+          claim_made?: boolean | null
+          claim_notes?: string | null
+          claim_status?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          effective_date?: string
+          expiry_date?: string
+          id?: string
+          issued_date?: string | null
+          notes?: string | null
+          obligee_name?: string
+          premium_amount?: number | null
+          principal_name?: string
+          project_id?: string | null
+          status?: string
+          surety_company?: string
+          surety_contact_email?: string | null
+          surety_contact_name?: string | null
+          surety_contact_phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bonds_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonds_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "bonds_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_flow_projections: {
         Row: {
           actual_balance: number | null
@@ -1958,6 +2101,263 @@ export type Database = {
           },
         ]
       }
+      insurance_claims: {
+        Row: {
+          adjuster_company: string | null
+          adjuster_contact: string | null
+          adjuster_name: string | null
+          affects_premium: boolean | null
+          claim_amount: number
+          claim_date: string
+          claim_description: string
+          claim_documents_path: string | null
+          claim_number: string
+          claim_type: string
+          claimant_contact: string | null
+          claimant_name: string | null
+          correspondence_log: Json | null
+          created_at: string
+          created_by: string | null
+          deductible_amount: number | null
+          id: string
+          incident_date: string
+          insurance_policy_id: string
+          photos_path: string | null
+          premium_impact_amount: number | null
+          project_id: string | null
+          reserve_amount: number | null
+          resolution_date: string | null
+          resolution_notes: string | null
+          settlement_amount: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          adjuster_company?: string | null
+          adjuster_contact?: string | null
+          adjuster_name?: string | null
+          affects_premium?: boolean | null
+          claim_amount: number
+          claim_date: string
+          claim_description: string
+          claim_documents_path?: string | null
+          claim_number: string
+          claim_type: string
+          claimant_contact?: string | null
+          claimant_name?: string | null
+          correspondence_log?: Json | null
+          created_at?: string
+          created_by?: string | null
+          deductible_amount?: number | null
+          id?: string
+          incident_date: string
+          insurance_policy_id: string
+          photos_path?: string | null
+          premium_impact_amount?: number | null
+          project_id?: string | null
+          reserve_amount?: number | null
+          resolution_date?: string | null
+          resolution_notes?: string | null
+          settlement_amount?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          adjuster_company?: string | null
+          adjuster_contact?: string | null
+          adjuster_name?: string | null
+          affects_premium?: boolean | null
+          claim_amount?: number
+          claim_date?: string
+          claim_description?: string
+          claim_documents_path?: string | null
+          claim_number?: string
+          claim_type?: string
+          claimant_contact?: string | null
+          claimant_name?: string | null
+          correspondence_log?: Json | null
+          created_at?: string
+          created_by?: string | null
+          deductible_amount?: number | null
+          id?: string
+          incident_date?: string
+          insurance_policy_id?: string
+          photos_path?: string | null
+          premium_impact_amount?: number | null
+          project_id?: string | null
+          reserve_amount?: number | null
+          resolution_date?: string | null
+          resolution_notes?: string | null
+          settlement_amount?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_insurance_policy_id_fkey"
+            columns: ["insurance_policy_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurance_policies: {
+        Row: {
+          additional_insured_required: boolean | null
+          agent_company: string | null
+          agent_email: string | null
+          agent_name: string | null
+          agent_phone: string | null
+          aggregate_limit: number | null
+          carrier_contact_email: string | null
+          carrier_contact_name: string | null
+          carrier_contact_phone: string | null
+          certificate_path: string | null
+          claims_count: number | null
+          claims_made: boolean | null
+          company_id: string
+          coverage_limit: number
+          created_at: string
+          created_by: string | null
+          declarations_page_path: string | null
+          deductible: number | null
+          description: string | null
+          effective_date: string
+          expiry_date: string
+          id: string
+          insurance_company: string
+          insurance_company_rating: string | null
+          issued_date: string | null
+          notes: string | null
+          per_occurrence_limit: number | null
+          policy_document_path: string | null
+          policy_name: string
+          policy_number: string
+          policy_type: string
+          premium_amount: number | null
+          primary_non_contributory: boolean | null
+          status: string
+          total_claims_amount: number | null
+          updated_at: string
+          waiver_of_subrogation: boolean | null
+        }
+        Insert: {
+          additional_insured_required?: boolean | null
+          agent_company?: string | null
+          agent_email?: string | null
+          agent_name?: string | null
+          agent_phone?: string | null
+          aggregate_limit?: number | null
+          carrier_contact_email?: string | null
+          carrier_contact_name?: string | null
+          carrier_contact_phone?: string | null
+          certificate_path?: string | null
+          claims_count?: number | null
+          claims_made?: boolean | null
+          company_id: string
+          coverage_limit: number
+          created_at?: string
+          created_by?: string | null
+          declarations_page_path?: string | null
+          deductible?: number | null
+          description?: string | null
+          effective_date: string
+          expiry_date: string
+          id?: string
+          insurance_company: string
+          insurance_company_rating?: string | null
+          issued_date?: string | null
+          notes?: string | null
+          per_occurrence_limit?: number | null
+          policy_document_path?: string | null
+          policy_name: string
+          policy_number: string
+          policy_type: string
+          premium_amount?: number | null
+          primary_non_contributory?: boolean | null
+          status?: string
+          total_claims_amount?: number | null
+          updated_at?: string
+          waiver_of_subrogation?: boolean | null
+        }
+        Update: {
+          additional_insured_required?: boolean | null
+          agent_company?: string | null
+          agent_email?: string | null
+          agent_name?: string | null
+          agent_phone?: string | null
+          aggregate_limit?: number | null
+          carrier_contact_email?: string | null
+          carrier_contact_name?: string | null
+          carrier_contact_phone?: string | null
+          certificate_path?: string | null
+          claims_count?: number | null
+          claims_made?: boolean | null
+          company_id?: string
+          coverage_limit?: number
+          created_at?: string
+          created_by?: string | null
+          declarations_page_path?: string | null
+          deductible?: number | null
+          description?: string | null
+          effective_date?: string
+          expiry_date?: string
+          id?: string
+          insurance_company?: string
+          insurance_company_rating?: string | null
+          issued_date?: string | null
+          notes?: string | null
+          per_occurrence_limit?: number | null
+          policy_document_path?: string | null
+          policy_name?: string
+          policy_number?: string
+          policy_type?: string
+          premium_amount?: number | null
+          primary_non_contributory?: boolean | null
+          status?: string
+          total_claims_amount?: number | null
+          updated_at?: string
+          waiver_of_subrogation?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_policies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           cost_code_id: string | null
@@ -3111,6 +3511,83 @@ export type Database = {
           },
         ]
       }
+      project_bond_requirements: {
+        Row: {
+          bond_id: string | null
+          bond_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_required: boolean
+          is_satisfied: boolean
+          project_id: string
+          required_amount: number
+          required_percentage: number | null
+          requirement_description: string | null
+          satisfied_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          bond_id?: string | null
+          bond_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_required?: boolean
+          is_satisfied?: boolean
+          project_id: string
+          required_amount: number
+          required_percentage?: number | null
+          requirement_description?: string | null
+          satisfied_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bond_id?: string | null
+          bond_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_required?: boolean
+          is_satisfied?: boolean
+          project_id?: string
+          required_amount?: number
+          required_percentage?: number | null
+          requirement_description?: string | null
+          satisfied_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_bond_requirements_bond_id_fkey"
+            columns: ["bond_id"]
+            isOneToOne: false
+            referencedRelation: "bonds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bond_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bond_requirements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_bond_requirements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_budgets: {
         Row: {
           budgeted_amount: number
@@ -3325,6 +3802,104 @@ export type Database = {
           },
           {
             foreignKeyName: "project_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_insurance_requirements: {
+        Row: {
+          additional_insured_required: boolean | null
+          certificate_expiry_date: string | null
+          certificate_holder: string | null
+          certificate_received: boolean | null
+          created_at: string
+          created_by: string | null
+          id: string
+          insurance_policy_id: string | null
+          insurance_type: string
+          is_required: boolean
+          is_satisfied: boolean
+          maximum_deductible: number | null
+          minimum_aggregate: number | null
+          minimum_coverage: number
+          primary_non_contributory_required: boolean | null
+          project_id: string
+          requirement_description: string | null
+          satisfied_date: string | null
+          updated_at: string
+          waiver_of_subrogation_required: boolean | null
+        }
+        Insert: {
+          additional_insured_required?: boolean | null
+          certificate_expiry_date?: string | null
+          certificate_holder?: string | null
+          certificate_received?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          insurance_policy_id?: string | null
+          insurance_type: string
+          is_required?: boolean
+          is_satisfied?: boolean
+          maximum_deductible?: number | null
+          minimum_aggregate?: number | null
+          minimum_coverage: number
+          primary_non_contributory_required?: boolean | null
+          project_id: string
+          requirement_description?: string | null
+          satisfied_date?: string | null
+          updated_at?: string
+          waiver_of_subrogation_required?: boolean | null
+        }
+        Update: {
+          additional_insured_required?: boolean | null
+          certificate_expiry_date?: string | null
+          certificate_holder?: string | null
+          certificate_received?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          insurance_policy_id?: string | null
+          insurance_type?: string
+          is_required?: boolean
+          is_satisfied?: boolean
+          maximum_deductible?: number | null
+          minimum_aggregate?: number | null
+          minimum_coverage?: number
+          primary_non_contributory_required?: boolean | null
+          project_id?: string
+          requirement_description?: string | null
+          satisfied_date?: string | null
+          updated_at?: string
+          waiver_of_subrogation_required?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_insurance_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_insurance_requirements_insurance_policy_id_fkey"
+            columns: ["insurance_policy_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_insurance_requirements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_insurance_requirements_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -5719,6 +6294,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_project_requirements: {
+        Args: { p_project_id: string; p_contract_value: number }
+        Returns: Json
+      }
       check_rate_limit: {
         Args: {
           p_identifier: string
