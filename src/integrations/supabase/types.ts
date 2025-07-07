@@ -1369,6 +1369,99 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_service_requests: {
+        Row: {
+          additional_documents: Json | null
+          customer_email: string
+          customer_ip_address: unknown | null
+          customer_name: string
+          customer_notified: boolean | null
+          customer_phone: string | null
+          id: string
+          issue_description: string
+          issue_photos: Json | null
+          preferred_date: string | null
+          preferred_time: string | null
+          priority_requested: string | null
+          request_number: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_address: string
+          service_call_id: string | null
+          service_type: string
+          status: string
+          submission_method: string | null
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          additional_documents?: Json | null
+          customer_email: string
+          customer_ip_address?: unknown | null
+          customer_name: string
+          customer_notified?: boolean | null
+          customer_phone?: string | null
+          id?: string
+          issue_description: string
+          issue_photos?: Json | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          priority_requested?: string | null
+          request_number: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_address: string
+          service_call_id?: string | null
+          service_type: string
+          status?: string
+          submission_method?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          additional_documents?: Json | null
+          customer_email?: string
+          customer_ip_address?: unknown | null
+          customer_name?: string
+          customer_notified?: boolean | null
+          customer_phone?: string | null
+          id?: string
+          issue_description?: string
+          issue_photos?: Json | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          priority_requested?: string | null
+          request_number?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_address?: string
+          service_call_id?: string | null
+          service_type?: string
+          status?: string
+          submission_method?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_service_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_service_requests_service_call_id_fkey"
+            columns: ["service_call_id"]
+            isOneToOne: false
+            referencedRelation: "service_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_reports: {
         Row: {
           created_at: string
@@ -5804,6 +5897,494 @@ export type Database = {
         }
         Relationships: []
       }
+      service_call_parts: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          customer_cost: number | null
+          description: string | null
+          id: string
+          inventory_item_id: string | null
+          is_warranty_covered: boolean | null
+          manufacturer: string | null
+          markup_percentage: number | null
+          part_name: string
+          part_number: string | null
+          quantity_used: number
+          service_call_id: string
+          supplier: string | null
+          total_cost: number | null
+          unit_cost: number | null
+          warranty_period_months: number | null
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          customer_cost?: number | null
+          description?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          is_warranty_covered?: boolean | null
+          manufacturer?: string | null
+          markup_percentage?: number | null
+          part_name: string
+          part_number?: string | null
+          quantity_used: number
+          service_call_id: string
+          supplier?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
+          warranty_period_months?: number | null
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          customer_cost?: number | null
+          description?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          is_warranty_covered?: boolean | null
+          manufacturer?: string | null
+          markup_percentage?: number | null
+          part_name?: string
+          part_number?: string | null
+          quantity_used?: number
+          service_call_id?: string
+          supplier?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
+          warranty_period_months?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_call_parts_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_call_parts_service_call_id_fkey"
+            columns: ["service_call_id"]
+            isOneToOne: false
+            referencedRelation: "service_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_call_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          from_status: string | null
+          id: string
+          location_lat: number | null
+          location_lng: number | null
+          notes: string | null
+          reason: string | null
+          service_call_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          notes?: string | null
+          reason?: string | null
+          service_call_id: string
+          to_status: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          notes?: string | null
+          reason?: string | null
+          service_call_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_call_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_call_status_history_service_call_id_fkey"
+            columns: ["service_call_id"]
+            isOneToOne: false
+            referencedRelation: "service_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_call_templates: {
+        Row: {
+          company_id: string
+          completion_checklist: Json | null
+          created_at: string
+          created_by: string | null
+          default_priority: string | null
+          description_template: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          on_site_checklist: Json | null
+          parts_commonly_needed: Json | null
+          pre_visit_checklist: Json | null
+          safety_requirements: string | null
+          service_type: string
+          special_instructions: string | null
+          template_name: string
+          tools_required: string[] | null
+          trade_required: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completion_checklist?: Json | null
+          created_at?: string
+          created_by?: string | null
+          default_priority?: string | null
+          description_template?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          on_site_checklist?: Json | null
+          parts_commonly_needed?: Json | null
+          pre_visit_checklist?: Json | null
+          safety_requirements?: string | null
+          service_type: string
+          special_instructions?: string | null
+          template_name: string
+          tools_required?: string[] | null
+          trade_required?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completion_checklist?: Json | null
+          created_at?: string
+          created_by?: string | null
+          default_priority?: string | null
+          description_template?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          on_site_checklist?: Json | null
+          parts_commonly_needed?: Json | null
+          pre_visit_checklist?: Json | null
+          safety_requirements?: string | null
+          service_type?: string
+          special_instructions?: string | null
+          template_name?: string
+          tools_required?: string[] | null
+          trade_required?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_call_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_call_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_calls: {
+        Row: {
+          access_instructions: string | null
+          actual_cost: number | null
+          after_photos: Json | null
+          arrival_notification_sent: boolean | null
+          arrived_at: string | null
+          assigned_technician_id: string | null
+          backup_technician_id: string | null
+          before_photos: Json | null
+          call_number: string
+          company_id: string
+          completion_notification_sent: boolean | null
+          completion_status: string | null
+          created_at: string
+          created_by: string | null
+          customer_address: string
+          customer_company: string | null
+          customer_contact_person: string | null
+          customer_email: string | null
+          customer_feedback: string | null
+          customer_name: string
+          customer_notified: boolean | null
+          customer_phone: string | null
+          customer_satisfaction_rating: number | null
+          customer_signature_path: string | null
+          departed_at: string | null
+          description: string | null
+          dispatched_at: string | null
+          dispatcher_id: string | null
+          equipment_needed: string[] | null
+          estimated_cost: number | null
+          estimated_duration_minutes: number | null
+          follow_up_date: string | null
+          follow_up_notes: string | null
+          id: string
+          internal_notes: string | null
+          invoice_document_path: string | null
+          is_billable: boolean | null
+          is_recurring: boolean | null
+          is_warranty_work: boolean | null
+          labor_cost: number | null
+          next_service_date: string | null
+          parts_cost: number | null
+          parts_needed: Json | null
+          photos: Json | null
+          priority: string
+          project_id: string | null
+          recurring_frequency: string | null
+          requested_date: string | null
+          requested_time_end: string | null
+          requested_time_start: string | null
+          requires_follow_up: boolean | null
+          resolution_notes: string | null
+          safety_notes: string | null
+          scheduled_date: string | null
+          scheduled_time_end: string | null
+          scheduled_time_start: string | null
+          service_location_lat: number | null
+          service_location_lng: number | null
+          service_type: string
+          special_requirements: string | null
+          status: string
+          technician_notes: string | null
+          title: string
+          tools_required: string[] | null
+          trade_required: string | null
+          traffic_conditions: string | null
+          travel_cost: number | null
+          updated_at: string
+          weather_conditions: string | null
+          work_completed_at: string | null
+          work_order_document_path: string | null
+          work_performed: string | null
+          work_started_at: string | null
+        }
+        Insert: {
+          access_instructions?: string | null
+          actual_cost?: number | null
+          after_photos?: Json | null
+          arrival_notification_sent?: boolean | null
+          arrived_at?: string | null
+          assigned_technician_id?: string | null
+          backup_technician_id?: string | null
+          before_photos?: Json | null
+          call_number: string
+          company_id: string
+          completion_notification_sent?: boolean | null
+          completion_status?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address: string
+          customer_company?: string | null
+          customer_contact_person?: string | null
+          customer_email?: string | null
+          customer_feedback?: string | null
+          customer_name: string
+          customer_notified?: boolean | null
+          customer_phone?: string | null
+          customer_satisfaction_rating?: number | null
+          customer_signature_path?: string | null
+          departed_at?: string | null
+          description?: string | null
+          dispatched_at?: string | null
+          dispatcher_id?: string | null
+          equipment_needed?: string[] | null
+          estimated_cost?: number | null
+          estimated_duration_minutes?: number | null
+          follow_up_date?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          internal_notes?: string | null
+          invoice_document_path?: string | null
+          is_billable?: boolean | null
+          is_recurring?: boolean | null
+          is_warranty_work?: boolean | null
+          labor_cost?: number | null
+          next_service_date?: string | null
+          parts_cost?: number | null
+          parts_needed?: Json | null
+          photos?: Json | null
+          priority?: string
+          project_id?: string | null
+          recurring_frequency?: string | null
+          requested_date?: string | null
+          requested_time_end?: string | null
+          requested_time_start?: string | null
+          requires_follow_up?: boolean | null
+          resolution_notes?: string | null
+          safety_notes?: string | null
+          scheduled_date?: string | null
+          scheduled_time_end?: string | null
+          scheduled_time_start?: string | null
+          service_location_lat?: number | null
+          service_location_lng?: number | null
+          service_type: string
+          special_requirements?: string | null
+          status?: string
+          technician_notes?: string | null
+          title: string
+          tools_required?: string[] | null
+          trade_required?: string | null
+          traffic_conditions?: string | null
+          travel_cost?: number | null
+          updated_at?: string
+          weather_conditions?: string | null
+          work_completed_at?: string | null
+          work_order_document_path?: string | null
+          work_performed?: string | null
+          work_started_at?: string | null
+        }
+        Update: {
+          access_instructions?: string | null
+          actual_cost?: number | null
+          after_photos?: Json | null
+          arrival_notification_sent?: boolean | null
+          arrived_at?: string | null
+          assigned_technician_id?: string | null
+          backup_technician_id?: string | null
+          before_photos?: Json | null
+          call_number?: string
+          company_id?: string
+          completion_notification_sent?: boolean | null
+          completion_status?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string
+          customer_company?: string | null
+          customer_contact_person?: string | null
+          customer_email?: string | null
+          customer_feedback?: string | null
+          customer_name?: string
+          customer_notified?: boolean | null
+          customer_phone?: string | null
+          customer_satisfaction_rating?: number | null
+          customer_signature_path?: string | null
+          departed_at?: string | null
+          description?: string | null
+          dispatched_at?: string | null
+          dispatcher_id?: string | null
+          equipment_needed?: string[] | null
+          estimated_cost?: number | null
+          estimated_duration_minutes?: number | null
+          follow_up_date?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          internal_notes?: string | null
+          invoice_document_path?: string | null
+          is_billable?: boolean | null
+          is_recurring?: boolean | null
+          is_warranty_work?: boolean | null
+          labor_cost?: number | null
+          next_service_date?: string | null
+          parts_cost?: number | null
+          parts_needed?: Json | null
+          photos?: Json | null
+          priority?: string
+          project_id?: string | null
+          recurring_frequency?: string | null
+          requested_date?: string | null
+          requested_time_end?: string | null
+          requested_time_start?: string | null
+          requires_follow_up?: boolean | null
+          resolution_notes?: string | null
+          safety_notes?: string | null
+          scheduled_date?: string | null
+          scheduled_time_end?: string | null
+          scheduled_time_start?: string | null
+          service_location_lat?: number | null
+          service_location_lng?: number | null
+          service_type?: string
+          special_requirements?: string | null
+          status?: string
+          technician_notes?: string | null
+          title?: string
+          tools_required?: string[] | null
+          trade_required?: string | null
+          traffic_conditions?: string | null
+          travel_cost?: number | null
+          updated_at?: string
+          weather_conditions?: string | null
+          work_completed_at?: string | null
+          work_order_document_path?: string | null
+          work_performed?: string | null
+          work_started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_calls_assigned_technician_id_fkey"
+            columns: ["assigned_technician_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_backup_technician_id_fkey"
+            columns: ["backup_technician_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "service_calls_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcontractor_disclosures: {
         Row: {
           approval_date: string | null
@@ -6155,6 +6736,66 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technician_locations: {
+        Row: {
+          accuracy: number | null
+          heading: number | null
+          id: string
+          is_active: boolean | null
+          is_on_duty: boolean | null
+          latitude: number
+          longitude: number
+          recorded_at: string
+          service_call_id: string | null
+          speed: number | null
+          status: string | null
+          technician_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          heading?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_on_duty?: boolean | null
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          service_call_id?: string | null
+          speed?: number | null
+          status?: string | null
+          technician_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          heading?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_on_duty?: boolean | null
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          service_call_id?: string | null
+          speed?: number | null
+          status?: string | null
+          technician_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technician_locations_service_call_id_fkey"
+            columns: ["service_call_id"]
+            isOneToOne: false
+            referencedRelation: "service_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technician_locations_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6952,12 +7593,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_customer_request_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_po_number: {
         Args: { company_uuid: string }
+        Returns: string
+      }
+      generate_service_call_number: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_active_promotions: {
