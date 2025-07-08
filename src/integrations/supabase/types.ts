@@ -690,6 +690,133 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          calendar_provider: string
+          company_id: string
+          created_at: string
+          description: string | null
+          end_time: string
+          external_id: string
+          id: string
+          integration_id: string
+          project_id: string | null
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          calendar_provider: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          end_time: string
+          external_id: string
+          id?: string
+          integration_id: string
+          project_id?: string | null
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          calendar_provider?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          external_id?: string
+          id?: string
+          integration_id?: string
+          project_id?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "calendar_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_integrations: {
+        Row: {
+          access_token: string
+          account_email: string
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_sync: string | null
+          provider: string
+          refresh_token: string | null
+          sync_enabled: boolean
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          account_email: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync?: string | null
+          provider: string
+          refresh_token?: string | null
+          sync_enabled?: boolean
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          account_email?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync?: string | null
+          provider?: string
+          refresh_token?: string | null
+          sync_enabled?: boolean
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_flow_projections: {
         Row: {
           actual_balance: number | null

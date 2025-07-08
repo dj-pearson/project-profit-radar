@@ -23,12 +23,17 @@ import {
 
 interface CalendarIntegration {
   id: string;
+  company_id: string;
   provider: 'google' | 'outlook';
   account_email: string;
+  access_token: string;
+  refresh_token: string | null;
+  token_expires_at: string | null;
   is_active: boolean;
   sync_enabled: boolean;
   last_sync: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface CalendarEvent {
@@ -59,19 +64,14 @@ const CalendarIntegration = () => {
 
   const loadIntegrations = async () => {
     try {
-      // Mock data for now - replace with actual API calls
-      const mockIntegrations: CalendarIntegration[] = [
-        {
-          id: '1',
-          provider: 'google',
-          account_email: 'user@company.com',
-          is_active: true,
-          sync_enabled: true,
-          last_sync: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        }
-      ];
-      setIntegrations(mockIntegrations);
+      const { data: integrations, error } = await supabase
+        .from('calendar_integrations')
+        .select('*')
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setIntegrations((integrations as CalendarIntegration[]) || []);
     } catch (error) {
       console.error('Error loading integrations:', error);
       toast({
@@ -84,29 +84,16 @@ const CalendarIntegration = () => {
 
   const loadEvents = async () => {
     try {
-      // Mock calendar events - replace with actual API calls
-      const mockEvents: CalendarEvent[] = [
-        {
-          id: '1',
-          title: 'Project Kickoff Meeting',
-          start_time: new Date(Date.now() + 86400000).toISOString(),
-          end_time: new Date(Date.now() + 86400000 + 3600000).toISOString(),
-          description: 'Initial project planning and team introductions',
-          project_id: 'proj-1',
-          calendar_provider: 'google',
-          external_id: 'google-event-123'
-        },
-        {
-          id: '2',
-          title: 'Site Inspection',
-          start_time: new Date(Date.now() + 172800000).toISOString(),
-          end_time: new Date(Date.now() + 172800000 + 7200000).toISOString(),
-          description: 'Quarterly safety and progress inspection',
-          calendar_provider: 'outlook',
-          external_id: 'outlook-event-456'
-        }
-      ];
-      setEvents(mockEvents);
+      const { data: events, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('company_id', userProfile?.company_id)
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(50);
+
+      if (error) throw error;
+      setEvents(events || []);
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -190,7 +177,14 @@ const CalendarIntegration = () => {
 
   const toggleIntegration = async (integrationId: string, enabled: boolean) => {
     try {
-      // Update integration status
+      const { error } = await supabase
+        .from('calendar_integrations')
+        .update({ sync_enabled: enabled })
+        .eq('id', integrationId);
+
+      if (error) throw error;
+
+      // Update local state
       const integration = integrations.find(i => i.id === integrationId);
       if (integration) {
         integration.sync_enabled = enabled;
@@ -217,6 +211,13 @@ const CalendarIntegration = () => {
     }
 
     try {
+      const { error } = await supabase
+        .from('calendar_integrations')
+        .delete()
+        .eq('id', integrationId);
+
+      if (error) throw error;
+
       setIntegrations(integrations.filter(i => i.id !== integrationId));
       
       toast({
