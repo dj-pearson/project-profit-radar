@@ -17,8 +17,10 @@ import {
   CheckCircle,
   AlertTriangle,
   Calendar,
-  Building
+  Building,
+  ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Permit {
   id: string;
@@ -41,6 +43,7 @@ interface Permit {
 
 export default function PermitManagement() {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
   const [permits, setPermits] = useState<Permit[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -168,17 +171,29 @@ export default function PermitManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Permit Management</h2>
-          <p className="text-muted-foreground">Track and manage project permits and approvals</p>
+    <div className="min-h-screen bg-background">
+      <div className="border-b bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-xl font-semibold text-card-foreground">Permit Management</h1>
+                <p className="text-sm text-muted-foreground">Track and manage project permits</p>
+              </div>
+            </div>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Permit
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Permit
-        </Button>
       </div>
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -390,6 +405,8 @@ export default function PermitManagement() {
           }}
         />
       )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, FileText, Users, Calendar, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Search, FileText, Users, Calendar, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,12 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function PublicProcurement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("opportunities");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const opportunities = [
     {
@@ -101,15 +103,26 @@ export default function PublicProcurement() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Public Procurement</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage bid opportunities and subcontractor disclosures
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-xl font-semibold text-card-foreground">Public Procurement</h1>
+                <p className="text-sm text-muted-foreground">Manage bid opportunities and subcontractor disclosures</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -174,8 +187,13 @@ export default function PublicProcurement() {
               </div>
             </DialogContent>
           </Dialog>
+            </div>
+          </div>
         </div>
       </div>
+
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
@@ -403,6 +421,8 @@ export default function PublicProcurement() {
           </div>
         </TabsContent>
       </Tabs>
+        </div>
+      </div>
     </div>
   );
 }

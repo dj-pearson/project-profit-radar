@@ -15,7 +15,8 @@ import {
   Edit,
   Trash2,
   Send,
-  Check
+  Check,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -187,9 +188,19 @@ const PurchaseOrders = () => {
       <div className="border-b bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div>
-              <h1 className="text-2xl font-bold text-construction-dark">Purchase Orders</h1>
-              <p className="text-sm text-muted-foreground">Manage vendor purchase orders and procurement</p>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-construction-dark">Purchase Orders</h1>
+                <p className="text-sm text-muted-foreground">Manage vendor purchase orders and procurement</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Button 

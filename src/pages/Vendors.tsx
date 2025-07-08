@@ -14,11 +14,13 @@ import {
   Trash2,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Vendor {
   id: string;
@@ -49,6 +51,7 @@ const Vendors = () => {
   });
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadVendors();
@@ -231,9 +234,19 @@ const Vendors = () => {
       <div className="border-b bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div>
-              <h1 className="text-2xl font-bold text-construction-dark">Vendors</h1>
-              <p className="text-sm text-muted-foreground">Manage your supplier and vendor relationships</p>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-construction-dark">Vendors</h1>
+                <p className="text-sm text-muted-foreground">Manage your supplier and vendor relationships</p>
+              </div>
             </div>
             <Dialog open={showAddDialog} onOpenChange={(open) => {
               setShowAddDialog(open);

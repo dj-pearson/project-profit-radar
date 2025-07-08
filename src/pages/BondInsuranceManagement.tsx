@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,8 @@ import {
   DollarSign,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 interface Bond {
@@ -53,6 +55,7 @@ interface InsurancePolicy {
 
 export default function BondInsuranceManagement() {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [insurancePolicies, setInsurancePolicies] = useState<InsurancePolicy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,13 +186,31 @@ export default function BondInsuranceManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Bonds & Insurance</h2>
-          <p className="text-muted-foreground">Track bonding and insurance for contracts over $35K</p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-xl font-semibold text-card-foreground">Bonds & Insurance</h1>
+                <p className="text-sm text-muted-foreground">Track bonding and insurance for contracts over $35K</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
@@ -587,6 +608,8 @@ export default function BondInsuranceManagement() {
           }}
         />
       )}
+        </div>
+      </div>
     </div>
   );
 }

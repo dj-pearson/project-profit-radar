@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +20,8 @@ import {
   Search,
   Filter,
   FileText,
-  Users
+  Users,
+  ArrowLeft
 } from 'lucide-react';
 
 interface Warranty {
@@ -38,6 +40,7 @@ interface Warranty {
 
 const WarrantyManagement = () => {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
   const [warranties, setWarranties] = useState<Warranty[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,19 +172,35 @@ const WarrantyManagement = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Warranty Management</h1>
-          <p className="text-muted-foreground">
-            Track and manage warranties for materials, equipment, and services
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-xl font-semibold text-card-foreground">Warranty Management</h1>
+                <p className="text-sm text-muted-foreground">Track and manage warranties</p>
+              </div>
+            </div>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Warranty
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Warranty
-        </Button>
       </div>
+
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -407,6 +426,8 @@ const WarrantyManagement = () => {
           }}
         />
       )}
+        </div>
+      </div>
     </div>
   );
 };
