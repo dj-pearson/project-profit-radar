@@ -315,10 +315,7 @@ const Projects = () => {
                   <Eye className="h-4 w-4 mr-2" />
                   View Project Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  setEditingProject(project);
-                  setEditDialogOpen(true);
-                }}>
+                <DropdownMenuItem onClick={() => navigate(`/project/${project.id}`)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Project
                 </DropdownMenuItem>
