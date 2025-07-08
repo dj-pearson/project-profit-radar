@@ -7,8 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import InvoiceGenerator from '@/components/InvoiceGenerator';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -22,7 +28,9 @@ import {
   BarChart3,
   FileText,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  Package,
+  Wrench
 } from 'lucide-react';
 
 interface Project {
@@ -80,6 +88,49 @@ const ProjectDetail = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingProject, setLoadingProject] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Dialog states
+  const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [createMaterialDialogOpen, setCreateMaterialDialogOpen] = useState(false);
+  const [createReportDialogOpen, setCreateReportDialogOpen] = useState(false);
+  const [editClientDialogOpen, setEditClientDialogOpen] = useState(false);
+  const [createInvoiceDialogOpen, setCreateInvoiceDialogOpen] = useState(false);
+  
+  // Form states
+  const [newTask, setNewTask] = useState({
+    name: '',
+    description: '',
+    priority: 'medium',
+    status: 'todo',
+    estimated_hours: 0,
+    due_date: '',
+    completion_percentage: 0
+  });
+  
+  const [newMaterial, setNewMaterial] = useState({
+    name: '',
+    description: '',
+    category: '',
+    unit: '',
+    unit_cost: 0,
+    quantity_needed: 0,
+    supplier_name: ''
+  });
+  
+  const [newReport, setNewReport] = useState({
+    work_performed: '',
+    crew_count: 0,
+    weather_conditions: '',
+    materials_delivered: '',
+    equipment_used: '',
+    delays_issues: '',
+    safety_incidents: ''
+  });
+  
+  const [editedClient, setEditedClient] = useState({
+    client_name: '',
+    client_email: ''
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -92,8 +143,138 @@ const ProjectDetail = () => {
     
     if (projectId && userProfile?.company_id) {
       loadProjectData();
+      setEditedClient({
+        client_name: project?.client_name || '',
+        client_email: project?.client_email || ''
+      });
     }
   }, [projectId, user, userProfile, loading, navigate]);
+
+  // CRUD handlers
+  const handleCreateTask = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          ...newTask,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTasks(prev => [data, ...prev]);
+      setCreateTaskDialogOpen(false);
+      setNewTask({
+        name: '',
+        description: '',
+        priority: 'medium',
+        status: 'todo',
+        estimated_hours: 0,
+        due_date: '',
+        completion_percentage: 0
+      });
+
+      toast({
+        title: "Task created",
+        description: "New task has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error creating task",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateDailyReport = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('daily_reports')
+        .insert({
+          ...newReport,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id,
+          date: new Date().toISOString().split('T')[0]
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCreateReportDialogOpen(false);
+      setNewReport({
+        work_performed: '',
+        crew_count: 0,
+        weather_conditions: '',
+        materials_delivered: '',
+        equipment_used: '',
+        delays_issues: '',
+        safety_incidents: ''
+      });
+
+      toast({
+        title: "Daily report created",
+        description: "Daily report has been submitted successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error creating daily report",
+        description: error.message
+      });
+    }
+  };
+
+  const handleUpdateClientInfo = async () => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          client_name: editedClient.client_name,
+          client_email: editedClient.client_email
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      setProject(prev => prev ? {
+        ...prev,
+        client_name: editedClient.client_name,
+        client_email: editedClient.client_email
+      } : null);
+
+      setEditClientDialogOpen(false);
+
+      toast({
+        title: "Client information updated",
+        description: "Client details have been updated successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating client info",
+        description: error.message
+      });
+    }
+  };
+
+  const navigateToMaterials = () => {
+    navigate('/materials', { state: { projectFilter: projectId } });
+  };
+
+  const navigateToDailyReports = () => {
+    navigate('/daily-reports', { state: { projectFilter: projectId } });
+  };
+
+  const navigateToTeamManagement = () => {
+    navigate('/team');
+  };
 
   const loadProjectData = async () => {
     try {
@@ -457,10 +638,14 @@ const ProjectDetail = () => {
           <TabsContent value="tasks" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Tasks</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Task
-              </Button>
+              <Dialog open={createTaskDialogOpen} onOpenChange={setCreateTaskDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Task
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </div>
             
             {tasks.length === 0 ? (
@@ -527,18 +712,18 @@ const ProjectDetail = () => {
           <TabsContent value="materials" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Materials</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Material
+              <Button onClick={navigateToMaterials}>
+                <Package className="h-4 w-4 mr-2" />
+                Manage Materials
               </Button>
             </div>
             
             <Card>
               <CardContent className="text-center py-8">
-                <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Track materials specific to this project</p>
-                <Button variant="outline" className="mt-4">
-                  Add First Material
+                <Button variant="outline" onClick={navigateToMaterials} className="mt-4">
+                  Go to Materials Page
                 </Button>
               </CardContent>
             </Card>
@@ -657,9 +842,9 @@ const ProjectDetail = () => {
           <TabsContent value="dailyreports" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Daily Reports</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Report
+              <Button onClick={navigateToDailyReports}>
+                <FileText className="h-4 w-4 mr-2" />
+                Manage Reports
               </Button>
             </div>
             
@@ -667,9 +852,13 @@ const ProjectDetail = () => {
               <CardContent className="text-center py-8">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Daily progress reports for this project</p>
-                <Button variant="outline" className="mt-4">
-                  Create Today's Report
-                </Button>
+                <Dialog open={createReportDialogOpen} onOpenChange={setCreateReportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="mt-4">
+                      Create Today's Report
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
@@ -699,10 +888,14 @@ const ProjectDetail = () => {
                       <p className="text-sm">{project.client_email}</p>
                     </div>
                   )}
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit Client Info
-                  </Button>
+                  <Dialog open={editClientDialogOpen} onOpenChange={setEditClientDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit Client Info
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
                 </CardContent>
               </Card>
 
@@ -721,7 +914,7 @@ const ProjectDetail = () => {
                         <p className="text-xs text-muted-foreground">Not assigned</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={navigateToTeamManagement}>
                       <Plus className="h-3 w-3 mr-1" />
                       Add Team Member
                     </Button>
@@ -734,10 +927,14 @@ const ProjectDetail = () => {
           <TabsContent value="invoicing" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Invoicing</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Invoice
-              </Button>
+              <Dialog open={createInvoiceDialogOpen} onOpenChange={setCreateInvoiceDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Invoice
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -773,9 +970,13 @@ const ProjectDetail = () => {
               <CardContent className="text-center py-8">
                 <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No invoices created for this project yet</p>
-                <Button variant="outline" className="mt-4">
-                  Create First Invoice
-                </Button>
+                <Dialog open={createInvoiceDialogOpen} onOpenChange={setCreateInvoiceDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="mt-4">
+                      Create First Invoice
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
@@ -798,14 +999,225 @@ const ProjectDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Task Dialog */}
+      <Dialog open={createTaskDialogOpen} onOpenChange={setCreateTaskDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="task-name">Task Name</Label>
+              <Input
+                id="task-name"
+                value={newTask.name}
+                onChange={(e) => setNewTask(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter task name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="task-description">Description</Label>
+              <Textarea
+                id="task-description"
+                value={newTask.description}
+                onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Task description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="task-priority">Priority</Label>
+                <Select value={newTask.priority} onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="task-estimated-hours">Estimated Hours</Label>
+                <Input
+                  id="task-estimated-hours"
+                  type="number"
+                  value={newTask.estimated_hours}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, estimated_hours: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="task-due-date">Due Date</Label>
+              <Input
+                id="task-due-date"
+                type="date"
+                value={newTask.due_date}
+                onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setCreateTaskDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateTask}>
+                Create Task
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Daily Report Dialog */}
+      <Dialog open={createReportDialogOpen} onOpenChange={setCreateReportDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Daily Report</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="work-performed">Work Performed</Label>
+              <Textarea
+                id="work-performed"
+                value={newReport.work_performed}
+                onChange={(e) => setNewReport(prev => ({ ...prev, work_performed: e.target.value }))}
+                placeholder="Describe the work performed today"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="crew-count">Crew Count</Label>
+                <Input
+                  id="crew-count"
+                  type="number"
+                  value={newReport.crew_count}
+                  onChange={(e) => setNewReport(prev => ({ ...prev, crew_count: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="weather">Weather Conditions</Label>
+                <Input
+                  id="weather"
+                  value={newReport.weather_conditions}
+                  onChange={(e) => setNewReport(prev => ({ ...prev, weather_conditions: e.target.value }))}
+                  placeholder="Weather conditions"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="materials-delivered">Materials Delivered</Label>
+              <Textarea
+                id="materials-delivered"
+                value={newReport.materials_delivered}
+                onChange={(e) => setNewReport(prev => ({ ...prev, materials_delivered: e.target.value }))}
+                placeholder="Materials delivered to site"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="equipment-used">Equipment Used</Label>
+              <Textarea
+                id="equipment-used"
+                value={newReport.equipment_used}
+                onChange={(e) => setNewReport(prev => ({ ...prev, equipment_used: e.target.value }))}
+                placeholder="Equipment and tools used"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="delays-issues">Delays/Issues</Label>
+              <Textarea
+                id="delays-issues"
+                value={newReport.delays_issues}
+                onChange={(e) => setNewReport(prev => ({ ...prev, delays_issues: e.target.value }))}
+                placeholder="Any delays or issues encountered"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="safety-incidents">Safety Incidents</Label>
+              <Textarea
+                id="safety-incidents"
+                value={newReport.safety_incidents}
+                onChange={(e) => setNewReport(prev => ({ ...prev, safety_incidents: e.target.value }))}
+                placeholder="Any safety incidents or observations"
+                rows={2}
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setCreateReportDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateDailyReport}>
+                Submit Report
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={editClientDialogOpen} onOpenChange={setEditClientDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Client Information</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="client-name">Client Name</Label>
+              <Input
+                id="client-name"
+                value={editedClient.client_name}
+                onChange={(e) => setEditedClient(prev => ({ ...prev, client_name: e.target.value }))}
+                placeholder="Client name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="client-email">Client Email</Label>
+              <Input
+                id="client-email"
+                type="email"
+                value={editedClient.client_email}
+                onChange={(e) => setEditedClient(prev => ({ ...prev, client_email: e.target.value }))}
+                placeholder="Client email"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setEditClientDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateClientInfo}>
+                Update Client Info
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Invoice Dialog */}
+      <Dialog open={createInvoiceDialogOpen} onOpenChange={setCreateInvoiceDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Invoice</DialogTitle>
+          </DialogHeader>
+          <InvoiceGenerator 
+            projectId={projectId} 
+            onInvoiceCreated={() => {
+              setCreateInvoiceDialogOpen(false);
+              toast({
+                title: "Invoice created",
+                description: "Invoice has been generated successfully."
+              });
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
-
-const Label = ({ className, children, ...props }: any) => (
-  <label className={`text-sm font-medium ${className}`} {...props}>
-    {children}
-  </label>
-);
 
 export default ProjectDetail;
