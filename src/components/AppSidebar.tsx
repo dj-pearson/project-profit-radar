@@ -65,38 +65,63 @@ const navigationCategories: NavigationCategory[] = [
     ]
   },
   {
-    label: "Project Management",
+    label: "Project Management", 
     items: [
       { title: "All Projects", url: "/projects", icon: Building2, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
       { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
-      { title: "Crew Scheduling", url: "/crew-scheduling", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
-      { title: "Time Tracking", url: "/time-tracking", icon: Clock, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
-      { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] }
+      { title: "Job Costing", url: "/job-costing", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+      { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] },
+      { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] }
     ]
   },
   {
-    label: "Financial",
+    label: "Financial Management",
     items: [
       { title: "Financial Dashboard", url: "/financial", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
-      { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] }
+      { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+      { title: "Purchase Orders", url: "/purchase-orders", icon: FileText, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
+      { title: "Vendors", url: "/vendors", icon: Users, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] }
     ]
   },
   {
-    label: "Resources",
+    label: "Resource Management",
     items: [
       { title: "Team Management", url: "/team", icon: Users, roles: ["admin", "project_manager", "root_admin"] },
-      { title: "Document Management", url: "/documents", icon: FolderOpen, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Crew Scheduling", url: "/crew-scheduling", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
+      { title: "Time Tracking", url: "/time-tracking", icon: Clock, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
       { title: "Materials", url: "/materials", icon: Package, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Equipment", url: "/equipment", icon: Truck, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] }
+      { title: "Equipment Tracking", url: "/equipment", icon: Truck, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Equipment Management", url: "/equipment-management", icon: Wrench, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Document Management", url: "/documents", icon: FolderOpen, roles: ["admin", "project_manager", "office_staff", "root_admin"] }
     ]
   },
   {
-    label: "Safety & Compliance",
+    label: "Legal & Compliance",
     items: [
-      { title: "Safety", url: "/safety", icon: Shield, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
+      { title: "Safety Management", url: "/safety", icon: Shield, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
+      { title: "Permit Management", url: "/permit-management", icon: FileText, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Environmental Permits", url: "/environmental-permitting", icon: FileText, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Bond & Insurance", url: "/bond-insurance", icon: Shield, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+      { title: "Warranty Management", url: "/warranty-management", icon: Wrench, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
       { title: "Compliance Audit", url: "/compliance-audit", icon: FileText, roles: ["admin", "root_admin"] },
       { title: "GDPR Compliance", url: "/gdpr-compliance", icon: Lock, roles: ["admin", "root_admin"] }
+    ]
+  },
+  {
+    label: "Specialized Services",
+    items: [
+      { title: "Public Procurement", url: "/public-procurement", icon: Globe, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Service Dispatch", url: "/service-dispatch", icon: Truck, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Calendar Integration", url: "/calendar", icon: Calendar, roles: ["admin", "project_manager", "office_staff", "root_admin"] }
+    ]
+  },
+  {
+    label: "Communication & Support",
+    items: [
+      { title: "Email Marketing", url: "/email-marketing", icon: MessageSquare, roles: ["admin", "office_staff", "root_admin"] },
+      { title: "Automated Workflows", url: "/workflows", icon: Settings, roles: ["admin", "project_manager", "root_admin"] },
+      { title: "Knowledge Base", url: "/knowledge-base", icon: FileText, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
+      { title: "Support", url: "/support", icon: MessageSquare, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] }
     ]
   },
   {

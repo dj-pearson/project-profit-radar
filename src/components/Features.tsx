@@ -6,7 +6,12 @@ import {
   Zap, 
   MessageSquare, 
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Building2,
+  Wrench,
+  FileText,
+  Truck,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -15,46 +20,60 @@ import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/Respons
 const Features = () => {
   const features = [
     {
+      icon: Building2,
+      title: "Complete Project Management",
+      description: "End-to-end project lifecycle control",
+      details: "From initial bid to final warranty, manage every aspect of your construction projects with comprehensive tracking and reporting.",
+      benefits: ["Project phases & tasks", "Change order management", "Progress tracking"]
+    },
+    {
       icon: DollarSign,
-      title: "Real-Time Job Costing",
-      description: "Know your profit margins instantly",
-      details: "Track labor, materials, and overhead in real-time. Get alerts before costs spiral out of control.",
-      benefits: ["Live P&L tracking", "Cost variance alerts", "Margin protection"]
+      title: "Advanced Financial Management", 
+      description: "Real-time profitability & cash flow control",
+      details: "Live job costing, purchase order management, vendor tracking, and automated QuickBooks integration for complete financial visibility.",
+      benefits: ["Real-time job costing", "Purchase order system", "Automated invoicing"]
     },
     {
       icon: Smartphone,
-      title: "Mobile Field Management",
-      description: "Your crew stays connected, online or off",
-      details: "Time tracking, photo updates, and progress reports that sync when back online.",
-      benefits: ["Offline functionality", "Time clock integration", "Photo documentation"]
+      title: "Mobile Field Operations",
+      description: "Your crew stays connected anywhere",
+      details: "Complete offline functionality with time tracking, daily reports, photo documentation, and equipment management from the field.",
+      benefits: ["Offline capability", "Daily reporting", "Equipment tracking"]
     },
     {
       icon: Shield,
-      title: "Automated Compliance",
-      description: "Never miss an OSHA deadline again",
-      details: "Automated safety checklists, certification tracking, and regulatory reporting.",
-      benefits: ["OSHA compliance", "Safety inspections", "Certification alerts"]
+      title: "Legal & Compliance Suite",
+      description: "Stay compliant and protected",
+      details: "Comprehensive safety management, permit tracking, bond & insurance management, warranty systems, and OSHA compliance automation.",
+      benefits: ["Safety management", "Permit tracking", "Insurance management"]
+    },
+    {
+      icon: Wrench,
+      title: "Resource & Equipment Management",
+      description: "Optimize your assets and workforce",
+      details: "Full equipment fleet management, crew scheduling, material tracking, and utilization optimization with maintenance scheduling.",
+      benefits: ["Equipment fleet management", "Crew optimization", "Maintenance scheduling"]
+    },
+    {
+      icon: FileText,
+      title: "Specialized Construction Services",
+      description: "Industry-specific tools and workflows",
+      details: "Public procurement & bidding, service dispatch, environmental permitting, warranty management, and vendor relationship management.",
+      benefits: ["Public bidding", "Service dispatch", "Warranty management"]
+    },
+    {
+      icon: Users,
+      title: "Client Communication & Support",
+      description: "Keep stakeholders informed and engaged", 
+      details: "Client portals, automated progress updates, email marketing, knowledge base, and integrated support systems.",
+      benefits: ["Client portals", "Automated updates", "Integrated support"]
     },
     {
       icon: Zap,
-      title: "Seamless QuickBooks Sync",
-      description: "Your books stay current automatically",
-      details: "Two-way sync with QuickBooks keeps your financials accurate without double entry.",
-      benefits: ["Real-time sync", "No duplicate entry", "Tax-ready reports"]
-    },
-    {
-      icon: MessageSquare,
-      title: "Client Communication Hub",
-      description: "Keep clients happy with transparency",
-      details: "Automated progress updates, photo sharing, and change order approvals.",
-      benefits: ["Client portal", "Progress photos", "Digital approvals"]
-    },
-    {
-      icon: Calendar,
-      title: "Resource Scheduling",
-      description: "Deploy crews efficiently across projects",
-      details: "Visual scheduling with drag-and-drop simplicity and resource conflict detection.",
-      benefits: ["Visual scheduling", "Resource optimization", "Conflict alerts"]
+      title: "Automation & Integrations",
+      description: "Streamline operations with smart workflows",
+      details: "Calendar integration, automated workflows, QuickBooks sync, email marketing, and comprehensive reporting dashboards.",
+      benefits: ["Workflow automation", "Calendar sync", "Smart reporting"]
     }
   ];
 
@@ -64,16 +83,16 @@ const Features = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
-            6 Core Features That Transform Your Business
+            Complete Construction Management Platform
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Everything you need to run profitable projects, delivered without enterprise complexity
+            From project management to compliance, financial control to field operations - everything you need to run profitable construction projects
           </p>
         </div>
 
         {/* Features Grid */}
         <ResponsiveGrid 
-          cols={{ default: 1, md: 2, lg: 3 }} 
+          cols={{ default: 1, md: 2, lg: 4 }} 
           gap="lg"
           className="mb-12 sm:mb-16"
         >
@@ -110,9 +129,9 @@ const Features = () => {
 
         {/* Interactive Demo CTA */}
         <div className="bg-gradient-to-r from-construction-blue to-construction-blue/80 rounded-2xl p-6 sm:p-8 text-center text-white">
-          <h3 className="text-xl sm:text-2xl font-bold mb-4">See These Features in Action</h3>
+          <h3 className="text-xl sm:text-2xl font-bold mb-4">Experience the Complete Platform</h3>
           <p className="text-base sm:text-lg mb-6 text-white/90 max-w-2xl mx-auto">
-            Watch our 2-minute demo or start your free trial to experience the difference
+            Start your free trial to explore all features, or browse our comprehensive functionality showcase
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto sm:max-w-none">
             <Button variant="hero" className="bg-white text-construction-blue hover:bg-white/90 w-full sm:w-auto" asChild>
