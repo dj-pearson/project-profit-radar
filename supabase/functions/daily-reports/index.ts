@@ -46,99 +46,105 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const path = url.pathname.split('/').pop();
+    
+    // Handle different request types
+    if (method === "GET") {
+      const projectId = url.searchParams.get('project_id');
+      
+      let query = supabaseClient
+        .from('daily_reports')
+        .select(`
+          *,
+          projects(name)
+        `)
+        .order('date', { ascending: false });
 
-    switch (method) {
-      case "GET":
-        // Default GET request or explicit list request
-        if (!path || path === "daily-reports" || path === "list") {
-          const projectId = url.searchParams.get('project_id');
-          
-          let query = supabaseClient
-            .from('daily_reports')
-            .select(`
-              *,
-              projects(name)
-            `)
-            .order('date', { ascending: false });
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
 
-          if (projectId) {
-            query = query.eq('project_id', projectId);
-          }
+      const { data: dailyReports, error: reportsError } = await query;
 
-          const { data: dailyReports, error: reportsError } = await query;
+      if (reportsError) throw new Error(`Daily reports fetch error: ${reportsError.message}`);
+      
+      logStep("Daily reports retrieved", { count: dailyReports?.length });
+      return new Response(JSON.stringify({ dailyReports }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
-          if (reportsError) throw new Error(`Daily reports fetch error: ${reportsError.message}`);
-          
-          logStep("Daily reports retrieved", { count: dailyReports?.length });
-          return new Response(JSON.stringify({ dailyReports }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
+    if (method === "POST") {
+      const body = await req.json();
+      const { action } = body;
+
+      if (action === "list") {
+        // POST request for listing daily reports
+        const projectId = body.project_id;
+        
+        let query = supabaseClient
+          .from('daily_reports')
+          .select(`
+            *,
+            projects(name)
+          `)
+          .order('date', { ascending: false });
+
+        if (projectId) {
+          query = query.eq('project_id', projectId);
         }
 
-        if (path === "today") {
-          const projectId = url.searchParams.get('project_id');
-          if (!projectId) throw new Error("Project ID is required");
+        const { data: dailyReports, error: reportsError } = await query;
 
-          const today = new Date().toISOString().split('T')[0];
-          
-          const { data: todaysReport, error: reportError } = await supabaseClient
-            .from('daily_reports')
-            .select(`
-              *,
-              projects(name)
-            `)
-            .eq('project_id', projectId)
-            .eq('date', today)
-            .maybeSingle();
+        if (reportsError) throw new Error(`Daily reports fetch error: ${reportsError.message}`);
+        
+        logStep("Daily reports retrieved", { count: dailyReports?.length });
+        return new Response(JSON.stringify({ dailyReports }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
 
-          logStep("Today's report retrieved", { projectId, hasReport: !!todaysReport });
-          return new Response(JSON.stringify({ dailyReport: todaysReport }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
+      if (action === "create") {
+        logStep("Creating daily report", body);
+
+        // Verify user can create daily reports
+        if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
+          throw new Error("Insufficient permissions to create daily reports");
         }
 
-        break;
+        const reportDate = body.date || new Date().toISOString().split('T')[0];
+        
+        const reportData = {
+          project_id: body.project_id,
+          work_performed: body.work_performed,
+          crew_count: body.crew_count,
+          weather_conditions: body.weather_conditions,
+          materials_delivered: body.materials_delivered,
+          equipment_used: body.equipment_used,
+          delays_issues: body.delays_issues,
+          safety_incidents: body.safety_incidents,
+          date: reportDate,
+          created_by: user.id
+        };
 
-      case "POST":
-        if (path === "create") {
-          const body = await req.json();
-          logStep("Creating daily report", body);
+        const { data: newReport, error: createError } = await supabaseClient
+          .from('daily_reports')
+          .insert([reportData])
+          .select(`
+            *,
+            projects(name)
+          `)
+          .single();
 
-          // Verify user can create daily reports
-          if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
-            throw new Error("Insufficient permissions to create daily reports");
-          }
+        if (createError) throw new Error(`Daily report creation error: ${createError.message}`);
 
-          const reportDate = body.date || new Date().toISOString().split('T')[0];
-          
-          const reportData = {
-            ...body,
-            date: reportDate,
-            created_by: user.id
-          };
-
-          const { data: newReport, error: createError } = await supabaseClient
-            .from('daily_reports')
-            .insert([reportData])
-            .select(`
-              *,
-              projects(name)
-            `)
-            .single();
-
-          if (createError) throw new Error(`Daily report creation error: ${createError.message}`);
-
-          logStep("Daily report created", { reportId: newReport.id, date: reportDate });
-          return new Response(JSON.stringify({ dailyReport: newReport }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 201,
-          });
-        }
-
-        break;
+        logStep("Daily report created", { reportId: newReport.id, date: reportDate });
+        return new Response(JSON.stringify({ dailyReport: newReport }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 201,
+        });
+      }
     }
 
     // If no route matched

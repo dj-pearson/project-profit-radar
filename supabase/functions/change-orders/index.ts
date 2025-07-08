@@ -46,134 +46,160 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const path = url.pathname.split('/').pop();
+    
+    // Handle different request types
+    if (method === "GET") {
+      // GET requests for listing change orders
+      const projectId = url.searchParams.get('project_id');
+      
+      let query = supabaseClient
+        .from('change_orders')
+        .select(`
+          *,
+          projects(name, client_name)
+        `)
+        .order('created_at', { ascending: false });
 
-    switch (method) {
-      case "GET":
-        // Default GET request or explicit list request
-        if (!path || path === "change-orders" || path === "list") {
-          const projectId = url.searchParams.get('project_id');
-          
-          let query = supabaseClient
-            .from('change_orders')
-            .select(`
-              *,
-              projects(name)
-            `)
-            .order('created_at', { ascending: false });
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
 
-          if (projectId) {
-            query = query.eq('project_id', projectId);
-          }
+      const { data: changeOrders, error: ordersError } = await query;
 
-          const { data: changeOrders, error: ordersError } = await query;
+      if (ordersError) throw new Error(`Change orders fetch error: ${ordersError.message}`);
+      
+      logStep("Change orders retrieved", { count: changeOrders?.length });
+      return new Response(JSON.stringify({ changeOrders }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
-          if (ordersError) throw new Error(`Change orders fetch error: ${ordersError.message}`);
-          
-          logStep("Change orders retrieved", { count: changeOrders?.length });
-          return new Response(JSON.stringify({ changeOrders }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
+    if (method === "POST") {
+      const body = await req.json();
+      const { action } = body;
+
+      if (action === "list") {
+        // POST request for listing change orders
+        const projectId = body.project_id;
+        
+        let query = supabaseClient
+          .from('change_orders')
+          .select(`
+            *,
+            projects(name, client_name)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (projectId) {
+          query = query.eq('project_id', projectId);
         }
 
-        break;
+        const { data: changeOrders, error: ordersError } = await query;
 
-      case "POST":
-        if (path === "create") {
-          const body = await req.json();
-          logStep("Creating change order", body);
+        if (ordersError) throw new Error(`Change orders fetch error: ${ordersError.message}`);
+        
+        logStep("Change orders retrieved", { count: changeOrders?.length });
+        return new Response(JSON.stringify({ changeOrders }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
 
-          // Verify user can create change orders
-          if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
-            throw new Error("Insufficient permissions to create change orders");
-          }
+      if (action === "create") {
+        logStep("Creating change order", body);
 
-          // Generate change order number
-          const { data: existingOrders } = await supabaseClient
-            .from('change_orders')
-            .select('change_order_number')
-            .eq('project_id', body.project_id)
-            .order('change_order_number', { ascending: false })
-            .limit(1);
+        // Verify user can create change orders
+        if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+          throw new Error("Insufficient permissions to create change orders");
+        }
 
-          let changeOrderNumber = 'CO-001';
-          if (existingOrders && existingOrders.length > 0) {
-            const lastNumber = existingOrders[0].change_order_number;
-            const numberPart = parseInt(lastNumber.split('-')[1]) + 1;
-            changeOrderNumber = `CO-${numberPart.toString().padStart(3, '0')}`;
-          }
+        // Generate change order number
+        const { data: existingOrders } = await supabaseClient
+          .from('change_orders')
+          .select('change_order_number')
+          .eq('project_id', body.project_id)
+          .order('change_order_number', { ascending: false })
+          .limit(1);
 
-          const changeOrderData = {
-            ...body,
-            change_order_number: changeOrderNumber,
-            created_by: user.id,
-            status: 'pending'
+        let changeOrderNumber = 'CO-001';
+        if (existingOrders && existingOrders.length > 0) {
+          const lastNumber = existingOrders[0].change_order_number;
+          const numberPart = parseInt(lastNumber.split('-')[1]) + 1;
+          changeOrderNumber = `CO-${numberPart.toString().padStart(3, '0')}`;
+        }
+
+        const changeOrderData = {
+          project_id: body.project_id,
+          title: body.title,
+          description: body.description,
+          amount: body.amount,
+          reason: body.reason,
+          change_order_number: changeOrderNumber,
+          created_by: user.id,
+          status: 'pending'
+        };
+
+        const { data: newOrder, error: createError } = await supabaseClient
+          .from('change_orders')
+          .insert([changeOrderData])
+          .select(`
+            *,
+            projects(name, client_name)
+          `)
+          .single();
+
+        if (createError) throw new Error(`Change order creation error: ${createError.message}`);
+
+        logStep("Change order created", { orderId: newOrder.id, changeOrderNumber });
+        return new Response(JSON.stringify({ changeOrder: newOrder }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 201,
+        });
+      }
+
+      if (action === "approve") {
+        const { orderId, approvalType, approved } = body;
+        logStep("Processing approval", { orderId, approvalType, approved });
+
+        // Verify user can approve change orders
+        if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+          throw new Error("Insufficient permissions to approve change orders");
+        }
+
+        let updateData: any = {};
+        
+        if (approvalType === 'internal') {
+          updateData = {
+            internal_approved: approved,
+            internal_approved_by: approved ? user.id : null,
+            internal_approved_date: approved ? new Date().toISOString() : null
           };
-
-          const { data: newOrder, error: createError } = await supabaseClient
-            .from('change_orders')
-            .insert([changeOrderData])
-            .select(`
-              *,
-              projects(name)
-            `)
-            .single();
-
-          if (createError) throw new Error(`Change order creation error: ${createError.message}`);
-
-          logStep("Change order created", { orderId: newOrder.id, changeOrderNumber });
-          return new Response(JSON.stringify({ changeOrder: newOrder }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 201,
-          });
+        } else if (approvalType === 'client') {
+          updateData = {
+            client_approved: approved,
+            client_approved_date: approved ? new Date().toISOString() : null
+          };
         }
 
-        if (path === "approve") {
-          const body = await req.json();
-          const { orderId, approvalType, approved } = body;
-          logStep("Processing approval", { orderId, approvalType, approved });
+        const { data: updatedOrder, error: updateError } = await supabaseClient
+          .from('change_orders')
+          .update(updateData)
+          .eq('id', orderId)
+          .select(`
+            *,
+            projects(name, client_name)
+          `)
+          .single();
 
-          // Verify user can approve change orders
-          if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
-            throw new Error("Insufficient permissions to approve change orders");
-          }
+        if (updateError) throw new Error(`Change order approval error: ${updateError.message}`);
 
-          let updateData: any = {};
-          
-          if (approvalType === 'internal') {
-            updateData = {
-              internal_approved: approved,
-              internal_approved_by: approved ? user.id : null,
-              internal_approved_date: approved ? new Date().toISOString() : null
-            };
-          } else if (approvalType === 'client') {
-            updateData = {
-              client_approved: approved,
-              client_approved_date: approved ? new Date().toISOString() : null
-            };
-          }
-
-          const { data: updatedOrder, error: updateError } = await supabaseClient
-            .from('change_orders')
-            .update(updateData)
-            .eq('id', orderId)
-            .select(`
-              *,
-              projects(name)
-            `)
-            .single();
-
-          if (updateError) throw new Error(`Change order approval error: ${updateError.message}`);
-
-          logStep("Change order approval processed", { orderId, approvalType, approved });
-          return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
-        }
-
-        break;
+        logStep("Change order approval processed", { orderId, approvalType, approved });
+        return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
     }
 
     // If no route matched

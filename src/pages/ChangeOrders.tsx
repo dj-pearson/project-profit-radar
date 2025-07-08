@@ -104,7 +104,9 @@ const ChangeOrders = () => {
       setProjects(projectsData || []);
 
       // Load change orders
-      const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders');
+      const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
+        body: { action: 'list' }
+      });
 
       if (ordersError) throw ordersError;
       setChangeOrders(ordersData.changeOrders || []);
@@ -132,8 +134,9 @@ const ChangeOrders = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('change-orders/create', {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
+          action: 'create',
           ...newOrder,
           amount: Number(newOrder.amount)
         }
@@ -168,8 +171,9 @@ const ChangeOrders = () => {
 
   const handleApproval = async (orderId: string, approvalType: 'internal' | 'client', approved: boolean) => {
     try {
-      const { data, error } = await supabase.functions.invoke('change-orders/approve', {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
+          action: 'approve',
           orderId,
           approvalType,
           approved

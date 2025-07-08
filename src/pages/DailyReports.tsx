@@ -116,7 +116,9 @@ const DailyReports = () => {
       setProjects(projectsData || []);
 
       // Load daily reports
-      const { data: reportsData, error: reportsError } = await supabase.functions.invoke('daily-reports');
+      const { data: reportsData, error: reportsError } = await supabase.functions.invoke('daily-reports', {
+        body: { action: 'list' }
+      });
 
       if (reportsError) throw reportsError;
       setDailyReports(reportsData.dailyReports || []);
@@ -144,8 +146,9 @@ const DailyReports = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('daily-reports/create', {
+      const { data, error } = await supabase.functions.invoke('daily-reports', {
         body: { 
+          action: 'create',
           ...newReport,
           crew_count: Number(newReport.crew_count)
         }
