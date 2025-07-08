@@ -547,39 +547,61 @@ const ProjectDetail = () => {
           <TabsContent value="progress" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Progress Tracking</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Update Progress
-              </Button>
+              <div className="text-sm text-muted-foreground">
+                Auto-calculated from task completion
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Overall Progress</CardTitle>
+                  <CardDescription>
+                    Automatically calculated from {tasks.length} tasks
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span>Project Completion</span>
-                        <span>{project.completion_percentage}%</span>
+                        <span className="font-medium">{project.completion_percentage}%</span>
                       </div>
                       <Progress value={project.completion_percentage} />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Time Elapsed</span>
-                        <span>65%</span>
+                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                        <span>
+                          {tasks.filter(t => t.status === 'completed').length} of {tasks.length} tasks completed
+                        </span>
+                        <span>
+                          Avg: {tasks.length > 0 ? Math.round(tasks.reduce((sum, t) => sum + t.completion_percentage, 0) / tasks.length) : 0}%
+                        </span>
                       </div>
-                      <Progress value={65} />
                     </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Budget Used</span>
-                        <span>58%</span>
+                    
+                    {/* Task Breakdown */}
+                    <div className="border-t pt-4">
+                      <div className="text-sm font-medium mb-2">Task Progress Breakdown</div>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {tasks.slice(0, 5).map((task) => (
+                          <div key={task.id} className="flex items-center justify-between text-xs">
+                            <span className="truncate flex-1 mr-2">{task.name}</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="w-16 h-1 bg-secondary rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary transition-all"
+                                  style={{ width: `${task.completion_percentage}%` }}
+                                />
+                              </div>
+                              <span className="w-8 text-right">{task.completion_percentage}%</span>
+                            </div>
+                          </div>
+                        ))}
+                        {tasks.length > 5 && (
+                          <div className="text-xs text-muted-foreground text-center pt-1">
+                            +{tasks.length - 5} more tasks
+                          </div>
+                        )}
                       </div>
-                      <Progress value={58} />
                     </div>
                   </div>
                 </CardContent>
@@ -587,31 +609,45 @@ const ProjectDetail = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Progress Timeline</CardTitle>
+                  <CardTitle>Progress Insights</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Foundation Complete</p>
-                        <p className="text-xs text-muted-foreground">3 days ago</p>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span>Completed Tasks</span>
+                        <span className="text-green-600 font-medium">
+                          {tasks.filter(t => t.status === 'completed').length}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Framing In Progress</p>
-                        <p className="text-xs text-muted-foreground">Started today</p>
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span>In Progress</span>
+                        <span className="text-blue-600 font-medium">
+                          {tasks.filter(t => t.status === 'in_progress').length}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Roofing Pending</p>
-                        <p className="text-xs text-muted-foreground">Starts in 5 days</p>
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span>Pending</span>
+                        <span className="text-orange-600 font-medium">
+                          {tasks.filter(t => t.status === 'pending' || t.status === 'todo').length}
+                        </span>
                       </div>
                     </div>
+                    
+                    {tasks.length > 0 && (
+                      <div className="border-t pt-4">
+                        <div className="text-sm font-medium mb-2">Next Actions</div>
+                        {tasks.filter(t => t.status !== 'completed').slice(0, 3).map((task) => (
+                          <div key={task.id} className="text-xs text-muted-foreground mb-1">
+                            • {task.name} ({task.completion_percentage}%)
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -8875,6 +8875,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_project_completion: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
       check_project_requirements: {
         Args: { p_project_id: string; p_contract_value: number }
         Returns: Json
