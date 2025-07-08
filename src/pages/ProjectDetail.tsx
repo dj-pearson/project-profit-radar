@@ -78,6 +78,31 @@ interface Task {
   phase_id: string;
 }
 
+interface Permit {
+  id: string;
+  permit_name: string;
+  permit_type: string;
+  permit_number: string;
+  issuing_authority: string;
+  application_status: string;
+  application_date: string;
+  approval_date: string;
+  permit_expiry_date: string;
+  priority: string;
+}
+
+interface Warranty {
+  id: string;
+  item_name: string;
+  warranty_type: string;
+  manufacturer: string;
+  warranty_start_date: string;
+  warranty_end_date: string;
+  status: string;
+  is_transferable: boolean;
+  is_transferred_to_customer: boolean;
+}
+
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { user, userProfile, loading } = useAuth();
@@ -418,6 +443,8 @@ const ProjectDetail = () => {
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
             <TabsTrigger value="dailyreports">Daily Reports</TabsTrigger>
+            <TabsTrigger value="permits">Permits</TabsTrigger>
+            <TabsTrigger value="warranties">Warranties</TabsTrigger>
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
             <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -859,6 +886,46 @@ const ProjectDetail = () => {
                     </Button>
                   </DialogTrigger>
                 </Dialog>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="permits" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Project Permits</h2>
+              <Button onClick={() => navigate('/permit-management')}>
+                <FileText className="h-4 w-4 mr-2" />
+                Manage Permits
+              </Button>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Track permits and approvals for this project</p>
+                <Button variant="outline" onClick={() => navigate('/permit-management')} className="mt-4">
+                  Go to Permit Management
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="warranties" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Project Warranties</h2>
+              <Button onClick={() => navigate('/warranty-management')}>
+                <Wrench className="h-4 w-4 mr-2" />
+                Manage Warranties
+              </Button>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Track warranties for materials and equipment on this project</p>
+                <Button variant="outline" onClick={() => navigate('/warranty-management')} className="mt-4">
+                  Go to Warranty Management
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
