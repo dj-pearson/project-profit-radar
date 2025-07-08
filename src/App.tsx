@@ -46,6 +46,8 @@ import MaterialTracking from "./pages/MaterialTracking";
 import EquipmentTracking from "./pages/EquipmentTracking";
 import CrewScheduling from "./pages/CrewScheduling";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import CustomerSupportChat from "./components/support/CustomerSupportChat";
 import KnowledgeBase from "./components/knowledge/KnowledgeBase";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
@@ -482,6 +484,8 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
