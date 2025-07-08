@@ -379,7 +379,7 @@ const ProjectDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-white">
+      <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -393,7 +393,7 @@ const ProjectDetail = () => {
               </Button>
               <Separator orientation="vertical" className="h-6" />
               <div>
-                <h1 className="text-xl font-semibold">{project.name}</h1>
+                <h1 className="text-xl font-semibold text-card-foreground">{project.name}</h1>
                 <p className="text-sm text-muted-foreground">{project.client_name}</p>
               </div>
             </div>
@@ -413,7 +413,7 @@ const ProjectDetail = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 h-auto">
+          <TabsList className="w-full justify-start">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
