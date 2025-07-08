@@ -29,10 +29,18 @@ import {
   User, 
   DollarSign,
   MoreHorizontal,
-  Trash2
+  Trash2,
+  CalendarDays,
+  FileText,
+  Package,
+  FilterX,
+  SlidersHorizontal
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 interface Project {
   id: string;
@@ -48,6 +56,9 @@ interface Project {
   project_manager_id?: string;
   created_at: string;
   updated_at: string;
+  tasks?: Array<{ id: string; name: string; description?: string }>;
+  materials?: Array<{ id: string; name: string; description?: string }>;
+  documents?: Array<{ id: string; name: string; description?: string }>;
 }
 
 const Projects = () => {
@@ -61,6 +72,16 @@ const Projects = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  
+  // Advanced filter states
+  const [budgetMin, setBudgetMin] = useState<string>('');
+  const [budgetMax, setBudgetMax] = useState<string>('');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [materialFilter, setMaterialFilter] = useState('');
+  const [taskFilter, setTaskFilter] = useState('');
+  const [documentFilter, setDocumentFilter] = useState('');
 
   useEffect(() => {
     loadProjects();
@@ -72,7 +93,12 @@ const Projects = () => {
       
       let query = supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          tasks(id, name, description),
+          materials(id, name, description),
+          documents(id, name, description)
+        `)
         .order('created_at', { ascending: false });
 
       if (userProfile?.role !== 'root_admin' && userProfile?.company_id) {
@@ -193,14 +219,65 @@ const Projects = () => {
     return 'text-red-600';
   };
 
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setBudgetMin('');
+    setBudgetMax('');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setMaterialFilter('');
+    setTaskFilter('');
+    setDocumentFilter('');
+  };
+
   const filteredProjects = projects.filter(project => {
+    // Basic search
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.site_address.toLowerCase().includes(searchTerm.toLowerCase());
+                         project.site_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // Status filter
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // Budget range filter
+    const matchesBudget = (!budgetMin || project.budget >= parseFloat(budgetMin)) &&
+                         (!budgetMax || project.budget <= parseFloat(budgetMax));
+    
+    // Date range filters
+    const projectStartDate = new Date(project.start_date);
+    const projectEndDate = new Date(project.end_date);
+    const matchesStartDate = !startDate || projectStartDate >= startDate;
+    const matchesEndDate = !endDate || projectEndDate <= endDate;
+    
+    // Material filter
+    const matchesMaterial = !materialFilter || 
+      (project.materials && Array.isArray(project.materials) && 
+       project.materials.some((material: any) => 
+         material.name?.toLowerCase().includes(materialFilter.toLowerCase()) ||
+         material.description?.toLowerCase().includes(materialFilter.toLowerCase())
+       ));
+    
+    // Task filter
+    const matchesTask = !taskFilter || 
+      (project.tasks && Array.isArray(project.tasks) && 
+       project.tasks.some((task: any) => 
+         task.name?.toLowerCase().includes(taskFilter.toLowerCase()) ||
+         task.description?.toLowerCase().includes(taskFilter.toLowerCase())
+       ));
+    
+    // Document filter
+    const matchesDocument = !documentFilter || 
+      (project.documents && Array.isArray(project.documents) && 
+       project.documents.some((doc: any) => 
+         doc.name?.toLowerCase().includes(documentFilter.toLowerCase()) ||
+         doc.description?.toLowerCase().includes(documentFilter.toLowerCase())
+       ));
+    
+    return matchesSearch && matchesStatus && matchesBudget && 
+           matchesStartDate && matchesEndDate && matchesMaterial && 
+           matchesTask && matchesDocument;
   });
 
   const getProjectsByStatus = (status: string) => {
@@ -236,7 +313,7 @@ const Projects = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate(`/project/${project.id}`)}>
                   <Eye className="h-4 w-4 mr-2" />
-                  View Details
+                  View Project Details
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   setEditingProject(project);
@@ -339,31 +416,186 @@ const Projects = () => {
 
           {/* Main Content */}
           <ResponsiveContainer className="py-6">
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search projects..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+            {/* Search and Filters */}
+            <div className="space-y-4 mb-6">
+              {/* Main Search Bar */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search projects, clients, addresses, descriptions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-48">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Projects</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="on_hold">On Hold</SelectItem>
+                      <SelectItem value="planning">Planning</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    className="px-3"
+                  >
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Advanced
+                  </Button>
+                  {(budgetMin || budgetMax || startDate || endDate || materialFilter || taskFilter || documentFilter) && (
+                    <Button
+                      variant="ghost"
+                      onClick={clearAllFilters}
+                      className="px-3"
+                    >
+                      <FilterX className="h-4 w-4 mr-2" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="on_hold">On Hold</SelectItem>
-                  <SelectItem value="planning">Planning</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Advanced Filters */}
+              {showAdvancedFilters && (
+                <Card className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Budget Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Budget Range</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Min ($)"
+                          type="number"
+                          value={budgetMin}
+                          onChange={(e) => setBudgetMin(e.target.value)}
+                          className="text-sm"
+                        />
+                        <Input
+                          placeholder="Max ($)"
+                          type="number"
+                          value={budgetMax}
+                          onChange={(e) => setBudgetMax(e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Start Date Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Start Date From</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {startDate ? format(startDate, "PPP") : "Pick start date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={startDate}
+                            onSelect={setStartDate}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* End Date Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">End Date To</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {endDate ? format(endDate, "PPP") : "Pick end date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={endDate}
+                            onSelect={setEndDate}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Materials Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Materials</Label>
+                      <div className="relative">
+                        <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search materials..."
+                          value={materialFilter}
+                          onChange={(e) => setMaterialFilter(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tasks Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Tasks</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search tasks..."
+                          value={taskFilter}
+                          onChange={(e) => setTaskFilter(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Documents Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Documents</Label>
+                      <div className="relative">
+                        <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search documents..."
+                          value={documentFilter}
+                          onChange={(e) => setDocumentFilter(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Results Count */}
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>
+                  Showing {filteredProjects.length} of {projects.length} projects
+                </span>
+                {filteredProjects.length !== projects.length && (
+                  <span>
+                    {projects.length - filteredProjects.length} projects filtered out
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Projects Tabs */}
