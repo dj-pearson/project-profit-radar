@@ -1,5 +1,6 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { gtag } from '@/hooks/useGoogleAnalytics';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
 import JobProfitabilityOverview from '@/components/financial/JobProfitabilityOverview';
 import InvoicingPayments from '@/components/financial/InvoicingPayments';
@@ -17,10 +18,14 @@ import StripePaymentProcessor from '@/components/financial/StripePaymentProcesso
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const FinancialDashboard = () => {
+  React.useEffect(() => {
+    gtag.trackFeature('financial_dashboard', 'page_view');
+  }, []);
+
   return (
     <DashboardLayout title="Financial Dashboard">
       <div className="space-y-6">
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', value)}>
           <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="budgets" className="text-xs sm:text-sm">

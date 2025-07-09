@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { gtag } from '@/hooks/useGoogleAnalytics';
 import { 
   DollarSign,
   CreditCard,
@@ -72,6 +73,7 @@ const Billing = () => {
     
     if (userProfile?.role === 'root_admin') {
       loadBillingData();
+      gtag.trackFeature('admin_billing', 'page_view');
     }
   }, [user, userProfile, loading, navigate]);
 
@@ -330,6 +332,7 @@ const Billing = () => {
                       onClick={() => {
                         setSelectedCompany(company);
                         setIsDetailDialogOpen(true);
+                        gtag.trackFeature('admin_billing', 'view_company_details', 1);
                       }}
                     >
                       <Eye className="h-3 w-3 mr-1" />

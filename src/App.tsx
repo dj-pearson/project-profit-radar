@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { usePWA } from "@/hooks/usePWA";
+import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 import { RouteGuard } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -72,6 +73,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   usePWA();
+  useGoogleAnalytics(); // Enable automatic page view tracking
 
   return (
     <Routes>

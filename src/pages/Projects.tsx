@@ -16,6 +16,7 @@ import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { gtag } from '@/hooks/useGoogleAnalytics';
 import { 
   Building2, 
   Search, 
@@ -393,7 +394,10 @@ const Projects = () => {
       showTrialBanner={false}
     >
       <div className="flex justify-end mb-6">
-        <Button onClick={() => navigate('/create-project')} size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+        <Button onClick={() => {
+          gtag.trackProject('create', 'new_project_click');
+          navigate('/create-project');
+        }} size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
           <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           <span className="hidden sm:inline">New Project</span>
           <span className="sm:hidden">New</span>
@@ -605,7 +609,10 @@ const Projects = () => {
                       <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No active projects</h3>
                       <p className="text-muted-foreground mb-4">Get started by creating your first project.</p>
-                      <Button onClick={() => navigate('/create-project')}>
+                      <Button onClick={() => {
+                        gtag.trackProject('create', 'empty_state_click');
+                        navigate('/create-project');
+                      }}>
                         <Plus className="h-4 w-4 mr-2" />
                         Create Project
                       </Button>

@@ -10,6 +10,7 @@ import {
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { gtag } from "@/hooks/useGoogleAnalytics";
 import type { ReactNode, FC } from "react";
 
 interface UserProfile {
@@ -344,6 +345,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       }
 
       console.log("Sign in successful");
+      gtag.trackAuth('login', 'email');
       // Loading will be set to false by the auth state change listener
       return {};
     } catch (error) {
@@ -372,6 +374,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       }
 
       console.log("Google sign in successful");
+      gtag.trackAuth('login', 'google');
       // User will be redirected, loading will be handled by redirect
       return {};
     } catch (error) {
@@ -404,6 +407,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
 
         console.log("FIXED AuthContext: Sign up successful");
+        gtag.trackAuth('signup', 'email');
         setLoading(false);
         return {};
       } catch (error) {
@@ -420,6 +424,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       console.log("FIXED AuthContext: Signing out...");
       setLoading(true);
       await supabase.auth.signOut();
+      gtag.trackAuth('logout');
       setUser(null);
       setSession(null);
       setUserProfile(null);
