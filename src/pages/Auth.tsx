@@ -181,7 +181,22 @@ const Auth = () => {
 
     setLoading(true);
 
-    await resetPassword(sanitizeInput(resetEmail));
+    const { error } = await resetPassword(sanitizeInput(resetEmail));
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Reset Failed",
+        description: error,
+      });
+    } else {
+      toast({
+        title: "Reset Link Sent!",
+        description: "Please check your email for the password reset link.",
+      });
+      setResetEmail("");
+      setActiveTab("signin");
+    }
 
     setLoading(false);
   };

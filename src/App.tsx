@@ -9,6 +9,7 @@ import { usePWA } from "@/hooks/usePWA";
 import { RouteGuard } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Setup from "./pages/Setup";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
@@ -76,6 +77,7 @@ const AppContent = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/setup" element={<Setup />} />
       <Route
         path="/dashboard"
