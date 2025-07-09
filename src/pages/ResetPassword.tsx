@@ -29,12 +29,30 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   // Check if we have access token and type parameters (from email link)
-  const accessToken = searchParams.get('access_token');
-  const refreshToken = searchParams.get('refresh_token');
-  const type = searchParams.get('type');
+  // Supabase can pass these as either query parameters or URL fragments
+  const urlParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  
+  const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+  const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+  const type = urlParams.get('type') || hashParams.get('type');
+  const error = urlParams.get('error') || hashParams.get('error');
+  const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
 
   useEffect(() => {
     const validateTokenAndSetSession = async () => {
+      // Check for errors first
+      if (error) {
+        console.error('Reset link error:', error, errorDescription);
+        setIsValidToken(false);
+        toast({
+          variant: "destructive",
+          title: "Reset Link Error",
+          description: errorDescription || "There was an error with your reset link.",
+        });
+        return;
+      }
+
       // Check if this is a password recovery link
       if (type === 'recovery' && accessToken && refreshToken) {
         try {
@@ -97,7 +115,7 @@ const ResetPassword = () => {
     };
 
     validateTokenAndSetSession();
-  }, [accessToken, refreshToken, type]);
+  }, [accessToken, refreshToken, type, error, errorDescription]);
 
   const handlePasswordReset = async (e: FormEvent) => {
     e.preventDefault();
