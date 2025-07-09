@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
   Search, 
   Calendar, 
@@ -88,41 +89,25 @@ const Resources = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white py-16">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-                Construction Industry Resources
-              </h1>
-              <p className="text-xl opacity-90">
-                Expert insights, best practices, and industry trends to help your construction business thrive
-              </p>
-            </div>
-          </div>
+      <DashboardLayout title="Construction Industry Resources">
+        <div className="text-center py-16">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading articles...</p>
         </div>
-
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading articles...</p>
-          </div>
-        </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white py-16">
-        <div className="container mx-auto px-4">
+    <DashboardLayout title="Construction Industry Resources">
+      <div className="space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white rounded-lg p-8">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-6">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
               Construction Industry Resources
-            </h1>
-            <p className="text-xl opacity-90 mb-8">
+            </h2>
+            <p className="text-lg opacity-90 mb-6">
               Expert insights, best practices, and industry trends to help your construction business thrive
             </p>
             
@@ -139,27 +124,18 @@ const Resources = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <div className="border-b bg-white sticky top-0 z-40">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center text-construction-blue hover:text-construction-orange transition-colors">
-              <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
-              Back to Home
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="text-construction-blue border-construction-blue">
-                {filteredPosts.length} Article{filteredPosts.length !== 1 ? 's' : ''}
-              </Badge>
-            </div>
+        {/* Article Count */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <Badge variant="outline" className="text-construction-blue border-construction-blue">
+              {filteredPosts.length} Article{filteredPosts.length !== 1 ? 's' : ''}
+            </Badge>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="container mx-auto px-4 py-12">
+        {/* Content */}
+        <div>
         {filteredPosts.length === 0 && !loading ? (
           <div className="text-center py-16">
             <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -268,8 +244,9 @@ const Resources = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

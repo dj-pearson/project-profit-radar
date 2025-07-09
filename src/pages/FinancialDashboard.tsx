@@ -1,6 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
 import JobProfitabilityOverview from '@/components/financial/JobProfitabilityOverview';
 import InvoicingPayments from '@/components/financial/InvoicingPayments';
@@ -16,34 +15,11 @@ import InvoiceGenerator from '@/components/InvoiceGenerator';
 import Form1099Manager from '@/components/financial/Form1099Manager';
 import StripePaymentProcessor from '@/components/financial/StripePaymentProcessor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
 
 const FinancialDashboard = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center h-14 sm:h-16 lg:h-18">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="mr-2 sm:mr-3 lg:mr-4 flex-shrink-0"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Back to Dashboard</span>
-              <span className="sm:hidden">Back</span>
-            </Button>
-            <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">Financial Dashboard</h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-2 sm:px-4 lg:px-8">
+    <DashboardLayout title="Financial Dashboard">
+      <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
@@ -136,7 +112,7 @@ const FinancialDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

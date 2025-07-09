@@ -10,8 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   Building2,
   Calendar,
   DollarSign,
@@ -186,49 +186,23 @@ const ClientPortal = () => {
 
   if (projects.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="border-b bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center h-16">
-              <h1 className="text-xl font-semibold">Client Portal</h1>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <Card>
-            <CardContent className="text-center py-12">
-              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Projects Found</h3>
-              <p className="text-muted-foreground">
-                No projects are associated with your account. Please contact your contractor for access.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <DashboardLayout title="Client Portal">
+        <Card>
+          <CardContent className="text-center py-12">
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Projects Found</h3>
+            <p className="text-muted-foreground">
+              No projects are associated with your account. Please contact your contractor for access.
+            </p>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-semibold">Client Portal</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
-                Welcome, {user?.email}
-              </span>
-              <Button variant="outline" onClick={() => navigate('/auth')}>
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout title="Client Portal">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Project Selector */}
           <div className="lg:col-span-1">
@@ -440,7 +414,7 @@ const ClientPortal = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

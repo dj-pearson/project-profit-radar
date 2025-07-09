@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   DollarSign,
   CreditCard,
   TrendingUp,
@@ -172,43 +172,22 @@ const Billing = () => {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading billing data...</p>
+      <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading billing data...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold">Billing & Subscriptions</h1>
-                <p className="text-sm text-muted-foreground">Revenue overview and subscription management</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
+      <div className="space-y-6">
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Annual Revenue</CardTitle>
@@ -268,7 +247,7 @@ const Billing = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -458,7 +437,7 @@ const Billing = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

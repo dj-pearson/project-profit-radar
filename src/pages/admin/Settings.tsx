@@ -11,8 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import RenewalNotificationPanel from '@/components/RenewalNotificationPanel';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   Settings,
   Shield,
   Mail,
@@ -141,39 +141,25 @@ const AdminSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold">System Settings</h1>
-                <p className="text-sm text-muted-foreground">Configure platform-wide settings</p>
-              </div>
-            </div>
-            <Button onClick={saveSettings} disabled={saving}>
-              {saving ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Save Changes
-            </Button>
+    <DashboardLayout title="System Settings">
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Configure platform-wide settings</p>
           </div>
+          <Button onClick={saveSettings} disabled={saving}>
+            {saving ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Save Changes
+          </Button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Content */}
+        <div>
         <div className="space-y-6">
           {/* General Settings */}
           <Card>
@@ -432,8 +418,9 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
         </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

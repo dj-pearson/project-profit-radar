@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   PlusCircle,
   Edit,
   Trash2,
@@ -287,50 +287,33 @@ const BlogManager = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h1 className="text-xl font-semibold">Blog Manager</h1>
-                <p className="text-sm text-muted-foreground">Create and manage blog articles with AI assistance</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Settings className="h-4 w-4 mr-2" />
-                    AI Settings
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    New Post
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
-            </div>
+    <DashboardLayout title="Blog Manager">
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Create and manage blog articles with AI assistance</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  AI Settings
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Post
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Posts List */}
         <div className="space-y-6">
           {posts.length === 0 ? (
@@ -592,7 +575,7 @@ const BlogManager = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

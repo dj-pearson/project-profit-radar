@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   Search,
   Globe,
   BarChart3,
@@ -307,39 +307,25 @@ const SEOManager = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold">SEO Manager</h1>
-                <p className="text-sm text-muted-foreground">Comprehensive SEO management and optimization</p>
-              </div>
-            </div>
-            <Button onClick={saveConfiguration} disabled={saving}>
-              {saving ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Settings className="h-4 w-4 mr-2" />
-              )}
-              Save Configuration
-            </Button>
+    <DashboardLayout title="SEO Manager">
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Comprehensive SEO management and optimization</p>
           </div>
+          <Button onClick={saveConfiguration} disabled={saving}>
+            {saving ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Settings className="h-4 w-4 mr-2" />
+            )}
+            Save Configuration
+          </Button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Content */}
+        <div>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="config" className="flex items-center space-x-2">
@@ -693,8 +679,9 @@ const SEOManager = () => {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

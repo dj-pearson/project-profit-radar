@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Link } from 'react-router-dom';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
   Calculator,
   DollarSign, 
@@ -104,35 +105,22 @@ const ROICalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white py-16">
-        <div className="container mx-auto px-4">
+    <DashboardLayout title="ROI Calculator">
+      <div className="space-y-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white rounded-lg p-8">
           <div className="max-w-3xl mx-auto text-center">
             <Calculator className="h-16 w-16 mx-auto mb-6 opacity-90" />
-            <h1 className="text-4xl lg:text-5xl font-bold mb-6">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
               ROI Calculator
-            </h1>
-            <p className="text-xl opacity-90">
+            </h2>
+            <p className="text-lg opacity-90">
               Calculate your potential savings with Build Desk construction management software
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <div className="border-b bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center text-construction-blue hover:text-construction-orange transition-colors">
-              <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Input Form */}
           <div className="space-y-6">
@@ -405,8 +393,9 @@ const ROICalculator = () => {
             )}
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
