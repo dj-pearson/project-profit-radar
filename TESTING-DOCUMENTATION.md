@@ -5,7 +5,6 @@
 **Date:** $(date)  
 **Tester:** Claude Code (End-to-End Testing)  
 **Environment:** Development Server (http://localhost:8080/)  
-**Test Login:** Pearsonperformance@gmail.com / Infomax1!
 
 ## Testing Methodology
 This comprehensive test covers:
@@ -45,7 +44,6 @@ This comprehensive test covers:
 - Login form renders correctly
 - Email and password fields present
 - Form validation working
-- Test credentials: Pearsonperformance@gmail.com / Infomax1!
 
 #### Test 2.3: Login Flow
 **Status:** ✅ PASS
