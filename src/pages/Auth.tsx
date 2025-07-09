@@ -45,22 +45,27 @@ const Auth = () => {
     setCSRFToken(csrfToken);
   }, [csrfToken]);
 
+  // Check for password recovery tokens in URL on page load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+    const type = urlParams.get('type') || hashParams.get('type');
+    
+    // If this is a password recovery session, redirect to reset password page immediately
+    if (type === 'recovery' && accessToken) {
+      console.log("Password recovery session detected, redirecting to reset password...");
+      navigate(`/reset-password${window.location.search}${window.location.hash}`);
+      return;
+    }
+  }, [navigate]);
+
   // Navigate to dashboard after successful authentication
-  // But check if this is a password recovery session first
   useEffect(() => {
     if (user) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const accessToken = urlParams.get('access_token');
-      const type = urlParams.get('type');
-      
-      // If this is a password recovery session, redirect to reset password page
-      if (type === 'recovery' && accessToken) {
-        console.log("Password recovery session detected, redirecting to reset password...");
-        navigate(`/reset-password${window.location.search}`);
-      } else {
-        console.log("User authenticated, navigating to dashboard...");
-        navigate("/dashboard");
-      }
+      console.log("User authenticated, navigating to dashboard...");
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
