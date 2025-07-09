@@ -185,6 +185,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event, session?.user?.id || "none");
 
+      // Check if this is a password recovery session
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = urlParams.get('type') || hashParams.get('type');
+      
+      // If this is a password recovery session, handle it specially
+      if (type === 'recovery' && session?.user) {
+        console.log("Password recovery session detected in auth state change");
+        setSession(session);
+        setUser(session.user);
+        setLoading(false);
+        
+        // Don't fetch profile for password recovery - just redirect
+        if (window.location.pathname === '/auth') {
+          window.location.href = `/reset-password${window.location.search}${window.location.hash}`;
+        }
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
 
