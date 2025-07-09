@@ -12,8 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   Clock, 
   Play,
   Pause,
@@ -541,28 +541,11 @@ const TimeTracking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
-            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 min-w-0 flex-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-              <Separator orientation="vertical" className="h-4 sm:h-6" />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">Time Tracking</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block truncate">Track your work hours and activities</p>
-              </div>
-            </div>
+    <DashboardLayout 
+      title="Time Tracking"
+      showTrialBanner={false}
+    >
+      <div className="flex justify-end mb-6">
             <Dialog open={isManualEntryOpen} onOpenChange={setIsManualEntryOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
@@ -655,12 +638,9 @@ const TimeTracking = () => {
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+      
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Active Timer */}
         <Card className={`border-2 ${isTracking ? 'border-construction-blue' : 'border-border'}`}>
           <CardHeader>
@@ -922,7 +902,7 @@ const TimeTracking = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

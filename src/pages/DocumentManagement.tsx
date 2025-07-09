@@ -14,8 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { DocumentCard } from '@/components/documents/DocumentCard';
 import DocumentOCRProcessor from '@/components/ocr/DocumentOCRProcessor';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   Upload,
   FileText,
   Plus,
@@ -390,126 +390,105 @@ const DocumentManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
-            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 min-w-0 flex-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(isProjectContext ? `/project/${projectId}` : '/dashboard')}
-                className="flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">{isProjectContext ? 'Back to Project' : 'Back to Dashboard'}</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-              <Separator orientation="vertical" className="h-4 sm:h-6" />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">{pageTitle}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {isProjectContext ? 'Project-specific documents and files' : 'Company-wide documents and files'}
-                </p>
+    <DashboardLayout 
+      title={pageTitle}
+      showTrialBanner={false}
+    >
+      <div className="flex justify-end mb-6">
+        <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Files
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Upload Documents</DialogTitle>
+              <DialogDescription>
+                Upload files to {isProjectContext ? 'this project' : 'your company library'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleFileUpload} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="files">Files *</Label>
+                <Input
+                  id="files"
+                  type="file"
+                  multiple
+                  onChange={(e) => setSelectedFiles(e.target.files)}
+                  required
+                />
+                <div className="flex items-center space-x-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="smart-processing"
+                    checked={useSmartProcessing}
+                    onChange={(e) => setUseSmartProcessing(e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="smart-processing" className="text-sm flex items-center space-x-1">
+                    <Brain className="h-3 w-3" />
+                    <span>Enable Smart Processing (OCR + AI Classification)</span>
+                  </Label>
+                </div>
+                {useSmartProcessing && (
+                  <p className="text-xs text-muted-foreground">
+                    Single images and PDFs will be processed with OCR and AI for automatic routing
+                  </p>
+                )}
               </div>
-            </div>
-            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Files
+              
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={uploadDescription}
+                  onChange={(e) => setUploadDescription(e.target.value)}
+                  placeholder="Optional description"
+                />
+              </div>
+              
+              {isUploading && (
+                <div className="space-y-2">
+                  <Label>Upload Progress</Label>
+                  <Progress value={uploadProgress} />
+                  <p className="text-sm text-muted-foreground">{uploadProgress}% complete</p>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsUploadOpen(false)}
+                  disabled={isUploading}
+                >
+                  Cancel
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Upload Documents</DialogTitle>
-                  <DialogDescription>
-                    Upload files to {isProjectContext ? 'this project' : 'your company library'}
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleFileUpload} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="files">Files *</Label>
-                    <Input
-                      id="files"
-                      type="file"
-                      multiple
-                      onChange={(e) => setSelectedFiles(e.target.files)}
-                      required
-                    />
-                    <div className="flex items-center space-x-2 mt-2">
-                      <input
-                        type="checkbox"
-                        id="smart-processing"
-                        checked={useSmartProcessing}
-                        onChange={(e) => setUseSmartProcessing(e.target.checked)}
-                        className="rounded"
-                      />
-                      <Label htmlFor="smart-processing" className="text-sm flex items-center space-x-1">
-                        <Brain className="h-3 w-3" />
-                        <span>Enable Smart Processing (OCR + AI Classification)</span>
-                      </Label>
-                    </div>
-                    {useSmartProcessing && (
-                      <p className="text-xs text-muted-foreground">
-                        Single images and PDFs will be processed with OCR and AI for automatic routing
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={uploadDescription}
-                      onChange={(e) => setUploadDescription(e.target.value)}
-                      placeholder="Optional description"
-                    />
-                  </div>
-                  
-                  {isUploading && (
-                    <div className="space-y-2">
-                      <Label>Upload Progress</Label>
-                      <Progress value={uploadProgress} />
-                      <p className="text-sm text-muted-foreground">{uploadProgress}% complete</p>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsUploadOpen(false)}
-                      disabled={isUploading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isUploading || !selectedFiles}>
-                      {isUploading ? 'Uploading...' : 'Upload'}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+                <Button type="submit" disabled={isUploading || !selectedFiles}>
+                  {isUploading ? 'Uploading...' : 'Upload'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Main Content */}
@@ -619,7 +598,7 @@ const DocumentManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

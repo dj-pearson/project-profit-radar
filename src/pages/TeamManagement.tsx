@@ -11,8 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
-  ArrowLeft, 
   Users, 
   Plus,
   Edit,
@@ -244,28 +244,11 @@ const TeamManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
-            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-              <Separator orientation="vertical" className="h-4 sm:h-6 hidden sm:block" />
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">Team Management</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Manage your team members and their roles</p>
-              </div>
-            </div>
+    <DashboardLayout 
+      title="Team Management"
+      showTrialBanner={false}
+    >
+      <div className="flex justify-end mb-6">
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="shrink-0">
@@ -359,12 +342,8 @@ const TeamManagement = () => {
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-2 sm:px-4 lg:px-8">
+        
         {/* Team Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card>
@@ -504,8 +483,7 @@ const TeamManagement = () => {
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

@@ -11,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/AppSidebar';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { supabase } from '@/integrations/supabase/client';
@@ -389,30 +388,17 @@ const Projects = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background flex w-full">
-        <AppSidebar />
-        
-        <div className="flex-1">
-          {/* Header */}
-          <nav className="border-b bg-background/95 backdrop-blur-sm">
-            <div className="flex justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
-              <div className="flex items-center min-w-0 flex-1">
-                <SidebarTrigger className="mr-2 sm:mr-3 lg:mr-4 flex-shrink-0" />
-                <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-foreground truncate">Projects</h1>
-              </div>
-              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-shrink-0">
-                <Button onClick={() => navigate('/create-project')} size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
-                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">New Project</span>
-                  <span className="sm:hidden">New</span>
-                </Button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Main Content */}
-          <ResponsiveContainer className="py-6">
+    <DashboardLayout 
+      title="Projects"
+      showTrialBanner={false}
+    >
+      <div className="flex justify-end mb-6">
+        <Button onClick={() => navigate('/create-project')} size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">New Project</span>
+          <span className="sm:hidden">New</span>
+        </Button>
+      </div>
             {/* Search and Filters */}
             <div className="space-y-4 mb-6">
               {/* Main Search Bar */}
@@ -688,9 +674,6 @@ const Projects = () => {
                 )}
               </TabsContent>
             </Tabs>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
       {/* Edit Project Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
@@ -799,7 +782,7 @@ const Projects = () => {
           )}
         </DialogContent>
       </Dialog>
-    </SidebarProvider>
+    </DashboardLayout>
   );
 };
 
