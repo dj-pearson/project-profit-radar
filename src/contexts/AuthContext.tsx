@@ -85,7 +85,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           .from("user_profiles")
           .select("*")
           .eq("id", userId)
-          .single();
+          .maybeSingle(); // Use maybeSingle() to handle cases where user doesn't exist
 
         const { data, error } = await Promise.race([
           fetchPromise,
@@ -94,8 +94,22 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         if (error) {
           console.error("Profile fetch error:", error);
+          
+          // If it's a user not found error or RLS violation, the user likely doesn't exist
+          if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
+            console.warn("User profile not found - user may have been deleted");
+            // Sign out the user since their profile doesn't exist
+            await supabase.auth.signOut();
+            toast({
+              title: "Account not found",
+              description: "Your user account no longer exists. Please sign up again.",
+              variant: "destructive",
+            });
+            return null;
+          }
+          
           if (retryCount < 2) {
-            // Retry up to 3 times
+            // Retry up to 3 times for other errors
             console.log(`Retrying profile fetch (${retryCount + 1}/3)`);
             await new Promise((resolve) => setTimeout(resolve, 1000));
             return await fetchUserProfile(userId, retryCount + 1);
@@ -103,12 +117,39 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
-        console.log("Profile fetched successfully:", data?.role);
+        // If data is null, user profile doesn't exist
+        if (!data) {
+          console.warn("User profile not found - user may have been deleted");
+          // Sign out the user since their profile doesn't exist
+          await supabase.auth.signOut();
+          toast({
+            title: "Account not found",
+            description: "Your user account no longer exists. Please sign up again.",
+            variant: "destructive",
+          });
+          return null;
+        }
+
+        console.log("Profile fetched successfully:", data.role);
         return data as UserProfile;
       } catch (error) {
         console.error("Profile fetch exception:", error);
         const isTimeout =
           error instanceof Error && error.message === "Profile fetch timeout";
+        
+        // Check if it's a user not found error
+        if (!isTimeout && error instanceof Error && 
+            (error.message.includes('0 rows') || error.message.includes('not found'))) {
+          console.warn("User profile not found in catch block - user may have been deleted");
+          await supabase.auth.signOut();
+          toast({
+            title: "Account not found", 
+            description: "Your user account no longer exists. Please sign up again.",
+            variant: "destructive",
+          });
+          return null;
+        }
+        
         if (retryCount < 2 && !isTimeout) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           return await fetchUserProfile(userId, retryCount + 1);
