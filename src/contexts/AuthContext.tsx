@@ -36,6 +36,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
   signUp: (
     email: string,
     password: string,
@@ -292,6 +293,34 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      console.log("Signing in with Google...");
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        console.error("Google sign in error:", error);
+        setLoading(false);
+        return { error: error.message };
+      }
+
+      console.log("Google sign in successful");
+      // User will be redirected, loading will be handled by redirect
+      return {};
+    } catch (error) {
+      console.error("Google sign in exception:", error);
+      setLoading(false);
+      return { error: "An unexpected error occurred" };
+    }
+  }, []);
+
   const signUp = useCallback(
     async (email: string, password: string, userData?: any) => {
       try {
@@ -401,6 +430,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       userProfile,
       loading: effectiveLoading,
       signIn,
+      signInWithGoogle,
       signUp,
       signOut,
       resetPassword,
@@ -413,6 +443,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       userProfile,
       effectiveLoading,
       signIn,
+      signInWithGoogle,
       signUp,
       signOut,
       resetPassword,
