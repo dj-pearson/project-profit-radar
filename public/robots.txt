@@ -1,8 +1,29 @@
+# Robots.txt for Build Desk
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /private/
+
+# Additional SEO directives
+Crawl-delay: 1
+
+# Sitemap reference
+Sitemap: https://builddesk.com/sitemap.xml
+
+# Search engine specific rules
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +31,24 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+# Construction industry specific content
+Allow: /resources/
+Allow: /roi-calculator/
+Allow: /features/
+Allow: /pricing/
+Allow: /knowledge-base/
+
+# Prevent indexing of user-generated content
+Disallow: /dashboard/
+Disallow: /projects/
+Disallow: /documents/
+Disallow: /financial/
+Disallow: /team/
+Disallow: /time-tracking/
+Disallow: /reports/
+
+# Allow important public pages
+Allow: /privacy-policy/
+Allow: /terms-of-service/
+Allow: /resources/
+Allow: /tutorials/

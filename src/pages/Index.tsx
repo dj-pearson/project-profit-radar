@@ -9,10 +9,18 @@ import Implementation from "@/components/Implementation";
 import BlogSection from "@/components/BlogSection";
 import Footer from "@/components/Footer";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
+import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEOMetaTags
+        title="BuildDesk - Construction Management Platform"
+        description="Construction management platform built for growing teams. Real-time project visibility without enterprise complexity. Start your free trial today."
+        keywords={['construction management software', 'project management', 'contractor software', 'construction app', 'building management', 'construction project tracking']}
+        canonicalUrl="/"
+        structuredData={[constructionSoftwareStructuredData, organizationStructuredData]}
+      />
       <SkipLink href="#main-content">Skip to main content</SkipLink>
       <SkipLink href="#navigation">Skip to navigation</SkipLink>
       
