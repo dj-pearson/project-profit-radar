@@ -59,6 +59,32 @@ const ResetPassword = () => {
           console.error('Token validation error:', error);
           setIsValidToken(false);
         }
+      } else if (type === 'recovery') {
+        // Handle case where we have recovery type but tokens are in different format
+        // Check if we have a current session (tokens might have been processed by Supabase already)
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (session && !error) {
+            console.log('Found existing recovery session');
+            setIsValidToken(true);
+          } else {
+            console.log('No valid session found for recovery');
+            setIsValidToken(false);
+            toast({
+              variant: "destructive",
+              title: "Invalid Reset Link",
+              description: "This password reset link is invalid or has expired. Please request a new one.",
+            });
+          }
+        } catch (error) {
+          console.error('Session check error:', error);
+          setIsValidToken(false);
+          toast({
+            variant: "destructive",
+            title: "Invalid Reset Link",
+            description: "Unable to validate reset link. Please request a new one.",
+          });
+        }
       } else {
         // No valid recovery parameters found
         setIsValidToken(false);
