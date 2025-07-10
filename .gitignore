@@ -32,3 +32,6 @@ pnpm-lock.yaml
 .wrangler
 functions/api/_worker.js
 functions/api/_worker.js.map
+
+# MCP (Model Context Protocol) configuration with sensitive tokens
+.mcp.json

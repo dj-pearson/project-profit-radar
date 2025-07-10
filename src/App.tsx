@@ -69,6 +69,9 @@ import PublicProcurement from "./pages/PublicProcurement";
 import ServiceDispatch from "./pages/ServiceDispatch";
 import EnvironmentalPermitting from "./pages/EnvironmentalPermitting";
 import EquipmentManagement from "./pages/EquipmentManagement";
+import CRMDashboard from "./pages/CRMDashboard";
+import CRMLeads from "./pages/CRMLeads";
+import CRMOpportunities from "./pages/CRMOpportunities";
 
 const queryClient = new QueryClient();
 
@@ -486,6 +489,30 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/equipment-management">
             <EquipmentManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm"
+        element={
+          <RouteGuard routePath="/crm">
+            <CRMDashboard />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/leads"
+        element={
+          <RouteGuard routePath="/crm/leads">
+            <CRMLeads />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/opportunities"
+        element={
+          <RouteGuard routePath="/crm/opportunities">
+            <CRMOpportunities />
           </RouteGuard>
         }
       />

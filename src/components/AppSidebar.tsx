@@ -75,6 +75,15 @@ const navigationCategories: NavigationCategory[] = [
     ]
   },
   {
+    label: "Customer Relationship Management",
+    items: [
+      { title: "CRM Dashboard", url: "/crm", icon: Users, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Leads", url: "/crm/leads", icon: Users, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Contacts", url: "/crm/contacts", icon: Users, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
+      { title: "Opportunities", url: "/crm/opportunities", icon: TrendingUp, roles: ["admin", "project_manager", "office_staff", "root_admin"] }
+    ]
+  },
+  {
     label: "Financial Management",
     items: [
       { title: "Financial Dashboard", url: "/financial", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
