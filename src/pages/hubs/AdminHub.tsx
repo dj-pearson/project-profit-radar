@@ -149,7 +149,11 @@ const AdminHub = () => {
                 <h2 className="text-lg font-semibold mb-4">{category.label}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {visibleItems.map((item) => (
-                    <Card key={item.url} className="hover:shadow-md transition-shadow cursor-pointer group">
+                    <Card 
+                      key={item.url} 
+                      className="hover:shadow-md transition-shadow cursor-pointer group"
+                      onClick={() => navigate(item.url)}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -168,10 +172,7 @@ const AdminHub = () => {
                           <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                         </div>
                       </CardHeader>
-                      <CardContent 
-                        className="pt-0 cursor-pointer"
-                        onClick={() => navigate(item.url)}
-                      >
+                      <CardContent className="pt-0">
                         <CardDescription>
                           {getItemDescription(item.title)}
                         </CardDescription>
