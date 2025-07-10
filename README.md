@@ -1,71 +1,92 @@
-# Welcome to your Lovable project
+# BuildDesk - Construction Management Platform
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/ed4c0428-159f-4b25-8136-15b119a75bd5
+BuildDesk is a comprehensive construction management platform designed for small to medium-sized construction businesses. It's a B2B SaaS platform that provides real-time project management, financial tracking, and collaborative tools specifically tailored for the construction industry.
 
-## How can I edit this code?
+### Key Features
+- **Real-time job costing** - Live cost tracking per project
+- **Budget vs actual** - Variance analysis and alerts
+- **Project scheduling** - Gantt charts and timelines
+- **Change order management** - Workflow and approvals
+- **Mobile accessibility** - Native mobile apps and responsive design
+- **Team collaboration** - Real-time communication and file sharing
+- **Client portal** - External stakeholder access
+- **Financial integration** - QuickBooks sync and Stripe payments
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Prerequisites
+- Node.js 18+ ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+- npm 9+
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ed4c0428-159f-4b25-8136-15b119a75bd5) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd project-profit-radar
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Development
 
-**Use GitHub Codespaces**
+### Available Scripts
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run dev          # Start development server
+npm run build        # Production build
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
 
-## What technologies are used for this project?
+### Project Structure
 
-This project is built with:
+```
+src/
+├── components/           # Reusable UI components
+├── pages/               # Route pages
+├── contexts/            # React contexts
+├── hooks/               # Custom React hooks
+├── integrations/        # Third-party integrations
+├── lib/                 # Utility functions
+└── utils/               # Additional utilities
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Technology Stack
 
-## How can I deploy this project?
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite 5.4.1
+- **Styling**: Tailwind CSS 3.4.11 with shadcn/ui components
+- **State Management**: React Context + TanStack Query 5.56.2
+- **Routing**: React Router DOM 6.26.2
+- **Mobile**: Capacitor 7.4.1 (for native mobile apps)
 
-### Deploy to Lovable
-Simply open [Lovable](https://lovable.dev/projects/ed4c0428-159f-4b25-8136-15b119a75bd5) and click on Share -> Publish.
+### Backend
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Real-time**: Supabase Realtime
+- **File Storage**: Supabase Storage
 
-### Deploy to Cloudflare Pages
+### Integrations
+- **Payments**: Stripe
+- **Accounting**: QuickBooks Online
+- **Calendar**: Google Calendar & Outlook
+- **PDF Generation**: jsPDF
+
+## Deployment
+
+### Cloudflare Pages (Recommended)
 
 This project is optimized for Cloudflare Pages deployment and **uses npm only**:
 
@@ -99,10 +120,24 @@ The project includes:
 
 For custom domains, configure them in your Cloudflare Pages dashboard.
 
-## Can I connect a custom domain to my Lovable project?
+## Environment Configuration
 
-Yes, you can!
+The application uses Supabase for backend services. Configuration is managed through:
+- Database connection settings in `/src/integrations/supabase/client.ts`
+- Environment variables for production deployments
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is proprietary software. All rights reserved.
+
+## Support
+
+For support and questions, please contact the development team.
