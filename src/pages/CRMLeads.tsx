@@ -157,13 +157,50 @@ const CRMLeads = () => {
     }
 
     try {
+      const leadData = {
+        first_name: newLead.first_name!,
+        last_name: newLead.last_name!,
+        email: newLead.email,
+        phone: newLead.phone,
+        company_name: newLead.company_name,
+        job_title: newLead.job_title,
+        project_name: newLead.project_name,
+        project_type: newLead.project_type,
+        project_description: newLead.project_description,
+        project_address: newLead.project_address,
+        project_city: newLead.project_city,
+        project_state: newLead.project_state,
+        project_zip: newLead.project_zip,
+        estimated_budget: newLead.estimated_budget,
+        budget_range: newLead.budget_range,
+        desired_start_date: newLead.desired_start_date,
+        desired_completion_date: newLead.desired_completion_date,
+        timeline_flexibility: newLead.timeline_flexibility,
+        lead_source: newLead.lead_source!,
+        lead_source_detail: newLead.lead_source_detail,
+        status: newLead.status!,
+        priority: newLead.priority!,
+        assigned_to: newLead.assigned_to,
+        property_type: newLead.property_type,
+        permits_required: newLead.permits_required,
+        hoa_approval_needed: newLead.hoa_approval_needed,
+        financing_secured: newLead.financing_secured,
+        financing_type: newLead.financing_type,
+        site_accessible: newLead.site_accessible,
+        site_conditions: newLead.site_conditions,
+        decision_maker: newLead.decision_maker,
+        decision_timeline: newLead.decision_timeline,
+        next_follow_up_date: newLead.next_follow_up_date,
+        last_contact_date: newLead.last_contact_date,
+        notes: newLead.notes,
+        tags: newLead.tags,
+        company_id: userProfile.company_id,
+        created_by: user?.id
+      };
+
       const { error } = await supabase
         .from('leads')
-        .insert({
-          ...newLead,
-          company_id: userProfile.company_id,
-          created_by: user?.id
-        });
+        .insert([leadData]);
 
       if (error) throw error;
 

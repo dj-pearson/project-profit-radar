@@ -1308,6 +1308,136 @@ export type Database = {
           },
         ]
       }
+      contacts: {
+        Row: {
+          address: string | null
+          anniversary: string | null
+          assigned_to: string | null
+          birthday: string | null
+          city: string | null
+          company_id: string
+          company_name: string | null
+          contact_type: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          custom_fields: Json | null
+          department: string | null
+          email: string | null
+          first_name: string
+          id: string
+          job_title: string | null
+          last_contact_date: string | null
+          last_name: string
+          lead_source: string | null
+          linkedin_profile: string | null
+          mobile_phone: string | null
+          next_contact_date: string | null
+          notes: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          relationship_status: string
+          state: string | null
+          tags: string[] | null
+          time_zone: string | null
+          updated_at: string
+          website: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          anniversary?: string | null
+          assigned_to?: string | null
+          birthday?: string | null
+          city?: string | null
+          company_id: string
+          company_name?: string | null
+          contact_type?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_fields?: Json | null
+          department?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          job_title?: string | null
+          last_contact_date?: string | null
+          last_name: string
+          lead_source?: string | null
+          linkedin_profile?: string | null
+          mobile_phone?: string | null
+          next_contact_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          relationship_status?: string
+          state?: string | null
+          tags?: string[] | null
+          time_zone?: string | null
+          updated_at?: string
+          website?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          anniversary?: string | null
+          assigned_to?: string | null
+          birthday?: string | null
+          city?: string | null
+          company_id?: string
+          company_name?: string | null
+          contact_type?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_fields?: Json | null
+          department?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_contact_date?: string | null
+          last_name?: string
+          lead_source?: string | null
+          linkedin_profile?: string | null
+          mobile_phone?: string | null
+          next_contact_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          relationship_status?: string
+          state?: string | null
+          tags?: string[] | null
+          time_zone?: string | null
+          updated_at?: string
+          website?: string | null
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_payments: {
         Row: {
           amount: number
@@ -4323,6 +4453,160 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          budget_range: string | null
+          company_id: string
+          company_name: string | null
+          created_at: string
+          created_by: string | null
+          decision_maker: boolean | null
+          decision_timeline: string | null
+          desired_completion_date: string | null
+          desired_start_date: string | null
+          email: string | null
+          estimated_budget: number | null
+          financing_secured: boolean | null
+          financing_type: string | null
+          first_name: string
+          hoa_approval_needed: boolean | null
+          id: string
+          job_title: string | null
+          last_contact_date: string | null
+          last_name: string
+          lead_source: string
+          lead_source_detail: string | null
+          next_follow_up_date: string | null
+          notes: string | null
+          permits_required: boolean | null
+          phone: string | null
+          priority: string
+          project_address: string | null
+          project_city: string | null
+          project_description: string | null
+          project_name: string | null
+          project_state: string | null
+          project_type: string | null
+          project_zip: string | null
+          property_type: string | null
+          site_accessible: boolean | null
+          site_conditions: string | null
+          status: string
+          tags: string[] | null
+          timeline_flexibility: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          budget_range?: string | null
+          company_id: string
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision_maker?: boolean | null
+          decision_timeline?: string | null
+          desired_completion_date?: string | null
+          desired_start_date?: string | null
+          email?: string | null
+          estimated_budget?: number | null
+          financing_secured?: boolean | null
+          financing_type?: string | null
+          first_name: string
+          hoa_approval_needed?: boolean | null
+          id?: string
+          job_title?: string | null
+          last_contact_date?: string | null
+          last_name: string
+          lead_source?: string
+          lead_source_detail?: string | null
+          next_follow_up_date?: string | null
+          notes?: string | null
+          permits_required?: boolean | null
+          phone?: string | null
+          priority?: string
+          project_address?: string | null
+          project_city?: string | null
+          project_description?: string | null
+          project_name?: string | null
+          project_state?: string | null
+          project_type?: string | null
+          project_zip?: string | null
+          property_type?: string | null
+          site_accessible?: boolean | null
+          site_conditions?: string | null
+          status?: string
+          tags?: string[] | null
+          timeline_flexibility?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          budget_range?: string | null
+          company_id?: string
+          company_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision_maker?: boolean | null
+          decision_timeline?: string | null
+          desired_completion_date?: string | null
+          desired_start_date?: string | null
+          email?: string | null
+          estimated_budget?: number | null
+          financing_secured?: boolean | null
+          financing_type?: string | null
+          first_name?: string
+          hoa_approval_needed?: boolean | null
+          id?: string
+          job_title?: string | null
+          last_contact_date?: string | null
+          last_name?: string
+          lead_source?: string
+          lead_source_detail?: string | null
+          next_follow_up_date?: string | null
+          notes?: string | null
+          permits_required?: boolean | null
+          phone?: string | null
+          priority?: string
+          project_address?: string | null
+          project_city?: string | null
+          project_description?: string | null
+          project_name?: string | null
+          project_state?: string | null
+          project_type?: string | null
+          project_zip?: string | null
+          property_type?: string | null
+          site_accessible?: boolean | null
+          site_conditions?: string | null
+          status?: string
+          tags?: string[] | null
+          timeline_flexibility?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       material_usage: {
         Row: {
           created_at: string
@@ -4468,6 +4752,171 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunities: {
+        Row: {
+          account_manager: string | null
+          actual_value: number | null
+          bid_due_date: string | null
+          bid_required: boolean | null
+          close_date: string | null
+          close_reason: string | null
+          company_id: string
+          competitor_names: string[] | null
+          contact_id: string | null
+          contract_signed_date: string | null
+          created_at: string
+          description: string | null
+          estimated_value: number
+          estimator: string | null
+          expected_close_date: string | null
+          id: string
+          key_decision_factors: string[] | null
+          lead_id: string | null
+          mitigation_strategies: string | null
+          name: string
+          notes: string | null
+          our_competitive_advantage: string | null
+          pipeline_position: number | null
+          probability_percent: number
+          project_id: string | null
+          project_manager: string | null
+          project_type: string | null
+          proposal_sent_date: string | null
+          risk_factors: string[] | null
+          risk_level: string
+          stage: string
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          account_manager?: string | null
+          actual_value?: number | null
+          bid_due_date?: string | null
+          bid_required?: boolean | null
+          close_date?: string | null
+          close_reason?: string | null
+          company_id: string
+          competitor_names?: string[] | null
+          contact_id?: string | null
+          contract_signed_date?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_value: number
+          estimator?: string | null
+          expected_close_date?: string | null
+          id?: string
+          key_decision_factors?: string[] | null
+          lead_id?: string | null
+          mitigation_strategies?: string | null
+          name: string
+          notes?: string | null
+          our_competitive_advantage?: string | null
+          pipeline_position?: number | null
+          probability_percent?: number
+          project_id?: string | null
+          project_manager?: string | null
+          project_type?: string | null
+          proposal_sent_date?: string | null
+          risk_factors?: string[] | null
+          risk_level?: string
+          stage?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          account_manager?: string | null
+          actual_value?: number | null
+          bid_due_date?: string | null
+          bid_required?: boolean | null
+          close_date?: string | null
+          close_reason?: string | null
+          company_id?: string
+          competitor_names?: string[] | null
+          contact_id?: string | null
+          contract_signed_date?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_value?: number
+          estimator?: string | null
+          expected_close_date?: string | null
+          id?: string
+          key_decision_factors?: string[] | null
+          lead_id?: string | null
+          mitigation_strategies?: string | null
+          name?: string
+          notes?: string | null
+          our_competitive_advantage?: string | null
+          pipeline_position?: number | null
+          probability_percent?: number
+          project_id?: string | null
+          project_manager?: string | null
+          project_type?: string | null
+          proposal_sent_date?: string | null
+          risk_factors?: string[] | null
+          risk_level?: string
+          stage?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_account_manager_fkey"
+            columns: ["account_manager"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_estimator_fkey"
+            columns: ["estimator"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_manager_fkey"
+            columns: ["project_manager"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]

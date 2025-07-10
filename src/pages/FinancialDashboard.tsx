@@ -25,7 +25,7 @@ const FinancialDashboard = () => {
   return (
     <DashboardLayout title="Financial Dashboard">
       <div className="space-y-6">
-        <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', value)}>
+        <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
           <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="budgets" className="text-xs sm:text-sm">

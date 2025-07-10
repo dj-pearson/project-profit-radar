@@ -172,13 +172,42 @@ const CRMOpportunities = () => {
     }
 
     try {
+      const opportunityData = {
+        name: newOpportunity.name!,
+        description: newOpportunity.description,
+        lead_id: newOpportunity.lead_id,
+        contact_id: newOpportunity.contact_id,
+        project_id: newOpportunity.project_id,
+        estimated_value: newOpportunity.estimated_value!,
+        probability_percent: newOpportunity.probability_percent!,
+        expected_close_date: newOpportunity.expected_close_date,
+        stage: newOpportunity.stage!,
+        pipeline_position: newOpportunity.pipeline_position,
+        project_type: newOpportunity.project_type,
+        bid_required: newOpportunity.bid_required,
+        bid_due_date: newOpportunity.bid_due_date,
+        proposal_sent_date: newOpportunity.proposal_sent_date,
+        contract_signed_date: newOpportunity.contract_signed_date,
+        competitor_names: newOpportunity.competitor_names,
+        our_competitive_advantage: newOpportunity.our_competitive_advantage,
+        key_decision_factors: newOpportunity.key_decision_factors,
+        estimator: newOpportunity.estimator,
+        project_manager: newOpportunity.project_manager,
+        risk_level: newOpportunity.risk_level!,
+        risk_factors: newOpportunity.risk_factors,
+        mitigation_strategies: newOpportunity.mitigation_strategies,
+        close_date: newOpportunity.close_date,
+        close_reason: newOpportunity.close_reason,
+        actual_value: newOpportunity.actual_value,
+        notes: newOpportunity.notes,
+        tags: newOpportunity.tags,
+        company_id: userProfile.company_id,
+        account_manager: user?.id
+      };
+
       const { error } = await supabase
         .from('opportunities')
-        .insert({
-          ...newOpportunity,
-          company_id: userProfile.company_id,
-          account_manager: user?.id
-        });
+        .insert([opportunityData]);
 
       if (error) throw error;
 
