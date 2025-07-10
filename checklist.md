@@ -1,13 +1,13 @@
 ✅ SMB Construction Platform Feature Additions Checklist
-1. RFIs (Request for Information)
+1. ✅ RFIs (Request for Information)
 What it is: A formal way for field or office teams to submit questions and get written responses from clients, architects, or vendors.
 Why it's needed: Many SMBs use email for RFIs, which causes delays and confusion. A built-in RFI tracker improves accountability and helps keep project scope clear.
 
-2. Submittals Workflow
+2. ✅Submittals Workflow
 What it is: A simple system to submit drawings, product data, or samples for approval before construction.
 Why it's needed: Common on commercial projects. Even small GCs need a basic way to track who submitted what, when, and whether it was approved.
 
-3. Punch List / Issue Tracking
+3. ✅Punch List / Issue Tracking
 What it is: A field tool to log quality issues or incomplete work, assign them, and track fixes.
 Why it's needed: Closes the loop on walk-throughs. Easy punch list tracking ensures nothing gets missed during final inspections or client handoff.
 
