@@ -77,6 +77,11 @@ import CRMLeads from "./pages/CRMLeads";
 import CRMOpportunities from "./pages/CRMOpportunities";
 import CRMContacts from "./pages/CRMContacts";
 import QuickBooksRouting from "./pages/QuickBooksRouting";
+import ProjectsHub from "./pages/hubs/ProjectsHub";
+import FinancialHub from "./pages/hubs/FinancialHub";
+import PeopleHub from "./pages/hubs/PeopleHub";
+import OperationsHub from "./pages/hubs/OperationsHub";
+import AdminHub from "./pages/hubs/AdminHub";
 
 const queryClient = new QueryClient();
 
@@ -558,6 +563,46 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/quickbooks-routing">
             <QuickBooksRouting />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/projects-hub"
+        element={
+          <RouteGuard routePath="/projects-hub">
+            <ProjectsHub />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/financial-hub"
+        element={
+          <RouteGuard routePath="/financial-hub">
+            <FinancialHub />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/people-hub"
+        element={
+          <RouteGuard routePath="/people-hub">
+            <PeopleHub />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/operations-hub"
+        element={
+          <RouteGuard routePath="/operations-hub">
+            <OperationsHub />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin-hub"
+        element={
+          <RouteGuard routePath="/admin-hub">
+            <AdminHub />
           </RouteGuard>
         }
       />
