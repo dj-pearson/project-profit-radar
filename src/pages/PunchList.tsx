@@ -141,23 +141,9 @@ const PunchList = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load punch list items (for now, we'll simulate the data structure)
-      // In a real implementation, this would call a Supabase function or query the punch_list table
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('punch_list_items')
-        .select(`
-          *,
-          projects:project_id (name, client_name),
-          creator:created_by (first_name, last_name),
-          assignee:assigned_to (first_name, last_name),
-          photos:punch_list_photos (*),
-          comments:punch_list_comments (
-            *,
-            commenter:commented_by (first_name, last_name)
-          )
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
+      // Load punch list items (simulated data for now)
+      // In a real implementation, this would query the punch_list_items table
+      const itemsData: PunchListItem[] = [];
 
       // For now, we'll set empty data since the table doesn't exist yet
       setPunchItems([]);

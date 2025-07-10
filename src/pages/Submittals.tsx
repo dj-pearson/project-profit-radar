@@ -131,19 +131,9 @@ const Submittals = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load submittals (for now, we'll simulate the data structure)
-      // In a real implementation, this would call a Supabase function or query the submittals table
-      const { data: submittalsData, error: submittalsError } = await supabase
-        .from('submittals')
-        .select(`
-          *,
-          projects:project_id (name, client_name),
-          submitter:submitted_by (first_name, last_name),
-          reviewer:reviewed_by (first_name, last_name),
-          attachments:submittal_attachments (*)
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
+      // Load submittals (simulated data for now)
+      // In a real implementation, this would query the submittals table
+      const submittalsData: Submittal[] = [];
 
       // For now, we'll set empty data since the table doesn't exist yet
       setSubmittals([]);

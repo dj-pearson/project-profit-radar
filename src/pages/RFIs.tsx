@@ -125,22 +125,9 @@ const RFIs = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load RFIs (for now, we'll simulate the data structure)
-      // In a real implementation, this would call a Supabase function or query the RFI table
-      const { data: rfisData, error: rfisError } = await supabase
-        .from('rfis')
-        .select(`
-          *,
-          projects:project_id (name, client_name),
-          requester:requested_by (first_name, last_name),
-          assignee:assigned_to (first_name, last_name),
-          responses:rfi_responses (
-            *,
-            responder:responded_by (first_name, last_name)
-          )
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
+      // Load RFIs (simulated data for now)
+      // In a real implementation, this would query the rfis table
+      const rfisData: RFI[] = [];
 
       // For now, we'll set empty data since the table doesn't exist yet
       setRFIs([]);
