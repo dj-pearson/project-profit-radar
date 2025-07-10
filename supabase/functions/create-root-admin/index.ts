@@ -26,10 +26,18 @@ serve(async (req) => {
 
     console.log("Creating root admin user...");
 
+    // Get admin credentials from environment variables
+    const adminEmail = Deno.env.get("ADMIN_EMAIL");
+    const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+    
+    if (!adminEmail || !adminPassword) {
+      throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required");
+    }
+
     // Create the root admin user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: 'Pearsonperformance@gmail.com',
-      password: 'Infomax1!',
+      email: adminEmail,
+      password: adminPassword,
       email_confirm: true,
       user_metadata: {
         first_name: 'Dan',
@@ -69,7 +77,7 @@ serve(async (req) => {
         success: true,
         message: "Root admin user created successfully",
         user_id: authData.user?.id,
-        email: 'Pearsonperformance@gmail.com'
+        email: adminEmail
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

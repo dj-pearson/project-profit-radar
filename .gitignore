@@ -35,3 +35,12 @@ functions/api/_worker.js.map
 
 # MCP (Model Context Protocol) configuration with sensitive tokens
 .mcp.json
+
+# Supabase secrets and sensitive files
+.env.local
+.env.production
+supabase/.env
+supabase/functions/.env
+**/secrets.json
+**/*secret*
+**/*private*
