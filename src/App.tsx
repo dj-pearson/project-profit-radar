@@ -24,6 +24,9 @@ import DocumentManagement from "./pages/DocumentManagement";
 import FinancialDashboard from "./pages/FinancialDashboard";
 import DailyReports from "./pages/DailyReports";
 import ChangeOrders from "./pages/ChangeOrders";
+import RFIs from "./pages/RFIs";
+import Submittals from "./pages/Submittals";
+import PunchList from "./pages/PunchList";
 import ClientPortal from "./pages/ClientPortal";
 import Reports from "./pages/Reports";
 import BlogManager from "./pages/BlogManager";
@@ -180,6 +183,30 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/change-orders">
             <ChangeOrders />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/rfis"
+        element={
+          <RouteGuard routePath="/rfis">
+            <RFIs />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/submittals"
+        element={
+          <RouteGuard routePath="/submittals">
+            <Submittals />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/punch-list"
+        element={
+          <RouteGuard routePath="/punch-list">
+            <PunchList />
           </RouteGuard>
         }
       />

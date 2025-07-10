@@ -41,7 +41,9 @@ import {
   Lock,
   Zap,
   Tag,
-  Gift
+  Gift,
+  HelpCircle,
+  CheckSquare
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -71,7 +73,10 @@ const navigationCategories: NavigationCategory[] = [
       { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
       { title: "Job Costing", url: "/job-costing", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
       { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] },
-      { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] }
+      { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
+      { title: "RFIs", url: "/rfis", icon: HelpCircle, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Submittals", url: "/submittals", icon: FileText, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Punch List", url: "/punch-list", icon: CheckSquare, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] }
     ]
   },
   {
