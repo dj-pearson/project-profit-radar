@@ -89,7 +89,8 @@ const navigationCategories: NavigationCategory[] = [
       { title: "Financial Dashboard", url: "/financial", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
       { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] },
       { title: "Purchase Orders", url: "/purchase-orders", icon: FileText, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
-      { title: "Vendors", url: "/vendors", icon: Users, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] }
+      { title: "Vendors", url: "/vendors", icon: Users, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
+      { title: "QuickBooks Routing", url: "/quickbooks-routing", icon: TrendingUp, roles: ["admin", "project_manager", "accounting", "root_admin"] }
     ]
   },
   {

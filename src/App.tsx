@@ -72,6 +72,7 @@ import EquipmentManagement from "./pages/EquipmentManagement";
 import CRMDashboard from "./pages/CRMDashboard";
 import CRMLeads from "./pages/CRMLeads";
 import CRMOpportunities from "./pages/CRMOpportunities";
+import QuickBooksRouting from "./pages/QuickBooksRouting";
 
 const queryClient = new QueryClient();
 
@@ -513,6 +514,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/crm/opportunities">
             <CRMOpportunities />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/quickbooks-routing"
+        element={
+          <RouteGuard routePath="/quickbooks-routing">
+            <QuickBooksRouting />
           </RouteGuard>
         }
       />
