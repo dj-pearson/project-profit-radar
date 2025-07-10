@@ -4,8 +4,8 @@
 const TEST_CONFIG = {
   baseUrl: 'http://localhost:8080',
   testUser: {
-    email: 'Pearsonperformance@gmail.com',
-    password: 'Infomax1!'
+    email: process.env.TEST_USER_EMAIL || 'test@example.com',
+    password: process.env.TEST_USER_PASSWORD || 'test-password'
   },
   testTimeout: 30000
 };

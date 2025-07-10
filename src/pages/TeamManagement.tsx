@@ -108,11 +108,21 @@ const TeamManagement = () => {
     setInviteLoading(true);
 
     try {
+      // Generate a secure temporary password
+      const generatePassword = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < 16; i++) {
+          password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password;
+      };
+
       // For now, we'll create the user profile directly
       // In a real implementation, you'd want to send an invitation email
       const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
         email: inviteEmail,
-        password: 'TemporaryPassword123!', // In real implementation, generate random password
+        password: generatePassword(), // Generate random secure password
         email_confirm: true,
         user_metadata: {
           first_name: inviteFirstName,
