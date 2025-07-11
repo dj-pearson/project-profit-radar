@@ -541,10 +541,7 @@ const TimeTracking = () => {
   }
 
   return (
-    <DashboardLayout 
-      title="Time Tracking"
-      showTrialBanner={false}
-    >
+    <DashboardLayout title="Time Tracking">
       <div className="flex justify-end mb-6">
             <Dialog open={isManualEntryOpen} onOpenChange={setIsManualEntryOpen}>
               <DialogTrigger asChild>
