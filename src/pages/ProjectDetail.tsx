@@ -128,6 +128,12 @@ const ProjectDetail = () => {
   const [addPermitDialogOpen, setAddPermitDialogOpen] = useState(false);
   const [addWarrantyDialogOpen, setAddWarrantyDialogOpen] = useState(false);
   const [addDocumentDialogOpen, setAddDocumentDialogOpen] = useState(false);
+  const [addJobCostDialogOpen, setAddJobCostDialogOpen] = useState(false);
+  const [addRfiDialogOpen, setAddRfiDialogOpen] = useState(false);
+  const [addSubmittalDialogOpen, setAddSubmittalDialogOpen] = useState(false);
+  const [addChangeOrderDialogOpen, setAddChangeOrderDialogOpen] = useState(false);
+  const [addPunchListDialogOpen, setAddPunchListDialogOpen] = useState(false);
+  const [addEquipmentDialogOpen, setAddEquipmentDialogOpen] = useState(false);
   
   // User and contact lists
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
@@ -216,6 +222,66 @@ const ProjectDetail = () => {
     description: '',
     file_path: '',
     category: ''
+  });
+
+  const [newJobCost, setNewJobCost] = useState({
+    cost_code: '',
+    description: '',
+    estimated_cost: 0,
+    actual_cost: 0,
+    cost_type: 'labor',
+    unit: '',
+    quantity: 0,
+    unit_cost: 0
+  });
+
+  const [newRfi, setNewRfi] = useState({
+    rfi_number: '',
+    subject: '',
+    description: '',
+    priority: 'medium',
+    submitted_to: '',
+    due_date: '',
+    status: 'submitted'
+  });
+
+  const [newSubmittal, setNewSubmittal] = useState({
+    submittal_number: '',
+    title: '',
+    description: '',
+    spec_section: '',
+    priority: 'medium',
+    due_date: '',
+    status: 'submitted'
+  });
+
+  const [newChangeOrder, setNewChangeOrder] = useState({
+    change_order_number: '',
+    title: '',
+    description: '',
+    amount: 0,
+    reason: '',
+    status: 'pending'
+  });
+
+  const [newPunchListItem, setNewPunchListItem] = useState({
+    item_number: '',
+    description: '',
+    location: '',
+    trade: '',
+    priority: 'medium',
+    status: 'open'
+  });
+
+  const [newEquipment, setNewEquipment] = useState({
+    equipment_name: '',
+    equipment_type: '',
+    manufacturer: '',
+    model: '',
+    serial_number: '',
+    purchase_date: '',
+    warranty_end_date: '',
+    status: 'operational'
   });
 
   useEffect(() => {
@@ -641,6 +707,235 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleCreateJobCost = async () => {
+    try {
+      const { error } = await supabase
+        .from('job_costs')
+        .insert({
+          cost_code_id: newJobCost.cost_code || '',
+          description: newJobCost.description,
+          labor_cost: newJobCost.cost_type === 'labor' ? newJobCost.actual_cost : 0,
+          material_cost: newJobCost.cost_type === 'material' ? newJobCost.actual_cost : 0,
+          equipment_cost: newJobCost.cost_type === 'equipment' ? newJobCost.actual_cost : 0,
+          other_cost: newJobCost.cost_type === 'other' ? newJobCost.actual_cost : 0,
+          labor_hours: newJobCost.cost_type === 'labor' ? newJobCost.quantity : 0,
+          total_cost: newJobCost.actual_cost,
+          project_id: projectId,
+          created_by: user?.id,
+          date: new Date().toISOString().split('T')[0]
+        });
+
+      if (error) throw error;
+
+      setAddJobCostDialogOpen(false);
+      setNewJobCost({
+        cost_code: '',
+        description: '',
+        estimated_cost: 0,
+        actual_cost: 0,
+        cost_type: 'labor',
+        unit: '',
+        quantity: 0,
+        unit_cost: 0
+      });
+
+      toast({
+        title: "Job cost added",
+        description: "Job cost has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding job cost",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateRfi = async () => {
+    try {
+      const { error } = await supabase
+        .from('rfis')
+        .insert({
+          ...newRfi,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddRfiDialogOpen(false);
+      setNewRfi({
+        rfi_number: '',
+        subject: '',
+        description: '',
+        priority: 'medium',
+        submitted_to: '',
+        due_date: '',
+        status: 'submitted'
+      });
+
+      toast({
+        title: "RFI added",
+        description: "RFI has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding RFI",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateSubmittal = async () => {
+    try {
+      const { error } = await supabase
+        .from('submittals')
+        .insert({
+          ...newSubmittal,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddSubmittalDialogOpen(false);
+      setNewSubmittal({
+        submittal_number: '',
+        title: '',
+        description: '',
+        spec_section: '',
+        priority: 'medium',
+        due_date: '',
+        status: 'submitted'
+      });
+
+      toast({
+        title: "Submittal added",
+        description: "Submittal has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding submittal",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateChangeOrder = async () => {
+    try {
+      const { error } = await supabase
+        .from('change_orders')
+        .insert({
+          ...newChangeOrder,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddChangeOrderDialogOpen(false);
+      setNewChangeOrder({
+        change_order_number: '',
+        title: '',
+        description: '',
+        amount: 0,
+        reason: '',
+        status: 'pending'
+      });
+
+      toast({
+        title: "Change order added",
+        description: "Change order has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding change order",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreatePunchListItem = async () => {
+    try {
+      const { error } = await supabase
+        .from('punch_list_items')
+        .insert({
+          ...newPunchListItem,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddPunchListDialogOpen(false);
+      setNewPunchListItem({
+        item_number: '',
+        description: '',
+        location: '',
+        trade: '',
+        priority: 'medium',
+        status: 'open'
+      });
+
+      toast({
+        title: "Punch list item added",
+        description: "Punch list item has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding punch list item",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateEquipment = async () => {
+    try {
+      const { error } = await supabase
+        .from('equipment')
+        .insert({
+          ...newEquipment,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddEquipmentDialogOpen(false);
+      setNewEquipment({
+        equipment_name: '',
+        equipment_type: '',
+        manufacturer: '',
+        model: '',
+        serial_number: '',
+        purchase_date: '',
+        warranty_end_date: '',
+        status: 'operational'
+      });
+
+      toast({
+        title: "Equipment added",
+        description: "Equipment has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding equipment",
+        description: error.message
+      });
+    }
+  };
+
   const navigateToMaterials = () => {
     navigate('/materials', { state: { projectFilter: projectId } });
   };
@@ -813,11 +1108,17 @@ const ProjectDetail = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full justify-start">
+          <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
             <TabsTrigger value="dailyreports">Daily Reports</TabsTrigger>
+            <TabsTrigger value="jobcosting">Job Costing</TabsTrigger>
+            <TabsTrigger value="rfis">RFI's</TabsTrigger>
+            <TabsTrigger value="submittals">Submittals</TabsTrigger>
+            <TabsTrigger value="changeorders">Change Orders</TabsTrigger>
+            <TabsTrigger value="punchlist">Punch List</TabsTrigger>
+            <TabsTrigger value="equipment">Equipment</TabsTrigger>
             <TabsTrigger value="permits">Permits</TabsTrigger>
             <TabsTrigger value="warranties">Warranties</TabsTrigger>
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
