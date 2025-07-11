@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Zap, ChevronRight } from 'lucide-react';
 import { getNavigationForRole } from './NavigationConfig';
-import { hierarchicalNavigation, findSectionByUrl } from './HierarchicalNavigationConfig';
+import { hierarchicalNavigation, NavigationSection } from './HierarchicalNavigationConfig';
 
 export const SimplifiedSidebar = () => {
   const { state } = useSidebar();
@@ -40,18 +40,19 @@ export const SimplifiedSidebar = () => {
   // Check if we're on a hub page that should show expandable sections
   const isHubPage = currentPath.includes('-hub');
   
-  // Get main areas with their sub-sections only for hub pages
-  const getAreaSubSections = (areaId: string) => {
+  // Get main areas with their sections organized by section only for hub pages
+  const getAreaSections = (areaId: string): NavigationSection[] => {
     if (!isHubPage) return [];
     
     const area = hierarchicalNavigation.find(a => a.id === areaId);
     if (!area) return [];
     
-    return area.sections.flatMap(section => 
-      section.items.filter(item => 
+    return area.sections.map(section => ({
+      ...section,
+      items: section.items.filter(item => 
         userProfile?.role === 'root_admin' || item.roles.includes(userProfile?.role || '')
       )
-    );
+    })).filter(section => section.items.length > 0);
   };
 
   const toggleSection = (sectionId: string) => {
@@ -109,8 +110,8 @@ export const SimplifiedSidebar = () => {
                 else if (item.url.includes('/operations')) areaId = 'operations';
                 else if (item.url.includes('/admin')) areaId = 'admin';
                 
-                const subSections = getAreaSubSections(areaId);
-                const hasSubSections = subSections.length > 0;
+                const sections = getAreaSections(areaId);
+                const hasSubSections = sections.length > 0;
                 const isExpanded = expandedSections.includes(areaId);
                 
                 return (
@@ -152,27 +153,34 @@ export const SimplifiedSidebar = () => {
                     
                     {hasSubSections && isExpanded && !collapsed && (
                       <SidebarMenuSub>
-                        {subSections.map((subItem) => {
-                          const subIsActive = currentPath === subItem.url;
-                          return (
-                            <SidebarMenuSubItem key={subItem.url}>
-                              <SidebarMenuSubButton asChild>
-                                <NavLink 
-                                  to={subItem.url} 
-                                  className={getNavClass({ isActive: subIsActive })}
-                                >
-                                  <subItem.icon className="h-4 w-4" />
-                                  <span>{subItem.title}</span>
-                                  {subItem.badge && (
-                                    <Badge variant="destructive" className="text-xs px-1 py-0 ml-auto">
-                                      {subItem.badge}
-                                    </Badge>
-                                  )}
-                                </NavLink>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          );
-                        })}
+                        {sections.map((section) => (
+                          <div key={section.id}>
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              {section.label}
+                            </div>
+                            {section.items.map((subItem) => {
+                              const subIsActive = currentPath === subItem.url;
+                              return (
+                                <SidebarMenuSubItem key={subItem.url}>
+                                  <SidebarMenuSubButton asChild>
+                                    <NavLink 
+                                      to={subItem.url} 
+                                      className={getNavClass({ isActive: subIsActive })}
+                                    >
+                                      <subItem.icon className="h-4 w-4" />
+                                      <span>{subItem.title}</span>
+                                      {subItem.badge && (
+                                        <Badge variant="destructive" className="text-xs px-1 py-0 ml-auto">
+                                          {subItem.badge}
+                                        </Badge>
+                                      )}
+                                    </NavLink>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
+                          </div>
+                        ))}
                       </SidebarMenuSub>
                     )}
                   </SidebarMenuItem>
