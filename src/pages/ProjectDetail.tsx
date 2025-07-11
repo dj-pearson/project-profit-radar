@@ -1169,8 +1169,8 @@ const ProjectDetail = () => {
       <div className="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-6 lg:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Desktop Tabs */}
-          <div className="hidden lg:block">
-            <TabsList>
+          <div className="hidden lg:block overflow-x-auto">
+            <TabsList className="w-max min-w-full">
               <TabsTrigger value="overview" className="shrink-0">Overview</TabsTrigger>
               <TabsTrigger value="materials" className="shrink-0">Materials</TabsTrigger>
               <TabsTrigger value="progress" className="shrink-0">Progress</TabsTrigger>
