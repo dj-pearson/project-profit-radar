@@ -5,6 +5,8 @@ import SubscriptionManager from "@/components/SubscriptionManager";
 import TrialStatusBanner from "@/components/TrialStatusBanner";
 import UsageDashboard from "@/components/billing/UsageDashboard";
 import PaymentFailureAlert from "@/components/billing/PaymentFailureAlert";
+import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
+import { mobileTextClasses } from '@/utils/mobileHelpers';
 
 const SubscriptionSettings = () => {
   const { user } = useAuth();
@@ -22,24 +24,26 @@ const SubscriptionSettings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <TrialStatusBanner />
-        
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-construction-dark mb-2">Subscription</h1>
-          <p className="text-muted-foreground">Manage your subscription and billing information.</p>
-        </div>
-
-        <div className="space-y-6">
-          <PaymentFailureAlert />
+      <ResponsiveContainer>
+        <div className="py-4 sm:py-8">
+          <TrialStatusBanner />
           
-          <div className="max-w-2xl">
-            <SubscriptionManager />
+          <div className="mb-6 sm:mb-8">
+            <h1 className={mobileTextClasses.title}>Subscription</h1>
+            <p className={mobileTextClasses.muted}>Manage your subscription and billing information.</p>
           </div>
 
-          <UsageDashboard />
+          <div className="space-y-4 sm:space-y-6">
+            <PaymentFailureAlert />
+            
+            <div className="max-w-2xl">
+              <SubscriptionManager />
+            </div>
+
+            <UsageDashboard />
+          </div>
         </div>
-      </div>
+      </ResponsiveContainer>
     </div>
   );
 };

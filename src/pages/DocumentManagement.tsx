@@ -15,6 +15,8 @@ import { DocumentCard } from '@/components/documents/DocumentCard';
 import DocumentOCRProcessor from '@/components/ocr/DocumentOCRProcessor';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
+import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { 
   Upload,
   FileText,
@@ -492,11 +494,11 @@ const DocumentManagement = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <ResponsiveContainer>
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className={mobileFilterClasses.container}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -561,7 +563,7 @@ const DocumentManagement = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={mobileGridClasses.content}>
             {filteredDocuments.map((document) => (
               <DocumentCard
                 key={document.id}
@@ -574,7 +576,7 @@ const DocumentManagement = () => {
             ))}
           </div>
         )}
-      </div>
+      </ResponsiveContainer>
 
       {/* OCR Processing Dialog */}
       <Dialog open={showOCRProcessor} onOpenChange={setShowOCRProcessor}>

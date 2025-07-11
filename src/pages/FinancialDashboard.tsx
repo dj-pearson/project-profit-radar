@@ -1,5 +1,6 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { gtag } from '@/hooks/useGoogleAnalytics';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
 import JobProfitabilityOverview from '@/components/financial/JobProfitabilityOverview';
@@ -26,24 +27,15 @@ const FinancialDashboard = () => {
     <DashboardLayout title="Financial Dashboard">
       <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="budgets" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Budget Tracking</span>
-              <span className="sm:hidden">Budget</span>
-            </TabsTrigger>
-            <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Cash Flow</span>
-              <span className="sm:hidden">Cash</span>
-            </TabsTrigger>
+            <TabsTrigger value="budgets" className="text-xs sm:text-sm">Budget</TabsTrigger>
+            <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">Cash</TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
             <TabsTrigger value="invoices" className="text-xs sm:text-sm">Invoices</TabsTrigger>
             <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
             <TabsTrigger value="1099s" className="text-xs sm:text-sm">1099s</TabsTrigger>
-            <TabsTrigger value="reports" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">P&L Reports</span>
-              <span className="sm:hidden">P&L</span>
-            </TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">P&L</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6">

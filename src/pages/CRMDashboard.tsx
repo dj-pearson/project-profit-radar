@@ -14,6 +14,7 @@ import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/Respons
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
   Users, 
@@ -307,7 +308,7 @@ const CRMDashboard = () => {
                   className="mb-8"
                 />
               ) : (
-                <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-8">
+                <div className={mobileGridClasses.stats}>
                   <KPICard
                     title="Total Leads"
                     value={crmData?.totalLeads || 0}
@@ -361,17 +362,17 @@ const CRMDashboard = () => {
                     subtitle="Average first response"
                     changeType="positive"
                   />
-                </ResponsiveGrid>
+                </div>
               )}
             </ErrorBoundary>
 
             {/* CRM Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="leads">Leads</TabsTrigger>
-                <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-                <TabsTrigger value="reports">Reports</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+                <TabsTrigger value="leads" className="text-xs sm:text-sm">Leads</TabsTrigger>
+                <TabsTrigger value="opportunities" className="text-xs sm:text-sm">Opportunities</TabsTrigger>
+                <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -499,7 +500,7 @@ const CRMDashboard = () => {
                 {/* Filters */}
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className={mobileFilterClasses.container}>
                       <div className="flex-1">
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -512,7 +513,7 @@ const CRMDashboard = () => {
                         </div>
                       </div>
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-40">
+                        <SelectTrigger className={mobileFilterClasses.input}>
                           <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -527,7 +528,7 @@ const CRMDashboard = () => {
                         </SelectContent>
                       </Select>
                       <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                        <SelectTrigger className="w-full sm:w-40">
+                        <SelectTrigger className={mobileFilterClasses.input}>
                           <SelectValue placeholder="Source" />
                         </SelectTrigger>
                         <SelectContent>
@@ -540,7 +541,7 @@ const CRMDashboard = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                    <Button onClick={() => navigate('/crm/leads')}>
+                    <Button className={mobileButtonClasses.primary} onClick={() => navigate('/crm/leads')}>
                       <Plus className="h-4 w-4 mr-2" />
                       New Lead
                     </Button>
