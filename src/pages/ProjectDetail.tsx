@@ -118,6 +118,7 @@ const ProjectDetail = () => {
   const [reports, setReports] = useState<any[]>([]);
   const [jobCosts, setJobCosts] = useState<any[]>([]);
   const [rfis, setRfis] = useState<any[]>([]);
+  const [submittals, setSubmittals] = useState<any[]>([]);
   const [editingRFI, setEditingRFI] = useState<any>(null);
   const [isEditRFIDialogOpen, setIsEditRFIDialogOpen] = useState(false);
   const [loadingProject, setLoadingProject] = useState(true);
@@ -2267,24 +2268,90 @@ const ProjectDetail = () => {
           </TabsContent>
 
           <TabsContent value="submittals" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Submittals</h2>
-              <Dialog open={addSubmittalDialogOpen} onOpenChange={setAddSubmittalDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
+            {submittals.length === 0 ? (
+              <div className="text-center py-8">
+                <h2 className="text-2xl font-bold mb-4">Submittals</h2>
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">No submittals found for this project</p>
+                    <Button onClick={() => navigate('/submittals', { state: { selectedProjectId: projectId } })}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Submittal
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold">Submittals ({submittals.length})</h2>
+                  <Button onClick={() => navigate('/submittals', { state: { selectedProjectId: projectId } })}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Submittal
                   </Button>
-                </DialogTrigger>
-              </Dialog>
-            </div>
-            
-            <Card>
-              <CardContent className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Manage submittals and approvals</p>
-              </CardContent>
-            </Card>
+                </div>
+                
+                <div className="grid gap-4">
+                  {submittals.slice(0, 5).map((submittal) => (
+                    <Card key={submittal.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <FileText className="h-4 w-4 text-construction-blue" />
+                              <h3 className="font-medium">{submittal.title}</h3>
+                              <Badge variant="outline">#{submittal.submittal_number}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {submittal.description}
+                            </p>
+                            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                              {submittal.spec_section && (
+                                <span>Spec: {submittal.spec_section}</span>
+                              )}
+                              {submittal.priority && (
+                                <span>Priority: {submittal.priority}</span>
+                              )}
+                              {submittal.due_date && (
+                                <span>Due: {new Date(submittal.due_date).toLocaleDateString()}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {submittal.status === 'draft' && (
+                              <Badge variant="outline"><FileText className="h-3 w-3 mr-1" />Draft</Badge>
+                            )}
+                            {submittal.status === 'submitted' && (
+                              <Badge variant="secondary">Submitted</Badge>
+                            )}
+                            {submittal.status === 'approved' && (
+                              <Badge className="bg-green-500">Approved</Badge>
+                            )}
+                            {submittal.status === 'rejected' && (
+                              <Badge variant="destructive">Rejected</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                
+                {submittals.length > 5 && (
+                  <Card>
+                    <CardContent className="text-center py-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => navigate('/submittals', { state: { selectedProjectId: projectId } })}
+                      >
+                        View All {submittals.length} Submittals
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="changeorders" className="space-y-6">

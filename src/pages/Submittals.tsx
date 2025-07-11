@@ -25,7 +25,8 @@ import {
   User,
   Calendar,
   Download,
-  Eye
+  Eye,
+  Edit
 } from 'lucide-react';
 
 interface Project {
@@ -41,22 +42,19 @@ interface Submittal {
   submittal_number: string;
   title: string;
   description: string;
-  type: string;
+  spec_section: string;
   status: string;
-  submitted_by: string;
-  reviewed_by: string;
+  priority: string;
   due_date: string;
   submitted_date: string;
-  reviewed_date: string;
-  approval_status: string;
-  revision_number: number;
-  comments: string;
+  approved_date: string;
   created_at: string;
   updated_at: string;
-  projects: { name: string; client_name: string };
-  submitter: { first_name: string; last_name: string };
-  reviewer: { first_name: string; last_name: string };
-  attachments: SubmittalAttachment[];
+  created_by: string;
+  company_id: string;
+  projects?: { name: string; client_name: string };
+  submitter?: { first_name: string; last_name: string };
+  reviewer?: { first_name: string; last_name: string };
 }
 
 interface SubmittalAttachment {
@@ -81,6 +79,8 @@ const Submittals = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSubmittal, setSelectedSubmittal] = useState<Submittal | null>(null);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingSubmittal, setEditingSubmittal] = useState<Submittal | null>(null);
   const [reviewComments, setReviewComments] = useState('');
   const [reviewStatus, setReviewStatus] = useState('');
   
@@ -88,9 +88,9 @@ const Submittals = () => {
     project_id: '',
     title: '',
     description: '',
-    type: 'drawings',
+    spec_section: '',
     due_date: '',
-    comments: ''
+    priority: 'medium'
   });
 
   useEffect(() => {
@@ -132,12 +132,27 @@ const Submittals = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load submittals (simulated data for now)
-      // In a real implementation, this would query the submittals table
-      const submittalsData: Submittal[] = [];
+      // Load submittals
+      let submittalsQuery = supabase
+        .from('submittals')
+        .select(`
+          *,
+          projects:project_id (name, client_name)
+        `)
+        .eq('company_id', userProfile?.company_id);
 
-      // For now, we'll set empty data since the table doesn't exist yet
-      setSubmittals([]);
+      if (selectedProject && selectedProject !== 'all') {
+        submittalsQuery = submittalsQuery.eq('project_id', selectedProject);
+      }
+
+      const { data: submittalsData, error: submittalsError } = await submittalsQuery
+        .order('created_at', { ascending: false });
+
+      if (submittalsError) {
+        console.error('Error loading submittals:', submittalsError);
+      }
+
+      setSubmittals(submittalsData || []);
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -162,7 +177,27 @@ const Submittals = () => {
     }
 
     try {
-      // In a real implementation, this would create the submittal record
+      // Generate submittal number
+      const submittalCount = submittals.length + 1;
+      const submittalNumber = `SUB-${new Date().getFullYear()}-${submittalCount.toString().padStart(3, '0')}`;
+
+      const { error } = await supabase
+        .from('submittals')
+        .insert({
+          company_id: userProfile?.company_id,
+          project_id: newSubmittal.project_id,
+          title: newSubmittal.title,
+          description: newSubmittal.description,
+          spec_section: newSubmittal.spec_section,
+          due_date: newSubmittal.due_date || null,
+          priority: newSubmittal.priority,
+          status: 'draft',
+          submittal_number: submittalNumber,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Submittal created successfully"
@@ -173,9 +208,9 @@ const Submittals = () => {
         project_id: '',
         title: '',
         description: '',
-        type: 'drawings',
+        spec_section: '',
         due_date: '',
-        comments: ''
+        priority: 'medium'
       });
       
       loadData();
@@ -200,7 +235,18 @@ const Submittals = () => {
     }
 
     try {
-      // In a real implementation, this would update the submittal review
+      if (!selectedSubmittal) return;
+
+      const { error } = await supabase
+        .from('submittals')
+        .update({
+          status: reviewStatus,
+          approved_date: reviewStatus === 'approved' ? new Date().toISOString() : null
+        })
+        .eq('id', selectedSubmittal.id);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Submittal reviewed successfully"
@@ -241,22 +287,65 @@ const Submittals = () => {
     }
   };
 
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'drawings':
-        return <Badge variant="outline">Drawings</Badge>;
-      case 'specifications':
-        return <Badge variant="outline">Specifications</Badge>;
-      case 'product_data':
-        return <Badge variant="outline">Product Data</Badge>;
-      case 'samples':
-        return <Badge variant="outline">Samples</Badge>;
-      case 'calculations':
-        return <Badge variant="outline">Calculations</Badge>;
-      case 'certifications':
-        return <Badge variant="outline">Certifications</Badge>;
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return <Badge variant="destructive">High</Badge>;
+      case 'medium':
+        return <Badge variant="secondary">Medium</Badge>;
+      case 'low':
+        return <Badge variant="outline">Low</Badge>;
       default:
-        return <Badge variant="outline">{type}</Badge>;
+        return <Badge variant="outline">{priority}</Badge>;
+    }
+  };
+
+  const handleEditSubmittal = (submittal: Submittal) => {
+    setEditingSubmittal({
+      ...submittal
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateSubmittal = async () => {
+    if (!editingSubmittal || !editingSubmittal.title || !editingSubmittal.description) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields."
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('submittals')
+        .update({
+          title: editingSubmittal.title,
+          description: editingSubmittal.description,
+          spec_section: editingSubmittal.spec_section,
+          due_date: editingSubmittal.due_date || null,
+          priority: editingSubmittal.priority
+        })
+        .eq('id', editingSubmittal.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Submittal updated successfully"
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingSubmittal(null);
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating submittal:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update submittal"
+      });
     }
   };
 
@@ -355,44 +444,41 @@ const Submittals = () => {
                   </div>
 
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div>
-                       <Label htmlFor="type">Type</Label>
-                       <Select value={newSubmittal.type} onValueChange={(value) => setNewSubmittal({...newSubmittal, type: value})}>
-                         <SelectTrigger>
-                           <SelectValue placeholder="Select type" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="drawings">Drawings</SelectItem>
-                           <SelectItem value="specifications">Specifications</SelectItem>
-                           <SelectItem value="product_data">Product Data</SelectItem>
-                           <SelectItem value="samples">Samples</SelectItem>
-                           <SelectItem value="calculations">Calculations</SelectItem>
-                           <SelectItem value="certifications">Certifications</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     </div>
+                   <div>
+                     <Label htmlFor="spec-section">Specification Section</Label>
+                     <Input
+                       id="spec-section"
+                       placeholder="e.g., 03 30 00 - Cast-in-Place Concrete"
+                       value={newSubmittal.spec_section}
+                       onChange={(e) => setNewSubmittal({...newSubmittal, spec_section: e.target.value})}
+                     />
+                   </div>
                      
-                     <div>
-                       <Label htmlFor="due_date">Due Date</Label>
-                       <Input
-                         id="due_date"
-                         type="date"
-                         value={newSubmittal.due_date}
-                         onChange={(e) => setNewSubmittal({...newSubmittal, due_date: e.target.value})}
-                       />
-                     </div>
+                      <div>
+                        <Label htmlFor="priority">Priority</Label>
+                        <Select value={newSubmittal.priority} onValueChange={(value) => setNewSubmittal({...newSubmittal, priority: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="due_date">Due Date</Label>
+                        <Input
+                          id="due_date"
+                          type="date"
+                          value={newSubmittal.due_date}
+                          onChange={(e) => setNewSubmittal({...newSubmittal, due_date: e.target.value})}
+                        />
+                      </div>
                    </div>
 
-                  <div>
-                    <Label htmlFor="comments">Comments</Label>
-                    <Textarea
-                      id="comments"
-                      placeholder="Additional comments or instructions..."
-                      value={newSubmittal.comments}
-                      onChange={(e) => setNewSubmittal({...newSubmittal, comments: e.target.value})}
-                      rows={2}
-                    />
-                  </div>
 
                    <div className="flex flex-col sm:flex-row justify-end gap-2">
                      <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="w-full sm:w-auto">
@@ -409,7 +495,96 @@ const Submittals = () => {
         </div>
       </div>
 
-         {/* Main Content */}
+      {/* Edit Submittal Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Submittal</DialogTitle>
+            <DialogDescription>
+              Update submittal information and details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Title *</Label>
+              <Input
+                id="edit-title"
+                placeholder="Brief description of the submittal"
+                value={editingSubmittal?.title || ''}
+                onChange={(e) => setEditingSubmittal(prev => prev ? {...prev, title: e.target.value} : null)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-description">Description *</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Detailed description of what is being submitted..."
+                value={editingSubmittal?.description || ''}
+                onChange={(e) => setEditingSubmittal(prev => prev ? {...prev, description: e.target.value} : null)}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-spec-section">Specification Section</Label>
+              <Input
+                id="edit-spec-section"
+                placeholder="e.g., 03 30 00 - Cast-in-Place Concrete"
+                value={editingSubmittal?.spec_section || ''}
+                onChange={(e) => setEditingSubmittal(prev => prev ? {...prev, spec_section: e.target.value} : null)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-priority">Priority</Label>
+                <Select 
+                  value={editingSubmittal?.priority || ''} 
+                  onValueChange={(value) => setEditingSubmittal(prev => prev ? {...prev, priority: value} : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-due-date">Due Date</Label>
+                <Input
+                  id="edit-due-date"
+                  type="date"
+                  value={editingSubmittal?.due_date || ''}
+                  onChange={(e) => setEditingSubmittal(prev => prev ? {...prev, due_date: e.target.value} : null)}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingSubmittal(null);
+                }} 
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateSubmittal} className="w-full sm:w-auto">
+                Update Submittal
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+          {/* Main Content */}
          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
            {/* Filters */}
            <Card className="mb-4 sm:mb-6">
@@ -468,9 +643,8 @@ const Submittals = () => {
                         </CardDescription>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {getStatusBadge(submittal.status)}
-                        {getTypeBadge(submittal.type)}
-                        <Badge variant="outline">Rev {submittal.revision_number}</Badge>
+                         {getStatusBadge(submittal.status)}
+                         {getPriorityBadge(submittal.priority)}
                       </div>
                     </div>
                   </CardHeader>
@@ -486,25 +660,25 @@ const Submittals = () => {
                           <User className="h-4 w-4 mr-2" />
                           Submitted By
                         </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {submittal.submitter?.first_name} {submittal.submitter?.last_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {submittal.submitted_date && new Date(submittal.submitted_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
-                          Reviewed By
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {submittal.reviewer?.first_name} {submittal.reviewer?.last_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {submittal.reviewed_date && new Date(submittal.reviewed_date).toLocaleDateString()}
-                        </p>
+                         <p className="text-sm text-muted-foreground">
+                           {submittal.created_by || 'Unknown'}
+                         </p>
+                         <p className="text-xs text-muted-foreground">
+                           {submittal.submitted_date && new Date(submittal.submitted_date).toLocaleDateString()}
+                         </p>
+                       </div>
+                       
+                       <div>
+                         <h4 className="font-medium mb-2 flex items-center">
+                           <User className="h-4 w-4 mr-2" />
+                           Priority
+                         </h4>
+                         <p className="text-sm text-muted-foreground">
+                           {submittal.priority}
+                         </p>
+                         <p className="text-xs text-muted-foreground">
+                           {submittal.spec_section && submittal.spec_section}
+                         </p>
                       </div>
                       
                       <div>
@@ -518,43 +692,31 @@ const Submittals = () => {
                       </div>
                     </div>
 
-                    {submittal.comments && (
-                      <div>
-                        <h4 className="font-medium mb-2">Comments</h4>
-                        <p className="text-sm text-muted-foreground">{submittal.comments}</p>
-                      </div>
-                    )}
 
-                    {submittal.attachments && submittal.attachments.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Attachments ({submittal.attachments.length})</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {submittal.attachments.map((attachment) => (
-                            <div key={attachment.id} className="flex items-center space-x-2 p-2 bg-muted rounded-md">
-                              <FileText className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground flex-1">{attachment.file_name}</span>
-                              <Button variant="ghost" size="sm">
-                                <Download className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedSubmittal(submittal);
-                          setIsReviewDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        Review
-                      </Button>
-                    </div>
+                     <div className="flex justify-end space-x-2">
+                       <Button size="sm" variant="outline">
+                         <Eye className="h-4 w-4 mr-1" />
+                         View
+                       </Button>
+                       <Button 
+                         size="sm" 
+                         variant="outline"
+                         onClick={() => handleEditSubmittal(submittal)}
+                       >
+                         <Edit className="h-4 w-4 mr-1" />
+                         Edit
+                       </Button>
+                       <Button 
+                         size="sm" 
+                         onClick={() => {
+                           setSelectedSubmittal(submittal);
+                           setIsReviewDialogOpen(true);
+                         }}
+                       >
+                         <CheckCircle className="h-4 w-4 mr-1" />
+                         Review
+                       </Button>
+                     </div>
                   </CardContent>
                 </Card>
               ))}
