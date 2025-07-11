@@ -279,31 +279,34 @@ const Submittals = () => {
 
   return (
     <DashboardLayout title="Submittals">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 sm:h-16">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
+                className="w-full sm:w-auto"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
               </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h1 className="text-xl font-semibold">Submittals Workflow</h1>
-                <p className="text-sm text-muted-foreground">Submit and track drawings, product data, and samples for approval</p>
+              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+              <div className="text-center sm:text-left">
+                <h1 className="text-lg sm:text-xl font-semibold">Submittals Workflow</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Submit and track drawings, product data, and samples for approval</p>
               </div>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Submittal
+                  <span className="hidden sm:inline">Create Submittal</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
@@ -351,34 +354,34 @@ const Submittals = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="type">Type</Label>
-                      <Select value={newSubmittal.type} onValueChange={(value) => setNewSubmittal({...newSubmittal, type: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="drawings">Drawings</SelectItem>
-                          <SelectItem value="specifications">Specifications</SelectItem>
-                          <SelectItem value="product_data">Product Data</SelectItem>
-                          <SelectItem value="samples">Samples</SelectItem>
-                          <SelectItem value="calculations">Calculations</SelectItem>
-                          <SelectItem value="certifications">Certifications</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="due_date">Due Date</Label>
-                      <Input
-                        id="due_date"
-                        type="date"
-                        value={newSubmittal.due_date}
-                        onChange={(e) => setNewSubmittal({...newSubmittal, due_date: e.target.value})}
-                      />
-                    </div>
-                  </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div>
+                       <Label htmlFor="type">Type</Label>
+                       <Select value={newSubmittal.type} onValueChange={(value) => setNewSubmittal({...newSubmittal, type: value})}>
+                         <SelectTrigger>
+                           <SelectValue placeholder="Select type" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="drawings">Drawings</SelectItem>
+                           <SelectItem value="specifications">Specifications</SelectItem>
+                           <SelectItem value="product_data">Product Data</SelectItem>
+                           <SelectItem value="samples">Samples</SelectItem>
+                           <SelectItem value="calculations">Calculations</SelectItem>
+                           <SelectItem value="certifications">Certifications</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     
+                     <div>
+                       <Label htmlFor="due_date">Due Date</Label>
+                       <Input
+                         id="due_date"
+                         type="date"
+                         value={newSubmittal.due_date}
+                         onChange={(e) => setNewSubmittal({...newSubmittal, due_date: e.target.value})}
+                       />
+                     </div>
+                   </div>
 
                   <div>
                     <Label htmlFor="comments">Comments</Label>
@@ -391,14 +394,14 @@ const Submittals = () => {
                     />
                   </div>
 
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateSubmittal}>
-                      Create Submittal
-                    </Button>
-                  </div>
+                   <div className="flex flex-col sm:flex-row justify-end gap-2">
+                     <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="w-full sm:w-auto">
+                       Cancel
+                     </Button>
+                     <Button onClick={handleCreateSubmittal} className="w-full sm:w-auto">
+                       Create Submittal
+                     </Button>
+                   </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -406,31 +409,31 @@ const Submittals = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <Label htmlFor="project-filter">Filter by Project</Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All projects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All projects</SelectItem>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+         {/* Main Content */}
+         <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+           {/* Filters */}
+           <Card className="mb-4 sm:mb-6">
+             <CardContent className="p-4 sm:p-6">
+               <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                 <div className="flex-1">
+                   <Label htmlFor="project-filter" className="text-sm sm:text-base">Filter by Project</Label>
+                   <Select value={selectedProject} onValueChange={setSelectedProject}>
+                     <SelectTrigger className="w-full">
+                       <SelectValue placeholder="All projects" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="all">All projects</SelectItem>
+                       {projects.map((project) => (
+                         <SelectItem key={project.id} value={project.id}>
+                           {project.name}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
+             </CardContent>
+           </Card>
 
         {/* Submittals List */}
         <div className="space-y-6">

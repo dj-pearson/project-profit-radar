@@ -191,19 +191,20 @@ export default function EquipmentManagement() {
   return (
     <DashboardLayout title="Equipment Management">
       <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Equipment Management</h1>
-          <p className="text-muted-foreground mt-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="text-center sm:text-left">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Equipment Management</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Track utilization, schedule maintenance, and manage heavy equipment fleet
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <Wrench className="mr-2 h-4 w-4" />
-                Schedule Maintenance
+                <span className="hidden sm:inline">Schedule Maintenance</span>
+                <span className="sm:hidden">Schedule</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -220,13 +221,14 @@ export default function EquipmentManagement() {
               </div>
             </DialogContent>
           </Dialog>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Equipment
-              </Button>
-            </DialogTrigger>
+           <Dialog>
+             <DialogTrigger asChild>
+               <Button className="w-full sm:w-auto">
+                 <Plus className="mr-2 h-4 w-4" />
+                 <span className="hidden sm:inline">Add Equipment</span>
+                 <span className="sm:hidden">Add</span>
+               </Button>
+             </DialogTrigger>
             <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Add New Equipment</DialogTitle>
@@ -244,24 +246,24 @@ export default function EquipmentManagement() {
         </div>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="equipment">Equipment Fleet</TabsTrigger>
-          <TabsTrigger value="utilization">Utilization</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
+       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+           <TabsTrigger value="equipment" className="text-xs sm:text-sm">Fleet</TabsTrigger>
+           <TabsTrigger value="utilization" className="text-xs sm:text-sm">Usage</TabsTrigger>
+           <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
+           <TabsTrigger value="schedule" className="text-xs sm:text-sm">Schedule</TabsTrigger>
+           <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analytics</TabsTrigger>
+         </TabsList>
 
-        <div className="flex items-center space-x-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search equipment, operators, or projects..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
+         <div className="flex items-center space-x-2">
+           <Search className="h-4 w-4 text-muted-foreground" />
+           <Input
+             placeholder="Search equipment, operators, or projects..."
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             className="w-full sm:max-w-sm"
+           />
+         </div>
 
         <TabsContent value="equipment" className="space-y-4">
           <div className="grid gap-4">
@@ -286,65 +288,67 @@ export default function EquipmentManagement() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">Location</div>
-                        <div className="truncate">{item.location}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">Total Hours</div>
-                        <div>{item.total_hours.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">Next Maintenance</div>
-                        <div>{formatDate(item.next_maintenance_date)}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">Operator</div>
-                        <div>{item.assigned_operator || "Unassigned"}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {item.current_project && (
-                    <div className="mb-4 p-3 bg-muted rounded-lg">
-                      <div className="text-sm font-medium">Currently Assigned</div>
-                      <div className="text-sm text-muted-foreground">{item.current_project}</div>
-                    </div>
-                  )}
+                 <CardContent>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
+                     <div className="flex items-center gap-2">
+                       <MapPin className="h-4 w-4 text-muted-foreground" />
+                       <div>
+                         <div className="font-medium text-muted-foreground">Location</div>
+                         <div className="truncate">{item.location}</div>
+                       </div>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Clock className="h-4 w-4 text-muted-foreground" />
+                       <div>
+                         <div className="font-medium text-muted-foreground">Total Hours</div>
+                         <div>{item.total_hours.toLocaleString()}</div>
+                       </div>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <Calendar className="h-4 w-4 text-muted-foreground" />
+                       <div>
+                         <div className="font-medium text-muted-foreground">Next Maintenance</div>
+                         <div>{formatDate(item.next_maintenance_date)}</div>
+                       </div>
+                     </div>
+                     <div className="flex items-center gap-2">
+                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                       <div>
+                         <div className="font-medium text-muted-foreground">Operator</div>
+                         <div>{item.assigned_operator || "Unassigned"}</div>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {item.current_project && (
+                     <div className="mb-4 p-3 bg-muted rounded-lg">
+                       <div className="text-sm font-medium">Currently Assigned</div>
+                       <div className="text-sm text-muted-foreground">{item.current_project}</div>
+                     </div>
+                   )}
 
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-1">
-                      <div className="text-sm text-muted-foreground">Utilization Rate</div>
-                      <Progress value={item.utilization_rate} className="w-32" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Utilization
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Wrench className="h-4 w-4 mr-2" />
-                        Maintenance
-                      </Button>
-                      <Button size="sm">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
+                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                     <div className="space-y-1">
+                       <div className="text-sm text-muted-foreground">Utilization Rate</div>
+                       <Progress value={item.utilization_rate} className="w-32" />
+                     </div>
+                     <div className="flex flex-col sm:flex-row gap-2">
+                       <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                         <Clock className="h-4 w-4 mr-2" />
+                         <span className="hidden sm:inline">Utilization</span>
+                         <span className="sm:hidden">Usage</span>
+                       </Button>
+                       <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                         <Wrench className="h-4 w-4 mr-2" />
+                         <span className="hidden sm:inline">Maintenance</span>
+                         <span className="sm:hidden">Maint</span>
+                       </Button>
+                       <Button size="sm" className="w-full sm:w-auto">
+                         View Details
+                       </Button>
+                     </div>
+                   </div>
+                 </CardContent>
               </Card>
             ))}
           </div>

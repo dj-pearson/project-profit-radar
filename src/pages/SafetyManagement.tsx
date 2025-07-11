@@ -191,20 +191,21 @@ export default function SafetyManagement() {
   return (
     <DashboardLayout title="Safety Management">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Safety Management</h1>
-            <p className="text-muted-foreground">Manage workplace safety, incidents, and compliance</p>
-          </div>
-          <div className="flex gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Report Incident
-                </Button>
-              </DialogTrigger>
+         {/* Header */}
+         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+           <div className="text-center sm:text-left">
+             <h1 className="text-xl sm:text-2xl font-bold">Safety Management</h1>
+             <p className="text-sm sm:text-base text-muted-foreground">Manage workplace safety, incidents, and compliance</p>
+           </div>
+           <div className="flex flex-col sm:flex-row gap-2">
+             <Dialog>
+               <DialogTrigger asChild>
+                 <Button className="w-full sm:w-auto">
+                   <Plus className="mr-2 h-4 w-4" />
+                   <span className="hidden sm:inline">Report Incident</span>
+                   <span className="sm:hidden">Report</span>
+                 </Button>
+               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Report Safety Incident</DialogTitle>
@@ -217,46 +218,46 @@ export default function SafetyManagement() {
                     <Label htmlFor="incident-title">Incident Title</Label>
                     <Input id="incident-title" placeholder="Brief description of incident" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="incident-type">Incident Type</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="injury">Injury</SelectItem>
-                          <SelectItem value="near_miss">Near Miss</SelectItem>
-                          <SelectItem value="property_damage">Property Damage</SelectItem>
-                          <SelectItem value="environmental">Environmental</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="severity">Severity</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select severity" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="minor">Minor</SelectItem>
-                          <SelectItem value="moderate">Moderate</SelectItem>
-                          <SelectItem value="major">Major</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="incident-date">Date & Time</Label>
-                      <Input id="incident-date" type="datetime-local" />
-                    </div>
-                    <div>
-                      <Label htmlFor="location">Location</Label>
-                      <Input id="location" placeholder="Where did this occur?" />
-                    </div>
-                  </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div>
+                       <Label htmlFor="incident-type">Incident Type</Label>
+                       <Select>
+                         <SelectTrigger>
+                           <SelectValue placeholder="Select type" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="injury">Injury</SelectItem>
+                           <SelectItem value="near_miss">Near Miss</SelectItem>
+                           <SelectItem value="property_damage">Property Damage</SelectItem>
+                           <SelectItem value="environmental">Environmental</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div>
+                       <Label htmlFor="severity">Severity</Label>
+                       <Select>
+                         <SelectTrigger>
+                           <SelectValue placeholder="Select severity" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="minor">Minor</SelectItem>
+                           <SelectItem value="moderate">Moderate</SelectItem>
+                           <SelectItem value="major">Major</SelectItem>
+                           <SelectItem value="critical">Critical</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div>
+                       <Label htmlFor="incident-date">Date & Time</Label>
+                       <Input id="incident-date" type="datetime-local" />
+                     </div>
+                     <div>
+                       <Label htmlFor="location">Location</Label>
+                       <Input id="location" placeholder="Where did this occur?" />
+                     </div>
+                   </div>
                   <div>
                     <Label htmlFor="injured-person">Injured Person (if applicable)</Label>
                     <Input id="injured-person" placeholder="Name of injured person" />
@@ -277,22 +278,22 @@ export default function SafetyManagement() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="incidents">Incidents</TabsTrigger>
-            <TabsTrigger value="training">Training</TabsTrigger>
-            <TabsTrigger value="inspections">Inspections</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+           <TabsTrigger value="incidents" className="text-xs sm:text-sm">Incidents</TabsTrigger>
+           <TabsTrigger value="training" className="text-xs sm:text-sm">Training</TabsTrigger>
+           <TabsTrigger value="inspections" className="text-xs sm:text-sm">Inspections</TabsTrigger>
+           <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analytics</TabsTrigger>
+         </TabsList>
 
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search incidents, training, or inspections..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
+         <div className="flex items-center space-x-2">
+           <Search className="h-4 w-4 text-muted-foreground" />
+           <Input
+             placeholder="Search incidents, training, or inspections..."
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             className="w-full sm:max-w-sm"
+           />
+         </div>
 
           <TabsContent value="incidents" className="space-y-4">
             <div className="grid gap-4">
@@ -315,49 +316,49 @@ export default function SafetyManagement() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                      <div>
-                        <div className="font-medium text-muted-foreground">Type</div>
-                        <div className="capitalize">{incident.incident_type.replace('_', ' ')}</div>
-                      </div>
-                      <div>
-                        <div className="font-medium text-muted-foreground">Date</div>
-                        <div>{new Date(incident.incident_date).toLocaleDateString()}</div>
-                      </div>
-                      <div>
-                        <div className="font-medium text-muted-foreground">Location</div>
-                        <div>{incident.location}</div>
-                      </div>
-                      <div>
-                        <div className="font-medium text-muted-foreground">Reported By</div>
-                        <div>{incident.reported_by}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm">
-                        <span className="font-medium">Project: </span>
-                        <span>{incident.project_name}</span>
-                        {incident.injured_person && (
-                          <>
-                            <span className="mx-2">•</span>
-                            <span className="font-medium">Injured: </span>
-                            <span>{incident.injured_person}</span>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Report
-                        </Button>
-                        <Button size="sm">
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
+                   <CardContent>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
+                       <div>
+                         <div className="font-medium text-muted-foreground">Type</div>
+                         <div className="capitalize">{incident.incident_type.replace('_', ' ')}</div>
+                       </div>
+                       <div>
+                         <div className="font-medium text-muted-foreground">Date</div>
+                         <div>{new Date(incident.incident_date).toLocaleDateString()}</div>
+                       </div>
+                       <div>
+                         <div className="font-medium text-muted-foreground">Location</div>
+                         <div>{incident.location}</div>
+                       </div>
+                       <div>
+                         <div className="font-medium text-muted-foreground">Reported By</div>
+                         <div>{incident.reported_by}</div>
+                       </div>
+                     </div>
+                     
+                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                       <div className="text-sm">
+                         <span className="font-medium">Project: </span>
+                         <span>{incident.project_name}</span>
+                         {incident.injured_person && (
+                           <>
+                             <span className="mx-2">•</span>
+                             <span className="font-medium">Injured: </span>
+                             <span>{incident.injured_person}</span>
+                           </>
+                         )}
+                       </div>
+                       <div className="flex flex-col sm:flex-row gap-2">
+                         <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                           <FileText className="h-4 w-4 mr-2" />
+                           Report
+                         </Button>
+                         <Button size="sm" className="w-full sm:w-auto">
+                           View Details
+                         </Button>
+                       </div>
+                     </div>
+                   </CardContent>
                 </Card>
               ))}
             </div>

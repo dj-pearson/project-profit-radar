@@ -307,21 +307,22 @@ const GDPRCompliance = () => {
   return (
     <DashboardLayout title="GDPR Compliance">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground mt-2">
-              Data subject rights management, consent tracking, and privacy controls
-            </p>
-          </div>
-        <Button onClick={() => setShowNewRequestForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Request
-        </Button>
-      </div>
+         {/* Header */}
+         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+           <div className="text-center sm:text-left">
+             <p className="text-sm sm:text-base text-muted-foreground">
+               Data subject rights management, consent tracking, and privacy controls
+             </p>
+           </div>
+         <Button onClick={() => setShowNewRequestForm(true)} className="w-full sm:w-auto">
+           <Plus className="mr-2 h-4 w-4" />
+           <span className="hidden sm:inline">New Request</span>
+           <span className="sm:hidden">New</span>
+         </Button>
+       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+       {/* Statistics Cards */}
+       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Requests</CardTitle>
@@ -386,34 +387,34 @@ const GDPRCompliance = () => {
             <CardDescription>Create a new GDPR data subject request</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="request_type">Request Type *</Label>
-                <Select value={newRequest.request_type} onValueChange={(value) => setNewRequest({...newRequest, request_type: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select request type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="access">Right of Access</SelectItem>
-                    <SelectItem value="portability">Data Portability</SelectItem>
-                    <SelectItem value="rectification">Rectification</SelectItem>
-                    <SelectItem value="erasure">Right to be Forgotten</SelectItem>
-                    <SelectItem value="restriction">Restriction of Processing</SelectItem>
-                    <SelectItem value="objection">Right to Object</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="requester_email">Requester Email *</Label>
-                <Input
-                  id="requester_email"
-                  type="email"
-                  value={newRequest.requester_email}
-                  onChange={(e) => setNewRequest({...newRequest, requester_email: e.target.value})}
-                  placeholder="requester@example.com"
-                />
-              </div>
-            </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div>
+                 <Label htmlFor="request_type">Request Type *</Label>
+                 <Select value={newRequest.request_type} onValueChange={(value) => setNewRequest({...newRequest, request_type: value})}>
+                   <SelectTrigger>
+                     <SelectValue placeholder="Select request type" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="access">Right of Access</SelectItem>
+                     <SelectItem value="portability">Data Portability</SelectItem>
+                     <SelectItem value="rectification">Rectification</SelectItem>
+                     <SelectItem value="erasure">Right to be Forgotten</SelectItem>
+                     <SelectItem value="restriction">Restriction of Processing</SelectItem>
+                     <SelectItem value="objection">Right to Object</SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+               <div>
+                 <Label htmlFor="requester_email">Requester Email *</Label>
+                 <Input
+                   id="requester_email"
+                   type="email"
+                   value={newRequest.requester_email}
+                   onChange={(e) => setNewRequest({...newRequest, requester_email: e.target.value})}
+                   placeholder="requester@example.com"
+                 />
+               </div>
+             </div>
             <div>
               <Label htmlFor="requester_name">Requester Name</Label>
               <Input
@@ -433,10 +434,10 @@ const GDPRCompliance = () => {
                 rows={3}
               />
             </div>
-            <div className="flex gap-3">
-              <Button onClick={handleCreateRequest}>Create Request</Button>
-              <Button variant="outline" onClick={() => setShowNewRequestForm(false)}>Cancel</Button>
-            </div>
+             <div className="flex flex-col sm:flex-row gap-3">
+               <Button onClick={handleCreateRequest} className="w-full sm:w-auto">Create Request</Button>
+               <Button variant="outline" onClick={() => setShowNewRequestForm(false)} className="w-full sm:w-auto">Cancel</Button>
+             </div>
           </CardContent>
         </Card>
       )}
