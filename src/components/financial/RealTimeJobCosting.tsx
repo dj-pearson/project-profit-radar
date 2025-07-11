@@ -100,6 +100,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
   
   // Add cost form state
   const [newCostForm, setNewCostForm] = useState({
+    project_id: projectId || '',
     cost_code_id: '',
     date: new Date().toISOString().split('T')[0],
     labor_hours: '',
@@ -112,6 +113,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
 
   // Edit cost form state
   const [editCostForm, setEditCostForm] = useState({
+    project_id: '',
     cost_code_id: '',
     date: '',
     labor_hours: '',
@@ -308,7 +310,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
   };
 
   const addJobCost = async () => {
-    if (!selectedProject || !newCostForm.cost_code_id) return;
+    if (!newCostForm.project_id || !newCostForm.cost_code_id) return;
 
     try {
       setAddingCost(true);
@@ -320,7 +322,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       const totalCost = laborCost + materialCost + equipmentCost + otherCost;
 
       const costData = {
-        project_id: selectedProject,
+        project_id: newCostForm.project_id,
         cost_code_id: newCostForm.cost_code_id,
         date: newCostForm.date,
         labor_hours: parseFloat(newCostForm.labor_hours) || 0,
@@ -338,8 +340,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
 
       if (error) throw error;
 
+      // Update selected project to match the form's project
+      setSelectedProject(newCostForm.project_id);
+
       // Reset form
       setNewCostForm({
+        project_id: newCostForm.project_id, // Keep the same project selected
         cost_code_id: '',
         date: new Date().toISOString().split('T')[0],
         labor_hours: '',
@@ -378,6 +384,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
   const startEditingCost = (cost: JobCost) => {
     setEditingCost(cost.id);
     setEditCostForm({
+      project_id: cost.project_id,
       cost_code_id: cost.cost_code_id,
       date: cost.date,
       labor_hours: cost.labor_hours.toString(),
@@ -392,6 +399,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
   const cancelEditing = () => {
     setEditingCost(null);
     setEditCostForm({
+      project_id: '',
       cost_code_id: '',
       date: '',
       labor_hours: '',
@@ -413,6 +421,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       const otherCost = parseFloat(editCostForm.other_cost) || 0;
 
       const costData = {
+        project_id: editCostForm.project_id,
         cost_code_id: editCostForm.cost_code_id,
         date: editCostForm.date,
         labor_hours: parseFloat(editCostForm.labor_hours) || 0,
@@ -631,35 +640,54 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                               </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label>Cost Code</Label>
-                                <Select 
-                                  value={editCostForm.cost_code_id} 
-                                  onValueChange={(value) => updateEditFormField('cost_code_id', value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {costCodes.map((code) => (
-                                      <SelectItem key={code.id} value={code.id}>
-                                        {code.code} - {code.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label>Date</Label>
-                                <Input
-                                  type="date"
-                                  value={editCostForm.date}
-                                  onChange={(e) => updateEditFormField('date', e.target.value)}
-                                />
-                              </div>
-                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                               <div className="space-y-2">
+                                 <Label>Project *</Label>
+                                 <Select 
+                                   value={editCostForm.project_id} 
+                                   onValueChange={(value) => updateEditFormField('project_id', value)}
+                                 >
+                                   <SelectTrigger>
+                                     <SelectValue placeholder="Select project" />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     {projects.map((project) => (
+                                       <SelectItem key={project.id} value={project.id}>
+                                         {project.name}
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               </div>
+                               
+                               <div className="space-y-2">
+                                 <Label>Cost Code *</Label>
+                                 <Select 
+                                   value={editCostForm.cost_code_id} 
+                                   onValueChange={(value) => updateEditFormField('cost_code_id', value)}
+                                 >
+                                   <SelectTrigger>
+                                     <SelectValue placeholder="Select cost code" />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     {costCodes.map((code) => (
+                                       <SelectItem key={code.id} value={code.id}>
+                                         {code.code} - {code.name}
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               </div>
+                               
+                               <div className="space-y-2">
+                                 <Label>Date</Label>
+                                 <Input
+                                   type="date"
+                                   value={editCostForm.date}
+                                   onChange={(e) => updateEditFormField('date', e.target.value)}
+                                 />
+                               </div>
+                             </div>
                             
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                               <div className="space-y-2">
@@ -812,36 +840,55 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                     Record costs for labor, materials, equipment, and other expenses
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Cost Code *</Label>
-                      <Select 
-                        value={newCostForm.cost_code_id} 
-                        onValueChange={(value) => updateFormField('cost_code_id', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cost code" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {costCodes.map((code) => (
-                            <SelectItem key={code.id} value={code.id}>
-                              {code.code} - {code.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Date</Label>
-                      <Input
-                        type="date"
-                        value={newCostForm.date}
-                        onChange={(e) => updateFormField('date', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                 <CardContent className="space-y-4">
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="space-y-2">
+                       <Label>Project *</Label>
+                       <Select 
+                         value={newCostForm.project_id} 
+                         onValueChange={(value) => updateFormField('project_id', value)}
+                       >
+                         <SelectTrigger>
+                           <SelectValue placeholder="Select project" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {projects.map((project) => (
+                             <SelectItem key={project.id} value={project.id}>
+                               {project.name}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     
+                     <div className="space-y-2">
+                       <Label>Cost Code *</Label>
+                       <Select 
+                         value={newCostForm.cost_code_id} 
+                         onValueChange={(value) => updateFormField('cost_code_id', value)}
+                       >
+                         <SelectTrigger>
+                           <SelectValue placeholder="Select cost code" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {costCodes.map((code) => (
+                             <SelectItem key={code.id} value={code.id}>
+                               {code.code} - {code.name}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     
+                     <div className="space-y-2">
+                       <Label>Date</Label>
+                       <Input
+                         type="date"
+                         value={newCostForm.date}
+                         onChange={(e) => updateFormField('date', e.target.value)}
+                       />
+                     </div>
+                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
@@ -933,13 +980,13 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                     />
                   </div>
                   
-                  <Button 
-                    onClick={addJobCost}
-                    disabled={addingCost || !newCostForm.cost_code_id}
-                    className="w-full"
-                  >
-                    {addingCost ? 'Adding...' : 'Add Job Cost'}
-                  </Button>
+                   <Button 
+                     onClick={addJobCost}
+                     disabled={addingCost || !newCostForm.project_id || !newCostForm.cost_code_id}
+                     className="w-full"
+                   >
+                     {addingCost ? 'Adding...' : 'Add Job Cost'}
+                   </Button>
                 </CardContent>
               </Card>
             </TabsContent>
