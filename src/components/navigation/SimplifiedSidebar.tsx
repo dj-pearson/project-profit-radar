@@ -37,11 +37,13 @@ export const SimplifiedSidebar = () => {
 
   const navigationItems = getNavigationForRole(userProfile?.role || '');
   
-  // Find current section and auto-expand it
-  const currentSectionInfo = findSectionByUrl(currentPath);
+  // Check if we're on a hub page that should show expandable sections
+  const isHubPage = currentPath.includes('-hub');
   
-  // Get main areas with their sub-sections
+  // Get main areas with their sub-sections only for hub pages
   const getAreaSubSections = (areaId: string) => {
+    if (!isHubPage) return [];
+    
     const area = hierarchicalNavigation.find(a => a.id === areaId);
     if (!area) return [];
     
@@ -60,12 +62,15 @@ export const SimplifiedSidebar = () => {
     );
   };
 
-  // Auto-expand current section
+  // Auto-expand current section only on hub pages
   React.useEffect(() => {
-    if (currentSectionInfo && !expandedSections.includes(currentSectionInfo.area.id)) {
-      setExpandedSections(prev => [...prev, currentSectionInfo.area.id]);
+    if (isHubPage) {
+      const currentSectionInfo = findSectionByUrl(currentPath);
+      if (currentSectionInfo && !expandedSections.includes(currentSectionInfo.area.id)) {
+        setExpandedSections(prev => [...prev, currentSectionInfo.area.id]);
+      }
     }
-  }, [currentSectionInfo, expandedSections]);
+  }, [currentPath, expandedSections, isHubPage]);
 
   const collapsed = state === 'collapsed';
 
