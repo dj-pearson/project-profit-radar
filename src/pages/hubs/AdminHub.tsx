@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,59 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { dashboardAreas } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminHub = () => {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
+  const [metrics, setMetrics] = useState({
+    totalCompanies: 0,
+    activeUsers: 0,
+    auditLogs: 0,
+    blogPosts: 0
+  });
 
   const adminArea = dashboardAreas.find(area => area.id === 'admin');
+  
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (userProfile?.role !== 'root_admin') return;
+
+      try {
+        // Fetch total companies
+        const { count: companiesCount } = await supabase
+          .from('companies')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch active users
+        const { count: usersCount } = await supabase
+          .from('user_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        // Fetch recent audit logs
+        const { count: auditCount } = await supabase
+          .from('audit_logs')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+        // Fetch blog posts
+        const { count: blogCount } = await supabase
+          .from('blog_posts')
+          .select('*', { count: 'exact', head: true });
+
+        setMetrics({
+          totalCompanies: companiesCount || 0,
+          activeUsers: usersCount || 0,
+          auditLogs: auditCount || 0,
+          blogPosts: blogCount || 0
+        });
+      } catch (error) {
+        console.error('Error fetching admin metrics:', error);
+      }
+    };
+
+    fetchMetrics();
+  }, [userProfile?.role]);
   
   if (!adminArea) {
     return <div>Area not found</div>;
@@ -56,7 +103,7 @@ const AdminHub = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Companies</p>
-                    <p className="text-2xl font-bold">147</p>
+                    <p className="text-2xl font-bold">{metrics.totalCompanies}</p>
                   </div>
                   <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <adminArea.icon className="h-4 w-4 text-blue-600" />
@@ -70,7 +117,7 @@ const AdminHub = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-                    <p className="text-2xl font-bold">1,423</p>
+                    <p className="text-2xl font-bold">{metrics.activeUsers}</p>
                   </div>
                   <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
                     <adminArea.icon className="h-4 w-4 text-green-600" />
@@ -83,8 +130,8 @@ const AdminHub = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Monthly Revenue</p>
-                    <p className="text-2xl font-bold">$89K</p>
+                    <p className="text-sm font-medium text-muted-foreground">Audit Logs (30d)</p>
+                    <p className="text-2xl font-bold">{metrics.auditLogs}</p>
                   </div>
                   <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
                     <adminArea.icon className="h-4 w-4 text-green-600" />
@@ -97,8 +144,8 @@ const AdminHub = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Support Tickets</p>
-                    <p className="text-2xl font-bold">23</p>
+                    <p className="text-sm font-medium text-muted-foreground">Blog Posts</p>
+                    <p className="text-2xl font-bold">{metrics.blogPosts}</p>
                   </div>
                   <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
                     <adminArea.icon className="h-4 w-4 text-yellow-600" />

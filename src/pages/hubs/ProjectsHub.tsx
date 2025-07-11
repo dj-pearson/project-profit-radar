@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,63 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { dashboardAreas } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProjectsHub = () => {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
+  const [metrics, setMetrics] = useState({
+    activeProjects: 0,
+    changeOrders: 0,
+    dailyReports: 0,
+    totalProjects: 0
+  });
 
   const projectsArea = dashboardAreas.find(area => area.id === 'projects');
+  
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (!userProfile?.company_id) return;
+
+      try {
+        // Fetch active projects
+        const { count: activeProjectsCount } = await supabase
+          .from('projects')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', userProfile.company_id)
+          .eq('status', 'active');
+
+        // Fetch change orders
+        const { count: changeOrdersCount } = await supabase
+          .from('change_orders')
+          .select('*, projects!inner(*)', { count: 'exact', head: true })
+          .eq('projects.company_id', userProfile.company_id);
+
+        // Fetch daily reports
+        const { count: dailyReportsCount } = await supabase
+          .from('daily_reports')
+          .select('*, projects!inner(*)', { count: 'exact', head: true })
+          .eq('projects.company_id', userProfile.company_id);
+
+        // Fetch total projects
+        const { count: totalProjectsCount } = await supabase
+          .from('projects')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', userProfile.company_id);
+
+        setMetrics({
+          activeProjects: activeProjectsCount || 0,
+          changeOrders: changeOrdersCount || 0,
+          dailyReports: dailyReportsCount || 0,
+          totalProjects: totalProjectsCount || 0
+        });
+      } catch (error) {
+        console.error('Error fetching project metrics:', error);
+      }
+    };
+
+    fetchMetrics();
+  }, [userProfile?.company_id]);
   
   if (!projectsArea) {
     return <div>Area not found</div>;
@@ -34,7 +85,7 @@ const ProjectsHub = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-2xl font-bold">{metrics.activeProjects}</p>
                 </div>
                 <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <projectsArea.icon className="h-4 w-4 text-blue-600" />
@@ -47,8 +98,8 @@ const ProjectsHub = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Open RFIs</p>
-                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                  <p className="text-2xl font-bold">{metrics.totalProjects}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
                   <projectsArea.icon className="h-4 w-4 text-green-600" />
@@ -61,8 +112,8 @@ const ProjectsHub = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Submittals</p>
-                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-sm font-medium text-muted-foreground">Change Orders</p>
+                  <p className="text-2xl font-bold">{metrics.changeOrders}</p>
                 </div>
                 <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
                   <projectsArea.icon className="h-4 w-4 text-yellow-600" />
@@ -75,8 +126,8 @@ const ProjectsHub = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Punch List Items</p>
-                  <p className="text-2xl font-bold">23</p>
+                  <p className="text-sm font-medium text-muted-foreground">Daily Reports</p>
+                  <p className="text-2xl font-bold">{metrics.dailyReports}</p>
                 </div>
                 <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
                   <projectsArea.icon className="h-4 w-4 text-red-600" />

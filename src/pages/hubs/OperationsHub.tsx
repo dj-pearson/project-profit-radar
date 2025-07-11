@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,58 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { dashboardAreas } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
 
 const OperationsHub = () => {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
+  const [metrics, setMetrics] = useState({
+    safetyIncidents: 0,
+    activePermits: 0,
+    bonds: 0,
+    serviceRequests: 0
+  });
 
   const operationsArea = dashboardAreas.find(area => area.id === 'operations');
+  
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (!userProfile?.company_id) return;
+
+      try {
+        // Fetch active environmental permits
+        const { count: permitsCount } = await supabase
+          .from('environmental_permits')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', userProfile.company_id)
+          .eq('status', 'active');
+
+        // Fetch active bonds
+        const { count: bondsCount } = await supabase
+          .from('bonds')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', userProfile.company_id)
+          .eq('status', 'active');
+
+        // Fetch service requests
+        const { count: serviceRequestsCount } = await supabase
+          .from('customer_service_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'submitted');
+
+        setMetrics({
+          safetyIncidents: 0, // No safety incidents table yet
+          activePermits: permitsCount || 0,
+          bonds: bondsCount || 0,
+          serviceRequests: serviceRequestsCount || 0
+        });
+      } catch (error) {
+        console.error('Error fetching operations metrics:', error);
+      }
+    };
+
+    fetchMetrics();
+  }, [userProfile?.company_id]);
   
   if (!operationsArea) {
     return <div>Area not found</div>;
@@ -34,7 +80,7 @@ const OperationsHub = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Safety Incidents</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{metrics.safetyIncidents}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
                   <operationsArea.icon className="h-4 w-4 text-green-600" />
@@ -48,7 +94,7 @@ const OperationsHub = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Permits</p>
-                  <p className="text-2xl font-bold">7</p>
+                  <p className="text-2xl font-bold">{metrics.activePermits}</p>
                 </div>
                 <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <operationsArea.icon className="h-4 w-4 text-blue-600" />
@@ -61,8 +107,8 @@ const OperationsHub = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Equipment Items</p>
-                  <p className="text-2xl font-bold">34</p>
+                  <p className="text-sm font-medium text-muted-foreground">Active Bonds</p>
+                  <p className="text-2xl font-bold">{metrics.bonds}</p>
                 </div>
                 <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
                   <operationsArea.icon className="h-4 w-4 text-purple-600" />
@@ -75,8 +121,8 @@ const OperationsHub = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Workflows Active</p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-sm font-medium text-muted-foreground">Service Requests</p>
+                  <p className="text-2xl font-bold">{metrics.serviceRequests}</p>
                 </div>
                 <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
                   <operationsArea.icon className="h-4 w-4 text-orange-600" />
