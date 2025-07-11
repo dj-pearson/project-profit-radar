@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
-import { dashboardAreas } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,8 +18,6 @@ const ProjectsHub = () => {
     totalProjects: 0
   });
 
-  const projectsArea = dashboardAreas.find(area => area.id === 'projects');
-  
   useEffect(() => {
     const fetchMetrics = async () => {
       if (!userProfile?.company_id) return;
@@ -64,19 +61,38 @@ const ProjectsHub = () => {
 
     fetchMetrics();
   }, [userProfile?.company_id]);
-  
-  if (!projectsArea) {
-    return <div>Area not found</div>;
-  }
 
-  const filterItemsByRole = (items: any[]) => {
-    return items.filter(item => {
-      return userProfile?.role === 'root_admin' || item.roles.includes(userProfile?.role || '');
-    });
-  };
+  const projectSections = [
+    {
+      label: "Project Management",
+      items: [
+        { title: "All Projects", url: "/projects", description: "View and manage all construction projects" },
+        { title: "Create Project", url: "/create-project", description: "Start a new construction project" },
+        { title: "Job Costing", url: "/job-costing", description: "Track project costs and budgets" },
+        { title: "Daily Reports", url: "/daily-reports", description: "Daily progress and activity reports" }
+      ]
+    },
+    {
+      label: "Project Communication",
+      items: [
+        { title: "RFIs", url: "/rfis", description: "Request for Information management" },
+        { title: "Submittals", url: "/submittals", description: "Submit and track approval workflows" },
+        { title: "Change Orders", url: "/change-orders", description: "Manage project change requests" },
+        { title: "Punch List", url: "/punch-list", description: "Track quality issues and completion items" }
+      ]
+    },
+    {
+      label: "Project Resources", 
+      items: [
+        { title: "Document Management", url: "/documents", description: "Store and organize project documents" },
+        { title: "Materials", url: "/materials", description: "Track material usage and inventory" },
+        { title: "Equipment", url: "/equipment", description: "Manage equipment tracking and usage" }
+      ]
+    }
+  ];
 
   return (
-    <DashboardLayout title={projectsArea.title}>
+    <DashboardLayout title="Projects Hub">
       <div>
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -88,7 +104,7 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.activeProjects}</p>
                 </div>
                 <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <projectsArea.icon className="h-4 w-4 text-blue-600" />
+                  <ArrowRight className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
             </CardContent>
@@ -102,7 +118,7 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.totalProjects}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <projectsArea.icon className="h-4 w-4 text-green-600" />
+                  <ArrowRight className="h-4 w-4 text-green-600" />
                 </div>
               </div>
             </CardContent>
@@ -116,7 +132,7 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.changeOrders}</p>
                 </div>
                 <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <projectsArea.icon className="h-4 w-4 text-yellow-600" />
+                  <ArrowRight className="h-4 w-4 text-yellow-600" />
                 </div>
               </div>
             </CardContent>
@@ -130,7 +146,7 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.dailyReports}</p>
                 </div>
                 <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <projectsArea.icon className="h-4 w-4 text-red-600" />
+                  <ArrowRight className="h-4 w-4 text-red-600" />
                 </div>
               </div>
             </CardContent>
@@ -156,75 +172,36 @@ const ProjectsHub = () => {
           </div>
         </div>
 
-        {/* Navigation Categories */}
+        {/* Navigation Sections */}
         <div className="space-y-8">
-          {projectsArea.subcategories.map((category) => {
-            const visibleItems = filterItemsByRole(category.items);
-            
-            if (visibleItems.length === 0) return null;
-            
-            return (
-              <div key={category.label}>
-                <h2 className="text-lg font-semibold mb-4">{category.label}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {visibleItems.map((item) => (
-                    <Card 
-                      key={item.url} 
-                      className="hover:shadow-md transition-shadow cursor-pointer group"
-                      onClick={() => navigate(item.url)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="h-10 w-10 bg-construction-blue/10 rounded-lg flex items-center justify-center">
-                              <item.icon className="h-5 w-5 text-construction-blue" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-base">{item.title}</CardTitle>
-                              {item.badge && (
-                                <Badge variant="destructive" className="text-xs mt-1">
-                                  {item.badge}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <CardDescription>
-                          {getItemDescription(item.title)}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+          {projectSections.map((section) => (
+            <div key={section.label}>
+              <h2 className="text-lg font-semibold mb-4">{section.label}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {section.items.map((item) => (
+                  <Card 
+                    key={item.url} 
+                    className="hover:shadow-md transition-shadow cursor-pointer group"
+                    onClick={() => navigate(item.url)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{item.title}</CardTitle>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <CardDescription>{item.description}</CardDescription>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </DashboardLayout>
   );
-};
-
-// Helper function to get descriptions for items
-const getItemDescription = (title: string): string => {
-  const descriptions: { [key: string]: string } = {
-    'All Projects': 'View and manage all construction projects',
-    'Create Project': 'Start a new construction project',
-    'Job Costing': 'Track project costs and budgets',
-    'Daily Reports': 'Daily progress and activity reports',
-    'RFIs': 'Request for Information management',
-    'Submittals': 'Submit and track approval workflows',
-    'Change Orders': 'Manage project change requests',
-    'Punch List': 'Track quality issues and completion items',
-    'Document Management': 'Store and organize project documents',
-    'Materials': 'Track material usage and inventory',
-    'Equipment': 'Manage equipment tracking and usage'
-  };
-  
-  return descriptions[title] || 'Access this feature';
 };
 
 export default ProjectsHub;
