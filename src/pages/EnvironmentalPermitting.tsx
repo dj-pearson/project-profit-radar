@@ -1,19 +1,18 @@
 import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, AlertTriangle, Calendar, CheckCircle, Clock, FileText, Building2, ArrowLeft } from "lucide-react";
+import { Plus, Search, AlertTriangle, Calendar, CheckCircle, Clock, FileText, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 export default function EnvironmentalPermitting() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("permits");
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Mock data for demonstration
   const permits = [
@@ -167,21 +166,15 @@ export default function EnvironmentalPermitting() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold text-card-foreground">Environmental Permitting</h1>
-                <p className="text-sm text-muted-foreground">NEPA compliance and environmental permits</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
+    <DashboardLayout title="Environmental Permitting" showTrialBanner={false}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Environmental Permitting</h1>
+            <p className="text-muted-foreground">NEPA compliance and environmental permits</p>
+          </div>
+          <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -205,10 +198,8 @@ export default function EnvironmentalPermitting() {
           </Dialog>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Content */}
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
@@ -491,9 +482,9 @@ export default function EnvironmentalPermitting() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

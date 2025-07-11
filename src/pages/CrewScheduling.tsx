@@ -338,43 +338,29 @@ const CrewScheduling = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
-            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 min-w-0 flex-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-              <Separator orientation="vertical" className="h-4 sm:h-6" />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">Crew Scheduling & Dispatch</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block truncate">Manage crew assignments and dispatch</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-32 sm:w-40 text-xs sm:text-sm"
-              />
-              <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
-                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Assign Crew</span>
-                    <span className="sm:hidden">Assign</span>
-                  </Button>
-                </DialogTrigger>
+    <DashboardLayout title="Crew Scheduling & Dispatch" showTrialBanner={false}>
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Crew Scheduling & Dispatch</h1>
+            <p className="text-muted-foreground">Manage crew assignments and dispatch</p>
+          </div>
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-32 sm:w-40 text-xs sm:text-sm"
+            />
+            <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Assign Crew</span>
+                  <span className="sm:hidden">Assign</span>
+                </Button>
+              </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Create Crew Assignment</DialogTitle>
@@ -478,11 +464,8 @@ const CrewScheduling = () => {
               </Dialog>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Today's Assignments */}
           <div className="lg:col-span-1">
@@ -625,7 +608,7 @@ const CrewScheduling = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
