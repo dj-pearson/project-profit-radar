@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { dashboardAreas } from '@/components/navigation/NavigationConfig';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 const AdminHub = () => {
   const navigate = useNavigate();
@@ -21,19 +21,21 @@ const AdminHub = () => {
   // Check if user has admin access
   if (!['admin', 'root_admin'].includes(userProfile?.role || '')) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="text-center py-12">
-            <h3 className="text-lg font-medium mb-2">Access Denied</h3>
-            <p className="text-muted-foreground mb-4">
-              You don't have permission to access administrative features.
-            </p>
-            <Button onClick={() => navigate('/dashboard')}>
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardLayout title="Access Denied">
+        <div className="flex items-center justify-center min-h-96">
+          <Card className="max-w-md">
+            <CardContent className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Access Denied</h3>
+              <p className="text-muted-foreground mb-4">
+                You don't have permission to access administrative features.
+              </p>
+              <Button onClick={() => navigate('/dashboard')}>
+                Return to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -44,38 +46,8 @@ const AdminHub = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="flex items-center space-x-3">
-                <adminArea.icon className="h-6 w-6 text-construction-blue" />
-                <div>
-                  <h1 className="text-xl font-semibold">{adminArea.title}</h1>
-                  <p className="text-sm text-muted-foreground">{adminArea.description}</p>
-                </div>
-                <Badge variant="destructive" className="text-xs">
-                  {userProfile?.role === 'root_admin' ? 'Root Admin' : 'Admin'}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout title={adminArea.title}>
+      <div>
         {/* Admin Stats (only for root_admin) */}
         {userProfile?.role === 'root_admin' && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -208,7 +180,7 @@ const AdminHub = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
