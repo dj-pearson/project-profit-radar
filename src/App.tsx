@@ -60,8 +60,11 @@ import KnowledgeBase from "./components/knowledge/KnowledgeBase";
 import Knowledgebase from "./pages/Knowledgebase";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
 import EmailMarketingIntegration from "./components/marketing/EmailMarketingIntegration";
+import EmailMarketing from "./pages/EmailMarketing";
 import FeatureAnnouncementSystem from "./components/announcements/FeatureAnnouncementSystem";
 import AutomatedWorkflows from "./components/workflows/AutomatedWorkflows";
+import AutomatedWorkflowsPage from "./pages/AutomatedWorkflows";
+import Materials from "./pages/Materials";
 import EnhancedEmailIntegration from "./components/integrations/EnhancedEmailIntegration";
 import CalendarIntegration from "./components/calendar/CalendarIntegration";
 import PurchaseOrders from "./pages/PurchaseOrders";
@@ -362,7 +365,7 @@ const AppContent = () => {
         path="/materials"
         element={
           <RouteGuard routePath="/materials">
-            <MaterialTracking />
+            <Materials />
           </RouteGuard>
         }
       />
@@ -396,7 +399,7 @@ const AppContent = () => {
         path="/email-marketing"
         element={
           <RouteGuard routePath="/email-marketing">
-            <EmailMarketingIntegration />
+            <EmailMarketing />
           </RouteGuard>
         }
       />
@@ -412,7 +415,7 @@ const AppContent = () => {
         path="/workflows"
         element={
           <RouteGuard routePath="/workflows">
-            <AutomatedWorkflows />
+            <AutomatedWorkflowsPage />
           </RouteGuard>
         }
       />
