@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Zap, ChevronRight } from 'lucide-react';
 import { getNavigationForRole } from './NavigationConfig';
-import { hierarchicalNavigation, NavigationSection } from './HierarchicalNavigationConfig';
+import { hierarchicalNavigation, NavigationSection, findSectionByUrl } from './HierarchicalNavigationConfig';
 
 export const SimplifiedSidebar = () => {
   const { state } = useSidebar();
@@ -37,13 +37,8 @@ export const SimplifiedSidebar = () => {
 
   const navigationItems = getNavigationForRole(userProfile?.role || '');
   
-  // Check if we're on a hub page that should show expandable sections
-  const isHubPage = currentPath.includes('-hub');
-  
-  // Get main areas with their sections organized by section only for hub pages
+  // Get main areas with their sections - always show hierarchical navigation
   const getAreaSections = (areaId: string): NavigationSection[] => {
-    if (!isHubPage) return [];
-    
     const area = hierarchicalNavigation.find(a => a.id === areaId);
     if (!area) return [];
     
@@ -63,22 +58,16 @@ export const SimplifiedSidebar = () => {
     );
   };
 
-  // Auto-expand current section only on hub pages
+  // Auto-expand the section that contains the current page
   React.useEffect(() => {
-    if (isHubPage) {
-      // Map hub page URLs to area IDs
-      let areaId = '';
-      if (currentPath.includes('/projects')) areaId = 'projects';
-      else if (currentPath.includes('/financial')) areaId = 'financial';
-      else if (currentPath.includes('/people')) areaId = 'people';
-      else if (currentPath.includes('/operations')) areaId = 'operations';
-      else if (currentPath.includes('/admin')) areaId = 'admin';
-      
-      if (areaId && !expandedSections.includes(areaId)) {
+    const foundSection = findSectionByUrl(currentPath);
+    if (foundSection) {
+      const areaId = foundSection.area.id;
+      if (!expandedSections.includes(areaId)) {
         setExpandedSections(prev => [...prev, areaId]);
       }
     }
-  }, [currentPath, expandedSections, isHubPage]);
+  }, [currentPath, expandedSections]);
 
   const collapsed = state === 'collapsed';
 
