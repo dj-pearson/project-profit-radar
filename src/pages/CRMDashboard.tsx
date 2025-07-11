@@ -540,10 +540,10 @@ const CRMDashboard = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button onClick={() => navigate('/crm/leads/new')}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Lead
-                      </Button>
+                    <Button onClick={() => navigate('/crm/leads')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Lead
+                    </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -619,7 +619,7 @@ const CRMDashboard = () => {
                       <CardTitle>Sales Opportunities</CardTitle>
                       <CardDescription>Track your sales pipeline and close deals</CardDescription>
                     </div>
-                    <Button onClick={() => navigate('/crm/opportunities/new')}>
+                    <Button onClick={() => navigate('/crm/opportunities')}>
                       <Plus className="h-4 w-4 mr-2" />
                       New Opportunity
                     </Button>
@@ -632,7 +632,7 @@ const CRMDashboard = () => {
                         description="Start tracking your sales pipeline by creating opportunities from qualified leads."
                         action={{
                           label: "Create Opportunity",
-                          onClick: () => navigate('/crm/opportunities/new')
+                          onClick: () => navigate('/crm/opportunities')
                         }}
                       />
                     ) : (

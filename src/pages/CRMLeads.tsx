@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,6 +82,7 @@ interface Lead {
 const CRMLeads = () => {
   const { user, userProfile, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,6 +121,13 @@ const CRMLeads = () => {
       loadLeads(loadLeadsData);
     }
   }, [user, userProfile, loading, navigate]);
+
+  useEffect(() => {
+    // Check if we're on the /new route and open the dialog
+    if (location.pathname.includes('/new')) {
+      setShowNewLeadDialog(true);
+    }
+  }, [location.pathname]);
 
   const loadLeadsData = async (): Promise<Lead[]> => {
     if (!userProfile?.company_id) {

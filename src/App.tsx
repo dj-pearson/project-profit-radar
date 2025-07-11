@@ -559,6 +559,22 @@ const AppContent = () => {
         }
       />
       <Route
+        path="/crm/leads/new"
+        element={
+          <RouteGuard routePath="/crm/leads">
+            <CRMLeads />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/opportunities/new"
+        element={
+          <RouteGuard routePath="/crm/opportunities">
+            <CRMOpportunities />
+          </RouteGuard>
+        }
+      />
+      <Route
         path="/quickbooks-routing"
         element={
           <RouteGuard routePath="/quickbooks-routing">
