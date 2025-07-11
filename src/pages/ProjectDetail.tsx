@@ -1098,8 +1098,41 @@ const ProjectDetail = () => {
         <div className="flex-1">
       {/* Header */}
       <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          {/* Mobile Header */}
+          <div className="lg:hidden">
+            <div className="flex items-center justify-between h-14 min-h-[3.5rem]">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="p-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex-1 text-center px-2">
+                <h1 className="text-lg font-semibold text-card-foreground truncate">{project.name}</h1>
+                <p className="text-xs text-muted-foreground truncate">{project.client_name}</p>
+              </div>
+              <Badge variant={getStatusColor(project.status)} className="text-xs px-2 py-1">
+                {project.status.replace('_', ' ')}
+              </Badge>
+            </div>
+            {/* Mobile Edit Button Row */}
+            <div className="pb-3 pt-1">
+              <Dialog open={editProjectDialogOpen} onOpenChange={setEditProjectDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="w-full">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Project
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden lg:flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
@@ -1133,7 +1166,7 @@ const ProjectDetail = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-6 lg:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Desktop Tabs */}
           <div className="hidden lg:block">
@@ -1157,34 +1190,124 @@ const ProjectDetail = () => {
             </TabsList>
           </div>
 
-          {/* Mobile/Tablet Dropdown */}
-          <div className="lg:hidden mb-6">
-            <Select value={activeTab} onValueChange={setActiveTab}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select tab" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="overview">📊 Overview</SelectItem>
-                <SelectItem value="materials">📦 Materials</SelectItem>
-                <SelectItem value="progress">📈 Progress</SelectItem>
-                <SelectItem value="dailyreports">📝 Daily Reports</SelectItem>
-                <SelectItem value="jobcosting">💰 Job Costing</SelectItem>
-                <SelectItem value="rfis">❓ RFI's</SelectItem>
-                <SelectItem value="submittals">📋 Submittals</SelectItem>
-                <SelectItem value="changeorders">🔄 Change Orders</SelectItem>
-                <SelectItem value="punchlist">✅ Punch List</SelectItem>
-                <SelectItem value="equipment">🚜 Equipment</SelectItem>
-                <SelectItem value="permits">📄 Permits</SelectItem>
-                <SelectItem value="warranties">🛡️ Warranties</SelectItem>
-                <SelectItem value="contacts">👥 Contacts</SelectItem>
-                <SelectItem value="invoicing">💳 Invoicing</SelectItem>
-                <SelectItem value="tasks">📋 Tasks</SelectItem>
-                <SelectItem value="documents">📁 Documents</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Mobile/Tablet Navigation */}
+          <div className="lg:hidden mb-4">
+            <div className="bg-card border rounded-lg p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-medium text-muted-foreground">Project Section</h2>
+                <Badge variant="outline" className="text-xs">
+                  {activeTab === 'overview' ? 'Overview' :
+                   activeTab === 'materials' ? 'Materials' :
+                   activeTab === 'progress' ? 'Progress' :
+                   activeTab === 'dailyreports' ? 'Daily Reports' :
+                   activeTab === 'jobcosting' ? 'Job Costing' :
+                   activeTab === 'rfis' ? "RFI's" :
+                   activeTab === 'submittals' ? 'Submittals' :
+                   activeTab === 'changeorders' ? 'Change Orders' :
+                   activeTab === 'punchlist' ? 'Punch List' :
+                   activeTab === 'equipment' ? 'Equipment' :
+                   activeTab === 'permits' ? 'Permits' :
+                   activeTab === 'warranties' ? 'Warranties' :
+                   activeTab === 'contacts' ? 'Contacts' :
+                   activeTab === 'invoicing' ? 'Invoicing' :
+                   activeTab === 'tasks' ? 'Tasks' :
+                   activeTab === 'documents' ? 'Documents' : activeTab}
+                </Badge>
+              </div>
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-full h-12 text-left">
+                  <SelectValue placeholder="Select section" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[70vh] overflow-y-auto">
+                  <div className="p-2">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">MAIN SECTIONS</div>
+                    <SelectItem value="overview" className="flex items-center py-3">
+                      <span className="mr-3">📊</span>
+                      <span>Overview</span>
+                    </SelectItem>
+                    <SelectItem value="progress" className="flex items-center py-3">
+                      <span className="mr-3">📈</span>
+                      <span>Progress</span>
+                    </SelectItem>
+                    <SelectItem value="tasks" className="flex items-center py-3">
+                      <span className="mr-3">📋</span>
+                      <span>Tasks</span>
+                    </SelectItem>
+                  </div>
+                  
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">RESOURCES</div>
+                    <SelectItem value="materials" className="flex items-center py-3">
+                      <span className="mr-3">📦</span>
+                      <span>Materials</span>
+                    </SelectItem>
+                    <SelectItem value="equipment" className="flex items-center py-3">
+                      <span className="mr-3">🚜</span>
+                      <span>Equipment</span>
+                    </SelectItem>
+                    <SelectItem value="contacts" className="flex items-center py-3">
+                      <span className="mr-3">👥</span>
+                      <span>Contacts</span>
+                    </SelectItem>
+                  </div>
+
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">PROJECT MANAGEMENT</div>
+                    <SelectItem value="jobcosting" className="flex items-center py-3">
+                      <span className="mr-3">💰</span>
+                      <span>Job Costing</span>
+                    </SelectItem>
+                    <SelectItem value="changeorders" className="flex items-center py-3">
+                      <span className="mr-3">🔄</span>
+                      <span>Change Orders</span>
+                    </SelectItem>
+                    <SelectItem value="rfis" className="flex items-center py-3">
+                      <span className="mr-3">❓</span>
+                      <span>RFI's</span>
+                    </SelectItem>
+                    <SelectItem value="submittals" className="flex items-center py-3">
+                      <span className="mr-3">📋</span>
+                      <span>Submittals</span>
+                    </SelectItem>
+                    <SelectItem value="punchlist" className="flex items-center py-3">
+                      <span className="mr-3">✅</span>
+                      <span>Punch List</span>
+                    </SelectItem>
+                  </div>
+
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">REPORTS & DOCS</div>
+                    <SelectItem value="dailyreports" className="flex items-center py-3">
+                      <span className="mr-3">📝</span>
+                      <span>Daily Reports</span>
+                    </SelectItem>
+                    <SelectItem value="documents" className="flex items-center py-3">
+                      <span className="mr-3">📁</span>
+                      <span>Documents</span>
+                    </SelectItem>
+                    <SelectItem value="invoicing" className="flex items-center py-3">
+                      <span className="mr-3">💳</span>
+                      <span>Invoicing</span>
+                    </SelectItem>
+                  </div>
+
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">COMPLIANCE</div>
+                    <SelectItem value="permits" className="flex items-center py-3">
+                      <span className="mr-3">📄</span>
+                      <span>Permits</span>
+                    </SelectItem>
+                    <SelectItem value="warranties" className="flex items-center py-3">
+                      <span className="mr-3">🛡️</span>
+                      <span>Warranties</span>
+                    </SelectItem>
+                  </div>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
             {/* Project Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
