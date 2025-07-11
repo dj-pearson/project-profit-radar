@@ -231,28 +231,28 @@ const ChangeOrders = () => {
   return (
     <DashboardLayout title="Change Orders">
       <div className="space-y-6">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        {/* Header */}
+        <div className={mobileCardClasses.header}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
+                className={mobileButtonClasses.secondary}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </Button>
-              <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-6 hidden sm:block" />
               <div>
-                <h1 className="text-xl font-semibold">Change Orders</h1>
-                <p className="text-sm text-muted-foreground">Client approval workflows and project modifications</p>
+                <h1 className={mobileTextClasses.title}>Change Orders</h1>
+                <p className={mobileTextClasses.muted}>Client approval workflows and project modifications</p>
               </div>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className={mobileButtonClasses.primary}>
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Create Change Order
                 </Button>
@@ -352,13 +352,13 @@ const ChangeOrders = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
+        <Card className={mobileCardClasses.container}>
+          <CardContent className={mobileCardClasses.content}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1">
-                <Label htmlFor="project-filter">Filter by Project</Label>
+                <Label htmlFor="project-filter" className={mobileTextClasses.body}>Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
+                  <SelectTrigger className={mobileFilterClasses.input}>
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>
@@ -378,38 +378,40 @@ const ChangeOrders = () => {
         {/* Change Orders List */}
         <div className="space-y-6">
           {filteredOrders.length === 0 ? (
-            <Card>
+            <Card className={mobileCardClasses.container}>
               <CardContent className="text-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No Change Orders</h3>
-                <p className="text-muted-foreground mb-4">
+                <h3 className={mobileTextClasses.header}>No Change Orders</h3>
+                <p className={`${mobileTextClasses.muted} mb-4`}>
                   {selectedProject ? 'No change orders found for selected project' : 'No change orders have been created yet'}
                 </p>
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Button onClick={() => setIsCreateDialogOpen(true)} className={mobileButtonClasses.primary}>
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Create First Change Order
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6">
+            <div className="space-y-6">
               {filteredOrders.map((order) => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
+                <Card key={order.id} className={mobileCardClasses.container}>
+                  <CardHeader className={mobileCardClasses.header}>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div>
-                        <CardTitle className="flex items-center space-x-2">
-                          <FileText className="h-5 w-5 text-construction-blue" />
-                          <span>{order.title}</span>
-                          <Badge variant="outline">#{order.change_order_number}</Badge>
+                        <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <div className="flex items-center space-x-2">
+                            <FileText className="h-5 w-5 text-construction-blue" />
+                            <span className={mobileTextClasses.cardTitle}>{order.title}</span>
+                          </div>
+                          <Badge variant="outline" className={mobileCardClasses.badge}>#{order.change_order_number}</Badge>
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className={mobileTextClasses.muted}>
                           {order.projects?.name} - {order.projects?.client_name}
                         </CardDescription>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className={mobileCardClasses.badges}>
                         {getStatusBadge(order)}
-                        <Badge variant="outline" className="font-mono">
+                        <Badge variant="outline" className={`${mobileCardClasses.badge} font-mono`}>
                           <DollarSign className="h-3 w-3 mr-1" />
                           {order.amount.toLocaleString()}
                         </Badge>
@@ -429,9 +431,9 @@ const ChangeOrders = () => {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div>
-                        <h4 className="font-medium mb-2 flex items-center">
+                        <h4 className={`${mobileTextClasses.cardTitle} mb-2 flex items-center`}>
                           Internal Approval
                           {order.internal_approved ? (
                             <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
@@ -440,19 +442,20 @@ const ChangeOrders = () => {
                           )}
                         </h4>
                         <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">
+                          <p className={mobileTextClasses.muted}>
                             Status: {order.internal_approved ? 'Approved' : 'Pending'}
                           </p>
                           {order.internal_approved_date && (
-                            <p className="text-xs text-muted-foreground">
+                            <p className={mobileTextClasses.muted}>
                               Approved: {new Date(order.internal_approved_date).toLocaleDateString()}
                             </p>
                           )}
                           {!order.internal_approved && (
-                            <div className="flex space-x-2">
+                            <div className={mobileFilterClasses.buttonGroup}>
                               <Button 
                                 size="sm" 
                                 onClick={() => handleApproval(order.id, 'internal', true)}
+                                className={mobileButtonClasses.secondary}
                               >
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Approve
@@ -461,6 +464,7 @@ const ChangeOrders = () => {
                                 size="sm" 
                                 variant="outline"
                                 onClick={() => handleApproval(order.id, 'internal', false)}
+                                className={mobileButtonClasses.secondary}
                               >
                                 <XCircle className="h-3 w-3 mr-1" />
                                 Reject
@@ -516,7 +520,6 @@ const ChangeOrders = () => {
             </div>
           )}
         </div>
-      </div>
       </div>
     </DashboardLayout>
   );

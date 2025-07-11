@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 import { 
   Settings,
   Search,
@@ -358,136 +359,138 @@ const QuickBooksRouting = () => {
 
   return (
     <DashboardLayout title="QuickBooks Data Routing">
-      {/* Auto-routing Button in Header */}
-      <div className="mb-6">
-        <Button onClick={runAutoRouting} className="bg-green-600 hover:bg-green-700">
-          <Zap className="h-4 w-4 mr-2" />
-          Run Auto-routing
-        </Button>
-      </div>
+      <div className="space-y-6">
+        {/* Auto-routing Button in Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className={mobileTextClasses.title}>QuickBooks Data Routing</h1>
+          <Button onClick={runAutoRouting} className={mobileButtonClasses.primary}>
+            <Zap className="h-4 w-4 mr-2" />
+            Run Auto-routing
+          </Button>
+        </div>
             
-            {/* Overview Cards */}
-            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="h-5 w-5 text-orange-600" />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Unrouted</p>
-                      <p className="text-2xl font-bold">{unroutedTransactions?.length || 0}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Active Rules</p>
-                      <p className="text-2xl font-bold">{routingRules?.filter(r => r.is_active).length || 0}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Auto-matched</p>
-                      <p className="text-2xl font-bold">{unroutedTransactions?.filter(t => t.suggested_project_id).length || 0}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                      <p className="text-2xl font-bold">
-                        {formatCurrency(unroutedTransactions?.reduce((sum, t) => sum + t.amount, 0) || 0)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </ResponsiveGrid>
+        {/* Overview Cards */}
+        <div className={mobileGridClasses.stats}>
+          <Card className={mobileCardClasses.container}>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                <div>
+                  <p className={mobileTextClasses.body}>Unrouted</p>
+                  <p className="text-xl sm:text-2xl font-bold">{unroutedTransactions?.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={mobileCardClasses.container}>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Target className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className={mobileTextClasses.body}>Active Rules</p>
+                  <p className="text-xl sm:text-2xl font-bold">{routingRules?.filter(r => r.is_active).length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={mobileCardClasses.container}>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className={mobileTextClasses.body}>Auto-matched</p>
+                  <p className="text-xl sm:text-2xl font-bold">{unroutedTransactions?.filter(t => t.suggested_project_id).length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={mobileCardClasses.container}>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className={mobileTextClasses.body}>Total Value</p>
+                  <p className="text-xl sm:text-2xl font-bold">
+                    {formatCurrency(unroutedTransactions?.reduce((sum, t) => sum + t.amount, 0) || 0)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Main Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="unrouted">Unrouted Transactions</TabsTrigger>
-                <TabsTrigger value="rules">Routing Rules</TabsTrigger>
-                <TabsTrigger value="history">Routing History</TabsTrigger>
-              </TabsList>
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
+            <TabsTrigger value="unrouted" className={mobileTextClasses.body}>Unrouted Transactions</TabsTrigger>
+            <TabsTrigger value="rules" className={mobileTextClasses.body}>Routing Rules</TabsTrigger>
+            <TabsTrigger value="history" className={mobileTextClasses.body}>Routing History</TabsTrigger>
+          </TabsList>
 
               {/* Unrouted Transactions Tab */}
               <TabsContent value="unrouted" className="space-y-6">
-                {/* Bulk Actions */}
-                {selectedTransactions.length > 0 && (
-                  <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <p className="font-medium">{selectedTransactions.length} transactions selected</p>
-                          <Select value={bulkProjectId} onValueChange={setBulkProjectId}>
-                            <SelectTrigger className="w-64">
-                              <SelectValue placeholder="Select project for bulk assignment" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {projects?.map((project) => (
-                                <SelectItem key={project.id} value={project.id}>
-                                  {project.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" onClick={() => setSelectedTransactions([])}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleBulkAssignment}>
-                            Assign to Project
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+          {/* Bulk Actions */}
+          {selectedTransactions.length > 0 && (
+            <Card className={`${mobileCardClasses.container} border-orange-200 bg-orange-50 dark:bg-orange-950/20`}>
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <p className={`${mobileTextClasses.body} font-medium`}>{selectedTransactions.length} transactions selected</p>
+                    <Select value={bulkProjectId} onValueChange={setBulkProjectId}>
+                      <SelectTrigger className={mobileFilterClasses.input}>
+                        <SelectValue placeholder="Select project for bulk assignment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects?.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className={mobileFilterClasses.buttonGroup}>
+                    <Button variant="outline" onClick={() => setSelectedTransactions([])} className={mobileButtonClasses.secondary}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleBulkAssignment} className={mobileButtonClasses.secondary}>
+                      Assign to Project
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-                {/* Filters */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="flex-1">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search transactions..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-48">
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Transactions</SelectItem>
-                          <SelectItem value="suggested">Has Suggestions</SelectItem>
-                          <SelectItem value="no_suggestions">No Suggestions</SelectItem>
-                          <SelectItem value="high_confidence">High Confidence</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
+          {/* Filters */}
+          <Card className={mobileCardClasses.container}>
+            <CardContent className="pt-6">
+              <div className={mobileFilterClasses.container}>
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search transactions..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className={mobileFilterClasses.input}>
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Transactions</SelectItem>
+                    <SelectItem value="suggested">Has Suggestions</SelectItem>
+                    <SelectItem value="no_suggestions">No Suggestions</SelectItem>
+                    <SelectItem value="high_confidence">High Confidence</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
                 {/* Transactions List */}
                 <Card>
@@ -808,6 +811,7 @@ const QuickBooksRouting = () => {
                 </Card>
               </TabsContent>
             </Tabs>
+      </div>
     </DashboardLayout>
   );
 };
