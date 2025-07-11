@@ -113,6 +113,8 @@ const ProjectDetail = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [loadingProject, setLoadingProject] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -1029,6 +1031,26 @@ const ProjectDetail = () => {
 
       if (tasksError) throw tasksError;
       setTasks(tasksData || []);
+
+      // Load materials
+      const { data: materialsData, error: materialsError } = await supabase
+        .from('materials')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (materialsError) throw materialsError;
+      setMaterials(materialsData || []);
+
+      // Load daily reports
+      const { data: reportsData, error: reportsError } = await supabase
+        .from('daily_reports')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('date', { ascending: false });
+
+      if (reportsError) throw reportsError;
+      setReports(reportsData || []);
 
     } catch (error: any) {
       console.error('Error loading project:', error);
