@@ -140,28 +140,39 @@ export default function SafetyManagement() {
   ];
 
   const getStatusBadge = (status: string, type: 'incident' | 'inspection' = 'incident') => {
-    const incidentConfig = {
-      open: { variant: "destructive" as const, label: "Open", icon: AlertTriangle },
-      investigating: { variant: "secondary" as const, label: "Investigating", icon: Clock },
-      closed: { variant: "default" as const, label: "Closed", icon: CheckCircle }
-    };
-
-    const inspectionConfig = {
-      completed: { variant: "default" as const, label: "Completed", icon: CheckCircle },
-      pending: { variant: "secondary" as const, label: "Pending", icon: Clock },
-      failed: { variant: "destructive" as const, label: "Failed", icon: XCircle }
-    };
-    
-    const config = type === 'incident' ? incidentConfig : inspectionConfig;
-    const statusData = config[status as keyof typeof config] || { variant: "outline" as const, label: status, icon: Clock };
-    const Icon = statusData.icon;
-    
-    return (
-      <Badge variant={statusData.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {statusData.label}
-      </Badge>
-    );
+    if (type === 'incident') {
+      const incidentConfig: Record<string, { variant: any; label: string; icon: any }> = {
+        open: { variant: "destructive" as const, label: "Open", icon: AlertTriangle },
+        investigating: { variant: "secondary" as const, label: "Investigating", icon: Clock },
+        closed: { variant: "default" as const, label: "Closed", icon: CheckCircle }
+      };
+      
+      const statusData = incidentConfig[status] || { variant: "outline" as const, label: status, icon: Clock };
+      const Icon = statusData.icon;
+      
+      return (
+        <Badge variant={statusData.variant} className="flex items-center gap-1">
+          <Icon className="h-3 w-3" />
+          {statusData.label}
+        </Badge>
+      );
+    } else {
+      const inspectionConfig: Record<string, { variant: any; label: string; icon: any }> = {
+        completed: { variant: "default" as const, label: "Completed", icon: CheckCircle },
+        pending: { variant: "secondary" as const, label: "Pending", icon: Clock },
+        failed: { variant: "destructive" as const, label: "Failed", icon: XCircle }
+      };
+      
+      const statusData = inspectionConfig[status] || { variant: "outline" as const, label: status, icon: Clock };
+      const Icon = statusData.icon;
+      
+      return (
+        <Badge variant={statusData.variant} className="flex items-center gap-1">
+          <Icon className="h-3 w-3" />
+          {statusData.label}
+        </Badge>
+      );
+    }
   };
 
   const getSeverityBadge = (severity: string) => {
