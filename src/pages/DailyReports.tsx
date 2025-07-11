@@ -119,12 +119,28 @@ const DailyReports = () => {
       setProjects(projectsData || []);
 
       // Load daily reports
-      const { data: reportsData, error: reportsError } = await supabase.functions.invoke('daily-reports', {
-        body: { action: 'list' }
-      });
+      const { data: reportsData, error: reportsError } = await supabase
+        .from('daily_reports')
+        .select(`
+          id,
+          project_id,
+          date,
+          work_performed,
+          crew_count,
+          weather_conditions,
+          materials_delivered,
+          equipment_used,
+          delays_issues,
+          safety_incidents,
+          photos,
+          created_at,
+          projects!inner(name, company_id)
+        `)
+        .eq('projects.company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
 
       if (reportsError) throw reportsError;
-      setDailyReports(reportsData.dailyReports || []);
+      setDailyReports(reportsData || []);
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -149,13 +165,13 @@ const DailyReports = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('daily-reports', {
-        body: { 
-          action: 'create',
+      const { data, error } = await supabase
+        .from('daily_reports')
+        .insert({
           ...newReport,
-          crew_count: Number(newReport.crew_count)
-        }
-      });
+          crew_count: Number(newReport.crew_count),
+          date: new Date().toISOString().split('T')[0] // Today's date
+        });
 
       if (error) throw error;
 

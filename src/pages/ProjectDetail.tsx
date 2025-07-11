@@ -1640,19 +1640,40 @@ const ProjectDetail = () => {
               </div>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Track materials specific to this project</p>
-                <Dialog open={createMaterialDialogOpen} onOpenChange={setCreateMaterialDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="mt-4">
-                      Add First Material
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
-              </CardContent>
-            </Card>
+            {materials.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Track materials specific to this project</p>
+                  <Dialog open={createMaterialDialogOpen} onOpenChange={setCreateMaterialDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="mt-4">
+                        Add First Material
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {materials.map((material) => (
+                  <Card key={material.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">{material.name}</h3>
+                          <p className="text-sm text-muted-foreground">{material.category}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{material.quantity_available} {material.unit}</p>
+                          <p className="text-sm text-muted-foreground">${material.unit_cost}/unit</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-6">
@@ -1774,19 +1795,46 @@ const ProjectDetail = () => {
               </Button>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Daily progress reports for this project</p>
-                <Dialog open={createReportDialogOpen} onOpenChange={setCreateReportDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="mt-4">
-                      Create Today's Report
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
-              </CardContent>
-            </Card>
+            {reports.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Daily progress reports for this project</p>
+                  <Dialog open={createReportDialogOpen} onOpenChange={setCreateReportDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="mt-4">
+                        Create Today's Report
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {reports.map((report) => (
+                  <Card key={report.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium">
+                          {new Date(report.date).toLocaleDateString()}
+                        </h3>
+                        <Badge variant="outline">
+                          {report.crew_count} crew
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {report.work_performed}
+                      </p>
+                      {report.weather_conditions && (
+                        <p className="text-xs text-muted-foreground">
+                          Weather: {report.weather_conditions}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="permits" className="space-y-6">

@@ -48,7 +48,10 @@ export default function Materials() {
     try {
       const { data, error } = await supabase
         .from('materials')
-        .select('*')
+        .select(`
+          *,
+          projects(name)
+        `)
         .order('name');
       
       if (error) throw error;
