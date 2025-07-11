@@ -24,6 +24,7 @@ import SafetyIncidentForm from '@/components/safety/SafetyIncidentForm';
 import SafetyChecklistBuilder from '@/components/safety/SafetyChecklistBuilder';
 import TrainingCertificationManager from '@/components/safety/TrainingCertificationManager';
 import OSHAComplianceManager from '@/components/safety/OSHAComplianceManager';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface SafetyStats {
   totalIncidents: number;
@@ -177,26 +178,8 @@ const Safety = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="mr-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <h1 className="text-xl font-semibold">Safety & OSHA Compliance</h1>
-          </div>
-        </div>
-      </div>
-      
-      <div className="container mx-auto p-6 space-y-6">
+    <DashboardLayout title="Safety & OSHA Compliance">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -230,200 +213,200 @@ const Safety = () => {
               </DialogContent>
             </Dialog>
           </div>
-      </div>
+        </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-construction-orange" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalIncidents}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.openIncidents} open incidents
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Safety Checklists</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.checklistsCompleted}</div>
-            <p className="text-xs text-muted-foreground">
-              Completed this month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expiring Certifications</CardTitle>
-            <Clock className="h-4 w-4 text-construction-orange" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.expiringCertifications}</div>
-            <p className="text-xs text-muted-foreground">
-              Next 30 days
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
-            <Calendar className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.upcomingDeadlines}</div>
-            <p className="text-xs text-muted-foreground">
-              Compliance deadlines
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="incidents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="incidents">Incidents</TabsTrigger>
-          <TabsTrigger value="checklists">Safety Checklists</TabsTrigger>
-          <TabsTrigger value="training">Training & Certifications</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="incidents" className="space-y-6">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Recent Safety Incidents</CardTitle>
-                  <CardDescription>
-                    Track and manage workplace safety incidents and near misses
-                  </CardDescription>
-                </div>
-                <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Report Incident
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Report Safety Incident</DialogTitle>
-                    </DialogHeader>
-                    <SafetyIncidentForm 
-                      onSuccess={() => {
-                        setShowIncidentDialog(false);
-                        fetchSafetyStats();
-                      }}
-                      onCancel={() => setShowIncidentDialog(false)}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-construction-orange" />
             </CardHeader>
             <CardContent>
-              {recentIncidents.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" />
-                  <p className="text-lg font-medium mb-2">No Recent Incidents</p>
-                  <p>Great job maintaining a safe workplace!</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentIncidents.map(incident => (
-                    <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(incident.incident_date).toLocaleDateString()} • Severity: {incident.severity}
-                        </p>
-                      </div>
-                      <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'}>
-                        {incident.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="text-2xl font-bold">{stats.totalIncidents}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.openIncidents} open incidents
+              </p>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="checklists" className="space-y-6">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Safety Checklists</CardTitle>
-                  <CardDescription>
-                    Daily safety checks and inspection forms
-                  </CardDescription>
-                </div>
-                <Dialog open={showChecklistDialog} onOpenChange={setShowChecklistDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Checklist
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Create Safety Checklist</DialogTitle>
-                    </DialogHeader>
-                    <SafetyChecklistBuilder 
-                      onSuccess={() => {
-                        setShowChecklistDialog(false);
-                        fetchSafetyStats();
-                      }}
-                      onCancel={() => setShowChecklistDialog(false)}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Safety Checklists</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              {checklists.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="mx-auto h-12 w-12 mb-4" />
-                  <p className="text-lg font-medium mb-2">No Safety Checklists</p>
-                  <p>Create your first safety checklist to get started</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {checklists.map(checklist => (
-                    <div key={checklist.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">{checklist.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Type: {checklist.checklist_type.replace('_', ' ').toUpperCase()}
-                        </p>
-                      </div>
-                      <Badge variant="default">Active</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="text-2xl font-bold">{stats.checklistsCompleted}</div>
+              <p className="text-xs text-muted-foreground">
+                Completed this month
+              </p>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="training" className="space-y-6">
-          <TrainingCertificationManager />
-        </TabsContent>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Expiring Certifications</CardTitle>
+              <Clock className="h-4 w-4 text-construction-orange" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.expiringCertifications}</div>
+              <p className="text-xs text-muted-foreground">
+                Next 30 days
+              </p>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="compliance" className="space-y-6">
-          <OSHAComplianceManager />
-        </TabsContent>
-      </Tabs>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
+              <Calendar className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.upcomingDeadlines}</div>
+              <p className="text-xs text-muted-foreground">
+                Compliance deadlines
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="incidents" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="incidents">Incidents</TabsTrigger>
+            <TabsTrigger value="checklists">Safety Checklists</TabsTrigger>
+            <TabsTrigger value="training">Training & Certifications</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="incidents" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Recent Safety Incidents</CardTitle>
+                    <CardDescription>
+                      Track and manage workplace safety incidents and near misses
+                    </CardDescription>
+                  </div>
+                  <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-construction-orange hover:bg-construction-orange/90">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Report Incident
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Report Safety Incident</DialogTitle>
+                      </DialogHeader>
+                      <SafetyIncidentForm 
+                        onSuccess={() => {
+                          setShowIncidentDialog(false);
+                          fetchSafetyStats();
+                        }}
+                        onCancel={() => setShowIncidentDialog(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {recentIncidents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" />
+                    <p className="text-lg font-medium mb-2">No Recent Incidents</p>
+                    <p>Great job maintaining a safe workplace!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recentIncidents.map(incident => (
+                      <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(incident.incident_date).toLocaleDateString()} • Severity: {incident.severity}
+                          </p>
+                        </div>
+                        <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'}>
+                          {incident.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="checklists" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Safety Checklists</CardTitle>
+                    <CardDescription>
+                      Daily safety checks and inspection forms
+                    </CardDescription>
+                  </div>
+                  <Dialog open={showChecklistDialog} onOpenChange={setShowChecklistDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-construction-orange hover:bg-construction-orange/90">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Checklist
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Create Safety Checklist</DialogTitle>
+                      </DialogHeader>
+                      <SafetyChecklistBuilder 
+                        onSuccess={() => {
+                          setShowChecklistDialog(false);
+                          fetchSafetyStats();
+                        }}
+                        onCancel={() => setShowChecklistDialog(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {checklists.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Shield className="mx-auto h-12 w-12 mb-4" />
+                    <p className="text-lg font-medium mb-2">No Safety Checklists</p>
+                    <p>Create your first safety checklist to get started</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {checklists.map(checklist => (
+                      <div key={checklist.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-medium">{checklist.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Type: {checklist.checklist_type.replace('_', ' ').toUpperCase()}
+                          </p>
+                        </div>
+                        <Badge variant="default">Active</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="training" className="space-y-6">
+            <TrainingCertificationManager />
+          </TabsContent>
+
+          <TabsContent value="compliance" className="space-y-6">
+            <OSHAComplianceManager />
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
