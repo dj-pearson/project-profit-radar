@@ -156,7 +156,7 @@ const ProjectDetail = () => {
     category: '',
     unit: '',
     unit_cost: 0,
-    quantity_needed: 0,
+    quantity_available: 0,
     supplier_name: ''
   });
   
@@ -466,7 +466,7 @@ const ProjectDetail = () => {
         category: '',
         unit: '',
         unit_cost: 0,
-        quantity_needed: 0,
+        quantity_available: 0,
         supplier_name: ''
       });
 
@@ -2450,12 +2450,12 @@ const ProjectDetail = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="material-quantity">Quantity Needed</Label>
+                <Label htmlFor="material-quantity">Quantity Available</Label>
                 <Input
                   id="material-quantity"
                   type="number"
-                  value={newMaterial.quantity_needed}
-                  onChange={(e) => setNewMaterial(prev => ({ ...prev, quantity_needed: parseFloat(e.target.value) || 0 }))}
+                  value={newMaterial.quantity_available}
+                  onChange={(e) => setNewMaterial(prev => ({ ...prev, quantity_available: parseFloat(e.target.value) || 0 }))}
                 />
               </div>
               <div>
