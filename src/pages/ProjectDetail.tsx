@@ -347,7 +347,6 @@ const ProjectDetail = () => {
         .insert({
           ...newReport,
           project_id: projectId,
-          company_id: userProfile?.company_id,
           created_by: user?.id,
           date: new Date().toISOString().split('T')[0]
         })
