@@ -228,7 +228,7 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Reports & Analytics">
-      <div className="space-y-6">
+      <MobilePageWrapper title="Reports & Analytics">
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
             <TabsTrigger value="dashboard" className={mobileTextClasses.body}>
@@ -362,7 +362,7 @@ const Reports = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </MobilePageWrapper>
     </DashboardLayout>
   );
 };
