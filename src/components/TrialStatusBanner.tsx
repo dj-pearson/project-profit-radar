@@ -29,6 +29,18 @@ const TrialStatusBanner = () => {
 
   const checkTrialStatus = async () => {
     try {
+      // First check subscription status using the check-subscription function
+      const { data: subscriptionData, error: subscriptionError } = await supabase.functions.invoke('check-subscription');
+      
+      if (subscriptionError) {
+        console.error('Error checking subscription:', subscriptionError);
+      } else if (subscriptionData?.subscribed) {
+        // User has active subscription (including complimentary), don't show trial banner
+        setTrialData(null);
+        return;
+      }
+
+      // If no active subscription, check trial status
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('company_id')
