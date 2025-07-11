@@ -24,7 +24,8 @@ import {
   XCircle,
   AlertCircle,
   User,
-  Calendar
+  Calendar,
+  Edit
 } from 'lucide-react';
 
 interface Project {
@@ -79,6 +80,8 @@ const RFIs = () => {
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [loadingRFIs, setLoadingRFIs] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingRFI, setEditingRFI] = useState<RFI | null>(null);
   const [selectedRFI, setSelectedRFI] = useState<RFI | null>(null);
   const [isResponseDialogOpen, setIsResponseDialogOpen] = useState(false);
   const [responseText, setResponseText] = useState('');
@@ -91,6 +94,16 @@ const RFIs = () => {
     priority: 'medium',
     assigned_to: '',
     due_date: ''
+  });
+
+  const [editedRFI, setEditedRFI] = useState({
+    project_id: '',
+    title: '',
+    description: '',
+    priority: 'medium',
+    assigned_to: '',
+    due_date: '',
+    status: 'submitted'
   });
 
   useEffect(() => {
@@ -229,6 +242,74 @@ const RFIs = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to create RFI"
+      });
+    }
+  };
+
+  const handleEditRFI = (rfi: RFI) => {
+    setEditingRFI(rfi);
+    setEditedRFI({
+      project_id: rfi.project_id,
+      title: rfi.title,
+      description: rfi.description,
+      priority: rfi.priority,
+      assigned_to: rfi.assigned_to || '',
+      due_date: rfi.due_date || '',
+      status: rfi.status
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateRFI = async () => {
+    if (!editingRFI || !editedRFI.title || !editedRFI.description) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields."
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('rfis')
+        .update({
+          project_id: editedRFI.project_id,
+          subject: editedRFI.title,
+          description: editedRFI.description,
+          priority: editedRFI.priority,
+          submitted_to: editedRFI.assigned_to || null,
+          due_date: editedRFI.due_date || null,
+          status: editedRFI.status
+        })
+        .eq('id', editingRFI.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "RFI updated successfully"
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingRFI(null);
+      setEditedRFI({
+        project_id: '',
+        title: '',
+        description: '',
+        priority: 'medium',
+        assigned_to: '',
+        due_date: '',
+        status: 'submitted'
+      });
+      
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating RFI:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update RFI"
       });
     }
   };
@@ -542,6 +623,14 @@ const RFIs = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
+                        onClick={() => handleEditRFI(rfi)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
                         onClick={() => {
                           setSelectedRFI(rfi);
                           setIsResponseDialogOpen(true);
@@ -558,6 +647,120 @@ const RFIs = () => {
           )}
         </div>
       </div>
+
+      {/* Edit RFI Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Request for Information</DialogTitle>
+            <DialogDescription>
+              Update the RFI details and status.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-project">Project *</Label>
+              <Select value={editedRFI.project_id} onValueChange={(value) => setEditedRFI({...editedRFI, project_id: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-title">Title *</Label>
+              <Input
+                id="edit-title"
+                placeholder="Brief description of the information request"
+                value={editedRFI.title}
+                onChange={(e) => setEditedRFI({...editedRFI, title: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-description">Description *</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Detailed description of the information being requested..."
+                value={editedRFI.description}
+                onChange={(e) => setEditedRFI({...editedRFI, description: e.target.value})}
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-priority">Priority</Label>
+                <Select value={editedRFI.priority} onValueChange={(value) => setEditedRFI({...editedRFI, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-status">Status</Label>
+                <Select value={editedRFI.status} onValueChange={(value) => setEditedRFI({...editedRFI, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="submitted">Submitted</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="responded">Responded</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-assigned-to">Assigned To</Label>
+                <Input
+                  id="edit-assigned-to"
+                  placeholder="Person or organization"
+                  value={editedRFI.assigned_to}
+                  onChange={(e) => setEditedRFI({...editedRFI, assigned_to: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-due-date">Due Date</Label>
+                <Input
+                  id="edit-due-date"
+                  type="date"
+                  value={editedRFI.due_date}
+                  onChange={(e) => setEditedRFI({...editedRFI, due_date: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateRFI}>
+                Update RFI
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Response Dialog */}
       <Dialog open={isResponseDialogOpen} onOpenChange={setIsResponseDialogOpen}>
