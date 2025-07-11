@@ -439,12 +439,12 @@ const CRMOpportunities = () => {
                               </div>
                               <div>
                                 <Label htmlFor="lead_id">Related Lead</Label>
-                                <Select value={newOpportunity.lead_id || ''} onValueChange={(value) => setNewOpportunity({...newOpportunity, lead_id: value})}>
+                                <Select value={newOpportunity.lead_id || 'none'} onValueChange={(value) => setNewOpportunity({...newOpportunity, lead_id: value === 'none' ? undefined : value})}>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select lead (optional)" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">No related lead</SelectItem>
+                                    <SelectItem value="none">No related lead</SelectItem>
                                     {leads?.map((lead) => (
                                       <SelectItem key={lead.id} value={lead.id}>
                                         {lead.first_name} {lead.last_name} - {lead.project_name || 'No project'}
