@@ -9,6 +9,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import PredictiveAnalytics from '@/components/analytics/PredictiveAnalytics';
 import RiskAssessment from '@/components/analytics/RiskAssessment';
 import TimelineOptimization from '@/components/analytics/TimelineOptimization';
@@ -254,15 +255,15 @@ const Analytics = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <ResponsiveContainer>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
             <div>
-              <h1 className="text-xl font-semibold text-foreground">Analytics & Reporting</h1>
-              <p className="text-sm text-muted-foreground">Executive insights and project performance metrics</p>
+              <h1 className={mobileTextClasses.title}>Analytics & Reporting</h1>
+              <p className={mobileTextClasses.muted}>Executive insights and project performance metrics</p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className={mobileFilterClasses.buttonGroup}>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className={mobileFilterClasses.input}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,32 +274,32 @@ const Analytics = () => {
                   <SelectItem value="ytd">Year to Date</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" className={mobileButtonClasses.secondary}>
                 <Download className="h-4 w-4 mr-2" />
-                Export
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
 
       {/* Main Content */}
       <ResponsiveContainer className="py-6">
         <Tabs value={selectedView} onValueChange={setSelectedView} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="overview">Executive Overview</TabsTrigger>
-            <TabsTrigger value="projects">Project Performance</TabsTrigger>
-            <TabsTrigger value="resources">Resource Utilization</TabsTrigger>
-            <TabsTrigger value="trends">Trend Analysis</TabsTrigger>
-            <TabsTrigger value="predictive">Predictive</TabsTrigger>
-            <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
-            <TabsTrigger value="optimization">Timeline Opt.</TabsTrigger>
-            <TabsTrigger value="benchmarks">Benchmarks</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
+            <TabsTrigger value="resources" className="text-xs sm:text-sm">Resources</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
+            <TabsTrigger value="predictive" className="text-xs sm:text-sm">Predictive</TabsTrigger>
+            <TabsTrigger value="risk" className="text-xs sm:text-sm">Risk</TabsTrigger>
+            <TabsTrigger value="optimization" className="text-xs sm:text-sm">Timeline</TabsTrigger>
+            <TabsTrigger value="benchmarks" className="text-xs sm:text-sm">Benchmarks</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Executive KPIs */}
-            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 6 }}>
+            <div className={mobileGridClasses.stats}>
               <KPICard
                 title="Total Revenue"
                 value={`$${(analyticsData.executiveMetrics.totalRevenue / 1000).toFixed(0)}K`}
@@ -347,7 +348,7 @@ const Analytics = () => {
                 change="+5%"
                 changeType="positive"
               />
-            </ResponsiveGrid>
+            </div>
 
             {/* Revenue & Profit Chart */}
             <ResponsiveGrid cols={{ default: 1, lg: 2 }}>
