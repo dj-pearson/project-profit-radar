@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -141,23 +142,9 @@ const PunchList = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load punch list items (for now, we'll simulate the data structure)
-      // In a real implementation, this would call a Supabase function or query the punch_list table
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('punch_list_items')
-        .select(`
-          *,
-          projects:project_id (name, client_name),
-          creator:created_by (first_name, last_name),
-          assignee:assigned_to (first_name, last_name),
-          photos:punch_list_photos (*),
-          comments:punch_list_comments (
-            *,
-            commenter:commented_by (first_name, last_name)
-          )
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
+      // Load punch list items (simulated data for now)
+      // In a real implementation, this would query the punch_list_items table
+      const itemsData: PunchListItem[] = [];
 
       // For now, we'll set empty data since the table doesn't exist yet
       setPunchItems([]);
@@ -323,43 +310,32 @@ const PunchList = () => {
 
   if (loading || loadingItems) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading punch list...</p>
+      <DashboardLayout title="Punch List">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading punch list...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+    <DashboardLayout title="Punch List">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Punch List / Issue Tracking</h2>
+            <p className="text-sm text-muted-foreground">Track quality issues and incomplete work for project completion</p>
+          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add Item
               </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h1 className="text-xl font-semibold">Punch List / Issue Tracking</h1>
-                <p className="text-sm text-muted-foreground">Track quality issues and incomplete work for project completion</p>
-              </div>
-            </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add Item
-                </Button>
-              </DialogTrigger>
+            </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Add Punch List Item</DialogTitle>
@@ -481,12 +457,7 @@ const PunchList = () => {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-6">
@@ -736,7 +707,7 @@ const PunchList = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

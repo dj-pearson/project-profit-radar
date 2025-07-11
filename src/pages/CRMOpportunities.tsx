@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/AppSidebar';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
@@ -81,6 +80,7 @@ interface Lead {
 const CRMOpportunities = () => {
   const { user, userProfile, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,6 +120,13 @@ const CRMOpportunities = () => {
       loadLeads(loadLeadsData);
     }
   }, [user, userProfile, loading, navigate]);
+
+  useEffect(() => {
+    // Check if we're on the /new route and open the dialog
+    if (location.pathname.includes('/new')) {
+      setShowNewOpportunityDialog(true);
+    }
+  }, [location.pathname]);
 
   const loadOpportunitiesData = async (): Promise<Opportunity[]> => {
     if (!userProfile?.company_id) {
@@ -301,32 +308,7 @@ const CRMOpportunities = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background flex w-full">
-        <AppSidebar />
-        
-        <div className="flex-1">
-          {/* Header */}
-          <nav className="border-b bg-background/95 backdrop-blur-sm">
-            <div className="flex justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
-              <div className="flex items-center min-w-0 flex-1">
-                <SidebarTrigger className="mr-2 sm:mr-3 flex-shrink-0" />
-                <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-foreground truncate">Sales Opportunities</h1>
-              </div>
-              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-shrink-0">
-                <span className="hidden md:block text-xs sm:text-sm text-muted-foreground truncate max-w-32 lg:max-w-none">
-                  Welcome, {userProfile?.first_name || user.email}
-                </span>
-                <ThemeToggle />
-                <Button variant="outline" size="sm" className="hidden sm:flex text-xs lg:text-sm px-2 lg:px-3" onClick={signOut}>
-                  Sign Out
-                </Button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Main Content */}
-          <ResponsiveContainer className="py-4 sm:py-6" padding="sm">
+    <DashboardLayout title="Sales Opportunities">
             
             {/* Pipeline Summary */}
             <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-6">
@@ -457,12 +439,12 @@ const CRMOpportunities = () => {
                               </div>
                               <div>
                                 <Label htmlFor="lead_id">Related Lead</Label>
-                                <Select value={newOpportunity.lead_id || ''} onValueChange={(value) => setNewOpportunity({...newOpportunity, lead_id: value})}>
+                                <Select value={newOpportunity.lead_id || 'none'} onValueChange={(value) => setNewOpportunity({...newOpportunity, lead_id: value === 'none' ? undefined : value})}>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select lead (optional)" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">No related lead</SelectItem>
+                                    <SelectItem value="none">No related lead</SelectItem>
                                     {leads?.map((lead) => (
                                       <SelectItem key={lead.id} value={lead.id}>
                                         {lead.first_name} {lead.last_name} - {lead.project_name || 'No project'}
@@ -752,10 +734,7 @@ const CRMOpportunities = () => {
                 </ErrorBoundary>
               </CardContent>
             </Card>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </SidebarProvider>
+    </DashboardLayout>
   );
 };
 

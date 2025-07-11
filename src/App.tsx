@@ -50,12 +50,14 @@ import GDPRCompliance from "./pages/GDPRCompliance";
 import RateLimitingDashboard from "./pages/RateLimitingDashboard";
 import MaterialTracking from "./pages/MaterialTracking";
 import EquipmentTracking from "./pages/EquipmentTracking";
+import Equipment from "./pages/Equipment";
 import CrewScheduling from "./pages/CrewScheduling";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CustomerSupportChat from "./components/support/CustomerSupportChat";
 import KnowledgeBase from "./components/knowledge/KnowledgeBase";
+import Knowledgebase from "./pages/Knowledgebase";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
 import EmailMarketingIntegration from "./components/marketing/EmailMarketingIntegration";
 import FeatureAnnouncementSystem from "./components/announcements/FeatureAnnouncementSystem";
@@ -368,7 +370,7 @@ const AppContent = () => {
         path="/equipment"
         element={
           <RouteGuard routePath="/equipment">
-            <EquipmentTracking />
+            <Equipment />
           </RouteGuard>
         }
       />
@@ -388,7 +390,7 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
-      <Route path="/knowledge-base" element={<KnowledgeBase />} />
+      <Route path="/knowledge-base" element={<Knowledgebase />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route
         path="/email-marketing"
@@ -555,6 +557,22 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/crm/contacts">
             <CRMContacts />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/leads/new"
+        element={
+          <RouteGuard routePath="/crm/leads">
+            <CRMLeads />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/opportunities/new"
+        element={
+          <RouteGuard routePath="/crm/opportunities">
+            <CRMOpportunities />
           </RouteGuard>
         }
       />

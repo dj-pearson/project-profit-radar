@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -183,45 +184,10 @@ const PurchaseOrders = () => {
   const pendingCount = purchaseOrders.filter(po => ['draft', 'sent'].includes(po.status)).length;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-construction-dark">Purchase Orders</h1>
-                <p className="text-sm text-muted-foreground">Manage vendor purchase orders and procurement</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline"
-                onClick={() => navigate('/vendors')}
-              >
-                Manage Vendors
-              </Button>
-              <Button onClick={() => navigate('/purchase-orders/new')}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Purchase Order
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <DashboardLayout title="Purchase Orders">
+      <div className="space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -260,7 +226,7 @@ const PurchaseOrders = () => {
         </div>
 
         {/* Filters and Search */}
-        <Card className="mb-6">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -395,7 +361,7 @@ const PurchaseOrders = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
