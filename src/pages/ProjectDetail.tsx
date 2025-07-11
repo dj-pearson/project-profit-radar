@@ -447,14 +447,16 @@ const ProjectDetail = () => {
 
   const handleCreateMaterial = async () => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('materials')
         .insert({
           ...newMaterial,
           project_id: projectId,
           company_id: userProfile?.company_id,
           created_by: user?.id
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
