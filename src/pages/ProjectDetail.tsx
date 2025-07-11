@@ -1170,23 +1170,23 @@ const ProjectDetail = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Desktop Tabs */}
           <div className="hidden lg:block">
-            <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="materials">Materials</TabsTrigger>
-              <TabsTrigger value="progress">Progress</TabsTrigger>
-              <TabsTrigger value="dailyreports">Daily Reports</TabsTrigger>
-              <TabsTrigger value="jobcosting">Job Costing</TabsTrigger>
-              <TabsTrigger value="rfis">RFI's</TabsTrigger>
-              <TabsTrigger value="submittals">Submittals</TabsTrigger>
-              <TabsTrigger value="changeorders">Change Orders</TabsTrigger>
-              <TabsTrigger value="punchlist">Punch List</TabsTrigger>
-              <TabsTrigger value="equipment">Equipment</TabsTrigger>
-              <TabsTrigger value="permits">Permits</TabsTrigger>
-              <TabsTrigger value="warranties">Warranties</TabsTrigger>
-              <TabsTrigger value="contacts">Contacts</TabsTrigger>
-              <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
-              <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="overview" className="shrink-0">Overview</TabsTrigger>
+              <TabsTrigger value="materials" className="shrink-0">Materials</TabsTrigger>
+              <TabsTrigger value="progress" className="shrink-0">Progress</TabsTrigger>
+              <TabsTrigger value="dailyreports" className="shrink-0">Daily Reports</TabsTrigger>
+              <TabsTrigger value="jobcosting" className="shrink-0">Job Costing</TabsTrigger>
+              <TabsTrigger value="rfis" className="shrink-0">RFI's</TabsTrigger>
+              <TabsTrigger value="submittals" className="shrink-0">Submittals</TabsTrigger>
+              <TabsTrigger value="changeorders" className="shrink-0">Change Orders</TabsTrigger>
+              <TabsTrigger value="punchlist" className="shrink-0">Punch List</TabsTrigger>
+              <TabsTrigger value="equipment" className="shrink-0">Equipment</TabsTrigger>
+              <TabsTrigger value="permits" className="shrink-0">Permits</TabsTrigger>
+              <TabsTrigger value="warranties" className="shrink-0">Warranties</TabsTrigger>
+              <TabsTrigger value="contacts" className="shrink-0">Contacts</TabsTrigger>
+              <TabsTrigger value="invoicing" className="shrink-0">Invoicing</TabsTrigger>
+              <TabsTrigger value="tasks" className="shrink-0">Tasks</TabsTrigger>
+              <TabsTrigger value="documents" className="shrink-0">Documents</TabsTrigger>
             </TabsList>
           </div>
 
