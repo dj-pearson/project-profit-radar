@@ -189,7 +189,7 @@ export default function SafetyManagement() {
   };
 
   return (
-    <DashboardLayout title="Safety Management" showTrialBanner={false}>
+    <DashboardLayout title="Safety Management">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
