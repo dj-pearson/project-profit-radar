@@ -125,6 +125,9 @@ const ProjectDetail = () => {
   const [editProjectDialogOpen, setEditProjectDialogOpen] = useState(false);
   const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
   const [addTeamMemberDialogOpen, setAddTeamMemberDialogOpen] = useState(false);
+  const [addPermitDialogOpen, setAddPermitDialogOpen] = useState(false);
+  const [addWarrantyDialogOpen, setAddWarrantyDialogOpen] = useState(false);
+  const [addDocumentDialogOpen, setAddDocumentDialogOpen] = useState(false);
   
   // User and contact lists
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
@@ -186,6 +189,34 @@ const ProjectDetail = () => {
   });
 
   const [selectedUserId, setSelectedUserId] = useState('');
+
+  const [newPermit, setNewPermit] = useState({
+    permit_name: '',
+    permit_type: '',
+    issuing_authority: '',
+    application_date: '',
+    permit_expiry_date: '',
+    description: '',
+    priority: 'medium'
+  });
+
+  const [newWarranty, setNewWarranty] = useState({
+    item_name: '',
+    warranty_type: '',
+    manufacturer: '',
+    warranty_start_date: '',
+    warranty_duration_months: 12,
+    description: '',
+    is_transferable: false
+  });
+
+  const [newDocument, setNewDocument] = useState({
+    document_name: '',
+    document_type: '',
+    description: '',
+    file_path: '',
+    category: ''
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -480,6 +511,133 @@ const ProjectDetail = () => {
       setContacts(data || []);
     } catch (error: any) {
       console.error('Error loading contacts:', error);
+    }
+  };
+
+  const handleCreatePermit = async () => {
+    try {
+      const { error } = await supabase
+        .from('environmental_permits')
+        .insert({
+          permit_name: newPermit.permit_name,
+          permit_type: newPermit.permit_type,
+          issuing_agency: newPermit.issuing_authority,
+          application_date: newPermit.application_date,
+          expiration_date: newPermit.permit_expiry_date,
+          description: newPermit.description,
+          priority: newPermit.priority,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id,
+          status: 'submitted',
+          permit_number: `PERM-${Date.now()}`
+        });
+
+      if (error) throw error;
+
+      setAddPermitDialogOpen(false);
+      setNewPermit({
+        permit_name: '',
+        permit_type: '',
+        issuing_authority: '',
+        application_date: '',
+        permit_expiry_date: '',
+        description: '',
+        priority: 'medium'
+      });
+
+      toast({
+        title: "Permit added",
+        description: "Permit has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding permit",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateWarranty = async () => {
+    try {
+      const { error } = await supabase
+        .from('warranties')
+        .insert({
+          item_name: newWarranty.item_name,
+          warranty_type: newWarranty.warranty_type,
+          manufacturer: newWarranty.manufacturer,
+          warranty_start_date: newWarranty.warranty_start_date,
+          warranty_duration_months: newWarranty.warranty_duration_months,
+          item_description: newWarranty.description,
+          is_transferable: newWarranty.is_transferable,
+          is_transferred_to_customer: false,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id,
+          status: 'active'
+        });
+
+      if (error) throw error;
+
+      setAddWarrantyDialogOpen(false);
+      setNewWarranty({
+        item_name: '',
+        warranty_type: '',
+        manufacturer: '',
+        warranty_start_date: '',
+        warranty_duration_months: 12,
+        description: '',
+        is_transferable: false
+      });
+
+      toast({
+        title: "Warranty added",
+        description: "Warranty has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding warranty",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateDocument = async () => {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .insert({
+          name: newDocument.document_name,
+          description: newDocument.description,
+          file_path: newDocument.file_path,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          uploaded_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddDocumentDialogOpen(false);
+      setNewDocument({
+        document_name: '',
+        document_type: '',
+        description: '',
+        file_path: '',
+        category: ''
+      });
+
+      toast({
+        title: "Document added",
+        description: "Document has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding document",
+        description: error.message
+      });
     }
   };
 
@@ -1144,19 +1302,33 @@ const ProjectDetail = () => {
           <TabsContent value="warranties" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Warranties</h2>
-              <Button onClick={() => navigate('/warranty-management')}>
-                <Wrench className="h-4 w-4 mr-2" />
-                Manage Warranties
-              </Button>
+              <div className="flex gap-2">
+                <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Warranty
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+                <Button variant="outline" onClick={() => navigate('/warranty-management')}>
+                  <Wrench className="h-4 w-4 mr-2" />
+                  View All Warranties
+                </Button>
+              </div>
             </div>
             
             <Card>
               <CardContent className="text-center py-8">
                 <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Track warranties for materials and equipment on this project</p>
-                <Button variant="outline" onClick={() => navigate('/warranty-management')} className="mt-4">
-                  Go to Warranty Management
-                </Button>
+                <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="mt-4">
+                      Add First Warranty
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1290,16 +1462,33 @@ const ProjectDetail = () => {
           <TabsContent value="documents" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Documents</h2>
-              <Button onClick={() => navigate(`/project/${projectId}/documents`)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Manage Documents
-              </Button>
+              <div className="flex gap-2">
+                <Dialog open={addDocumentDialogOpen} onOpenChange={setAddDocumentDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Document
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+                <Button variant="outline" onClick={() => navigate(`/project/${projectId}/documents`)}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  View All Documents
+                </Button>
+              </div>
             </div>
             
             <Card>
               <CardContent className="text-center py-8">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Click "Manage Documents" to view and upload project files</p>
+                <p className="text-muted-foreground">Upload and manage project documents</p>
+                <Dialog open={addDocumentDialogOpen} onOpenChange={setAddDocumentDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="mt-4">
+                      Add First Document
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1774,6 +1963,275 @@ const ProjectDetail = () => {
               </Button>
               <Button onClick={handleCreateContact}>
                 Add Contact
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Permit Dialog */}
+      <Dialog open={addPermitDialogOpen} onOpenChange={setAddPermitDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Permit to Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="permit-name">Permit Name</Label>
+                <Input
+                  id="permit-name"
+                  value={newPermit.permit_name}
+                  onChange={(e) => setNewPermit(prev => ({ ...prev, permit_name: e.target.value }))}
+                  placeholder="Permit name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="permit-type">Permit Type</Label>
+                <Select value={newPermit.permit_type} onValueChange={(value) => setNewPermit(prev => ({ ...prev, permit_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select permit type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="building">Building Permit</SelectItem>
+                    <SelectItem value="environmental">Environmental Permit</SelectItem>
+                    <SelectItem value="demolition">Demolition Permit</SelectItem>
+                    <SelectItem value="electrical">Electrical Permit</SelectItem>
+                    <SelectItem value="plumbing">Plumbing Permit</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="permit-authority">Issuing Authority</Label>
+              <Input
+                id="permit-authority"
+                value={newPermit.issuing_authority}
+                onChange={(e) => setNewPermit(prev => ({ ...prev, issuing_authority: e.target.value }))}
+                placeholder="Authority name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="permit-description">Description</Label>
+              <Textarea
+                id="permit-description"
+                value={newPermit.description}
+                onChange={(e) => setNewPermit(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Permit description"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="permit-application-date">Application Date</Label>
+                <Input
+                  id="permit-application-date"
+                  type="date"
+                  value={newPermit.application_date}
+                  onChange={(e) => setNewPermit(prev => ({ ...prev, application_date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="permit-expiry-date">Expiry Date</Label>
+                <Input
+                  id="permit-expiry-date"
+                  type="date"
+                  value={newPermit.permit_expiry_date}
+                  onChange={(e) => setNewPermit(prev => ({ ...prev, permit_expiry_date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="permit-priority">Priority</Label>
+                <Select value={newPermit.priority} onValueChange={(value) => setNewPermit(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddPermitDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreatePermit}>
+                Add Permit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Warranty Dialog */}
+      <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Warranty to Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="warranty-item">Item Name</Label>
+                <Input
+                  id="warranty-item"
+                  value={newWarranty.item_name}
+                  onChange={(e) => setNewWarranty(prev => ({ ...prev, item_name: e.target.value }))}
+                  placeholder="Item or equipment name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="warranty-type">Warranty Type</Label>
+                <Select value={newWarranty.warranty_type} onValueChange={(value) => setNewWarranty(prev => ({ ...prev, warranty_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select warranty type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manufacturer">Manufacturer Warranty</SelectItem>
+                    <SelectItem value="extended">Extended Warranty</SelectItem>
+                    <SelectItem value="workmanship">Workmanship Warranty</SelectItem>
+                    <SelectItem value="material">Material Warranty</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="warranty-manufacturer">Manufacturer</Label>
+                <Input
+                  id="warranty-manufacturer"
+                  value={newWarranty.manufacturer}
+                  onChange={(e) => setNewWarranty(prev => ({ ...prev, manufacturer: e.target.value }))}
+                  placeholder="Manufacturer name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="warranty-start">Start Date</Label>
+                <Input
+                  id="warranty-start"
+                  type="date"
+                  value={newWarranty.warranty_start_date}
+                  onChange={(e) => setNewWarranty(prev => ({ ...prev, warranty_start_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="warranty-description">Description</Label>
+              <Textarea
+                id="warranty-description"
+                value={newWarranty.description}
+                onChange={(e) => setNewWarranty(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Warranty description"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="warranty-duration">Duration (Months)</Label>
+                <Input
+                  id="warranty-duration"
+                  type="number"
+                  value={newWarranty.warranty_duration_months}
+                  onChange={(e) => setNewWarranty(prev => ({ ...prev, warranty_duration_months: parseInt(e.target.value) || 12 }))}
+                />
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="warranty-transferable"
+                  checked={newWarranty.is_transferable}
+                  onChange={(e) => setNewWarranty(prev => ({ ...prev, is_transferable: e.target.checked }))}
+                />
+                <Label htmlFor="warranty-transferable">Transferable to Customer</Label>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddWarrantyDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateWarranty}>
+                Add Warranty
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Document Dialog */}
+      <Dialog open={addDocumentDialogOpen} onOpenChange={setAddDocumentDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Document to Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="document-name">Document Name</Label>
+                <Input
+                  id="document-name"
+                  value={newDocument.document_name}
+                  onChange={(e) => setNewDocument(prev => ({ ...prev, document_name: e.target.value }))}
+                  placeholder="Document name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="document-type">Document Type</Label>
+                <Select value={newDocument.document_type} onValueChange={(value) => setNewDocument(prev => ({ ...prev, document_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contract">Contract</SelectItem>
+                    <SelectItem value="blueprint">Blueprint</SelectItem>
+                    <SelectItem value="invoice">Invoice</SelectItem>
+                    <SelectItem value="permit">Permit</SelectItem>
+                    <SelectItem value="inspection">Inspection Report</SelectItem>
+                    <SelectItem value="photo">Photo</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="document-category">Category</Label>
+              <Input
+                id="document-category"
+                value={newDocument.category}
+                onChange={(e) => setNewDocument(prev => ({ ...prev, category: e.target.value }))}
+                placeholder="Document category"
+              />
+            </div>
+            <div>
+              <Label htmlFor="document-description">Description</Label>
+              <Textarea
+                id="document-description"
+                value={newDocument.description}
+                onChange={(e) => setNewDocument(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Document description"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label htmlFor="document-path">File Path/URL</Label>
+              <Input
+                id="document-path"
+                value={newDocument.file_path}
+                onChange={(e) => setNewDocument(prev => ({ ...prev, file_path: e.target.value }))}
+                placeholder="File path or URL"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddDocumentDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateDocument}>
+                Add Document
               </Button>
             </div>
           </div>
