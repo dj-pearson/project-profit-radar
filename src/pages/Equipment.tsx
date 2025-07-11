@@ -20,6 +20,7 @@ import {
   MapPin,
   DollarSign
 } from 'lucide-react';
+import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 
 export default function Equipment() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -118,17 +119,18 @@ export default function Equipment() {
     <DashboardLayout title="Equipment Management">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Equipment Management</h1>
-            <p className="text-muted-foreground">Manage fleet, maintenance, and equipment utilization</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Equipment Management</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage fleet, maintenance, and equipment utilization</p>
           </div>
           <div className="flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Equipment
+                  <span className="hidden sm:inline">Add Equipment</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -175,21 +177,32 @@ export default function Equipment() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="fleet">Equipment Fleet</TabsTrigger>
-            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-            <TabsTrigger value="utilization">Utilization</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
+          <div className="grid w-full grid-cols-2 sm:grid-cols-4 rounded-md bg-muted p-1">
+            <TabsTrigger value="fleet" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Equipment Fleet</span>
+              <span className="sm:hidden">Fleet</span>
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Maintenance</span>
+              <span className="sm:hidden">Maint.</span>
+            </TabsTrigger>
+            <TabsTrigger value="utilization" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Utilization</span>
+              <span className="sm:hidden">Util.</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
+          </div>
 
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search equipment, models, or serial numbers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
+          <div className={mobileFilterClasses.container}>
+            <div className="flex items-center space-x-2 w-full">
+              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Input
+                placeholder="Search equipment..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
           </div>
 
           <TabsContent value="fleet" className="space-y-4">
@@ -213,44 +226,46 @@ export default function Equipment() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium text-muted-foreground">Location</div>
-                          <div>{item.location}</div>
+                          <div className="font-medium text-muted-foreground text-xs">Location</div>
+                          <div className="text-sm">{item.location}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium text-muted-foreground">Hours Used</div>
-                          <div>{item.hours_used.toLocaleString()} hrs</div>
+                          <div className="font-medium text-muted-foreground text-xs">Hours Used</div>
+                          <div className="text-sm">{item.hours_used.toLocaleString()} hrs</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium text-muted-foreground">Next Maintenance</div>
-                          <div>{new Date(item.next_maintenance).toLocaleDateString()}</div>
+                          <div className="font-medium text-muted-foreground text-xs">Next Maintenance</div>
+                          <div className="text-sm">{new Date(item.next_maintenance).toLocaleDateString()}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium text-muted-foreground">Daily Rate</div>
-                          <div>${item.daily_rate.toFixed(2)}</div>
+                          <div className="font-medium text-muted-foreground text-xs">Daily Rate</div>
+                          <div className="text-sm">${item.daily_rate.toFixed(2)}</div>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm">
-                        <Wrench className="h-4 w-4 mr-2" />
-                        Schedule Maintenance
+                    <div className={mobileFilterClasses.buttonGroup}>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Wrench className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Schedule Maintenance</span>
+                        <span className="sm:hidden">Maint.</span>
                       </Button>
-                      <Button size="sm">
-                        View Details
+                      <Button size="sm" className="flex-1">
+                        <span className="hidden sm:inline">View Details</span>
+                        <span className="sm:hidden">Details</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -279,24 +294,25 @@ export default function Equipment() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-4">
                       <div>
-                        <div className="font-medium text-muted-foreground">Technician</div>
-                        <div>{record.technician}</div>
+                        <div className="font-medium text-muted-foreground text-xs">Technician</div>
+                        <div className="text-sm">{record.technician}</div>
                       </div>
                       <div>
-                        <div className="font-medium text-muted-foreground">Cost</div>
-                        <div className="font-semibold">${record.cost.toFixed(2)}</div>
+                        <div className="font-medium text-muted-foreground text-xs">Cost</div>
+                        <div className="font-semibold text-sm">${record.cost.toFixed(2)}</div>
                       </div>
                       <div>
-                        <div className="font-medium text-muted-foreground">Date</div>
-                        <div>{new Date(record.date).toLocaleDateString()}</div>
+                        <div className="font-medium text-muted-foreground text-xs">Date</div>
+                        <div className="text-sm">{new Date(record.date).toLocaleDateString()}</div>
                       </div>
                     </div>
                     
                     <div className="flex justify-end">
-                      <Button size="sm">
-                        View Maintenance Details
+                      <Button size="sm" className="w-full sm:w-auto">
+                        <span className="hidden sm:inline">View Maintenance Details</span>
+                        <span className="sm:hidden">Details</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -316,14 +332,14 @@ export default function Equipment() {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium">Total Equipment</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">3</div>
-                  <div className="text-sm text-muted-foreground">Active units</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Active units</div>
                 </CardContent>
               </Card>
               
@@ -333,7 +349,7 @@ export default function Equipment() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">78%</div>
-                  <div className="text-sm text-green-600">+12% from last month</div>
+                  <div className="text-xs sm:text-sm text-green-600">+12% from last month</div>
                 </CardContent>
               </Card>
               
@@ -343,7 +359,7 @@ export default function Equipment() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">1</div>
-                  <div className="flex items-center text-sm text-yellow-600">
+                  <div className="flex items-center text-xs sm:text-sm text-yellow-600">
                     <AlertTriangle className="h-4 w-4 mr-1" />
                     Within 30 days
                   </div>

@@ -23,6 +23,7 @@ import {
   Plus,
   X
 } from 'lucide-react';
+import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 
 const CreateProject = () => {
   const { user, userProfile, loading } = useAuth();
@@ -151,7 +152,7 @@ const CreateProject = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="projectName">Project Name *</Label>
                   <Input
@@ -220,7 +221,7 @@ const CreateProject = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="clientName">Client Name</Label>
                   <Input
@@ -269,7 +270,7 @@ const CreateProject = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Start Date</Label>
                   <Input
@@ -290,7 +291,7 @@ const CreateProject = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="budget">
                     <DollarSign className="h-4 w-4 inline mr-1" />
@@ -365,7 +366,7 @@ const CreateProject = () => {
           </Card>
 
           {/* Submit */}
-          <div className="flex justify-end space-x-4">
+          <div className={mobileFilterClasses.buttonGroup}>
             <Button
               type="button"
               variant="outline"

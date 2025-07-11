@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 
 const Setup = () => {
   const { user, userProfile, refreshProfile, loading } = useAuth();
@@ -128,22 +129,22 @@ const Setup = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-construction-blue">Welcome to Build Desk</h1>
-          <p className="text-muted-foreground mt-2">Let's set up your company to get started</p>
+      <div className="w-full max-w-4xl">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-construction-blue">Welcome to Build Desk</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">Let's set up your company to get started</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Company Information</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Company Information</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Tell us about your construction business to customize your experience
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCompanySetup} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Company Name *</Label>
                   <Input
@@ -180,7 +181,7 @@ const Setup = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="companySize">Company Size</Label>
                   <Select value={companySize} onValueChange={setCompanySize}>
@@ -224,7 +225,7 @@ const Setup = () => {
 
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full text-sm sm:text-base py-2 sm:py-3" 
                 disabled={setupLoading || !companyName || !industryType}
               >
                 {setupLoading ? 'Setting Up Company...' : 'Complete Setup'}

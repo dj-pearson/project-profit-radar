@@ -17,6 +17,7 @@ import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Ey
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 
 const Reports = () => {
   const { user, userProfile, loading } = useAuth();
@@ -229,20 +230,23 @@ const Reports = () => {
     <DashboardLayout title="Reports & Analytics">
       <div className="space-y-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dashboard">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Executive Dashboard
+          <div className="grid w-full grid-cols-1 sm:grid-cols-3 rounded-md bg-muted p-1">
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
+              <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Executive Dashboard</span>
+              <span className="sm:hidden">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="builder">
-              <Settings className="h-4 w-4 mr-2" />
-              Custom Reports
+            <TabsTrigger value="builder" className="text-xs sm:text-sm">
+              <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Custom Reports</span>
+              <span className="sm:hidden">Custom</span>
             </TabsTrigger>
-            <TabsTrigger value="exports">
-              <Download className="h-4 w-4 mr-2" />
-              Export Center
+            <TabsTrigger value="exports" className="text-xs sm:text-sm">
+              <Download className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Export Center</span>
+              <span className="sm:hidden">Export</span>
             </TabsTrigger>
-          </TabsList>
+          </div>
 
           <TabsContent value="dashboard">
             <ExecutiveDashboard />
@@ -264,96 +268,98 @@ const Reports = () => {
           </TabsContent>
 
           <TabsContent value="exports" className="space-y-6">
-        {/* Project Report Generator */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Project Report Generator</CardTitle>
-            <CardDescription>Generate comprehensive reports with job costs, change orders, and progress data</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="project">Select Project</Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project: any) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="date-range">Date Range</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    type="date"
-                    value={dateRange.start}
-                    onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                  />
-                  <Input
-                    type="date"
-                    value={dateRange.end}
-                    onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                  />
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Report Generator</CardTitle>
+                <CardDescription>Generate comprehensive reports with job costs, change orders, and progress data</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className={mobileFilterClasses.container}>
+                  <div>
+                    <Label htmlFor="project">Select Project</Label>
+                    <Select value={selectedProject} onValueChange={setSelectedProject}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project: any) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="date-range">Date Range</Label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Input
+                        type="date"
+                        value={dateRange.start}
+                        onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
+                      />
+                      <Input
+                        type="date"
+                        value={dateRange.end}
+                        onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="flex space-x-4">
-              <Button
-                onClick={() => generateProjectReport('excel')}
-                disabled={!selectedProject || generating}
-                className="flex-1"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                {generating ? 'Generating...' : 'Export to Excel'}
-              </Button>
-              <Button
-                onClick={() => generateProjectReport('pdf')}
-                disabled={!selectedProject || generating}
-                variant="outline"
-                className="flex-1"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {generating ? 'Generating...' : 'Export to PDF'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                
+                <div className={mobileFilterClasses.buttonGroup}>
+                  <Button
+                    onClick={() => generateProjectReport('excel')}
+                    disabled={!selectedProject || generating}
+                    className="flex-1"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to Excel'}</span>
+                    <span className="sm:hidden">Excel</span>
+                  </Button>
+                  <Button
+                    onClick={() => generateProjectReport('pdf')}
+                    disabled={!selectedProject || generating}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to PDF'}</span>
+                    <span className="sm:hidden">PDF</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Quick Reports */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Summary</CardTitle>
-              <CardDescription>Project costs and profitability</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full" variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Generate Financial Report
-              </Button>
-            </CardContent>
-          </Card>
+            <div className={mobileGridClasses.twoColumn}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Financial Summary</CardTitle>
+                  <CardDescription>Project costs and profitability</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Generate Financial Report</span>
+                    <span className="sm:hidden">Financial</span>
+                  </Button>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Time Tracking</CardTitle>
-              <CardDescription>Labor hours and productivity</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full" variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Generate Time Report
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Time Tracking</CardTitle>
+                  <CardDescription>Labor hours and productivity</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Generate Time Report</span>
+                    <span className="sm:hidden">Time</span>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
