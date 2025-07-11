@@ -2228,15 +2228,16 @@ const ProjectDetail = () => {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="crew-count">Crew Count</Label>
-                <Input
-                  id="crew-count"
-                  type="number"
-                  value={newReport.crew_count}
-                  onChange={(e) => setNewReport(prev => ({ ...prev, crew_count: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
+                      <div>
+                        <Label htmlFor="crew-count">Crew Count</Label>
+                        <Input
+                          id="crew-count"
+                          type="number"
+                          placeholder="Enter crew count"
+                          value={newReport.crew_count === 0 ? '' : newReport.crew_count}
+                          onChange={(e) => setNewReport(prev => ({ ...prev, crew_count: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
               <div>
                 <Label htmlFor="weather">Weather Conditions</Label>
                 <Input
@@ -2501,7 +2502,8 @@ const ProjectDetail = () => {
                   id="material-cost"
                   type="number"
                   step="0.01"
-                  value={newMaterial.unit_cost}
+                  placeholder="Enter cost per unit"
+                  value={newMaterial.unit_cost === 0 ? '' : newMaterial.unit_cost}
                   onChange={(e) => setNewMaterial(prev => ({ ...prev, unit_cost: parseFloat(e.target.value) || 0 }))}
                 />
               </div>

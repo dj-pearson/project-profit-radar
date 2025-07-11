@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
@@ -23,6 +26,17 @@ import {
 export default function Materials() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("inventory");
+  const [projects, setProjects] = useState<any[]>([]);
+  const [newMaterial, setNewMaterial] = useState({
+    name: '',
+    material_code: '',
+    category: '',
+    unit: '',
+    quantity: '',
+    cost: '',
+    project_id: ''
+  });
+  const navigate = useNavigate();
 
   // Mock data
   const materials = [
@@ -91,6 +105,77 @@ export default function Materials() {
     }
   ];
 
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error loading projects",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateMaterial = async () => {
+    try {
+      // Get company_id from user profile
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const { error } = await supabase
+        .from('materials')
+        .insert({
+          name: newMaterial.name,
+          material_code: newMaterial.material_code,
+          category: newMaterial.category,
+          unit: newMaterial.unit,
+          quantity_available: parseInt(newMaterial.quantity) || 0,
+          unit_cost: parseFloat(newMaterial.cost) || 0,
+          project_id: newMaterial.project_id || null,
+          company_id: userProfile.company_id
+        });
+
+      if (error) throw error;
+
+      setNewMaterial({
+        name: '',
+        material_code: '',
+        category: '',
+        unit: '',
+        quantity: '',
+        cost: '',
+        project_id: ''
+      });
+
+      toast({
+        title: "Material created",
+        description: "Material has been added successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error creating material",
+        description: error.message
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       in_stock: { variant: "default" as const, label: "In Stock", icon: CheckCircle },
@@ -136,16 +221,42 @@ export default function Materials() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Material Name</Label>
-                    <Input id="name" placeholder="Enter material name" />
+                    <Label htmlFor="project">Project (Optional)</Label>
+                    <Select value={newMaterial.project_id} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, project_id: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No Project</SelectItem>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
-                    <Label htmlFor="sku">SKU</Label>
-                    <Input id="sku" placeholder="Enter SKU" />
+                    <Label htmlFor="name">Material Name</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="Enter material name" 
+                      value={newMaterial.name}
+                      onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="material-code">Material Code</Label>
+                    <Input 
+                      id="material-code" 
+                      placeholder="Enter material code" 
+                      value={newMaterial.material_code}
+                      onChange={(e) => setNewMaterial(prev => ({ ...prev, material_code: e.target.value }))}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="category">Category</Label>
-                    <Select>
+                    <Select value={newMaterial.category} onValueChange={(value) => setNewMaterial(prev => ({ ...prev, category: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -161,16 +272,50 @@ export default function Materials() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="quantity">Quantity</Label>
-                      <Input id="quantity" type="number" placeholder="0" />
+                      <Input 
+                        id="quantity" 
+                        type="number" 
+                        placeholder="Enter quantity"
+                        value={newMaterial.quantity}
+                        onChange={(e) => setNewMaterial(prev => ({ ...prev, quantity: e.target.value }))}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="unit">Unit</Label>
-                      <Input id="unit" placeholder="e.g., bags, tons" />
+                      <Input 
+                        id="unit" 
+                        placeholder="e.g., bags, tons" 
+                        value={newMaterial.unit}
+                        onChange={(e) => setNewMaterial(prev => ({ ...prev, unit: e.target.value }))}
+                      />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="cost">Cost per Unit</Label>
-                    <Input id="cost" type="number" step="0.01" placeholder="0.00" />
+                    <Input 
+                      id="cost" 
+                      type="number" 
+                      step="0.01" 
+                      placeholder="Enter cost"
+                      value={newMaterial.cost}
+                      onChange={(e) => setNewMaterial(prev => ({ ...prev, cost: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setNewMaterial({
+                      name: '',
+                      material_code: '',
+                      category: '',
+                      unit: '',
+                      quantity: '',
+                      cost: '',
+                      project_id: ''
+                    })}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateMaterial}>
+                      Add Material
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
