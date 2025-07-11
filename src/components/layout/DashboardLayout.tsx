@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { HierarchicalSidebar } from '@/components/navigation/HierarchicalSidebar';
+import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
@@ -24,7 +24,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background flex w-full">
-        <HierarchicalSidebar />
+        <SimplifiedSidebar />
         
         <div className="flex-1">
           {/* Header */}
