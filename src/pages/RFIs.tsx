@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,16 +38,21 @@ interface RFI {
   id: string;
   project_id: string;
   rfi_number: string;
+  subject: string;
   title: string;
   description: string;
   priority: string;
   status: string;
+  submitted_to?: string;
   requested_by: string;
   assigned_to: string;
-  due_date: string;
+  due_date: string | null;
+  response_date?: string | null;
+  company_id: string;
+  created_by: string;
   created_at: string;
   updated_at: string;
-  closed_at: string;
+  closed_at?: string | null;
   projects: { name: string; client_name: string };
   requester: { first_name: string; last_name: string };
   assignee: { first_name: string; last_name: string };
@@ -67,6 +72,7 @@ interface RFIResponse {
 const RFIs = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [rfis, setRFIs] = useState<RFI[]>([]);
@@ -110,7 +116,12 @@ const RFIs = () => {
     if (userProfile?.company_id) {
       loadData();
     }
-  }, [user, userProfile, loading, navigate]);
+    
+    // Handle project filter from navigation state
+    if (location.state?.projectFilter) {
+      setSelectedProject(location.state.projectFilter);
+    }
+  }, [user, userProfile, loading, navigate, location.state]);
 
   const loadData = async () => {
     try {
@@ -126,12 +137,35 @@ const RFIs = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load RFIs (simulated data for now)
-      // In a real implementation, this would query the rfis table
-      const rfisData: RFI[] = [];
+      // Load RFIs with project details
+      const { data: rfisData, error: rfisError } = await supabase
+        .from('rfis')
+        .select(`
+          *,
+          projects:project_id (
+            name,
+            client_name
+          )
+        `)
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
 
-      // For now, we'll set empty data since the table doesn't exist yet
-      setRFIs([]);
+      if (rfisError) throw rfisError;
+      
+      // Transform data to match expected interface
+      const transformedRFIs = (rfisData || []).map(rfi => ({
+        ...rfi,
+        rfi_number: rfi.rfi_number || `RFI-${rfi.id?.slice(-8)}`,
+        title: rfi.subject || '',
+        requested_by: rfi.created_by || '',
+        assigned_to: rfi.submitted_to || '',
+        closed_at: null,
+        requester: { first_name: 'User', last_name: '' },
+        assignee: { first_name: rfi.submitted_to || 'Unassigned', last_name: '' },
+        responses: []
+      }));
+
+      setRFIs(transformedRFIs);
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -156,7 +190,23 @@ const RFIs = () => {
     }
 
     try {
-      // In a real implementation, this would create the RFI record
+      const { error } = await supabase
+        .from('rfis')
+        .insert({
+          project_id: newRFI.project_id,
+          subject: newRFI.title,
+          description: newRFI.description,
+          priority: newRFI.priority,
+          submitted_to: newRFI.assigned_to || null,
+          due_date: newRFI.due_date || null,
+          status: 'submitted',
+          company_id: userProfile?.company_id,
+          created_by: user?.id,
+          rfi_number: `RFI-${Date.now().toString().slice(-8)}`
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "RFI created successfully"

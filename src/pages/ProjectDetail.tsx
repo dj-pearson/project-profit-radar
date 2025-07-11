@@ -117,6 +117,7 @@ const ProjectDetail = () => {
   const [materials, setMaterials] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [jobCosts, setJobCosts] = useState<any[]>([]);
+  const [rfis, setRfis] = useState<any[]>([]);
   const [loadingProject, setLoadingProject] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -764,24 +765,22 @@ const ProjectDetail = () => {
 
   const handleCreateRfi = async () => {
     try {
-      // Temporarily commented out until types are updated
-      console.log('Would create RFI:', {
-        ...newRfi,
-        project_id: projectId,
-        company_id: userProfile?.company_id,
-        created_by: user?.id
-      });
+      const { error } = await supabase
+        .from('rfis')
+        .insert({
+          project_id: projectId,
+          subject: newRfi.subject,
+          description: newRfi.description,
+          priority: newRfi.priority,
+          submitted_to: newRfi.submitted_to || null,
+          due_date: newRfi.due_date || null,
+          status: newRfi.status,
+          company_id: userProfile?.company_id,
+          created_by: user?.id,
+          rfi_number: newRfi.rfi_number || `RFI-${Date.now().toString().slice(-8)}`
+        });
 
-      // const { error } = await supabase
-      //   .from('rfis')
-      //   .insert({
-      //     ...newRfi,
-      //     project_id: projectId,
-      //     company_id: userProfile?.company_id,
-      //     created_by: user?.id
-      //   });
-
-      // if (error) throw error;
+      if (error) throw error;
 
       setAddRfiDialogOpen(false);
       setNewRfi({
@@ -798,6 +797,8 @@ const ProjectDetail = () => {
         title: "RFI added",
         description: "RFI has been added to the project."
       });
+      
+      loadProjectData();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -990,6 +991,10 @@ const ProjectDetail = () => {
     navigate('/team');
   };
 
+  const navigateToRFIs = () => {
+    navigate('/rfis', { state: { projectFilter: projectId } });
+  };
+
   const loadProjectData = async () => {
     try {
       setLoadingProject(true);
@@ -1072,6 +1077,16 @@ const ProjectDetail = () => {
 
       if (jobCostsError) throw jobCostsError;
       setJobCosts(jobCostsData || []);
+
+      // Load RFIs
+      const { data: rfisData, error: rfisError } = await supabase
+        .from('rfis')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (rfisError) throw rfisError;
+      setRfis(rfisData || []);
 
     } catch (error: any) {
       console.error('Error loading project:', error);
@@ -2099,22 +2114,71 @@ const ProjectDetail = () => {
           <TabsContent value="rfis" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">RFI's (Request for Information)</h2>
-              <Dialog open={addRfiDialogOpen} onOpenChange={setAddRfiDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add RFI
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={navigateToRFIs}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  View All RFIs
+                </Button>
+                <Dialog open={addRfiDialogOpen} onOpenChange={setAddRfiDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add RFI
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Submit and track requests for information</p>
-              </CardContent>
-            </Card>
+            {rfis.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No RFIs for this project yet</p>
+                  <Button onClick={() => setAddRfiDialogOpen(true)} className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First RFI
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {rfis.slice(0, 5).map((rfi) => (
+                  <Card key={rfi.id}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-medium">{rfi.subject}</h3>
+                            <Badge variant={rfi.status === 'submitted' ? 'outline' : rfi.status === 'responded' ? 'default' : 'secondary'}>
+                              {rfi.status}
+                            </Badge>
+                            <Badge variant={rfi.priority === 'urgent' ? 'destructive' : rfi.priority === 'high' ? 'secondary' : 'outline'}>
+                              {rfi.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{rfi.description}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>Created: {new Date(rfi.created_at).toLocaleDateString()}</span>
+                            {rfi.due_date && <span>Due: {new Date(rfi.due_date).toLocaleDateString()}</span>}
+                            {rfi.submitted_to && <span>To: {rfi.submitted_to}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {rfis.length > 5 && (
+                  <Card>
+                    <CardContent className="text-center py-4">
+                      <Button variant="outline" onClick={navigateToRFIs}>
+                        View All {rfis.length} RFIs
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="submittals" className="space-y-6">
