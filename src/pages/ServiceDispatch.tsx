@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ export default function ServiceDispatch() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("active-calls");
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const serviceCalls = [
     {
@@ -176,26 +176,8 @@ export default function ServiceDispatch() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold text-card-foreground">Service Dispatch</h1>
-                <p className="text-sm text-muted-foreground">Manage service calls and technician assignments</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
+    <DashboardLayout title="Service Dispatch">
+      <div className="flex justify-end mb-6">
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -294,13 +276,9 @@ export default function ServiceDispatch() {
               </div>
             </DialogContent>
           </Dialog>
-            </div>
-          </div>
-        </div>
       </div>
-
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
+      
+      <div className="space-y-6">
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
@@ -506,8 +484,7 @@ export default function ServiceDispatch() {
           </Card>
         </TabsContent>
       </Tabs>
-        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
