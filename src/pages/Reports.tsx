@@ -17,7 +17,7 @@ import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Ey
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
+import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 
 const Reports = () => {
   const { user, userProfile, loading } = useAuth();
@@ -230,23 +230,23 @@ const Reports = () => {
     <DashboardLayout title="Reports & Analytics">
       <div className="space-y-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <div className="grid w-full grid-cols-1 sm:grid-cols-3 rounded-md bg-muted p-1">
-            <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
+            <TabsTrigger value="dashboard" className={mobileTextClasses.body}>
               <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Executive Dashboard</span>
               <span className="sm:hidden">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="builder" className="text-xs sm:text-sm">
+            <TabsTrigger value="builder" className={mobileTextClasses.body}>
               <Settings className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Custom Reports</span>
               <span className="sm:hidden">Custom</span>
             </TabsTrigger>
-            <TabsTrigger value="exports" className="text-xs sm:text-sm">
+            <TabsTrigger value="exports" className={mobileTextClasses.body}>
               <Download className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Export Center</span>
               <span className="sm:hidden">Export</span>
             </TabsTrigger>
-          </div>
+          </TabsList>
 
           <TabsContent value="dashboard">
             <ExecutiveDashboard />
@@ -268,12 +268,12 @@ const Reports = () => {
           </TabsContent>
 
           <TabsContent value="exports" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Report Generator</CardTitle>
-                <CardDescription>Generate comprehensive reports with job costs, change orders, and progress data</CardDescription>
+            <Card className={mobileCardClasses.container}>
+              <CardHeader className={mobileCardClasses.header}>
+                <CardTitle className={mobileTextClasses.cardTitle}>Project Report Generator</CardTitle>
+                <CardDescription className={mobileTextClasses.muted}>Generate comprehensive reports with job costs, change orders, and progress data</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className={mobileCardClasses.content}>
                 <div className={mobileFilterClasses.container}>
                   <div>
                     <Label htmlFor="project">Select Project</Label>
@@ -311,7 +311,7 @@ const Reports = () => {
                   <Button
                     onClick={() => generateProjectReport('excel')}
                     disabled={!selectedProject || generating}
-                    className="flex-1"
+                    className={mobileButtonClasses.primary}
                   >
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to Excel'}</span>
@@ -321,7 +321,7 @@ const Reports = () => {
                     onClick={() => generateProjectReport('pdf')}
                     disabled={!selectedProject || generating}
                     variant="outline"
-                    className="flex-1"
+                    className={mobileButtonClasses.secondary}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to PDF'}</span>
@@ -332,13 +332,13 @@ const Reports = () => {
             </Card>
 
             <div className={mobileGridClasses.twoColumn}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Financial Summary</CardTitle>
-                  <CardDescription>Project costs and profitability</CardDescription>
+              <Card className={mobileCardClasses.container}>
+                <CardHeader className={mobileCardClasses.header}>
+                  <CardTitle className={mobileTextClasses.cardTitle}>Financial Summary</CardTitle>
+                  <CardDescription className={mobileTextClasses.muted}>Project costs and profitability</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className={mobileButtonClasses.primary} variant="outline">
                     <Download className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">Generate Financial Report</span>
                     <span className="sm:hidden">Financial</span>
@@ -346,13 +346,13 @@ const Reports = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Time Tracking</CardTitle>
-                  <CardDescription>Labor hours and productivity</CardDescription>
+              <Card className={mobileCardClasses.container}>
+                <CardHeader className={mobileCardClasses.header}>
+                  <CardTitle className={mobileTextClasses.cardTitle}>Time Tracking</CardTitle>
+                  <CardDescription className={mobileTextClasses.muted}>Labor hours and productivity</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className={mobileButtonClasses.primary} variant="outline">
                     <Download className="h-4 w-4 mr-2" />
                     <span className="hidden sm:inline">Generate Time Report</span>
                     <span className="sm:hidden">Time</span>
