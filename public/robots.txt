@@ -12,6 +12,14 @@ Crawl-delay: 1
 # Sitemap reference
 Sitemap: https://builddesk.com/sitemap.xml
 
+# Construction industry specific pages
+Allow: /construction-management-software/
+Allow: /procore-alternative/
+Allow: /buildertrend-alternative/
+Allow: /job-costing-software/
+Allow: /construction-field-management/
+Allow: /osha-compliance-software/
+
 # Search engine specific rules
 User-agent: Googlebot
 Allow: /

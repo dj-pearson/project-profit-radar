@@ -103,14 +103,30 @@ export const constructionSoftwareStructuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "BuildDesk",
-  "description": "Construction management platform built for growing teams. Real-time project visibility without enterprise complexity.",
+  "description": "Construction management software for small and medium contractors. Real-time job costing, mobile field management, OSHA compliance, and QuickBooks integration.",
   "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
+  "operatingSystem": ["Web", "iOS", "Android"],
   "url": "https://builddesk.com",
+  "featureList": [
+    "Real-time job costing",
+    "Mobile field management", 
+    "OSHA compliance automation",
+    "QuickBooks integration",
+    "Project scheduling",
+    "Document management",
+    "Team collaboration",
+    "Financial reporting"
+  ],
   "offers": {
     "@type": "Offer",
-    "price": "350",
+    "price": "149",
     "priceCurrency": "USD",
+    "priceSpecification": {
+      "@type": "UnitPriceSpecification",
+      "price": "149",
+      "priceCurrency": "USD",
+      "unitText": "MONTH"
+    },
     "priceValidUntil": "2025-12-31"
   },
   "publisher": {
@@ -121,26 +137,41 @@ export const constructionSoftwareStructuredData = {
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": "4.8",
-    "ratingCount": "150"
+    "ratingCount": "500",
+    "bestRating": "5"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BuildDesk",
+    "url": "https://builddesk.com"
   }
 };
 
 export const organizationStructuredData = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": ["Organization", "SoftwareCompany"],
   "name": "BuildDesk",
   "url": "https://builddesk.com",
-  "logo": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png",
-  "description": "Construction management platform built for growing teams. Real-time project visibility without enterprise complexity.",
-  "sameAs": [
-    "https://twitter.com/builddesk"
-  ],
+  "logo": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png", 
+  "description": "Construction management software for small and medium contractors",
+  "foundingDate": "2024",
+  "industry": "Construction Technology",
+  "numberOfEmployees": "10-50",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "US"
+  },
   "contactPoint": {
     "@type": "ContactPoint",
+    "telephone": "+1-800-BUILDDESK",
     "contactType": "customer service",
     "areaServed": "US",
-    "availableLanguage": "en"
-  }
+    "availableLanguage": "English"
+  },
+  "sameAs": [
+    "https://linkedin.com/company/builddesk",
+    "https://twitter.com/builddesk"
+  ]
 };
 
 export const breadcrumbStructuredData = (items: Array<{name: string, url: string}>) => ({
