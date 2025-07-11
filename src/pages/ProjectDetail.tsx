@@ -903,8 +903,13 @@ const ProjectDetail = () => {
       const { error } = await supabase
         .from('equipment')
         .insert({
-          ...newEquipment,
-          project_id: projectId,
+          name: newEquipment.equipment_name,
+          equipment_type: newEquipment.equipment_type,
+          model: newEquipment.model,
+          serial_number: newEquipment.serial_number,
+          purchase_date: newEquipment.purchase_date,
+          status: newEquipment.status,
+          description: `${newEquipment.equipment_name} - ${newEquipment.manufacturer}`,
           company_id: userProfile?.company_id,
           created_by: user?.id
         });
@@ -925,7 +930,7 @@ const ProjectDetail = () => {
 
       toast({
         title: "Equipment added",
-        description: "Equipment has been added to the project."
+        description: "Equipment has been added to the company inventory."
       });
     } catch (error: any) {
       toast({
@@ -1793,6 +1798,132 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="jobcosting" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Job Costing</h2>
+              <Dialog open={addJobCostDialogOpen} onOpenChange={setAddJobCostDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Job Cost
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Track labor, material, and equipment costs for this project</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="rfis" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">RFI's (Request for Information)</h2>
+              <Dialog open={addRfiDialogOpen} onOpenChange={setAddRfiDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add RFI
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Submit and track requests for information</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="submittals" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Submittals</h2>
+              <Dialog open={addSubmittalDialogOpen} onOpenChange={setAddSubmittalDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Submittal
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Manage submittals and approvals</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="changeorders" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Change Orders</h2>
+              <Dialog open={addChangeOrderDialogOpen} onOpenChange={setAddChangeOrderDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Change Order
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <Edit className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Track project changes and cost adjustments</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="punchlist" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Punch List</h2>
+              <Dialog open={addPunchListDialogOpen} onOpenChange={setAddPunchListDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Punch List Item
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Track items that need completion or correction</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="equipment" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Equipment</h2>
+              <Dialog open={addEquipmentDialogOpen} onOpenChange={setAddEquipmentDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Equipment
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+            
+            <Card>
+              <CardContent className="text-center py-8">
+                <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Manage equipment and tools for this project</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -2567,6 +2698,500 @@ const ProjectDetail = () => {
               </Button>
               <Button onClick={handleAddTeamMember} disabled={!selectedUserId}>
                 Add Team Member
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Job Cost Dialog */}
+      <Dialog open={addJobCostDialogOpen} onOpenChange={setAddJobCostDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Job Cost</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cost-code">Cost Code</Label>
+                <Input
+                  id="cost-code"
+                  value={newJobCost.cost_code}
+                  onChange={(e) => setNewJobCost(prev => ({ ...prev, cost_code: e.target.value }))}
+                  placeholder="Cost code"
+                />
+              </div>
+              <div>
+                <Label htmlFor="cost-type">Cost Type</Label>
+                <Select value={newJobCost.cost_type} onValueChange={(value) => setNewJobCost(prev => ({ ...prev, cost_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="labor">Labor</SelectItem>
+                    <SelectItem value="material">Material</SelectItem>
+                    <SelectItem value="equipment">Equipment</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="cost-description">Description</Label>
+              <Textarea
+                id="cost-description"
+                value={newJobCost.description}
+                onChange={(e) => setNewJobCost(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Cost description"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="cost-quantity">Quantity</Label>
+                <Input
+                  id="cost-quantity"
+                  type="number"
+                  value={newJobCost.quantity}
+                  onChange={(e) => setNewJobCost(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="cost-unit-cost">Unit Cost</Label>
+                <Input
+                  id="cost-unit-cost"
+                  type="number"
+                  step="0.01"
+                  value={newJobCost.unit_cost}
+                  onChange={(e) => setNewJobCost(prev => ({ ...prev, unit_cost: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="cost-actual">Actual Cost</Label>
+                <Input
+                  id="cost-actual"
+                  type="number"
+                  step="0.01"
+                  value={newJobCost.actual_cost}
+                  onChange={(e) => setNewJobCost(prev => ({ ...prev, actual_cost: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddJobCostDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateJobCost}>
+                Add Job Cost
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add RFI Dialog */}
+      <Dialog open={addRfiDialogOpen} onOpenChange={setAddRfiDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add RFI</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rfi-number">RFI Number</Label>
+                <Input
+                  id="rfi-number"
+                  value={newRfi.rfi_number}
+                  onChange={(e) => setNewRfi(prev => ({ ...prev, rfi_number: e.target.value }))}
+                  placeholder="RFI-001"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rfi-priority">Priority</Label>
+                <Select value={newRfi.priority} onValueChange={(value) => setNewRfi(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="rfi-subject">Subject</Label>
+              <Input
+                id="rfi-subject"
+                value={newRfi.subject}
+                onChange={(e) => setNewRfi(prev => ({ ...prev, subject: e.target.value }))}
+                placeholder="RFI subject"
+              />
+            </div>
+            <div>
+              <Label htmlFor="rfi-description">Description</Label>
+              <Textarea
+                id="rfi-description"
+                value={newRfi.description}
+                onChange={(e) => setNewRfi(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Detailed description of the request"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="rfi-submitted-to">Submitted To</Label>
+                <Input
+                  id="rfi-submitted-to"
+                  value={newRfi.submitted_to}
+                  onChange={(e) => setNewRfi(prev => ({ ...prev, submitted_to: e.target.value }))}
+                  placeholder="Name or company"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rfi-due-date">Due Date</Label>
+                <Input
+                  id="rfi-due-date"
+                  type="date"
+                  value={newRfi.due_date}
+                  onChange={(e) => setNewRfi(prev => ({ ...prev, due_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddRfiDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateRfi}>
+                Add RFI
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Submittal Dialog */}
+      <Dialog open={addSubmittalDialogOpen} onOpenChange={setAddSubmittalDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Submittal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="submittal-number">Submittal Number</Label>
+                <Input
+                  id="submittal-number"
+                  value={newSubmittal.submittal_number}
+                  onChange={(e) => setNewSubmittal(prev => ({ ...prev, submittal_number: e.target.value }))}
+                  placeholder="SUB-001"
+                />
+              </div>
+              <div>
+                <Label htmlFor="submittal-priority">Priority</Label>
+                <Select value={newSubmittal.priority} onValueChange={(value) => setNewSubmittal(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="submittal-title">Title</Label>
+              <Input
+                id="submittal-title"
+                value={newSubmittal.title}
+                onChange={(e) => setNewSubmittal(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Submittal title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="submittal-description">Description</Label>
+              <Textarea
+                id="submittal-description"
+                value={newSubmittal.description}
+                onChange={(e) => setNewSubmittal(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Submittal description"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="submittal-spec">Spec Section</Label>
+                <Input
+                  id="submittal-spec"
+                  value={newSubmittal.spec_section}
+                  onChange={(e) => setNewSubmittal(prev => ({ ...prev, spec_section: e.target.value }))}
+                  placeholder="03 30 00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="submittal-due-date">Due Date</Label>
+                <Input
+                  id="submittal-due-date"
+                  type="date"
+                  value={newSubmittal.due_date}
+                  onChange={(e) => setNewSubmittal(prev => ({ ...prev, due_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddSubmittalDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateSubmittal}>
+                Add Submittal
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Change Order Dialog */}
+      <Dialog open={addChangeOrderDialogOpen} onOpenChange={setAddChangeOrderDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Change Order</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="change-order-number">Change Order Number</Label>
+                <Input
+                  id="change-order-number"
+                  value={newChangeOrder.change_order_number}
+                  onChange={(e) => setNewChangeOrder(prev => ({ ...prev, change_order_number: e.target.value }))}
+                  placeholder="CO-001"
+                />
+              </div>
+              <div>
+                <Label htmlFor="change-order-amount">Amount</Label>
+                <Input
+                  id="change-order-amount"
+                  type="number"
+                  step="0.01"
+                  value={newChangeOrder.amount}
+                  onChange={(e) => setNewChangeOrder(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="change-order-title">Title</Label>
+              <Input
+                id="change-order-title"
+                value={newChangeOrder.title}
+                onChange={(e) => setNewChangeOrder(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Change order title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="change-order-description">Description</Label>
+              <Textarea
+                id="change-order-description"
+                value={newChangeOrder.description}
+                onChange={(e) => setNewChangeOrder(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Detailed description of changes"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="change-order-reason">Reason</Label>
+              <Textarea
+                id="change-order-reason"
+                value={newChangeOrder.reason}
+                onChange={(e) => setNewChangeOrder(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="Reason for change"
+                rows={2}
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddChangeOrderDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateChangeOrder}>
+                Add Change Order
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Punch List Item Dialog */}
+      <Dialog open={addPunchListDialogOpen} onOpenChange={setAddPunchListDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Punch List Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="punch-item-number">Item Number</Label>
+                <Input
+                  id="punch-item-number"
+                  value={newPunchListItem.item_number}
+                  onChange={(e) => setNewPunchListItem(prev => ({ ...prev, item_number: e.target.value }))}
+                  placeholder="PL-001"
+                />
+              </div>
+              <div>
+                <Label htmlFor="punch-priority">Priority</Label>
+                <Select value={newPunchListItem.priority} onValueChange={(value) => setNewPunchListItem(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="punch-description">Description</Label>
+              <Textarea
+                id="punch-description"
+                value={newPunchListItem.description}
+                onChange={(e) => setNewPunchListItem(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description of work needed"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="punch-location">Location</Label>
+                <Input
+                  id="punch-location"
+                  value={newPunchListItem.location}
+                  onChange={(e) => setNewPunchListItem(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Room, area, or location"
+                />
+              </div>
+              <div>
+                <Label htmlFor="punch-trade">Trade</Label>
+                <Input
+                  id="punch-trade"
+                  value={newPunchListItem.trade}
+                  onChange={(e) => setNewPunchListItem(prev => ({ ...prev, trade: e.target.value }))}
+                  placeholder="Electrical, plumbing, etc."
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddPunchListDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreatePunchListItem}>
+                Add Punch List Item
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Equipment Dialog */}
+      <Dialog open={addEquipmentDialogOpen} onOpenChange={setAddEquipmentDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Equipment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="equipment-name">Equipment Name</Label>
+                <Input
+                  id="equipment-name"
+                  value={newEquipment.equipment_name}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, equipment_name: e.target.value }))}
+                  placeholder="Equipment name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="equipment-type">Equipment Type</Label>
+                <Input
+                  id="equipment-type"
+                  value={newEquipment.equipment_type}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, equipment_type: e.target.value }))}
+                  placeholder="Type of equipment"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="equipment-manufacturer">Manufacturer</Label>
+                <Input
+                  id="equipment-manufacturer"
+                  value={newEquipment.manufacturer}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, manufacturer: e.target.value }))}
+                  placeholder="Manufacturer name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="equipment-model">Model</Label>
+                <Input
+                  id="equipment-model"
+                  value={newEquipment.model}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, model: e.target.value }))}
+                  placeholder="Model number"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="equipment-serial">Serial Number</Label>
+                <Input
+                  id="equipment-serial"
+                  value={newEquipment.serial_number}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, serial_number: e.target.value }))}
+                  placeholder="Serial number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="equipment-status">Status</Label>
+                <Select value={newEquipment.status} onValueChange={(value) => setNewEquipment(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="operational">Operational</SelectItem>
+                    <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                    <SelectItem value="retired">Retired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="equipment-purchase-date">Purchase Date</Label>
+                <Input
+                  id="equipment-purchase-date"
+                  type="date"
+                  value={newEquipment.purchase_date}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, purchase_date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="equipment-warranty-end">Warranty End Date</Label>
+                <Input
+                  id="equipment-warranty-end"
+                  type="date"
+                  value={newEquipment.warranty_end_date}
+                  onChange={(e) => setNewEquipment(prev => ({ ...prev, warranty_end_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddEquipmentDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateEquipment}>
+                Add Equipment
               </Button>
             </div>
           </div>

@@ -6707,6 +6707,82 @@ export type Database = {
         }
         Relationships: []
       }
+      punch_list_items: {
+        Row: {
+          assigned_to: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          date_completed: string | null
+          date_identified: string | null
+          description: string
+          id: string
+          item_number: string
+          location: string | null
+          priority: string | null
+          project_id: string | null
+          status: string | null
+          trade: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          date_completed?: string | null
+          date_identified?: string | null
+          description: string
+          id?: string
+          item_number: string
+          location?: string | null
+          priority?: string | null
+          project_id?: string | null
+          status?: string | null
+          trade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          date_completed?: string | null
+          date_identified?: string | null
+          description?: string
+          id?: string
+          item_number?: string
+          location?: string | null
+          priority?: string | null
+          project_id?: string | null
+          status?: string | null
+          trade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "punch_list_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "punch_list_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "punch_list_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_order_line_items: {
         Row: {
           cost_code_id: string | null
@@ -7286,6 +7362,79 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfis: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          project_id: string | null
+          response_date: string | null
+          rfi_number: string
+          status: string | null
+          subject: string
+          submitted_to: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string | null
+          response_date?: string | null
+          rfi_number: string
+          status?: string | null
+          subject: string
+          submitted_to?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string | null
+          response_date?: string | null
+          rfi_number?: string
+          status?: string | null
+          subject?: string
+          submitted_to?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfis_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "rfis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -8422,6 +8571,82 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submittals: {
+        Row: {
+          approved_date: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          project_id: string | null
+          spec_section: string | null
+          status: string | null
+          submittal_number: string
+          submitted_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_date?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string | null
+          spec_section?: string | null
+          status?: string | null
+          submittal_number: string
+          submitted_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_date?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string | null
+          spec_section?: string | null
+          status?: string | null
+          submittal_number?: string
+          submitted_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submittals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submittals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "submittals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
