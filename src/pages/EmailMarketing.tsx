@@ -129,7 +129,7 @@ export default function EmailMarketing() {
   };
 
   return (
-    <DashboardLayout title="Email Marketing" showTrialBanner={false}>
+    <DashboardLayout title="Email Marketing">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

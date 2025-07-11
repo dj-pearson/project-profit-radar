@@ -111,7 +111,7 @@ export default function Materials() {
   };
 
   return (
-    <DashboardLayout title="Materials Management" showTrialBanner={false}>
+    <DashboardLayout title="Materials Management">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

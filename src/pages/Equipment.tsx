@@ -115,7 +115,7 @@ export default function Equipment() {
   };
 
   return (
-    <DashboardLayout title="Equipment Management" showTrialBanner={false}>
+    <DashboardLayout title="Equipment Management">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

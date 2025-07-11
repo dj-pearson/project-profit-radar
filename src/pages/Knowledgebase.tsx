@@ -222,7 +222,7 @@ export default function Knowledgebase() {
   };
 
   return (
-    <DashboardLayout title="Knowledge Base" showTrialBanner={false}>
+    <DashboardLayout title="Knowledge Base">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

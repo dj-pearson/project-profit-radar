@@ -194,7 +194,7 @@ export default function AutomatedWorkflows() {
   };
 
   return (
-    <DashboardLayout title="Automated Workflows" showTrialBanner={false}>
+    <DashboardLayout title="Automated Workflows">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
