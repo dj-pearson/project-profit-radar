@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
+import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { 
@@ -115,6 +116,7 @@ const ProjectDetail = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [jobCosts, setJobCosts] = useState<any[]>([]);
   const [loadingProject, setLoadingProject] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -976,6 +978,10 @@ const ProjectDetail = () => {
     navigate('/materials', { state: { projectFilter: projectId } });
   };
 
+  const navigateToJobCosting = () => {
+    navigate('/job-costing', { state: { projectFilter: projectId } });
+  };
+
   const navigateToDailyReports = () => {
     navigate('/daily-reports', { state: { projectFilter: projectId } });
   };
@@ -1053,6 +1059,19 @@ const ProjectDetail = () => {
 
       if (reportsError) throw reportsError;
       setReports(reportsData || []);
+
+      // Load job costs
+      const { data: jobCostsData, error: jobCostsError } = await supabase
+        .from('job_costs')
+        .select(`
+          *,
+          cost_codes(code, name, category)
+        `)
+        .eq('project_id', projectId)
+        .order('date', { ascending: false });
+
+      if (jobCostsError) throw jobCostsError;
+      setJobCosts(jobCostsData || []);
 
     } catch (error: any) {
       console.error('Error loading project:', error);
@@ -2054,22 +2073,27 @@ const ProjectDetail = () => {
           <TabsContent value="jobcosting" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Job Costing</h2>
-              <Dialog open={addJobCostDialogOpen} onOpenChange={setAddJobCostDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Job Cost
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
+              <Button variant="outline" onClick={navigateToJobCosting}>
+                <DollarSign className="h-4 w-4 mr-2" />
+                Manage Job Costs
+              </Button>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Track labor, material, and equipment costs for this project</p>
-              </CardContent>
-            </Card>
+            {jobCosts.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Track labor, material, and equipment costs for this project</p>
+                  <Button variant="outline" onClick={navigateToJobCosting} className="mt-4">
+                    Add First Job Cost
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                <RealTimeJobCosting projectId={projectId} />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="rfis" className="space-y-6">

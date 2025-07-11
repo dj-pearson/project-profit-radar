@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -7,6 +7,10 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 const JobCosting = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get project filter from navigation state
+  const projectFilter = location.state?.projectFilter;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -33,7 +37,7 @@ const JobCosting = () => {
 
   return (
     <DashboardLayout title="Job Costing">
-      <RealTimeJobCosting />
+      <RealTimeJobCosting projectId={projectFilter} />
     </DashboardLayout>
   );
 };
