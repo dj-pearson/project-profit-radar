@@ -110,6 +110,18 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     description: ''
   });
 
+  // Edit cost form state
+  const [editCostForm, setEditCostForm] = useState({
+    cost_code_id: '',
+    date: '',
+    labor_hours: '',
+    labor_cost: '',
+    material_cost: '',
+    equipment_cost: '',
+    other_cost: '',
+    description: ''
+  });
+
   // Load initial data
   useEffect(() => {
     if (userProfile?.company_id) {
@@ -359,6 +371,82 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     setNewCostForm(prev => ({ ...prev, [field]: value }));
   };
 
+  const updateEditFormField = (field: string, value: string) => {
+    setEditCostForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const startEditingCost = (cost: JobCost) => {
+    setEditingCost(cost.id);
+    setEditCostForm({
+      cost_code_id: cost.cost_code_id,
+      date: cost.date,
+      labor_hours: cost.labor_hours.toString(),
+      labor_cost: cost.labor_cost.toString(),
+      material_cost: cost.material_cost.toString(),
+      equipment_cost: cost.equipment_cost.toString(),
+      other_cost: cost.other_cost.toString(),
+      description: cost.description || ''
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingCost(null);
+    setEditCostForm({
+      cost_code_id: '',
+      date: '',
+      labor_hours: '',
+      labor_cost: '',
+      material_cost: '',
+      equipment_cost: '',
+      other_cost: '',
+      description: ''
+    });
+  };
+
+  const updateJobCost = async () => {
+    if (!editingCost) return;
+
+    try {
+      const laborCost = parseFloat(editCostForm.labor_cost) || 0;
+      const materialCost = parseFloat(editCostForm.material_cost) || 0;
+      const equipmentCost = parseFloat(editCostForm.equipment_cost) || 0;
+      const otherCost = parseFloat(editCostForm.other_cost) || 0;
+
+      const costData = {
+        cost_code_id: editCostForm.cost_code_id,
+        date: editCostForm.date,
+        labor_hours: parseFloat(editCostForm.labor_hours) || 0,
+        labor_cost: laborCost,
+        material_cost: materialCost,
+        equipment_cost: equipmentCost,
+        other_cost: otherCost,
+        description: editCostForm.description || null
+      };
+
+      const { error } = await supabase
+        .from('job_costs')
+        .update(costData)
+        .eq('id', editingCost);
+
+      if (error) throw error;
+
+      cancelEditing();
+      
+      toast({
+        title: "Cost Updated",
+        description: "Job cost has been successfully updated"
+      });
+
+    } catch (error: any) {
+      console.error('Error updating job cost:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update job cost"
+      });
+    }
+  };
+
   const getVarianceColor = (percentage: number) => {
     if (percentage > 10) return 'text-green-600';
     if (percentage > 0) return 'text-yellow-600';
@@ -528,55 +616,187 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                   {jobCosts.map((cost) => (
                     <Card key={cost.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Badge variant="outline">
-                                {cost.cost_codes?.code}
-                              </Badge>
-                              <span className="font-medium">{cost.cost_codes?.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {new Date(cost.date).toLocaleDateString()}
-                              </span>
-                            </div>
-                            
-                            {cost.description && (
-                              <p className="text-sm text-muted-foreground mb-2">{cost.description}</p>
-                            )}
-                            
-                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Labor:</span>
-                                <p className="font-medium">${cost.labor_cost?.toLocaleString() || '0'}</p>
-                                {cost.labor_hours > 0 && (
-                                  <p className="text-xs text-muted-foreground">{cost.labor_hours}h</p>
-                                )}
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Materials:</span>
-                                <p className="font-medium">${cost.material_cost?.toLocaleString() || '0'}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Equipment:</span>
-                                <p className="font-medium">${cost.equipment_cost?.toLocaleString() || '0'}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Other:</span>
-                                <p className="font-medium">${cost.other_cost?.toLocaleString() || '0'}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Total:</span>
-                                <p className="font-bold text-lg">${cost.total_cost?.toLocaleString() || '0'}</p>
+                        {editingCost === cost.id ? (
+                          // Edit mode
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="font-medium">Edit Job Cost</h4>
+                              <div className="flex space-x-2">
+                                <Button variant="ghost" size="sm" onClick={cancelEditing}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                                <Button variant="default" size="sm" onClick={updateJobCost}>
+                                  <Save className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Cost Code</Label>
+                                <Select 
+                                  value={editCostForm.cost_code_id} 
+                                  onValueChange={(value) => updateEditFormField('cost_code_id', value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {costCodes.map((code) => (
+                                      <SelectItem key={code.id} value={code.id}>
+                                        {code.code} - {code.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label>Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editCostForm.date}
+                                  onChange={(e) => updateEditFormField('date', e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                              <div className="space-y-2">
+                                <Label>Labor Hours</Label>
+                                <Input
+                                  type="number"
+                                  step="0.5"
+                                  min="0"
+                                  value={editCostForm.labor_hours}
+                                  onChange={(e) => updateEditFormField('labor_hours', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label>Labor Cost</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={editCostForm.labor_cost}
+                                  onChange={(e) => updateEditFormField('labor_cost', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label>Material Cost</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={editCostForm.material_cost}
+                                  onChange={(e) => updateEditFormField('material_cost', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label>Equipment Cost</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={editCostForm.equipment_cost}
+                                  onChange={(e) => updateEditFormField('equipment_cost', e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Other Cost</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={editCostForm.other_cost}
+                                  onChange={(e) => updateEditFormField('other_cost', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Label>Total Cost</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={
+                                    (parseFloat(editCostForm.labor_cost) || 0) +
+                                    (parseFloat(editCostForm.material_cost) || 0) +
+                                    (parseFloat(editCostForm.equipment_cost) || 0) +
+                                    (parseFloat(editCostForm.other_cost) || 0)
+                                  }
+                                  readOnly
+                                  className="bg-muted"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>Description</Label>
+                              <Textarea
+                                value={editCostForm.description}
+                                onChange={(e) => updateEditFormField('description', e.target.value)}
+                                rows={2}
+                              />
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                        ) : (
+                          // Display mode
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <Badge variant="outline">
+                                  {cost.cost_codes?.code}
+                                </Badge>
+                                <span className="font-medium">{cost.cost_codes?.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(cost.date).toLocaleDateString()}
+                                </span>
+                              </div>
+                              
+                              {cost.description && (
+                                <p className="text-sm text-muted-foreground mb-2">{cost.description}</p>
+                              )}
+                              
+                              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Labor:</span>
+                                  <p className="font-medium">${cost.labor_cost?.toLocaleString() || '0'}</p>
+                                  {cost.labor_hours > 0 && (
+                                    <p className="text-xs text-muted-foreground">{cost.labor_hours}h</p>
+                                  )}
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Materials:</span>
+                                  <p className="font-medium">${cost.material_cost?.toLocaleString() || '0'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Equipment:</span>
+                                  <p className="font-medium">${cost.equipment_cost?.toLocaleString() || '0'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Other:</span>
+                                  <p className="font-medium">${cost.other_cost?.toLocaleString() || '0'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Total:</span>
+                                  <p className="font-bold text-lg">${cost.total_cost?.toLocaleString() || '0'}</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Button variant="ghost" size="sm" onClick={() => startEditingCost(cost)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
