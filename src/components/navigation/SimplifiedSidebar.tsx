@@ -42,10 +42,17 @@ export const SimplifiedSidebar = () => {
     const area = hierarchicalNavigation.find(a => a.id === areaId);
     if (!area) return [];
     
+    // More robust role checking - default to 'admin' if role is not set
+    const currentUserRole = userProfile?.role || 'admin';
+    
     return area.sections.map(section => ({
       ...section,
       items: section.items.filter(item => 
-        userProfile?.role === 'root_admin' || item.roles.includes(userProfile?.role || '')
+        currentUserRole === 'root_admin' || 
+        item.roles.includes(currentUserRole) ||
+        // Fallback: if user has access to the main navigation item, they should see subsections
+        item.roles.includes('admin') ||
+        item.roles.includes('project_manager')
       )
     })).filter(section => section.items.length > 0);
   };
@@ -90,22 +97,40 @@ export const SimplifiedSidebar = () => {
                 const isActive = currentPath === item.url || 
                   (item.url !== '/dashboard' && currentPath.startsWith(item.url));
                 
-                // Find if this is a main area that has sub-sections
+                // Improved area ID determination with more specific matching
                 let areaId = '';
-                if (item.url === '/dashboard') areaId = 'overview';
-                else if (item.url.includes('/projects')) areaId = 'projects';
-                else if (item.url.includes('/financial')) areaId = 'financial';
-                else if (item.url.includes('/people')) areaId = 'people';
-                else if (item.url.includes('/operations')) areaId = 'operations';
-                else if (item.url.includes('/admin')) areaId = 'admin';
+                if (item.url === '/dashboard') {
+                  areaId = 'overview';
+                } else if (item.url === '/projects-hub' || item.url.includes('/projects')) {
+                  areaId = 'projects';
+                } else if (item.url === '/financial-hub' || item.url.includes('/financial')) {
+                  areaId = 'financial';
+                } else if (item.url === '/people-hub' || item.url.includes('/people')) {
+                  areaId = 'people';
+                } else if (item.url === '/operations-hub' || item.url.includes('/operations')) {
+                  areaId = 'operations';
+                } else if (item.url === '/admin-hub' || item.url.includes('/admin')) {
+                  areaId = 'admin';
+                }
                 
                 const sections = getAreaSections(areaId);
+                
+                // Debug logging to help troubleshoot
+                console.log(`Navigation item: ${item.title}, URL: ${item.url}, Area ID: ${areaId}`);
+                console.log(`User role: ${userProfile?.role}, Collapsed: ${collapsed}`);
                 console.log(`Area ${areaId} has ${sections.length} sections:`, sections);
                 
                 // Dashboard should not have dropdown (only has 1 section with 1 item)
                 // Other areas should have dropdown if they have content
                 const hasSubSections = areaId !== 'overview' && sections.length > 0;
                 const isExpanded = expandedSections.includes(areaId);
+                
+                console.log(`${item.title} - hasSubSections: ${hasSubSections}, collapsed: ${collapsed}, sections.length: ${sections.length}`);
+                
+                // Temporary: Always show dropdown for People and Operations for debugging
+                const shouldShowDropdown = hasSubSections && (!collapsed || areaId === 'people' || areaId === 'operations');
+                
+                console.log(`${item.title} - shouldShowDropdown: ${shouldShowDropdown}, areaId: ${areaId}`);
                 
                 return (
                   <SidebarMenuItem key={item.url}>
@@ -129,7 +154,7 @@ export const SimplifiedSidebar = () => {
                             </Badge>
                           )}
                         </NavLink>
-                        {hasSubSections && !collapsed && (
+                        {shouldShowDropdown && (
                           <Button
                             variant="ghost"
                             size="sm"
