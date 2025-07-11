@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -120,6 +122,13 @@ const ProjectDetail = () => {
   const [createReportDialogOpen, setCreateReportDialogOpen] = useState(false);
   const [editClientDialogOpen, setEditClientDialogOpen] = useState(false);
   const [createInvoiceDialogOpen, setCreateInvoiceDialogOpen] = useState(false);
+  const [editProjectDialogOpen, setEditProjectDialogOpen] = useState(false);
+  const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
+  const [addTeamMemberDialogOpen, setAddTeamMemberDialogOpen] = useState(false);
+  
+  // User and contact lists
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
   
   // Form states
   const [newTask, setNewTask] = useState({
@@ -157,6 +166,27 @@ const ProjectDetail = () => {
     client_email: ''
   });
 
+  const [editedProject, setEditedProject] = useState({
+    name: '',
+    description: '',
+    budget: 0,
+    start_date: '',
+    end_date: '',
+    status: '',
+    project_type: ''
+  });
+
+  const [newContact, setNewContact] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    company_name: '',
+    contact_type: 'client'
+  });
+
+  const [selectedUserId, setSelectedUserId] = useState('');
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -168,10 +198,8 @@ const ProjectDetail = () => {
     
     if (projectId && userProfile?.company_id) {
       loadProjectData();
-      setEditedClient({
-        client_name: project?.client_name || '',
-        client_email: project?.client_email || ''
-      });
+      loadAvailableUsers();
+      loadContacts();
     }
   }, [projectId, user, userProfile, loading, navigate]);
 
@@ -289,6 +317,172 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleUpdateProject = async () => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: editedProject.name,
+          description: editedProject.description,
+          budget: editedProject.budget,
+          start_date: editedProject.start_date,
+          end_date: editedProject.end_date,
+          status: editedProject.status,
+          project_type: editedProject.project_type
+        })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      setProject(prev => prev ? { ...prev, ...editedProject } : null);
+      setEditProjectDialogOpen(false);
+
+      toast({
+        title: "Project updated",
+        description: "Project details have been updated successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating project",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateMaterial = async () => {
+    try {
+      const { error } = await supabase
+        .from('materials')
+        .insert({
+          ...newMaterial,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setCreateMaterialDialogOpen(false);
+      setNewMaterial({
+        name: '',
+        description: '',
+        category: '',
+        unit: '',
+        unit_cost: 0,
+        quantity_needed: 0,
+        supplier_name: ''
+      });
+
+      toast({
+        title: "Material added",
+        description: "Material has been added to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding material",
+        description: error.message
+      });
+    }
+  };
+
+  const handleCreateContact = async () => {
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .insert({
+          ...newContact,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddContactDialogOpen(false);
+      setNewContact({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        company_name: '',
+        contact_type: 'client'
+      });
+      loadContacts();
+
+      toast({
+        title: "Contact added",
+        description: "Contact has been added successfully."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding contact",
+        description: error.message
+      });
+    }
+  };
+
+  const handleAddTeamMember = async () => {
+    try {
+      const { error } = await supabase
+        .from('crew_assignments')
+        .insert({
+          project_id: projectId,
+          crew_member_id: selectedUserId,
+          company_id: userProfile?.company_id,
+          assigned_date: new Date().toISOString().split('T')[0],
+          start_time: '08:00',
+          end_time: '17:00',
+          status: 'scheduled'
+        });
+
+      if (error) throw error;
+
+      setAddTeamMemberDialogOpen(false);
+      setSelectedUserId('');
+
+      toast({
+        title: "Team member added",
+        description: "Team member has been assigned to the project."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error adding team member",
+        description: error.message
+      });
+    }
+  };
+
+  const loadAvailableUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('company_id', userProfile?.company_id);
+
+      if (error) throw error;
+      setAvailableUsers(data || []);
+    } catch (error: any) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadContacts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('company_id', userProfile?.company_id);
+
+      if (error) throw error;
+      setContacts(data || []);
+    } catch (error: any) {
+      console.error('Error loading contacts:', error);
+    }
+  };
+
   const navigateToMaterials = () => {
     navigate('/materials', { state: { projectFilter: projectId } });
   };
@@ -314,6 +508,22 @@ const ProjectDetail = () => {
 
       if (projectError) throw projectError;
       setProject(projectData);
+      
+      // Set form defaults
+      setEditedClient({
+        client_name: projectData?.client_name || '',
+        client_email: projectData?.client_email || ''
+      });
+      
+      setEditedProject({
+        name: projectData?.name || '',
+        description: projectData?.description || '',
+        budget: projectData?.budget || 0,
+        start_date: projectData?.start_date || '',
+        end_date: projectData?.end_date || '',
+        status: projectData?.status || '',
+        project_type: projectData?.project_type || ''
+      });
 
       // Load project phases
       const { data: phasesData, error: phasesError } = await supabase
@@ -402,7 +612,10 @@ const ProjectDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen bg-background">
+        <SimplifiedSidebar />
+        <div className="flex-1">
       {/* Header */}
       <div className="border-b bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -426,10 +639,14 @@ const ProjectDetail = () => {
               <Badge variant={getStatusColor(project.status)}>
                 {project.status.replace('_', ' ')}
               </Badge>
-              <Button size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Project
-              </Button>
+              <Dialog open={editProjectDialogOpen} onOpenChange={setEditProjectDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Project
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </div>
           </div>
         </div>
@@ -739,19 +956,33 @@ const ProjectDetail = () => {
           <TabsContent value="materials" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Materials</h2>
-              <Button onClick={navigateToMaterials}>
-                <Package className="h-4 w-4 mr-2" />
-                Manage Materials
-              </Button>
+              <div className="flex gap-2">
+                <Dialog open={createMaterialDialogOpen} onOpenChange={setCreateMaterialDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Material
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+                <Button variant="outline" onClick={navigateToMaterials}>
+                  <Package className="h-4 w-4 mr-2" />
+                  View All Materials
+                </Button>
+              </div>
             </div>
             
             <Card>
               <CardContent className="text-center py-8">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Track materials specific to this project</p>
-                <Button variant="outline" onClick={navigateToMaterials} className="mt-4">
-                  Go to Materials Page
-                </Button>
+                <Dialog open={createMaterialDialogOpen} onOpenChange={setCreateMaterialDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="mt-4">
+                      Add First Material
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
@@ -933,10 +1164,14 @@ const ProjectDetail = () => {
           <TabsContent value="contacts" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Contacts</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Contact
-              </Button>
+              <Dialog open={addContactDialogOpen} onOpenChange={setAddContactDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Contact
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -981,10 +1216,14 @@ const ProjectDetail = () => {
                         <p className="text-xs text-muted-foreground">Not assigned</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={navigateToTeamManagement}>
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Team Member
-                    </Button>
+                    <Dialog open={addTeamMemberDialogOpen} onOpenChange={setAddTeamMemberDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Team Member
+                        </Button>
+                      </DialogTrigger>
+                    </Dialog>
                   </div>
                 </CardContent>
               </Card>
@@ -1283,7 +1522,300 @@ const ProjectDetail = () => {
           />
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={editProjectDialogOpen} onOpenChange={setEditProjectDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="project-name">Project Name</Label>
+              <Input
+                id="project-name"
+                value={editedProject.name}
+                onChange={(e) => setEditedProject(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Project name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="project-description">Description</Label>
+              <Textarea
+                id="project-description"
+                value={editedProject.description}
+                onChange={(e) => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Project description"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="project-budget">Budget</Label>
+                <Input
+                  id="project-budget"
+                  type="number"
+                  value={editedProject.budget}
+                  onChange={(e) => setEditedProject(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="project-status">Status</Label>
+                <Select value={editedProject.status} onValueChange={(value) => setEditedProject(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="project-start">Start Date</Label>
+                <Input
+                  id="project-start"
+                  type="date"
+                  value={editedProject.start_date}
+                  onChange={(e) => setEditedProject(prev => ({ ...prev, start_date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="project-end">End Date</Label>
+                <Input
+                  id="project-end"
+                  type="date"
+                  value={editedProject.end_date}
+                  onChange={(e) => setEditedProject(prev => ({ ...prev, end_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setEditProjectDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateProject}>
+                Update Project
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Material Dialog */}
+      <Dialog open={createMaterialDialogOpen} onOpenChange={setCreateMaterialDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Material to Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="material-name">Material Name</Label>
+                <Input
+                  id="material-name"
+                  value={newMaterial.name}
+                  onChange={(e) => setNewMaterial(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Material name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="material-category">Category</Label>
+                <Input
+                  id="material-category"
+                  value={newMaterial.category}
+                  onChange={(e) => setNewMaterial(prev => ({ ...prev, category: e.target.value }))}
+                  placeholder="Category"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="material-description">Description</Label>
+              <Textarea
+                id="material-description"
+                value={newMaterial.description}
+                onChange={(e) => setNewMaterial(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Material description"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="material-unit">Unit</Label>
+                <Input
+                  id="material-unit"
+                  value={newMaterial.unit}
+                  onChange={(e) => setNewMaterial(prev => ({ ...prev, unit: e.target.value }))}
+                  placeholder="Unit (e.g., bags, tons)"
+                />
+              </div>
+              <div>
+                <Label htmlFor="material-quantity">Quantity Needed</Label>
+                <Input
+                  id="material-quantity"
+                  type="number"
+                  value={newMaterial.quantity_needed}
+                  onChange={(e) => setNewMaterial(prev => ({ ...prev, quantity_needed: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="material-cost">Unit Cost</Label>
+                <Input
+                  id="material-cost"
+                  type="number"
+                  step="0.01"
+                  value={newMaterial.unit_cost}
+                  onChange={(e) => setNewMaterial(prev => ({ ...prev, unit_cost: parseFloat(e.target.value) || 0 }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="material-supplier">Supplier</Label>
+              <Input
+                id="material-supplier"
+                value={newMaterial.supplier_name}
+                onChange={(e) => setNewMaterial(prev => ({ ...prev, supplier_name: e.target.value }))}
+                placeholder="Supplier name"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setCreateMaterialDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateMaterial}>
+                Add Material
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Contact Dialog */}
+      <Dialog open={addContactDialogOpen} onOpenChange={setAddContactDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Contact</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contact-first-name">First Name</Label>
+                <Input
+                  id="contact-first-name"
+                  value={newContact.first_name}
+                  onChange={(e) => setNewContact(prev => ({ ...prev, first_name: e.target.value }))}
+                  placeholder="First name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contact-last-name">Last Name</Label>
+                <Input
+                  id="contact-last-name"
+                  value={newContact.last_name}
+                  onChange={(e) => setNewContact(prev => ({ ...prev, last_name: e.target.value }))}
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contact-email">Email</Label>
+                <Input
+                  id="contact-email"
+                  type="email"
+                  value={newContact.email}
+                  onChange={(e) => setNewContact(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Email address"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contact-phone">Phone</Label>
+                <Input
+                  id="contact-phone"
+                  value={newContact.phone}
+                  onChange={(e) => setNewContact(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Phone number"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="contact-company">Company</Label>
+                <Input
+                  id="contact-company"
+                  value={newContact.company_name}
+                  onChange={(e) => setNewContact(prev => ({ ...prev, company_name: e.target.value }))}
+                  placeholder="Company name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="contact-type">Contact Type</Label>
+                <Select value={newContact.contact_type} onValueChange={(value) => setNewContact(prev => ({ ...prev, contact_type: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="client">Client</SelectItem>
+                    <SelectItem value="supplier">Supplier</SelectItem>
+                    <SelectItem value="subcontractor">Subcontractor</SelectItem>
+                    <SelectItem value="inspector">Inspector</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddContactDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateContact}>
+                Add Contact
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Team Member Dialog */}
+      <Dialog open={addTeamMemberDialogOpen} onOpenChange={setAddTeamMemberDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="team-member">Select Team Member</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a team member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.first_name} {user.last_name} ({user.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setAddTeamMemberDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddTeamMember} disabled={!selectedUserId}>
+                Add Team Member
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
