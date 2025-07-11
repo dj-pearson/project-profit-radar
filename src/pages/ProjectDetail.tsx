@@ -1135,24 +1135,54 @@ const ProjectDetail = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="materials">Materials</TabsTrigger>
-            <TabsTrigger value="progress">Progress</TabsTrigger>
-            <TabsTrigger value="dailyreports">Daily Reports</TabsTrigger>
-            <TabsTrigger value="jobcosting">Job Costing</TabsTrigger>
-            <TabsTrigger value="rfis">RFI's</TabsTrigger>
-            <TabsTrigger value="submittals">Submittals</TabsTrigger>
-            <TabsTrigger value="changeorders">Change Orders</TabsTrigger>
-            <TabsTrigger value="punchlist">Punch List</TabsTrigger>
-            <TabsTrigger value="equipment">Equipment</TabsTrigger>
-            <TabsTrigger value="permits">Permits</TabsTrigger>
-            <TabsTrigger value="warranties">Warranties</TabsTrigger>
-            <TabsTrigger value="contacts">Contacts</TabsTrigger>
-            <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
+          {/* Desktop Tabs */}
+          <div className="hidden lg:block">
+            <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="materials">Materials</TabsTrigger>
+              <TabsTrigger value="progress">Progress</TabsTrigger>
+              <TabsTrigger value="dailyreports">Daily Reports</TabsTrigger>
+              <TabsTrigger value="jobcosting">Job Costing</TabsTrigger>
+              <TabsTrigger value="rfis">RFI's</TabsTrigger>
+              <TabsTrigger value="submittals">Submittals</TabsTrigger>
+              <TabsTrigger value="changeorders">Change Orders</TabsTrigger>
+              <TabsTrigger value="punchlist">Punch List</TabsTrigger>
+              <TabsTrigger value="equipment">Equipment</TabsTrigger>
+              <TabsTrigger value="permits">Permits</TabsTrigger>
+              <TabsTrigger value="warranties">Warranties</TabsTrigger>
+              <TabsTrigger value="contacts">Contacts</TabsTrigger>
+              <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
+              <TabsTrigger value="tasks">Tasks</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Mobile/Tablet Dropdown */}
+          <div className="lg:hidden mb-6">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select tab" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="overview">📊 Overview</SelectItem>
+                <SelectItem value="materials">📦 Materials</SelectItem>
+                <SelectItem value="progress">📈 Progress</SelectItem>
+                <SelectItem value="dailyreports">📝 Daily Reports</SelectItem>
+                <SelectItem value="jobcosting">💰 Job Costing</SelectItem>
+                <SelectItem value="rfis">❓ RFI's</SelectItem>
+                <SelectItem value="submittals">📋 Submittals</SelectItem>
+                <SelectItem value="changeorders">🔄 Change Orders</SelectItem>
+                <SelectItem value="punchlist">✅ Punch List</SelectItem>
+                <SelectItem value="equipment">🚜 Equipment</SelectItem>
+                <SelectItem value="permits">📄 Permits</SelectItem>
+                <SelectItem value="warranties">🛡️ Warranties</SelectItem>
+                <SelectItem value="contacts">👥 Contacts</SelectItem>
+                <SelectItem value="invoicing">💳 Invoicing</SelectItem>
+                <SelectItem value="tasks">📋 Tasks</SelectItem>
+                <SelectItem value="documents">📁 Documents</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Project Stats */}
