@@ -100,7 +100,12 @@ export const SimplifiedSidebar = () => {
                 else if (item.url.includes('/admin')) areaId = 'admin';
                 
                 const sections = getAreaSections(areaId);
-                const hasSubSections = sections.length > 0;
+                // Dashboard should not have dropdown (only has 1 section with 1 item)
+                // Other areas should have dropdown if they have multiple sections or multiple items
+                const hasSubSections = areaId !== 'overview' && sections.length > 0 && (
+                  sections.length > 1 || 
+                  sections.some(section => section.items.length > 1)
+                );
                 const isExpanded = expandedSections.includes(areaId);
                 
                 return (
