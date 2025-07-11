@@ -137,6 +137,25 @@ const ProjectsHub = () => {
           </Card>
         </div>
 
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => navigate('/create-project')}>
+              Create New Project
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/rfis')}>
+              New RFI
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/submittals')}>
+              New Submittal
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/punch-list')}>
+              Add Punch Item
+            </Button>
+          </div>
+        </div>
+
         {/* Navigation Categories */}
         <div className="space-y-8">
           {projectsArea.subcategories.map((category) => {
@@ -183,25 +202,6 @@ const ProjectsHub = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/create-project')}>
-              Create New Project
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/rfis')}>
-              New RFI
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/submittals')}>
-              New Submittal
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/punch-list')}>
-              Add Punch Item
-            </Button>
-          </div>
         </div>
       </div>
     </DashboardLayout>

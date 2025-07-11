@@ -145,6 +145,25 @@ const PeopleHub = () => {
           </Card>
         </div>
 
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => navigate('/team')}>
+              Add Team Member
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/crm/leads')}>
+              Add Lead
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/crm/contacts')}>
+              Add Contact
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/time-tracking')}>
+              Clock In/Out
+            </Button>
+          </div>
+        </div>
+
         {/* Navigation Categories */}
         <div className="space-y-8">
           {peopleArea.subcategories.map((category) => {
@@ -191,25 +210,6 @@ const PeopleHub = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/team')}>
-              Add Team Member
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/crm/leads')}>
-              Add Lead
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/crm/contacts')}>
-              Add Contact
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/time-tracking')}>
-              Clock In/Out
-            </Button>
-          </div>
         </div>
       </div>
     </DashboardLayout>

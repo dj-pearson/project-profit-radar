@@ -132,6 +132,25 @@ const OperationsHub = () => {
           </Card>
         </div>
 
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => navigate('/safety')}>
+              Report Safety Issue
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/permit-management')}>
+              Apply for Permit
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/equipment-management')}>
+              Check Out Equipment
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/workflows')}>
+              Create Workflow
+            </Button>
+          </div>
+        </div>
+
         {/* Navigation Categories */}
         <div className="space-y-8">
           {operationsArea.subcategories.map((category) => {
@@ -178,25 +197,6 @@ const OperationsHub = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/safety')}>
-              Report Safety Issue
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/permit-management')}>
-              Apply for Permit
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/equipment-management')}>
-              Check Out Equipment
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/workflows')}>
-              Create Workflow
-            </Button>
-          </div>
         </div>
       </div>
     </DashboardLayout>

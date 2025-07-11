@@ -144,6 +144,22 @@ const FinancialHub = () => {
           </Card>
         </div>
 
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={() => navigate('/purchase-orders/new')}>
+              Create Purchase Order
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/vendors')}>
+              Add Vendor
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/reports')}>
+              Generate Report
+            </Button>
+          </div>
+        </div>
+
         {/* Navigation Categories */}
         <div className="space-y-8">
           {financialArea.subcategories.map((category) => {
@@ -190,22 +206,6 @@ const FinancialHub = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/purchase-orders/new')}>
-              Create Purchase Order
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/vendors')}>
-              Add Vendor
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/reports')}>
-              Generate Report
-            </Button>
-          </div>
         </div>
       </div>
     </DashboardLayout>

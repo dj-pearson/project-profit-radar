@@ -156,6 +156,29 @@ const AdminHub = () => {
           </div>
         )}
 
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-3">
+            {userProfile?.role === 'root_admin' && (
+              <>
+                <Button onClick={() => navigate('/admin/companies')}>
+                  Manage Companies
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/users')}>
+                  Manage Users
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/analytics')}>
+                  View Analytics
+                </Button>
+              </>
+            )}
+            <Button variant="outline" onClick={() => navigate('/admin/settings')}>
+              System Settings
+            </Button>
+          </div>
+        </div>
+
         {/* Navigation Categories */}
         <div className="space-y-8">
           {adminArea.subcategories.map((category) => {
@@ -202,29 +225,6 @@ const AdminHub = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            {userProfile?.role === 'root_admin' && (
-              <>
-                <Button onClick={() => navigate('/admin/companies')}>
-                  Manage Companies
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/admin/users')}>
-                  Manage Users
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/admin/analytics')}>
-                  View Analytics
-                </Button>
-              </>
-            )}
-            <Button variant="outline" onClick={() => navigate('/admin/settings')}>
-              System Settings
-            </Button>
-          </div>
         </div>
       </div>
     </DashboardLayout>
