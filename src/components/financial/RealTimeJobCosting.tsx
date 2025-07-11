@@ -316,7 +316,6 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         material_cost: materialCost,
         equipment_cost: equipmentCost,
         other_cost: otherCost,
-        total_cost: totalCost,
         description: newCostForm.description || null,
         created_by: user?.id
       };
