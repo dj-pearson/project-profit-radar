@@ -36,53 +36,31 @@ export default function Materials() {
     cost: '',
     project_id: ''
   });
+  const [materials, setMaterials] = useState<any[]>([]);
   const navigate = useNavigate();
 
-  // Mock data
-  const materials = [
-    {
-      id: "1",
-      name: "Portland Cement",
-      sku: "CEM-001",
-      category: "Concrete",
-      quantity: 150,
-      unit: "bags",
-      cost_per_unit: 12.50,
-      total_value: 1875.00,
-      reorder_level: 50,
-      supplier: "BuildCo Supply",
-      location: "Warehouse A-1",
-      status: "in_stock"
-    },
-    {
-      id: "2", 
-      name: "Steel Rebar #4",
-      sku: "REB-004",
-      category: "Steel",
-      quantity: 25,
-      unit: "tons",
-      cost_per_unit: 650.00,
-      total_value: 16250.00,
-      reorder_level: 10,
-      supplier: "Metal Masters",
-      location: "Yard B",
-      status: "low_stock"
-    },
-    {
-      id: "3",
-      name: "Lumber 2x4x8",
-      sku: "LUM-248",
-      category: "Lumber",
-      quantity: 0,
-      unit: "pieces",
-      cost_per_unit: 8.75,
-      total_value: 0,
-      reorder_level: 100,
-      supplier: "Timber Corp",
-      location: "Warehouse C",
-      status: "out_of_stock"
+  useEffect(() => {
+    loadProjects();
+    loadMaterials();
+  }, []);
+
+  const loadMaterials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('materials')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      setMaterials(data || []);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error loading materials",
+        description: error.message
+      });
     }
-  ];
+  };
 
   const orders = [
     {
@@ -105,9 +83,6 @@ export default function Materials() {
     }
   ];
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
 
   const loadProjects = async () => {
     try {
@@ -163,6 +138,7 @@ export default function Materials() {
         project_id: ''
       });
 
+      await loadMaterials(); // Refresh the list
       toast({
         title: "Material created",
         description: "Material has been added successfully."
@@ -354,11 +330,13 @@ export default function Materials() {
                           {material.name}
                         </CardTitle>
                         <CardDescription>
-                          {material.sku} • {material.category}
+                          {material.material_code} • {material.category}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getStatusBadge(material.status)}
+                        <Badge variant={material.quantity_available > (material.minimum_stock_level || 0) ? "default" : "secondary"}>
+                          {material.quantity_available > (material.minimum_stock_level || 0) ? "In Stock" : "Low Stock"}
+                        </Badge>
                       </div>
                     </div>
                   </CardHeader>
@@ -367,27 +345,27 @@ export default function Materials() {
                       <div>
                         <div className="font-medium text-muted-foreground">Quantity</div>
                         <div className="text-lg font-semibold">
-                          {material.quantity} {material.unit}
+                          {material.quantity_available} {material.unit}
                         </div>
                       </div>
                       <div>
                         <div className="font-medium text-muted-foreground">Cost/Unit</div>
-                        <div>${material.cost_per_unit.toFixed(2)}</div>
+                        <div>${(material.unit_cost || 0).toFixed(2)}</div>
                       </div>
                       <div>
                         <div className="font-medium text-muted-foreground">Total Value</div>
-                        <div className="font-semibold">${material.total_value.toFixed(2)}</div>
+                        <div className="font-semibold">${((material.quantity_available || 0) * (material.unit_cost || 0)).toFixed(2)}</div>
                       </div>
                       <div>
-                        <div className="font-medium text-muted-foreground">Location</div>
-                        <div>{material.location}</div>
+                        <div className="font-medium text-muted-foreground">Supplier</div>
+                        <div>{material.supplier_name || 'N/A'}</div>
                       </div>
                     </div>
                     
                     <div className="flex justify-between items-center">
                       <div className="text-sm">
-                        <span className="font-medium">Supplier: </span>
-                        <span>{material.supplier}</span>
+                        <span className="font-medium">Description: </span>
+                        <span>{material.description || 'No description'}</span>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">

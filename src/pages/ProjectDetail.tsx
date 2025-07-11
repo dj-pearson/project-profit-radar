@@ -372,6 +372,7 @@ const ProjectDetail = () => {
         date: ''
       });
 
+      await loadProjectData(); // Refresh project data
       toast({
         title: "Daily report created",
         description: "Daily report has been submitted successfully."
@@ -477,6 +478,7 @@ const ProjectDetail = () => {
         supplier_name: ''
       });
 
+      await loadProjectData(); // Refresh project data
       toast({
         title: "Material added",
         description: "Material has been added to the project."
