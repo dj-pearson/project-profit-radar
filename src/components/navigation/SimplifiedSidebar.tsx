@@ -65,9 +65,16 @@ export const SimplifiedSidebar = () => {
   // Auto-expand current section only on hub pages
   React.useEffect(() => {
     if (isHubPage) {
-      const currentSectionInfo = findSectionByUrl(currentPath);
-      if (currentSectionInfo && !expandedSections.includes(currentSectionInfo.area.id)) {
-        setExpandedSections(prev => [...prev, currentSectionInfo.area.id]);
+      // Map hub page URLs to area IDs
+      let areaId = '';
+      if (currentPath.includes('/projects')) areaId = 'projects';
+      else if (currentPath.includes('/financial')) areaId = 'financial';
+      else if (currentPath.includes('/people')) areaId = 'people';
+      else if (currentPath.includes('/operations')) areaId = 'operations';
+      else if (currentPath.includes('/admin')) areaId = 'admin';
+      
+      if (areaId && !expandedSections.includes(areaId)) {
+        setExpandedSections(prev => [...prev, areaId]);
       }
     }
   }, [currentPath, expandedSections, isHubPage]);
@@ -94,7 +101,14 @@ export const SimplifiedSidebar = () => {
                   (item.url !== '/dashboard' && currentPath.startsWith(item.url));
                 
                 // Find if this is a main area that has sub-sections
-                const areaId = item.url === '/dashboard' ? 'overview' : item.url.replace('/', '');
+                let areaId = '';
+                if (item.url === '/dashboard') areaId = 'overview';
+                else if (item.url.includes('/projects')) areaId = 'projects';
+                else if (item.url.includes('/financial')) areaId = 'financial';
+                else if (item.url.includes('/people')) areaId = 'people';
+                else if (item.url.includes('/operations')) areaId = 'operations';
+                else if (item.url.includes('/admin')) areaId = 'admin';
+                
                 const subSections = getAreaSubSections(areaId);
                 const hasSubSections = subSections.length > 0;
                 const isExpanded = expandedSections.includes(areaId);
