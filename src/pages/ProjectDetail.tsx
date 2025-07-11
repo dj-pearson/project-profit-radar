@@ -167,7 +167,8 @@ const ProjectDetail = () => {
     materials_delivered: '',
     equipment_used: '',
     delays_issues: '',
-    safety_incidents: ''
+    safety_incidents: '',
+    date: ''
   });
   
   const [editedClient, setEditedClient] = useState({
@@ -348,12 +349,14 @@ const ProjectDetail = () => {
           ...newReport,
           project_id: projectId,
           created_by: user?.id,
-          date: new Date().toISOString().split('T')[0]
+          date: newReport.date || new Date().toISOString().split('T')[0]
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Report created successfully
 
       setCreateReportDialogOpen(false);
       setNewReport({
@@ -363,7 +366,8 @@ const ProjectDetail = () => {
         materials_delivered: '',
         equipment_used: '',
         delays_issues: '',
-        safety_incidents: ''
+        safety_incidents: '',
+        date: ''
       });
 
       toast({
@@ -2181,6 +2185,16 @@ const ProjectDetail = () => {
             <DialogTitle>Create Daily Report</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="report-date">Report Date</Label>
+              <Input
+                id="report-date"
+                type="date"
+                value={newReport.date}
+                onChange={(e) => setNewReport(prev => ({ ...prev, date: e.target.value }))}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
             <div>
               <Label htmlFor="work-performed">Work Performed</Label>
               <Textarea
