@@ -323,7 +323,8 @@ const ProjectDetail = () => {
     location: '',
     trade: '',
     assigned_to: '',
-    date_identified: ''
+    date_identified: '',
+    due_date: ''
   });
 
   const [newEquipment, setNewEquipment] = useState({
@@ -1088,7 +1089,19 @@ const ProjectDetail = () => {
     }
 
     try {
-      const { error } = await supabase
+      console.log('Creating punch list item with data:', {
+        item_number: newPunchListItem.item_number || `PLI-${Date.now().toString().slice(-8)}`,
+        description: newPunchListItem.description,
+        location: newPunchListItem.location || null,
+        trade: newPunchListItem.trade || null,
+        priority: newPunchListItem.priority,
+        assigned_to: newPunchListItem.assigned_to || null,
+        project_id: projectId,
+        company_id: userProfile?.company_id,
+        created_by: user?.id
+      });
+
+      const { data, error } = await supabase
         .from('punch_list_items')
         .insert({
           item_number: newPunchListItem.item_number || `PLI-${Date.now().toString().slice(-8)}`,
@@ -1100,7 +1113,10 @@ const ProjectDetail = () => {
           project_id: projectId,
           company_id: userProfile?.company_id,
           created_by: user?.id
-        });
+        })
+        .select();
+
+      console.log('Insert result:', { data, error });
 
       if (error) throw error;
 
@@ -1112,7 +1128,8 @@ const ProjectDetail = () => {
         location: '',
         trade: '',
         assigned_to: '',
-        date_identified: ''
+        date_identified: '',
+        due_date: ''
       });
 
       toast({
@@ -1122,6 +1139,7 @@ const ProjectDetail = () => {
       
       loadPunchListItems();
     } catch (error: any) {
+      console.error('Error creating punch list item:', error);
       toast({
         variant: "destructive",
         title: "Error adding punch list item",
@@ -3857,68 +3875,86 @@ const ProjectDetail = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add Punch List Item</DialogTitle>
+            <DialogDescription>
+              Log a quality issue or incomplete work item for tracking and resolution.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="punch-item-number">Item Number</Label>
-              <Input
-                id="punch-item-number"
-                value={newPunchListItem.item_number}
-                onChange={(e) => setNewPunchListItem(prev => ({ ...prev, item_number: e.target.value }))}
-                placeholder="PL-001"
+              <Label htmlFor="punch-description">Description *</Label>
+              <Textarea
+                id="punch-description"
+                placeholder="Detailed description of the issue or work needed..."
+                value={newPunchListItem.description}
+                onChange={(e) => setNewPunchListItem(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="punch-priority">Priority</Label>
                 <Select value={newPunchListItem.priority} onValueChange={(value) => setNewPunchListItem(prev => ({ ...prev, priority: value }))}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
                     <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="punch-assigned-to">Assigned To</Label>
+                <Input
+                  id="punch-assigned-to"
+                  placeholder="Team member name or ID..."
+                  value={newPunchListItem.assigned_to}
+                  onChange={(e) => setNewPunchListItem(prev => ({ ...prev, assigned_to: e.target.value }))}
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="punch-description">Description</Label>
-              <Textarea
-                id="punch-description"
-                value={newPunchListItem.description}
-                onChange={(e) => setNewPunchListItem(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description of work needed"
-                rows={3}
-              />
-            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="punch-location">Location</Label>
                 <Input
                   id="punch-location"
+                  placeholder="Room, floor, area..."
                   value={newPunchListItem.location}
                   onChange={(e) => setNewPunchListItem(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="Room, area, or location"
                 />
               </div>
+              
               <div>
                 <Label htmlFor="punch-trade">Trade</Label>
                 <Input
                   id="punch-trade"
+                  placeholder="Electrical, plumbing, etc..."
                   value={newPunchListItem.trade}
                   onChange={(e) => setNewPunchListItem(prev => ({ ...prev, trade: e.target.value }))}
-                  placeholder="Electrical, plumbing, etc."
                 />
               </div>
             </div>
-            <div className="flex justify-end space-x-2 pt-4">
+
+            <div>
+              <Label htmlFor="punch-due-date">Due Date</Label>
+              <Input
+                id="punch-due-date"
+                type="date"
+                value={newPunchListItem.due_date || ''}
+                onChange={(e) => setNewPunchListItem(prev => ({ ...prev, due_date: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setAddPunchListDialogOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleCreatePunchListItem}>
-                Add Punch List Item
+                Add Item
               </Button>
             </div>
           </div>
