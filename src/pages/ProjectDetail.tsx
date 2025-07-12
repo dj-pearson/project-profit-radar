@@ -320,6 +320,7 @@ const ProjectDetail = () => {
     item_number: '',
     description: '',
     priority: 'medium',
+    category: 'quality',
     location: '',
     trade: '',
     assigned_to: '',
@@ -1106,10 +1107,12 @@ const ProjectDetail = () => {
         .insert({
           item_number: newPunchListItem.item_number || `PLI-${Date.now().toString().slice(-8)}`,
           description: newPunchListItem.description,
+          category: newPunchListItem.category,
           location: newPunchListItem.location || null,
           trade: newPunchListItem.trade || null,
           priority: newPunchListItem.priority,
           assigned_to: newPunchListItem.assigned_to || null,
+          due_date: newPunchListItem.due_date || null,
           project_id: projectId,
           company_id: userProfile?.company_id,
           created_by: user?.id
@@ -1125,6 +1128,7 @@ const ProjectDetail = () => {
         item_number: '',
         description: '',
         priority: 'medium',
+        category: 'quality',
         location: '',
         trade: '',
         assigned_to: '',
@@ -1217,14 +1221,11 @@ const ProjectDetail = () => {
     try {
       const { data, error } = await supabase
         .from('punch_list_items')
-        .select(`
-          *,
-          projects(name, client_name),
-          creator:user_profiles!created_by(first_name, last_name),
-          assignee:user_profiles!assigned_to(first_name, last_name)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
+
+      console.log('Punch list query result:', { data, error });
 
       if (error) throw error;
       setPunchListItems((data || []) as any);
@@ -3907,13 +3908,18 @@ const ProjectDetail = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="punch-assigned-to">Assigned To</Label>
-                <Input
-                  id="punch-assigned-to"
-                  placeholder="Team member name or ID..."
-                  value={newPunchListItem.assigned_to}
-                  onChange={(e) => setNewPunchListItem(prev => ({ ...prev, assigned_to: e.target.value }))}
-                />
+                <Label htmlFor="punch-category">Category</Label>
+                <Select value={newPunchListItem.category || 'quality'} onValueChange={(value) => setNewPunchListItem(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quality">Quality</SelectItem>
+                    <SelectItem value="safety">Safety</SelectItem>
+                    <SelectItem value="cleanup">Cleanup</SelectItem>
+                    <SelectItem value="deficiency">Deficiency</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
