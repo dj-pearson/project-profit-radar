@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface PermitFormProps {
   permit?: any;
+  projectId?: string;
   onClose: () => void;
   onSave: () => void;
 }
@@ -21,25 +22,25 @@ interface Project {
   name: string;
 }
 
-export const PermitForm: React.FC<PermitFormProps> = ({ permit, onClose, onSave }) => {
+export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClose, onSave }) => {
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
 
   const [formData, setFormData] = useState({
-    project_id: permit?.project_id || '',
+    project_id: permit?.project_id || projectId || '',
     permit_type: permit?.permit_type || '',
     permit_name: permit?.permit_name || '',
     permit_number: permit?.permit_number || '',
     description: permit?.description || '',
     issuing_authority: permit?.issuing_authority || '',
-    application_date: permit?.application_date || '',
+    application_date: permit?.application_date || undefined,
     application_fee: permit?.application_fee || 0,
     application_status: permit?.application_status || 'not_applied',
-    approval_date: permit?.approval_date || '',
+    approval_date: permit?.approval_date || undefined,
     permit_fee: permit?.permit_fee || 0,
-    permit_start_date: permit?.permit_start_date || '',
-    permit_expiry_date: permit?.permit_expiry_date || '',
+    permit_start_date: permit?.permit_start_date || undefined,
+    permit_expiry_date: permit?.permit_expiry_date || undefined,
     contact_name: permit?.contact_name || '',
     contact_phone: permit?.contact_phone || '',
     contact_email: permit?.contact_email || '',
@@ -281,8 +282,8 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, onClose, onSave 
               <Input
                 id="application_date"
                 type="date"
-                value={formData.application_date}
-                onChange={(e) => handleInputChange('application_date', e.target.value)}
+                value={formData.application_date || ''}
+                onChange={(e) => handleInputChange('application_date', e.target.value || undefined)}
               />
             </div>
 
@@ -291,8 +292,8 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, onClose, onSave 
               <Input
                 id="approval_date"
                 type="date"
-                value={formData.approval_date}
-                onChange={(e) => handleInputChange('approval_date', e.target.value)}
+                value={formData.approval_date || ''}
+                onChange={(e) => handleInputChange('approval_date', e.target.value || undefined)}
               />
             </div>
 
@@ -322,8 +323,8 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, onClose, onSave 
               <Input
                 id="permit_start_date"
                 type="date"
-                value={formData.permit_start_date}
-                onChange={(e) => handleInputChange('permit_start_date', e.target.value)}
+                value={formData.permit_start_date || ''}
+                onChange={(e) => handleInputChange('permit_start_date', e.target.value || undefined)}
               />
             </div>
 
@@ -332,8 +333,8 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, onClose, onSave 
               <Input
                 id="permit_expiry_date"
                 type="date"
-                value={formData.permit_expiry_date}
-                onChange={(e) => handleInputChange('permit_expiry_date', e.target.value)}
+                value={formData.permit_expiry_date || ''}
+                onChange={(e) => handleInputChange('permit_expiry_date', e.target.value || undefined)}
               />
             </div>
           </div>

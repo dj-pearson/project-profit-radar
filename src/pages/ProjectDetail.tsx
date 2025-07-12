@@ -3336,7 +3336,7 @@ const ProjectDetail = () => {
       {/* Add Permit Dialog */}
       {addPermitDialogOpen && (
         <PermitForm
-          permit={{ project_id: projectId }}
+          projectId={projectId}
           onClose={() => setAddPermitDialogOpen(false)}
           onSave={() => {
             setAddPermitDialogOpen(false);
