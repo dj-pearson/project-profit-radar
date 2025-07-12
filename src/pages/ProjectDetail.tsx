@@ -885,25 +885,36 @@ const ProjectDetail = () => {
   };
 
   const handleCreateSubmittal = async () => {
-    try {
-      // Temporarily commented out until types are updated
-      console.log('Would create Submittal:', {
-        ...newSubmittal,
-        project_id: projectId,
-        company_id: userProfile?.company_id,
-        created_by: user?.id
+    if (!newSubmittal.title || !newSubmittal.description) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields."
       });
+      return;
+    }
 
-      // const { error } = await supabase
-      //   .from('submittals')
-      //   .insert({
-      //     ...newSubmittal,
-      //     project_id: projectId,
-      //     company_id: userProfile?.company_id,
-      //     created_by: user?.id
-      //   });
+    try {
+      // Generate submittal number
+      const submittalCount = submittals.length + 1;
+      const submittalNumber = `SUB-${new Date().getFullYear()}-${submittalCount.toString().padStart(3, '0')}`;
 
-      // if (error) throw error;
+      const { error } = await supabase
+        .from('submittals')
+        .insert({
+          company_id: userProfile?.company_id,
+          project_id: projectId,
+          title: newSubmittal.title,
+          description: newSubmittal.description,
+          spec_section: newSubmittal.spec_section,
+          due_date: newSubmittal.due_date || null,
+          priority: newSubmittal.priority,
+          status: 'draft',
+          submittal_number: submittalNumber,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
 
       setAddSubmittalDialogOpen(false);
       setNewSubmittal({
