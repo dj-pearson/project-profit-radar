@@ -20,6 +20,7 @@ import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
+import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -4589,30 +4590,15 @@ const ProjectDetail = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="contact-search">Search Contacts</Label>
-              <Select 
-                value={selectedContactToAdd?.id || ''} 
-                onValueChange={(value) => {
-                  const contact = contacts.find(c => c.id === value);
-                  setSelectedContactToAdd(contact);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a contact..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {contacts
-                    .filter(contact => 
-                      !projectContacts.some(pc => pc.contact_id === contact.id)
-                    )
-                    .map((contact) => (
-                    <SelectItem key={contact.id} value={contact.id}>
-                      {contact.first_name} {contact.last_name} 
-                      {contact.company_name && ` - ${contact.company_name}`}
-                      {contact.email && ` (${contact.email})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ContactSearchCombobox
+                contacts={contacts.filter(contact => 
+                  !projectContacts.some(pc => pc.contact_id === contact.id)
+                )}
+                selectedContact={selectedContactToAdd}
+                onSelectContact={setSelectedContactToAdd}
+                placeholder="Search and select a contact..."
+                className="w-full"
+              />
             </div>
             
             {selectedContactToAdd && (
