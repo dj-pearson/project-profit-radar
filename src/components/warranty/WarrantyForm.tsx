@@ -105,6 +105,13 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId,
     try {
       const warrantyData = {
         ...formData,
+        // Handle empty strings for UUID fields
+        project_id: formData.project_id || null,
+        vendor_id: formData.vendor_id || null,
+        purchase_order_id: formData.purchase_order_id || null,
+        // Handle empty strings for date fields
+        warranty_start_date: formData.warranty_start_date || null,
+        installation_date: formData.installation_date || null,
         company_id: userProfile?.company_id,
         created_by: userProfile?.id
       };
