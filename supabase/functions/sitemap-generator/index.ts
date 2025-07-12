@@ -61,11 +61,33 @@ serve(async (req) => {
 
 function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
   const staticPages = [
+    // Core pages
     { path: '/', priority: '1.0', changefreq: 'daily' },
-    { path: '/features', priority: '0.8', changefreq: 'weekly' },
-    { path: '/pricing', priority: '0.8', changefreq: 'weekly' },
-    { path: '/resources', priority: '0.6', changefreq: 'weekly' },
-    { path: '/roi-calculator', priority: '0.7', changefreq: 'monthly' },
+    { path: '/features', priority: '0.9', changefreq: 'weekly' },
+    { path: '/pricing', priority: '0.9', changefreq: 'weekly' },
+    { path: '/resources', priority: '0.8', changefreq: 'weekly' },
+    { path: '/roi-calculator', priority: '0.8', changefreq: 'monthly' },
+    
+    // Authentication & onboarding
+    { path: '/auth', priority: '0.3', changefreq: 'monthly' },
+    { path: '/setup', priority: '0.3', changefreq: 'monthly' },
+    
+    // Public content pages
+    { path: '/blog-manager', priority: '0.6', changefreq: 'weekly' },
+    { path: '/knowledge-base', priority: '0.7', changefreq: 'weekly' },
+    { path: '/tutorials', priority: '0.7', changefreq: 'weekly' },
+    
+    // Legal pages
+    { path: '/privacy-policy', priority: '0.4', changefreq: 'yearly' },
+    { path: '/terms-of-service', priority: '0.4', changefreq: 'yearly' },
+    
+    // Industry/SEO pages
+    { path: '/construction-management-software', priority: '0.8', changefreq: 'monthly' },
+    { path: '/procore-alternative', priority: '0.8', changefreq: 'monthly' },
+    { path: '/buildertrend-alternative', priority: '0.8', changefreq: 'monthly' },
+    { path: '/job-costing-software', priority: '0.8', changefreq: 'monthly' },
+    { path: '/construction-field-management', priority: '0.8', changefreq: 'monthly' },
+    { path: '/osha-compliance-software', priority: '0.8', changefreq: 'monthly' },
   ]
 
   const allPages = [
