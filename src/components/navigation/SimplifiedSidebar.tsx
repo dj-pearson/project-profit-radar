@@ -130,10 +130,8 @@ export const SimplifiedSidebar = () => {
                 // Show dropdown for areas that have sub-sections when not collapsed
                 const shouldShowDropdown = hasSubSections && !collapsed;
                 
-                // Debug specific sections that aren't working
-                if (item.title === 'People' || item.title === 'Operations') {
-                  console.log(`${item.title} DEBUG - areaId: ${areaId}, hasSubSections: ${hasSubSections}, collapsed: ${collapsed}, shouldShowDropdown: ${shouldShowDropdown}, sections: ${sections.length}`);
-                }
+                // Debug ALL sections to see what's happening
+                console.log(`${item.title} DEBUG - areaId: ${areaId}, hasSubSections: ${hasSubSections}, collapsed: ${collapsed}, shouldShowDropdown: ${shouldShowDropdown}, sections: ${sections.length}`);
                 
                 
                 return (
