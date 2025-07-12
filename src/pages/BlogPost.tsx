@@ -156,7 +156,10 @@ const BlogPost = () => {
 
             {/* Article Header */}
             <header className="mb-8">
-              <div className="flex items-center space-x-6 text-sm text-muted-foreground mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-construction-dark mb-4">
+                {post.title}
+              </h1>
+              <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4" />
                   <span>{formatDate(post.published_at || post.created_at)}</span>
@@ -172,7 +175,7 @@ const BlogPost = () => {
             <article className="prose prose-lg max-w-none prose-headings:text-construction-dark prose-a:text-construction-blue hover:prose-a:text-construction-orange prose-strong:text-construction-dark">
               <ReactMarkdown
                 components={{
-                  h1: ({ children }) => <h1 className="text-3xl md:text-4xl font-bold text-construction-dark mb-4 mt-0">{children}</h1>,
+                  h1: () => null, // Skip h1 elements from markdown content
                   h2: ({ children }) => <h2 className="text-2xl font-semibold text-construction-dark mb-3 mt-6">{children}</h2>,
                   h3: ({ children }) => <h3 className="text-xl font-semibold text-construction-dark mb-2 mt-4">{children}</h3>,
                   h4: ({ children }) => <h4 className="text-lg font-semibold text-construction-dark mb-2 mt-3">{children}</h4>,
