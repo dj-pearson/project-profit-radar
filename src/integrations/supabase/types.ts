@@ -6710,6 +6710,7 @@ export type Database = {
       punch_list_items: {
         Row: {
           assigned_to: string | null
+          category: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -6727,6 +6728,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          category?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -6744,6 +6746,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          category?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
