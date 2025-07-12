@@ -228,3 +228,4 @@ export const SimplifiedSidebar = () => {
     </Sidebar>
   );
 };
+
