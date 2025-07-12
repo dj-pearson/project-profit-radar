@@ -24,7 +24,8 @@ import {
   Gift,
   HelpCircle,
   CheckSquare,
-  CalendarDays
+  CalendarDays,
+  Calculator
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -144,6 +145,7 @@ export const hierarchicalNavigation: NavigationArea[] = [
         label: 'Financial Overview',
         items: [
           { title: "Financial Dashboard", url: "/financial", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
+          { title: "Estimates", url: "/estimates", icon: Calculator, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
           { title: "Reports & Analytics", url: "/reports", icon: BarChart3, roles: ["admin", "project_manager", "accounting", "root_admin"] }
         ]
       },

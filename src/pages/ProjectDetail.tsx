@@ -23,6 +23,7 @@ import ProjectProfitLoss from '@/components/project/ProjectProfitLoss';
 import EnhancedProjectOverview from '@/components/project/EnhancedProjectOverview';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
+import { ProjectEstimates } from '@/components/project/ProjectEstimates';
 import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
 import { 
   ArrowLeft, 
@@ -3137,6 +3138,10 @@ const ProjectDetail = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="estimates" className="space-y-6">
+            <ProjectEstimates projectId={projectId!} />
           </TabsContent>
 
           <TabsContent value="equipment" className="space-y-6">
