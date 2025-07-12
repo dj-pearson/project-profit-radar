@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { 
   Search, 
   Calendar, 
@@ -89,18 +91,39 @@ const Resources = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Construction Industry Resources">
-        <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading articles...</p>
+      <>
+        <SEOMetaTags
+          title="Construction Industry Resources - BuildDesk"
+          description="Expert insights, best practices, and industry trends to help your construction business thrive. Read articles on construction management, safety, and efficiency."
+          keywords={['construction resources', 'construction articles', 'construction best practices', 'construction management tips']}
+          canonicalUrl="/resources"
+        />
+        <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
+          <Header />
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading articles...</p>
+            </div>
+          </div>
+          <Footer />
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout title="Construction Industry Resources">
-      <div className="space-y-6">
+    <>
+      <SEOMetaTags
+        title="Construction Industry Resources - BuildDesk"
+        description="Expert insights, best practices, and industry trends to help your construction business thrive. Read articles on construction management, safety, and efficiency."
+        keywords={['construction resources', 'construction articles', 'construction best practices', 'construction management tips']}
+        canonicalUrl="/resources"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-6">
         {/* Header Section */}
         <div className="bg-gradient-to-br from-construction-blue to-construction-blue/80 text-white rounded-lg p-8">
           <div className="max-w-3xl mx-auto text-center">
@@ -244,9 +267,12 @@ const Resources = () => {
             </div>
           </div>
         )}
+          </div>
+          </div>
         </div>
+        <Footer />
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

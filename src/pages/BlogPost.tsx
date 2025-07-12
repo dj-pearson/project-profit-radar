@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 interface BlogPost {
   id: string;
@@ -128,6 +130,7 @@ const BlogPost = () => {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
+        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* Back Button */}
@@ -238,6 +241,7 @@ const BlogPost = () => {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     </>
   );
