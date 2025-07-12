@@ -6717,6 +6717,7 @@ export type Database = {
           date_completed: string | null
           date_identified: string | null
           description: string
+          due_date: string | null
           id: string
           item_number: string
           location: string | null
@@ -6735,6 +6736,7 @@ export type Database = {
           date_completed?: string | null
           date_identified?: string | null
           description: string
+          due_date?: string | null
           id?: string
           item_number: string
           location?: string | null
@@ -6753,6 +6755,7 @@ export type Database = {
           date_completed?: string | null
           date_identified?: string | null
           description?: string
+          due_date?: string | null
           id?: string
           item_number?: string
           location?: string | null
