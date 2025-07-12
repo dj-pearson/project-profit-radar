@@ -129,6 +129,7 @@ export const SimplifiedSidebar = () => {
                 // Show dropdown for areas that have sub-sections when not collapsed
                 const shouldShowDropdown = hasSubSections && !collapsed;
                 
+                
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild className="h-12">
@@ -155,7 +156,7 @@ export const SimplifiedSidebar = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="p-1 h-auto"
+                            className="p-1 h-auto ml-auto flex-shrink-0"
                             onClick={() => toggleSection(areaId)}
                           >
                             <ChevronRight 
