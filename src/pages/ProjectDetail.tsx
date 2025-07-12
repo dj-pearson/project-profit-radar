@@ -1078,11 +1078,25 @@ const ProjectDetail = () => {
   };
 
   const handleCreatePunchListItem = async () => {
+    if (!newPunchListItem.description) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Description is required."
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('punch_list_items')
         .insert({
-          ...newPunchListItem,
+          item_number: newPunchListItem.item_number || `PLI-${Date.now().toString().slice(-8)}`,
+          description: newPunchListItem.description,
+          location: newPunchListItem.location || null,
+          trade: newPunchListItem.trade || null,
+          priority: newPunchListItem.priority,
+          assigned_to: newPunchListItem.assigned_to || null,
           project_id: projectId,
           company_id: userProfile?.company_id,
           created_by: user?.id

@@ -177,16 +177,15 @@ const PunchList = () => {
       const { error } = await supabase
         .from('punch_list_items')
         .insert({
+          item_number: `PLI-${Date.now().toString().slice(-8)}`,
           project_id: newItem.project_id,
           description: newItem.description,
-          location: newItem.location,
-          trade: newItem.trade,
+          location: newItem.location || null,
+          trade: newItem.trade || null,
           priority: newItem.priority,
           assigned_to: newItem.assigned_to || null,
-          date_identified: new Date().toISOString().split('T')[0],
           company_id: userProfile?.company_id,
-          created_by: user?.id,
-          item_number: `PLI-${Date.now().toString().slice(-8)}`
+          created_by: user?.id
         });
 
       if (error) throw error;
