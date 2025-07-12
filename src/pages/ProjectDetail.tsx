@@ -40,8 +40,10 @@ import {
   ExternalLink,
   Trash2,
   Mail,
-  Phone
+  Phone,
+  Pencil
 } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 
 interface PunchListItem {
   id: string;
@@ -160,6 +162,8 @@ const ProjectDetail = () => {
   
   // Dialog states
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
   const [createMaterialDialogOpen, setCreateMaterialDialogOpen] = useState(false);
   const [createReportDialogOpen, setCreateReportDialogOpen] = useState(false);
   const [editClientDialogOpen, setEditClientDialogOpen] = useState(false);
@@ -395,6 +399,10 @@ const ProjectDetail = () => {
         estimated_hours: 0,
         due_date: '',
         completion_percentage: 0
+      });
+      toast({
+        title: "Task created",
+        description: "Task has been created successfully.",
       });
 
       toast({
@@ -2133,12 +2141,30 @@ const ProjectDetail = () => {
                             </div>
                             <div>
                               <Label className="text-muted-foreground">Progress</Label>
-                              <div className="flex items-center space-x-2">
-                                <Progress value={task.completion_percentage} className="flex-1" />
-                                <span className="text-xs">{task.completion_percentage}%</span>
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Progress value={task.completion_percentage} className="flex-1" />
+                                  <span className="text-xs w-10">{task.completion_percentage}%</span>
+                                </div>
+                                <Slider
+                                  value={[task.completion_percentage]}
+                                  onValueChange={([value]) => handleProgressUpdate(task.id, value)}
+                                  max={100}
+                                  step={5}
+                                  className="w-full"
+                                />
                               </div>
                             </div>
                           </div>
+                        </div>
+                        <div className="flex items-center space-x-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditTask(task)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -3204,6 +3230,121 @@ const ProjectDetail = () => {
         </Tabs>
       </div>
 
+      {/* Edit Task Dialog */}
+      <Dialog open={editTaskDialogOpen} onOpenChange={setEditTaskDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          {editingTask && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-task-name">Task Name</Label>
+                <Input
+                  id="edit-task-name"
+                  value={editingTask.name}
+                  onChange={(e) => setEditingTask(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter task name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-task-description">Description</Label>
+                <Textarea
+                  id="edit-task-description"
+                  value={editingTask.description || ''}
+                  onChange={(e) => setEditingTask(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Task description"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-task-priority">Priority</Label>
+                  <Select 
+                    value={editingTask.priority} 
+                    onValueChange={(value) => setEditingTask(prev => ({ ...prev, priority: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-task-status">Status</Label>
+                  <Select 
+                    value={editingTask.status} 
+                    onValueChange={(value) => setEditingTask(prev => ({ ...prev, status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todo">To Do</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="blocked">Blocked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-task-estimated-hours">Estimated Hours</Label>
+                  <Input
+                    id="edit-task-estimated-hours"
+                    type="number"
+                    value={editingTask.estimated_hours || 0}
+                    onChange={(e) => setEditingTask(prev => ({ ...prev, estimated_hours: parseFloat(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-task-actual-hours">Actual Hours</Label>
+                  <Input
+                    id="edit-task-actual-hours"
+                    type="number"
+                    value={editingTask.actual_hours || 0}
+                    onChange={(e) => setEditingTask(prev => ({ ...prev, actual_hours: parseFloat(e.target.value) || 0 }))}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-task-due-date">Due Date</Label>
+                  <Input
+                    id="edit-task-due-date"
+                    type="date"
+                    value={editingTask.due_date || ''}
+                    onChange={(e) => setEditingTask(prev => ({ ...prev, due_date: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-task-progress">Progress ({editingTask.completion_percentage}%)</Label>
+                  <Slider
+                    value={[editingTask.completion_percentage || 0]}
+                    onValueChange={([value]) => setEditingTask(prev => ({ ...prev, completion_percentage: value }))}
+                    max={100}
+                    step={5}
+                    className="w-full mt-2"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setEditTaskDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateTask}>
+                  Update Task
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create Daily Report Dialog */}
       <Dialog open={createReportDialogOpen} onOpenChange={setCreateReportDialogOpen}>
@@ -4668,7 +4809,6 @@ const ProjectDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
-        </div>
       </div>
     </SidebarProvider>
   );
