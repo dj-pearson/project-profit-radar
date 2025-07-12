@@ -36,6 +36,27 @@ import {
   Wrench
 } from 'lucide-react';
 
+interface PunchListItem {
+  id: string;
+  project_id: string | null;
+  item_number: string;
+  description: string;
+  priority: string | null;
+  status: string | null;
+  location: string | null;
+  trade: string | null;
+  created_by: string | null;
+  assigned_to: string | null;
+  date_identified: string | null;
+  date_completed: string | null;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
+  projects?: { name: string; client_name: string };
+  creator?: { first_name: string; last_name: string };
+  assignee?: { first_name: string; last_name: string };
+}
+
 interface Project {
   id: string;
   name: string;
@@ -119,6 +140,8 @@ const ProjectDetail = () => {
   const [jobCosts, setJobCosts] = useState<any[]>([]);
   const [rfis, setRfis] = useState<any[]>([]);
   const [submittals, setSubmittals] = useState<any[]>([]);
+  const [punchListItems, setPunchListItems] = useState<PunchListItem[]>([]);
+  const [punchListLoading, setPunchListLoading] = useState(false);
   const [editingRFI, setEditingRFI] = useState<any>(null);
   const [isEditRFIDialogOpen, setIsEditRFIDialogOpen] = useState(false);
   const [loadingProject, setLoadingProject] = useState(true);
@@ -296,10 +319,11 @@ const ProjectDetail = () => {
   const [newPunchListItem, setNewPunchListItem] = useState({
     item_number: '',
     description: '',
+    priority: 'medium',
     location: '',
     trade: '',
-    priority: 'medium',
-    status: 'open'
+    assigned_to: '',
+    date_identified: ''
   });
 
   const [newEquipment, setNewEquipment] = useState({
@@ -1078,10 +1102,11 @@ const ProjectDetail = () => {
       setNewPunchListItem({
         item_number: '',
         description: '',
+        priority: 'medium',
         location: '',
         trade: '',
-        priority: 'medium',
-        status: 'open'
+        assigned_to: '',
+        date_identified: ''
       });
 
       toast({
@@ -1157,6 +1182,36 @@ const ProjectDetail = () => {
 
   const navigateToRFIs = () => {
     navigate('/rfis', { state: { projectFilter: projectId } });
+  };
+
+  const loadPunchListItems = async () => {
+    if (!projectId) return;
+    
+    setPunchListLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('punch_list_items')
+        .select(`
+          *,
+          projects(name, client_name),
+          creator:user_profiles!created_by(first_name, last_name),
+          assignee:user_profiles!assigned_to(first_name, last_name)
+        `)
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPunchListItems((data || []) as any);
+    } catch (error) {
+      console.error('Error loading punch list items:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading punch list items",
+        description: "There was a problem loading the punch list items."
+      });
+    } finally {
+      setPunchListLoading(false);
+    }
   };
 
   const loadProjectData = async () => {
@@ -2487,12 +2542,88 @@ const ProjectDetail = () => {
               </Dialog>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Track items that need completion or correction</p>
-              </CardContent>
-            </Card>
+            {punchListLoading ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading punch list items...</p>
+                </CardContent>
+              </Card>
+            ) : punchListItems.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No punch list items yet</p>
+                  <Button variant="outline" className="mt-4" onClick={() => setAddPunchListDialogOpen(true)}>
+                    Create First Punch List Item
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {punchListItems.map((item) => (
+                  <Card key={item.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="outline">{item.item_number}</Badge>
+                          <CardTitle className="text-lg">{item.description}</CardTitle>
+                          <Badge variant={
+                            item.priority === 'high' ? 'destructive' : 
+                            item.priority === 'medium' ? 'default' : 
+                            'secondary'
+                          }>
+                            {item.priority} priority
+                          </Badge>
+                        </div>
+                         <Badge variant={
+                           item.status === 'completed' ? 'default' :
+                           item.status === 'in_progress' ? 'default' :
+                           'secondary'
+                         }>
+                          {item.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">Item #{item.item_number}</p>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Location</Label>
+                            <p>{item.location || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Trade</Label>
+                            <p>{item.trade || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Identified</Label>
+                            <p>{item.date_identified ? new Date(item.date_identified).toLocaleDateString() : 'Not set'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Completed</Label>
+                            <p>{item.date_completed ? new Date(item.date_completed).toLocaleDateString() : 'Not completed'}</p>
+                          </div>
+                        </div>
+
+                        {item.assignee && (
+                          <div className="text-sm">
+                            <Label className="text-xs font-medium text-muted-foreground">Assigned to</Label>
+                            <p>{item.assignee.first_name} {item.assignee.last_name}</p>
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-muted-foreground">
+                          Created {new Date(item.created_at).toLocaleDateString()} by {item.creator?.first_name} {item.creator?.last_name}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="equipment" className="space-y-6">
@@ -3721,15 +3852,15 @@ const ProjectDetail = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="punch-item-number">Item Number</Label>
-                <Input
-                  id="punch-item-number"
-                  value={newPunchListItem.item_number}
-                  onChange={(e) => setNewPunchListItem(prev => ({ ...prev, item_number: e.target.value }))}
-                  placeholder="PL-001"
-                />
-              </div>
+            <div>
+              <Label htmlFor="punch-item-number">Item Number</Label>
+              <Input
+                id="punch-item-number"
+                value={newPunchListItem.item_number}
+                onChange={(e) => setNewPunchListItem(prev => ({ ...prev, item_number: e.target.value }))}
+                placeholder="PL-001"
+              />
+            </div>
               <div>
                 <Label htmlFor="punch-priority">Priority</Label>
                 <Select value={newPunchListItem.priority} onValueChange={(value) => setNewPunchListItem(prev => ({ ...prev, priority: value }))}>
