@@ -164,6 +164,8 @@ const ProjectDetail = () => {
   const [addSubmittalDialogOpen, setAddSubmittalDialogOpen] = useState(false);
   const [addChangeOrderDialogOpen, setAddChangeOrderDialogOpen] = useState(false);
   const [addPunchListDialogOpen, setAddPunchListDialogOpen] = useState(false);
+  const [editPunchListDialogOpen, setEditPunchListDialogOpen] = useState(false);
+  const [editingPunchListItem, setEditingPunchListItem] = useState<any>(null);
   const [addEquipmentDialogOpen, setAddEquipmentDialogOpen] = useState(false);
   
   // User and contact lists
@@ -1148,6 +1150,43 @@ const ProjectDetail = () => {
         variant: "destructive",
         title: "Error adding punch list item",
         description: error.message
+      });
+    }
+  };
+
+  const handleEditPunchListItem = async () => {
+    if (!editingPunchListItem || !editingPunchListItem.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('punch_list_items')
+        .update({
+          description: editingPunchListItem.description,
+          category: editingPunchListItem.category,
+          priority: editingPunchListItem.priority,
+          location: editingPunchListItem.location,
+          trade: editingPunchListItem.trade,
+          due_date: editingPunchListItem.due_date || null,
+          assigned_to: editingPunchListItem.assigned_to || null
+        })
+        .eq('id', editingPunchListItem.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Punch list item updated successfully."
+      });
+
+      setEditPunchListDialogOpen(false);
+      setEditingPunchListItem(null);
+      loadPunchListItems();
+    } catch (error) {
+      console.error('Error updating punch list item:', error);
+      toast({
+        variant: "destructive",
+        title: "Error updating punch list item",
+        description: "There was a problem updating the punch list item."
       });
     }
   };
@@ -2645,6 +2684,20 @@ const ProjectDetail = () => {
                         <div className="text-xs text-muted-foreground">
                           Created {new Date(item.created_at).toLocaleDateString()} by {item.creator?.first_name} {item.creator?.last_name}
                         </div>
+                        
+                        <div className="flex justify-end space-x-2 mt-3">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingPunchListItem(item);
+                              setEditPunchListDialogOpen(true);
+                            }}
+                          >
+                            <User className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -3961,6 +4014,102 @@ const ProjectDetail = () => {
               </Button>
               <Button onClick={handleCreatePunchListItem}>
                 Add Item
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Punch List Item Dialog */}
+      <Dialog open={editPunchListDialogOpen} onOpenChange={setEditPunchListDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Punch List Item</DialogTitle>
+            <DialogDescription>
+              Update the details of this punch list item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-punch-description">Description *</Label>
+              <Textarea
+                id="edit-punch-description"
+                placeholder="Detailed description of the issue or work needed..."
+                value={editingPunchListItem?.description || ''}
+                onChange={(e) => setEditingPunchListItem(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-punch-priority">Priority</Label>
+                <Select value={editingPunchListItem?.priority || 'medium'} onValueChange={(value) => setEditingPunchListItem(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-punch-category">Category</Label>
+                <Select value={editingPunchListItem?.category || 'quality'} onValueChange={(value) => setEditingPunchListItem(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quality">Quality</SelectItem>
+                    <SelectItem value="safety">Safety</SelectItem>
+                    <SelectItem value="cleanup">Cleanup</SelectItem>
+                    <SelectItem value="deficiency">Deficiency</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-punch-location">Location</Label>
+                <Input
+                  id="edit-punch-location"
+                  placeholder="Room, floor, area..."
+                  value={editingPunchListItem?.location || ''}
+                  onChange={(e) => setEditingPunchListItem(prev => ({ ...prev, location: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-punch-trade">Trade</Label>
+                <Input
+                  id="edit-punch-trade"
+                  placeholder="Electrical, plumbing, etc..."
+                  value={editingPunchListItem?.trade || ''}
+                  onChange={(e) => setEditingPunchListItem(prev => ({ ...prev, trade: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-punch-due-date">Due Date</Label>
+              <Input
+                id="edit-punch-due-date"
+                type="date"
+                value={editingPunchListItem?.due_date || ''}
+                onChange={(e) => setEditingPunchListItem(prev => ({ ...prev, due_date: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setEditPunchListDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditPunchListItem}>
+                Update Item
               </Button>
             </div>
           </div>

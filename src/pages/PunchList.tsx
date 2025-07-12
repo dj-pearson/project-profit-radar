@@ -84,7 +84,9 @@ const PunchList = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [loadingItems, setLoadingItems] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PunchListItem | null>(null);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   
@@ -248,6 +250,43 @@ const PunchList = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to update status"
+      });
+    }
+  };
+
+  const handleEditItem = async () => {
+    if (!editingItem || !editingItem.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('punch_list_items')
+        .update({
+          description: editingItem.description,
+          category: editingItem.category,
+          priority: editingItem.priority,
+          location: editingItem.location,
+          trade: editingItem.trade,
+          due_date: editingItem.due_date || null,
+          assigned_to: editingItem.assigned_to || null
+        })
+        .eq('id', editingItem.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Punch list item updated successfully."
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingItem(null);
+      loadData();
+    } catch (error) {
+      console.error('Error updating punch list item:', error);
+      toast({
+        variant: "destructive",
+        title: "Error updating punch list item",
+        description: "There was a problem updating the punch list item."
       });
     }
   };
@@ -606,6 +645,18 @@ const PunchList = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
+                          setEditingItem(item);
+                          setIsEditDialogOpen(true);
+                        }}
+                      >
+                        <User className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
                           setSelectedItem(item);
                           setIsCommentDialogOpen(true);
                         }}
@@ -654,6 +705,104 @@ const PunchList = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Punch List Item</DialogTitle>
+            <DialogDescription>
+              Update the details of this punch list item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-description">Description *</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Detailed description of the issue or work needed..."
+                value={editingItem?.description || ''}
+                onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-category">Category</Label>
+                <Select value={editingItem?.category || 'quality'} onValueChange={(value) => setEditingItem({...editingItem, category: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quality">Quality</SelectItem>
+                    <SelectItem value="safety">Safety</SelectItem>
+                    <SelectItem value="deficiency">Deficiency</SelectItem>
+                    <SelectItem value="cleanup">Cleanup</SelectItem>
+                    <SelectItem value="documentation">Documentation</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-priority">Priority</Label>
+                <Select value={editingItem?.priority || 'medium'} onValueChange={(value) => setEditingItem({...editingItem, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-location">Location</Label>
+                <Input
+                  id="edit-location"
+                  placeholder="Room, floor, area..."
+                  value={editingItem?.location || ''}
+                  onChange={(e) => setEditingItem({...editingItem, location: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-trade">Trade</Label>
+                <Input
+                  id="edit-trade"
+                  placeholder="Electrical, plumbing, etc..."
+                  value={editingItem?.trade || ''}
+                  onChange={(e) => setEditingItem({...editingItem, trade: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-due-date">Due Date</Label>
+              <Input
+                id="edit-due-date"
+                type="date"
+                value={editingItem?.due_date || ''}
+                onChange={(e) => setEditingItem({...editingItem, due_date: e.target.value})}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditItem}>
+                Update Item
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Comment Dialog */}
       <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
