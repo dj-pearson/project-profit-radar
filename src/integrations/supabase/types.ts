@@ -3758,6 +3758,267 @@ export type Database = {
           },
         ]
       }
+      estimate_communications: {
+        Row: {
+          communication_type: string
+          created_at: string
+          created_by: string | null
+          estimate_id: string
+          id: string
+          message: string | null
+          recipient_email: string | null
+          responded_at: string | null
+          sent_at: string | null
+          subject: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          communication_type: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id: string
+          id?: string
+          message?: string | null
+          recipient_email?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          subject?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          communication_type?: string
+          created_at?: string
+          created_by?: string | null
+          estimate_id?: string
+          id?: string
+          message?: string | null
+          recipient_email?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          subject?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estimate_communications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimate_communications_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estimate_line_items: {
+        Row: {
+          category: string | null
+          cost_code_id: string | null
+          created_at: string
+          description: string | null
+          equipment_cost: number | null
+          estimate_id: string
+          id: string
+          item_name: string
+          labor_cost: number | null
+          labor_hours: number | null
+          labor_rate: number | null
+          material_cost: number | null
+          quantity: number
+          sort_order: number | null
+          total_cost: number | null
+          unit: string
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cost_code_id?: string | null
+          created_at?: string
+          description?: string | null
+          equipment_cost?: number | null
+          estimate_id: string
+          id?: string
+          item_name: string
+          labor_cost?: number | null
+          labor_hours?: number | null
+          labor_rate?: number | null
+          material_cost?: number | null
+          quantity?: number
+          sort_order?: number | null
+          total_cost?: number | null
+          unit?: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cost_code_id?: string | null
+          created_at?: string
+          description?: string | null
+          equipment_cost?: number | null
+          estimate_id?: string
+          id?: string
+          item_name?: string
+          labor_cost?: number | null
+          labor_hours?: number | null
+          labor_rate?: number | null
+          material_cost?: number | null
+          quantity?: number
+          sort_order?: number | null
+          total_cost?: number | null
+          unit?: string
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estimate_line_items_cost_code_id_fkey"
+            columns: ["cost_code_id"]
+            isOneToOne: false
+            referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimate_line_items_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estimates: {
+        Row: {
+          accepted_date: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_amount: number | null
+          estimate_date: string
+          estimate_number: string
+          id: string
+          is_current_version: boolean | null
+          markup_percentage: number | null
+          notes: string | null
+          parent_estimate_id: string | null
+          project_id: string | null
+          sent_date: string | null
+          site_address: string | null
+          status: string
+          tax_percentage: number | null
+          terms_and_conditions: string | null
+          title: string
+          total_amount: number
+          updated_at: string
+          valid_until: string | null
+          version_number: number
+        }
+        Insert: {
+          accepted_date?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_amount?: number | null
+          estimate_date?: string
+          estimate_number: string
+          id?: string
+          is_current_version?: boolean | null
+          markup_percentage?: number | null
+          notes?: string | null
+          parent_estimate_id?: string | null
+          project_id?: string | null
+          sent_date?: string | null
+          site_address?: string | null
+          status?: string
+          tax_percentage?: number | null
+          terms_and_conditions?: string | null
+          title: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+          version_number?: number
+        }
+        Update: {
+          accepted_date?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_amount?: number | null
+          estimate_date?: string
+          estimate_number?: string
+          id?: string
+          is_current_version?: boolean | null
+          markup_percentage?: number | null
+          notes?: string | null
+          parent_estimate_id?: string | null
+          project_id?: string | null
+          sent_date?: string | null
+          site_address?: string | null
+          status?: string
+          tax_percentage?: number | null
+          terms_and_conditions?: string | null
+          title?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estimates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_parent_estimate_id_fkey"
+            columns: ["parent_estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "estimates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_categories: {
         Row: {
           company_id: string
@@ -10018,6 +10279,10 @@ export type Database = {
         Returns: string
       }
       generate_customer_request_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_estimate_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

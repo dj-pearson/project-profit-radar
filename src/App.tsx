@@ -90,6 +90,7 @@ import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
 import CompanySettings from "./pages/CompanySettings";
 import ScheduleManagement from "./pages/ScheduleManagement";
+import EstimatesHub from "./pages/EstimatesHub";
 import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
@@ -403,6 +404,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/schedule-management">
             <ScheduleManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/estimates"
+        element={
+          <RouteGuard routePath="/estimates">
+            <EstimatesHub />
           </RouteGuard>
         }
       />
