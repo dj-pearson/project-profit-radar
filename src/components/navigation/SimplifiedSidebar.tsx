@@ -127,9 +127,6 @@ export const SimplifiedSidebar = () => {
                 const hasSubSections = areaId !== 'overview' && sections.length > 0;
                 const isExpanded = expandedSections.includes(areaId);
                 
-                // Show dropdown for areas that have sub-sections when not collapsed
-                const shouldShowDropdown = hasSubSections && !collapsed;
-                
                 // Force dropdown for all non-dashboard items temporarily for debugging
                 const forceDropdown = item.title !== 'Dashboard' && !collapsed;
                 
@@ -139,7 +136,16 @@ export const SimplifiedSidebar = () => {
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild className="h-12">
                       <div className={`flex items-center w-full ${getNavClass({ isActive })}`}>
-                        <NavLink to={item.url} className="flex items-center flex-1">
+                        <NavLink 
+                          to={item.url} 
+                          className="flex items-center flex-1"
+                          onClick={() => {
+                            // Auto-expand sections when clicking hub pages (except Dashboard)
+                            if (item.title !== 'Dashboard' && hasSubSections) {
+                              toggleSection(areaId);
+                            }
+                          }}
+                        >
                           <item.icon className="h-5 w-5" />
                           {!collapsed && (
                             <div className="flex flex-col items-start flex-1 ml-2">
