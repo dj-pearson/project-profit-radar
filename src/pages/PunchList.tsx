@@ -39,24 +39,21 @@ interface PunchListItem {
   id: string;
   project_id: string;
   item_number: string;
-  title: string;
   description: string;
-  category: string;
   priority: string;
-  status: string;
-  location: string;
-  trade: string;
+  status?: string;
+  location?: string;
+  trade?: string;
   created_by: string;
-  assigned_to: string;
-  due_date: string;
-  completed_date: string;
+  assigned_to?: string;
+  date_identified: string;
+  date_completed?: string;
   created_at: string;
   updated_at: string;
-  projects: { name: string; client_name: string };
-  creator: { first_name: string; last_name: string };
-  assignee: { first_name: string; last_name: string };
-  photos: PunchListPhoto[];
-  comments: PunchListComment[];
+  company_id: string;
+  projects?: { name: string; client_name: string };
+  creator?: { first_name: string; last_name: string };
+  assignee?: { first_name: string; last_name: string };
 }
 
 interface PunchListPhoto {
@@ -93,7 +90,6 @@ const PunchList = () => {
   
   const [newItem, setNewItem] = useState({
     project_id: '',
-    title: '',
     description: '',
     category: 'quality',
     priority: 'medium',
@@ -142,12 +138,18 @@ const PunchList = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load punch list items (simulated data for now)
-      // In a real implementation, this would query the punch_list_items table
-      const itemsData: PunchListItem[] = [];
+      // Load punch list items
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('punch_list_items')
+        .select(`
+          *,
+          projects(name, client_name)
+        `)
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
 
-      // For now, we'll set empty data since the table doesn't exist yet
-      setPunchItems([]);
+      if (itemsError) throw itemsError;
+      setPunchItems((itemsData || []) as any);
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -162,7 +164,7 @@ const PunchList = () => {
   };
 
   const handleCreateItem = async () => {
-    if (!newItem.project_id || !newItem.title || !newItem.description) {
+    if (!newItem.project_id || !newItem.description) {
       toast({
         variant: "destructive",
         title: "Validation Error",
@@ -172,7 +174,23 @@ const PunchList = () => {
     }
 
     try {
-      // In a real implementation, this would create the punch list item
+      const { error } = await supabase
+        .from('punch_list_items')
+        .insert({
+          project_id: newItem.project_id,
+          description: newItem.description,
+          location: newItem.location,
+          trade: newItem.trade,
+          priority: newItem.priority,
+          assigned_to: newItem.assigned_to || null,
+          date_identified: new Date().toISOString().split('T')[0],
+          company_id: userProfile?.company_id,
+          created_by: user?.id,
+          item_number: `PLI-${Date.now().toString().slice(-8)}`
+        });
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Punch list item created successfully"
@@ -181,7 +199,6 @@ const PunchList = () => {
       setIsCreateDialogOpen(false);
       setNewItem({
         project_id: '',
-        title: '',
         description: '',
         category: 'quality',
         priority: 'medium',
@@ -304,7 +321,7 @@ const PunchList = () => {
 
   const filteredItems = punchItems.filter(item => {
     const projectMatch = !selectedProject || selectedProject === 'all' || item.project_id === selectedProject;
-    const statusMatch = !selectedStatus || selectedStatus === 'all' || item.status === selectedStatus;
+    const statusMatch = !selectedStatus || selectedStatus === 'all' || (item.status || 'open') === selectedStatus;
     return projectMatch && statusMatch;
   });
 
@@ -360,15 +377,6 @@ const PunchList = () => {
                     </Select>
                   </div>
 
-                  <div>
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="Brief description of the issue"
-                      value={newItem.title}
-                      onChange={(e) => setNewItem({...newItem, title: e.target.value})}
-                    />
-                  </div>
 
                   <div>
                     <Label htmlFor="description">Description *</Label>
@@ -524,18 +532,17 @@ const PunchList = () => {
                       <div>
                         <CardTitle className="flex items-center space-x-2">
                           <CheckSquare className="h-5 w-5 text-construction-blue" />
-                          <span>{item.title}</span>
+                          <span>Punch List Item</span>
                           <Badge variant="outline">#{item.item_number}</Badge>
                         </CardTitle>
                         <CardDescription>
                           {item.projects?.name} - {item.projects?.client_name}
                         </CardDescription>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge(item.status)}
-                        {getPriorityBadge(item.priority)}
-                        {getCategoryBadge(item.category)}
-                      </div>
+                       <div className="flex items-center space-x-2">
+                         {getStatusBadge(item.status || 'open')}
+                         {getPriorityBadge(item.priority)}
+                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -569,57 +576,16 @@ const PunchList = () => {
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2 flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Due Date
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {item.due_date ? new Date(item.due_date).toLocaleDateString() : 'Not set'}
-                        </p>
+                         <h4 className="font-medium mb-2 flex items-center">
+                           <Calendar className="h-4 w-4 mr-2" />
+                           Date Identified
+                         </h4>
+                         <p className="text-sm text-muted-foreground">
+                           {item.date_identified ? new Date(item.date_identified).toLocaleDateString() : 'Not set'}
+                         </p>
                       </div>
                     </div>
 
-                    {item.photos && item.photos.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2 flex items-center">
-                          <Camera className="h-4 w-4 mr-2" />
-                          Photos ({item.photos.length})
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {item.photos.map((photo) => (
-                            <div key={photo.id} className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                              <Camera className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {item.comments && item.comments.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Comments ({item.comments.length})</h4>
-                        <div className="space-y-2">
-                          {item.comments.slice(0, 2).map((comment) => (
-                            <div key={comment.id} className="bg-muted p-3 rounded-md">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-sm font-medium">
-                                  {comment.commenter?.first_name} {comment.commenter?.last_name}
-                                </p>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(comment.created_at).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{comment.comment_text}</p>
-                            </div>
-                          ))}
-                          {item.comments.length > 2 && (
-                            <p className="text-xs text-muted-foreground">
-                              +{item.comments.length - 2} more comments
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
 
                     <div className="flex justify-end space-x-2">
                       <Button 
@@ -634,7 +600,7 @@ const PunchList = () => {
                         Add Comment
                       </Button>
                       
-                      {item.status === 'open' && (
+                      {(item.status || 'open') === 'open' && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -645,7 +611,7 @@ const PunchList = () => {
                         </Button>
                       )}
                       
-                      {item.status === 'in_progress' && (
+                      {(item.status || 'open') === 'in_progress' && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -656,7 +622,7 @@ const PunchList = () => {
                         </Button>
                       )}
                       
-                      {item.status === 'completed' && (
+                      {(item.status || 'open') === 'completed' && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -680,9 +646,9 @@ const PunchList = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add Comment</DialogTitle>
-            <DialogDescription>
-              Add a comment to item: {selectedItem?.title}
-            </DialogDescription>
+             <DialogDescription>
+               Add a comment to punch list item
+             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>

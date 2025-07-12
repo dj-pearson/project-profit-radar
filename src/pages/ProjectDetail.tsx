@@ -1079,24 +1079,16 @@ const ProjectDetail = () => {
 
   const handleCreatePunchListItem = async () => {
     try {
-      // Temporarily commented out until types are updated
-      console.log('Would create Punch List Item:', {
-        ...newPunchListItem,
-        project_id: projectId,
-        company_id: userProfile?.company_id,
-        created_by: user?.id
-      });
+      const { error } = await supabase
+        .from('punch_list_items')
+        .insert({
+          ...newPunchListItem,
+          project_id: projectId,
+          company_id: userProfile?.company_id,
+          created_by: user?.id
+        });
 
-      // const { error } = await supabase
-      //   .from('punch_list_items')
-      //   .insert({
-      //     ...newPunchListItem,
-      //     project_id: projectId,
-      //     company_id: userProfile?.company_id,
-      //     created_by: user?.id
-      //   });
-
-      // if (error) throw error;
+      if (error) throw error;
 
       setAddPunchListDialogOpen(false);
       setNewPunchListItem({
@@ -1113,6 +1105,8 @@ const ProjectDetail = () => {
         title: "Punch list item added",
         description: "Punch list item has been added to the project."
       });
+      
+      loadPunchListItems();
     } catch (error: any) {
       toast({
         variant: "destructive",
