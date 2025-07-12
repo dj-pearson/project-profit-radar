@@ -17,7 +17,8 @@ import {
   Receipt,
   ListTodo,
   FolderOpen,
-  Home
+  Home,
+  Calculator
 } from 'lucide-react';
 
 interface ProjectSubSidebarProps {
@@ -50,6 +51,7 @@ const navigationSections = [
   {
     title: 'Financial',
     items: [
+      { id: 'estimates', label: 'Estimates', icon: Calculator },
       { id: 'jobcosting', label: 'Job Costing', icon: DollarSign },
       { id: 'invoicing', label: 'Invoicing', icon: Receipt },
       { id: 'changeorders', label: 'Change Orders', icon: FileX },

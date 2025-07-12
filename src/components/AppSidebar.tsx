@@ -43,7 +43,8 @@ import {
   Tag,
   Gift,
   HelpCircle,
-  CheckSquare
+  CheckSquare,
+  Calculator
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -71,6 +72,8 @@ const navigationCategories: NavigationCategory[] = [
     items: [
       { title: "All Projects", url: "/projects", icon: Building2, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
       { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
+      { title: "Estimates", url: "/estimates", icon: Calculator, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
+      { title: "Schedule Management", url: "/schedule-management", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
       { title: "Job Costing", url: "/job-costing", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
       { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] },
       { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
