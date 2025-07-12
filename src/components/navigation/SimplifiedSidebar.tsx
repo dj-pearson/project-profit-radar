@@ -40,12 +40,15 @@ export const SimplifiedSidebar = () => {
   // Get main areas with their sections - always show hierarchical navigation
   const getAreaSections = (areaId: string): NavigationSection[] => {
     const area = hierarchicalNavigation.find(a => a.id === areaId);
-    if (!area) return [];
+    if (!area) {
+      console.log(`No area found for areaId: ${areaId}`);
+      return [];
+    }
     
     // More robust role checking - default to 'admin' if role is not set
     const currentUserRole = userProfile?.role || 'admin';
     
-    return area.sections.map(section => ({
+    const filteredSections = area.sections.map(section => ({
       ...section,
       items: section.items.filter(item => 
         currentUserRole === 'root_admin' || 
@@ -55,6 +58,9 @@ export const SimplifiedSidebar = () => {
         item.roles.includes('project_manager')
       )
     })).filter(section => section.items.length > 0);
+    
+    console.log(`Area ${areaId} has ${filteredSections.length} sections for role ${currentUserRole}:`, filteredSections);
+    return filteredSections;
   };
 
   const toggleSection = (sectionId: string) => {
