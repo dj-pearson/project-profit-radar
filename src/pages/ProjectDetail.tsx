@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1737,33 +1738,22 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-6 lg:px-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          {/* Desktop Tabs */}
-          <div className="hidden lg:block overflow-x-auto">
-            <TabsList className="w-max min-w-full">
-              <TabsTrigger value="overview" className="shrink-0">Overview</TabsTrigger>
-              <TabsTrigger value="materials" className="shrink-0">Materials</TabsTrigger>
-              <TabsTrigger value="progress" className="shrink-0">Progress</TabsTrigger>
-              <TabsTrigger value="dailyreports" className="shrink-0">Daily Reports</TabsTrigger>
-              <TabsTrigger value="jobcosting" className="shrink-0">Job Costing</TabsTrigger>
-              <TabsTrigger value="rfis" className="shrink-0">RFI's</TabsTrigger>
-              <TabsTrigger value="submittals" className="shrink-0">Submittals</TabsTrigger>
-              <TabsTrigger value="changeorders" className="shrink-0">Change Orders</TabsTrigger>
-              <TabsTrigger value="punchlist" className="shrink-0">Punch List</TabsTrigger>
-              <TabsTrigger value="equipment" className="shrink-0">Equipment</TabsTrigger>
-              <TabsTrigger value="permits" className="shrink-0">Permits</TabsTrigger>
-              <TabsTrigger value="warranties" className="shrink-0">Warranties</TabsTrigger>
-              <TabsTrigger value="contacts" className="shrink-0">Contacts</TabsTrigger>
-              <TabsTrigger value="invoicing" className="shrink-0">Invoicing</TabsTrigger>
-              <TabsTrigger value="tasks" className="shrink-0">Tasks</TabsTrigger>
-              <TabsTrigger value="documents" className="shrink-0">Documents</TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Mobile/Tablet Navigation */}
-          <div className="lg:hidden mb-4">
+      {/* Main Content with Sub-Sidebar */}
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Desktop Sub-Sidebar */}
+        <div className="hidden lg:block">
+          <ProjectSubSidebar 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab} 
+          />
+        </div>
+        
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-6 lg:px-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              {/* Mobile/Tablet Navigation */}
+              <div className="lg:hidden mb-4">
             <div className="bg-card border rounded-lg p-3">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-medium text-muted-foreground">Project Section</h2>
@@ -4884,7 +4874,9 @@ const ProjectDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
+            </div>
+          </div>
+        </div>
       </div>
     </SidebarProvider>
   );
