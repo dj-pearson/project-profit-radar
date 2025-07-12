@@ -8860,6 +8860,7 @@ export type Database = {
         Row: {
           actual_hours: number | null
           assigned_to: string | null
+          company_id: string
           completion_percentage: number | null
           created_at: string
           created_by: string | null
@@ -8878,6 +8879,7 @@ export type Database = {
         Insert: {
           actual_hours?: number | null
           assigned_to?: string | null
+          company_id: string
           completion_percentage?: number | null
           created_at?: string
           created_by?: string | null
@@ -8896,6 +8898,7 @@ export type Database = {
         Update: {
           actual_hours?: number | null
           assigned_to?: string | null
+          company_id?: string
           completion_percentage?: number | null
           created_at?: string
           created_by?: string | null
@@ -8912,6 +8915,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_phase_id_fkey"
             columns: ["phase_id"]
