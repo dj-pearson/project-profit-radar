@@ -105,9 +105,9 @@ export const SimplifiedSidebar = () => {
                   areaId = 'projects';
                 } else if (item.url === '/financial-hub' || item.url.includes('/financial')) {
                   areaId = 'financial';
-                } else if (item.url === '/people-hub' || item.url.includes('/people')) {
+                } else if (item.url === '/people-hub' || item.url.includes('/people') || item.url.includes('/crm') || item.url.includes('/team')) {
                   areaId = 'people';
-                } else if (item.url === '/operations-hub' || item.url.includes('/operations')) {
+                } else if (item.url === '/operations-hub' || item.url.includes('/operations') || item.url.includes('/safety') || item.url.includes('/permit') || item.url.includes('/bond') || item.url.includes('/warranty') || item.url.includes('/compliance')) {
                   areaId = 'operations';
                 } else if (item.url === '/admin-hub' || item.url.includes('/admin')) {
                   areaId = 'admin';
@@ -115,22 +115,13 @@ export const SimplifiedSidebar = () => {
                 
                 const sections = getAreaSections(areaId);
                 
-                // Debug logging to help troubleshoot
-                console.log(`Navigation item: ${item.title}, URL: ${item.url}, Area ID: ${areaId}`);
-                console.log(`User role: ${userProfile?.role}, Collapsed: ${collapsed}`);
-                console.log(`Area ${areaId} has ${sections.length} sections:`, sections);
-                
                 // Dashboard should not have dropdown (only has 1 section with 1 item)
                 // Other areas should have dropdown if they have content
                 const hasSubSections = areaId !== 'overview' && sections.length > 0;
                 const isExpanded = expandedSections.includes(areaId);
                 
-                console.log(`${item.title} - hasSubSections: ${hasSubSections}, collapsed: ${collapsed}, sections.length: ${sections.length}`);
-                
-                // Temporary: Always show dropdown for People and Operations for debugging
-                const shouldShowDropdown = hasSubSections && (!collapsed || areaId === 'people' || areaId === 'operations');
-                
-                console.log(`${item.title} - shouldShowDropdown: ${shouldShowDropdown}, areaId: ${areaId}`);
+                // Show dropdown for areas that have sub-sections when not collapsed
+                const shouldShowDropdown = hasSubSections && !collapsed;
                 
                 return (
                   <SidebarMenuItem key={item.url}>
