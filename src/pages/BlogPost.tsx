@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -169,20 +170,37 @@ const BlogPost = () => {
             </header>
 
             {/* Article Content */}
-            <article className="prose prose-lg max-w-none prose-headings:text-construction-dark prose-a:text-construction-blue hover:prose-a:text-construction-orange">
-              <div 
-                dangerouslySetInnerHTML={{ 
-                  __html: post.body
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/## (.*?)(\n|$)/g, '<h2>$1</h2>')
-                    .replace(/### (.*?)(\n|$)/g, '<h3>$1</h3>')
-                    .replace(/\n\n/g, '</p><p>')
-                    .replace(/^/, '<p>')
-                    .replace(/$/, '</p>')
-                    .replace(/<p><h/g, '<h')
-                    .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
-                }} 
-              />
+            <article className="prose prose-lg max-w-none prose-headings:text-construction-dark prose-a:text-construction-blue hover:prose-a:text-construction-orange prose-strong:text-construction-dark">
+              <ReactMarkdown
+                components={{
+                  h1: ({ children }) => <h1 className="text-3xl font-bold text-construction-dark mb-4 mt-8">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-2xl font-semibold text-construction-dark mb-3 mt-6">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-xl font-semibold text-construction-dark mb-2 mt-4">{children}</h3>,
+                  h4: ({ children }) => <h4 className="text-lg font-semibold text-construction-dark mb-2 mt-3">{children}</h4>,
+                  p: ({ children }) => <p className="mb-4 text-gray-700 leading-relaxed">{children}</p>,
+                  strong: ({ children }) => <strong className="font-semibold text-construction-dark">{children}</strong>,
+                  a: ({ href, children }) => (
+                    <a 
+                      href={href} 
+                      className="text-construction-blue hover:text-construction-orange transition-colors underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {children}
+                    </a>
+                  ),
+                  ul: ({ children }) => <ul className="mb-4 space-y-2 list-disc list-inside">{children}</ul>,
+                  ol: ({ children }) => <ol className="mb-4 space-y-2 list-decimal list-inside">{children}</ol>,
+                  li: ({ children }) => <li className="text-gray-700 ml-4">{children}</li>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-construction-blue pl-4 py-2 my-4 bg-construction-light/30 rounded-r-md">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {post.body}
+              </ReactMarkdown>
             </article>
 
             {/* Call to Action */}
