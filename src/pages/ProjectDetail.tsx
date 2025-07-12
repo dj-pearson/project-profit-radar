@@ -34,7 +34,8 @@ import {
   Users,
   AlertTriangle,
   Package,
-  Wrench
+  Wrench,
+  ExternalLink
 } from 'lucide-react';
 
 interface PunchListItem {
@@ -160,6 +161,8 @@ const ProjectDetail = () => {
   const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
   const [addTeamMemberDialogOpen, setAddTeamMemberDialogOpen] = useState(false);
   const [addPermitDialogOpen, setAddPermitDialogOpen] = useState(false);
+  const [editPermitDialogOpen, setEditPermitDialogOpen] = useState(false);
+  const [editingPermit, setEditingPermit] = useState<any>(null);
   const [addWarrantyDialogOpen, setAddWarrantyDialogOpen] = useState(false);
   const [addDocumentDialogOpen, setAddDocumentDialogOpen] = useState(false);
   const [addJobCostDialogOpen, setAddJobCostDialogOpen] = useState(false);
@@ -2290,10 +2293,21 @@ const ProjectDetail = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => navigate('/permit-management')}
+                            onClick={() => {
+                              setEditingPermit(permit);
+                              setEditPermitDialogOpen(true);
+                            }}
                           >
                             <FileText className="h-3 w-3 mr-1" />
-                            View Details
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate('/permit-management')}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View All
                           </Button>
                         </div>
                       </div>
@@ -3340,6 +3354,22 @@ const ProjectDetail = () => {
           onClose={() => setAddPermitDialogOpen(false)}
           onSave={() => {
             setAddPermitDialogOpen(false);
+            loadPermits();
+          }}
+        />
+      )}
+
+      {/* Edit Permit Dialog */}
+      {editPermitDialogOpen && (
+        <PermitForm
+          permit={editingPermit}
+          onClose={() => {
+            setEditPermitDialogOpen(false);
+            setEditingPermit(null);
+          }}
+          onSave={() => {
+            setEditPermitDialogOpen(false);
+            setEditingPermit(null);
             loadPermits();
           }}
         />
