@@ -87,6 +87,7 @@ import FinancialHub from "./pages/hubs/FinancialHub";
 import PeopleHub from "./pages/hubs/PeopleHub";
 import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
+import CompanySettings from "./pages/CompanySettings";
 
 const queryClient = new QueryClient();
 
@@ -305,6 +306,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/admin/seo">
             <SEOManager />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/company-settings"
+        element={
+          <RouteGuard routePath="/company-settings">
+            <CompanySettings />
           </RouteGuard>
         }
       />
