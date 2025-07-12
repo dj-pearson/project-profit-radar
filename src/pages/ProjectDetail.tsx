@@ -418,6 +418,81 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleEditTask = (task: any) => {
+    setEditingTask(task);
+    setEditTaskDialogOpen(true);
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editingTask || !user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          name: editingTask.name,
+          description: editingTask.description,
+          priority: editingTask.priority,
+          status: editingTask.status,
+          estimated_hours: editingTask.estimated_hours,
+          actual_hours: editingTask.actual_hours,
+          due_date: editingTask.due_date || null,
+          completion_percentage: editingTask.completion_percentage
+        })
+        .eq('id', editingTask.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTasks(prev => prev.map(task => task.id === editingTask.id ? data : task));
+      setEditTaskDialogOpen(false);
+      setEditingTask(null);
+      toast({
+        title: "Task updated",
+        description: "Task has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleProgressUpdate = async (taskId: string, newProgress: number) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          completion_percentage: newProgress,
+          status: newProgress === 100 ? 'completed' : newProgress > 0 ? 'in_progress' : 'todo'
+        })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      setTasks(prev => prev.map(task => 
+        task.id === taskId 
+          ? { 
+              ...task, 
+              completion_percentage: newProgress,
+              status: newProgress === 100 ? 'completed' : newProgress > 0 ? 'in_progress' : 'todo'
+            }
+          : task
+      ));
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update progress. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreateDailyReport = async () => {
     try {
       const { data, error } = await supabase
@@ -4809,6 +4884,7 @@ const ProjectDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
       </div>
     </SidebarProvider>
   );
