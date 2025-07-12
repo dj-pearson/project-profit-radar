@@ -31,6 +31,7 @@ import ClientPortal from "./pages/ClientPortal";
 import Reports from "./pages/Reports";
 import BlogManager from "./pages/BlogManager";
 import Resources from "./pages/Resources";
+import BlogPost from "./pages/BlogPost";
 import ROICalculator from "./pages/ROICalculator";
 import LogoShowcase from "./components/LogoShowcase";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
@@ -319,6 +320,7 @@ const AppContent = () => {
         }
       />
       <Route path="/resources" element={<Resources />} />
+      <Route path="/resources/:slug" element={<BlogPost />} />
       <Route path="/roi-calculator" element={<ROICalculator />} />
       <Route path="/logo-showcase" element={<LogoShowcase />} />
       <Route path="/subscription" element={<SubscriptionSettings />} />
