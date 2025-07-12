@@ -19,6 +19,8 @@ import InvoiceGenerator from '@/components/InvoiceGenerator';
 import { PermitForm } from '@/components/permits/PermitForm';
 import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
+import ProjectProfitLoss from '@/components/project/ProjectProfitLoss';
+import EnhancedProjectOverview from '@/components/project/EnhancedProjectOverview';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
@@ -1870,15 +1872,7 @@ const ProjectDetail = () => {
           </div>
 
           <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-            {/* Project Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Progress</p>
-                      <p className="text-2xl font-bold">{project.completion_percentage}%</p>
-                    </div>
+            <EnhancedProjectOverview projectId={projectId!} />
                     <BarChart3 className="h-8 w-8 text-construction-blue" />
                   </div>
                   <Progress value={project.completion_percentage} className="mt-2" />
