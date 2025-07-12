@@ -3999,6 +3999,122 @@ export type Database = {
           },
         ]
       }
+      import_field_suggestions: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          data_sample: string[] | null
+          id: string
+          import_session_id: string
+          source_field: string
+          suggested_target_field: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string
+          data_sample?: string[] | null
+          id?: string
+          import_session_id: string
+          source_field: string
+          suggested_target_field: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          data_sample?: string[] | null
+          id?: string
+          import_session_id?: string
+          source_field?: string
+          suggested_target_field?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_field_suggestions_import_session_id_fkey"
+            columns: ["import_session_id"]
+            isOneToOne: false
+            referencedRelation: "import_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_sessions: {
+        Row: {
+          company_id: string
+          confidence_score: number | null
+          created_at: string
+          created_by: string
+          detected_data_type: string | null
+          error_log: Json | null
+          failed_records: number | null
+          field_mappings: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          preview_data: Json | null
+          processed_records: number | null
+          source_platform: string | null
+          status: string
+          total_records: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string
+          created_by: string
+          detected_data_type?: string | null
+          error_log?: Json | null
+          failed_records?: number | null
+          field_mappings?: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id?: string
+          preview_data?: Json | null
+          processed_records?: number | null
+          source_platform?: string | null
+          status?: string
+          total_records?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string
+          detected_data_type?: string | null
+          error_log?: Json | null
+          failed_records?: number | null
+          field_mappings?: Json | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          preview_data?: Json | null
+          processed_records?: number | null
+          source_platform?: string | null
+          status?: string
+          total_records?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_sessions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurance_claims: {
         Row: {
           adjuster_company: string | null
