@@ -64,6 +64,7 @@ export const SimplifiedSidebar = () => {
   };
 
   const toggleSection = (sectionId: string) => {
+    console.log(`Toggling section: ${sectionId}`);
     setExpandedSections(prev => 
       prev.includes(sectionId) 
         ? prev.filter(id => id !== sectionId)
@@ -128,6 +129,11 @@ export const SimplifiedSidebar = () => {
                 
                 // Show dropdown for areas that have sub-sections when not collapsed
                 const shouldShowDropdown = hasSubSections && !collapsed;
+                
+                // Debug specific sections that aren't working
+                if (item.title === 'People' || item.title === 'Operations') {
+                  console.log(`${item.title} DEBUG - areaId: ${areaId}, hasSubSections: ${hasSubSections}, collapsed: ${collapsed}, shouldShowDropdown: ${shouldShowDropdown}, sections: ${sections.length}`);
+                }
                 
                 
                 return (
