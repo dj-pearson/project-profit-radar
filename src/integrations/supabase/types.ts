@@ -1118,6 +1118,105 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          additional_settings: Json | null
+          company_id: string
+          company_logo: string | null
+          created_at: string
+          created_by: string | null
+          default_markup: number
+          default_project_view: string
+          default_working_hours: string
+          due_date_reminders: boolean
+          email_notifications: boolean
+          enable_crm: boolean
+          enable_document_management: boolean
+          enable_financial_management: boolean
+          enable_mobile_access: boolean
+          enable_project_management: boolean
+          enable_reporting: boolean
+          enable_safety_management: boolean
+          enable_time_tracking: boolean
+          fiscal_year_start: string
+          id: string
+          primary_color: string
+          project_update_notifications: boolean
+          safety_alerts: boolean
+          time_zone: string
+          updated_at: string
+        }
+        Insert: {
+          additional_settings?: Json | null
+          company_id: string
+          company_logo?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_markup?: number
+          default_project_view?: string
+          default_working_hours?: string
+          due_date_reminders?: boolean
+          email_notifications?: boolean
+          enable_crm?: boolean
+          enable_document_management?: boolean
+          enable_financial_management?: boolean
+          enable_mobile_access?: boolean
+          enable_project_management?: boolean
+          enable_reporting?: boolean
+          enable_safety_management?: boolean
+          enable_time_tracking?: boolean
+          fiscal_year_start?: string
+          id?: string
+          primary_color?: string
+          project_update_notifications?: boolean
+          safety_alerts?: boolean
+          time_zone?: string
+          updated_at?: string
+        }
+        Update: {
+          additional_settings?: Json | null
+          company_id?: string
+          company_logo?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_markup?: number
+          default_project_view?: string
+          default_working_hours?: string
+          due_date_reminders?: boolean
+          email_notifications?: boolean
+          enable_crm?: boolean
+          enable_document_management?: boolean
+          enable_financial_management?: boolean
+          enable_mobile_access?: boolean
+          enable_project_management?: boolean
+          enable_reporting?: boolean
+          enable_safety_management?: boolean
+          enable_time_tracking?: boolean
+          fiscal_year_start?: string
+          id?: string
+          primary_color?: string
+          project_update_notifications?: boolean
+          safety_alerts?: boolean
+          time_zone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_reports: {
         Row: {
           compliance_score: number | null

@@ -83,21 +83,54 @@ const CompanySettings = () => {
 
     setLoading(true);
     try {
-      const { data: company, error } = await supabase
+      // Load basic company info
+      const { data: company, error: companyError } = await supabase
         .from('companies')
-        .select('*')
+        .select('name, address')
         .eq('id', userProfile.company_id)
         .single();
 
-      if (error) throw error;
+      if (companyError) throw companyError;
 
-      if (company) {
-        setSettings(prev => ({
-          ...prev,
-          name: company.name || '',
-          address: company.address || ''
-        }));
-      }
+      // Load company settings
+      const { data: companySettings, error: settingsError } = await supabase
+        .from('company_settings')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .maybeSingle();
+
+      if (settingsError) throw settingsError;
+
+      // Update settings state
+      setSettings(prev => ({
+        ...prev,
+        // Company info
+        name: company?.name || '',
+        address: company?.address || '',
+        // Feature toggles
+        enableProjectManagement: companySettings?.enable_project_management ?? true,
+        enableTimeTracking: companySettings?.enable_time_tracking ?? true,
+        enableFinancialManagement: companySettings?.enable_financial_management ?? true,
+        enableDocumentManagement: companySettings?.enable_document_management ?? true,
+        enableCRM: companySettings?.enable_crm ?? true,
+        enableSafetyManagement: companySettings?.enable_safety_management ?? true,
+        enableMobileAccess: companySettings?.enable_mobile_access ?? true,
+        enableReporting: companySettings?.enable_reporting ?? true,
+        // Notification settings
+        emailNotifications: companySettings?.email_notifications ?? true,
+        projectUpdateNotifications: companySettings?.project_update_notifications ?? true,
+        dueDateReminders: companySettings?.due_date_reminders ?? true,
+        safetyAlerts: companySettings?.safety_alerts ?? true,
+        // UI/UX settings
+        companyLogo: companySettings?.company_logo || '',
+        primaryColor: companySettings?.primary_color || '#3b82f6',
+        defaultProjectView: companySettings?.default_project_view || 'dashboard',
+        // Business settings
+        defaultWorkingHours: companySettings?.default_working_hours || '8:00 AM - 5:00 PM',
+        timeZone: companySettings?.time_zone || 'America/New_York',
+        fiscalYearStart: companySettings?.fiscal_year_start || 'January',
+        defaultMarkup: companySettings?.default_markup || 20
+      }));
     } catch (error) {
       console.error('Error loading company settings:', error);
       toast({
@@ -122,7 +155,8 @@ const CompanySettings = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      // Update company basic info
+      const { error: companyError } = await supabase
         .from('companies')
         .update({
           name: settings.name,
@@ -131,7 +165,36 @@ const CompanySettings = () => {
         })
         .eq('id', userProfile.company_id);
 
-      if (error) throw error;
+      if (companyError) throw companyError;
+
+      // Update or insert company settings
+      const { error: settingsError } = await supabase
+        .from('company_settings')
+        .upsert({
+          company_id: userProfile.company_id,
+          enable_project_management: settings.enableProjectManagement,
+          enable_time_tracking: settings.enableTimeTracking,
+          enable_financial_management: settings.enableFinancialManagement,
+          enable_document_management: settings.enableDocumentManagement,
+          enable_crm: settings.enableCRM,
+          enable_safety_management: settings.enableSafetyManagement,
+          enable_mobile_access: settings.enableMobileAccess,
+          enable_reporting: settings.enableReporting,
+          email_notifications: settings.emailNotifications,
+          project_update_notifications: settings.projectUpdateNotifications,
+          due_date_reminders: settings.dueDateReminders,
+          safety_alerts: settings.safetyAlerts,
+          company_logo: settings.companyLogo,
+          primary_color: settings.primaryColor,
+          default_project_view: settings.defaultProjectView,
+          default_working_hours: settings.defaultWorkingHours,
+          time_zone: settings.timeZone,
+          fiscal_year_start: settings.fiscalYearStart,
+          default_markup: settings.defaultMarkup,
+          updated_at: new Date().toISOString()
+        });
+
+      if (settingsError) throw settingsError;
 
       toast({
         title: "Success",
