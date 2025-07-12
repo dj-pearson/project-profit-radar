@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DocumentCard } from '@/components/documents/DocumentCard';
 import DocumentOCRProcessor from '@/components/ocr/DocumentOCRProcessor';
+import { SmartImportWizard } from '@/components/smart-import/SmartImportWizard';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
@@ -26,7 +27,8 @@ import {
   User,
   Calendar,
   Brain,
-  Zap
+  Zap,
+  Database
 } from 'lucide-react';
 
 interface Document {
@@ -84,6 +86,9 @@ const DocumentManagement = () => {
   const [showOCRProcessor, setShowOCRProcessor] = useState(false);
   const [currentProcessingFile, setCurrentProcessingFile] = useState<File | null>(null);
   const [useSmartProcessing, setUseSmartProcessing] = useState(true);
+  
+  // Smart import state
+  const [isSmartImportOpen, setIsSmartImportOpen] = useState(false);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -396,7 +401,16 @@ const DocumentManagement = () => {
       title={pageTitle}
       showTrialBanner={false}
     >
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-6 gap-2">
+        <Button
+          onClick={() => setIsSmartImportOpen(true)}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Database className="h-4 w-4" />
+          Smart Import
+        </Button>
+        
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -600,6 +614,16 @@ const DocumentManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Smart Import Wizard */}
+      <SmartImportWizard
+        isOpen={isSmartImportOpen}
+        onClose={() => setIsSmartImportOpen(false)}
+        onImportComplete={() => {
+          setIsSmartImportOpen(false);
+          loadDocuments();
+        }}
+      />
     </DashboardLayout>
   );
 };

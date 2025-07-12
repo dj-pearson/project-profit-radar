@@ -1118,6 +1118,105 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          additional_settings: Json | null
+          company_id: string
+          company_logo: string | null
+          created_at: string
+          created_by: string | null
+          default_markup: number
+          default_project_view: string
+          default_working_hours: string
+          due_date_reminders: boolean
+          email_notifications: boolean
+          enable_crm: boolean
+          enable_document_management: boolean
+          enable_financial_management: boolean
+          enable_mobile_access: boolean
+          enable_project_management: boolean
+          enable_reporting: boolean
+          enable_safety_management: boolean
+          enable_time_tracking: boolean
+          fiscal_year_start: string
+          id: string
+          primary_color: string
+          project_update_notifications: boolean
+          safety_alerts: boolean
+          time_zone: string
+          updated_at: string
+        }
+        Insert: {
+          additional_settings?: Json | null
+          company_id: string
+          company_logo?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_markup?: number
+          default_project_view?: string
+          default_working_hours?: string
+          due_date_reminders?: boolean
+          email_notifications?: boolean
+          enable_crm?: boolean
+          enable_document_management?: boolean
+          enable_financial_management?: boolean
+          enable_mobile_access?: boolean
+          enable_project_management?: boolean
+          enable_reporting?: boolean
+          enable_safety_management?: boolean
+          enable_time_tracking?: boolean
+          fiscal_year_start?: string
+          id?: string
+          primary_color?: string
+          project_update_notifications?: boolean
+          safety_alerts?: boolean
+          time_zone?: string
+          updated_at?: string
+        }
+        Update: {
+          additional_settings?: Json | null
+          company_id?: string
+          company_logo?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_markup?: number
+          default_project_view?: string
+          default_working_hours?: string
+          due_date_reminders?: boolean
+          email_notifications?: boolean
+          enable_crm?: boolean
+          enable_document_management?: boolean
+          enable_financial_management?: boolean
+          enable_mobile_access?: boolean
+          enable_project_management?: boolean
+          enable_reporting?: boolean
+          enable_safety_management?: boolean
+          enable_time_tracking?: boolean
+          fiscal_year_start?: string
+          id?: string
+          primary_color?: string
+          project_update_notifications?: boolean
+          safety_alerts?: boolean
+          time_zone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_reports: {
         Row: {
           compliance_score: number | null
@@ -3894,6 +3993,122 @@ export type Database = {
           {
             foreignKeyName: "forms_1099_generated_by_fkey"
             columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_field_suggestions: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          data_sample: string[] | null
+          id: string
+          import_session_id: string
+          source_field: string
+          suggested_target_field: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string
+          data_sample?: string[] | null
+          id?: string
+          import_session_id: string
+          source_field: string
+          suggested_target_field: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          data_sample?: string[] | null
+          id?: string
+          import_session_id?: string
+          source_field?: string
+          suggested_target_field?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_field_suggestions_import_session_id_fkey"
+            columns: ["import_session_id"]
+            isOneToOne: false
+            referencedRelation: "import_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_sessions: {
+        Row: {
+          company_id: string
+          confidence_score: number | null
+          created_at: string
+          created_by: string
+          detected_data_type: string | null
+          error_log: Json | null
+          failed_records: number | null
+          field_mappings: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          preview_data: Json | null
+          processed_records: number | null
+          source_platform: string | null
+          status: string
+          total_records: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string
+          created_by: string
+          detected_data_type?: string | null
+          error_log?: Json | null
+          failed_records?: number | null
+          field_mappings?: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          id?: string
+          preview_data?: Json | null
+          processed_records?: number | null
+          source_platform?: string | null
+          status?: string
+          total_records?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string
+          detected_data_type?: string | null
+          error_log?: Json | null
+          failed_records?: number | null
+          field_mappings?: Json | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          preview_data?: Json | null
+          processed_records?: number | null
+          source_platform?: string | null
+          status?: string
+          total_records?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_sessions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_sessions_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]

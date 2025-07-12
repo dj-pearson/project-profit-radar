@@ -40,6 +40,30 @@ interface Company {
   };
 }
 
+interface CompanySettings {
+  id: string;
+  company_id: string;
+  enable_project_management: boolean;
+  enable_time_tracking: boolean;
+  enable_financial_management: boolean;
+  enable_document_management: boolean;
+  enable_crm: boolean;
+  enable_safety_management: boolean;
+  enable_mobile_access: boolean;
+  enable_reporting: boolean;
+  email_notifications: boolean;
+  project_update_notifications: boolean;
+  due_date_reminders: boolean;
+  safety_alerts: boolean;
+  company_logo: string | null;
+  primary_color: string;
+  default_project_view: string;
+  default_working_hours: string;
+  time_zone: string;
+  fiscal_year_start: string;
+  default_markup: number;
+}
+
 const Companies = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
@@ -50,7 +74,9 @@ const Companies = () => {
   const [filterTier, setFilterTier] = useState('all');
   const [loadingData, setLoadingData] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedCompanySettings, setSelectedCompanySettings] = useState<CompanySettings | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -121,6 +147,30 @@ const Companies = () => {
       });
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const loadCompanySettings = async (companyId: string) => {
+    try {
+      setLoadingSettings(true);
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .eq('company_id', companyId)
+        .single();
+
+      if (error) {
+        console.error('Error loading company settings:', error);
+        setSelectedCompanySettings(null);
+        return;
+      }
+
+      setSelectedCompanySettings(data);
+    } catch (error: any) {
+      console.error('Error loading company settings:', error);
+      setSelectedCompanySettings(null);
+    } finally {
+      setLoadingSettings(false);
     }
   };
 
@@ -258,12 +308,13 @@ const Companies = () => {
                   </div>
                   
                   <div className="flex justify-end space-x-2 pt-2">
-                    <Button
+                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
+                      onClick={async () => {
                         setSelectedCompany(company);
                         setIsDetailDialogOpen(true);
+                        await loadCompanySettings(company.id);
                       }}
                     >
                       <Eye className="h-3 w-3 mr-1" />
@@ -289,16 +340,17 @@ const Companies = () => {
 
       {/* Company Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Company Details</DialogTitle>
             <DialogDescription>
-              Detailed information about {selectedCompany?.name}
+              Detailed information and settings for {selectedCompany?.name}
             </DialogDescription>
           </DialogHeader>
           
           {selectedCompany && (
             <div className="space-y-6">
+              {/* Basic Company Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">Company Name</Label>
@@ -355,6 +407,108 @@ const Companies = () => {
                   </p>
                 </div>
               )}
+
+              {/* Company Settings */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Company Settings</h3>
+                {loadingSettings ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">Loading settings...</p>
+                  </div>
+                ) : selectedCompanySettings ? (
+                  <div className="space-y-6">
+                    {/* Feature Toggles */}
+                    <div>
+                      <h4 className="text-md font-medium mb-3 text-muted-foreground">Enabled Features</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                          { key: 'enable_project_management', label: 'Project Management' },
+                          { key: 'enable_time_tracking', label: 'Time Tracking' },
+                          { key: 'enable_financial_management', label: 'Financial Management' },
+                          { key: 'enable_document_management', label: 'Document Management' },
+                          { key: 'enable_crm', label: 'CRM' },
+                          { key: 'enable_safety_management', label: 'Safety Management' },
+                          { key: 'enable_mobile_access', label: 'Mobile Access' },
+                          { key: 'enable_reporting', label: 'Reporting' }
+                        ].map(feature => (
+                          <div key={feature.key} className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              selectedCompanySettings[feature.key as keyof CompanySettings] 
+                                ? 'bg-green-500' 
+                                : 'bg-gray-300'
+                            }`} />
+                            <span className="text-sm">{feature.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Notification Settings */}
+                    <div>
+                      <h4 className="text-md font-medium mb-3 text-muted-foreground">Notification Settings</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { key: 'email_notifications', label: 'Email Notifications' },
+                          { key: 'project_update_notifications', label: 'Project Updates' },
+                          { key: 'due_date_reminders', label: 'Due Date Reminders' },
+                          { key: 'safety_alerts', label: 'Safety Alerts' }
+                        ].map(setting => (
+                          <div key={setting.key} className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              selectedCompanySettings[setting.key as keyof CompanySettings] 
+                                ? 'bg-green-500' 
+                                : 'bg-gray-300'
+                            }`} />
+                            <span className="text-sm">{setting.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Business Settings */}
+                    <div>
+                      <h4 className="text-md font-medium mb-3 text-muted-foreground">Business Configuration</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Working Hours</Label>
+                          <p className="text-sm">{selectedCompanySettings.default_working_hours}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Time Zone</Label>
+                          <p className="text-sm">{selectedCompanySettings.time_zone}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Fiscal Year Start</Label>
+                          <p className="text-sm">{selectedCompanySettings.fiscal_year_start}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Default Markup</Label>
+                          <p className="text-sm">{selectedCompanySettings.default_markup}%</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Default Project View</Label>
+                          <p className="text-sm capitalize">{selectedCompanySettings.default_project_view}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Primary Color</Label>
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="w-4 h-4 rounded border"
+                              style={{ backgroundColor: selectedCompanySettings.primary_color }}
+                            />
+                            <p className="text-sm">{selectedCompanySettings.primary_color}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">No settings configured for this company</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

@@ -31,6 +31,7 @@ import ClientPortal from "./pages/ClientPortal";
 import Reports from "./pages/Reports";
 import BlogManager from "./pages/BlogManager";
 import Resources from "./pages/Resources";
+import BlogPost from "./pages/BlogPost";
 import ROICalculator from "./pages/ROICalculator";
 import LogoShowcase from "./components/LogoShowcase";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
@@ -87,6 +88,8 @@ import FinancialHub from "./pages/hubs/FinancialHub";
 import PeopleHub from "./pages/hubs/PeopleHub";
 import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
+import CompanySettings from "./pages/CompanySettings";
+import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
 
@@ -308,7 +311,16 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
+      <Route
+        path="/company-settings"
+        element={
+          <RouteGuard routePath="/company-settings">
+            <CompanySettings />
+          </RouteGuard>
+        }
+      />
       <Route path="/resources" element={<Resources />} />
+      <Route path="/resources/:slug" element={<BlogPost />} />
       <Route path="/roi-calculator" element={<ROICalculator />} />
       <Route path="/logo-showcase" element={<LogoShowcase />} />
       <Route path="/subscription" element={<SubscriptionSettings />} />
@@ -394,6 +406,7 @@ const AppContent = () => {
         }
       />
       <Route path="/knowledge-base" element={<Knowledgebase />} />
+      <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route
         path="/email-marketing"
