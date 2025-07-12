@@ -89,6 +89,7 @@ import PeopleHub from "./pages/hubs/PeopleHub";
 import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
 import CompanySettings from "./pages/CompanySettings";
+import ScheduleManagement from "./pages/ScheduleManagement";
 import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
@@ -394,6 +395,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/crew-scheduling">
             <CrewScheduling />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/schedule-management"
+        element={
+          <RouteGuard routePath="/schedule-management">
+            <ScheduleManagement />
           </RouteGuard>
         }
       />

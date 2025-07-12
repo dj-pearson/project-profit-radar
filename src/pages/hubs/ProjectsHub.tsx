@@ -86,7 +86,8 @@ const ProjectsHub = () => {
       items: [
         { title: "Document Management", url: "/documents", description: "Store and organize project documents" },
         { title: "Materials", url: "/materials", description: "Track material usage and inventory" },
-        { title: "Equipment", url: "/equipment", description: "Manage equipment tracking and usage" }
+        { title: "Equipment", url: "/equipment", description: "Manage equipment tracking and usage" },
+        { title: "Schedule Management", url: "/schedule-management", description: "Visual timeline and Gantt charts for all projects" }
       ]
     }
   ];
