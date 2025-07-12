@@ -111,9 +111,9 @@ export const SimplifiedSidebar = () => {
                   areaId = 'projects';
                 } else if (item.url === '/financial-hub' || item.url.includes('/financial')) {
                   areaId = 'financial';
-                } else if (item.url === '/people-hub' || item.url.includes('/people') || item.url.includes('/crm') || item.url.includes('/team')) {
+                } else if (item.url === '/people-hub' || item.url.includes('/people-hub') || item.url.includes('/people') || item.url.includes('/crm') || item.url.includes('/team')) {
                   areaId = 'people';
-                } else if (item.url === '/operations-hub' || item.url.includes('/operations') || item.url.includes('/safety') || item.url.includes('/permit') || item.url.includes('/bond') || item.url.includes('/warranty') || item.url.includes('/compliance')) {
+                } else if (item.url === '/operations-hub' || item.url.includes('/operations-hub') || item.url.includes('/operations') || item.url.includes('/safety') || item.url.includes('/permit') || item.url.includes('/bond') || item.url.includes('/warranty') || item.url.includes('/compliance')) {
                   areaId = 'operations';
                 } else if (item.url === '/admin-hub' || item.url.includes('/admin')) {
                   areaId = 'admin';
