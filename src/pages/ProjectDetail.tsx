@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import { PermitForm } from '@/components/permits/PermitForm';
+import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
@@ -139,6 +140,8 @@ const ProjectDetail = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [permits, setPermits] = useState<any[]>([]);
+  const [warranties, setWarranties] = useState<any[]>([]);
+  const [warrantiesLoading, setWarrantiesLoading] = useState(false);
   const [permitsLoading, setPermitsLoading] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
   const [jobCosts, setJobCosts] = useState<any[]>([]);
@@ -164,6 +167,8 @@ const ProjectDetail = () => {
   const [editPermitDialogOpen, setEditPermitDialogOpen] = useState(false);
   const [editingPermit, setEditingPermit] = useState<any>(null);
   const [addWarrantyDialogOpen, setAddWarrantyDialogOpen] = useState(false);
+  const [editWarrantyDialogOpen, setEditWarrantyDialogOpen] = useState(false);
+  const [editingWarranty, setEditingWarranty] = useState<any>(null);
   const [addDocumentDialogOpen, setAddDocumentDialogOpen] = useState(false);
   const [addJobCostDialogOpen, setAddJobCostDialogOpen] = useState(false);
   const [addRfiDialogOpen, setAddRfiDialogOpen] = useState(false);
@@ -246,15 +251,6 @@ const ProjectDetail = () => {
     priority: 'medium'
   });
 
-  const [newWarranty, setNewWarranty] = useState({
-    item_name: '',
-    warranty_type: '',
-    manufacturer: '',
-    warranty_start_date: '',
-    warranty_duration_months: 12,
-    description: '',
-    is_transferable: false
-  });
 
   const [newDocument, setNewDocument] = useState({
     document_name: '',
@@ -687,6 +683,7 @@ const ProjectDetail = () => {
       });
       
       loadPermits();
+      loadWarranties();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -696,50 +693,6 @@ const ProjectDetail = () => {
     }
   };
 
-  const handleCreateWarranty = async () => {
-    try {
-      const { error } = await supabase
-        .from('warranties')
-        .insert({
-          item_name: newWarranty.item_name,
-          warranty_type: newWarranty.warranty_type,
-          manufacturer: newWarranty.manufacturer,
-          warranty_start_date: newWarranty.warranty_start_date,
-          warranty_duration_months: newWarranty.warranty_duration_months,
-          item_description: newWarranty.description,
-          is_transferable: newWarranty.is_transferable,
-          is_transferred_to_customer: false,
-          project_id: projectId,
-          company_id: userProfile?.company_id,
-          created_by: user?.id,
-          status: 'active'
-        });
-
-      if (error) throw error;
-
-      setAddWarrantyDialogOpen(false);
-      setNewWarranty({
-        item_name: '',
-        warranty_type: '',
-        manufacturer: '',
-        warranty_start_date: '',
-        warranty_duration_months: 12,
-        description: '',
-        is_transferable: false
-      });
-
-      toast({
-        title: "Warranty added",
-        description: "Warranty has been added to the project."
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error adding warranty",
-        description: error.message
-      });
-    }
-  };
 
   const handleCreateDocument = async () => {
     try {
@@ -1311,6 +1264,31 @@ const ProjectDetail = () => {
       });
     } finally {
       setPermitsLoading(false);
+    }
+  };
+
+  const loadWarranties = async () => {
+    if (!projectId) return;
+    
+    setWarrantiesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('warranties')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setWarranties((data || []) as any);
+    } catch (error) {
+      console.error('Error loading warranties:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading warranties",
+        description: "There was a problem loading the warranties."
+      });
+    } finally {
+      setWarrantiesLoading(false);
     }
   };
 
@@ -2322,14 +2300,10 @@ const ProjectDetail = () => {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Warranties</h2>
               <div className="flex gap-2">
-                <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Warranty
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
+                <Button onClick={() => setAddWarrantyDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Warranty
+                </Button>
                 <Button variant="outline" onClick={() => navigate('/warranty-management')}>
                   <Wrench className="h-4 w-4 mr-2" />
                   View All Warranties
@@ -2337,19 +2311,99 @@ const ProjectDetail = () => {
               </div>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Track warranties for materials and equipment on this project</p>
-                <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="mt-4">
-                      Add First Warranty
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
-              </CardContent>
-            </Card>
+            {warrantiesLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Loading warranties...</p>
+                </div>
+              </div>
+            ) : warranties.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">No warranties added to this project yet</p>
+                  <Button onClick={() => setAddWarrantyDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Warranty
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {warranties.map((warranty) => (
+                  <Card key={warranty.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="outline">{warranty.warranty_type || 'General'}</Badge>
+                          <CardTitle className="text-lg">{warranty.item_name}</CardTitle>
+                          <Badge variant={
+                            warranty.status === 'active' ? 'default' :
+                            warranty.status === 'expired' ? 'destructive' :
+                            warranty.status === 'transferred' ? 'secondary' :
+                            'secondary'
+                          }>
+                            {warranty.status || 'active'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Manufacturer</Label>
+                            <p>{warranty.manufacturer || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Start Date</Label>
+                            <p>{warranty.warranty_start_date ? new Date(warranty.warranty_start_date).toLocaleDateString() : 'Not set'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">End Date</Label>
+                            <p>{warranty.warranty_end_date ? new Date(warranty.warranty_end_date).toLocaleDateString() : 'Not calculated'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Duration</Label>
+                            <p>{warranty.warranty_duration_months || 12} months</p>
+                          </div>
+                        </div>
+                        
+                        {warranty.item_description && (
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Description</Label>
+                            <p className="text-sm">{warranty.item_description}</p>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-end space-x-2 mt-3">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingWarranty(warranty);
+                              setEditWarrantyDialogOpen(true);
+                            }}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate('/warranty-management')}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View All
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="contacts" className="space-y-6">
@@ -3376,99 +3430,32 @@ const ProjectDetail = () => {
       )}
 
       {/* Add Warranty Dialog */}
-      <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add Warranty to Project</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="warranty-item">Item Name</Label>
-                <Input
-                  id="warranty-item"
-                  value={newWarranty.item_name}
-                  onChange={(e) => setNewWarranty(prev => ({ ...prev, item_name: e.target.value }))}
-                  placeholder="Item or equipment name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="warranty-type">Warranty Type</Label>
-                <Select value={newWarranty.warranty_type} onValueChange={(value) => setNewWarranty(prev => ({ ...prev, warranty_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select warranty type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manufacturer">Manufacturer Warranty</SelectItem>
-                    <SelectItem value="extended">Extended Warranty</SelectItem>
-                    <SelectItem value="workmanship">Workmanship Warranty</SelectItem>
-                    <SelectItem value="material">Material Warranty</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="warranty-manufacturer">Manufacturer</Label>
-                <Input
-                  id="warranty-manufacturer"
-                  value={newWarranty.manufacturer}
-                  onChange={(e) => setNewWarranty(prev => ({ ...prev, manufacturer: e.target.value }))}
-                  placeholder="Manufacturer name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="warranty-start">Start Date</Label>
-                <Input
-                  id="warranty-start"
-                  type="date"
-                  value={newWarranty.warranty_start_date}
-                  onChange={(e) => setNewWarranty(prev => ({ ...prev, warranty_start_date: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="warranty-description">Description</Label>
-              <Textarea
-                id="warranty-description"
-                value={newWarranty.description}
-                onChange={(e) => setNewWarranty(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Warranty description"
-                rows={2}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="warranty-duration">Duration (Months)</Label>
-                <Input
-                  id="warranty-duration"
-                  type="number"
-                  value={newWarranty.warranty_duration_months}
-                  onChange={(e) => setNewWarranty(prev => ({ ...prev, warranty_duration_months: parseInt(e.target.value) || 12 }))}
-                />
-              </div>
-              <div className="flex items-center space-x-2 pt-6">
-                <input
-                  type="checkbox"
-                  id="warranty-transferable"
-                  checked={newWarranty.is_transferable}
-                  onChange={(e) => setNewWarranty(prev => ({ ...prev, is_transferable: e.target.checked }))}
-                />
-                <Label htmlFor="warranty-transferable">Transferable to Customer</Label>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setAddWarrantyDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateWarranty}>
-                Add Warranty
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {addWarrantyDialogOpen && (
+        <WarrantyForm
+          projectId={projectId}
+          onClose={() => setAddWarrantyDialogOpen(false)}
+          onSave={() => {
+            setAddWarrantyDialogOpen(false);
+            loadWarranties();
+          }}
+        />
+      )}
+
+      {/* Edit Warranty Dialog */}
+      {editWarrantyDialogOpen && (
+        <WarrantyForm
+          warranty={editingWarranty}
+          onClose={() => {
+            setEditWarrantyDialogOpen(false);
+            setEditingWarranty(null);
+          }}
+          onSave={() => {
+            setEditWarrantyDialogOpen(false);
+            setEditingWarranty(null);
+            loadWarranties();
+          }}
+        />
+      )}
 
       {/* Add Document Dialog */}
       <Dialog open={addDocumentDialogOpen} onOpenChange={setAddDocumentDialogOpen}>

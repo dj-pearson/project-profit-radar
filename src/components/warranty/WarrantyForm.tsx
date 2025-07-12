@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 
 interface WarrantyFormProps {
   warranty?: any;
+  projectId?: string;
   onClose: () => void;
   onSave: () => void;
 }
@@ -34,7 +35,7 @@ interface PurchaseOrder {
   po_number: string;
 }
 
-export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, onClose, onSave }) => {
+export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, projectId, onClose, onSave }) => {
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -50,12 +51,12 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, onClose, o
     manufacturer: warranty?.manufacturer || '',
     model_number: warranty?.model_number || '',
     serial_number: warranty?.serial_number || '',
-    project_id: warranty?.project_id || '',
+    project_id: warranty?.project_id || projectId || '',
     vendor_id: warranty?.vendor_id || '',
     purchase_order_id: warranty?.purchase_order_id || '',
     warranty_duration_months: warranty?.warranty_duration_months || 12,
-    warranty_start_date: warranty?.warranty_start_date || new Date().toISOString().split('T')[0],
-    installation_date: warranty?.installation_date || '',
+    warranty_start_date: warranty?.warranty_start_date || undefined,
+    installation_date: warranty?.installation_date || undefined,
     coverage_details: warranty?.coverage_details || '',
     coverage_limitations: warranty?.coverage_limitations || '',
     is_transferable: warranty?.is_transferable || false,
@@ -324,8 +325,8 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, onClose, o
               <Input
                 id="warranty_start_date"
                 type="date"
-                value={formData.warranty_start_date}
-                onChange={(e) => handleInputChange('warranty_start_date', e.target.value)}
+                value={formData.warranty_start_date || ''}
+                onChange={(e) => handleInputChange('warranty_start_date', e.target.value || undefined)}
                 required
               />
             </div>
@@ -335,8 +336,8 @@ export const WarrantyForm: React.FC<WarrantyFormProps> = ({ warranty, onClose, o
               <Input
                 id="installation_date"
                 type="date"
-                value={formData.installation_date}
-                onChange={(e) => handleInputChange('installation_date', e.target.value)}
+                value={formData.installation_date || ''}
+                onChange={(e) => handleInputChange('installation_date', e.target.value || undefined)}
               />
             </div>
           </div>
