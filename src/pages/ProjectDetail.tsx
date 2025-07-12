@@ -2017,6 +2017,73 @@ const ProjectDetail = () => {
                     Add Task
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Task</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="task-name">Task Name</Label>
+                      <Input
+                        id="task-name"
+                        value={newTask.name}
+                        onChange={(e) => setNewTask(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter task name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="task-description">Description</Label>
+                      <Textarea
+                        id="task-description"
+                        value={newTask.description}
+                        onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Task description"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="task-priority">Priority</Label>
+                        <Select value={newTask.priority} onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="task-estimated-hours">Estimated Hours</Label>
+                        <Input
+                          id="task-estimated-hours"
+                          type="number"
+                          value={newTask.estimated_hours}
+                          onChange={(e) => setNewTask(prev => ({ ...prev, estimated_hours: parseFloat(e.target.value) || 0 }))}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="task-due-date">Due Date</Label>
+                      <Input
+                        id="task-due-date"
+                        type="date"
+                        value={newTask.due_date}
+                        onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button variant="outline" onClick={() => setCreateTaskDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateTask}>
+                        Create Task
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
               </Dialog>
             </div>
             
@@ -2025,7 +2092,7 @@ const ProjectDetail = () => {
                 <CardContent className="text-center py-8">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No tasks created yet</p>
-                  <Button variant="outline" className="mt-4">
+                  <Button variant="outline" className="mt-4" onClick={() => setCreateTaskDialogOpen(true)}>
                     Create First Task
                   </Button>
                 </CardContent>
@@ -3137,76 +3204,6 @@ const ProjectDetail = () => {
         </Tabs>
       </div>
 
-      {/* Create Task Dialog */}
-      <Dialog open={createTaskDialogOpen} onOpenChange={setCreateTaskDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="task-name">Task Name</Label>
-              <Input
-                id="task-name"
-                value={newTask.name}
-                onChange={(e) => setNewTask(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter task name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="task-description">Description</Label>
-              <Textarea
-                id="task-description"
-                value={newTask.description}
-                onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Task description"
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="task-priority">Priority</Label>
-                <Select value={newTask.priority} onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="task-estimated-hours">Estimated Hours</Label>
-                <Input
-                  id="task-estimated-hours"
-                  type="number"
-                  value={newTask.estimated_hours}
-                  onChange={(e) => setNewTask(prev => ({ ...prev, estimated_hours: parseFloat(e.target.value) || 0 }))}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="task-due-date">Due Date</Label>
-              <Input
-                id="task-due-date"
-                type="date"
-                value={newTask.due_date}
-                onChange={(e) => setNewTask(prev => ({ ...prev, due_date: e.target.value }))}
-              />
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setCreateTaskDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateTask}>
-                Create Task
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Create Daily Report Dialog */}
       <Dialog open={createReportDialogOpen} onOpenChange={setCreateReportDialogOpen}>
