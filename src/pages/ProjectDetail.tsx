@@ -36,7 +36,10 @@ import {
   AlertTriangle,
   Package,
   Wrench,
-  ExternalLink
+  ExternalLink,
+  Trash2,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 interface PunchListItem {
@@ -182,6 +185,11 @@ const ProjectDetail = () => {
   // User and contact lists
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
+  const [projectContacts, setProjectContacts] = useState<any[]>([]);
+  const [projectContactsLoading, setProjectContactsLoading] = useState(false);
+  const [addExistingContactDialogOpen, setAddExistingContactDialogOpen] = useState(false);
+  const [selectedContactToAdd, setSelectedContactToAdd] = useState<any>(null);
+  const [contactRole, setContactRole] = useState('client');
   
   // Form states
   const [newTask, setNewTask] = useState({
@@ -355,6 +363,7 @@ const ProjectDetail = () => {
       loadProjectData();
       loadAvailableUsers();
       loadContacts();
+      loadProjectContacts();
       loadPermits();
     }
   }, [projectId, user, userProfile, loading, navigate]);
@@ -549,41 +558,6 @@ const ProjectDetail = () => {
     }
   };
 
-  const handleCreateContact = async () => {
-    try {
-      const { error } = await supabase
-        .from('contacts')
-        .insert({
-          ...newContact,
-          company_id: userProfile?.company_id,
-          created_by: user?.id
-        });
-
-      if (error) throw error;
-
-      setAddContactDialogOpen(false);
-      setNewContact({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        company_name: '',
-        contact_type: 'client'
-      });
-      loadContacts();
-
-      toast({
-        title: "Contact added",
-        description: "Contact has been added successfully."
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error adding contact",
-        description: error.message
-      });
-    }
-  };
 
   const handleAddTeamMember = async () => {
     try {
@@ -642,6 +616,150 @@ const ProjectDetail = () => {
       setContacts(data || []);
     } catch (error: any) {
       console.error('Error loading contacts:', error);
+    }
+  };
+
+  const loadProjectContacts = async () => {
+    if (!projectId) return;
+    
+    setProjectContactsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('project_contacts')
+        .select(`
+          *,
+          contact:contacts(*)
+        `)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+      setProjectContacts(data || []);
+    } catch (error: any) {
+      console.error('Error loading project contacts:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load project contacts",
+        variant: "destructive",
+      });
+    } finally {
+      setProjectContactsLoading(false);
+    }
+  };
+
+  const handleCreateContact = async () => {
+    try {
+      const contactData = {
+        ...newContact,
+        company_id: userProfile?.company_id,
+        created_by: user?.id
+      };
+
+      const { data: contactResult, error: contactError } = await supabase
+        .from('contacts')
+        .insert(contactData)
+        .select()
+        .single();
+
+      if (contactError) throw contactError;
+
+      // Also add to project_contacts if we have a project
+      if (projectId && contactResult) {
+        const { error: projectContactError } = await supabase
+          .from('project_contacts')
+          .insert({
+            project_id: projectId,
+            contact_id: contactResult.id,
+            role: newContact.contact_type || 'client',
+            created_by: user?.id
+          });
+
+        if (projectContactError) {
+          console.error('Error linking contact to project:', projectContactError);
+        }
+      }
+
+      setAddContactDialogOpen(false);
+      setNewContact({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        company_name: '',
+        contact_type: 'client'
+      });
+      
+      loadContacts();
+      loadProjectContacts();
+      
+      toast({
+        title: "Success",
+        description: "Contact added to project successfully",
+      });
+    } catch (error: any) {
+      console.error('Error creating contact:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to create contact",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddExistingContact = async () => {
+    if (!selectedContactToAdd || !projectId) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_contacts')
+        .insert({
+          project_id: projectId,
+          contact_id: selectedContactToAdd.id,
+          role: contactRole,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      setAddExistingContactDialogOpen(false);
+      setSelectedContactToAdd(null);
+      setContactRole('client');
+      loadProjectContacts();
+      
+      toast({
+        title: "Success",
+        description: "Contact added to project successfully",
+      });
+    } catch (error: any) {
+      console.error('Error adding contact to project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add contact to project. Contact may already be assigned this role.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveProjectContact = async (projectContactId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_contacts')
+        .delete()
+        .eq('id', projectContactId);
+
+      if (error) throw error;
+
+      loadProjectContacts();
+      toast({
+        title: "Success",
+        description: "Contact removed from project",
+      });
+    } catch (error: any) {
+      console.error('Error removing contact from project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove contact from project",
+        variant: "destructive",
+      });
     }
   };
 
@@ -2409,14 +2527,24 @@ const ProjectDetail = () => {
           <TabsContent value="contacts" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Contacts</h2>
-              <Dialog open={addContactDialogOpen} onOpenChange={setAddContactDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Contact
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
+              <div className="flex gap-2">
+                <Dialog open={addContactDialogOpen} onOpenChange={setAddContactDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add New Contact
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+                <Dialog open={addExistingContactDialogOpen} onOpenChange={setAddExistingContactDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Users className="h-4 w-4 mr-2" />
+                      Add Existing Contact
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2473,6 +2601,99 @@ const ProjectDetail = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Project Contacts List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Contacts</CardTitle>
+                <CardDescription>
+                  Contacts associated with this specific project
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {projectContactsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading project contacts...</p>
+                  </div>
+                ) : projectContacts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No contacts assigned to this project yet</p>
+                    <div className="flex gap-2 justify-center mt-4">
+                      <Dialog open={addContactDialogOpen} onOpenChange={setAddContactDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">
+                            Create New Contact
+                          </Button>
+                        </DialogTrigger>
+                      </Dialog>
+                      <Dialog open={addExistingContactDialogOpen} onOpenChange={setAddExistingContactDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">
+                            Add Existing Contact
+                          </Button>
+                        </DialogTrigger>
+                      </Dialog>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {projectContacts.map((projectContact) => (
+                      <Card key={projectContact.id} className="relative">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-full bg-construction-blue flex items-center justify-center text-white text-sm font-medium">
+                                {projectContact.contact.first_name?.[0]}{projectContact.contact.last_name?.[0]}
+                              </div>
+                              <div>
+                                <CardTitle className="text-sm">
+                                  {projectContact.contact.first_name} {projectContact.contact.last_name}
+                                </CardTitle>
+                                <Badge variant="outline" className="text-xs">
+                                  {projectContact.role}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveProjectContact(projectContact.id)}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="space-y-2 text-xs">
+                            {projectContact.contact.email && (
+                              <div className="flex items-center space-x-2 text-muted-foreground">
+                                <Mail className="h-3 w-3" />
+                                <span>{projectContact.contact.email}</span>
+                              </div>
+                            )}
+                            {projectContact.contact.phone && (
+                              <div className="flex items-center space-x-2 text-muted-foreground">
+                                <Phone className="h-3 w-3" />
+                                <span>{projectContact.contact.phone}</span>
+                              </div>
+                            )}
+                            {projectContact.contact.company_name && (
+                              <div className="flex items-center space-x-2 text-muted-foreground">
+                                <Building2 className="h-3 w-3" />
+                                <span>{projectContact.contact.company_name}</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="invoicing" className="space-y-6">
@@ -4350,6 +4571,115 @@ const ProjectDetail = () => {
               </Button>
               <Button onClick={handleUpdateRFI}>
                 Update RFI
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Existing Contact Dialog */}
+      <Dialog open={addExistingContactDialogOpen} onOpenChange={setAddExistingContactDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Existing Contact to Project</DialogTitle>
+            <DialogDescription>
+              Search and select an existing contact to add to this project
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="contact-search">Search Contacts</Label>
+              <Select 
+                value={selectedContactToAdd?.id || ''} 
+                onValueChange={(value) => {
+                  const contact = contacts.find(c => c.id === value);
+                  setSelectedContactToAdd(contact);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a contact..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {contacts
+                    .filter(contact => 
+                      !projectContacts.some(pc => pc.contact_id === contact.id)
+                    )
+                    .map((contact) => (
+                    <SelectItem key={contact.id} value={contact.id}>
+                      {contact.first_name} {contact.last_name} 
+                      {contact.company_name && ` - ${contact.company_name}`}
+                      {contact.email && ` (${contact.email})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedContactToAdd && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-construction-blue flex items-center justify-center text-white text-sm font-medium">
+                      {selectedContactToAdd.first_name?.[0]}{selectedContactToAdd.last_name?.[0]}
+                    </div>
+                    <div>
+                      <p className="font-medium">{selectedContactToAdd.first_name} {selectedContactToAdd.last_name}</p>
+                      {selectedContactToAdd.company_name && (
+                        <p className="text-sm text-muted-foreground">{selectedContactToAdd.company_name}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    {selectedContactToAdd.email && (
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <Mail className="h-3 w-3" />
+                        <span>{selectedContactToAdd.email}</span>
+                      </div>
+                    )}
+                    {selectedContactToAdd.phone && (
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <Phone className="h-3 w-3" />
+                        <span>{selectedContactToAdd.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            <div>
+              <Label htmlFor="contact-role">Role in Project</Label>
+              <Select value={contactRole} onValueChange={setContactRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Client Contact</SelectItem>
+                  <SelectItem value="project_manager">Project Manager</SelectItem>
+                  <SelectItem value="architect">Architect</SelectItem>
+                  <SelectItem value="engineer">Engineer</SelectItem>
+                  <SelectItem value="supplier">Supplier</SelectItem>
+                  <SelectItem value="subcontractor">Subcontractor</SelectItem>
+                  <SelectItem value="inspector">Inspector</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => {
+                setAddExistingContactDialogOpen(false);
+                setSelectedContactToAdd(null);
+                setContactRole('client');
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddExistingContact}
+                disabled={!selectedContactToAdd}
+              >
+                Add to Project
               </Button>
             </div>
           </div>
