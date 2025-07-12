@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
+import { PermitForm } from '@/components/permits/PermitForm';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
@@ -136,6 +137,8 @@ const ProjectDetail = () => {
   const [phases, setPhases] = useState<Phase[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
+  const [permits, setPermits] = useState<any[]>([]);
+  const [permitsLoading, setPermitsLoading] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
   const [jobCosts, setJobCosts] = useState<any[]>([]);
   const [rfis, setRfis] = useState<any[]>([]);
@@ -353,6 +356,7 @@ const ProjectDetail = () => {
       loadProjectData();
       loadAvailableUsers();
       loadContacts();
+      loadPermits();
     }
   }, [projectId, user, userProfile, loading, navigate]);
 
@@ -678,6 +682,8 @@ const ProjectDetail = () => {
         title: "Permit added",
         description: "Permit has been added to the project."
       });
+      
+      loadPermits();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -1277,6 +1283,31 @@ const ProjectDetail = () => {
       });
     } finally {
       setPunchListLoading(false);
+    }
+  };
+
+  const loadPermits = async () => {
+    if (!projectId) return;
+    
+    setPermitsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('permits')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPermits((data || []) as any);
+    } catch (error) {
+      console.error('Error loading permits:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading permits",
+        description: "There was a problem loading the permits."
+      });
+    } finally {
+      setPermitsLoading(false);
     }
   };
 
@@ -2169,21 +2200,108 @@ const ProjectDetail = () => {
           <TabsContent value="permits" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Project Permits</h2>
-              <Button onClick={() => navigate('/permit-management')}>
-                <FileText className="h-4 w-4 mr-2" />
-                Manage Permits
-              </Button>
+              <div className="flex space-x-2">
+                <Button onClick={() => setAddPermitDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Permit
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/permit-management')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Manage All Permits
+                </Button>
+              </div>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Track permits and approvals for this project</p>
-                <Button variant="outline" onClick={() => navigate('/permit-management')} className="mt-4">
-                  Go to Permit Management
-                </Button>
-              </CardContent>
-            </Card>
+            {permitsLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Loading permits...</p>
+                </div>
+              </div>
+            ) : permits.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">No permits added to this project yet</p>
+                  <Button onClick={() => setAddPermitDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Permit
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {permits.map((permit) => (
+                  <Card key={permit.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="outline">{permit.permit_number || 'No Number'}</Badge>
+                          <CardTitle className="text-lg">{permit.permit_name}</CardTitle>
+                          <Badge variant={
+                            permit.application_status === 'approved' ? 'default' :
+                            permit.application_status === 'submitted' ? 'secondary' :
+                            permit.application_status === 'under_review' ? 'default' :
+                            'secondary'
+                          }>
+                            {permit.application_status?.replace('_', ' ') || 'not applied'}
+                          </Badge>
+                        </div>
+                        <Badge variant={
+                          permit.priority === 'urgent' ? 'destructive' : 
+                          permit.priority === 'high' ? 'destructive' : 
+                          permit.priority === 'medium' ? 'default' : 
+                          'secondary'
+                        }>
+                          {permit.priority} priority
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+                            <p>{permit.permit_type || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Issuing Authority</Label>
+                            <p>{permit.issuing_authority || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Application Date</Label>
+                            <p>{permit.application_date ? new Date(permit.application_date).toLocaleDateString() : 'Not set'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Expiry Date</Label>
+                            <p>{permit.permit_expiry_date ? new Date(permit.permit_expiry_date).toLocaleDateString() : 'Not set'}</p>
+                          </div>
+                        </div>
+                        
+                        {permit.description && (
+                          <div>
+                            <Label className="text-xs font-medium text-muted-foreground">Description</Label>
+                            <p className="text-sm">{permit.description}</p>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-end space-x-2 mt-3">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate('/permit-management')}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="warranties" className="space-y-6">
@@ -3216,103 +3334,16 @@ const ProjectDetail = () => {
       </Dialog>
 
       {/* Add Permit Dialog */}
-      <Dialog open={addPermitDialogOpen} onOpenChange={setAddPermitDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add Permit to Project</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="permit-name">Permit Name</Label>
-                <Input
-                  id="permit-name"
-                  value={newPermit.permit_name}
-                  onChange={(e) => setNewPermit(prev => ({ ...prev, permit_name: e.target.value }))}
-                  placeholder="Permit name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="permit-type">Permit Type</Label>
-                <Select value={newPermit.permit_type} onValueChange={(value) => setNewPermit(prev => ({ ...prev, permit_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select permit type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="building">Building Permit</SelectItem>
-                    <SelectItem value="environmental">Environmental Permit</SelectItem>
-                    <SelectItem value="demolition">Demolition Permit</SelectItem>
-                    <SelectItem value="electrical">Electrical Permit</SelectItem>
-                    <SelectItem value="plumbing">Plumbing Permit</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="permit-authority">Issuing Authority</Label>
-              <Input
-                id="permit-authority"
-                value={newPermit.issuing_authority}
-                onChange={(e) => setNewPermit(prev => ({ ...prev, issuing_authority: e.target.value }))}
-                placeholder="Authority name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="permit-description">Description</Label>
-              <Textarea
-                id="permit-description"
-                value={newPermit.description}
-                onChange={(e) => setNewPermit(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Permit description"
-                rows={2}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="permit-application-date">Application Date</Label>
-                <Input
-                  id="permit-application-date"
-                  type="date"
-                  value={newPermit.application_date}
-                  onChange={(e) => setNewPermit(prev => ({ ...prev, application_date: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="permit-expiry-date">Expiry Date</Label>
-                <Input
-                  id="permit-expiry-date"
-                  type="date"
-                  value={newPermit.permit_expiry_date}
-                  onChange={(e) => setNewPermit(prev => ({ ...prev, permit_expiry_date: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="permit-priority">Priority</Label>
-                <Select value={newPermit.priority} onValueChange={(value) => setNewPermit(prev => ({ ...prev, priority: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setAddPermitDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreatePermit}>
-                Add Permit
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {addPermitDialogOpen && (
+        <PermitForm
+          permit={{ project_id: projectId }}
+          onClose={() => setAddPermitDialogOpen(false)}
+          onSave={() => {
+            setAddPermitDialogOpen(false);
+            loadPermits();
+          }}
+        />
+      )}
 
       {/* Add Warranty Dialog */}
       <Dialog open={addWarrantyDialogOpen} onOpenChange={setAddWarrantyDialogOpen}>
