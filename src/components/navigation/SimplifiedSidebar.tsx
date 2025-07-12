@@ -135,16 +135,18 @@ export const SimplifiedSidebar = () => {
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild className="h-12">
-                      <div className={`flex items-center w-full ${getNavClass({ isActive })}`}>
+                      <div 
+                        className={`flex items-center w-full cursor-pointer ${getNavClass({ isActive })}`}
+                        onClick={() => {
+                          // Auto-expand sections when clicking hub pages (except Dashboard)
+                          if (item.title !== 'Dashboard' && hasSubSections) {
+                            toggleSection(areaId);
+                          }
+                        }}
+                      >
                         <NavLink 
                           to={item.url} 
                           className="flex items-center flex-1"
-                          onClick={() => {
-                            // Auto-expand sections when clicking hub pages (except Dashboard)
-                            if (item.title !== 'Dashboard' && hasSubSections) {
-                              toggleSection(areaId);
-                            }
-                          }}
                         >
                           <item.icon className="h-5 w-5" />
                           {!collapsed && (
@@ -164,16 +166,9 @@ export const SimplifiedSidebar = () => {
                           )}
                         </NavLink>
                         {forceDropdown && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-auto ml-auto flex-shrink-0"
-                            onClick={() => toggleSection(areaId)}
-                          >
-                            <ChevronRight 
-                              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
-                            />
-                          </Button>
+                          <ChevronRight 
+                            className={`h-4 w-4 transition-transform ml-auto flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`} 
+                          />
                         )}
                       </div>
                     </SidebarMenuButton>
