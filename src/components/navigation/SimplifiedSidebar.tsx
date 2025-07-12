@@ -130,8 +130,9 @@ export const SimplifiedSidebar = () => {
                 // Show dropdown for areas that have sub-sections when not collapsed
                 const shouldShowDropdown = hasSubSections && !collapsed;
                 
-                // Debug ALL sections to see what's happening
-                console.log(`${item.title} DEBUG - areaId: ${areaId}, hasSubSections: ${hasSubSections}, collapsed: ${collapsed}, shouldShowDropdown: ${shouldShowDropdown}, sections: ${sections.length}`);
+                // Force dropdown for all non-dashboard items temporarily for debugging
+                const forceDropdown = item.title !== 'Dashboard' && !collapsed;
+                
                 
                 
                 return (
@@ -156,7 +157,7 @@ export const SimplifiedSidebar = () => {
                             </Badge>
                           )}
                         </NavLink>
-                        {shouldShowDropdown && (
+                        {forceDropdown && (
                           <Button
                             variant="ghost"
                             size="sm"
