@@ -88,6 +88,7 @@ import PeopleHub from "./pages/hubs/PeopleHub";
 import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
 import CompanySettings from "./pages/CompanySettings";
+import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
 
@@ -403,6 +404,7 @@ const AppContent = () => {
         }
       />
       <Route path="/knowledge-base" element={<Knowledgebase />} />
+      <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route
         path="/email-marketing"

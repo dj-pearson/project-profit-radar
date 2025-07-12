@@ -10,7 +10,7 @@ Disallow: /private/
 Crawl-delay: 1
 
 # Sitemap reference
-Sitemap: https://builddesk.com/sitemap.xml
+Sitemap: https://build-desk.com/sitemap.xml
 
 # Construction industry specific pages
 Allow: /construction-management-software/
