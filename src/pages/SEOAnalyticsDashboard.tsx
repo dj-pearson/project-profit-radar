@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from 'sonner';
 import { 
   TrendingUp, 
@@ -204,7 +205,8 @@ const SEOAnalyticsDashboard: React.FC = () => {
   }));
 
   return (
-    <div className="space-y-6 p-6">
+    <DashboardLayout title="SEO Analytics Dashboard">
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">SEO Analytics Dashboard</h1>
@@ -503,7 +505,8 @@ const SEOAnalyticsDashboard: React.FC = () => {
           )}
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
