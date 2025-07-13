@@ -160,8 +160,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <div className="max-h-[calc(90vh-4rem)] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6">
+        <div className="flex-1 overflow-y-auto space-y-4">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
         </DialogHeader>

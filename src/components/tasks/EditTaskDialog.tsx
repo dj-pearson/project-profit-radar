@@ -63,6 +63,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   onClose,
   onTaskUpdated
 }) => {
+  console.log("EditTaskDialog: Rendering with isOpen:", isOpen, "task:", task?.id);
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -169,8 +170,8 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <div className="max-h-[calc(90vh-4rem)] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6">
+        <div className="flex-1 overflow-y-auto space-y-4">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
