@@ -35,6 +35,8 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
   const [viewEnd, setViewEnd] = useState(new Date(selectedYear, 11, 31));
   const [draggedProject, setDraggedProject] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragMode, setDragMode] = useState<'move' | 'resize-start' | 'resize-end'>('move');
+  const [dragStartX, setDragStartX] = useState(0);
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,33 +81,88 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
     return Math.max(2, (projectDays / totalDays) * 100);
   };
 
-  const handleProjectDrag = (projectId: string, event: React.DragEvent) => {
-    setDraggedProject(projectId);
-    setIsDragging(true);
-  };
-
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    if (!draggedProject || !chartRef.current) return;
-
-    const rect = chartRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const percentage = (x / rect.width) * 100;
-    
+  const getDateFromPosition = (x: number, timelineWidth: number) => {
+    const percentage = Math.max(0, Math.min(100, (x / timelineWidth) * 100));
     const totalDays = Math.ceil((viewEnd.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24));
     const dayOffset = Math.floor((percentage / 100) * totalDays);
-    const newStartDate = new Date(viewStart.getTime() + dayOffset * 24 * 60 * 60 * 1000);
-    
-    const project = projects.find(p => p.id === draggedProject);
-    if (project) {
-      const originalDuration = Math.ceil((new Date(project.end_date).getTime() - new Date(project.start_date).getTime()) / (1000 * 60 * 60 * 24));
-      const newEndDate = new Date(newStartDate.getTime() + originalDuration * 24 * 60 * 60 * 1000);
-      
-      onDateRangeChange(newStartDate, newEndDate, draggedProject);
-    }
+    return new Date(viewStart.getTime() + dayOffset * 24 * 60 * 60 * 1000);
+  };
 
-    setDraggedProject(null);
-    setIsDragging(false);
+  const handleMouseDown = (projectId: string, event: React.MouseEvent) => {
+    if (!chartRef.current) return;
+    
+    const timelineElement = event.currentTarget as HTMLElement;
+    const timelineRect = timelineElement.getBoundingClientRect();
+    const relativeX = event.clientX - timelineRect.left;
+    const timelineWidth = timelineRect.width;
+    
+    // Determine drag mode based on position within the bar
+    let mode: 'move' | 'resize-start' | 'resize-end' = 'move';
+    if (relativeX < 10) {
+      mode = 'resize-start';
+    } else if (relativeX > timelineWidth - 10) {
+      mode = 'resize-end';
+    }
+    
+    setDraggedProject(projectId);
+    setDragMode(mode);
+    setDragStartX(event.clientX);
+    setIsDragging(true);
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!chartRef.current) return;
+      
+      const rect = chartRef.current.getBoundingClientRect();
+      const timelineStart = rect.left + 320; // Account for project info width
+      const timelineWidth = rect.width - 320;
+      const currentX = e.clientX - timelineStart;
+      
+      const project = projects.find(p => p.id === projectId);
+      if (!project) return;
+      
+      const currentStartDate = new Date(project.start_date);
+      const currentEndDate = new Date(project.end_date);
+      
+      let newStartDate = currentStartDate;
+      let newEndDate = currentEndDate;
+      
+      if (mode === 'move') {
+        // Move entire project
+        const deltaX = e.clientX - dragStartX;
+        const deltaPercentage = (deltaX / timelineWidth) * 100;
+        const totalDays = Math.ceil((viewEnd.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24));
+        const deltaDays = Math.round((deltaPercentage / 100) * totalDays);
+        
+        newStartDate = new Date(currentStartDate.getTime() + deltaDays * 24 * 60 * 60 * 1000);
+        newEndDate = new Date(currentEndDate.getTime() + deltaDays * 24 * 60 * 60 * 1000);
+      } else if (mode === 'resize-start') {
+        // Resize from start
+        newStartDate = getDateFromPosition(currentX, timelineWidth);
+        if (newStartDate >= currentEndDate) {
+          newStartDate = new Date(currentEndDate.getTime() - 24 * 60 * 60 * 1000); // At least 1 day duration
+        }
+      } else if (mode === 'resize-end') {
+        // Resize from end
+        newEndDate = getDateFromPosition(currentX, timelineWidth);
+        if (newEndDate <= currentStartDate) {
+          newEndDate = new Date(currentStartDate.getTime() + 24 * 60 * 60 * 1000); // At least 1 day duration
+        }
+      }
+      
+      // Update project dates immediately for visual feedback
+      onDateRangeChange(newStartDate, newEndDate, projectId);
+    };
+    
+    const handleMouseUp = () => {
+      setDraggedProject(null);
+      setIsDragging(false);
+      setDragMode('move');
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const navigateView = (direction: 'prev' | 'next') => {
@@ -169,8 +226,6 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
           <div
             ref={chartRef}
             className="relative"
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
           >
             {projects.map((project, index) => (
               <div key={project.id} className="flex h-16 border-b border-border/50 hover:bg-muted/30">
@@ -215,17 +270,17 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
                 {/* Timeline Bar */}
                 <div className="flex-1 relative p-2">
                   <div
-                    className={`absolute top-1/2 transform -translate-y-1/2 h-6 rounded-md cursor-move
+                    className={`absolute top-1/2 transform -translate-y-1/2 h-6 rounded-md cursor-move select-none
                       ${getStatusColor(project.status)} opacity-80 hover:opacity-100 transition-opacity
                       ${isDragging && draggedProject === project.id ? 'opacity-50' : ''}
+                      ${dragMode === 'resize-start' ? 'cursor-w-resize' : dragMode === 'resize-end' ? 'cursor-e-resize' : 'cursor-move'}
                     `}
                     style={{
                       left: `${calculatePosition(project.start_date)}%`,
                       width: `${calculateWidth(project.start_date, project.end_date)}%`,
                       minWidth: '20px'
                     }}
-                    draggable
-                    onDragStart={(e) => handleProjectDrag(project.id, e)}
+                    onMouseDown={(e) => handleMouseDown(project.id, e)}
                   >
                     {/* Progress Indicator */}
                     <div
