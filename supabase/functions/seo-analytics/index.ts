@@ -201,11 +201,22 @@ async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
       .from('seo_oauth_tokens')
       .select('*')
       .eq('provider', 'google')
-      .single()
+      .maybeSingle()
 
     if (tokenError || !tokenData) {
-      console.log('No Google OAuth token found, using mock data')
-      return await returnGoogleMockData(supabaseClient)
+      console.log('No Google OAuth token found')
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Google Search Console not configured. Please authenticate with Google first.',
+          requiresAuth: true,
+          provider: 'google'
+        }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
     // Check if token is expired and refresh if needed
@@ -213,8 +224,19 @@ async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
       console.log('Google token expired, attempting refresh')
       const refreshResult = await refreshGoogleToken(supabaseClient, tokenData.refresh_token)
       if (!refreshResult.success) {
-        console.log('Token refresh failed, using mock data')
-        return await returnGoogleMockData(supabaseClient)
+        console.log('Token refresh failed')
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Google Search Console authentication expired. Please re-authenticate.',
+            requiresAuth: true,
+            provider: 'google'
+          }),
+          { 
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
       }
       tokenData.access_token = refreshResult.accessToken
     }
@@ -242,8 +264,17 @@ async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
     
     if (!searchAnalyticsResponse.ok) {
       console.error('Google Search Console API Error:', searchData)
-      console.log('API call failed, returning mock data instead')
-      return await returnGoogleMockData(supabaseClient)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Google Search Console API error: ${searchData.error?.message || 'Unknown error'}`,
+          provider: 'google'
+        }),
+        { 
+          status: searchAnalyticsResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
     // Process and aggregate the real data
@@ -303,63 +334,18 @@ async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
     )
   } catch (error) {
     console.error('Google Search Console Error:', error)
-    return await returnGoogleMockData(supabaseClient)
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: `Failed to fetch Google Search Console data: ${error.message}`,
+        provider: 'google'
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
-}
-
-async function returnGoogleMockData(supabaseClient: any) {
-  const processedData = {
-    totalImpressions: Math.floor(Math.random() * 10000) + 5000,
-    totalClicks: Math.floor(Math.random() * 1000) + 500,
-    averageCTR: (Math.random() * 5 + 2).toFixed(2),
-    averagePosition: (Math.random() * 30 + 10).toFixed(1),
-    topQueries: Array.from({ length: 10 }, (_, i) => ({
-      query: `sample query ${i + 1}`,
-      impressions: Math.floor(Math.random() * 1000) + 100,
-      clicks: Math.floor(Math.random() * 100) + 10,
-      ctr: (Math.random() * 10).toFixed(2),
-      position: (Math.random() * 50 + 1).toFixed(1)
-    })),
-    topPages: Array.from({ length: 10 }, (_, i) => ({
-      page: `/page-${i + 1}`,
-      impressions: Math.floor(Math.random() * 800) + 100,
-      clicks: Math.floor(Math.random() * 80) + 10,
-      ctr: (Math.random() * 8).toFixed(2)
-    })),
-    deviceBreakdown: {
-      desktop: Math.floor(Math.random() * 40) + 30,
-      mobile: Math.floor(Math.random() * 50) + 40,
-      tablet: Math.floor(Math.random() * 20) + 10
-    },
-    countryBreakdown: {
-      'United States': Math.floor(Math.random() * 50) + 40,
-      'Canada': Math.floor(Math.random() * 20) + 10,
-      'United Kingdom': Math.floor(Math.random() * 15) + 5
-    }
-  }
-
-  // Store mock data in database
-  const { error } = await supabaseClient
-    .from('seo_analytics')
-    .upsert({
-      date: new Date().toISOString().split('T')[0],
-      search_engine: 'google',
-      impressions: processedData.totalImpressions,
-      clicks: processedData.totalClicks,
-      ctr: parseFloat(processedData.averageCTR),
-      average_position: parseFloat(processedData.averagePosition),
-      top_queries: processedData.topQueries,
-      top_pages: processedData.topPages,
-      device_breakdown: processedData.deviceBreakdown,
-      country_breakdown: processedData.countryBreakdown
-    }, { onConflict: 'date,search_engine' })
-
-  if (error) throw error
-
-  return new Response(
-    JSON.stringify({ success: true, data: processedData, mock: true }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
 }
 
 async function refreshGoogleToken(supabaseClient: any, refreshToken: string) {
@@ -401,136 +387,6 @@ async function refreshGoogleToken(supabaseClient: any, refreshToken: string) {
     console.error('Token refresh error:', error)
     return { success: false }
   }
-}
-
-async function fetchBingData(supabaseClient: any, data: any) {
-  const { siteUrl, startDate, endDate } = data
-  
-  console.log('Fetching Bing Webmaster data for:', siteUrl)
-  
-  try {
-    // Get stored OAuth token
-    const { data: tokenData, error: tokenError } = await supabaseClient
-      .from('seo_oauth_tokens')
-      .select('*')
-      .eq('provider', 'microsoft')
-      .single()
-
-    if (tokenError || !tokenData) {
-      console.log('No Microsoft OAuth token found, using mock data')
-      return await returnBingMockData(supabaseClient)
-    }
-
-    // Check if token is expired and refresh if needed
-    if (new Date(tokenData.expires_at) <= new Date()) {
-      console.log('Microsoft token expired, attempting refresh')
-      const refreshResult = await refreshMicrosoftToken(supabaseClient, tokenData.refresh_token)
-      if (!refreshResult.success) {
-        console.log('Token refresh failed, using mock data')
-        return await returnBingMockData(supabaseClient)
-      }
-      tokenData.access_token = refreshResult.accessToken
-    }
-
-    // Fetch data from Bing Webmaster Tools API
-    const bingResponse = await fetch(
-      `https://ssl.bing.com/webmaster/api.svc/json/GetQueryStats?siteUrl=${encodeURIComponent(siteUrl)}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
-          'Content-Type': 'application/json',
-        }
-      }
-    )
-
-    const bingData = await bingResponse.json()
-    
-    if (!bingResponse.ok) {
-      console.error('Bing Webmaster API Error:', bingData)
-      console.log('Bing API call failed, returning mock data instead')
-      return await returnBingMockData(supabaseClient)
-    }
-
-    const processedData = {
-      totalImpressions: bingData.TotalImpressions || 0,
-      totalClicks: bingData.TotalClicks || 0,
-      averageCTR: bingData.TotalClicks && bingData.TotalImpressions ? 
-        ((bingData.TotalClicks / bingData.TotalImpressions) * 100).toFixed(2) : '0',
-      averagePosition: bingData.AveragePosition?.toFixed(1) || '0',
-      topQueries: bingData.Data?.slice(0, 10).map((item: any) => ({
-        query: item.Query,
-        impressions: item.Impressions,
-        clicks: item.Clicks,
-        ctr: item.Clicks && item.Impressions ? ((item.Clicks / item.Impressions) * 100).toFixed(2) : '0',
-        position: item.AveragePosition?.toFixed(1) || '0'
-      })) || []
-    }
-
-    // Store in database
-    const { error } = await supabaseClient
-      .from('seo_analytics')
-      .upsert({
-        date: new Date().toISOString().split('T')[0],
-        search_engine: 'bing',
-        impressions: processedData.totalImpressions,
-        clicks: processedData.totalClicks,
-        ctr: parseFloat(processedData.averageCTR),
-        average_position: parseFloat(processedData.averagePosition),
-        top_queries: processedData.topQueries,
-        top_pages: [],
-        device_breakdown: {},
-        country_breakdown: {}
-      }, { onConflict: 'date,search_engine' })
-
-    if (error) throw error
-
-    return new Response(
-      JSON.stringify({ success: true, data: processedData }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  } catch (error) {
-    console.error('Bing Webmaster Error:', error)
-    return await returnBingMockData(supabaseClient)
-  }
-}
-
-async function returnBingMockData(supabaseClient: any) {
-  const processedData = {
-    totalImpressions: Math.floor(Math.random() * 5000) + 2000,
-    totalClicks: Math.floor(Math.random() * 500) + 200,
-    averageCTR: (Math.random() * 4 + 1).toFixed(2),
-    averagePosition: (Math.random() * 40 + 15).toFixed(1),
-    topQueries: Array.from({ length: 10 }, (_, i) => ({
-      query: `bing query ${i + 1}`,
-      impressions: Math.floor(Math.random() * 500) + 50,
-      clicks: Math.floor(Math.random() * 50) + 5,
-      ctr: (Math.random() * 8).toFixed(2),
-      position: (Math.random() * 60 + 5).toFixed(1)
-    }))
-  }
-
-  // Store mock data in database
-  const { error } = await supabaseClient
-    .from('seo_analytics')
-    .upsert({
-      date: new Date().toISOString().split('T')[0],
-      search_engine: 'bing',
-      impressions: processedData.totalImpressions,
-      clicks: processedData.totalClicks,
-      ctr: parseFloat(processedData.averageCTR),
-      average_position: parseFloat(processedData.averagePosition),
-      top_queries: processedData.topQueries,
-      top_pages: [],
-      device_breakdown: {},
-      country_breakdown: {}
-    }, { onConflict: 'date,search_engine' })
-
-  if (error) throw error
-
-  return new Response(
-    JSON.stringify({ success: true, data: processedData, mock: true }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
 }
 
 async function refreshMicrosoftToken(supabaseClient: any, refreshToken: string) {
