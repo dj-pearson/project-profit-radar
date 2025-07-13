@@ -135,6 +135,39 @@ const SEOAnalyticsDashboard: React.FC = () => {
   });
 
   // Generate AI insights
+  // OAuth Authentication mutations
+  const getGoogleAuthUrl = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('seo-analytics', {
+        body: { action: 'get_google_auth_url' }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      window.open(data.authUrl, '_blank', 'width=500,height=600');
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to get Google auth URL: ${error.message}`);
+    }
+  });
+
+  const getMicrosoftAuthUrl = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('seo-analytics', {
+        body: { action: 'get_microsoft_auth_url' }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      window.open(data.authUrl, '_blank', 'width=500,height=600');
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to get Microsoft auth URL: ${error.message}`);
+    }
+  });
+
   const generateInsights = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('seo-analytics', {
@@ -213,6 +246,22 @@ const SEOAnalyticsDashboard: React.FC = () => {
           <p className="text-muted-foreground">Comprehensive website traffic analysis and insights</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            onClick={() => getGoogleAuthUrl.mutate()}
+            disabled={getGoogleAuthUrl.isPending}
+            variant="outline"
+          >
+            <Globe className="h-4 w-4 mr-2" />
+            Connect Google
+          </Button>
+          <Button 
+            onClick={() => getMicrosoftAuthUrl.mutate()}
+            disabled={getMicrosoftAuthUrl.isPending}
+            variant="outline"
+          >
+            <Globe className="h-4 w-4 mr-2" />
+            Connect Bing
+          </Button>
           <Button 
             onClick={refreshAllData}
             disabled={fetchGoogleData.isPending || fetchBingData.isPending}

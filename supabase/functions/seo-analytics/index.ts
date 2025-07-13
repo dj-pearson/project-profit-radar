@@ -539,12 +539,40 @@ async function generateAIInsights(supabaseClient: any, data: any) {
 
 async function getAnalyticsSummary(supabaseClient: any, data: any) {
   try {
+    console.log('Getting analytics summary...')
+    
     // Get analytics data
     const { data: analyticsData, error: analyticsError } = await supabaseClient
       .from('seo_analytics')
       .select('*')
       .order('date', { ascending: false })
       .limit(30)
+
+    console.log('Analytics data result:', { analyticsData, analyticsError })
+    
+    // If error is related to permissions, return empty data structure
+    if (analyticsError && (analyticsError.code === 'PGRST116' || analyticsError.message?.includes('permission'))) {
+      console.log('No access to analytics data, returning empty structure')
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          data: {
+            analytics: [],
+            insights: [],
+            submissions: [],
+            performance: {
+              totalImpressions: 0,
+              totalClicks: 0,
+              averageCTR: 0,
+              averagePosition: 0
+            },
+            requiresAuth: true,
+            message: 'SEO analytics requires root admin access or OAuth authentication'
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     if (analyticsError) throw analyticsError
 
@@ -555,7 +583,8 @@ async function getAnalyticsSummary(supabaseClient: any, data: any) {
       .order('analysis_date', { ascending: false })
       .limit(5)
 
-    if (insightsError) throw insightsError
+    console.log('Insights data result:', { insightsData, insightsError })
+    if (insightsError && !insightsError.message?.includes('permission')) throw insightsError
 
     // Get submissions
     const { data: submissionsData, error: submissionsError } = await supabaseClient
@@ -564,19 +593,20 @@ async function getAnalyticsSummary(supabaseClient: any, data: any) {
       .order('submitted_at', { ascending: false })
       .limit(10)
 
-    if (submissionsError) throw submissionsError
+    console.log('Submissions data result:', { submissionsData, submissionsError })
+    if (submissionsError && !submissionsError.message?.includes('permission')) throw submissionsError
 
     const summary = {
-      analytics: analyticsData,
-      insights: insightsData,
-      submissions: submissionsData,
+      analytics: analyticsData || [],
+      insights: insightsData || [],
+      submissions: submissionsData || [],
       performance: {
-        totalImpressions: analyticsData.reduce((sum: number, item: any) => sum + item.impressions, 0),
-        totalClicks: analyticsData.reduce((sum: number, item: any) => sum + item.clicks, 0),
-        averageCTR: analyticsData.length ? 
-          (analyticsData.reduce((sum: number, item: any) => sum + item.ctr, 0) / analyticsData.length).toFixed(2) : 0,
-        averagePosition: analyticsData.length ?
-          (analyticsData.reduce((sum: number, item: any) => sum + item.average_position, 0) / analyticsData.length).toFixed(1) : 0
+        totalImpressions: (analyticsData || []).reduce((sum: number, item: any) => sum + (item.impressions || 0), 0),
+        totalClicks: (analyticsData || []).reduce((sum: number, item: any) => sum + (item.clicks || 0), 0),
+        averageCTR: analyticsData?.length ? 
+          ((analyticsData || []).reduce((sum: number, item: any) => sum + (item.ctr || 0), 0) / analyticsData.length).toFixed(2) : 0,
+        averagePosition: analyticsData?.length ?
+          ((analyticsData || []).reduce((sum: number, item: any) => sum + (item.average_position || 0), 0) / analyticsData.length).toFixed(1) : 0
       }
     }
 
