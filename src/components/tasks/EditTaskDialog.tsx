@@ -76,7 +76,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     priority: task.priority,
     status: task.status,
     project_id: task.project_id,
-    assigned_to: task.assigned_to || 'unassigned',
+    assigned_to: task.assigned_to && task.assigned_to.trim() !== '' ? task.assigned_to : 'unassigned',
     due_date: task.due_date ? task.due_date.split('T')[0] : '',
     estimated_hours: task.estimated_hours?.toString() || ''
   });
@@ -92,7 +92,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         priority: task.priority,
         status: task.status,
         project_id: task.project_id,
-        assigned_to: task.assigned_to || 'unassigned',
+        assigned_to: task.assigned_to && task.assigned_to.trim() !== '' ? task.assigned_to : 'unassigned',
         due_date: task.due_date ? task.due_date.split('T')[0] : '',
         estimated_hours: task.estimated_hours?.toString() || ''
       });
