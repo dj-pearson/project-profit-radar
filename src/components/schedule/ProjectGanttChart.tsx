@@ -37,6 +37,7 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<'move' | 'resize-start' | 'resize-end'>('move');
   const [dragStartX, setDragStartX] = useState(0);
+  const [tempProjectDates, setTempProjectDates] = useState<{[key: string]: {start: Date, end: Date}}>({});
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,7 +89,7 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
     return new Date(viewStart.getTime() + offsetMs);
   };
 
-  const handleMouseDown = (projectId: string, event: React.MouseEvent) => {
+  const handleMouseDown = (projectId: string, event: React.MouseEvent, forceMode?: 'move' | 'resize-start' | 'resize-end') => {
     if (!chartRef.current) return;
     
     event.preventDefault();
@@ -108,12 +109,14 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
     const relativeX = event.clientX - barRect.left;
     const barWidth = barRect.width;
     
-    // Determine drag mode based on position within the bar
-    let mode: 'move' | 'resize-start' | 'resize-end' = 'move';
-    if (relativeX < 10) {
-      mode = 'resize-start';
-    } else if (relativeX > barWidth - 10) {
-      mode = 'resize-end';
+    // Determine drag mode based on forced mode or position within the bar
+    let mode: 'move' | 'resize-start' | 'resize-end' = forceMode || 'move';
+    if (!forceMode) {
+      if (relativeX < 10) {
+        mode = 'resize-start';
+      } else if (relativeX > barWidth - 10) {
+        mode = 'resize-end';
+      }
     }
     
     setDraggedProject(projectId);
@@ -175,11 +178,27 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
         }
       }
       
-      // Update project dates immediately for visual feedback
-      onDateRangeChange(newStartDate, newEndDate, projectId);
+      // Store temporary dates for visual feedback only
+      setTempProjectDates(prev => ({
+        ...prev,
+        [projectId]: { start: newStartDate, end: newEndDate }
+      }));
     };
     
     const handleMouseUp = () => {
+      // Apply the final dates
+      if (tempProjectDates[projectId]) {
+        const { start, end } = tempProjectDates[projectId];
+        onDateRangeChange(start, end, projectId);
+        
+        // Clean up temp dates
+        setTempProjectDates(prev => {
+          const newTemp = { ...prev };
+          delete newTemp[projectId];
+          return newTemp;
+        });
+      }
+      
       setDraggedProject(null);
       setIsDragging(false);
       setDragMode('move');
@@ -295,32 +314,63 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
 
                 {/* Timeline Bar */}
                 <div className="flex-1 relative p-2">
-                  <div
-                    className={`absolute top-1/2 transform -translate-y-1/2 h-6 rounded-md cursor-move select-none
-                      ${getStatusColor(project.status)} opacity-80 hover:opacity-100 transition-opacity
-                      ${isDragging && draggedProject === project.id ? 'opacity-50' : ''}
-                      ${dragMode === 'resize-start' ? 'cursor-w-resize' : dragMode === 'resize-end' ? 'cursor-e-resize' : 'cursor-move'}
-                    `}
-                    style={{
-                      left: `${calculatePosition(project.start_date)}%`,
-                      width: `${calculateWidth(project.start_date, project.end_date)}%`,
-                      minWidth: '20px'
-                    }}
-                    onMouseDown={(e) => handleMouseDown(project.id, e)}
-                  >
-                    {/* Progress Indicator */}
-                    <div
-                      className="h-full bg-white/30 rounded-md"
-                      style={{ width: `${project.completion_percentage}%` }}
-                    />
+                  {(() => {
+                    // Use temp dates if dragging, otherwise use actual project dates
+                    const effectiveStartDate = tempProjectDates[project.id]?.start 
+                      ? tempProjectDates[project.id].start.toISOString().split('T')[0]
+                      : project.start_date;
+                    const effectiveEndDate = tempProjectDates[project.id]?.end 
+                      ? tempProjectDates[project.id].end.toISOString().split('T')[0]
+                      : project.end_date;
                     
-                    {/* Project Name on Bar */}
-                    <div className="absolute inset-0 flex items-center px-2">
-                      <span className="text-white text-xs font-medium truncate">
-                        {project.name}
-                      </span>
-                    </div>
-                  </div>
+                    return (
+                      <div
+                        className={`absolute top-1/2 transform -translate-y-1/2 h-6 rounded-md select-none
+                          ${getStatusColor(project.status)} opacity-80 hover:opacity-100 transition-opacity
+                          ${isDragging && draggedProject === project.id ? 'opacity-70 shadow-lg' : ''}
+                          group
+                        `}
+                        style={{
+                          left: `${calculatePosition(effectiveStartDate)}%`,
+                          width: `${calculateWidth(effectiveStartDate, effectiveEndDate)}%`,
+                          minWidth: '20px',
+                          cursor: 'move'
+                        }}
+                        onMouseDown={(e) => handleMouseDown(project.id, e)}
+                      >
+                        {/* Resize handle - left */}
+                        <div 
+                          className="absolute left-0 top-0 w-2 h-full cursor-w-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            handleMouseDown(project.id, e, 'resize-start');
+                          }}
+                        />
+                        
+                        {/* Resize handle - right */}
+                        <div 
+                          className="absolute right-0 top-0 w-2 h-full cursor-e-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            handleMouseDown(project.id, e, 'resize-end');
+                          }}
+                        />
+                        
+                        {/* Progress Indicator */}
+                        <div
+                          className="h-full bg-white/30 rounded-md"
+                          style={{ width: `${project.completion_percentage}%` }}
+                        />
+                        
+                        {/* Project Name on Bar */}
+                        <div className="absolute inset-0 flex items-center px-2">
+                          <span className="text-white text-xs font-medium truncate">
+                            {project.name}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             ))}
