@@ -32,6 +32,7 @@
     "@capacitor/local-notifications": "^7.0.1",
     "@capacitor/preferences": "^7.0.1",
     "@capacitor/push-notifications": "^7.0.1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.9.0",
     "@modelcontextprotocol/server-puppeteer": "2025.5.12",
     "@radix-ui/react-accordion": "^1.2.0",
