@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,7 +76,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     priority: task.priority,
     status: task.status,
     project_id: task.project_id,
-    assigned_to: task.assigned_to || '',
+    assigned_to: task.assigned_to || 'unassigned',
     due_date: task.due_date ? task.due_date.split('T')[0] : '',
     estimated_hours: task.estimated_hours?.toString() || ''
   });
@@ -92,7 +92,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         priority: task.priority,
         status: task.status,
         project_id: task.project_id,
-        assigned_to: task.assigned_to || '',
+        assigned_to: task.assigned_to || 'unassigned',
         due_date: task.due_date ? task.due_date.split('T')[0] : '',
         estimated_hours: task.estimated_hours?.toString() || ''
       });
@@ -145,7 +145,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         priority: formData.priority,
         status: formData.status,
         project_id: formData.project_id,
-        assigned_to: formData.assigned_to || null,
+        assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to || null,
         due_date: formData.due_date || null,
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null
       };
@@ -173,6 +173,9 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6 overflow-hidden bg-background">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Edit Task</DialogTitle>
+          <DialogDescription>
+            Update task details and settings below.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {task && (
@@ -275,7 +278,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 <SelectValue placeholder="Assign to..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 {users.map(user => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.first_name} {user.last_name}
