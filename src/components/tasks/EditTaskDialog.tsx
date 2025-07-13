@@ -170,7 +170,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6">
+      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6 overflow-hidden">
         <div className="flex-1 overflow-y-auto space-y-4">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
