@@ -148,7 +148,7 @@ export const DragDropDashboard = () => {
       </div>
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="dashboard" direction="horizontal">
+        <Droppable droppableId="dashboard">
           {(provided) => (
             <div
               {...provided.droppableProps}
