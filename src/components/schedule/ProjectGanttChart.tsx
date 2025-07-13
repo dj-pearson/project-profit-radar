@@ -82,25 +82,34 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
   };
 
   const getDateFromPosition = (x: number, timelineWidth: number) => {
-    const percentage = Math.max(0, Math.min(100, (x / timelineWidth) * 100));
-    const totalDays = Math.ceil((viewEnd.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24));
-    const dayOffset = Math.floor((percentage / 100) * totalDays);
-    return new Date(viewStart.getTime() + dayOffset * 24 * 60 * 60 * 1000);
+    const percentage = Math.max(0, Math.min(1, x / timelineWidth));
+    const totalMs = viewEnd.getTime() - viewStart.getTime();
+    const offsetMs = percentage * totalMs;
+    return new Date(viewStart.getTime() + offsetMs);
   };
 
   const handleMouseDown = (projectId: string, event: React.MouseEvent) => {
     if (!chartRef.current) return;
     
+    event.preventDefault();
+    
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    
+    const chartRect = chartRef.current.getBoundingClientRect();
+    const timelineStart = chartRect.left + 320; // Account for project info width
+    const timelineWidth = chartRect.width - 320;
+    
     const timelineElement = event.currentTarget as HTMLElement;
     const timelineRect = timelineElement.getBoundingClientRect();
     const relativeX = event.clientX - timelineRect.left;
-    const timelineWidth = timelineRect.width;
+    const barWidth = timelineRect.width;
     
     // Determine drag mode based on position within the bar
     let mode: 'move' | 'resize-start' | 'resize-end' = 'move';
     if (relativeX < 10) {
       mode = 'resize-start';
-    } else if (relativeX > timelineWidth - 10) {
+    } else if (relativeX > barWidth - 10) {
       mode = 'resize-end';
     }
     
@@ -109,43 +118,57 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
     setDragStartX(event.clientX);
     setIsDragging(true);
     
+    const originalStartDate = new Date(project.start_date);
+    const originalEndDate = new Date(project.end_date);
+    const projectDuration = originalEndDate.getTime() - originalStartDate.getTime();
+    
     const handleMouseMove = (e: MouseEvent) => {
       if (!chartRef.current) return;
       
-      const rect = chartRef.current.getBoundingClientRect();
-      const timelineStart = rect.left + 320; // Account for project info width
-      const timelineWidth = rect.width - 320;
       const currentX = e.clientX - timelineStart;
+      const clampedX = Math.max(0, Math.min(timelineWidth, currentX));
       
-      const project = projects.find(p => p.id === projectId);
-      if (!project) return;
-      
-      const currentStartDate = new Date(project.start_date);
-      const currentEndDate = new Date(project.end_date);
-      
-      let newStartDate = currentStartDate;
-      let newEndDate = currentEndDate;
+      let newStartDate = originalStartDate;
+      let newEndDate = originalEndDate;
       
       if (mode === 'move') {
         // Move entire project
         const deltaX = e.clientX - dragStartX;
-        const deltaPercentage = (deltaX / timelineWidth) * 100;
-        const totalDays = Math.ceil((viewEnd.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24));
-        const deltaDays = Math.round((deltaPercentage / 100) * totalDays);
+        const deltaPercentage = deltaX / timelineWidth;
+        const totalMs = viewEnd.getTime() - viewStart.getTime();
+        const deltaMs = deltaPercentage * totalMs;
         
-        newStartDate = new Date(currentStartDate.getTime() + deltaDays * 24 * 60 * 60 * 1000);
-        newEndDate = new Date(currentEndDate.getTime() + deltaDays * 24 * 60 * 60 * 1000);
+        newStartDate = new Date(originalStartDate.getTime() + deltaMs);
+        newEndDate = new Date(originalEndDate.getTime() + deltaMs);
+        
+        // Ensure project stays within view bounds
+        if (newStartDate.getTime() < viewStart.getTime()) {
+          const offset = viewStart.getTime() - newStartDate.getTime();
+          newStartDate = new Date(viewStart.getTime());
+          newEndDate = new Date(newEndDate.getTime() + offset);
+        }
+        if (newEndDate.getTime() > viewEnd.getTime()) {
+          const offset = newEndDate.getTime() - viewEnd.getTime();
+          newEndDate = new Date(viewEnd.getTime());
+          newStartDate = new Date(newStartDate.getTime() - offset);
+        }
       } else if (mode === 'resize-start') {
         // Resize from start
-        newStartDate = getDateFromPosition(currentX, timelineWidth);
-        if (newStartDate >= currentEndDate) {
-          newStartDate = new Date(currentEndDate.getTime() - 24 * 60 * 60 * 1000); // At least 1 day duration
+        newStartDate = getDateFromPosition(clampedX, timelineWidth);
+        newEndDate = originalEndDate;
+        
+        // Ensure minimum 1 day duration
+        if (newStartDate.getTime() >= newEndDate.getTime()) {
+          newStartDate = new Date(newEndDate.getTime() - 24 * 60 * 60 * 1000);
         }
       } else if (mode === 'resize-end') {
         // Resize from end
-        newEndDate = getDateFromPosition(currentX, timelineWidth);
-        if (newEndDate <= currentStartDate) {
-          newEndDate = new Date(currentStartDate.getTime() + 24 * 60 * 60 * 1000); // At least 1 day duration
+        newStartDate = originalStartDate;
+        newEndDate = getDateFromPosition(clampedX, timelineWidth);
+        
+        // Ensure minimum 1 day duration
+        if (newEndDate.getTime() <= newStartDate.getTime()) {
+          newEndDate = new Date(newStartDate.getTime() + 24 * 60 * 60 * 1000);
         }
       }
       
