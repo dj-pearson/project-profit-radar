@@ -97,13 +97,16 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
     if (!project) return;
     
     const chartRect = chartRef.current.getBoundingClientRect();
-    const timelineStart = chartRect.left + 320; // Account for project info width
-    const timelineWidth = chartRect.width - 320;
+    const timelineElement = event.currentTarget.closest('.flex-1') as HTMLElement;
+    if (!timelineElement) return;
     
-    const timelineElement = event.currentTarget as HTMLElement;
     const timelineRect = timelineElement.getBoundingClientRect();
-    const relativeX = event.clientX - timelineRect.left;
-    const barWidth = timelineRect.width;
+    const timelineWidth = timelineRect.width;
+    
+    const barElement = event.currentTarget as HTMLElement;
+    const barRect = barElement.getBoundingClientRect();
+    const relativeX = event.clientX - barRect.left;
+    const barWidth = barRect.width;
     
     // Determine drag mode based on position within the bar
     let mode: 'move' | 'resize-start' | 'resize-end' = 'move';
@@ -120,20 +123,20 @@ export const ProjectGanttChart: React.FC<ProjectGanttChartProps> = ({
     
     const originalStartDate = new Date(project.start_date);
     const originalEndDate = new Date(project.end_date);
-    const projectDuration = originalEndDate.getTime() - originalStartDate.getTime();
+    const originalStartX = event.clientX - timelineRect.left;
     
     const handleMouseMove = (e: MouseEvent) => {
-      if (!chartRef.current) return;
+      if (!timelineElement) return;
       
-      const currentX = e.clientX - timelineStart;
+      const currentX = e.clientX - timelineRect.left;
       const clampedX = Math.max(0, Math.min(timelineWidth, currentX));
       
       let newStartDate = originalStartDate;
       let newEndDate = originalEndDate;
       
       if (mode === 'move') {
-        // Move entire project
-        const deltaX = e.clientX - dragStartX;
+        // Calculate the movement delta in pixels, then convert to time
+        const deltaX = currentX - originalStartX;
         const deltaPercentage = deltaX / timelineWidth;
         const totalMs = viewEnd.getTime() - viewStart.getTime();
         const deltaMs = deltaPercentage * totalMs;
