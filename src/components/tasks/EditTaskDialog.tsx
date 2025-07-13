@@ -170,11 +170,16 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6 overflow-hidden">
-        <div className="flex-1 overflow-y-auto space-y-4">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6 overflow-hidden bg-background">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+          {task && (
+            <div className="text-xs text-muted-foreground mb-2">
+              Editing: {task.name} (ID: {task.id})
+            </div>
+          )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
