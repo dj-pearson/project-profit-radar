@@ -15,6 +15,8 @@ interface DashboardWidget {
   type: string;
   title: string;
   size: 'small' | 'medium' | 'large';
+  width?: number; // Custom width in grid units
+  height?: number; // Custom height multiplier
 }
 
 const AVAILABLE_WIDGETS = [
@@ -66,6 +68,12 @@ export const DragDropDashboard = () => {
     setWidgets(prev => prev.filter(w => w.id !== id));
   };
 
+  const resizeWidget = (id: string, newSize: 'small' | 'medium' | 'large') => {
+    setWidgets(prev => prev.map(w => 
+      w.id === id ? { ...w, size: newSize } : w
+    ));
+  };
+
   const addWidget = (type: string) => {
     const widget = AVAILABLE_WIDGETS.find(w => w.type === type);
     if (!widget) return;
@@ -96,15 +104,33 @@ export const DragDropDashboard = () => {
     }
   };
 
-  const getWidgetClassName = (size: string) => {
-    switch (size) {
-      case 'small':
-        return 'col-span-1';
-      case 'large':
-        return 'col-span-1 md:col-span-2';
-      default:
-        return 'col-span-1';
+  const getWidgetClassName = (widget: DashboardWidget) => {
+    const { size, width, height } = widget;
+    let baseClass = '';
+    
+    if (width) {
+      // Custom width
+      baseClass = `col-span-${Math.min(width, 3)}`;
+    } else {
+      // Default size behavior
+      switch (size) {
+        case 'small':
+          baseClass = 'col-span-1';
+          break;
+        case 'large':
+          baseClass = 'col-span-1 md:col-span-2 lg:col-span-3';
+          break;
+        default:
+          baseClass = 'col-span-1 md:col-span-2';
+      }
     }
+
+    // Add height modifier if custom height is set
+    if (height && height > 1) {
+      baseClass += ` row-span-${Math.min(height, 3)}`;
+    }
+    
+    return baseClass;
   };
 
   return (
@@ -153,7 +179,7 @@ export const DragDropDashboard = () => {
             <div
               {...provided.droppableProps}
               ref={provided.innerRef}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr"
             >
               {widgets.map((widget, index) => (
                 <Draggable key={widget.id} draggableId={widget.id} index={index}>
@@ -161,12 +187,14 @@ export const DragDropDashboard = () => {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={getWidgetClassName(widget.size)}
+                      className={getWidgetClassName(widget)}
                     >
                       <DashboardTile
                         id={widget.id}
                         title={widget.title}
+                        size={widget.size}
                         onRemove={removeWidget}
+                        onResize={resizeWidget}
                         dragHandleProps={provided.dragHandleProps}
                         isDragging={snapshot.isDragging}
                       >
