@@ -63,7 +63,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   onClose,
   onTaskUpdated
 }) => {
-  console.log("EditTaskDialog: Rendering with isOpen:", isOpen, "task:", task?.id);
+  console.log("EditTaskDialog: Rendering with isOpen:", isOpen, "task:", task?.id, "userAgent:", navigator.userAgent);
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);

@@ -119,7 +119,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+                <DropdownMenuItem onClick={() => {
+                  console.log("TaskCard: Edit clicked for task:", task.id, "isMobile:", /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+                  setIsEditOpen(true);
+                }}>
                   <Edit className="h-3 w-3 mr-2" />
                   Edit
                 </DropdownMenuItem>
