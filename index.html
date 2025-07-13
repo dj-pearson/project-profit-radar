@@ -220,10 +220,10 @@
       window.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
           const loader = document.getElementById('initial-loader');
-          if (loader && document.querySelector('[data-reactroot]')) {
+          if (loader) {
             loader.remove();
           }
-        }, 100);
+        }, 1000);
       });
     </script>
   </body>
