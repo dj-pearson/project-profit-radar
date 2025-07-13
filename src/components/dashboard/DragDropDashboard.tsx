@@ -133,6 +133,12 @@ export const DragDropDashboard = () => {
     return baseClass;
   };
 
+  const updateWidgetSize = (id: string, width: number, height: number) => {
+    setWidgets(prev => prev.map(w => 
+      w.id === id ? { ...w, width, height } : w
+    ));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -193,8 +199,11 @@ export const DragDropDashboard = () => {
                         id={widget.id}
                         title={widget.title}
                         size={widget.size}
+                        width={widget.width}
+                        height={widget.height}
                         onRemove={removeWidget}
                         onResize={resizeWidget}
+                        onUpdateSize={updateWidgetSize}
                         dragHandleProps={provided.dragHandleProps}
                         isDragging={snapshot.isDragging}
                       >
