@@ -3,11 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/src/main.tsx" as="script" crossorigin>
-    <link rel="preload" href="/src/index.css" as="style">
-    
     <!-- Multiple favicon sizes for better compatibility -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -47,21 +42,14 @@
       content="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
     />
 
-    <!-- Google tag (gtag.js) - Optimized loading -->
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR"></script>
     <script>
-      // Defer Google Analytics loading
-      window.addEventListener('load', function() {
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
-        document.head.appendChild(script);
-        
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-LNDT7H4SJR');
-      });
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LNDT7H4SJR');
     </script>
 
     <!-- Cache Management & Loop Protection -->
@@ -184,47 +172,7 @@
   </head>
 
   <body>
-    <div id="root">
-      <!-- Loading spinner to prevent layout shift -->
-      <div id="initial-loader" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      ">
-        <div style="
-          width: 40px;
-          height: 40px;
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #ff6b00;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        "></div>
-      </div>
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Remove loader once React app starts
-      window.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          const loader = document.getElementById('initial-loader');
-          if (loader) {
-            loader.remove();
-          }
-        }, 1000);
-      });
-    </script>
   </body>
 </html>

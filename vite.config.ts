@@ -18,59 +18,38 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Build optimizations for mobile performance
+  // Build optimizations for Cloudflare Pages
   build: {
     target: 'esnext',
     minify: 'esbuild',
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // More aggressive code splitting for better loading
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'radix';
-            }
-            if (id.includes('recharts')) {
-              return 'charts';
-            }
-            if (id.includes('jspdf') || id.includes('xlsx')) {
-              return 'documents';
-            }
-            if (id.includes('@supabase')) {
-              return 'supabase';
-            }
-            if (id.includes('@tanstack')) {
-              return 'query';
-            }
-            return 'vendor';
-          }
-          // Split by features for lazy loading
-          if (id.includes('/pages/admin/')) {
-            return 'admin';
-          }
-          if (id.includes('/pages/reports/') || id.includes('/components/reports/')) {
-            return 'reports';
-          }
-          if (id.includes('/pages/crm/') || id.includes('/components/crm/')) {
-            return 'crm';
-          }
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-slot', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-popover'],
+          radix: ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-tabs', '@radix-ui/react-toast', '@radix-ui/react-tooltip'],
+          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          router: ['react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          charts: ['recharts'],
+          pdf: ['jspdf', 'jspdf-autotable'],
+          excel: ['xlsx'],
+          query: ['@tanstack/react-query']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
+      // Reduce bundle size by excluding heavy dependencies not needed in production
       external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'] : []
     },
-    chunkSizeWarningLimit: 500, // Stricter chunk size limit
+    chunkSizeWarningLimit: 1000,
+    // Optimize for faster builds
     reportCompressedSize: false,
-    emptyOutDir: true,
-    // Additional mobile optimizations
-    cssCodeSplit: true,
-    assetsInlineLimit: 4096, // Inline smaller assets
+    // Enable build caching
+    emptyOutDir: true
   },
   // Optimize dependency pre-bundling
   optimizeDeps: {
