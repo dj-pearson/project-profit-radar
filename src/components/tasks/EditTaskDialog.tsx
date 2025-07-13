@@ -76,7 +76,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     priority: task.priority,
     status: task.status,
     project_id: task.project_id,
-    assigned_to: task.assigned_to && task.assigned_to.trim() !== '' ? task.assigned_to : 'unassigned',
+    assigned_to: 'unassigned', // Will be set properly after users load
     due_date: task.due_date ? task.due_date.split('T')[0] : '',
     estimated_hours: task.estimated_hours?.toString() || ''
   });
@@ -92,12 +92,23 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         priority: task.priority,
         status: task.status,
         project_id: task.project_id,
-        assigned_to: task.assigned_to && task.assigned_to.trim() !== '' ? task.assigned_to : 'unassigned',
+        assigned_to: 'unassigned', // Will be set after users load
         due_date: task.due_date ? task.due_date.split('T')[0] : '',
         estimated_hours: task.estimated_hours?.toString() || ''
       });
     }
   }, [isOpen, task]);
+
+  // Set assigned_to after users load
+  useEffect(() => {
+    if (users.length > 0 && task.assigned_to) {
+      const userExists = users.some(user => user.id === task.assigned_to);
+      setFormData(prev => ({
+        ...prev,
+        assigned_to: userExists ? task.assigned_to : 'unassigned'
+      }));
+    }
+  }, [users, task.assigned_to]);
 
   const loadProjects = async () => {
     if (!userProfile?.company_id) return;
