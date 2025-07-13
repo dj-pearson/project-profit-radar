@@ -423,15 +423,28 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       console.log("FIXED AuthContext: Signing out...");
       setLoading(true);
-      await supabase.auth.signOut();
-      gtag.trackAuth('logout');
+      
+      // Clear state first to prevent any UI flickering
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      successfulProfiles.current.clear(); // Clear cache on sign out
-      setLoading(false);
+      successfulProfiles.current.clear();
+      
+      // Then sign out from Supabase
+      await supabase.auth.signOut({ scope: 'local' });
+      gtag.trackAuth('logout');
+      
+      // Navigate to auth page after logout
+      window.location.href = '/auth';
     } catch (error) {
       console.error("FIXED AuthContext: Sign out error:", error);
+      // Even if there's an error, clear local state and redirect
+      setUser(null);
+      setSession(null);
+      setUserProfile(null);
+      successfulProfiles.current.clear();
+      window.location.href = '/auth';
+    } finally {
       setLoading(false);
     }
   }, []);
