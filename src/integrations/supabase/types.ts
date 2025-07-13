@@ -7111,6 +7111,57 @@ export type Database = {
           },
         ]
       }
+      project_templates: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          industry_type: string | null
+          name: string
+          project_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry_type?: string | null
+          name: string
+          project_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry_type?: string | null
+          name?: string
+          project_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           actual_hours: number | null
@@ -9401,10 +9452,64 @@ export type Database = {
           },
         ]
       }
+      task_templates: {
+        Row: {
+          category: Database["public"]["Enums"]["task_category"] | null
+          created_at: string | null
+          dependencies: string[] | null
+          description: string | null
+          due_days_from_start: number | null
+          estimated_hours: number | null
+          id: string
+          name: string
+          phase_order: number | null
+          priority: string | null
+          project_template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["task_category"] | null
+          created_at?: string | null
+          dependencies?: string[] | null
+          description?: string | null
+          due_days_from_start?: number | null
+          estimated_hours?: number | null
+          id?: string
+          name: string
+          phase_order?: number | null
+          priority?: string | null
+          project_template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["task_category"] | null
+          created_at?: string | null
+          dependencies?: string[] | null
+          description?: string | null
+          due_days_from_start?: number | null
+          estimated_hours?: number | null
+          id?: string
+          name?: string
+          phase_order?: number | null
+          priority?: string | null
+          project_template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_templates_project_template_id_fkey"
+            columns: ["project_template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           actual_hours: number | null
           assigned_to: string | null
+          category: Database["public"]["Enums"]["task_category"] | null
           company_id: string
           completion_percentage: number | null
           created_at: string
@@ -9424,6 +9529,7 @@ export type Database = {
         Insert: {
           actual_hours?: number | null
           assigned_to?: string | null
+          category?: Database["public"]["Enums"]["task_category"] | null
           company_id: string
           completion_percentage?: number | null
           created_at?: string
@@ -9443,6 +9549,7 @@ export type Database = {
         Update: {
           actual_hours?: number | null
           assigned_to?: string | null
+          category?: Database["public"]["Enums"]["task_category"] | null
           company_id?: string
           completion_percentage?: number | null
           created_at?: string
@@ -10475,6 +10582,19 @@ export type Database = {
         | "civil_infrastructure"
         | "specialty_trades"
       subscription_tier: "starter" | "professional" | "enterprise"
+      task_category:
+        | "general"
+        | "permit"
+        | "estimate"
+        | "inspection"
+        | "material_order"
+        | "labor"
+        | "safety"
+        | "quality_control"
+        | "client_communication"
+        | "documentation"
+        | "financial"
+        | "equipment"
       user_role:
         | "root_admin"
         | "admin"
@@ -10617,6 +10737,20 @@ export const Constants = {
         "specialty_trades",
       ],
       subscription_tier: ["starter", "professional", "enterprise"],
+      task_category: [
+        "general",
+        "permit",
+        "estimate",
+        "inspection",
+        "material_order",
+        "labor",
+        "safety",
+        "quality_control",
+        "client_communication",
+        "documentation",
+        "financial",
+        "equipment",
+      ],
       user_role: [
         "root_admin",
         "admin",
