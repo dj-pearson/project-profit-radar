@@ -1,12 +1,20 @@
 import React from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import CalendarIntegration from '@/components/calendar/CalendarIntegration';
 
 const CalendarSync = () => {
   return (
-    <DashboardLayout title="Calendar Integration">
-      <CalendarIntegration />
-    </DashboardLayout>
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen bg-background">
+        <SimplifiedSidebar />
+        <div className="flex-1">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6">
+            <CalendarIntegration />
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
