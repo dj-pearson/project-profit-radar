@@ -51,7 +51,11 @@ const PRIORITY_COLORS = {
   urgent: 'bg-red-100 text-red-800'
 };
 
-export const TaskManager = () => {
+interface TaskManagerProps {
+  projectId?: string;
+}
+
+export const TaskManager = ({ projectId }: TaskManagerProps = {}) => {
   const { userProfile } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
@@ -76,14 +80,20 @@ export const TaskManager = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select(`
           *,
           project:projects(name)
         `)
-        .eq('company_id', userProfile.company_id)
-        .order('due_date', { ascending: true, nullsFirst: false });
+        .eq('company_id', userProfile.company_id);
+
+      // Filter by project if projectId is provided
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query.order('due_date', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
 
@@ -384,6 +394,7 @@ export const TaskManager = () => {
         isOpen={isCreateOpen} 
         onClose={() => setIsCreateOpen(false)}
         onTaskCreated={loadTasks}
+        projectId={projectId}
       />
       
       <TaskTemplatesDialog 

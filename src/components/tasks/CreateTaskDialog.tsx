@@ -12,6 +12,7 @@ interface CreateTaskDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onTaskCreated: () => void;
+  projectId?: string;
 }
 
 interface Project {
@@ -45,7 +46,8 @@ const TASK_CATEGORIES: TaskCategory[] = [
 export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   isOpen,
   onClose,
-  onTaskCreated
+  onTaskCreated,
+  projectId
 }) => {
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -114,7 +116,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         description: formData.description.trim() || null,
         category: formData.category,
         priority: formData.priority,
-        project_id: formData.project_id,
+        project_id: projectId || formData.project_id,
         assigned_to: formData.assigned_to || userProfile.id,
         due_date: formData.due_date || null,
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
