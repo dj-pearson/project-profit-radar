@@ -292,18 +292,19 @@ const Projects = () => {
 
   const ProjectCard = ({ project }: { project: Project }) => (
     <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 px-3 sm:px-6">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 min-w-0 flex-1">
-            <CardTitle className="text-lg truncate">{project.name}</CardTitle>
+            <CardTitle className="text-base sm:text-lg leading-tight break-words">{project.name}</CardTitle>
             <div className="flex items-center text-sm text-muted-foreground">
               <User className="h-3 w-3 mr-1 shrink-0" />
-              <span className="truncate">{project.client_name}</span>
+              <span className="break-words">{project.client_name}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={getStatusColor(project.status)} className="text-xs">
-              {project.status.replace('_', ' ')}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Badge variant={getStatusColor(project.status)} className="text-xs px-1.5 py-0.5">
+              <span className="hidden sm:inline">{project.status.replace('_', ' ')}</span>
+              <span className="sm:hidden">{project.status.charAt(0).toUpperCase()}</span>
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -347,11 +348,11 @@ const Projects = () => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 px-3 sm:px-6">
         {project.site_address && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3 mr-1 shrink-0" />
-            <span className="truncate">{project.site_address}</span>
+          <div className="flex items-start text-sm text-muted-foreground">
+            <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
+            <span className="break-words">{project.site_address}</span>
           </div>
         )}
         
@@ -368,16 +369,16 @@ const Projects = () => {
         {project.budget && (
           <div className="flex items-center text-sm text-muted-foreground">
             <DollarSign className="h-3 w-3 mr-1 shrink-0" />
-            <span className="truncate">Budget: ${project.budget.toLocaleString()}</span>
+            <span className="break-words">Budget: ${project.budget.toLocaleString()}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-muted-foreground">
           <div className="flex items-center">
             <Calendar className="h-3 w-3 mr-1 shrink-0" />
-            <span className="truncate">{new Date(project.start_date).toLocaleDateString()}</span>
+            <span className="whitespace-nowrap">{new Date(project.start_date).toLocaleDateString()}</span>
           </div>
-          <div className="truncate ml-2">
+          <div className="whitespace-nowrap">
             Due: {new Date(project.end_date).toLocaleDateString()}
           </div>
         </div>
@@ -394,12 +395,12 @@ const Projects = () => {
       title="Projects"
       showTrialBanner={false}
     >
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-4 sm:mb-6">
         <Button onClick={() => {
           gtag.trackProject('create', 'new_project_click');
           navigate('/create-project');
-        }} size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
-          <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+        }} size="sm" className="text-sm">
+          <Plus className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">New Project</span>
           <span className="sm:hidden">New</span>
         </Button>
@@ -407,19 +408,19 @@ const Projects = () => {
             {/* Search and Filters */}
             <div className="space-y-4 mb-6">
               {/* Main Search Bar */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 relative">
+              <div className="flex flex-col gap-4">
+                <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search projects, clients, addresses, descriptions..."
+                    placeholder="Search projects..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48">
+                    <SelectTrigger className="w-full">
                       <Filter className="h-4 w-4 mr-2" />
                       <SelectValue placeholder="Filter by status" />
                     </SelectTrigger>
@@ -432,31 +433,35 @@ const Projects = () => {
                       <SelectItem value="planning">Planning</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                    className="px-3"
-                  >
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Advanced
-                  </Button>
-                  {(budgetMin || budgetMax || startDate || endDate || materialFilter || taskFilter || documentFilter) && (
+                  <div className="flex gap-2">
                     <Button
-                      variant="ghost"
-                      onClick={clearAllFilters}
-                      className="px-3"
+                      variant="outline"
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      className="flex-1 sm:flex-none"
                     >
-                      <FilterX className="h-4 w-4 mr-2" />
-                      Clear
+                      <SlidersHorizontal className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Advanced</span>
+                      <span className="sm:hidden">Filters</span>
                     </Button>
-                  )}
+                    {(budgetMin || budgetMax || startDate || endDate || materialFilter || taskFilter || documentFilter) && (
+                      <Button
+                        variant="ghost"
+                        onClick={clearAllFilters}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <FilterX className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">Clear</span>
+                        <span className="sm:hidden">Clear</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Advanced Filters */}
               {showAdvancedFilters && (
-                <Card className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card className="p-3 sm:p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {/* Budget Range */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Budget Range</Label>
@@ -588,18 +593,22 @@ const Projects = () => {
 
             {/* Projects Tabs */}
             <Tabs defaultValue="active" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="active">
-                  Active ({activeProjects.length})
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+                <TabsTrigger value="active" className="text-xs sm:text-sm py-2">
+                  <span className="hidden sm:inline">Active ({activeProjects.length})</span>
+                  <span className="sm:hidden">Active</span>
                 </TabsTrigger>
-                <TabsTrigger value="completed">
-                  Completed ({completedProjects.length})
+                <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">
+                  <span className="hidden sm:inline">Completed ({completedProjects.length})</span>
+                  <span className="sm:hidden">Done</span>
                 </TabsTrigger>
-                <TabsTrigger value="on_hold">
-                  On Hold ({onHoldProjects.length})
+                <TabsTrigger value="on_hold" className="text-xs sm:text-sm py-2">
+                  <span className="hidden sm:inline">On Hold ({onHoldProjects.length})</span>
+                  <span className="sm:hidden">Hold</span>
                 </TabsTrigger>
-                <TabsTrigger value="planning">
-                  Planning ({planningProjects.length})
+                <TabsTrigger value="planning" className="text-xs sm:text-sm py-2">
+                  <span className="hidden sm:inline">Planning ({planningProjects.length})</span>
+                  <span className="sm:hidden">Plan</span>
                 </TabsTrigger>
               </TabsList>
 
