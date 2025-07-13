@@ -25,7 +25,8 @@ import {
   HelpCircle,
   CheckSquare,
   CalendarDays,
-  Calculator
+  Calculator,
+  BarChart4
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -233,15 +234,16 @@ export const hierarchicalNavigation: NavigationArea[] = [
           { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Admin" }
         ]
       },
-      {
-        id: 'content_admin',
-        label: 'Content Administration',
-        items: [
-          { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
-          { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Admin" },
-          { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" }
-        ]
-      },
+        {
+          id: 'content_admin',
+          label: 'Content Administration',
+          items: [
+            { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
+            { title: "SEO Analytics", url: "/admin/seo-analytics", icon: BarChart4, roles: ["root_admin"], badge: "Admin" },
+            { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Admin" },
+            { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" }
+          ]
+        },
       {
         id: 'security_admin',
         label: 'Security Administration',

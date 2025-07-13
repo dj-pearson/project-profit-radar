@@ -8280,6 +8280,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_ai_insights: {
+        Row: {
+          action_plan: Json | null
+          analysis_date: string
+          competitor_analysis: Json | null
+          created_at: string
+          generated_by: string | null
+          id: string
+          insights: Json
+          recommendations: Json
+          traffic_analysis: Json | null
+          updated_at: string
+        }
+        Insert: {
+          action_plan?: Json | null
+          analysis_date: string
+          competitor_analysis?: Json | null
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          insights: Json
+          recommendations: Json
+          traffic_analysis?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          action_plan?: Json | null
+          analysis_date?: string
+          competitor_analysis?: Json | null
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          insights?: Json
+          recommendations?: Json
+          traffic_analysis?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_analytics: {
         Row: {
           average_position: number | null

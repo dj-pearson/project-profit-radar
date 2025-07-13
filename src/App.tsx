@@ -88,6 +88,7 @@ import FinancialHub from "./pages/hubs/FinancialHub";
 import PeopleHub from "./pages/hubs/PeopleHub";
 import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
+import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
 import CompanySettings from "./pages/CompanySettings";
 import ScheduleManagement from "./pages/ScheduleManagement";
 import EstimatesHub from "./pages/EstimatesHub";
@@ -310,6 +311,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/admin/seo">
             <SEOManager />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/admin/seo-analytics"
+        element={
+          <RouteGuard routePath="/admin/seo-analytics">
+            <SEOAnalyticsDashboard />
           </RouteGuard>
         }
       />
