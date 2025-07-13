@@ -22,6 +22,14 @@ serve(async (req) => {
     console.log('SEO Analytics Action:', action, data)
 
     switch (action) {
+      case 'get_google_auth_url':
+        return await getGoogleAuthUrl()
+      case 'get_microsoft_auth_url':
+        return await getMicrosoftAuthUrl()
+      case 'exchange_google_code':
+        return await exchangeGoogleCode(supabaseClient, data)
+      case 'exchange_microsoft_code':
+        return await exchangeMicrosoftCode(supabaseClient, data)
       case 'fetch_google_search_console':
         return await fetchGoogleSearchConsole(supabaseClient, data)
       case 'fetch_bing_data':
@@ -48,6 +56,139 @@ serve(async (req) => {
     )
   }
 })
+
+// OAuth flow functions
+async function getGoogleAuthUrl() {
+  const clientId = Deno.env.get('GOOGLE_OAuth_CLIENT_ID')
+  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
+  
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `response_type=code&` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `scope=${encodeURIComponent('https://www.googleapis.com/auth/webmasters.readonly')}&` +
+    `access_type=offline&` +
+    `prompt=consent`
+
+  return new Response(
+    JSON.stringify({ authUrl }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getMicrosoftAuthUrl() {
+  const clientId = Deno.env.get('Microsoft_WM_Client')
+  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
+  
+  const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+    `response_type=code&` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `scope=${encodeURIComponent('https://api.bing.microsoft.com/webmaster.read')}&` +
+    `response_mode=query`
+
+  return new Response(
+    JSON.stringify({ authUrl }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function exchangeGoogleCode(supabaseClient: any, data: any) {
+  const { code } = data
+  const clientId = Deno.env.get('GOOGLE_OAuth_CLIENT_ID')
+  const clientSecret = Deno.env.get('GOOGLE_OAuth_CLIENT_SECRET')
+  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
+
+  try {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId!,
+        client_secret: clientSecret!,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      })
+    })
+
+    const tokenData = await tokenResponse.json()
+    
+    if (!tokenResponse.ok) {
+      throw new Error(`Google OAuth error: ${tokenData.error_description || tokenData.error}`)
+    }
+
+    // Store tokens in database
+    const { error } = await supabaseClient
+      .from('seo_oauth_tokens')
+      .upsert({
+        provider: 'google',
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+        created_at: new Date().toISOString()
+      }, { onConflict: 'provider' })
+
+    if (error) throw error
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Google OAuth completed successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Google OAuth Error:', error)
+    throw error
+  }
+}
+
+async function exchangeMicrosoftCode(supabaseClient: any, data: any) {
+  const { code } = data
+  const clientId = Deno.env.get('Microsoft_WM_Client')
+  const clientSecret = Deno.env.get('Microsoft_WM_Secret')
+  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
+
+  try {
+    const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId!,
+        client_secret: clientSecret!,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+        scope: 'https://api.bing.microsoft.com/webmaster.read'
+      })
+    })
+
+    const tokenData = await tokenResponse.json()
+    
+    if (!tokenResponse.ok) {
+      throw new Error(`Microsoft OAuth error: ${tokenData.error_description || tokenData.error}`)
+    }
+
+    // Store tokens in database
+    const { error } = await supabaseClient
+      .from('seo_oauth_tokens')
+      .upsert({
+        provider: 'microsoft',
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+        created_at: new Date().toISOString()
+      }, { onConflict: 'provider' })
+
+    if (error) throw error
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Microsoft OAuth completed successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Microsoft OAuth Error:', error)
+    throw error
+  }
+}
 
 async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
   const googleApiKey = Deno.env.get('Google_Search_Console_API')
