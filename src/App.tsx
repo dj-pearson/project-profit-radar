@@ -68,6 +68,7 @@ import AutomatedWorkflowsPage from "./pages/AutomatedWorkflows";
 import Materials from "./pages/Materials";
 import EnhancedEmailIntegration from "./components/integrations/EnhancedEmailIntegration";
 import CalendarIntegration from "./components/calendar/CalendarIntegration";
+import CalendarSync from "./pages/CalendarSync";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import Vendors from "./pages/Vendors";
 import PurchaseOrderForm from "./components/purchasing/PurchaseOrderForm";
@@ -471,7 +472,7 @@ const AppContent = () => {
         path="/calendar"
         element={
           <RouteGuard routePath="/calendar">
-            <CalendarIntegration />
+            <CalendarSync />
           </RouteGuard>
         }
       />
