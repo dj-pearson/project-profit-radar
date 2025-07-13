@@ -3,15 +3,27 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-XSS-Protection: 1; mode=block
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://www.google-analytics.com;
+
+/
+  Cache-Control: public, max-age=300, s-maxage=300
+  
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
 
 /static/*
   Cache-Control: public, max-age=31536000, immutable
 
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /*.js
   Cache-Control: public, max-age=31536000, immutable
+  Expires: Wed, 31 Dec 2025 23:59:59 GMT
 
 /*.css
   Cache-Control: public, max-age=31536000, immutable
+  Expires: Wed, 31 Dec 2025 23:59:59 GMT
 
 /*.woff2
   Cache-Control: public, max-age=31536000, immutable
@@ -22,5 +34,14 @@
 /*.jpg
   Cache-Control: public, max-age=31536000, immutable
 
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
 /*.svg
   Cache-Control: public, max-age=31536000, immutable
+
+/manifest.json
+  Cache-Control: public, max-age=86400
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
