@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail, Phone, MapPin } from "lucide-react";
+import { ArrowRight, Mail, MapPin } from "lucide-react";
 import SmartLogo from "@/components/ui/smart-logo";
 
 const Footer = () => {
@@ -75,12 +75,8 @@ const Footer = () => {
               </p>
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-white/70">
-                  <Phone className="h-4 w-4" />
-                  (555) 123-4567
-                </div>
-                <div className="flex items-center gap-2 text-white/70">
                   <Mail className="h-4 w-4" />
-                  hello@build-desk.com
+                  support@build-desk.com
                 </div>
                 <div className="flex items-center gap-2 text-white/70">
                   <MapPin className="h-4 w-4" />
@@ -161,16 +157,16 @@ const Footer = () => {
 
         {/* Bottom Section */}
         <div className="py-8 border-t border-white/20">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-white/70 text-sm">
-              © 2024 Build Desk. All rights reserved.
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-white/70 text-sm">
+                © 2024 Build Desk. All rights reserved. | <a href="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</a>
+              </div>
+              <div className="flex items-center gap-6 text-sm text-white/70">
+                <span>SOC 2 Certified</span>
+                <span>GDPR Compliant</span>
+                <span>QuickBooks Certified</span>
+              </div>
             </div>
-            <div className="flex items-center gap-6 text-sm text-white/70">
-              <span>SOC 2 Certified</span>
-              <span>GDPR Compliant</span>
-              <span>QuickBooks Certified</span>
-            </div>
-          </div>
         </div>
       </div>
     </footer>
