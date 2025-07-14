@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { 
   Users, 
   Plus,
@@ -22,7 +24,8 @@ import {
   Calendar,
   Shield,
   UserCheck,
-  UserX
+  UserX,
+  Crown
 } from 'lucide-react';
 
 interface TeamMember {
@@ -40,10 +43,12 @@ interface TeamMember {
 const TeamManagement = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
+  const { checkLimit, getUpgradeRequirement, subscriptionData, refreshData } = useSubscriptionLimits();
   
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeam, setLoadingTeam] = useState(true);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
   // Invite form state
   const [inviteEmail, setInviteEmail] = useState('');
@@ -101,6 +106,18 @@ const TeamManagement = () => {
     } finally {
       setLoadingTeam(false);
     }
+  };
+
+  const handleInviteClick = () => {
+    // Check subscription limits before opening invite dialog
+    const limitCheck = checkLimit('teamMembers', 1);
+    
+    if (!limitCheck.canAdd) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    
+    setIsInviteOpen(true);
   };
 
   const handleInviteUser = async (e: React.FormEvent) => {
@@ -162,8 +179,8 @@ const TeamManagement = () => {
       setInvitePhone('');
       setIsInviteOpen(false);
       
-      // Reload team members
-      loadTeamMembers();
+      // Reload team members and refresh subscription data
+      await Promise.all([loadTeamMembers(), refreshData()]);
 
     } catch (error: any) {
       console.error('Error inviting user:', error);
@@ -260,13 +277,11 @@ const TeamManagement = () => {
     >
       <div className="flex justify-end mb-6">
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="shrink-0">
-                  <Plus className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Invite User</span>
-                  <span className="sm:hidden">Invite</span>
-                </Button>
-              </DialogTrigger>
+              <Button size="sm" className="shrink-0" onClick={handleInviteClick}>
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Invite User</span>
+                <span className="sm:hidden">Invite</span>
+              </Button>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Invite Team Member</DialogTitle>
@@ -493,6 +508,44 @@ const TeamManagement = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Subscription Limit Indicator */}
+        {subscriptionData && (
+          <Card className="mt-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-construction-orange" />
+                  <span className="text-sm font-medium">Team Member Limit</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {teamMembers.length} / {checkLimit('teamMembers').limit === -1 ? '∞' : checkLimit('teamMembers').limit}
+                  </span>
+                  <Badge variant={subscriptionData.subscription_tier === 'enterprise' ? 'default' : 'secondary'}>
+                    {subscriptionData.subscription_tier?.charAt(0).toUpperCase() + subscriptionData.subscription_tier?.slice(1) || 'Free'}
+                  </Badge>
+                </div>
+              </div>
+              {checkLimit('teamMembers').limit !== -1 && teamMembers.length >= checkLimit('teamMembers').limit * 0.8 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  You're approaching your team member limit. Consider upgrading to add more members.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upgrade Prompt */}
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          currentTier={subscriptionData?.subscription_tier || 'starter'}
+          requiredTier={getUpgradeRequirement('teamMembers')}
+          limitType="teamMembers"
+          currentUsage={teamMembers.length}
+          currentLimit={checkLimit('teamMembers').limit}
+        />
     </DashboardLayout>
   );
 };
