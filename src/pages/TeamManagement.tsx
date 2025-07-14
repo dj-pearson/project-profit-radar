@@ -235,14 +235,26 @@ const TeamManagement = () => {
       case 'root_admin':
         return 'destructive';
       case 'admin':
+      case 'superintendent':
         return 'default';
       case 'project_manager':
-        return 'secondary';
-      case 'field_supervisor':
-        return 'outline';
+      case 'estimator':
       case 'accounting':
         return 'secondary';
+      case 'safety_officer':
+      case 'quality_inspector':
+        return 'default';
+      case 'foreman':
+      case 'field_supervisor':
+        return 'outline';
+      case 'technician':
+      case 'equipment_operator':
+      case 'journeyman':
+        return 'secondary';
       case 'office_staff':
+        return 'outline';
+      case 'apprentice':
+      case 'laborer':
         return 'outline';
       default:
         return 'outline';
@@ -255,18 +267,38 @@ const TeamManagement = () => {
         return 'Root Admin';
       case 'admin':
         return 'Admin';
+      case 'superintendent':
+        return 'Superintendent';
       case 'project_manager':
         return 'Project Manager';
-      case 'field_supervisor':
-        return 'Field Supervisor';
+      case 'estimator':
+        return 'Estimator';
       case 'accounting':
         return 'Accounting';
+      case 'safety_officer':
+        return 'Safety Officer';
+      case 'quality_inspector':
+        return 'Quality Inspector';
+      case 'foreman':
+        return 'Foreman';
+      case 'field_supervisor':
+        return 'Field Supervisor';
+      case 'technician':
+        return 'Technician';
+      case 'equipment_operator':
+        return 'Equipment Operator';
+      case 'journeyman':
+        return 'Journeyman';
       case 'office_staff':
         return 'Office Staff';
+      case 'apprentice':
+        return 'Apprentice';
+      case 'laborer':
+        return 'Laborer';
       case 'client_portal':
         return 'Client Portal';
       default:
-        return role.charAt(0).toUpperCase() + role.slice(1);
+        return role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ');
     }
   };
 
@@ -330,10 +362,20 @@ const TeamManagement = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="superintendent">Superintendent</SelectItem>
                         <SelectItem value="project_manager">Project Manager</SelectItem>
-                        <SelectItem value="field_supervisor">Field Supervisor</SelectItem>
+                        <SelectItem value="estimator">Estimator</SelectItem>
                         <SelectItem value="accounting">Accounting</SelectItem>
+                        <SelectItem value="safety_officer">Safety Officer</SelectItem>
+                        <SelectItem value="quality_inspector">Quality Inspector</SelectItem>
+                        <SelectItem value="foreman">Foreman</SelectItem>
+                        <SelectItem value="field_supervisor">Field Supervisor</SelectItem>
+                        <SelectItem value="technician">Technician</SelectItem>
+                        <SelectItem value="equipment_operator">Equipment Operator</SelectItem>
+                        <SelectItem value="journeyman">Journeyman</SelectItem>
                         <SelectItem value="office_staff">Office Staff</SelectItem>
+                        <SelectItem value="apprentice">Apprentice</SelectItem>
+                        <SelectItem value="laborer">Laborer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

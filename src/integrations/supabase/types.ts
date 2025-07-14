@@ -10495,6 +10495,10 @@ export type Database = {
           display_on: string[]
         }[]
       }
+      get_role_permissions: {
+        Args: { p_role: Database["public"]["Enums"]["user_role"] }
+        Returns: Json
+      }
       get_smtp_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -10603,6 +10607,16 @@ export type Database = {
         | "office_staff"
         | "accounting"
         | "client_portal"
+        | "technician"
+        | "foreman"
+        | "superintendent"
+        | "estimator"
+        | "safety_officer"
+        | "quality_inspector"
+        | "equipment_operator"
+        | "journeyman"
+        | "apprentice"
+        | "laborer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -10759,6 +10773,16 @@ export const Constants = {
         "office_staff",
         "accounting",
         "client_portal",
+        "technician",
+        "foreman",
+        "superintendent",
+        "estimator",
+        "safety_officer",
+        "quality_inspector",
+        "equipment_operator",
+        "journeyman",
+        "apprentice",
+        "laborer",
       ],
     },
   },

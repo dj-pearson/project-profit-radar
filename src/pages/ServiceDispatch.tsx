@@ -82,9 +82,10 @@ export default function ServiceDispatch() {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, first_name, last_name')
+        .select('id, first_name, last_name, phone, is_active')
         .eq('company_id', userProfile.company_id)
-        .in('role', ['field_supervisor'])
+        .in('role', ['technician', 'field_supervisor', 'journeyman', 'equipment_operator'])
+        .eq('is_active', true)
         .order('first_name');
 
       if (error) throw error;
@@ -92,6 +93,7 @@ export default function ServiceDispatch() {
       const formattedTechnicians = data?.map(tech => ({
         id: tech.id,
         name: `${tech.first_name} ${tech.last_name}`,
+        phone: tech.phone || 'N/A',
         status: 'available',
         current_call: null,
         location: 'Shop',
