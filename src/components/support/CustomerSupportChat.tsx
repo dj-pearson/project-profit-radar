@@ -340,6 +340,7 @@ const CustomerSupportChat = () => {
           onClick={() => setIsOpen(true)}
           className="rounded-full h-14 w-14 shadow-lg"
           size="lg"
+          data-chat-trigger
         >
           <MessageCircle className="h-6 w-6" />
         </Button>

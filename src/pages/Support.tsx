@@ -351,7 +351,7 @@ export default function Support() {
           </TabsContent>
 
           <TabsContent value="contact" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="text-center">
                 <CardHeader>
                   <Mail className="h-12 w-12 mx-auto text-primary" />
@@ -360,31 +360,18 @@ export default function Support() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">support@builddesk.com</p>
+                    <p className="text-sm font-medium">support@build-desk.com</p>
                     <p className="text-xs text-muted-foreground">Response within 24 hours</p>
-                    <Button className="w-full">
+                    <Button 
+                      className="w-full"
+                      onClick={() => window.open('mailto:support@build-desk.com', '_blank')}
+                    >
                       Send Email
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="text-center">
-                <CardHeader>
-                  <Phone className="h-12 w-12 mx-auto text-primary" />
-                  <CardTitle>Phone Support</CardTitle>
-                  <CardDescription>Speak with our team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">1-800-BUILD-DESK</p>
-                    <p className="text-xs text-muted-foreground">Mon-Fri 8AM-6PM EST</p>
-                    <Button className="w-full">
-                      Call Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
 
               <Card className="text-center">
                 <CardHeader>
@@ -395,8 +382,19 @@ export default function Support() {
                 <CardContent>
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Available Now</p>
-                    <p className="text-xs text-muted-foreground">Average wait: 2 minutes</p>
-                    <Button className="w-full">
+                    <p className="text-xs text-muted-foreground">Click the chat icon in bottom right</p>
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        // This will activate the chat widget in the bottom right
+                        const chatButton = document.querySelector('[data-chat-trigger]') as HTMLElement;
+                        if (chatButton) {
+                          chatButton.click();
+                        } else {
+                          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                        }
+                      }}
+                    >
                       Start Chat
                     </Button>
                   </div>
