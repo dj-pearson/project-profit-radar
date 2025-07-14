@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from 'react-markdown';
+import { SimplifiedSidebar } from "@/components/navigation/SimplifiedSidebar";
 
 interface Article {
   id: string;
@@ -280,15 +281,18 @@ export default function KnowledgeBaseArticle() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
-          <div className="h-12 bg-muted rounded w-3/4 mb-4"></div>
-          <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
-          <div className="space-y-4">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-4 bg-muted rounded"></div>
-            ))}
+      <div className="flex min-h-screen">
+        <SimplifiedSidebar />
+        <div className="flex-1 container mx-auto px-4 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+            <div className="h-12 bg-muted rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
+            <div className="space-y-4">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="h-4 bg-muted rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -297,23 +301,28 @@ export default function KnowledgeBaseArticle() {
 
   if (!article) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">Article not found</h2>
-          <p className="text-muted-foreground mb-6">
-            The article you're looking for doesn't exist or has been removed.
-          </p>
-          <Button asChild>
-            <Link to="/knowledge-base">Back to Knowledge Base</Link>
-          </Button>
+      <div className="flex min-h-screen">
+        <SimplifiedSidebar />
+        <div className="flex-1 container mx-auto px-4 py-8">
+          <div className="text-center">
+            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h2 className="text-2xl font-semibold mb-2">Article not found</h2>
+            <p className="text-muted-foreground mb-6">
+              The article you're looking for doesn't exist or has been removed.
+            </p>
+            <Button asChild>
+              <Link to="/knowledge-base">Back to Knowledge Base</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="flex min-h-screen">
+      <SimplifiedSidebar />
+      <div className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="mb-6">
         <Button variant="ghost" asChild className="mb-4">
@@ -386,8 +395,37 @@ export default function KnowledgeBaseArticle() {
       <Separator className="mb-8" />
 
       {/* Article Content */}
-      <div className="prose prose-lg max-w-none mb-8">
-        <ReactMarkdown>{article.content}</ReactMarkdown>
+      <div className="prose prose-lg prose-slate dark:prose-invert max-w-none mb-8 leading-relaxed">
+        <div className="bg-card/50 rounded-lg p-8 border text-base">
+          <ReactMarkdown 
+            components={{
+              h1: ({ children }) => <h1 className="text-3xl font-bold mb-6 text-foreground leading-tight">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-2xl font-semibold mb-4 mt-8 text-foreground leading-tight">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-xl font-semibold mb-3 mt-6 text-foreground leading-tight">{children}</h3>,
+              p: ({ children }) => <p className="mb-4 text-foreground leading-relaxed">{children}</p>,
+              ul: ({ children }) => <ul className="mb-4 ml-6 space-y-2 list-disc">{children}</ul>,
+              ol: ({ children }) => <ol className="mb-4 ml-6 space-y-2 list-decimal">{children}</ol>,
+              li: ({ children }) => <li className="text-foreground leading-relaxed">{children}</li>,
+              blockquote: ({ children }) => (
+                <blockquote className="border-l-4 border-primary pl-6 my-6 italic text-muted-foreground bg-muted/30 py-4 rounded-r-lg">
+                  {children}
+                </blockquote>
+              ),
+              code: ({ children }) => (
+                <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground">
+                  {children}
+                </code>
+              ),
+              pre: ({ children }) => (
+                <pre className="bg-muted p-4 rounded-lg overflow-x-auto mb-4 border">
+                  {children}
+                </pre>
+              ),
+            }}
+          >
+            {article.content}
+          </ReactMarkdown>
+        </div>
       </div>
 
       <Separator className="mb-8" />
@@ -497,6 +535,7 @@ export default function KnowledgeBaseArticle() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

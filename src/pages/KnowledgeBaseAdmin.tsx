@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SimplifiedSidebar } from "@/components/navigation/SimplifiedSidebar";
 
 interface Category {
   id: string;
@@ -328,7 +329,9 @@ export default function KnowledgeBaseAdmin() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex min-h-screen">
+      <SimplifiedSidebar />
+      <div className="flex-1 container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -667,6 +670,7 @@ export default function KnowledgeBaseAdmin() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
