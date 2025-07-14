@@ -35,6 +35,9 @@ import {
   Download,
   Calendar
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExecutiveMetrics {
   totalRevenue: number;
@@ -71,44 +74,252 @@ interface ProjectHealth {
 }
 
 const ExecutiveDashboard: React.FC = () => {
+  const { userProfile } = useAuth();
+  const { toast } = useToast();
   const [selectedPeriod, setSelectedPeriod] = useState('last_12_months');
+  const [loading, setLoading] = useState(true);
   const [executiveMetrics, setExecutiveMetrics] = useState<ExecutiveMetrics>({
-    totalRevenue: 2850000,
-    revenueGrowth: 23.5,
-    totalProjects: 47,
-    activeProjects: 18,
-    completedProjects: 29,
-    avgProfitMargin: 28.4,
-    onTimeDelivery: 87.2,
-    onBudgetProjects: 91.5,
-    teamUtilization: 82.6,
-    customerSatisfaction: 4.7,
-    cashFlow: 425000,
-    pendingInvoices: 185000
+    totalRevenue: 0,
+    revenueGrowth: 0,
+    totalProjects: 0,
+    activeProjects: 0,
+    completedProjects: 0,
+    avgProfitMargin: 0,
+    onTimeDelivery: 0,
+    onBudgetProjects: 0,
+    teamUtilization: 0,
+    customerSatisfaction: 0,
+    cashFlow: 0,
+    pendingInvoices: 0
   });
 
-  const [trendData] = useState<TrendData[]>([
-    { period: 'Jan', revenue: 180000, projects: 3, costs: 125000, profit: 55000, efficiency: 78 },
-    { period: 'Feb', revenue: 220000, projects: 4, costs: 155000, profit: 65000, efficiency: 82 },
-    { period: 'Mar', revenue: 285000, projects: 5, costs: 198000, profit: 87000, efficiency: 85 },
-    { period: 'Apr', revenue: 310000, projects: 4, costs: 215000, profit: 95000, efficiency: 88 },
-    { period: 'May', revenue: 275000, projects: 3, costs: 190000, profit: 85000, efficiency: 84 },
-    { period: 'Jun', revenue: 340000, projects: 6, costs: 235000, profit: 105000, efficiency: 89 },
-    { period: 'Jul', revenue: 365000, projects: 5, costs: 250000, profit: 115000, efficiency: 91 },
-    { period: 'Aug', revenue: 295000, projects: 4, costs: 205000, profit: 90000, efficiency: 86 },
-    { period: 'Sep', revenue: 420000, projects: 7, costs: 285000, profit: 135000, efficiency: 93 },
-    { period: 'Oct', revenue: 385000, projects: 5, costs: 265000, profit: 120000, efficiency: 90 },
-    { period: 'Nov', revenue: 445000, projects: 6, costs: 300000, profit: 145000, efficiency: 94 },
-    { period: 'Dec', revenue: 390000, projects: 5, costs: 270000, profit: 120000, efficiency: 92 }
-  ]);
+  const [trendData, setTrendData] = useState<TrendData[]>([]);
+  const [projectHealth, setProjectHealth] = useState<ProjectHealth[]>([]);
 
-  const [projectHealth] = useState<ProjectHealth[]>([
-    { id: '1', name: 'Downtown Office Complex', status: 'healthy', completion: 85, budgetVariance: -2.3, scheduleVariance: 3, riskScore: 2 },
-    { id: '2', name: 'Residential Tower A', status: 'warning', completion: 65, budgetVariance: 8.5, scheduleVariance: -5, riskScore: 6 },
-    { id: '3', name: 'Shopping Center Renovation', status: 'healthy', completion: 92, budgetVariance: -1.2, scheduleVariance: 2, riskScore: 1 },
-    { id: '4', name: 'Industrial Warehouse', status: 'critical', completion: 45, budgetVariance: 15.2, scheduleVariance: -12, riskScore: 9 },
-    { id: '5', name: 'Medical Center Wing', status: 'healthy', completion: 78, budgetVariance: 3.1, scheduleVariance: 1, riskScore: 3 }
-  ]);
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadDashboardData();
+    }
+  }, [userProfile?.company_id, selectedPeriod]);
+
+  const getDateRange = () => {
+    const now = new Date();
+    let startDate: Date;
+    
+    switch (selectedPeriod) {
+      case 'last_30_days':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'last_3_months':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        break;
+      case 'last_6_months':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        break;
+      case 'ytd':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default: // last_12_months
+        startDate = new Date(now.getFullYear(), now.getMonth() - 12, 1);
+    }
+    
+    return {
+      start: startDate.toISOString().split('T')[0],
+      end: now.toISOString().split('T')[0]
+    };
+  };
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const dateRange = getDateRange();
+      
+      await Promise.all([
+        loadExecutiveMetrics(dateRange),
+        loadTrendData(dateRange),
+        loadProjectHealth()
+      ]);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load dashboard data"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadExecutiveMetrics = async (dateRange: { start: string; end: string }) => {
+    const { data: projects } = await supabase
+      .from('projects')
+      .select(`
+        id, name, budget, status, completion_percentage, start_date, end_date,
+        job_costs(total_cost, labor_cost, material_cost, equipment_cost)
+      `)
+      .eq('company_id', userProfile!.company_id);
+
+    const { data: invoices } = await supabase
+      .from('invoices')
+      .select('total_amount, status, issue_date')
+      .eq('company_id', userProfile!.company_id)
+      .gte('issue_date', dateRange.start)
+      .lte('issue_date', dateRange.end);
+
+    if (projects && invoices) {
+      const totalRevenue = invoices
+        .filter(inv => inv.status === 'paid')
+        .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+
+      const totalProjects = projects.length;
+      const activeProjects = projects.filter(p => p.status === 'active').length;
+      const completedProjects = projects.filter(p => p.status === 'completed').length;
+
+      const projectsWithCosts = projects.map(project => {
+        const totalCosts = project.job_costs?.reduce((sum, cost) => sum + (cost.total_cost || 0), 0) || 0;
+        const profitMargin = project.budget > 0 ? ((project.budget - totalCosts) / project.budget) * 100 : 0;
+        return { ...project, totalCosts, profitMargin };
+      });
+
+      const avgProfitMargin = projectsWithCosts.length > 0 
+        ? projectsWithCosts.reduce((sum, p) => sum + p.profitMargin, 0) / projectsWithCosts.length 
+        : 0;
+
+      const onTimeProjects = projects.filter(p => {
+        if (!p.end_date || p.status !== 'completed') return false;
+        return new Date(p.end_date) <= new Date();
+      }).length;
+
+      const onBudgetProjects = projectsWithCosts.filter(p => p.profitMargin >= 0).length;
+
+      const pendingInvoices = invoices
+        .filter(inv => inv.status === 'pending')
+        .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+
+      setExecutiveMetrics({
+        totalRevenue,
+        revenueGrowth: 0, // Would need historical data to calculate
+        totalProjects,
+        activeProjects,
+        completedProjects,
+        avgProfitMargin,
+        onTimeDelivery: totalProjects > 0 ? (onTimeProjects / totalProjects) * 100 : 0,
+        onBudgetProjects: totalProjects > 0 ? (onBudgetProjects / totalProjects) * 100 : 0,
+        teamUtilization: 85, // Would need time tracking data
+        customerSatisfaction: 4.5, // Would need feedback data
+        cashFlow: totalRevenue - pendingInvoices,
+        pendingInvoices
+      });
+    }
+  };
+
+  const loadTrendData = async (dateRange: { start: string; end: string }) => {
+    const { data: monthlyData } = await supabase
+      .from('invoices')
+      .select('total_amount, issue_date, status')
+      .eq('company_id', userProfile!.company_id)
+      .gte('issue_date', dateRange.start)
+      .lte('issue_date', dateRange.end);
+
+    const { data: expenses } = await supabase
+      .from('expenses')
+      .select('amount, expense_date')
+      .eq('company_id', userProfile!.company_id)
+      .gte('expense_date', dateRange.start)
+      .lte('expense_date', dateRange.end);
+
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('id, created_at')
+      .eq('company_id', userProfile!.company_id)
+      .gte('created_at', dateRange.start)
+      .lte('created_at', dateRange.end);
+
+    if (monthlyData && expenses && projects) {
+      const monthlyTrends = new Map<string, { revenue: number; costs: number; projects: number }>();
+
+      monthlyData.forEach(invoice => {
+        const month = new Date(invoice.issue_date).toLocaleDateString('en', { month: 'short' });
+        const current = monthlyTrends.get(month) || { revenue: 0, costs: 0, projects: 0 };
+        if (invoice.status === 'paid') {
+          current.revenue += invoice.total_amount || 0;
+        }
+        monthlyTrends.set(month, current);
+      });
+
+      expenses.forEach(expense => {
+        const month = new Date(expense.expense_date).toLocaleDateString('en', { month: 'short' });
+        const current = monthlyTrends.get(month) || { revenue: 0, costs: 0, projects: 0 };
+        current.costs += expense.amount || 0;
+        monthlyTrends.set(month, current);
+      });
+
+      projects.forEach(project => {
+        const month = new Date(project.created_at).toLocaleDateString('en', { month: 'short' });
+        const current = monthlyTrends.get(month) || { revenue: 0, costs: 0, projects: 0 };
+        current.projects += 1;
+        monthlyTrends.set(month, current);
+      });
+
+      const trendArray = Array.from(monthlyTrends.entries()).map(([period, data]) => ({
+        period,
+        revenue: data.revenue,
+        projects: data.projects,
+        costs: data.costs,
+        profit: data.revenue - data.costs,
+        efficiency: data.revenue > 0 ? Math.min(100, ((data.revenue - data.costs) / data.revenue) * 100) : 0
+      }));
+
+      setTrendData(trendArray);
+    }
+  };
+
+  const loadProjectHealth = async () => {
+    const { data: projects } = await supabase
+      .from('projects')
+      .select(`
+        id, name, budget, completion_percentage, start_date, end_date, status,
+        job_costs(total_cost)
+      `)
+      .eq('company_id', userProfile!.company_id)
+      .eq('status', 'active')
+      .limit(10);
+
+    if (projects) {
+      const healthData: ProjectHealth[] = projects.map(project => {
+        const totalCosts = project.job_costs?.reduce((sum, cost) => sum + (cost.total_cost || 0), 0) || 0;
+        const budgetVariance = project.budget > 0 ? ((totalCosts - project.budget) / project.budget) * 100 : 0;
+        
+        const scheduleVariance = project.end_date 
+          ? Math.ceil((new Date(project.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+          : 0;
+
+        let status: 'healthy' | 'warning' | 'critical' = 'healthy';
+        let riskScore = 1;
+
+        if (budgetVariance > 10 || scheduleVariance < -10) {
+          status = 'critical';
+          riskScore = 8;
+        } else if (budgetVariance > 5 || scheduleVariance < -5) {
+          status = 'warning';
+          riskScore = 5;
+        }
+
+        return {
+          id: project.id,
+          name: project.name,
+          status,
+          completion: project.completion_percentage || 0,
+          budgetVariance,
+          scheduleVariance,
+          riskScore
+        };
+      });
+
+      setProjectHealth(healthData);
+    }
+  };
 
   const chartConfig = {
     revenue: {
@@ -158,6 +369,17 @@ const ExecutiveDashboard: React.FC = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

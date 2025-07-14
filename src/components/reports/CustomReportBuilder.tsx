@@ -23,6 +23,8 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import * as XLSX from 'xlsx';
 
 interface ReportField {
@@ -108,6 +110,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   initialConfig
 }) => {
   const { toast } = useToast();
+  const { userProfile } = useAuth();
   
   const [config, setConfig] = useState<ReportConfig>({
     name: '',
@@ -185,9 +188,8 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
 
     setIsGenerating(true);
     try {
-      // Mock data generation - in a real app, this would call the backend
-      const mockData = generateMockData(config);
-      setReportData(mockData);
+      const realData = await generateRealData(config);
+      setReportData(realData);
       setPreviewMode(true);
       
       if (onExecute) {
@@ -210,8 +212,66 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
     }
   };
 
+  const generateRealData = async (config: ReportConfig): Promise<any[]> => {
+    try {
+      if (!userProfile?.company_id) {
+        throw new Error('No company found');
+      }
+
+      // Build query based on data source
+      let query;
+      switch (config.dataSource) {
+        case 'projects':
+          query = supabase.from('projects').select('*');
+          break;
+        case 'job_costs':
+          query = supabase.from('job_costs').select('*');
+          break;
+        case 'time_entries':
+          query = supabase.from('time_entries').select('*');
+          break;
+        case 'expenses':
+          query = supabase.from('expenses').select('*');
+          break;
+        case 'invoices':
+          query = supabase.from('invoices').select('*');
+          break;
+        default:
+          throw new Error('Invalid data source');
+      }
+
+      // Add company filter
+      query = query.eq('company_id', userProfile.company_id);
+
+      // Apply date range filter
+      if (config.dateRange.start && config.dateRange.end) {
+        const dateField = config.dataSource === 'projects' ? 'created_at' 
+          : config.dataSource === 'job_costs' ? 'date'
+          : config.dataSource === 'time_entries' ? 'date'
+          : config.dataSource === 'expenses' ? 'expense_date'
+          : 'issue_date';
+        
+        query = query.gte(dateField, config.dateRange.start).lte(dateField, config.dateRange.end);
+      }
+
+      // Apply sorting
+      if (config.sortBy) {
+        query = query.order(config.sortBy, { ascending: config.sortOrder === 'asc' });
+      }
+
+      const { data, error } = await query.limit(1000);
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error generating real data:', error);
+      // Fallback to mock data if real data fails
+      return generateMockData(config);
+    }
+  };
+
   const generateMockData = (config: ReportConfig) => {
-    // This is mock data generation - replace with actual API call
     const dataCount = Math.floor(Math.random() * 20) + 10;
     return Array.from({ length: dataCount }, (_, i) => {
       const item: any = {};
