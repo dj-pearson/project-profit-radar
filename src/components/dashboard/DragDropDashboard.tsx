@@ -185,7 +185,8 @@ export const DragDropDashboard = () => {
             <div
               {...provided.droppableProps}
               ref={provided.innerRef}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr touch-manipulation"
+              style={{ touchAction: 'manipulation' }}
             >
               {widgets.map((widget, index) => (
                 <Draggable key={widget.id} draggableId={widget.id} index={index}>
@@ -194,6 +195,10 @@ export const DragDropDashboard = () => {
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       className={getWidgetClassName(widget)}
+                      style={{
+                        ...provided.draggableProps.style,
+                        touchAction: 'none'
+                      }}
                     >
                       <DashboardTile
                         id={widget.id}

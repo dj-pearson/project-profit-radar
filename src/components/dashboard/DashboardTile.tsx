@@ -125,20 +125,26 @@ export const DashboardTile = ({
         onTouchStart={(e) => handleResizeStart(e, 'bottom-right')}
       />
       
-      {/* Mobile resize handles - always visible on mobile */}
+      {/* Mobile resize handles - subtle and only visible when needed */}
       <div className="md:hidden">
         <div 
-          className="absolute top-0 right-0 w-4 h-full bg-primary/30 touch-none"
+          className="absolute top-0 right-0 w-6 h-full opacity-20 touch-none flex items-center justify-center"
           onTouchStart={(e) => handleResizeStart(e, 'right')}
-        />
+        >
+          <div className="w-1 h-8 bg-muted-foreground rounded-full opacity-60" />
+        </div>
         <div 
-          className="absolute bottom-0 left-0 w-full h-4 bg-primary/30 touch-none"
+          className="absolute bottom-0 left-0 w-full h-6 opacity-20 touch-none flex items-center justify-center"
           onTouchStart={(e) => handleResizeStart(e, 'bottom')}
-        />
+        >
+          <div className="w-8 h-1 bg-muted-foreground rounded-full opacity-60" />
+        </div>
         <div 
-          className="absolute bottom-0 right-0 w-6 h-6 bg-primary/50 rounded-tl-lg touch-none"
+          className="absolute bottom-0 right-0 w-6 h-6 opacity-30 touch-none flex items-center justify-center"
           onTouchStart={(e) => handleResizeStart(e, 'bottom-right')}
-        />
+        >
+          <div className="w-2 h-2 bg-muted-foreground rounded-full" />
+        </div>
       </div>
       
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
