@@ -435,9 +435,30 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
-      <Route path="/knowledge-base" element={<KnowledgeBase />} />
-      <Route path="/knowledge-base/category/:categorySlug" element={<KnowledgeBase />} />
-      <Route path="/knowledge-base/article/:slug" element={<KnowledgeBaseArticle />} />
+      <Route 
+        path="/knowledge-base" 
+        element={
+          <RouteGuard routePath="/knowledge-base">
+            <KnowledgeBase />
+          </RouteGuard>
+        } 
+      />
+      <Route 
+        path="/knowledge-base/category/:categorySlug" 
+        element={
+          <RouteGuard routePath="/knowledge-base">
+            <KnowledgeBase />
+          </RouteGuard>
+        } 
+      />
+      <Route 
+        path="/knowledge-base/article/:slug" 
+        element={
+          <RouteGuard routePath="/knowledge-base">
+            <KnowledgeBaseArticle />
+          </RouteGuard>
+        } 
+      />
       <Route
         path="/knowledge-base-admin"
         element={
