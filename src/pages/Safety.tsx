@@ -66,6 +66,102 @@ const Safety = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const generateOSHA300Log = async () => {
+    try {
+      // Get user's company
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', user?.id)
+        .single();
+
+      if (!profile?.company_id) {
+        toast({
+          title: "Error",
+          description: "Company information not found",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Get safety incidents for the current year
+      const currentYear = new Date().getFullYear();
+      const { data: incidents } = await supabase
+        .from('safety_incidents')
+        .select('*')
+        .eq('company_id', profile.company_id)
+        .gte('incident_date', `${currentYear}-01-01`)
+        .lte('incident_date', `${currentYear}-12-31`)
+        .order('incident_date', { ascending: true });
+
+      if (!incidents || incidents.length === 0) {
+        toast({
+          title: "No Data",
+          description: "No incidents found for the current year to generate OSHA 300 log",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Generate CSV content for OSHA 300 log
+      const headers = [
+        'Case No.',
+        'Employee Name',
+        'Job Title',
+        'Date of Injury/Illness',
+        'Where Event Occurred',
+        'Describe Injury/Illness',
+        'Death',
+        'Days Away From Work',
+        'Days of Restricted Work Activity',
+        'Job Transfer/Restriction',
+        'Other Recordable Cases',
+        'Classification'
+      ];
+
+      const csvContent = [
+        headers.join(','),
+        ...incidents.map((incident, index) => [
+          index + 1,
+          incident.injured_person_name || 'N/A',
+          incident.injured_person_job_title || 'N/A',
+          incident.incident_date,
+          incident.location || 'N/A',
+          `"${incident.description.replace(/"/g, '""')}"`,
+          incident.severity === 'fatal' ? 'Yes' : 'No',
+          incident.days_away_from_work || 0,
+          incident.lost_time ? (incident.days_away_from_work || 0) : 0,
+          incident.medical_attention_required ? 'Yes' : 'No',
+          incident.osha_recordable ? 'Yes' : 'No',
+          incident.incident_type || 'Injury'
+        ].join(','))
+      ].join('\n');
+
+      // Download the CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `OSHA_300_Log_${currentYear}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: "OSHA 300 Log downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Error generating OSHA 300 log:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate OSHA 300 log",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchSafetyStats();
@@ -187,16 +283,18 @@ const Safety = () => {
               Manage safety incidents, checklists, training, and compliance deadlines
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline">
-              <FileText className="mr-2 h-4 w-4" />
-              Generate OSHA 300 Log
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" onClick={generateOSHA300Log} className="text-xs md:text-sm">
+              <FileText className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Generate OSHA 300 Log</span>
+              <span className="sm:hidden">OSHA 300</span>
             </Button>
             <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Report Incident
+                <Button className="bg-construction-orange hover:bg-construction-orange/90 text-xs md:text-sm">
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Report Incident</span>
+                  <span className="sm:hidden">Report</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -216,14 +314,14 @@ const Safety = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-construction-orange" />
+              <CardTitle className="text-xs md:text-sm font-medium">Total Incidents</CardTitle>
+              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalIncidents}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats.totalIncidents}</div>
               <p className="text-xs text-muted-foreground">
                 {stats.openIncidents} open incidents
               </p>
@@ -232,11 +330,11 @@ const Safety = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Safety Checklists</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-xs md:text-sm font-medium">Safety Checklists</CardTitle>
+              <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.checklistsCompleted}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats.checklistsCompleted}</div>
               <p className="text-xs text-muted-foreground">
                 Completed this month
               </p>
@@ -245,11 +343,11 @@ const Safety = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expiring Certifications</CardTitle>
-              <Clock className="h-4 w-4 text-construction-orange" />
+              <CardTitle className="text-xs md:text-sm font-medium">Expiring Certifications</CardTitle>
+              <Clock className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.expiringCertifications}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats.expiringCertifications}</div>
               <p className="text-xs text-muted-foreground">
                 Next 30 days
               </p>
@@ -258,11 +356,11 @@ const Safety = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
-              <Calendar className="h-4 w-4 text-red-600" />
+              <CardTitle className="text-xs md:text-sm font-medium">Upcoming Deadlines</CardTitle>
+              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.upcomingDeadlines}</div>
+              <div className="text-lg md:text-2xl font-bold">{stats.upcomingDeadlines}</div>
               <p className="text-xs text-muted-foreground">
                 Compliance deadlines
               </p>
@@ -272,11 +370,11 @@ const Safety = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="incidents" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="incidents">Incidents</TabsTrigger>
-            <TabsTrigger value="checklists">Safety Checklists</TabsTrigger>
-            <TabsTrigger value="training">Training & Certifications</TabsTrigger>
-            <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+            <TabsTrigger value="incidents" className="text-xs md:text-sm px-2 md:px-4">Incidents</TabsTrigger>
+            <TabsTrigger value="checklists" className="text-xs md:text-sm px-2 md:px-4">Checklists</TabsTrigger>
+            <TabsTrigger value="training" className="text-xs md:text-sm px-2 md:px-4">Training</TabsTrigger>
+            <TabsTrigger value="compliance" className="text-xs md:text-sm px-2 md:px-4">Compliance</TabsTrigger>
           </TabsList>
 
           <TabsContent value="incidents" className="space-y-6">

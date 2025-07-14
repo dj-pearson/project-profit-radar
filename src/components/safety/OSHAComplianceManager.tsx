@@ -250,51 +250,51 @@ const OSHAComplianceManager = () => {
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold">{pendingDeadlines}</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Pending</p>
+                <p className="text-lg md:text-2xl font-bold">{pendingDeadlines}</p>
               </div>
-              <Clock className="h-8 w-8 text-muted-foreground" />
+              <Clock className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Upcoming (30 days)</p>
-                <p className="text-2xl font-bold text-orange-600">{upcomingDeadlines}</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Upcoming (30 days)</p>
+                <p className="text-lg md:text-2xl font-bold text-orange-600">{upcomingDeadlines}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-orange-600" />
+              <AlertTriangle className="h-6 w-6 md:h-8 md:w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Overdue</p>
-                <p className="text-2xl font-bold text-red-600">{overdueDeadlines}</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Overdue</p>
+                <p className="text-lg md:text-2xl font-bold text-red-600">{overdueDeadlines}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <AlertTriangle className="h-6 w-6 md:h-8 md:w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold text-green-600">{completedDeadlines}</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Completed</p>
+                <p className="text-lg md:text-2xl font-bold text-green-600">{completedDeadlines}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
+              <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -315,9 +315,10 @@ const OSHAComplianceManager = () => {
             </div>
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Deadline
+                <Button className="bg-construction-orange hover:bg-construction-orange/90 text-xs md:text-sm">
+                  <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Add Deadline</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
@@ -326,7 +327,7 @@ const OSHAComplianceManager = () => {
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <FormField
                         control={form.control}
                         name="title"
