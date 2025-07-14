@@ -3560,6 +3560,92 @@ export type Database = {
           },
         ]
       }
+      equipment_assignments: {
+        Row: {
+          actual_end_date: string | null
+          actual_start_date: string | null
+          assigned_by: string | null
+          assigned_quantity: number
+          assignment_status: string
+          company_id: string
+          created_at: string
+          end_date: string
+          equipment_id: string
+          id: string
+          notes: string | null
+          planned_end_date: string | null
+          planned_start_date: string | null
+          project_id: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          assigned_by?: string | null
+          assigned_quantity?: number
+          assignment_status?: string
+          company_id: string
+          created_at?: string
+          end_date: string
+          equipment_id: string
+          id?: string
+          notes?: string | null
+          planned_end_date?: string | null
+          planned_start_date?: string | null
+          project_id: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          assigned_by?: string | null
+          assigned_quantity?: number
+          assignment_status?: string
+          company_id?: string
+          created_at?: string
+          end_date?: string
+          equipment_id?: string
+          id?: string
+          notes?: string | null
+          planned_end_date?: string | null
+          planned_start_date?: string | null
+          project_id?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_equipment_assignments_assigned_by"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_equipment_assignments_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_equipment_assignments_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fk_equipment_assignments_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment_maintenance_records: {
         Row: {
           actual_completion_date: string | null
