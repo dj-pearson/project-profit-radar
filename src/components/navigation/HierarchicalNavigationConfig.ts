@@ -239,9 +239,18 @@ export const hierarchicalNavigation: NavigationArea[] = [
           label: 'Content Administration',
           items: [
             { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
+            { title: "Knowledge Base Admin", url: "/knowledge-base-admin", icon: FileText, roles: ["root_admin"], badge: "Admin" },
             { title: "SEO Analytics", url: "/admin/seo-analytics", icon: BarChart4, roles: ["root_admin"], badge: "Admin" },
             { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Admin" },
             { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" }
+          ]
+        },
+        {
+          id: 'support_admin',
+          label: 'Support Administration',
+          items: [
+            { title: "Support Tickets", url: "/admin/support-tickets", icon: HelpCircle, roles: ["admin", "root_admin"], badge: "Admin" },
+            { title: "Customer Service", url: "/admin/customer-service", icon: MessageSquare, roles: ["admin", "root_admin"], badge: "Admin" }
           ]
         },
       {

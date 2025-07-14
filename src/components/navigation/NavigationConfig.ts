@@ -285,7 +285,15 @@ export const dashboardAreas: DashboardArea[] = [
         label: "Content Management",
         items: [
           { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Root Admin" },
+          { title: "Knowledge Base Admin", url: "/knowledge-base-admin", icon: FileText, roles: ["root_admin"], badge: "Root Admin" },
           { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Root Admin" }
+        ]
+      },
+      {
+        label: "Support Management",
+        items: [
+          { title: "Support Tickets", url: "/admin/support-tickets", icon: HelpCircle, roles: ["admin", "root_admin"] },
+          { title: "Customer Service", url: "/admin/customer-service", icon: MessageSquare, roles: ["admin", "root_admin"] }
         ]
       }
     ]
