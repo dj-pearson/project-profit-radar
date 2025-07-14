@@ -13,11 +13,96 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PublicProcurement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("opportunities");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
+
+  const [formData, setFormData] = useState({
+    opportunity_number: '',
+    issuing_agency: '',
+    title: '',
+    description: '',
+    procurement_type: '',
+    estimated_value: '',
+    submission_deadline: ''
+  });
+
+  const resetForm = () => {
+    setFormData({
+      opportunity_number: '',
+      issuing_agency: '',
+      title: '',
+      description: '',
+      procurement_type: '',
+      estimated_value: '',
+      submission_deadline: ''
+    });
+  };
+
+  const handleSaveOpportunity = async () => {
+    if (!userProfile?.company_id) {
+      toast({
+        title: "Error",
+        description: "User profile not found",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.title || !formData.issuing_agency || !formData.opportunity_number) {
+      toast({
+        title: "Error", 
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const opportunityData = {
+        company_id: userProfile.company_id,
+        opportunity_number: formData.opportunity_number,
+        issuing_agency: formData.issuing_agency,
+        title: formData.title,
+        description: formData.description || null,
+        procurement_type: formData.procurement_type || null,
+        estimated_value: formData.estimated_value ? parseFloat(formData.estimated_value) : null,
+        submission_deadline: formData.submission_deadline || null,
+        status: 'open'
+      };
+
+      const { error } = await supabase
+        .from('procurement_opportunities')
+        .insert([opportunityData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Procurement opportunity saved successfully"
+      });
+      
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving opportunity:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save opportunity. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const opportunities = [
     {
@@ -105,9 +190,9 @@ export default function PublicProcurement() {
   return (
     <DashboardLayout title="Public Procurement">
       <div className="space-y-6">
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Opportunity
               </Button>
@@ -122,26 +207,49 @@ export default function PublicProcurement() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="opportunity-number">Opportunity Number</Label>
-                    <Input id="opportunity-number" placeholder="RFP-2024-001" />
+                    <Label htmlFor="opportunity-number">Opportunity Number *</Label>
+                    <Input 
+                      id="opportunity-number" 
+                      placeholder="RFP-2024-001"
+                      value={formData.opportunity_number}
+                      onChange={(e) => setFormData({...formData, opportunity_number: e.target.value})}
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="issuing-agency">Issuing Agency</Label>
-                    <Input id="issuing-agency" placeholder="City of Springfield" />
+                    <Label htmlFor="issuing-agency">Issuing Agency *</Label>
+                    <Input 
+                      id="issuing-agency" 
+                      placeholder="City of Springfield"
+                      value={formData.issuing_agency}
+                      onChange={(e) => setFormData({...formData, issuing_agency: e.target.value})}
+                    />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" placeholder="Project title" />
+                  <Label htmlFor="title">Title *</Label>
+                  <Input 
+                    id="title" 
+                    placeholder="Project title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" placeholder="Project description and scope" />
+                  <Textarea 
+                    id="description" 
+                    placeholder="Project description and scope"
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="procurement-type">Procurement Type</Label>
-                    <Select>
+                    <Select 
+                      value={formData.procurement_type}
+                      onValueChange={(value) => setFormData({...formData, procurement_type: value})}
+                    >
                       <SelectTrigger id="procurement-type">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -155,16 +263,40 @@ export default function PublicProcurement() {
                   </div>
                   <div>
                     <Label htmlFor="estimated-value">Estimated Value</Label>
-                    <Input id="estimated-value" type="number" placeholder="1000000" />
+                    <Input 
+                      id="estimated-value" 
+                      type="number" 
+                      placeholder="1000000"
+                      value={formData.estimated_value}
+                      onChange={(e) => setFormData({...formData, estimated_value: e.target.value})}
+                    />
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="submission-deadline">Submission Deadline</Label>
-                  <Input id="submission-deadline" type="datetime-local" />
+                  <Input 
+                    id="submission-deadline" 
+                    type="datetime-local"
+                    value={formData.submission_deadline}
+                    onChange={(e) => setFormData({...formData, submission_deadline: e.target.value})}
+                  />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Save Opportunity</Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSaveOpportunity}
+                    disabled={loading}
+                  >
+                    {loading ? "Saving..." : "Save Opportunity"}
+                  </Button>
                 </div>
               </div>
             </DialogContent>
