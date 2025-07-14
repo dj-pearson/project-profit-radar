@@ -82,18 +82,36 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
 
     try {
       const bondData = {
-        ...formData,
         company_id: userProfile?.company_id,
         created_by: userProfile?.id,
+        project_id: formData.project_id || null,
+        bond_type: formData.bond_type,
+        bond_number: formData.bond_number,
+        bond_name: formData.bond_name,
+        description: formData.description,
         bond_amount: parseFloat(formData.bond_amount.toString()) || 0,
         premium_amount: parseFloat(formData.premium_amount.toString()) || 0,
         bond_percentage: parseFloat(formData.bond_percentage.toString()) || 100,
-        claim_amount: parseFloat(formData.claim_amount.toString()) || 0,
-        // Convert empty strings to null for date fields
+        principal_name: formData.principal_name,
+        obligee_name: formData.obligee_name,
+        surety_company: formData.surety_company,
+        surety_contact_name: formData.surety_contact_name,
+        surety_contact_phone: formData.surety_contact_phone,
+        surety_contact_email: formData.surety_contact_email,
+        agent_company: formData.agent_company,
+        agent_name: formData.agent_name,
+        agent_phone: formData.agent_phone,
+        agent_email: formData.agent_email,
         effective_date: formData.effective_date || null,
         expiry_date: formData.expiry_date || null,
         issued_date: formData.issued_date || null,
-        claim_date: formData.claim_date || null
+        status: formData.status,
+        notes: formData.notes,
+        claim_made: formData.claim_made,
+        claim_amount: parseFloat(formData.claim_amount.toString()) || 0,
+        claim_date: formData.claim_date || null,
+        claim_status: formData.claim_status,
+        claim_notes: formData.claim_notes
       };
 
       if (bond) {
