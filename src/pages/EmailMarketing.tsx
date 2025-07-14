@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EmailIntegrationSettings } from '@/components/email/EmailIntegrationSettings';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Plus, 
   Search, 
@@ -19,97 +23,104 @@ import {
   MousePointer,
   TrendingUp,
   Calendar,
-  Edit
+  Edit,
+  Settings
 } from 'lucide-react';
 
 export default function EmailMarketing() {
+  const { userProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("campaigns");
+  const [loading, setLoading] = useState(true);
+  
+  // Real data states
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [lists, setLists] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState({
+    totalCampaigns: 0,
+    avgOpenRate: 0,
+    avgClickRate: 0,
+    totalSubscribers: 0
+  });
 
-  // Mock data
-  const campaigns = [
-    {
-      id: "1",
-      name: "Spring Construction Services",
-      subject: "Get Ready for Spring Construction Projects",
-      status: "sent",
-      sent_date: "2024-04-08",
-      recipients: 245,
-      open_rate: 32.5,
-      click_rate: 8.2,
-      replies: 5
-    },
-    {
-      id: "2",
-      name: "Monthly Newsletter - April",
-      subject: "BuildDesk April Newsletter - Project Updates & Tips",
-      status: "draft",
-      created_date: "2024-04-10",
-      recipients: 312,
-      open_rate: 0,
-      click_rate: 0,
-      replies: 0
-    },
-    {
-      id: "3",
-      name: "Safety Training Reminder",
-      subject: "Important: Upcoming Safety Training Sessions",
-      status: "scheduled",
-      scheduled_date: "2024-04-15",
-      recipients: 89,
-      open_rate: 0,
-      click_rate: 0,
-      replies: 0
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadEmailData();
     }
-  ];
+  }, [userProfile?.company_id]);
 
-  const templates = [
-    {
-      id: "1",
-      name: "Project Completion Notification",
-      category: "Project Updates",
-      last_used: "2024-03-25",
-      usage_count: 15
-    },
-    {
-      id: "2",
-      name: "Quote Follow-up",
-      category: "Sales",
-      last_used: "2024-04-02",
-      usage_count: 23
-    },
-    {
-      id: "3",
-      name: "Safety Reminder",
-      category: "Safety",
-      last_used: "2024-04-01",
-      usage_count: 8
-    }
-  ];
+  const loadEmailData = async () => {
+    if (!userProfile?.company_id) return;
 
-  const lists = [
-    {
-      id: "1",
-      name: "Active Clients",
-      subscriber_count: 156,
-      last_updated: "2024-04-09",
-      source: "CRM Import"
-    },
-    {
-      id: "2",
-      name: "Prospects",
-      subscriber_count: 89,
-      last_updated: "2024-04-08",
-      source: "Website Signup"
-    },
-    {
-      id: "3",
-      name: "Vendors & Suppliers",
-      subscriber_count: 67,
-      last_updated: "2024-04-05",
-      source: "Manual Entry"
+    setLoading(true);
+    try {
+      // Load campaigns
+      const { data: campaignData, error: campaignError } = await supabase
+        .from('email_campaigns')
+        .select(`
+          *,
+          email_lists!recipient_list_id(name, subscriber_count),
+          email_integrations(provider_name)
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('created_at', { ascending: false });
+
+      if (campaignError) throw campaignError;
+
+      // Load templates
+      const { data: templateData, error: templateError } = await supabase
+        .from('email_templates')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('usage_count', { ascending: false });
+
+      if (templateError) throw templateError;
+
+      // Load email lists
+      const { data: listData, error: listError } = await supabase
+        .from('email_lists')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (listError) throw listError;
+
+      setCampaigns(campaignData || []);
+      setTemplates(templateData || []);
+      setLists(listData || []);
+
+      // Calculate analytics
+      const totalCampaigns = campaignData?.length || 0;
+      const totalSubscribers = listData?.reduce((sum, list) => sum + (list.subscriber_count || 0), 0) || 0;
+      
+      const sentCampaigns = campaignData?.filter(c => c.status === 'sent') || [];
+      const avgOpenRate = sentCampaigns.length > 0 
+        ? sentCampaigns.reduce((sum, c) => sum + (c.total_opened / Math.max(c.total_sent, 1) * 100), 0) / sentCampaigns.length
+        : 0;
+      const avgClickRate = sentCampaigns.length > 0 
+        ? sentCampaigns.reduce((sum, c) => sum + (c.total_clicked / Math.max(c.total_sent, 1) * 100), 0) / sentCampaigns.length
+        : 0;
+
+      setAnalytics({
+        totalCampaigns,
+        avgOpenRate: Math.round(avgOpenRate * 10) / 10,
+        avgClickRate: Math.round(avgClickRate * 10) / 10,
+        totalSubscribers
+      });
+
+    } catch (error) {
+      console.error('Error loading email data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load email marketing data"
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -204,11 +215,12 @@ export default function EmailMarketing() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="lists">Email Lists</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center space-x-2">
@@ -222,156 +234,229 @@ export default function EmailMarketing() {
           </div>
 
           <TabsContent value="campaigns" className="space-y-4">
-            <div className="grid gap-4">
-              {campaigns.map((campaign) => (
-                <Card key={campaign.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Mail className="h-5 w-5" />
-                          {campaign.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {campaign.subject}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(campaign.status)}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Recipients</div>
-                          <div className="font-semibold">{campaign.recipients}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Open Rate</div>
-                          <div>{campaign.open_rate}%</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MousePointer className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Click Rate</div>
-                          <div>{campaign.click_rate}%</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">
-                            {campaign.status === 'sent' ? 'Sent' : campaign.status === 'scheduled' ? 'Scheduled' : 'Created'}
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : campaigns.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-64">
+                  <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Email Campaigns</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Create your first email campaign to start reaching your audience
+                  </p>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Campaign
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {campaigns.map((campaign) => {
+                  const openRate = campaign.total_sent > 0 
+                    ? Math.round((campaign.total_opened / campaign.total_sent) * 100 * 10) / 10
+                    : 0;
+                  const clickRate = campaign.total_sent > 0 
+                    ? Math.round((campaign.total_clicked / campaign.total_sent) * 100 * 10) / 10
+                    : 0;
+                  
+                  return (
+                    <Card key={campaign.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Mail className="h-5 w-5" />
+                              {campaign.name}
+                            </CardTitle>
+                            <CardDescription>
+                              {campaign.subject}
+                            </CardDescription>
                           </div>
-                          <div>
-                            {campaign.status === 'sent' && new Date(campaign.sent_date).toLocaleDateString()}
-                            {campaign.status === 'scheduled' && new Date(campaign.scheduled_date).toLocaleDateString()}
-                            {campaign.status === 'draft' && new Date(campaign.created_date).toLocaleDateString()}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(campaign.status)}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-end gap-2">
-                      {campaign.status === 'draft' && (
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                      )}
-                      <Button size="sm">
-                        View Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Recipients</div>
+                              <div className="font-semibold">{campaign.total_recipients || 0}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Open Rate</div>
+                              <div>{openRate}%</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MousePointer className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Click Rate</div>
+                              <div>{clickRate}%</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">
+                                {campaign.status === 'sent' ? 'Sent' : campaign.status === 'scheduled' ? 'Scheduled' : 'Created'}
+                              </div>
+                              <div>
+                                {campaign.status === 'sent' && campaign.sent_at && new Date(campaign.sent_at).toLocaleDateString()}
+                                {campaign.status === 'scheduled' && campaign.scheduled_at && new Date(campaign.scheduled_at).toLocaleDateString()}
+                                {campaign.status === 'draft' && new Date(campaign.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          {campaign.status === 'draft' && (
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          )}
+                          <Button size="sm">
+                            View Details
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-4">
-            <div className="grid gap-4">
-              {templates.map((template) => (
-                <Card key={template.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">
-                          {template.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {template.category}
-                        </CardDescription>
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : templates.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-64">
+                  <Edit className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Email Templates</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Create email templates to streamline your campaigns
+                  </p>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Template
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {templates.map((template) => (
+                  <Card key={template.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg">
+                            {template.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {template.category || template.template_type}
+                          </CardDescription>
+                        </div>
+                        <Badge variant="outline">
+                          Used {template.usage_count || 0} times
+                        </Badge>
                       </div>
-                      <Badge variant="outline">
-                        Used {template.usage_count} times
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        Last used: {new Date(template.last_used).toLocaleDateString()}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                          {template.last_used_at 
+                            ? `Last used: ${new Date(template.last_used_at).toLocaleDateString()}`
+                            : 'Never used'
+                          }
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Template
+                          </Button>
+                          <Button size="sm">
+                            Use Template
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Template
-                        </Button>
-                        <Button size="sm">
-                          Use Template
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="lists" className="space-y-4">
-            <div className="grid gap-4">
-              {lists.map((list) => (
-                <Card key={list.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Users className="h-5 w-5" />
-                          {list.name}
-                        </CardTitle>
-                        <CardDescription>
-                          {list.subscriber_count} subscribers • Source: {list.source}
-                        </CardDescription>
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : lists.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-64">
+                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Email Lists</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Create email lists to organize your subscribers
+                  </p>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create List
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {lists.map((list) => (
+                  <Card key={list.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            {list.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {list.subscriber_count || 0} subscribers
+                            {list.description && ` • ${list.description}`}
+                          </CardDescription>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        Last updated: {new Date(list.last_updated).toLocaleDateString()}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                          Created: {new Date(list.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Manage
+                          </Button>
+                          <Button size="sm">
+                            View Subscribers
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Manage
-                        </Button>
-                        <Button size="sm">
-                          View Subscribers
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
@@ -381,8 +466,8 @@ export default function EmailMarketing() {
                   <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">12</div>
-                  <div className="text-sm text-muted-foreground">This month</div>
+                  <div className="text-2xl font-bold">{analytics.totalCampaigns}</div>
+                  <div className="text-sm text-muted-foreground">All time</div>
                 </CardContent>
               </Card>
               
@@ -391,11 +476,8 @@ export default function EmailMarketing() {
                   <CardTitle className="text-sm font-medium">Average Open Rate</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">28.3%</div>
-                  <div className="flex items-center text-sm text-green-600">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +5.2% vs last month
-                  </div>
+                  <div className="text-2xl font-bold">{analytics.avgOpenRate}%</div>
+                  <div className="text-sm text-muted-foreground">Across all campaigns</div>
                 </CardContent>
               </Card>
               
@@ -404,11 +486,8 @@ export default function EmailMarketing() {
                   <CardTitle className="text-sm font-medium">Average Click Rate</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">6.8%</div>
-                  <div className="flex items-center text-sm text-green-600">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +1.3% vs last month
-                  </div>
+                  <div className="text-2xl font-bold">{analytics.avgClickRate}%</div>
+                  <div className="text-sm text-muted-foreground">Across all campaigns</div>
                 </CardContent>
               </Card>
               
@@ -417,11 +496,15 @@ export default function EmailMarketing() {
                   <CardTitle className="text-sm font-medium">Total Subscribers</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">312</div>
+                  <div className="text-2xl font-bold">{analytics.totalSubscribers}</div>
                   <div className="text-sm text-muted-foreground">Across all lists</div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-4">
+            <EmailIntegrationSettings />
           </TabsContent>
         </Tabs>
       </div>
