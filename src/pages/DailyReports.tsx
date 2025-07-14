@@ -561,8 +561,8 @@ const DailyReports = () => {
 
       {/* Mobile Report Modal */}
       {showMobileReport && (
-        <div className="fixed inset-0 bg-background z-50">
-          <div className="flex items-center justify-between p-4 border-b">
+        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b shrink-0">
             <h2 className="text-xl font-semibold">Mobile Daily Report</h2>
             <Button 
               variant="ghost" 
@@ -572,19 +572,21 @@ const DailyReports = () => {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex-1 overflow-auto p-4">
-            <MobileDailyReport
-              companyId={userProfile?.company_id || ''}
-              userId={user?.id || ''}
-              onReportSaved={() => {
-                setShowMobileReport(false);
-                loadData();
-                toast({
-                  title: "Report Saved",
-                  description: "Daily report has been saved successfully"
-                });
-              }}
-            />
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="p-4">
+              <MobileDailyReport
+                companyId={userProfile?.company_id || ''}
+                userId={user?.id || ''}
+                onReportSaved={() => {
+                  setShowMobileReport(false);
+                  loadData();
+                  toast({
+                    title: "Report Saved",
+                    description: "Daily report has been saved successfully"
+                  });
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
