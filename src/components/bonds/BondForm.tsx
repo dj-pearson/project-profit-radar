@@ -88,7 +88,12 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
         bond_amount: parseFloat(formData.bond_amount.toString()) || 0,
         premium_amount: parseFloat(formData.premium_amount.toString()) || 0,
         bond_percentage: parseFloat(formData.bond_percentage.toString()) || 100,
-        claim_amount: parseFloat(formData.claim_amount.toString()) || 0
+        claim_amount: parseFloat(formData.claim_amount.toString()) || 0,
+        // Convert empty strings to null for date fields
+        effective_date: formData.effective_date || null,
+        expiry_date: formData.expiry_date || null,
+        issued_date: formData.issued_date || null,
+        claim_date: formData.claim_date || null
       };
 
       if (bond) {
