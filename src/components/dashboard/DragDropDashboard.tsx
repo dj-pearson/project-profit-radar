@@ -195,10 +195,7 @@ export const DragDropDashboard = () => {
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       className={getWidgetClassName(widget)}
-                      style={{
-                        ...provided.draggableProps.style,
-                        touchAction: 'none'
-                      }}
+                      style={provided.draggableProps.style}
                     >
                       <DashboardTile
                         id={widget.id}
