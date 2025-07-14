@@ -8,26 +8,33 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageCircle, Send, Headphones, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MessageCircle, Send, Headphones, Clock, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
 
 interface Message {
   id: string;
   content: string;
-  sender_type: 'user' | 'support';
+  sender_type: 'user' | 'support' | 'system';
   sender_name: string;
+  sender_email?: string;
   timestamp: string;
   is_read: boolean;
+  attachments?: any[];
 }
 
 interface SupportTicket {
   id: string;
+  ticket_number: string;
   subject: string;
+  description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: string;
+  customer_name: string;
+  customer_email: string;
   created_at: string;
   updated_at: string;
   assigned_to?: string;
-  category: string;
+  source: string;
 }
 
 const CustomerSupportChat = () => {
@@ -67,24 +74,41 @@ const CustomerSupportChat = () => {
   };
 
   const loadTickets = async () => {
-    if (!userProfile?.company_id) return;
+    if (!userProfile?.id) return;
 
     try {
-      // For now, use mock data until we create the support_tickets table
-      const mockTickets: SupportTicket[] = [
-        {
-          id: '1',
-          subject: 'Cannot access project dashboard',
-          status: 'open',
-          priority: 'medium',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          category: 'technical'
-        }
-      ];
-      setTickets(mockTickets);
+      const { data: ticketsData, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', userProfile.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedTickets: SupportTicket[] = (ticketsData || []).map(ticket => ({
+        id: ticket.id,
+        ticket_number: ticket.ticket_number,
+        subject: ticket.subject,
+        description: ticket.description,
+        status: ticket.status as SupportTicket['status'],
+        priority: ticket.priority as SupportTicket['priority'],
+        category: ticket.category,
+        customer_name: ticket.customer_name,
+        customer_email: ticket.customer_email,
+        created_at: ticket.created_at,
+        updated_at: ticket.updated_at,
+        assigned_to: ticket.assigned_to,
+        source: ticket.source
+      }));
+      
+      setTickets(formattedTickets);
     } catch (error) {
       console.error('Error loading tickets:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load support tickets"
+      });
     }
   };
 
@@ -92,55 +116,117 @@ const CustomerSupportChat = () => {
     if (!currentTicket) return;
 
     try {
-      // Mock messages until we create the support_messages table
-      const mockMessages: Message[] = [
-        {
-          id: '1',
-          content: 'Hello, I am having trouble accessing my project dashboard. It shows a loading screen but never loads.',
-          sender_type: 'user',
-          sender_name: userProfile?.first_name + ' ' + userProfile?.last_name || 'User',
-          timestamp: new Date().toISOString(),
-          is_read: true
-        },
-        {
-          id: '2',
-          content: 'Thank you for contacting support. I can help you with that. Can you please tell me which browser you are using?',
-          sender_type: 'support',
-          sender_name: 'Sarah (Support)',
-          timestamp: new Date().toISOString(),
-          is_read: true
-        }
-      ];
-      setMessages(mockMessages);
+      const { data: messages, error } = await supabase
+        .from('support_messages')
+        .select('*')
+        .eq('ticket_id', currentTicket.id)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      
+      const formattedMessages: Message[] = (messages || []).map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        sender_type: msg.sender_type as Message['sender_type'],
+        sender_name: msg.sender_name,
+        sender_email: msg.sender_email,
+        timestamp: msg.created_at,
+        is_read: msg.is_read,
+        attachments: Array.isArray(msg.attachments) ? msg.attachments : []
+      }));
+      
+      setMessages(formattedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load messages"
+      });
     }
   };
 
   const createTicket = async () => {
-    if (!newTicketSubject.trim() || !userProfile?.company_id) return;
+    if (!newTicketSubject.trim() || !userProfile?.id) return;
 
     setLoading(true);
     try {
-      // Create new ticket (mock for now)
-      const newTicket: SupportTicket = {
-        id: Date.now().toString(),
-        subject: newTicketSubject,
-        status: 'open',
-        priority: 'medium',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        category: newTicketCategory
+      const customerName = `${userProfile.first_name} ${userProfile.last_name}`.trim() || 'User';
+      const customerEmail = userProfile.email || '';
+
+      // Create the ticket in database
+      const { data: ticketData, error: ticketError } = await supabase
+        .from('support_tickets')
+        .insert({
+          company_id: userProfile.company_id,
+          user_id: userProfile.id,
+          customer_email: customerEmail,
+          customer_name: customerName,
+          subject: newTicketSubject,
+          description: `New support request from ${customerName}`,
+          category: newTicketCategory,
+          priority: 'medium',
+          source: 'chat',
+          ticket_number: '' // Will be auto-generated by trigger
+        })
+        .select()
+        .single();
+
+      if (ticketError) throw ticketError;
+      
+      const ticket: SupportTicket = {
+        id: ticketData.id,
+        ticket_number: ticketData.ticket_number,
+        subject: ticketData.subject,
+        description: ticketData.description,
+        status: ticketData.status as SupportTicket['status'],
+        priority: ticketData.priority as SupportTicket['priority'],
+        category: ticketData.category,
+        customer_name: ticketData.customer_name,
+        customer_email: ticketData.customer_email,
+        created_at: ticketData.created_at,
+        updated_at: ticketData.updated_at,
+        assigned_to: ticketData.assigned_to,
+        source: ticketData.source
       };
 
-      setTickets([newTicket, ...tickets]);
-      setCurrentTicket(newTicket);
+      // Create initial message
+      await supabase
+        .from('support_messages')
+        .insert({
+          ticket_id: ticket.id,
+          sender_type: 'user',
+          sender_name: customerName,
+          sender_email: customerEmail,
+          content: `Hello, I need help with: ${newTicketSubject}`
+        });
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-support-notification', {
+          body: {
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticket_number,
+            customerName,
+            customerEmail,
+            subject: newTicketSubject,
+            description: `New support request from ${customerName}`,
+            priority: 'medium',
+            category: newTicketCategory
+          }
+        });
+      } catch (emailError) {
+        console.warn('Email notification failed:', emailError);
+      }
+
+      setTickets([ticket, ...tickets]);
+      setCurrentTicket(ticket);
       setNewTicketSubject('');
       setNewTicketCategory('general');
 
       toast({
         title: "Support Ticket Created",
-        description: "Your support ticket has been created. We'll get back to you soon!"
+        description: `Your support ticket ${ticket.ticket_number} has been created. We'll get back to you soon!`
       });
     } catch (error) {
       console.error('Error creating ticket:', error);
@@ -155,20 +241,38 @@ const CustomerSupportChat = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !currentTicket) return;
+    if (!newMessage.trim() || !currentTicket || !userProfile) return;
 
     setLoading(true);
     try {
-      const message: Message = {
-        id: Date.now().toString(),
-        content: newMessage,
-        sender_type: 'user',
-        sender_name: userProfile?.first_name + ' ' + userProfile?.last_name || 'User',
-        timestamp: new Date().toISOString(),
-        is_read: true
+      const customerName = `${userProfile.first_name} ${userProfile.last_name}`.trim() || 'User';
+      
+      const { data: message, error } = await supabase
+        .from('support_messages')
+        .insert({
+          ticket_id: currentTicket.id,
+          sender_type: 'user',
+          sender_name: customerName,
+          sender_email: userProfile.email,
+          content: newMessage
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const formattedMessage: Message = {
+        id: message.id,
+        content: message.content,
+        sender_type: message.sender_type as Message['sender_type'],
+        sender_name: message.sender_name,
+        sender_email: message.sender_email,
+        timestamp: message.created_at,
+        is_read: message.is_read,
+        attachments: Array.isArray(message.attachments) ? message.attachments : []
       };
 
-      setMessages([...messages, message]);
+      setMessages([...messages, formattedMessage]);
       setNewMessage('');
 
       toast({
@@ -224,7 +328,14 @@ const CustomerSupportChat = () => {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+        <Button
+          onClick={() => window.open('mailto:support@build-desk.com', '_blank')}
+          className="rounded-full h-12 w-12 shadow-lg bg-secondary hover:bg-secondary/80"
+          size="sm"
+        >
+          <Mail className="h-5 w-5" />
+        </Button>
         <Button
           onClick={() => setIsOpen(true)}
           className="rounded-full h-14 w-14 shadow-lg"
@@ -304,7 +415,7 @@ const CustomerSupportChat = () => {
                       </div>
                       <p className="text-sm font-medium truncate">{ticket.subject}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(ticket.created_at).toLocaleDateString()}
+                        {ticket.ticket_number} • {new Date(ticket.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   ))}

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,48 +29,33 @@ export default function Support() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("tickets");
 
-  // Mock data
-  const tickets = [
-    {
-      id: "TKT-001",
-      title: "Unable to sync with QuickBooks",
-      description: "Getting connection error when trying to sync project data",
-      status: "open",
-      priority: "high",
-      category: "integration",
-      customer_name: "John Smith",
-      customer_email: "john@acmeconstruction.com",
-      created_date: "2024-04-10",
-      last_update: "2024-04-10",
-      assigned_to: "Support Team"
-    },
-    {
-      id: "TKT-002",
-      title: "Mobile app login issues",
-      description: "Field workers cannot log into the mobile app with their credentials",
-      status: "in_progress",
-      priority: "medium",
-      category: "mobile",
-      customer_name: "Sarah Johnson",
-      customer_email: "sarah@buildersinc.com",
-      created_date: "2024-04-09",
-      last_update: "2024-04-10",
-      assigned_to: "Tech Support"
-    },
-    {
-      id: "TKT-003",
-      title: "Report generation error",
-      description: "Cost reports are showing incorrect data for last month",
-      status: "resolved",
-      priority: "low",
-      category: "reporting",
-      customer_name: "Mike Wilson",
-      customer_email: "mike@wilsoncontracting.com",
-      created_date: "2024-04-08",
-      last_update: "2024-04-09",
-      assigned_to: "Data Team"
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTickets();
+  }, []);
+
+  const loadTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTickets(data || []);
+    } catch (error) {
+      console.error('Error loading tickets:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load support tickets"
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const knowledgeBase = [
     {
@@ -240,77 +227,87 @@ export default function Support() {
           </div>
 
           <TabsContent value="tickets" className="space-y-4">
-            <div className="grid gap-4">
-              {tickets.map((ticket) => (
-                <Card key={ticket.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <MessageSquare className="h-5 w-5" />
-                          {ticket.title}
-                        </CardTitle>
-                        <CardDescription>
-                          {ticket.id} • {ticket.description}
-                        </CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getPriorityBadge(ticket.priority)}
-                        {getStatusBadge(ticket.status)}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Customer</div>
-                          <div>{ticket.customer_name}</div>
+            {loading ? (
+              <div className="text-center py-8">Loading tickets...</div>
+            ) : (
+              <div className="grid gap-4">
+                {tickets.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No support tickets found
+                  </div>
+                ) : (
+                  tickets.map((ticket) => (
+                    <Card key={ticket.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <MessageSquare className="h-5 w-5" />
+                              {ticket.subject}
+                            </CardTitle>
+                            <CardDescription>
+                              {ticket.ticket_number} • {ticket.description}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getPriorityBadge(ticket.priority)}
+                            {getStatusBadge(ticket.status)}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Email</div>
-                          <div className="truncate">{ticket.customer_email}</div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Customer</div>
+                              <div>{ticket.customer_name}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Email</div>
+                              <div className="truncate">{ticket.customer_email}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Created</div>
+                              <div>{new Date(ticket.created_at).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium text-muted-foreground">Last Update</div>
+                              <div>{new Date(ticket.updated_at).toLocaleDateString()}</div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Created</div>
-                          <div>{new Date(ticket.created_date).toLocaleDateString()}</div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm">
+                            <span className="font-medium">Source: </span>
+                            <span className="capitalize">{ticket.source}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Reply
+                            </Button>
+                            <Button size="sm">
+                              View Details
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium text-muted-foreground">Last Update</div>
-                          <div>{new Date(ticket.last_update).toLocaleDateString()}</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm">
-                        <span className="font-medium">Assigned to: </span>
-                        <span>{ticket.assigned_to}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Reply
-                        </Button>
-                        <Button size="sm">
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="knowledge" className="space-y-4">

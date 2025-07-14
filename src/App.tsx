@@ -57,6 +57,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CustomerSupportChat from "./components/support/CustomerSupportChat";
+import Support from "./pages/Support";
 import KnowledgeBase from "./components/knowledge/KnowledgeBase";
 import Knowledgebase from "./pages/Knowledgebase";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
@@ -429,7 +430,7 @@ const AppContent = () => {
         path="/support"
         element={
           <RouteGuard routePath="/support">
-            <CustomerSupportChat />
+            <Support />
           </RouteGuard>
         }
       />
