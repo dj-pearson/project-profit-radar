@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -10,58 +12,93 @@ import {
   DollarSign
 } from 'lucide-react';
 
-const JobProfitabilityOverview = () => {
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+interface JobData {
+  id: string;
+  name: string;
+  revenue: number;
+  estimatedCosts: number;
+  actualCosts: number;
+  grossProfit: number;
+  profitMargin: number;
+  status: string;
+  completion_percentage: number;
+}
 
-  // Mock data - replace with real data from Supabase
-  const jobData = [
-    {
-      id: '1',
-      name: 'Kitchen Renovation - Smith',
-      revenue: 25000,
-      costs: {
-        labor: 8500,
-        materials: 6200,
-        subcontractors: 4300,
-        overhead: 1500
-      },
-      grossProfit: 4500,
-      profitMargin: 18,
-      status: 'In Progress'
-    },
-    {
-      id: '2',
-      name: 'Office Buildout - Tech Corp',
-      revenue: 75000,
-      costs: {
-        labor: 22000,
-        materials: 18500,
-        subcontractors: 15000,
-        overhead: 4500
-      },
-      grossProfit: 15000,
-      profitMargin: 20,
-      status: 'Completed'
-    },
-    {
-      id: '3',
-      name: 'Warehouse Extension',
-      revenue: 125000,
-      costs: {
-        labor: 35000,
-        materials: 45000,
-        subcontractors: 25000,
-        overhead: 8000
-      },
-      grossProfit: 12000,
-      profitMargin: 9.6,
-      status: 'In Progress'
+const JobProfitabilityOverview = () => {
+  const { userProfile } = useAuth();
+  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [jobData, setJobData] = useState<JobData[]>([]);
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadJobData();
     }
-  ];
+  }, [userProfile?.company_id]);
+
+  const loadJobData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get projects with budget data
+      const { data: projects, error: projectsError } = await supabase
+        .from('projects')
+        .select('id, name, budget, completion_percentage, status')
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
+
+      if (projectsError) throw projectsError;
+
+      // Transform projects data to job profitability format
+      const transformedJobs: JobData[] = projects?.map(project => {
+        const budget = parseFloat(String(project.budget)) || 0;
+        const completion = project.completion_percentage || 0;
+        const revenue = budget * (completion / 100);
+        const estimatedCosts = budget * 0.75; // Estimate 75% cost ratio
+        const actualCosts = estimatedCosts * (completion / 100);
+        const grossProfit = revenue - actualCosts;
+        const profitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+
+        return {
+          id: project.id,
+          name: project.name,
+          revenue,
+          estimatedCosts,
+          actualCosts,
+          grossProfit,
+          profitMargin,
+          status: project.status === 'completed' ? 'Completed' : 'In Progress',
+          completion_percentage: completion
+        };
+      }) || [];
+
+      setJobData(transformedJobs);
+    } catch (error) {
+      console.error('Error loading job data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const totalRevenue = jobData.reduce((sum, job) => sum + job.revenue, 0);
   const totalProfit = jobData.reduce((sum, job) => sum + job.grossProfit, 0);
-  const overallMargin = (totalProfit / totalRevenue) * 100;
+  const overallMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Job Profitability Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading project data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -91,7 +128,6 @@ const JobProfitabilityOverview = () => {
 
         <div className="space-y-4">
           {jobData.map(job => {
-            const totalCosts = Object.values(job.costs).reduce((sum, cost) => sum + cost, 0);
             const isPositive = job.grossProfit > 0;
             
             return (
@@ -110,7 +146,7 @@ const JobProfitabilityOverview = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Costs:</span>
-                    <div className="font-medium">${totalCosts.toLocaleString()}</div>
+                    <div className="font-medium">${job.actualCosts.toLocaleString()}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Profit:</span>

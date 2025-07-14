@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -12,17 +14,68 @@ import {
 } from 'lucide-react';
 
 const CashFlowSnapshot = () => {
-  // Mock data - replace with real data from Supabase
-  const cashFlowData = {
-    currentBalance: 45750,
-    accountsReceivable: 23400,
-    accountsPayable: 8900,
-    weeklyTrend: [
-      { date: '2024-01-01', amount: 42000 },
-      { date: '2024-01-08', amount: 44500 },
-      { date: '2024-01-15', amount: 43200 },
-      { date: '2024-01-22', amount: 45750 }
-    ]
+  const { userProfile } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [cashFlowData, setCashFlowData] = useState({
+    currentBalance: 0,
+    accountsReceivable: 0,
+    accountsPayable: 0,
+    totalProjects: 0,
+    activeProjects: 0
+  });
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadCashFlowData();
+    }
+  }, [userProfile?.company_id]);
+
+  const loadCashFlowData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get projects data for cash flow calculation
+      const { data: projects, error: projectsError } = await supabase
+        .from('projects')
+        .select('id, budget, completion_percentage, status')
+        .eq('company_id', userProfile?.company_id);
+
+      if (projectsError) throw projectsError;
+
+      // Get cash flow projections
+      const { data: cashFlow, error: cashFlowError } = await supabase
+        .from('cash_flow_projections')
+        .select('projected_income, projected_expenses, actual_income, actual_expenses')
+        .eq('company_id', userProfile?.company_id)
+        .gte('projection_date', new Date().toISOString().split('T')[0]);
+
+      if (cashFlowError) throw cashFlowError;
+
+      // Calculate metrics from available data
+      const totalBudget = projects?.reduce((sum, p) => sum + (parseFloat(String(p.budget)) || 0), 0) || 0;
+      const activeProjects = projects?.filter(p => p.status === 'active' || p.status === 'in_progress').length || 0;
+      const completedRevenue = projects?.reduce((sum, p) => {
+        const budget = parseFloat(String(p.budget)) || 0;
+        const completion = p.completion_percentage || 0;
+        return sum + (budget * completion / 100);
+      }, 0) || 0;
+
+      const projectedIncome = cashFlow?.reduce((sum, cf) => sum + (parseFloat(String(cf.projected_income)) || 0), 0) || totalBudget;
+      const projectedExpenses = cashFlow?.reduce((sum, cf) => sum + (parseFloat(String(cf.projected_expenses)) || 0), 0) || (totalBudget * 0.7);
+      const actualIncome = cashFlow?.reduce((sum, cf) => sum + (parseFloat(String(cf.actual_income)) || 0), 0) || completedRevenue;
+
+      setCashFlowData({
+        currentBalance: actualIncome - (projectedExpenses * 0.5), // Estimate current balance
+        accountsReceivable: projectedIncome - actualIncome,
+        accountsPayable: projectedExpenses * 0.3, // Estimate payables
+        totalProjects: projects?.length || 0,
+        activeProjects
+      });
+    } catch (error) {
+      console.error('Error loading cash flow data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const netCashPosition = cashFlowData.currentBalance + cashFlowData.accountsReceivable - cashFlowData.accountsPayable;
