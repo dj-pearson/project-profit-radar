@@ -53,7 +53,7 @@ export const BondForm: React.FC<BondFormProps> = ({ bond, onClose, onSave }) => 
     claim_made: bond?.claim_made || false,
     claim_amount: bond?.claim_amount || 0,
     claim_date: bond?.claim_date || '',
-    claim_status: bond?.claim_status || '',
+    claim_status: bond?.claim_status || null,
     claim_notes: bond?.claim_notes || ''
   });
 
