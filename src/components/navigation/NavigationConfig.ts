@@ -131,6 +131,7 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Document Management", url: "/documents", icon: FolderOpen, roles: ["admin", "project_manager", "office_staff", "root_admin"] },
           { title: "Materials", url: "/materials", icon: Package, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
+          { title: "Material Tracking", url: "/material-tracking", icon: Package, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
           { title: "Equipment", url: "/equipment", icon: Truck, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] }
         ]
       }
