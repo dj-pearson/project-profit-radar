@@ -112,12 +112,16 @@ const CrewScheduling = () => {
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
 
-      // Load crew members (from user_profiles table)
+      // Load crew members (from user_profiles table) - now includes all construction roles
       const { data: crewData, error: crewError } = await supabase
         .from('user_profiles')
         .select('id, first_name, last_name, role, phone')
         .eq('company_id', userProfile?.company_id)
-        .in('role', ['field_supervisor', 'admin', 'project_manager'])
+        .in('role', [
+          'admin', 'superintendent', 'project_manager', 'foreman', 'field_supervisor', 
+          'technician', 'equipment_operator', 'journeyman', 'apprentice', 'laborer'
+        ])
+        .eq('is_active', true)
         .order('first_name');
 
       if (crewError) throw crewError;

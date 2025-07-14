@@ -64,22 +64,22 @@ const navigationCategories: NavigationCategory[] = [
   {
     label: "Overview",
     items: [
-      { title: "Dashboard", url: "/dashboard", icon: Home, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] }
+      { title: "Dashboard", url: "/dashboard", icon: Home, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "technician", "office_staff", "accounting", "estimator", "safety_officer", "quality_inspector", "root_admin"] }
     ]
   },
   {
     label: "Project Management", 
     items: [
-      { title: "All Projects", url: "/projects", icon: Building2, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
-      { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "project_manager", "root_admin"] },
-      { title: "Estimates", url: "/estimates", icon: Calculator, roles: ["admin", "project_manager", "office_staff", "accounting", "root_admin"] },
-      { title: "Schedule Management", url: "/schedule-management", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Job Costing", url: "/job-costing", icon: DollarSign, roles: ["admin", "project_manager", "accounting", "root_admin"] },
-      { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "project_manager", "root_admin"] },
-      { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
-      { title: "RFIs", url: "/rfis", icon: HelpCircle, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Submittals", url: "/submittals", icon: FileText, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Punch List", url: "/punch-list", icon: CheckSquare, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] }
+      { title: "All Projects", url: "/projects", icon: Building2, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "estimator", "office_staff", "accounting", "root_admin"] },
+      { title: "Create Project", url: "/create-project", icon: Building2, roles: ["admin", "superintendent", "project_manager", "root_admin"] },
+      { title: "Estimates", url: "/estimates", icon: Calculator, roles: ["admin", "superintendent", "project_manager", "estimator", "office_staff", "accounting", "root_admin"] },
+      { title: "Schedule Management", url: "/schedule-management", icon: Calendar, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Job Costing", url: "/job-costing", icon: DollarSign, roles: ["admin", "superintendent", "project_manager", "estimator", "accounting", "root_admin"] },
+      { title: "Change Orders", url: "/change-orders", icon: Wrench, roles: ["admin", "superintendent", "project_manager", "root_admin"] },
+      { title: "Daily Reports", url: "/daily-reports", icon: Clipboard, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "root_admin"] },
+      { title: "RFIs", url: "/rfis", icon: HelpCircle, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Submittals", url: "/submittals", icon: FileText, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Punch List", url: "/punch-list", icon: CheckSquare, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "quality_inspector", "office_staff", "root_admin"] }
     ]
   },
   {
@@ -104,13 +104,13 @@ const navigationCategories: NavigationCategory[] = [
   {
     label: "Resource Management",
     items: [
-      { title: "Team Management", url: "/team", icon: Users, roles: ["admin", "project_manager", "root_admin"] },
-      { title: "Crew Scheduling", url: "/crew-scheduling", icon: Calendar, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
-      { title: "Time Tracking", url: "/time-tracking", icon: Clock, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Materials", url: "/materials", icon: Package, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Equipment Tracking", url: "/equipment", icon: Truck, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Equipment Management", url: "/equipment-management", icon: Wrench, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"] },
-      { title: "Document Management", url: "/documents", icon: FolderOpen, roles: ["admin", "project_manager", "office_staff", "root_admin"] }
+      { title: "Team Management", url: "/team", icon: Users, roles: ["admin", "superintendent", "project_manager", "root_admin"] },
+      { title: "Crew Scheduling", url: "/crew-scheduling", icon: Calendar, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "root_admin"] },
+      { title: "Time Tracking", url: "/time-tracking", icon: Clock, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "technician", "journeyman", "equipment_operator", "office_staff", "root_admin"] },
+      { title: "Materials", url: "/materials", icon: Package, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "office_staff", "root_admin"] },
+      { title: "Equipment Tracking", url: "/equipment", icon: Truck, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "equipment_operator", "office_staff", "root_admin"] },
+      { title: "Equipment Management", url: "/equipment-management", icon: Wrench, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "equipment_operator", "office_staff", "root_admin"] },
+      { title: "Document Management", url: "/documents", icon: FolderOpen, roles: ["admin", "superintendent", "project_manager", "office_staff", "root_admin"] }
     ]
   },
   {

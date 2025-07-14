@@ -29,12 +29,14 @@ const CreateProject = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   const [createLoading, setCreateLoading] = useState(false);
+  const [projectManagers, setProjectManagers] = useState<any[]>([]);
   
   // Project basic info
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
   const [projectType, setProjectType] = useState('');
   const [status, setStatus] = useState('planning');
+  const [projectManagerId, setProjectManagerId] = useState('');
   
   // Client info
   const [clientName, setClientName] = useState('');
