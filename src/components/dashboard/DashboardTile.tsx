@@ -38,24 +38,32 @@ export const DashboardTile = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
-  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
+  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, direction: string) => {
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
     setResizeDirection(direction);
     
+    // Get coordinates from mouse or touch event
+    const clientX = 'clientX' in e ? e.clientX : e.touches[0]?.clientX || 0;
+    const clientY = 'clientY' in e ? e.clientY : e.touches[0]?.clientY || 0;
+    
     startPos.current = {
-      x: e.clientX,
-      y: e.clientY,
+      x: clientX,
+      y: clientY,
       width: width || 2,
       height: height || 1
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
       if (!onUpdateSize) return;
       
-      const deltaX = e.clientX - startPos.current.x;
-      const deltaY = e.clientY - startPos.current.y;
+      // Get coordinates from mouse or touch event
+      const moveX = 'clientX' in e ? e.clientX : (e as TouchEvent).touches[0]?.clientX || 0;
+      const moveY = 'clientY' in e ? e.clientY : (e as TouchEvent).touches[0]?.clientY || 0;
+      
+      const deltaX = moveX - startPos.current.x;
+      const deltaY = moveY - startPos.current.y;
       
       let newWidth = startPos.current.width;
       let newHeight = startPos.current.height;
@@ -76,15 +84,19 @@ export const DashboardTile = ({
       onUpdateSize(id, newWidth, newHeight);
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsResizing(false);
       setResizeDirection('');
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
   };
 
   return (
@@ -98,17 +110,36 @@ export const DashboardTile = ({
     >
       {/* Resize handles */}
       <div 
-        className="absolute top-0 right-0 w-2 h-full cursor-e-resize opacity-0 group-hover:opacity-100 bg-primary/20 transition-opacity"
+        className="absolute top-0 right-0 w-3 h-full cursor-e-resize opacity-0 md:group-hover:opacity-100 bg-primary/20 transition-opacity touch-none"
         onMouseDown={(e) => handleResizeStart(e, 'right')}
+        onTouchStart={(e) => handleResizeStart(e, 'right')}
       />
       <div 
-        className="absolute bottom-0 left-0 w-full h-2 cursor-s-resize opacity-0 group-hover:opacity-100 bg-primary/20 transition-opacity"
+        className="absolute bottom-0 left-0 w-full h-3 cursor-s-resize opacity-0 md:group-hover:opacity-100 bg-primary/20 transition-opacity touch-none"
         onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+        onTouchStart={(e) => handleResizeStart(e, 'bottom')}
       />
       <div 
-        className="absolute bottom-0 right-0 w-3 h-3 cursor-se-resize opacity-0 group-hover:opacity-100 bg-primary/40 transition-opacity"
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 md:group-hover:opacity-100 bg-primary/40 transition-opacity touch-none"
         onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+        onTouchStart={(e) => handleResizeStart(e, 'bottom-right')}
       />
+      
+      {/* Mobile resize handles - always visible on mobile */}
+      <div className="md:hidden">
+        <div 
+          className="absolute top-0 right-0 w-4 h-full bg-primary/30 touch-none"
+          onTouchStart={(e) => handleResizeStart(e, 'right')}
+        />
+        <div 
+          className="absolute bottom-0 left-0 w-full h-4 bg-primary/30 touch-none"
+          onTouchStart={(e) => handleResizeStart(e, 'bottom')}
+        />
+        <div 
+          className="absolute bottom-0 right-0 w-6 h-6 bg-primary/50 rounded-tl-lg touch-none"
+          onTouchStart={(e) => handleResizeStart(e, 'bottom-right')}
+        />
+      </div>
       
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
