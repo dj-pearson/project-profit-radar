@@ -351,9 +351,18 @@ export default function KnowledgeBase() {
             <div className="text-center py-12">
               <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No articles found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search criteria or browse all categories
+              <p className="text-muted-foreground mb-4">
+                {searchQuery || selectedCategory !== 'all' || selectedType !== 'all' || selectedDifficulty !== 'all'
+                  ? "Try adjusting your search criteria or browse all categories"
+                  : "No knowledge base articles have been created yet."}
               </p>
+              {(!searchQuery && selectedCategory === 'all' && selectedType === 'all' && selectedDifficulty === 'all') && (
+                <Button asChild>
+                  <Link to="/knowledge-base-admin">
+                    Create First Article
+                  </Link>
+                </Button>
+              )}
             </div>
           )}
         </TabsContent>
