@@ -11317,6 +11317,26 @@ export type Database = {
           display_on: string[]
         }[]
       }
+      get_equipment_schedule: {
+        Args: {
+          p_company_id: string
+          p_equipment_id?: string
+          p_start_date?: string
+          p_end_date?: string
+        }
+        Returns: {
+          equipment_id: string
+          equipment_name: string
+          assignment_id: string
+          project_id: string
+          project_name: string
+          assigned_quantity: number
+          start_date: string
+          end_date: string
+          assignment_status: string
+          days_duration: number
+        }[]
+      }
       get_role_permissions: {
         Args: { p_role: Database["public"]["Enums"]["user_role"] }
         Returns: Json
