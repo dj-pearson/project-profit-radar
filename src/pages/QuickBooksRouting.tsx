@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { QuickBooksIntegration } from '@/components/integrations/QuickBooksIntegration';
 import { 
   Settings,
   Search,
@@ -82,6 +83,9 @@ const QuickBooksRouting = () => {
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('unrouted');
+  
+  // Check if user has access to QuickBooks integration
+  const hasIntegrationAccess = userProfile?.role && ['root_admin', 'admin', 'project_manager', 'accounting'].includes(userProfile.role);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showNewRuleDialog, setShowNewRuleDialog] = useState(false);
@@ -421,10 +425,25 @@ const QuickBooksRouting = () => {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
-            <TabsTrigger value="unrouted" className={mobileTextClasses.body}>Unrouted Transactions</TabsTrigger>
-            <TabsTrigger value="rules" className={mobileTextClasses.body}>Routing Rules</TabsTrigger>
-            <TabsTrigger value="history" className={mobileTextClasses.body}>Routing History</TabsTrigger>
+          <TabsList className={`grid w-full ${hasIntegrationAccess ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'} h-auto`}>
+            <TabsTrigger value="unrouted" className={`${mobileTextClasses.body} text-xs sm:text-sm`}>
+              <span className="hidden sm:inline">Unrouted Transactions</span>
+              <span className="sm:hidden">Unrouted</span>
+            </TabsTrigger>
+            <TabsTrigger value="rules" className={`${mobileTextClasses.body} text-xs sm:text-sm`}>
+              <span className="hidden sm:inline">Routing Rules</span>
+              <span className="sm:hidden">Rules</span>
+            </TabsTrigger>
+            <TabsTrigger value="history" className={`${mobileTextClasses.body} text-xs sm:text-sm`}>
+              <span className="hidden sm:inline">Routing History</span>
+              <span className="sm:hidden">History</span>
+            </TabsTrigger>
+            {hasIntegrationAccess && (
+              <TabsTrigger value="integration" className={`${mobileTextClasses.body} text-xs sm:text-sm`}>
+                <span className="hidden sm:inline">QB Integration</span>
+                <span className="sm:hidden">QB Setup</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
               {/* Unrouted Transactions Tab */}
@@ -508,94 +527,106 @@ const QuickBooksRouting = () => {
                         description="Great! All QuickBooks transactions have been assigned to projects."
                       />
                     ) : (
-                      <div className="space-y-4">
-                        {unroutedTransactions.map((transaction) => (
-                          <div key={transaction.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-start space-x-3 flex-1">
-                                <Checkbox
-                                  checked={selectedTransactions.includes(transaction.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setSelectedTransactions([...selectedTransactions, transaction.id]);
-                                    } else {
-                                      setSelectedTransactions(selectedTransactions.filter(id => id !== transaction.id));
-                                    }
-                                  }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center space-x-2 mb-2">
-                                    <h3 className="font-medium">{transaction.description}</h3>
-                                    <Badge variant="outline">
-                                      {transaction.transaction_type}
-                                    </Badge>
-                                    {transaction.confidence_score && (
-                                      <Badge variant="outline" className={`text-${getConfidenceColor(transaction.confidence_score)}-600`}>
-                                        {transaction.confidence_score}% confidence
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground mb-2">
-                                    <div>Amount: <span className="font-medium text-foreground">{formatCurrency(transaction.amount)}</span></div>
-                                    <div>Date: <span className="font-medium text-foreground">{formatDate(transaction.transaction_date)}</span></div>
-                                    <div>
-                                      {transaction.customer_name ? 
-                                        `Customer: ${transaction.customer_name}` : 
-                                        `Vendor: ${transaction.vendor_name}`
-                                      }
-                                    </div>
-                                  </div>
-                                  
-                                  {transaction.memo && (
-                                    <p className="text-sm text-muted-foreground mb-2">
-                                      <strong>Memo:</strong> {transaction.memo}
-                                    </p>
-                                  )}
-                                  
-                                  {transaction.suggested_project_id && (
-                                    <div className="flex items-center space-x-2 text-sm">
-                                      <Target className="h-4 w-4 text-green-600" />
-                                      <span className="text-green-600 font-medium">
-                                        Suggested: Project {transaction.suggested_project_id}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-col space-y-2 ml-4">
-                                {transaction.suggested_project_id ? (
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => routeTransactionToProject(transaction.id, transaction.suggested_project_id!)}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                                    Accept
-                                  </Button>
-                                ) : (
-                                  <Select onValueChange={(projectId) => routeTransactionToProject(transaction.id, projectId)}>
-                                    <SelectTrigger className="w-40">
-                                      <SelectValue placeholder="Assign to project" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {projects?.map((project) => (
-                                        <SelectItem key={project.id} value={project.id}>
-                                          {project.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                <Button variant="outline" size="sm">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Details
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                       <div className="space-y-4">
+                         {unroutedTransactions.map((transaction) => (
+                           <div key={transaction.id} className="border rounded-lg p-3 sm:p-4 hover:bg-muted/50 transition-colors">
+                             <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+                               <div className="flex items-start space-x-2 sm:space-x-3 flex-1">
+                                 <Checkbox
+                                   checked={selectedTransactions.includes(transaction.id)}
+                                   onCheckedChange={(checked) => {
+                                     if (checked) {
+                                       setSelectedTransactions([...selectedTransactions, transaction.id]);
+                                     } else {
+                                       setSelectedTransactions(selectedTransactions.filter(id => id !== transaction.id));
+                                     }
+                                   }}
+                                   className="mt-1"
+                                 />
+                                 <div className="flex-1 min-w-0">
+                                   <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
+                                     <h3 className="font-medium text-sm sm:text-base truncate">{transaction.description}</h3>
+                                     <div className="flex items-center space-x-1 sm:space-x-2">
+                                       <Badge variant="outline" className="text-xs">
+                                         {transaction.transaction_type}
+                                       </Badge>
+                                       {transaction.confidence_score && (
+                                         <Badge variant="outline" className={`text-xs text-${getConfidenceColor(transaction.confidence_score)}-600`}>
+                                           {transaction.confidence_score}%
+                                         </Badge>
+                                       )}
+                                     </div>
+                                   </div>
+                                   
+                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mb-2">
+                                     <div className="truncate">
+                                       <span className="sm:hidden font-medium">Amount: </span>
+                                       <span className="font-medium text-foreground">{formatCurrency(transaction.amount)}</span>
+                                     </div>
+                                     <div className="truncate">
+                                       <span className="sm:hidden font-medium">Date: </span>
+                                       <span className="font-medium text-foreground">{formatDate(transaction.transaction_date)}</span>
+                                     </div>
+                                     <div className="truncate">
+                                       <span className="sm:hidden font-medium">
+                                         {transaction.customer_name ? 'Customer: ' : 'Vendor: '}
+                                       </span>
+                                       {transaction.customer_name || transaction.vendor_name}
+                                     </div>
+                                   </div>
+                                   
+                                   {transaction.memo && (
+                                     <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2">
+                                       <strong className="sm:inline hidden">Memo:</strong> {transaction.memo}
+                                     </p>
+                                   )}
+                                   
+                                   {transaction.suggested_project_id && (
+                                     <div className="flex items-center space-x-2 text-xs sm:text-sm">
+                                       <Target className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
+                                       <span className="text-green-600 font-medium truncate">
+                                         <span className="sm:hidden">Proj {transaction.suggested_project_id}</span>
+                                         <span className="hidden sm:inline">Suggested: Project {transaction.suggested_project_id}</span>
+                                       </span>
+                                     </div>
+                                   )}
+                                 </div>
+                               </div>
+                               
+                               <div className="flex flex-row sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2 sm:ml-4">
+                                 {transaction.suggested_project_id ? (
+                                   <Button 
+                                     size="sm" 
+                                     onClick={() => routeTransactionToProject(transaction.id, transaction.suggested_project_id!)}
+                                     className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none text-xs sm:text-sm"
+                                   >
+                                     <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                     <span className="sm:hidden">Accept</span>
+                                     <span className="hidden sm:inline">Accept</span>
+                                   </Button>
+                                 ) : (
+                                   <Select onValueChange={(projectId) => routeTransactionToProject(transaction.id, projectId)}>
+                                     <SelectTrigger className="w-full sm:w-40 text-xs sm:text-sm">
+                                       <SelectValue placeholder="Assign to project" />
+                                     </SelectTrigger>
+                                     <SelectContent>
+                                       {projects?.map((project) => (
+                                         <SelectItem key={project.id} value={project.id} className="text-xs sm:text-sm">
+                                           {project.name}
+                                         </SelectItem>
+                                       ))}
+                                     </SelectContent>
+                                   </Select>
+                                 )}
+                                 <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs sm:text-sm">
+                                   <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                   <span className="sm:hidden">View</span>
+                                   <span className="hidden sm:inline">Details</span>
+                                 </Button>
+                               </div>
+                             </div>
+                           </div>
+                         ))}
                       </div>
                     )}
                   </CardContent>
@@ -810,6 +841,13 @@ const QuickBooksRouting = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {/* QuickBooks Integration Tab */}
+              {hasIntegrationAccess && (
+                <TabsContent value="integration" className="space-y-6">
+                  <QuickBooksIntegration />
+                </TabsContent>
+              )}
             </Tabs>
       </div>
     </DashboardLayout>
