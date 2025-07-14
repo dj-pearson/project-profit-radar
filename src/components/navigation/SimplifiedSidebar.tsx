@@ -150,10 +150,10 @@ export const SimplifiedSidebar = () => {
                         >
                           <item.icon className="h-5 w-5" />
                           {!collapsed && (
-                            <div className="flex flex-col items-start flex-1 ml-2">
-                              <span className="font-medium">{item.title}</span>
+                            <div className="flex flex-col items-start flex-1 ml-2 min-w-0">
+                              <span className="font-medium text-sm truncate w-full">{item.title}</span>
                               {item.description && (
-                                <span className="text-xs text-muted-foreground truncate">
+                                <span className="text-xs text-muted-foreground truncate w-full max-w-[140px]">
                                   {item.description}
                                 </span>
                               )}
