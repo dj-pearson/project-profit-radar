@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { EstimatesTable } from "@/components/estimates/EstimatesTable";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export default function EstimatesHub() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,35 +31,33 @@ export default function EstimatesHub() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Estimates</h1>
-            <p className="text-muted-foreground mt-1">
-              Create, manage, and track construction estimates
-            </p>
-          </div>
-          
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleCreateEstimate} className="gap-2">
-                <Plus className="h-4 w-4" />
-                New Estimate
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Estimate</DialogTitle>
-              </DialogHeader>
-              <EstimateForm 
-                onSuccess={handleEstimateCreated}
-                onCancel={() => setIsCreateDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+    <DashboardLayout title="Estimates">
+      {/* Header Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <p className="text-muted-foreground mt-1">
+            Create, manage, and track construction estimates
+          </p>
         </div>
+        
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleCreateEstimate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Estimate
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Estimate</DialogTitle>
+            </DialogHeader>
+            <EstimateForm 
+              onSuccess={handleEstimateCreated}
+              onCancel={() => setIsCreateDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -205,7 +204,6 @@ export default function EstimatesHub() {
             />
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }
