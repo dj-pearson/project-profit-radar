@@ -58,8 +58,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CustomerSupportChat from "./components/support/CustomerSupportChat";
 import Support from "./pages/Support";
-import KnowledgeBase from "./components/knowledge/KnowledgeBase";
-import Knowledgebase from "./pages/Knowledgebase";
+import KnowledgeBase from "./pages/KnowledgeBase";
+import KnowledgeBaseArticle from "./pages/KnowledgeBaseArticle";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
 import EmailMarketingIntegration from "./components/marketing/EmailMarketingIntegration";
 import EmailMarketing from "./pages/EmailMarketing";
@@ -434,7 +434,9 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
-      <Route path="/knowledge-base" element={<Knowledgebase />} />
+      <Route path="/knowledge-base" element={<KnowledgeBase />} />
+      <Route path="/knowledge-base/category/:categorySlug" element={<KnowledgeBase />} />
+      <Route path="/knowledge-base/article/:slug" element={<KnowledgeBaseArticle />} />
       <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route
