@@ -11226,6 +11226,16 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      check_equipment_availability: {
+        Args: {
+          p_equipment_id: string
+          p_start_date: string
+          p_end_date: string
+          p_requested_quantity?: number
+          p_exclude_assignment_id?: string
+        }
+        Returns: Json
+      }
       check_project_requirements: {
         Args: { p_project_id: string; p_contract_value: number }
         Returns: Json
