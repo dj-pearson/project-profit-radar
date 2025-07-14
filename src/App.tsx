@@ -60,6 +60,7 @@ import CustomerSupportChat from "./components/support/CustomerSupportChat";
 import Support from "./pages/Support";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import KnowledgeBaseArticle from "./pages/KnowledgeBaseArticle";
+import KnowledgeBaseAdmin from "./pages/KnowledgeBaseAdmin";
 import VideoTutorialSystem from "./components/onboarding/VideoTutorialSystem";
 import EmailMarketingIntegration from "./components/marketing/EmailMarketingIntegration";
 import EmailMarketing from "./pages/EmailMarketing";
@@ -437,6 +438,14 @@ const AppContent = () => {
       <Route path="/knowledge-base" element={<KnowledgeBase />} />
       <Route path="/knowledge-base/category/:categorySlug" element={<KnowledgeBase />} />
       <Route path="/knowledge-base/article/:slug" element={<KnowledgeBaseArticle />} />
+      <Route
+        path="/knowledge-base-admin"
+        element={
+          <RouteGuard routePath="/knowledge-base-admin">
+            <KnowledgeBaseAdmin />
+          </RouteGuard>
+        }
+      />
       <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route
