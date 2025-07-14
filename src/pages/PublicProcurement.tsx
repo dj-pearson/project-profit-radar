@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +20,9 @@ export default function PublicProcurement() {
   const [selectedTab, setSelectedTab] = useState("opportunities");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [bidSubmissions, setBidSubmissions] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
@@ -92,6 +95,8 @@ export default function PublicProcurement() {
       
       resetForm();
       setIsDialogOpen(false);
+      // Refresh the opportunities list
+      loadOpportunities();
     } catch (error) {
       console.error('Error saving opportunity:', error);
       toast({
@@ -104,53 +109,66 @@ export default function PublicProcurement() {
     }
   };
 
-  const opportunities = [
-    {
-      id: "1",
-      opportunity_number: "RFP-2024-001",
-      title: "Downtown Convention Center Renovation",
-      issuing_agency: "City of Springfield",
-      procurement_type: "request_for_proposal",
-      estimated_value: 2500000,
-      submission_deadline: "2024-12-15T17:00:00Z",
-      status: "open",
-      project_location: "Springfield, IL",
-      is_watched: true
-    },
-    {
-      id: "2", 
-      opportunity_number: "IFB-2024-087",
-      title: "Highway Bridge Repair",
-      issuing_agency: "State DOT",
-      procurement_type: "sealed_bid",
-      estimated_value: 850000,
-      submission_deadline: "2024-11-30T15:00:00Z",
-      status: "open",
-      project_location: "Route 66, IL",
-      is_watched: false
-    }
-  ];
+  const loadOpportunities = async () => {
+    if (!userProfile?.company_id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('procurement_opportunities')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('created_at', { ascending: false });
 
-  const bidSubmissions = [
-    {
-      id: "1",
-      bid_number: "BID-2024-0001",
-      opportunity_title: "Downtown Convention Center Renovation",
-      bid_amount: 2350000,
-      status: "submitted",
-      submitted_at: "2024-11-15T14:30:00Z",
-      ranking: 2
-    },
-    {
-      id: "2",
-      bid_number: "BID-2024-0002", 
-      opportunity_title: "Municipal Building HVAC Upgrade",
-      bid_amount: 125000,
-      status: "preparing",
-      submitted_at: null,
-      ranking: null
+      if (error) throw error;
+      setOpportunities(data || []);
+    } catch (error) {
+      console.error('Error loading opportunities:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load opportunities",
+        variant: "destructive"
+      });
     }
-  ];
+  };
+
+  const loadBidSubmissions = async () => {
+    if (!userProfile?.company_id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('bid_submissions')
+        .select(`
+          *,
+          procurement_opportunities(title)
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedData = data?.map(bid => ({
+        ...bid,
+        opportunity_title: bid.procurement_opportunities?.title || 'Unknown Opportunity'
+      })) || [];
+      
+      setBidSubmissions(formattedData);
+    } catch (error) {
+      console.error('Error loading bid submissions:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to load bid submissions",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      setDataLoading(true);
+      Promise.all([loadOpportunities(), loadBidSubmissions()])
+        .finally(() => setDataLoading(false));
+    }
+  }, [userProfile?.company_id]);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -324,61 +342,79 @@ export default function PublicProcurement() {
         </div>
 
         <TabsContent value="opportunities" className="space-y-4">
-          <div className="grid gap-4">
-            {opportunities.map((opportunity) => (
-              <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                      <CardDescription>
-                        {opportunity.opportunity_number} • {opportunity.issuing_agency}
-                      </CardDescription>
+          {dataLoading ? (
+            <div className="text-center py-8">
+              <div className="text-muted-foreground">Loading opportunities...</div>
+            </div>
+          ) : opportunities.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium">No Opportunities Found</h3>
+              <p className="text-muted-foreground mb-4">
+                Add your first procurement opportunity to get started
+              </p>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Opportunity
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {opportunities.map((opportunity) => (
+                <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <CardTitle className="text-lg">{opportunity.title}</CardTitle>
+                        <CardDescription>
+                          {opportunity.opportunity_number} • {opportunity.issuing_agency}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {opportunity.is_watched && (
+                          <Badge variant="outline">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Watching
+                          </Badge>
+                        )}
+                        {getStatusBadge(opportunity.status)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {opportunity.is_watched && (
-                        <Badge variant="outline">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          Watching
-                        </Badge>
-                      )}
-                      {getStatusBadge(opportunity.status)}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <div className="font-medium text-muted-foreground">Type</div>
+                        <div className="capitalize">{opportunity.procurement_type?.replace('_', ' ') || 'Not specified'}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-muted-foreground">Estimated Value</div>
+                        <div>{opportunity.estimated_value ? formatCurrency(opportunity.estimated_value) : 'Not specified'}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-muted-foreground">Deadline</div>
+                        <div>{opportunity.submission_deadline ? formatDate(opportunity.submission_deadline) : 'Not set'}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-muted-foreground">Location</div>
+                        <div>{opportunity.project_location || 'Not specified'}</div>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium text-muted-foreground">Type</div>
-                      <div className="capitalize">{opportunity.procurement_type.replace('_', ' ')}</div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button variant="outline" size="sm">
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Submit Bid
+                      </Button>
                     </div>
-                    <div>
-                      <div className="font-medium text-muted-foreground">Estimated Value</div>
-                      <div>{formatCurrency(opportunity.estimated_value)}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-muted-foreground">Deadline</div>
-                      <div>{formatDate(opportunity.submission_deadline)}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-muted-foreground">Location</div>
-                      <div>{opportunity.project_location}</div>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Submit Bid
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="bids" className="space-y-4">
