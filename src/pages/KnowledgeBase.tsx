@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SimplifiedSidebar } from "@/components/navigation/SimplifiedSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface Category {
   id: string;
@@ -180,9 +181,11 @@ export default function KnowledgeBase() {
   const featuredArticles = articles.filter(article => article.is_featured).slice(0, 3);
 
   return (
-    <div className="flex min-h-screen">
-      <SimplifiedSidebar />
-      <div className="flex-1 container mx-auto px-4 py-8">
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen bg-background">
+        <SimplifiedSidebar />
+        <div className="flex-1">
+          <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">Knowledge Base</h1>
@@ -472,7 +475,9 @@ export default function KnowledgeBase() {
           )}
         </TabsContent>
       </Tabs>
+          </div>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

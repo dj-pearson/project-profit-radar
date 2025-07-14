@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from 'react-markdown';
 import { SimplifiedSidebar } from "@/components/navigation/SimplifiedSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface Article {
   id: string;
@@ -281,48 +282,58 @@ export default function KnowledgeBaseArticle() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen">
-        <SimplifiedSidebar />
-        <div className="flex-1 container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
-            <div className="h-12 bg-muted rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
-            <div className="space-y-4">
-              {[...Array(10)].map((_, i) => (
-                <div key={i} className="h-4 bg-muted rounded"></div>
-              ))}
+      <SidebarProvider>
+        <div className="flex w-full min-h-screen bg-background">
+          <SimplifiedSidebar />
+          <div className="flex-1">
+            <div className="container mx-auto px-4 py-8">
+              <div className="animate-pulse">
+                <div className="h-8 bg-muted rounded w-1/4 mb-4"></div>
+                <div className="h-12 bg-muted rounded w-3/4 mb-4"></div>
+                <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
+                <div className="space-y-4">
+                  {[...Array(10)].map((_, i) => (
+                    <div key={i} className="h-4 bg-muted rounded"></div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
   if (!article) {
     return (
-      <div className="flex min-h-screen">
-        <SimplifiedSidebar />
-        <div className="flex-1 container mx-auto px-4 py-8">
-          <div className="text-center">
-            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">Article not found</h2>
-            <p className="text-muted-foreground mb-6">
-              The article you're looking for doesn't exist or has been removed.
-            </p>
-            <Button asChild>
-              <Link to="/knowledge-base">Back to Knowledge Base</Link>
-            </Button>
+      <SidebarProvider>
+        <div className="flex w-full min-h-screen bg-background">
+          <SimplifiedSidebar />
+          <div className="flex-1">
+            <div className="container mx-auto px-4 py-8">
+              <div className="text-center">
+                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-2xl font-semibold mb-2">Article not found</h2>
+                <p className="text-muted-foreground mb-6">
+                  The article you're looking for doesn't exist or has been removed.
+                </p>
+                <Button asChild>
+                  <Link to="/knowledge-base">Back to Knowledge Base</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
   return (
-    <div className="flex min-h-screen">
-      <SimplifiedSidebar />
-      <div className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+    <SidebarProvider>
+      <div className="flex w-full min-h-screen bg-background">
+        <SimplifiedSidebar />
+        <div className="flex-1">
+          <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Header */}
       <div className="mb-6">
         <Button variant="ghost" asChild className="mb-4">
@@ -535,7 +546,9 @@ export default function KnowledgeBaseArticle() {
           </div>
         </div>
       )}
+          </div>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
