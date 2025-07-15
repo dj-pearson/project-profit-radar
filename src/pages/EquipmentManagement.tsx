@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import { Calendar, Truck, Clock, Plus, Settings, Search, Wrench, TrendingUp, AlertTriangle, CheckCircle, MapPin } from 'lucide-react';
+import { Calendar, Truck, Clock, Plus, Settings, Search, Wrench, TrendingUp, AlertTriangle, CheckCircle, MapPin, Edit } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EquipmentGanttChart from '@/components/equipment/EquipmentGanttChart';
+import EquipmentEditForm from '@/components/equipment/EquipmentEditForm';
 import { useToast } from '@/hooks/use-toast';
 
 // Mock equipment data - in a real app, this would come from the database
@@ -105,6 +107,8 @@ export default function EquipmentManagement() {
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingEquipment, setEditingEquipment] = useState<any>(null);
+  const [currentTab, setCurrentTab] = useState("schedule");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -177,6 +181,22 @@ export default function EquipmentManagement() {
     // In a real app, you'd also refresh the equipment list to update availability status
   };
 
+  const handleEditEquipment = (item: any) => {
+    setEditingEquipment(item);
+  };
+
+  const handleEquipmentUpdate = (updatedEquipment: any) => {
+    setEquipment(prev => prev.map(item => 
+      item.id === updatedEquipment.id ? updatedEquipment : item
+    ));
+    setEditingEquipment(null);
+  };
+
+  const handleManageSchedule = (equipmentId: string) => {
+    setSelectedEquipment(equipmentId);
+    setCurrentTab("schedule");
+  };
+
   const filteredEquipment = equipment.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -212,7 +232,7 @@ export default function EquipmentManagement() {
           </Button>
         </div>
 
-        <Tabs defaultValue="schedule" className="space-y-6">
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="schedule" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -316,11 +336,23 @@ export default function EquipmentManagement() {
                         <p className="text-sm text-muted-foreground">{item.type}</p>
                         <p className="text-xs text-muted-foreground">{item.model} • {item.serial_number}</p>
                       </div>
-                      <div className="text-right">
-                        <div className={`text-2xl font-bold ${getUtilizationColor(item.utilization_rate)}`}>
-                          {item.utilization_rate}%
+                      <div className="flex items-start gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditEquipment(item);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <div className="text-right">
+                          <div className={`text-2xl font-bold ${getUtilizationColor(item.utilization_rate)}`}>
+                            {item.utilization_rate}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Utilization</div>
                         </div>
-                        <div className="text-xs text-muted-foreground">Utilization</div>
                       </div>
                     </div>
                   </CardHeader>
@@ -366,8 +398,7 @@ export default function EquipmentManagement() {
                         className="w-full"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedEquipment(item.id);
-                          // This would switch to schedule view
+                          handleManageSchedule(item.id);
                         }}
                       >
                         <Settings className="h-4 w-4 mr-2" />
@@ -386,6 +417,22 @@ export default function EquipmentManagement() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Edit Equipment Dialog */}
+        <Dialog open={!!editingEquipment} onOpenChange={() => setEditingEquipment(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Equipment</DialogTitle>
+            </DialogHeader>
+            {editingEquipment && (
+              <EquipmentEditForm
+                equipment={editingEquipment}
+                onSuccess={handleEquipmentUpdate}
+                onCancel={() => setEditingEquipment(null)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
