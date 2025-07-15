@@ -40,7 +40,7 @@ const SocialProof = () => {
             </div>
             <span className="text-lg font-semibold text-construction-dark">4.8/5 stars</span>
           </div>
-          <p className="text-muted-foreground">Trusted by 500+ contractors nationwide</p>
+          <p className="text-muted-foreground">Trusted by contractors nationwide</p>
         </div>
 
         {/* Company Logos */}
@@ -82,27 +82,15 @@ const SocialProof = () => {
           ))}
         </div>
 
-        {/* Certification Badges */}
+        {/* Integration Badge */}
         <div className="mt-16 text-center">
-          <p className="text-muted-foreground mb-6">Industry Certified & Compliant</p>
+          <p className="text-muted-foreground mb-6">Seamlessly Integrates With Your Tools</p>
           <div className="flex justify-center gap-8 flex-wrap">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-8 h-8 bg-construction-blue rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">SOC</span>
-              </div>
-              SOC 2 Certified
-            </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="w-8 h-8 bg-construction-blue rounded-full flex items-center justify-center">
                 <span className="text-white text-xs font-bold">QB</span>
               </div>
-              QuickBooks Certified
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-8 h-8 bg-construction-blue rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">GDPR</span>
-              </div>
-              GDPR Compliant
+              QuickBooks Integration
             </div>
           </div>
         </div>

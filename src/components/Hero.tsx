@@ -20,7 +20,7 @@ const Hero = () => {
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
                 Stop losing money on delays and budget overruns. Get real-time job costing, 
                 mobile field management, and OSHA compliance without enterprise complexity. 
-                <span className="block mt-2 font-semibold text-construction-orange">Join 500+ contractors saving $50K+ annually.</span>
+                <span className="block mt-2 font-semibold text-construction-orange">Join contractors who are transforming their operations.</span>
               </p>
             </div>
             
