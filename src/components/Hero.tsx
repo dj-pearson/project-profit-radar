@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import InteractiveDashboard from "@/components/InteractiveDashboard";
+import { lazy, Suspense } from "react";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
+
+// Lazy load the heavy Interactive Dashboard component
+const InteractiveDashboard = lazy(() => import("@/components/InteractiveDashboard"));
 
 const Hero = () => {
   return (
@@ -46,7 +49,13 @@ const Hero = () => {
           
           {/* Interactive Dashboard */}
           <div className="relative order-1 lg:order-2">
-            <InteractiveDashboard />
+            <Suspense fallback={
+              <div className="w-full max-w-4xl mx-auto h-96 bg-card rounded-lg border animate-pulse flex items-center justify-center">
+                <div className="text-muted-foreground">Loading dashboard demo...</div>
+              </div>
+            }>
+              <InteractiveDashboard />
+            </Suspense>
           </div>
         </ResponsiveGrid>
       </ResponsiveContainer>
