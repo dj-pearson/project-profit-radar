@@ -7,8 +7,8 @@ import Industries from "@/components/Industries";
 import Pricing from "@/components/Pricing";
 import Implementation from "@/components/Implementation";
 import FAQ from "@/components/FAQ";
-import BlogSection from "@/components/BlogSection";
 import Footer from "@/components/Footer";
+import LazySection from "@/components/LazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 
@@ -44,13 +44,30 @@ const Index = () => {
       <main id="main-content" role="main">
         <Hero />
         <SocialProof />
-        <ProblemSolution />
-        <Features />
-        <Industries />
-        <Pricing />
-        <Implementation />
-        <FAQ />
-        {/* Remove BlogSection to eliminate database calls on homepage load */}
+        
+        <LazySection>
+          <ProblemSolution />
+        </LazySection>
+        
+        <LazySection>
+          <Features />
+        </LazySection>
+        
+        <LazySection>
+          <Industries />
+        </LazySection>
+        
+        <LazySection>
+          <Pricing />
+        </LazySection>
+        
+        <LazySection>
+          <Implementation />
+        </LazySection>
+        
+        <LazySection>
+          <FAQ />
+        </LazySection>
       </main>
       
       <Footer />
