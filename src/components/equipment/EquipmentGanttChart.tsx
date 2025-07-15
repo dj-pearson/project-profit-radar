@@ -56,17 +56,51 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .rpc('get_equipment_schedule', {
-          p_company_id: userProfile.company_id,
-          p_equipment_id: equipmentId || null,
-          p_start_date: format(startDate, 'yyyy-MM-dd'),
-          p_end_date: format(endDate, 'yyyy-MM-dd')
-        });
+      
+      // Build query for equipment assignments
+      let query = supabase
+        .from('equipment_assignments')
+        .select(`
+          id,
+          equipment_id,
+          project_id,
+          assigned_quantity,
+          start_date,
+          end_date,
+          assignment_status,
+          projects!inner(name)
+        `)
+        .eq('company_id', userProfile.company_id)
+        .gte('end_date', format(startDate, 'yyyy-MM-dd'))
+        .lte('start_date', format(endDate, 'yyyy-MM-dd'));
+
+      if (equipmentId) {
+        query = query.eq('equipment_id', equipmentId);
+      }
+
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      setAssignments(data || []);
+      // Transform data to match expected interface
+      const transformedData = data?.map(assignment => ({
+        assignment_id: assignment.id,
+        equipment_id: assignment.equipment_id,
+        equipment_name: `Equipment ${assignment.equipment_id.slice(0, 8)}`, // Simplified for now
+        project_id: assignment.project_id,
+        project_name: assignment.projects.name,
+        assigned_quantity: assignment.assigned_quantity,
+        start_date: assignment.start_date,
+        end_date: assignment.end_date,
+        assignment_status: assignment.assignment_status,
+        days_duration: differenceInDays(new Date(assignment.end_date), new Date(assignment.start_date)) + 1
+      })) || [];
+
+      setAssignments(transformedData);
     } catch (error) {
       console.error('Error loading equipment schedule:', error);
       toast({
@@ -219,77 +253,137 @@ const EquipmentGanttChart: React.FC<EquipmentGanttChartProps> = ({
           {format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}
         </div>
       </CardHeader>
-      <CardContent>
-        {/* Timeline Header */}
-        <div className="grid grid-cols-[200px_1fr] gap-4 mb-4">
-          <div className="font-medium text-sm">
-            {equipmentId ? 'Project' : 'Equipment'}
-          </div>
-          <div className="grid" style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}>
-            {days.map((day, index) => (
-              <div
-                key={index}
-                className="text-xs text-center p-1 border-l border-border"
-              >
-                <div className="font-medium">{format(day, 'EEE')}</div>
-                <div className="text-muted-foreground">{format(day, 'd')}</div>
+      <CardContent className="p-2 sm:p-6">
+        {/* Mobile View */}
+        <div className="block lg:hidden">
+          <div className="space-y-4">
+            {Object.keys(groupedAssignments).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No equipment assignments found for this period
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Assignment Rows */}
-        <div className="space-y-2">
-          {Object.keys(groupedAssignments).length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No equipment assignments found for this period
-            </div>
-          ) : (
-            Object.entries(groupedAssignments).map(([name, groupAssignments]) => (
-              <div key={name} className="grid grid-cols-[200px_1fr] gap-4 items-center">
-                <div className="font-medium text-sm truncate" title={name}>
-                  {name}
-                </div>
-                <div className="relative h-12 border border-border rounded bg-muted/20">
-                  {groupAssignments.map((assignment) => {
-                    const position = getAssignmentPosition(assignment);
-                    return (
+            ) : (
+              Object.entries(groupedAssignments).map(([name, groupAssignments]) => (
+                <Card key={name} className="p-4">
+                  <h4 className="font-medium mb-3">{name}</h4>
+                  <div className="space-y-2">
+                    {groupAssignments.map((assignment) => (
                       <div
                         key={assignment.assignment_id}
-                        className={`absolute top-1 h-10 rounded px-2 text-white text-xs flex items-center justify-between cursor-pointer ${getStatusColor(assignment.assignment_status)} hover:opacity-80`}
-                        style={position}
+                        className={`p-3 rounded-md cursor-pointer ${getStatusColor(assignment.assignment_status)} text-white`}
                         onClick={() => {
                           setSelectedAssignment(assignment);
                           setShowForm(true);
                         }}
-                        title={`${assignment.project_name || assignment.equipment_name} (${format(new Date(assignment.start_date), 'MMM d')} - ${format(new Date(assignment.end_date), 'MMM d')})`}
                       >
-                        <span className="truncate flex-1">
-                          {equipmentId ? assignment.project_name : assignment.equipment_name}
-                        </span>
-                        <div className="flex items-center gap-1 ml-2">
-                          <Badge variant="secondary" className="text-xs px-1">
-                            {assignment.assigned_quantity}
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteAssignment(assignment.assignment_id);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-medium text-sm">
+                            {equipmentId ? assignment.project_name : assignment.equipment_name}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              Qty: {assignment.assigned_quantity}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAssignment(assignment.assignment_id);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="text-xs opacity-90">
+                          {format(new Date(assignment.start_date), 'MMM d')} - {format(new Date(assignment.end_date), 'MMM d, yyyy')}
+                        </div>
+                        <div className="text-xs opacity-75 mt-1">
+                          Status: {assignment.assignment_status}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Gantt View */}
+        <div className="hidden lg:block overflow-x-auto">
+          {/* Timeline Header */}
+          <div className="grid grid-cols-[200px_1fr] gap-4 mb-4 min-w-[800px]">
+            <div className="font-medium text-sm">
+              {equipmentId ? 'Project' : 'Equipment'}
+            </div>
+            <div className="grid" style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}>
+              {days.map((day, index) => (
+                <div
+                  key={index}
+                  className="text-xs text-center p-1 border-l border-border"
+                >
+                  <div className="font-medium">{format(day, 'EEE')}</div>
+                  <div className="text-muted-foreground">{format(day, 'd')}</div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Assignment Rows */}
+          <div className="space-y-2 min-w-[800px]">
+            {Object.keys(groupedAssignments).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No equipment assignments found for this period
               </div>
-            ))
-          )}
+            ) : (
+              Object.entries(groupedAssignments).map(([name, groupAssignments]) => (
+                <div key={name} className="grid grid-cols-[200px_1fr] gap-4 items-center">
+                  <div className="font-medium text-sm truncate" title={name}>
+                    {name}
+                  </div>
+                  <div className="relative h-12 border border-border rounded bg-muted/20">
+                    {groupAssignments.map((assignment) => {
+                      const position = getAssignmentPosition(assignment);
+                      return (
+                        <div
+                          key={assignment.assignment_id}
+                          className={`absolute top-1 h-10 rounded px-2 text-white text-xs flex items-center justify-between cursor-pointer ${getStatusColor(assignment.assignment_status)} hover:opacity-80`}
+                          style={position}
+                          onClick={() => {
+                            setSelectedAssignment(assignment);
+                            setShowForm(true);
+                          }}
+                          title={`${assignment.project_name || assignment.equipment_name} (${format(new Date(assignment.start_date), 'MMM d')} - ${format(new Date(assignment.end_date), 'MMM d')})`}
+                        >
+                          <span className="truncate flex-1">
+                            {equipmentId ? assignment.project_name : assignment.equipment_name}
+                          </span>
+                          <div className="flex items-center gap-1 ml-2">
+                            <Badge variant="secondary" className="text-xs px-1">
+                              {assignment.assigned_quantity}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAssignment(assignment.assignment_id);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Legend */}
