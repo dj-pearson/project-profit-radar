@@ -50,7 +50,7 @@ const Index = () => {
         <Pricing />
         <Implementation />
         <FAQ />
-        <BlogSection />
+        {/* Remove BlogSection to eliminate database calls on homepage load */}
       </main>
       
       <Footer />
