@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import RenewalNotificationPanel from '@/components/RenewalNotificationPanel';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import AnalyticsSettings from '@/components/admin/AnalyticsSettings';
 import { 
   Settings,
   Shield,
@@ -381,6 +382,9 @@ const AdminSettings = () => {
 
           
           <RenewalNotificationPanel />
+
+          {/* Analytics Settings */}
+          <AnalyticsSettings />
 
           {/* API Settings */}
           <Card>
