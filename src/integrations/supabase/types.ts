@@ -10911,6 +10911,57 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          accessibility_preferences: Json | null
+          created_at: string
+          dashboard_layout: Json | null
+          email_notifications: Json | null
+          favorite_shortcuts: Json | null
+          id: string
+          in_app_notifications: Json | null
+          language: string | null
+          mobile_preferences: Json | null
+          sms_notifications: Json | null
+          time_zone: string | null
+          updated_at: string
+          user_id: string
+          working_hours: Json | null
+        }
+        Insert: {
+          accessibility_preferences?: Json | null
+          created_at?: string
+          dashboard_layout?: Json | null
+          email_notifications?: Json | null
+          favorite_shortcuts?: Json | null
+          id?: string
+          in_app_notifications?: Json | null
+          language?: string | null
+          mobile_preferences?: Json | null
+          sms_notifications?: Json | null
+          time_zone?: string | null
+          updated_at?: string
+          user_id: string
+          working_hours?: Json | null
+        }
+        Update: {
+          accessibility_preferences?: Json | null
+          created_at?: string
+          dashboard_layout?: Json | null
+          email_notifications?: Json | null
+          favorite_shortcuts?: Json | null
+          id?: string
+          in_app_notifications?: Json | null
+          language?: string | null
+          mobile_preferences?: Json | null
+          sms_notifications?: Json | null
+          time_zone?: string | null
+          updated_at?: string
+          user_id?: string
+          working_hours?: Json | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           company_id: string | null

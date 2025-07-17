@@ -91,6 +91,13 @@ export const mainNavigation: NavigationItem[] = [
     icon: Clipboard, 
     roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"],
     description: "Daily operations and compliance"
+  },
+  { 
+    title: "Settings", 
+    url: "/user-settings", 
+    icon: Settings, 
+    roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"],
+    description: "Personal preferences and settings"
   }
 ];
 

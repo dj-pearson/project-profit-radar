@@ -96,6 +96,7 @@ import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
 import CompanySettings from "./pages/CompanySettings";
 import ScheduleManagement from "./pages/ScheduleManagement";
 import EstimatesHub from "./pages/EstimatesHub";
+import { UserSettings } from "./pages/UserSettings";
 import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
@@ -339,6 +340,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/company-settings">
             <CompanySettings />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/user-settings"
+        element={
+          <RouteGuard routePath="/user-settings">
+            <UserSettings />
           </RouteGuard>
         }
       />
