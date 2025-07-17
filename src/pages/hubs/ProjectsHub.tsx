@@ -73,56 +73,56 @@ const ProjectsHub = () => {
       <div>
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/projects')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
                   <p className="text-2xl font-bold">{metrics.activeProjects}</p>
                 </div>
-                <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors">
                   <ArrowRight className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/projects')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
                   <p className="text-2xl font-bold">{metrics.totalProjects}</p>
                 </div>
-                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors">
                   <ArrowRight className="h-4 w-4 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/change-orders')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Change Orders</p>
                   <p className="text-2xl font-bold">{metrics.changeOrders}</p>
                 </div>
-                <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center hover:bg-yellow-200 transition-colors">
                   <ArrowRight className="h-4 w-4 text-yellow-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/daily-reports')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Daily Reports</p>
                   <p className="text-2xl font-bold">{metrics.dailyReports}</p>
                 </div>
-                <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
                   <ArrowRight className="h-4 w-4 text-red-600" />
                 </div>
               </div>
