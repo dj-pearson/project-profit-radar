@@ -19,7 +19,8 @@ import {
   Calendar as CalendarIcon,
   LayoutGrid,
   List,
-  Kanban
+  Kanban,
+  Edit
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -291,9 +292,25 @@ export const MyTasksDashboard = () => {
                 {item.source.toUpperCase()}
               </Badge>
             </div>
-            <Badge className={PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS]}>
-              {item.priority}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className={PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS]}>
+                {item.priority}
+              </Badge>
+              {item.source === 'task' && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Navigate to edit task page when implemented
+                    console.log('Edit task:', item.id);
+                  }}
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
           
           <h4 className="font-medium text-sm mb-1">{item.title}</h4>

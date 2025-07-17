@@ -58,6 +58,13 @@ export const mainNavigation: NavigationItem[] = [
     description: "Overview and key metrics"
   },
   { 
+    title: "My Tasks", 
+    url: "/my-tasks", 
+    icon: CheckSquare, 
+    roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"],
+    description: "Your personal task dashboard"
+  },
+  { 
     title: "Projects", 
     url: "/projects-hub", 
     icon: Building2, 
