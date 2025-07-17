@@ -1059,6 +1059,151 @@ export type Database = {
         }
         Relationships: []
       }
+      company_admin_settings: {
+        Row: {
+          billing_settings: Json | null
+          company_id: string
+          company_logo_url: string | null
+          created_at: string
+          created_by: string | null
+          custom_fields: Json | null
+          custom_theme: Json | null
+          data_retention: Json | null
+          email_signature: string | null
+          id: string
+          integration_config: Json | null
+          primary_color: string | null
+          secondary_color: string | null
+          security_policies: Json | null
+          updated_at: string
+          updated_by: string | null
+          user_invite_settings: Json | null
+          workflow_settings: Json | null
+        }
+        Insert: {
+          billing_settings?: Json | null
+          company_id: string
+          company_logo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_fields?: Json | null
+          custom_theme?: Json | null
+          data_retention?: Json | null
+          email_signature?: string | null
+          id?: string
+          integration_config?: Json | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          security_policies?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+          user_invite_settings?: Json | null
+          workflow_settings?: Json | null
+        }
+        Update: {
+          billing_settings?: Json | null
+          company_id?: string
+          company_logo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_fields?: Json | null
+          custom_theme?: Json | null
+          data_retention?: Json | null
+          email_signature?: string | null
+          id?: string
+          integration_config?: Json | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          security_policies?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+          user_invite_settings?: Json | null
+          workflow_settings?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_admin_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_admin_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_custom_fields: {
+        Row: {
+          applies_to: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          field_name: string
+          field_options: Json | null
+          field_type: string
+          id: string
+          is_active: boolean | null
+          is_required: boolean | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          applies_to: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          field_name: string
+          field_options?: Json | null
+          field_type: string
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          field_name?: string
+          field_options?: Json | null
+          field_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_custom_fields_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_custom_fields_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_payment_settings: {
         Row: {
           chargeback_fee: number | null
