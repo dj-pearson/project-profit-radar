@@ -173,6 +173,11 @@ export const AppSidebar = () => {
 
   const filterItemsByRole = (items: NavigationItem[]) => {
     return items.filter(item => {
+      // Root admin items should only be visible to root_admin
+      if (item.roles.length === 1 && item.roles[0] === 'root_admin') {
+        return userProfile?.role === 'root_admin';
+      }
+      // For other items, check normal role access
       const hasRole = userProfile?.role === 'root_admin' || item.roles.includes(userProfile?.role || '');
       const hasAccess = canAccessRoute(item.url);
       return hasRole && hasAccess;

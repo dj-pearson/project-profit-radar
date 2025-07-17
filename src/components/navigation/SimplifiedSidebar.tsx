@@ -39,7 +39,7 @@ export const SimplifiedSidebar = () => {
 
   const navigationItems = getNavigationForRole(userProfile?.role || '');
   
-  // Get main areas with their sections - always show hierarchical navigation
+  // Get main areas with their sections - filter out sensitive admin functions
   const getAreaSections = (areaId: string): NavigationSection[] => {
     const area = hierarchicalNavigation.find(a => a.id === areaId);
     if (!area) {
@@ -47,18 +47,24 @@ export const SimplifiedSidebar = () => {
       return [];
     }
     
-    // More robust role checking - default to 'admin' if role is not set
     const currentUserRole = userProfile?.role || 'admin';
     
     const filteredSections = area.sections.map(section => ({
       ...section,
-      items: section.items.map(item => ({
+      items: section.items.filter(item => {
+        // Root admin items should only be visible to root_admin
+        if (item.roles.length === 1 && item.roles[0] === 'root_admin') {
+          return currentUserRole === 'root_admin';
+        }
+        // For other items, show them (may be locked later)
+        return true;
+      }).map(item => ({
         ...item,
         hasAccess: currentUserRole === 'root_admin' || 
                    item.roles.includes(currentUserRole) ||
                    canAccessRoute(item.url)
       }))
-    }));
+    })).filter(section => section.items.length > 0); // Remove empty sections
     
     console.log(`Area ${areaId} has ${filteredSections.length} sections for role ${currentUserRole}:`, filteredSections);
     return filteredSections;

@@ -19,6 +19,16 @@ export const HubNavigationSection: React.FC<HubNavigationSectionProps> = ({ labe
 
   const currentUserRole = userProfile?.role || '';
 
+  // Filter out items that the user shouldn't see at all (especially root_admin only items)
+  const visibleItems = items.filter(item => {
+    // Root admin items should only be visible to root_admin
+    if (item.roles.length === 1 && item.roles[0] === 'root_admin') {
+      return currentUserRole === 'root_admin';
+    }
+    // For other items, show them but may be locked
+    return true;
+  });
+
   const getItemAccess = (item: NavigationItem) => {
     return currentUserRole === 'root_admin' || 
            item.roles.includes(currentUserRole) ||
@@ -88,11 +98,16 @@ export const HubNavigationSection: React.FC<HubNavigationSectionProps> = ({ labe
     return item.description || descriptions[item.title] || 'Access this feature';
   };
 
+  // Don't render section if no visible items
+  if (visibleItems.length === 0) {
+    return null;
+  }
+
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4">{label}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const hasAccess = getItemAccess(item);
           return (
             <Card 
