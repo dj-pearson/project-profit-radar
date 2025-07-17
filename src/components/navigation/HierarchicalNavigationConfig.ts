@@ -26,7 +26,8 @@ import {
   CheckSquare,
   CalendarDays,
   Calculator,
-  BarChart4
+  BarChart4,
+  ListTodo
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -61,7 +62,8 @@ export const hierarchicalNavigation: NavigationArea[] = [
         id: 'dashboard',
         label: 'Dashboard',
         items: [
-          { title: "Dashboard", url: "/dashboard", icon: Home, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] }
+          { title: "Dashboard", url: "/dashboard", icon: Home, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] },
+          { title: "My Tasks", url: "/my-tasks", icon: ListTodo, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] }
         ]
       }
     ]

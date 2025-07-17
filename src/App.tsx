@@ -18,6 +18,7 @@ import Projects from "./pages/Projects";
 import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamManagement from "./pages/TeamManagement";
+import { MyTasksDashboard } from "./pages/tasks/MyTasksDashboard";
 import TimeTracking from "./pages/TimeTracking";
 import JobCosting from "./pages/JobCosting";
 import DocumentManagement from "./pages/DocumentManagement";
@@ -146,6 +147,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/team">
             <TeamManagement />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/my-tasks"
+        element={
+          <RouteGuard routePath="/my-tasks">
+            <MyTasksDashboard />
           </RouteGuard>
         }
       />
