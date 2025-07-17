@@ -14,6 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_codes: {
+        Row: {
+          affiliate_code: string
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          program_id: string
+          successful_referrals: number
+          total_referrals: number
+          total_rewards_earned: number
+          updated_at: string
+        }
+        Insert: {
+          affiliate_code: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          program_id: string
+          successful_referrals?: number
+          total_referrals?: number
+          total_rewards_earned?: number
+          updated_at?: string
+        }
+        Update: {
+          affiliate_code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          program_id?: string
+          successful_referrals?: number
+          total_referrals?: number
+          total_rewards_earned?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_codes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_codes_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_programs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          min_subscription_duration_months: number
+          name: string
+          referee_reward_months: number
+          referrer_reward_months: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          min_subscription_duration_months?: number
+          name?: string
+          referee_reward_months?: number
+          referrer_reward_months?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          min_subscription_duration_months?: number
+          name?: string
+          referee_reward_months?: number
+          referrer_reward_months?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_referrals: {
+        Row: {
+          affiliate_code_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          referee_company_id: string | null
+          referee_email: string
+          referee_reward_months: number | null
+          referee_rewarded_at: string | null
+          referral_status: string
+          referrer_company_id: string
+          referrer_reward_months: number | null
+          referrer_rewarded_at: string | null
+          subscription_duration_months: number | null
+          subscription_tier: string | null
+          updated_at: string
+        }
+        Insert: {
+          affiliate_code_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          referee_company_id?: string | null
+          referee_email: string
+          referee_reward_months?: number | null
+          referee_rewarded_at?: string | null
+          referral_status?: string
+          referrer_company_id: string
+          referrer_reward_months?: number | null
+          referrer_rewarded_at?: string | null
+          subscription_duration_months?: number | null
+          subscription_tier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affiliate_code_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          referee_company_id?: string | null
+          referee_email?: string
+          referee_reward_months?: number | null
+          referee_rewarded_at?: string | null
+          referral_status?: string
+          referrer_company_id?: string
+          referrer_reward_months?: number | null
+          referrer_rewarded_at?: string | null
+          subscription_duration_months?: number | null
+          subscription_tier?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_affiliate_code_id_fkey"
+            columns: ["affiliate_code_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_referrals_referee_company_id_fkey"
+            columns: ["referee_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_referrals_referrer_company_id_fkey"
+            columns: ["referrer_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_rewards: {
+        Row: {
+          applied_at: string | null
+          company_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          notes: string | null
+          referral_id: string
+          reward_months: number
+          reward_status: string
+          reward_type: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          company_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          referral_id: string
+          reward_months: number
+          reward_status?: string
+          reward_type: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          company_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          referral_id?: string
+          reward_months?: number
+          reward_status?: string
+          reward_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_rewards_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_rewards_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_coordination: {
         Row: {
           agency_name: string
@@ -11788,6 +12017,10 @@ export type Database = {
         Args: { type_name: string }
         Returns: boolean
       }
+      create_company_affiliate_code: {
+        Args: { p_company_id: string }
+        Returns: string
+      }
       create_document_version: {
         Args: {
           p_document_id: string
@@ -11796,6 +12029,10 @@ export type Database = {
           p_checksum?: string
           p_version_notes?: string
         }
+        Returns: string
+      }
+      generate_affiliate_code: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_bid_number: {
