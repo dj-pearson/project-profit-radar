@@ -375,6 +375,14 @@ const AppContent = () => {
       <Route path="/logo-showcase" element={<LogoShowcase />} />
       <Route path="/subscription" element={<SubscriptionSettings />} />
       <Route
+        path="/subscription-settings"
+        element={
+          <RouteGuard routePath="/subscription-settings">
+            <SubscriptionSettings />
+          </RouteGuard>
+        }
+      />
+      <Route
         path="/upgrade"
         element={
           <RouteGuard routePath="/upgrade">

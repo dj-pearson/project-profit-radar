@@ -99,6 +99,13 @@ export const mainNavigation: NavigationItem[] = [
     icon: Settings, 
     roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"],
     description: "Personal preferences and settings"
+  },
+  { 
+    title: "Subscription & Referrals", 
+    url: "/subscription-settings", 
+    icon: Share, 
+    roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"],
+    description: "Manage your subscription and affiliate referral program"
   }
 ];
 
@@ -285,8 +292,7 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Billing", url: "/admin/billing", icon: DollarSign, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Complimentary Subscriptions", url: "/admin/complimentary", icon: Gift, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "Subscription & Referrals", url: "/subscription-settings", icon: Share, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] }
+          { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Root Admin" }
         ]
       },
       {
