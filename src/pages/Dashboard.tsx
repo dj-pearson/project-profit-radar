@@ -20,7 +20,7 @@ import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { mobileGridClasses, mobileTextClasses, MobilePageWrapper } from '@/utils/mobileHelpers';
-import { DragDropDashboard } from '@/components/dashboard/DragDropDashboard';
+import { BusinessDashboard } from '@/components/dashboard/BusinessDashboard';
 
 import { 
   Building2, 
@@ -214,10 +214,10 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Build Desk">
-      {/* Drag & Drop Dashboard Tiles */}
-      <DragDropDashboard />
+      {/* Business Dashboard */}
+      <BusinessDashboard />
 
-        {/* Root Admin Panel */}
+      {/* Root Admin Panel */}
         {userProfile?.role === 'root_admin' && (
           <Card>
             <CardHeader>
