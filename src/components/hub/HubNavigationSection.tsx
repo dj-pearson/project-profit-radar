@@ -92,7 +92,8 @@ export const HubNavigationSection: React.FC<HubNavigationSectionProps> = ({ labe
       "Customer Service": "Customer service management",
       "Security Monitoring": "Security and threat monitoring",
       "Rate Limiting": "API rate limiting configuration",
-      "My Tasks": "Personal task management dashboard"
+      "My Tasks": "Personal task management dashboard",
+      "Subscription & Referrals": "Manage your subscription and affiliate referral program"
     };
     
     return item.description || descriptions[item.title] || 'Access this feature';

@@ -21,7 +21,8 @@ import {
   FolderOpen,
   Lock,
   Tag,
-  Gift
+  Gift,
+  Share
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -284,7 +285,8 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Billing", url: "/admin/billing", icon: DollarSign, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Complimentary Subscriptions", url: "/admin/complimentary", icon: Gift, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Root Admin" }
+          { title: "Promotions", url: "/admin/promotions", icon: Tag, roles: ["root_admin"], badge: "Root Admin" },
+          { title: "Subscription & Referrals", url: "/subscription-settings", icon: Share, roles: ["admin", "project_manager", "field_supervisor", "office_staff", "accounting", "root_admin"] }
         ]
       },
       {
