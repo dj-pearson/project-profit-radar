@@ -1,0 +1,52 @@
+/* High Contrast Mode */
+:root.high-contrast {
+  --text-primary: hsl(0 0% 100%);
+  --text-secondary: hsl(0 0% 90%);
+  --background: hsl(0 0% 0%);
+  --background-secondary: hsl(0 0% 10%);
+  --border: hsl(0 0% 40%);
+  --accent: hsl(45 100% 50%);
+}
+
+/* Reduce Motion */
+:root.reduce-motion * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Font Sizes */
+:root.text-size-small {
+  font-size: 14px;
+}
+
+:root.text-size-medium {
+  font-size: 16px;
+}
+
+:root.text-size-large {
+  font-size: 18px;
+}
+
+/* Keyboard Navigation */
+:root.keyboard-navigation :focus {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+
+:root.keyboard-navigation :focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* Screen Reader Support */
+:root.screen-reader-support .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

@@ -29,6 +29,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface UserPreferences {
   id?: string;
@@ -152,6 +153,7 @@ const availableShortcuts = [
 export const UserSettings = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
+  const { accessibility, updateAccessibility } = useTheme();
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -640,7 +642,10 @@ export const UserSettings = () => {
                     </Label>
                     <Select 
                       value={preferences.accessibility_preferences.font_size} 
-                      onValueChange={(value) => updatePreferences('accessibility_preferences.font_size', value)}
+                      onValueChange={(value) => {
+                        updatePreferences('accessibility_preferences.font_size', value);
+                        updateAccessibility({ fontSize: value as 'small' | 'medium' | 'large' });
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -653,16 +658,17 @@ export const UserSettings = () => {
                     </Select>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Eye className="h-4 w-4" />
                       <Label>High Contrast</Label>
                     </div>
                     <Switch
                       checked={preferences.accessibility_preferences.high_contrast}
-                      onCheckedChange={(checked) => 
-                        updatePreferences('accessibility_preferences.high_contrast', checked)
-                      }
+                      onCheckedChange={(checked) => {
+                        updatePreferences('accessibility_preferences.high_contrast', checked);
+                        updateAccessibility({ highContrast: checked });
+                      }}
                     />
                   </div>
 
@@ -670,9 +676,10 @@ export const UserSettings = () => {
                     <Label>Reduce Motion</Label>
                     <Switch
                       checked={preferences.accessibility_preferences.reduce_motion}
-                      onCheckedChange={(checked) => 
-                        updatePreferences('accessibility_preferences.reduce_motion', checked)
-                      }
+                      onCheckedChange={(checked) => {
+                        updatePreferences('accessibility_preferences.reduce_motion', checked);
+                        updateAccessibility({ reduceMotion: checked });
+                      }}
                     />
                   </div>
 
@@ -683,9 +690,10 @@ export const UserSettings = () => {
                     </div>
                     <Switch
                       checked={preferences.accessibility_preferences.screen_reader}
-                      onCheckedChange={(checked) => 
-                        updatePreferences('accessibility_preferences.screen_reader', checked)
-                      }
+                      onCheckedChange={(checked) => {
+                        updatePreferences('accessibility_preferences.screen_reader', checked);
+                        updateAccessibility({ screenReader: checked });
+                      }}
                     />
                   </div>
 
@@ -693,9 +701,10 @@ export const UserSettings = () => {
                     <Label>Keyboard Navigation</Label>
                     <Switch
                       checked={preferences.accessibility_preferences.keyboard_navigation}
-                      onCheckedChange={(checked) => 
-                        updatePreferences('accessibility_preferences.keyboard_navigation', checked)
-                      }
+                      onCheckedChange={(checked) => {
+                        updatePreferences('accessibility_preferences.keyboard_navigation', checked);
+                        updateAccessibility({ keyboardNavigation: checked });
+                      }}
                     />
                   </div>
                 </CardContent>
