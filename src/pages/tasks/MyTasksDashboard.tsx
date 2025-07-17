@@ -37,6 +37,7 @@ interface TaskItem {
   source: 'task' | 'rfi' | 'permit' | 'contact';
   source_data: {
     project_name?: string;
+    project_id?: string;
     category?: string;
     type?: string;
   };
@@ -96,6 +97,7 @@ export const MyTasksDashboard = () => {
           due_date,
           assigned_to,
           category,
+          project_id,
           project:projects(name)
         `)
         .eq('assigned_to', userProfile.id)
@@ -114,6 +116,7 @@ export const MyTasksDashboard = () => {
             source: 'task',
             source_data: {
               project_name: task.project?.name,
+              project_id: task.project_id,
               category: task.category
             }
           });
@@ -309,7 +312,7 @@ export const MyTasksDashboard = () => {
         estimated_hours: 0,
         assigned_to: item.assigned_to,
         company_id: userProfile?.company_id || '',
-        project_id: '', // This would need to be fetched if needed
+        project_id: item.source_data.project_id || '',
         project: item.source_data.project_name ? { name: item.source_data.project_name } : undefined,
         assigned_user: item.assigned_user
       };
