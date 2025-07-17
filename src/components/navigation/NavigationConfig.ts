@@ -292,6 +292,7 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Root Admin" },
           { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ["root_admin"], badge: "Root Admin" },
+          { title: "System Admin Settings", url: "/system-admin/settings", icon: Settings, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Security Monitoring", url: "/security-monitoring", icon: Shield, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Rate Limiting", url: "/rate-limiting", icon: Settings, roles: ["root_admin"], badge: "Root Admin" }
         ]

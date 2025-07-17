@@ -98,6 +98,7 @@ import ScheduleManagement from "./pages/ScheduleManagement";
 import EstimatesHub from "./pages/EstimatesHub";
 import { UserSettings } from "./pages/UserSettings";
 import CompanyAdminSettings from "./pages/CompanyAdminSettings";
+import SystemAdminSettings from "./pages/SystemAdminSettings";
 import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
@@ -357,6 +358,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/company-admin-settings">
             <CompanyAdminSettings />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/system-admin/settings"
+        element={
+          <RouteGuard routePath="/system-admin/settings">
+            <SystemAdminSettings />
           </RouteGuard>
         }
       />

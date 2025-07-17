@@ -1998,6 +1998,53 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_forms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          form_fields: Json
+          form_type: string
+          id: string
+          is_active: boolean | null
+          is_system_template: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          form_fields?: Json
+          form_type: string
+          id?: string
+          is_active?: boolean | null
+          is_system_template?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          form_fields?: Json
+          form_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_system_template?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_forms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_service_requests: {
         Row: {
           additional_documents: Json | null
@@ -10332,6 +10379,60 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_admin_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_management: Json | null
+          email_templates: Json | null
+          form_templates: Json | null
+          id: string
+          report_templates: Json | null
+          system_preferences: Json | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_management?: Json | null
+          email_templates?: Json | null
+          form_templates?: Json | null
+          id?: string
+          report_templates?: Json | null
+          system_preferences?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_management?: Json | null
+          email_templates?: Json | null
+          form_templates?: Json | null
+          id?: string
+          report_templates?: Json | null
+          system_preferences?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_admin_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
