@@ -87,8 +87,9 @@ serve(async (req) => {
           .from('change_orders')
           .select(`
             *,
-            projects(name, client_name)
+            projects!inner(name, client_name, company_id)
           `)
+          .eq('projects.company_id', userProfile.company_id)
           .order('created_at', { ascending: false });
 
         if (projectId) {

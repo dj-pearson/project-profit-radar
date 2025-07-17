@@ -63,7 +63,7 @@ const ChangeOrders = () => {
     project_id: '',
     title: '',
     description: '',
-    amount: 0,
+    amount: '',
     reason: ''
   });
 
@@ -157,7 +157,7 @@ const ChangeOrders = () => {
         project_id: '',
         title: '',
         description: '',
-        amount: 0,
+        amount: '',
         reason: ''
       });
       
@@ -311,7 +311,7 @@ const ChangeOrders = () => {
                         step="0.01"
                         placeholder="0.00"
                         value={newOrder.amount}
-                        onChange={(e) => setNewOrder({...newOrder, amount: Number(e.target.value)})}
+                        onChange={(e) => setNewOrder({...newOrder, amount: e.target.value})}
                       />
                     </div>
                     
