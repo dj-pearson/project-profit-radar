@@ -64,7 +64,8 @@ const navigationCategories: NavigationCategory[] = [
   {
     label: "Overview",
     items: [
-      { title: "Dashboard", url: "/dashboard", icon: Home, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "technician", "office_staff", "accounting", "estimator", "safety_officer", "quality_inspector", "root_admin"] }
+      { title: "Dashboard", url: "/dashboard", icon: Home, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "technician", "office_staff", "accounting", "estimator", "safety_officer", "quality_inspector", "root_admin"] },
+      { title: "My Tasks", url: "/my-tasks", icon: CheckSquare, roles: ["admin", "superintendent", "project_manager", "foreman", "field_supervisor", "technician", "office_staff", "accounting", "estimator", "safety_officer", "quality_inspector", "root_admin"] }
     ]
   },
   {
