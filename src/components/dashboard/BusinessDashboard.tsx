@@ -222,7 +222,7 @@ export const BusinessDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/tasks')}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/my-tasks')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-red-100 rounded-lg">
@@ -241,7 +241,7 @@ export const BusinessDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/tasks')}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/my-tasks')}>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-yellow-100 rounded-lg">
@@ -353,7 +353,7 @@ export const BusinessDashboard = () => {
         <TabsContent value="tasks" className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Upcoming Tasks</h3>
-            <Button onClick={() => navigate('/tasks/new')} size="sm">
+            <Button onClick={() => navigate('/my-tasks')} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Task
             </Button>
@@ -361,7 +361,7 @@ export const BusinessDashboard = () => {
           <div className="space-y-3">
             {tasks.map((task) => (
               <Card key={task.id} className="hover:shadow-sm transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/tasks/${task.id}`)}>
+                    onClick={() => navigate('/my-tasks')}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -400,7 +400,7 @@ export const BusinessDashboard = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     All caught up! Create a new task or check completed ones.
                   </p>
-                  <Button onClick={() => navigate('/tasks/new')}>
+                  <Button onClick={() => navigate('/my-tasks')}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Task
                   </Button>
@@ -446,7 +446,7 @@ export const BusinessDashboard = () => {
                     <Building2 className="h-5 w-5 mb-1" />
                     <span className="text-xs">New Project</span>
                   </Button>
-                  <Button variant="outline" onClick={() => navigate('/tasks/new')} className="h-16 flex-col">
+                  <Button variant="outline" onClick={() => navigate('/my-tasks')} className="h-16 flex-col">
                     <FileText className="h-5 w-5 mb-1" />
                     <span className="text-xs">New Task</span>
                   </Button>
