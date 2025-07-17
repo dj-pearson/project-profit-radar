@@ -19,12 +19,12 @@ import {
   Calendar as CalendarIcon,
   LayoutGrid,
   List,
-  Kanban,
-  Edit
+  Kanban
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, isToday, isTomorrow, isThisWeek, isPast } from 'date-fns';
+import { TaskCard } from '@/components/tasks/TaskCard';
 
 interface TaskItem {
   id: string;
@@ -279,9 +279,53 @@ export const MyTasksDashboard = () => {
     return filteredItems.filter(item => item.status === status);
   };
 
+  const handleTaskUpdate = (updatedTask: any) => {
+    setItems(prevItems => 
+      prevItems.map(item => 
+        item.id === updatedTask.id && item.source === 'task' 
+          ? { ...item, title: updatedTask.name, description: updatedTask.description, status: updatedTask.status, priority: updatedTask.priority, due_date: updatedTask.due_date }
+          : item
+      )
+    );
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    setItems(prevItems => prevItems.filter(item => !(item.id === taskId && item.source === 'task')));
+  };
+
   const renderItemCard = (item: TaskItem) => {
     const SourceIcon = SOURCE_ICONS[item.source];
     
+    // For tasks, use the TaskCard component which has working edit functionality
+    if (item.source === 'task') {
+      const taskData = {
+        id: item.id,
+        name: item.title,
+        description: item.description,
+        status: item.status,
+        category: item.source_data.category || 'general',
+        priority: item.priority,
+        due_date: item.due_date,
+        estimated_hours: 0,
+        assigned_to: item.assigned_to,
+        company_id: userProfile?.company_id || '',
+        project_id: '', // This would need to be fetched if needed
+        project: item.source_data.project_name ? { name: item.source_data.project_name } : undefined,
+        assigned_user: item.assigned_user
+      };
+      
+      return (
+        <TaskCard 
+          key={item.id}
+          task={taskData}
+          onUpdate={handleTaskUpdate}
+          onDelete={handleTaskDelete}
+          showProject={true}
+        />
+      );
+    }
+    
+    // For non-task items, render the original card
     return (
       <Card key={item.id} className="hover:shadow-md transition-shadow">
         <CardContent className="p-4">
@@ -296,20 +340,6 @@ export const MyTasksDashboard = () => {
               <Badge className={PRIORITY_COLORS[item.priority as keyof typeof PRIORITY_COLORS]}>
                 {item.priority}
               </Badge>
-              {item.source === 'task' && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Navigate to edit task page when implemented
-                    console.log('Edit task:', item.id);
-                  }}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-              )}
             </div>
           </div>
           
