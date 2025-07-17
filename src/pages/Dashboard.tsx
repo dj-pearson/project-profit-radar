@@ -21,6 +21,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { mobileGridClasses, mobileTextClasses, MobilePageWrapper } from '@/utils/mobileHelpers';
 import { BusinessDashboard } from '@/components/dashboard/BusinessDashboard';
+import { MFASetupDialog } from '@/components/auth/MFASetupDialog';
+import { useMFASetup } from '@/hooks/useMFASetup';
 
 import { 
   Building2, 
@@ -37,6 +39,16 @@ const Dashboard = () => {
   const { toast } = useToast();
   
   const [projectWizardOpen, setProjectWizardOpen] = useState(false);
+  
+  // MFA Setup
+  const { 
+    shouldPromptMFA, 
+    companyRequiresMFA, 
+    isLoading: mfaLoading,
+    dismissMFASetup,
+    completeMFASetup 
+  } = useMFASetup();
+  const [showMFADialog, setShowMFADialog] = useState(false);
   const { 
     data: dashboardData, 
     loading: dashboardLoading, 
@@ -51,6 +63,7 @@ const Dashboard = () => {
     projectsCompleted: 0
   });
 
+  // Check auth and load dashboard data
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -66,6 +79,13 @@ const Dashboard = () => {
       loadDashboard(loadDashboardData);
     }
   }, [user, userProfile, loading, navigate]);
+  
+  // MFA setup effect - show dialog if needed
+  useEffect(() => {
+    if (!mfaLoading && shouldPromptMFA) {
+      setShowMFADialog(true);
+    }
+  }, [shouldPromptMFA, mfaLoading]);
 
   const loadDashboardData = async () => {
     if (userProfile?.role === 'root_admin') {
@@ -214,6 +234,16 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Build Desk">
+      {/* MFA Setup Dialog */}
+      <MFASetupDialog 
+        isOpen={showMFADialog}
+        onClose={() => {
+          setShowMFADialog(false);
+          dismissMFASetup();
+        }}
+        isRequired={companyRequiresMFA}
+      />
+      
       {/* Business Dashboard */}
       <BusinessDashboard />
 
