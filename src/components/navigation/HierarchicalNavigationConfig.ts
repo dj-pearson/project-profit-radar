@@ -37,6 +37,7 @@ export interface NavigationItem {
   roles: string[];
   badge?: string;
   description?: string;
+  hasAccess?: boolean;
 }
 
 export interface NavigationSection {

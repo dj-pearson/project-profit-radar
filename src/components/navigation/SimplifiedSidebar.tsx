@@ -21,7 +21,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Zap, ChevronRight } from 'lucide-react';
+import { Zap, ChevronRight, Lock } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { getNavigationForRole } from './NavigationConfig';
 import { hierarchicalNavigation, NavigationSection, findSectionByUrl } from './HierarchicalNavigationConfig';
 
@@ -29,6 +30,7 @@ export const SimplifiedSidebar = () => {
   const { state } = useSidebar();
   const location = useLocation();
   const { userProfile } = useAuth();
+  const { canAccessRoute } = usePermissions();
   const currentPath = location.pathname;
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
@@ -50,14 +52,13 @@ export const SimplifiedSidebar = () => {
     
     const filteredSections = area.sections.map(section => ({
       ...section,
-      items: section.items.filter(item => 
-        currentUserRole === 'root_admin' || 
-        item.roles.includes(currentUserRole) ||
-        // Fallback: if user has access to the main navigation item, they should see subsections
-        item.roles.includes('admin') ||
-        item.roles.includes('project_manager')
-      )
-    })).filter(section => section.items.length > 0);
+      items: section.items.map(item => ({
+        ...item,
+        hasAccess: currentUserRole === 'root_admin' || 
+                   item.roles.includes(currentUserRole) ||
+                   canAccessRoute(item.url)
+      }))
+    }));
     
     console.log(`Area ${areaId} has ${filteredSections.length} sections for role ${currentUserRole}:`, filteredSections);
     return filteredSections;
@@ -180,23 +181,33 @@ export const SimplifiedSidebar = () => {
                             <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                               {section.label}
                             </div>
-                            {section.items.map((subItem) => {
+                            {section.items.map((subItem: any) => {
                               const subIsActive = currentPath === subItem.url;
+                              const hasAccess = subItem.hasAccess !== false;
+                              
                               return (
                                 <SidebarMenuSubItem key={subItem.url}>
-                                  <SidebarMenuSubButton asChild>
-                                    <NavLink 
-                                      to={subItem.url} 
-                                      className={getNavClass({ isActive: subIsActive })}
-                                    >
-                                      <subItem.icon className="h-4 w-4" />
-                                      <span>{subItem.title}</span>
-                                      {subItem.badge && (
-                                        <Badge variant="destructive" className="text-xs px-1 py-0 ml-auto">
-                                          {subItem.badge}
-                                        </Badge>
-                                      )}
-                                    </NavLink>
+                                  <SidebarMenuSubButton asChild={hasAccess}>
+                                    {hasAccess ? (
+                                      <NavLink 
+                                        to={subItem.url} 
+                                        className={getNavClass({ isActive: subIsActive })}
+                                      >
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.title}</span>
+                                        {subItem.badge && (
+                                          <Badge variant="destructive" className="text-xs px-1 py-0 ml-auto">
+                                            {subItem.badge}
+                                          </Badge>
+                                        )}
+                                      </NavLink>
+                                    ) : (
+                                      <div className="flex items-center opacity-50 cursor-not-allowed px-2 py-1">
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.title}</span>
+                                        <Lock className="h-3 w-3 ml-auto" />
+                                      </div>
+                                    )}
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               );

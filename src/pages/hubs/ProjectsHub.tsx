@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
+import { HubNavigationSection } from '@/components/hub/HubNavigationSection';
+import { hierarchicalNavigation } from '@/components/navigation/HierarchicalNavigationConfig';
 
 const ProjectsHub = () => {
   const navigate = useNavigate();
@@ -62,35 +64,9 @@ const ProjectsHub = () => {
     fetchMetrics();
   }, [userProfile?.company_id]);
 
-  const projectSections = [
-    {
-      label: "Project Management",
-      items: [
-        { title: "All Projects", url: "/projects", description: "View and manage all construction projects" },
-        { title: "Create Project", url: "/create-project", description: "Start a new construction project" },
-        { title: "Job Costing", url: "/job-costing", description: "Track project costs and budgets" },
-        { title: "Daily Reports", url: "/daily-reports", description: "Daily progress and activity reports" }
-      ]
-    },
-    {
-      label: "Project Communication",
-      items: [
-        { title: "RFIs", url: "/rfis", description: "Request for Information management" },
-        { title: "Submittals", url: "/submittals", description: "Submit and track approval workflows" },
-        { title: "Change Orders", url: "/change-orders", description: "Manage project change requests" },
-        { title: "Punch List", url: "/punch-list", description: "Track quality issues and completion items" }
-      ]
-    },
-    {
-      label: "Project Resources", 
-      items: [
-        { title: "Document Management", url: "/documents", description: "Store and organize project documents" },
-        { title: "Materials", url: "/materials", description: "Track material usage and inventory" },
-        { title: "Equipment", url: "/equipment", description: "Manage equipment tracking and usage" },
-        { title: "Schedule Management", url: "/schedule-management", description: "Visual timeline and Gantt charts for all projects" }
-      ]
-    }
-  ];
+  // Get project sections from hierarchical navigation config
+  const projectsArea = hierarchicalNavigation.find(area => area.id === 'projects');
+  const projectSections = projectsArea?.sections || [];
 
   return (
     <DashboardLayout title="Projects Hub">
@@ -176,28 +152,11 @@ const ProjectsHub = () => {
         {/* Navigation Sections */}
         <div className="space-y-8">
           {projectSections.map((section) => (
-            <div key={section.label}>
-              <h2 className="text-lg font-semibold mb-4">{section.label}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {section.items.map((item) => (
-                  <Card 
-                    key={item.url} 
-                    className="hover:shadow-md transition-shadow cursor-pointer group"
-                    onClick={() => navigate(item.url)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{item.title}</CardTitle>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <CardDescription>{item.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <HubNavigationSection 
+              key={section.id} 
+              label={section.label} 
+              items={section.items} 
+            />
           ))}
         </div>
       </div>
