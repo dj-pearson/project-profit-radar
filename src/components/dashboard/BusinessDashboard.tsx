@@ -20,7 +20,12 @@ import {
   BarChart3,
   Target,
   FileText,
-  Plus
+  Plus,
+  HelpCircle,
+  Upload,
+  Shield,
+  Wrench,
+  ClipboardList
 } from 'lucide-react';
 
 interface Project {
@@ -34,24 +39,15 @@ interface Project {
   client_name?: string;
 }
 
-interface Task {
+interface DeadlineItem {
   id: string;
-  name: string;
-  description?: string;
-  due_date: string;
+  title: string;
+  type: 'task' | 'rfi' | 'submittal' | 'warranty' | 'permit' | 'bond' | 'crm_task';
+  date: string;
   priority: string;
   status: string;
-  project_id: string;
-  company_id: string;
-  assigned_to?: string;
-  category?: string;
-  estimated_hours?: number;
-  actual_hours?: number;
-  tags?: string[];
-  created_at?: string;
-  updated_at?: string;
-  created_by?: string;
-  projects?: { name: string };
+  project_name?: string;
+  project_id?: string;
 }
 
 interface DashboardMetrics {
@@ -67,7 +63,7 @@ export const BusinessDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [deadlineItems, setDeadlineItems] = useState<DeadlineItem[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     activeProjects: 0,
     overdueTasks: 0,
@@ -97,30 +93,133 @@ export const BusinessDashboard = () => {
 
       if (projectsError) throw projectsError;
 
-      // Load upcoming tasks
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select(`
-          *,
-          projects (name)
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .gte('due_date', new Date().toISOString().split('T')[0])
-        .lte('due_date', new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .neq('status', 'completed')
-        .order('due_date', { ascending: true })
-        .limit(10);
+      const today = new Date();
+      const twoWeeksFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
-      if (tasksError) throw tasksError;
+      // Load all upcoming deadlines from various sources
+      const deadlines: DeadlineItem[] = [];
+
+      // 1. Tasks
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('*, projects(name)')
+        .eq('company_id', userProfile?.company_id)
+        .gte('due_date', today.toISOString().split('T')[0])
+        .lte('due_date', twoWeeksFromNow.toISOString().split('T')[0])
+        .neq('status', 'completed');
+
+      tasksData?.forEach(task => {
+        deadlines.push({
+          id: task.id,
+          title: task.name,
+          type: 'task',
+          date: task.due_date,
+          priority: task.priority || 'medium',
+          status: task.status,
+          project_name: task.projects?.name,
+          project_id: task.project_id
+        });
+      });
+
+      // 2. RFIs
+      const { data: rfisData } = await supabase
+        .from('rfis')
+        .select('*, projects(name)')
+        .eq('company_id', userProfile?.company_id)
+        .gte('due_date', today.toISOString().split('T')[0])
+        .lte('due_date', twoWeeksFromNow.toISOString().split('T')[0])
+        .neq('status', 'closed');
+
+      rfisData?.forEach(rfi => {
+        deadlines.push({
+          id: rfi.id,
+          title: `RFI: ${rfi.subject}`,
+          type: 'rfi',
+          date: rfi.due_date,
+          priority: rfi.priority || 'medium',
+          status: rfi.status,
+          project_name: rfi.projects?.name,
+          project_id: rfi.project_id
+        });
+      });
+
+      // 3. Submittals
+      const { data: submittalsData } = await supabase
+        .from('submittals')
+        .select('*, projects(name)')
+        .eq('company_id', userProfile?.company_id)
+        .gte('due_date', today.toISOString().split('T')[0])
+        .lte('due_date', twoWeeksFromNow.toISOString().split('T')[0])
+        .neq('status', 'approved');
+
+      submittalsData?.forEach(submittal => {
+        deadlines.push({
+          id: submittal.id,
+          title: `Submittal: ${submittal.title}`,
+          type: 'submittal',
+          date: submittal.due_date,
+          priority: submittal.priority || 'medium',
+          status: submittal.status,
+          project_name: submittal.projects?.name,
+          project_id: submittal.project_id
+        });
+      });
+
+      // 4. Warranties expiring
+      const { data: warrantiesData } = await supabase
+        .from('warranties')
+        .select('*, projects(name)')
+        .eq('company_id', userProfile?.company_id)
+        .gte('warranty_end_date', today.toISOString().split('T')[0])
+        .lte('warranty_end_date', twoWeeksFromNow.toISOString().split('T')[0])
+        .eq('status', 'active');
+
+      warrantiesData?.forEach(warranty => {
+        deadlines.push({
+          id: warranty.id,
+          title: `Warranty Expiry: ${warranty.item_description}`,
+          type: 'warranty',
+          date: warranty.warranty_end_date,
+          priority: 'medium',
+          status: warranty.status,
+          project_name: warranty.projects?.name,
+          project_id: warranty.project_id
+        });
+      });
+
+      // 5. Bonds expiring  
+      const { data: bondsData } = await supabase
+        .from('bonds')
+        .select('*, projects(name)')
+        .eq('company_id', userProfile?.company_id)
+        .gte('expiry_date', today.toISOString().split('T')[0])
+        .lte('expiry_date', twoWeeksFromNow.toISOString().split('T')[0])
+        .eq('status', 'active');
+
+      bondsData?.forEach(bond => {
+        deadlines.push({
+          id: bond.id,
+          title: `Bond Expiry: ${bond.bond_name}`,
+          type: 'bond',
+          date: bond.expiry_date,
+          priority: 'high',
+          status: bond.status,
+          project_name: bond.projects?.name,
+          project_id: bond.project_id
+        });
+      });
+
+      // Sort deadlines by date
+      deadlines.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
       // Calculate metrics
       const activeProjects = projectsData?.filter(p => ['active', 'in_progress'].includes(p.status)) || [];
       const overdueTasks = tasksData?.filter(t => new Date(t.due_date) < new Date() && t.status !== 'completed') || [];
-      const upcomingDeadlines = tasksData?.filter(t => {
-        const dueDate = new Date(t.due_date);
+      const upcomingDeadlines = deadlines.filter(d => {
+        const dueDate = new Date(d.date);
         const threeDaysFromNow = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-        return dueDate <= threeDaysFromNow && t.status !== 'completed';
-      }) || [];
+        return dueDate <= threeDaysFromNow;
+      });
       
       const totalRevenue = projectsData?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
       const avgCompletion = projectsData?.length > 0 
@@ -128,7 +227,7 @@ export const BusinessDashboard = () => {
         : 0;
 
       setProjects(projectsData || []);
-      setTasks(tasksData || []);
+      setDeadlineItems(deadlines.slice(0, 10));
       setMetrics({
         activeProjects: activeProjects.length,
         overdueTasks: overdueTasks.length,
@@ -170,6 +269,44 @@ export const BusinessDashboard = () => {
         return 'text-green-600 bg-green-50';
       default:
         return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getDeadlineTypeIcon = (type: string) => {
+    switch (type) {
+      case 'task':
+        return <ClipboardList className="h-4 w-4" />;
+      case 'rfi':
+        return <HelpCircle className="h-4 w-4" />;
+      case 'submittal':
+        return <Upload className="h-4 w-4" />;
+      case 'warranty':
+        return <Wrench className="h-4 w-4" />;
+      case 'permit':
+        return <FileText className="h-4 w-4" />;
+      case 'bond':
+        return <Shield className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const getDeadlineTypeColor = (type: string) => {
+    switch (type) {
+      case 'task':
+        return 'text-blue-600';
+      case 'rfi':
+        return 'text-orange-600';
+      case 'submittal':
+        return 'text-purple-600';
+      case 'warranty':
+        return 'text-green-600';
+      case 'permit':
+        return 'text-red-600';
+      case 'bond':
+        return 'text-indigo-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -284,7 +421,7 @@ export const BusinessDashboard = () => {
       <Tabs defaultValue="projects" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="projects">Active Projects</TabsTrigger>
-          <TabsTrigger value="tasks">Upcoming Tasks</TabsTrigger>
+          <TabsTrigger value="deadlines">Upcoming Deadlines</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>
         </TabsList>
 
@@ -350,41 +487,57 @@ export const BusinessDashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="tasks" className="space-y-4">
+        <TabsContent value="deadlines" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Upcoming Tasks</h3>
+            <h3 className="text-lg font-semibold">Upcoming Deadlines</h3>
             <Button onClick={() => navigate('/my-tasks')} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Task
             </Button>
           </div>
           <div className="space-y-3">
-            {tasks.map((task) => (
-              <Card key={task.id} className="hover:shadow-sm transition-shadow cursor-pointer"
-                    onClick={() => navigate('/my-tasks')}>
+            {deadlineItems.map((item) => (
+              <Card key={`${item.type}-${item.id}`} className="hover:shadow-sm transition-shadow cursor-pointer"
+                    onClick={() => {
+                      switch (item.type) {
+                        case 'task':
+                          navigate('/my-tasks');
+                          break;
+                        case 'rfi':
+                          navigate('/rfis');
+                          break;
+                        case 'submittal':
+                          navigate('/submittals');
+                          break;
+                        case 'warranty':
+                          navigate('/warranty-management');
+                          break;
+                        case 'bond':
+                          navigate('/bond-insurance');
+                          break;
+                        default:
+                          break;
+                      }
+                    }}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        {task.status === 'completed' ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                        )}
+                      <div className={`flex items-center space-x-2 ${getDeadlineTypeColor(item.type)}`}>
+                        {getDeadlineTypeIcon(item.type)}
                         <div>
-                          <h4 className="font-medium">{task.name}</h4>
+                          <h4 className="font-medium">{item.title}</h4>
                           <p className="text-sm text-muted-foreground">
-                            {task.projects?.name || 'No project'}
+                            {item.project_name || 'No project'}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge className={getPriorityColor(task.priority)} variant="outline">
-                        {task.priority}
+                      <Badge className={getPriorityColor(item.priority)} variant="outline">
+                        {item.priority}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
-                        {new Date(task.due_date).toLocaleDateString()}
+                        {new Date(item.date).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -392,13 +545,13 @@ export const BusinessDashboard = () => {
               </Card>
             ))}
             
-            {tasks.length === 0 && (
+            {deadlineItems.length === 0 && (
               <Card>
                 <CardContent className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Upcoming Tasks</h3>
+                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Upcoming Deadlines</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    All caught up! Create a new task or check completed ones.
+                    All caught up! No deadlines in the next two weeks.
                   </p>
                   <Button onClick={() => navigate('/my-tasks')}>
                     <Plus className="h-4 w-4 mr-2" />
