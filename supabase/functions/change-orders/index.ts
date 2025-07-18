@@ -154,7 +154,10 @@ serve(async (req) => {
           reason: body.reason,
           change_order_number: changeOrderNumber,
           created_by: user.id,
-          status: 'pending'
+          status: 'pending',
+          assigned_approvers: body.assigned_approvers || [],
+          approval_due_date: body.approval_due_date || null,
+          approval_notes: body.approval_notes || null
         };
 
         const { data: newOrder, error: createError } = await supabaseClient
@@ -167,6 +170,35 @@ serve(async (req) => {
           .single();
 
         if (createError) throw new Error(`Change order creation error: ${createError.message}`);
+
+        // Create approval tasks for assigned approvers
+        if (body.assigned_approvers && body.assigned_approvers.length > 0) {
+          logStep("Creating approval tasks", { approvers: body.assigned_approvers });
+          
+          const approvalTasks = body.assigned_approvers.map((approverId: string) => ({
+            name: `Approve Change Order ${changeOrderNumber}`,
+            description: `Review and approve change order: ${body.title}`,
+            project_id: body.project_id,
+            assigned_to: approverId,
+            status: 'pending',
+            priority: 'high',
+            due_date: body.approval_due_date || null,
+            company_id: userProfile.company_id,
+            created_by: user.id,
+            category: 'approval'
+          }));
+
+          const { error: tasksError } = await supabaseClient
+            .from('tasks')
+            .insert(approvalTasks);
+
+          if (tasksError) {
+            logStep("Task creation error", { error: tasksError.message });
+            // Don't fail the change order creation, just log the error
+          } else {
+            logStep("Approval tasks created", { count: approvalTasks.length });
+          }
+        }
 
         logStep("Change order created", { orderId: newOrder.id, changeOrderNumber });
         return new Response(JSON.stringify({ changeOrder: newOrder }), {

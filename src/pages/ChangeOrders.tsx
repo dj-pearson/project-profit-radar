@@ -22,8 +22,14 @@ import {
   PlusCircle,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Users,
+  CalendarIcon
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
 
 interface Project {
   id: string;
@@ -45,8 +51,18 @@ interface ChangeOrder {
   internal_approved: boolean;
   client_approved_date: string;
   internal_approved_date: string;
+  assigned_approvers: string[];
+  approval_due_date: string;
+  approval_notes: string;
   created_at: string;
   projects: { name: string; client_name: string };
+}
+
+interface UserProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
 }
 
 const ChangeOrders = () => {
@@ -55,16 +71,20 @@ const ChangeOrders = () => {
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+  const [companyUsers, setCompanyUsers] = useState<UserProfile[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [approvalDueDate, setApprovalDueDate] = useState<Date>();
+  const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
   
   const [newOrder, setNewOrder] = useState({
     project_id: '',
     title: '',
     description: '',
     amount: '',
-    reason: ''
+    reason: '',
+    approval_notes: ''
   });
 
   useEffect(() => {
@@ -105,6 +125,16 @@ const ChangeOrders = () => {
 
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
+
+      // Load company users for approver assignment
+      const { data: usersData, error: usersError } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, role')
+        .eq('company_id', userProfile?.company_id)
+        .in('role', ['admin', 'project_manager', 'superintendent', 'root_admin']);
+
+      if (usersError) throw usersError;
+      setCompanyUsers(usersData || []);
 
       // Load change orders
       console.log('Loading change orders...');
@@ -165,14 +195,18 @@ const ChangeOrders = () => {
       console.log('Creating change order with data:', { 
         action: 'create',
         ...newOrder,
-        amount: amount
+        amount: amount,
+        assigned_approvers: selectedApprovers,
+        approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
       });
       
       const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'create',
           ...newOrder,
-          amount: amount
+          amount: amount,
+          assigned_approvers: selectedApprovers,
+          approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
         }
       });
 
@@ -191,8 +225,11 @@ const ChangeOrders = () => {
         title: '',
         description: '',
         amount: '',
-        reason: ''
+        reason: '',
+        approval_notes: ''
       });
+      setSelectedApprovers([]);
+      setApprovalDueDate(undefined);
       
       loadData();
     } catch (error: any) {
@@ -364,6 +401,73 @@ const ChangeOrders = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+
+                  {/* Approval Assignment Section */}
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4" />
+                      <Label className="text-sm font-medium">Approval Assignment</Label>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="approvers">Assign Approvers</Label>
+                      <div className="grid grid-cols-1 gap-2 mt-2 max-h-40 overflow-y-auto">
+                        {companyUsers.map((user) => (
+                          <div key={user.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`approver-${user.id}`}
+                              checked={selectedApprovers.includes(user.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedApprovers([...selectedApprovers, user.id]);
+                                } else {
+                                  setSelectedApprovers(selectedApprovers.filter(id => id !== user.id));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`approver-${user.id}`} className="text-sm cursor-pointer">
+                              {user.first_name} {user.last_name} ({user.role})
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Approval Due Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {approvalDueDate ? format(approvalDueDate, "PPP") : "Select date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={approvalDueDate}
+                              onSelect={setApprovalDueDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="approval_notes">Approval Notes</Label>
+                        <Textarea
+                          id="approval_notes"
+                          placeholder="Special instructions for approvers..."
+                          value={newOrder.approval_notes}
+                          onChange={(e) => setNewOrder({...newOrder, approval_notes: e.target.value})}
+                        />
+                      </div>
                     </div>
                   </div>
 

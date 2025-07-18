@@ -1105,6 +1105,9 @@ export type Database = {
       change_orders: {
         Row: {
           amount: number
+          approval_due_date: string | null
+          approval_notes: string | null
+          assigned_approvers: string[] | null
           change_order_number: string
           client_approved: boolean | null
           client_approved_date: string | null
@@ -1123,6 +1126,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          approval_due_date?: string | null
+          approval_notes?: string | null
+          assigned_approvers?: string[] | null
           change_order_number: string
           client_approved?: boolean | null
           client_approved_date?: string | null
@@ -1141,6 +1147,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          approval_due_date?: string | null
+          approval_notes?: string | null
+          assigned_approvers?: string[] | null
           change_order_number?: string
           client_approved?: boolean | null
           client_approved_date?: string | null
