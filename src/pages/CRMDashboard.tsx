@@ -769,11 +769,19 @@ const CRMDashboard = () => {
 
             {/* CRM Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
-                <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-                <TabsTrigger value="leads" className="text-xs sm:text-sm">Leads</TabsTrigger>
-                <TabsTrigger value="opportunities" className="text-xs sm:text-sm">Opportunities</TabsTrigger>
-                <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
+              <TabsList className="flex h-12 items-center justify-start bg-card border-b border-border p-0 text-muted-foreground w-full overflow-x-auto scrollbar-hide">
+                <TabsTrigger value="overview" className="inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50">
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="leads" className="inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50">
+                  Leads
+                </TabsTrigger>
+                <TabsTrigger value="opportunities" className="inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50">
+                  Opportunities
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-background/50">
+                  Reports
+                </TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -787,9 +795,9 @@ const CRMDashboard = () => {
                         <CardTitle>Recent Leads</CardTitle>
                         <CardDescription>Latest prospects in your pipeline</CardDescription>
                       </div>
-                      <Button size="sm" onClick={() => navigate('/crm/leads/new')}>
+                      <Button size="sm" onClick={() => setActiveTab('leads')}>
                         <Plus className="h-4 w-4 mr-2" />
-                        New Lead
+                        View Leads
                       </Button>
                     </CardHeader>
                     <CardContent>
@@ -800,7 +808,7 @@ const CRMDashboard = () => {
                           description="Start building your sales pipeline by adding your first lead."
                           action={{
                             label: "Add First Lead",
-                            onClick: () => navigate('/crm/leads/new')
+                            onClick: () => setActiveTab('leads')
                           }}
                         />
                       ) : (
@@ -942,7 +950,7 @@ const CRMDashboard = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                    <Button className={mobileButtonClasses.primary} onClick={() => navigate('/crm/leads')}>
+                    <Button className={mobileButtonClasses.primary} onClick={() => {/* TODO: Add new lead functionality */}}>
                       <Plus className="h-4 w-4 mr-2" />
                       New Lead
                     </Button>
@@ -1022,7 +1030,7 @@ const CRMDashboard = () => {
                       <CardTitle>Sales Opportunities</CardTitle>
                       <CardDescription>Track your sales pipeline and close deals</CardDescription>
                     </div>
-                    <Button onClick={() => navigate('/crm/opportunities')}>
+                    <Button onClick={() => {/* TODO: Add new opportunity functionality */}}>
                       <Plus className="h-4 w-4 mr-2" />
                       New Opportunity
                     </Button>
@@ -1035,7 +1043,7 @@ const CRMDashboard = () => {
                         description="Start tracking your sales pipeline by creating opportunities from qualified leads."
                         action={{
                           label: "Create Opportunity",
-                          onClick: () => navigate('/crm/opportunities')
+                          onClick: () => setActiveTab('opportunities')
                         }}
                       />
                     ) : (
