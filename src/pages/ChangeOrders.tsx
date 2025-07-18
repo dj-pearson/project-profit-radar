@@ -24,7 +24,8 @@ import {
   XCircle,
   Clock,
   Users,
-  CalendarIcon
+  CalendarIcon,
+  Edit
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -77,6 +78,7 @@ const ChangeOrders = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [approvalDueDate, setApprovalDueDate] = useState<Date>();
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
+  const [editingOrder, setEditingOrder] = useState<ChangeOrder | null>(null);
   
   const [newOrder, setNewOrder] = useState({
     project_id: '',
@@ -230,6 +232,7 @@ const ChangeOrders = () => {
       });
       setSelectedApprovers([]);
       setApprovalDueDate(undefined);
+      setEditingOrder(null);
       
       loadData();
     } catch (error: any) {
@@ -238,6 +241,73 @@ const ChangeOrders = () => {
         variant: "destructive",
         title: "Error",
         description: "Failed to create change order"
+      });
+    }
+  };
+
+  const handleUpdateOrder = async () => {
+    if (!editingOrder) return;
+
+    // Validate required fields
+    if (!newOrder.project_id || !newOrder.title || !newOrder.amount.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields."
+      });
+      return;
+    }
+
+    // Validate amount is a valid number greater than 0
+    const amount = parseFloat(newOrder.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error", 
+        description: "Please enter a valid amount greater than 0"
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
+        body: { 
+          action: 'update',
+          id: editingOrder.id,
+          ...newOrder,
+          amount: amount,
+          assigned_approvers: selectedApprovers,
+          approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Change order updated successfully"
+      });
+
+      setIsCreateDialogOpen(false);
+      setNewOrder({
+        project_id: '',
+        title: '',
+        description: '',
+        amount: '',
+        reason: '',
+        approval_notes: ''
+      });
+      setSelectedApprovers([]);
+      setApprovalDueDate(undefined);
+      setEditingOrder(null);
+      
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating change order:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update change order"
       });
     }
   };
@@ -329,9 +399,9 @@ const ChangeOrders = () => {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Create Change Order</DialogTitle>
+                  <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</DialogTitle>
                   <DialogDescription>
-                    Create a new change order for project modifications that require client approval.
+                    {editingOrder ? 'Update the change order details and approval workflow.' : 'Create a new change order for project modifications that require client approval.'}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -472,11 +542,24 @@ const ChangeOrders = () => {
                   </div>
 
                   <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    <Button variant="outline" onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      setEditingOrder(null);
+                      setNewOrder({
+                        project_id: '',
+                        title: '',
+                        description: '',
+                        amount: '',
+                        reason: '',
+                        approval_notes: ''
+                      });
+                      setSelectedApprovers([]);
+                      setApprovalDueDate(undefined);
+                    }}>
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateOrder}>
-                      Create Change Order
+                    <Button onClick={editingOrder ? handleUpdateOrder : handleCreateOrder}>
+                      {editingOrder ? 'Update Change Order' : 'Create Change Order'}
                     </Button>
                   </div>
                 </div>
@@ -545,14 +628,34 @@ const ChangeOrders = () => {
                         <CardDescription className={mobileTextClasses.muted}>
                           {order.projects?.name} - {order.projects?.client_name}
                         </CardDescription>
-                      </div>
-                      <div className={mobileCardClasses.badges}>
-                        {getStatusBadge(order)}
-                        <Badge variant="outline" className={`${mobileCardClasses.badge} font-mono`}>
-                          <DollarSign className="h-3 w-3 mr-1" />
-                          {order.amount.toLocaleString()}
-                        </Badge>
-                      </div>
+                       </div>
+                       <div className={`${mobileCardClasses.badges} gap-2`}>
+                         {getStatusBadge(order)}
+                         <Badge variant="outline" className={`${mobileCardClasses.badge} font-mono`}>
+                           <DollarSign className="h-3 w-3 mr-1" />
+                           {order.amount.toLocaleString()}
+                         </Badge>
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => {
+                             setNewOrder({
+                               project_id: order.project_id,
+                               title: order.title,
+                               description: order.description || '',
+                               amount: order.amount.toString(),
+                               reason: order.reason || '',
+                               approval_notes: order.approval_notes || ''
+                             });
+                             setSelectedApprovers(order.assigned_approvers || []);
+                             setApprovalDueDate(order.approval_due_date ? new Date(order.approval_due_date) : undefined);
+                             setEditingOrder(order);
+                             setIsCreateDialogOpen(true);
+                           }}
+                         >
+                           <Edit className="h-4 w-4" />
+                         </Button>
+                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">

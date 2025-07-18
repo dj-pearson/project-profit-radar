@@ -27,9 +27,13 @@ import { ProjectEstimates } from '@/components/project/ProjectEstimates';
 import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
 import { TaskManager } from '@/components/tasks/TaskManager';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { 
   ArrowLeft, 
-  Calendar, 
+  CalendarIcon,
   DollarSign, 
   MapPin, 
   User, 
@@ -4311,6 +4315,89 @@ const ProjectDetail = () => {
                 />
               </div>
               <div>
+                <Label>Reason</Label>
+                <Select 
+                  value={editingChangeOrder.reason || ''} 
+                  onValueChange={(value) => setEditingChangeOrder({...editingChangeOrder, reason: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scope_change">Scope Change</SelectItem>
+                    <SelectItem value="material_upgrade">Material Upgrade</SelectItem>
+                    <SelectItem value="unforeseen_conditions">Unforeseen Conditions</SelectItem>
+                    <SelectItem value="client_request">Client Request</SelectItem>
+                    <SelectItem value="code_requirement">Code Requirement</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Assigned Approvers</Label>
+                  <Select 
+                    value={editingChangeOrder.assigned_approvers?.[0] || ''} 
+                    onValueChange={(value) => setEditingChangeOrder({
+                      ...editingChangeOrder, 
+                      assigned_approvers: value ? [value] : []
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select approver" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companyUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.first_name} {user.last_name} ({user.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Approval Due Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !editingChangeOrder.approval_due_date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {editingChangeOrder.approval_due_date ? format(new Date(editingChangeOrder.approval_due_date), "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={editingChangeOrder.approval_due_date ? new Date(editingChangeOrder.approval_due_date) : undefined}
+                        onSelect={(date) => setEditingChangeOrder({
+                          ...editingChangeOrder, 
+                          approval_due_date: date ? format(date, 'yyyy-MM-dd') : ''
+                        })}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              
+              <div>
+                <Label>Approval Notes</Label>
+                <Textarea
+                  placeholder="Special instructions for approvers..."
+                  value={editingChangeOrder.approval_notes || ''}
+                  onChange={(e) => setEditingChangeOrder({...editingChangeOrder, approval_notes: e.target.value})}
+                />
+              </div>
+
+              <div>
                 <Label>Status</Label>
                 <Select value={editingChangeOrder.status} onValueChange={(value) => setEditingChangeOrder({...editingChangeOrder, status: value})}>
                   <SelectTrigger>
@@ -4329,15 +4416,20 @@ const ProjectDetail = () => {
                 </Button>
                 <Button onClick={async () => {
                   try {
-                    const { error } = await supabase
-                      .from('change_orders')
-                      .update({
+                    const { error } = await supabase.functions.invoke('change-orders', {
+                      body: { 
+                        action: 'update',
+                        id: editingChangeOrder.id,
                         title: editingChangeOrder.title,
                         description: editingChangeOrder.description,
                         amount: editingChangeOrder.amount,
+                        reason: editingChangeOrder.reason,
+                        assigned_approvers: editingChangeOrder.assigned_approvers || [],
+                        approval_due_date: editingChangeOrder.approval_due_date,
+                        approval_notes: editingChangeOrder.approval_notes,
                         status: editingChangeOrder.status
-                      })
-                      .eq('id', editingChangeOrder.id);
+                      }
+                    });
 
                     if (error) throw error;
 
