@@ -327,48 +327,52 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{lead.first_name} {lead.last_name}</h1>
-            <p className="text-muted-foreground">{lead.company_name || 'Individual'}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg md:text-2xl font-bold truncate">{lead.first_name} {lead.last_name}</h1>
+            <p className="text-sm text-muted-foreground truncate">{lead.company_name || 'Individual'}</p>
           </div>
-          <div className="flex space-x-2">
-            <Badge variant="outline" className={`border-${getStatusColor(lead.status)}-500 text-${getStatusColor(lead.status)}-700`}>
-              {lead.status}
-            </Badge>
-            <Badge variant="outline" className={`border-${getPriorityColor(lead.priority)}-500 text-${getPriorityColor(lead.priority)}-700`}>
-              {lead.priority} Priority
-            </Badge>
-          </div>
+          <Button 
+            onClick={() => setIsEditing(true)}
+            className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white"
+            size="sm"
+          >
+            <Edit className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Edit Lead</span>
+          </Button>
         </div>
-        <div className="flex space-x-2">
-          {isEditing ? (
-            <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setIsEditing(true)}>
-              Edit Lead
+        
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className={`border-${getStatusColor(lead.status)}-500 text-${getStatusColor(lead.status)}-700`}>
+            {lead.status}
+          </Badge>
+          <Badge variant="outline" className={`border-${getPriorityColor(lead.priority)}-500 text-${getPriorityColor(lead.priority)}-700`}>
+            {lead.priority} Priority
+          </Badge>
+        </div>
+
+        {isEditing && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsEditing(false)} size="sm">
+              Cancel
             </Button>
-          )}
-        </div>
+            <Button onClick={handleSave} size="sm">
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Main Content */}
-        <div className="col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -565,48 +569,201 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Star className="h-5 w-5" />
-                <span>Lead Score</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">85</div>
-                <p className="text-sm text-muted-foreground">out of 100</p>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+        <div className="space-y-4 md:space-y-6 order-first lg:order-last">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Star className="h-4 w-4" />
+                  <span>Lead Score</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-blue-600">85</div>
+                  <p className="text-xs md:text-sm text-muted-foreground">out of 100</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button className="w-full" variant="outline">
-                <Phone className="h-4 w-4 mr-2" />
-                Call Lead
-              </Button>
-              <Button className="w-full" variant="outline">
-                <Mail className="h-4 w-4 mr-2" />
-                Send Email
-              </Button>
-              <Button className="w-full" variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Meeting
-              </Button>
-              <Button className="w-full" variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Create Proposal
-              </Button>
-            </CardContent>
-          </Card>
+            <Card className="lg:w-full">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline" size="sm">
+                      <PhoneCall className="h-4 w-4 mr-2" />
+                      Call Lead
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Log Call</DialogTitle>
+                      <DialogDescription>
+                        Record details about your call with {lead.first_name} {lead.last_name}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Call Date</Label>
+                        <Input 
+                          type="date" 
+                          value={newActivity.activity_date} 
+                          onChange={(e) => setNewActivity({...newActivity, activity_date: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Call Notes</Label>
+                        <Textarea 
+                          placeholder="What was discussed during the call?"
+                          value={newActivity.description}
+                          onChange={(e) => setNewActivity({...newActivity, description: e.target.value, activity_type: 'call'})}
+                        />
+                      </div>
+                      <Button 
+                        onClick={addActivity} 
+                        className="w-full"
+                        disabled={!newActivity.description.trim()}
+                      >
+                        Log Call
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline" size="sm">
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Email
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Log Email</DialogTitle>
+                      <DialogDescription>
+                        Record email communication with {lead.first_name} {lead.last_name}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Email Date</Label>
+                        <Input 
+                          type="date" 
+                          value={newActivity.activity_date} 
+                          onChange={(e) => setNewActivity({...newActivity, activity_date: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Email Summary</Label>
+                        <Textarea 
+                          placeholder="What was the email about? Key points discussed..."
+                          value={newActivity.description}
+                          onChange={(e) => setNewActivity({...newActivity, description: e.target.value, activity_type: 'email'})}
+                        />
+                      </div>
+                      <Button 
+                        onClick={addActivity} 
+                        className="w-full"
+                        disabled={!newActivity.description.trim()}
+                      >
+                        Log Email
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline" size="sm">
+                      <CalendarPlus className="h-4 w-4 mr-2" />
+                      Schedule Meeting
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Schedule Meeting</DialogTitle>
+                      <DialogDescription>
+                        Schedule a meeting with {lead.first_name} {lead.last_name}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Meeting Date</Label>
+                        <Input 
+                          type="date" 
+                          value={newActivity.activity_date} 
+                          onChange={(e) => setNewActivity({...newActivity, activity_date: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Meeting Notes</Label>
+                        <Textarea 
+                          placeholder="Meeting agenda, location, attendees..."
+                          value={newActivity.description}
+                          onChange={(e) => setNewActivity({...newActivity, description: e.target.value, activity_type: 'meeting'})}
+                        />
+                      </div>
+                      <Button 
+                        onClick={addActivity} 
+                        className="w-full"
+                        disabled={!newActivity.description.trim()}
+                      >
+                        Schedule Meeting
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline" size="sm">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Create Proposal
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create Proposal</DialogTitle>
+                      <DialogDescription>
+                        Log proposal creation for {lead.first_name} {lead.last_name}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Proposal Date</Label>
+                        <Input 
+                          type="date" 
+                          value={newActivity.activity_date} 
+                          onChange={(e) => setNewActivity({...newActivity, activity_date: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Proposal Details</Label>
+                        <Textarea 
+                          placeholder="Proposal scope, pricing, timeline..."
+                          value={newActivity.description}
+                          onChange={(e) => setNewActivity({...newActivity, description: e.target.value, activity_type: 'proposal'})}
+                        />
+                      </div>
+                      <Button 
+                        onClick={addActivity} 
+                        className="w-full"
+                        disabled={!newActivity.description.trim()}
+                      >
+                        Log Proposal
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
