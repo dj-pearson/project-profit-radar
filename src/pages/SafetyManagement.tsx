@@ -20,12 +20,15 @@ import {
   CheckCircle,
   XCircle,
   Users,
-  HardHat
+  HardHat,
+  Edit
 } from 'lucide-react';
 
 export default function SafetyManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("incidents");
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Mock data
   const incidents = [
@@ -348,15 +351,27 @@ export default function SafetyManagement() {
                            </>
                          )}
                        </div>
-                       <div className="flex flex-col sm:flex-row gap-2">
-                         <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                           <FileText className="h-4 w-4 mr-2" />
-                           Report
-                         </Button>
-                         <Button size="sm" className="w-full sm:w-auto">
-                           View Details
-                         </Button>
-                       </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                              setEditingItem(incident);
+                              setEditDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Report
+                          </Button>
+                          <Button size="sm" className="w-full sm:w-auto">
+                            View Details
+                          </Button>
+                        </div>
                      </div>
                    </CardContent>
                 </Card>
@@ -404,15 +419,26 @@ export default function SafetyManagement() {
                       </div>
                     </div>
                     
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm">
-                        <Users className="h-4 w-4 mr-2" />
-                        Manage Attendees
-                      </Button>
-                      <Button size="sm">
-                        View Training
-                      </Button>
-                    </div>
+                     <div className="flex justify-end gap-2">
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => {
+                           setEditingItem(training);
+                           setEditDialogOpen(true);
+                         }}
+                       >
+                         <Edit className="h-4 w-4 mr-2" />
+                         Edit
+                       </Button>
+                       <Button variant="outline" size="sm">
+                         <Users className="h-4 w-4 mr-2" />
+                         Manage Attendees
+                       </Button>
+                       <Button size="sm">
+                         View Training
+                       </Button>
+                     </div>
                   </CardContent>
                 </Card>
               ))}
@@ -465,15 +491,26 @@ export default function SafetyManagement() {
                       </div>
                     </div>
                     
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-2" />
-                        View Report
-                      </Button>
-                      <Button size="sm">
-                        View Details
-                      </Button>
-                    </div>
+                     <div className="flex justify-end gap-2">
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => {
+                           setEditingItem(inspection);
+                           setEditDialogOpen(true);
+                         }}
+                       >
+                         <Edit className="h-4 w-4 mr-2" />
+                         Edit
+                       </Button>
+                       <Button variant="outline" size="sm">
+                         <FileText className="h-4 w-4 mr-2" />
+                         View Report
+                       </Button>
+                       <Button size="sm">
+                         View Details
+                       </Button>
+                     </div>
                   </CardContent>
                 </Card>
               ))}
@@ -522,9 +559,242 @@ export default function SafetyManagement() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </DashboardLayout>
-  );
-}
+           </TabsContent>
+         </Tabs>
+
+         {/* Edit Dialog */}
+         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+           <DialogContent className="max-w-2xl">
+             <DialogHeader>
+               <DialogTitle>
+                 Edit {editingItem?.title || editingItem?.inspection_type || 'Entry'}
+               </DialogTitle>
+               <DialogDescription>
+                 Update the details for this safety entry
+               </DialogDescription>
+             </DialogHeader>
+             
+             {editingItem && (
+               <div className="space-y-4">
+                 {/* Incident Edit Form */}
+                 {editingItem.incident_type && (
+                   <>
+                     <div>
+                       <Label htmlFor="edit-title">Title</Label>
+                       <Input 
+                         id="edit-title" 
+                         defaultValue={editingItem.title}
+                         placeholder="Incident title" 
+                       />
+                     </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="edit-type">Type</Label>
+                         <Select defaultValue={editingItem.incident_type}>
+                           <SelectTrigger>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="injury">Injury</SelectItem>
+                             <SelectItem value="near_miss">Near Miss</SelectItem>
+                             <SelectItem value="property_damage">Property Damage</SelectItem>
+                             <SelectItem value="environmental">Environmental</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-severity">Severity</Label>
+                         <Select defaultValue={editingItem.severity}>
+                           <SelectTrigger>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="minor">Minor</SelectItem>
+                             <SelectItem value="moderate">Moderate</SelectItem>
+                             <SelectItem value="major">Major</SelectItem>
+                             <SelectItem value="critical">Critical</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="edit-location">Location</Label>
+                         <Input 
+                           id="edit-location" 
+                           defaultValue={editingItem.location}
+                           placeholder="Incident location" 
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-status">Status</Label>
+                         <Select defaultValue={editingItem.status}>
+                           <SelectTrigger>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="open">Open</SelectItem>
+                             <SelectItem value="investigating">Investigating</SelectItem>
+                             <SelectItem value="closed">Closed</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+                     <div>
+                       <Label htmlFor="edit-description">Description</Label>
+                       <Textarea 
+                         id="edit-description" 
+                         defaultValue={editingItem.description}
+                         placeholder="Detailed description..."
+                         rows={3}
+                       />
+                     </div>
+                   </>
+                 )}
+
+                 {/* Training Edit Form */}
+                 {editingItem.type && (
+                   <>
+                     <div>
+                       <Label htmlFor="edit-training-title">Training Title</Label>
+                       <Input 
+                         id="edit-training-title" 
+                         defaultValue={editingItem.title}
+                         placeholder="Training title" 
+                       />
+                     </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="edit-training-type">Type</Label>
+                         <Select defaultValue={editingItem.type}>
+                           <SelectTrigger>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="certification">Certification</SelectItem>
+                             <SelectItem value="refresher">Refresher</SelectItem>
+                             <SelectItem value="orientation">Orientation</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-duration">Duration</Label>
+                         <Input 
+                           id="edit-duration" 
+                           defaultValue={editingItem.duration}
+                           placeholder="e.g., 4 hours" 
+                         />
+                       </div>
+                     </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="edit-instructor">Instructor</Label>
+                         <Input 
+                           id="edit-instructor" 
+                           defaultValue={editingItem.instructor}
+                           placeholder="Instructor name" 
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-scheduled-date">Scheduled Date</Label>
+                         <Input 
+                           id="edit-scheduled-date" 
+                           type="date"
+                           defaultValue={editingItem.scheduled_date}
+                         />
+                       </div>
+                     </div>
+                   </>
+                 )}
+
+                 {/* Inspection Edit Form */}
+                 {editingItem.inspection_type && (
+                   <>
+                     <div>
+                       <Label htmlFor="edit-inspection-type">Inspection Type</Label>
+                       <Input 
+                         id="edit-inspection-type" 
+                         defaultValue={editingItem.inspection_type}
+                         placeholder="Inspection type" 
+                       />
+                     </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="edit-inspector">Inspector</Label>
+                         <Input 
+                           id="edit-inspector" 
+                           defaultValue={editingItem.inspector}
+                           placeholder="Inspector name" 
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="edit-inspection-status">Status</Label>
+                         <Select defaultValue={editingItem.status}>
+                           <SelectTrigger>
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="pending">Pending</SelectItem>
+                             <SelectItem value="completed">Completed</SelectItem>
+                             <SelectItem value="failed">Failed</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+                     {editingItem.status === 'completed' && (
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <div>
+                           <Label htmlFor="edit-score">Score (%)</Label>
+                           <Input 
+                             id="edit-score" 
+                             type="number"
+                             min="0"
+                             max="100"
+                             defaultValue={editingItem.score}
+                             placeholder="Inspection score" 
+                           />
+                         </div>
+                         <div>
+                           <Label htmlFor="edit-violations">Violations</Label>
+                           <Input 
+                             id="edit-violations" 
+                             type="number"
+                             min="0"
+                             defaultValue={editingItem.violations}
+                             placeholder="Number of violations" 
+                           />
+                         </div>
+                       </div>
+                     )}
+                   </>
+                 )}
+
+                 <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                   <Button 
+                     onClick={() => {
+                       setEditDialogOpen(false);
+                       setEditingItem(null);
+                     }}
+                     className="w-full sm:flex-1"
+                   >
+                     Save Changes
+                   </Button>
+                   <Button 
+                     variant="outline" 
+                     onClick={() => {
+                       setEditDialogOpen(false);
+                       setEditingItem(null);
+                     }}
+                     className="w-full sm:w-auto"
+                   >
+                     Cancel
+                   </Button>
+                 </div>
+               </div>
+             )}
+           </DialogContent>
+         </Dialog>
+       </div>
+     </DashboardLayout>
+   );
+ }
