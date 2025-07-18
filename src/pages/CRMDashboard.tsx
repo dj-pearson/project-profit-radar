@@ -820,20 +820,43 @@ const CRMDashboard = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Overview Tab */}
+              {/* Overview Tab - Enhanced HubSpot-like View */}
               <TabsContent value="overview" className="space-y-6">
+                
+                {/* Pipeline Kanban - Primary Feature */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center">
+                        <Target className="h-5 w-5 mr-2 text-primary" />
+                        Sales Pipeline
+                      </CardTitle>
+                      <CardDescription>Visual overview of your opportunities and deals</CardDescription>
+                    </div>
+                    <Button variant="outline" onClick={() => setActiveTab('opportunities')}>
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      View Full Pipeline
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <PipelineKanban onLeadClick={handleLeadClick} />
+                  </CardContent>
+                </Card>
+
                 <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="sm">
                   
-                  {/* Recent Leads */}
+                  {/* Lead Scoring - AI Feature */}
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div>
-                        <CardTitle>Recent Leads</CardTitle>
-                        <CardDescription>Latest prospects in your pipeline</CardDescription>
+                        <CardTitle className="flex items-center">
+                          <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                          Top Scoring Leads
+                        </CardTitle>
+                        <CardDescription>AI-powered lead prioritization</CardDescription>
                       </div>
                       <Button size="sm" onClick={() => setActiveTab('leads')}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        View Leads
+                        View All Scores
                       </Button>
                     </CardHeader>
                     <CardContent>
