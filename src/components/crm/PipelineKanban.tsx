@@ -190,9 +190,9 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
   return (
     <div className="h-full">
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex space-x-4 overflow-x-auto pb-4">
+        <div className="flex space-x-2 sm:space-x-4 overflow-x-auto pb-4">
           {stages.map((stage) => (
-            <div key={stage.id} className="min-w-[300px] flex-shrink-0">
+            <div key={stage.id} className="min-w-[240px] sm:min-w-[300px] flex-shrink-0">
               <Card className="h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
