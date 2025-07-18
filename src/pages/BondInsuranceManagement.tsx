@@ -257,8 +257,8 @@ export default function BondInsuranceManagement() {
           {/* Bond Filters */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="flex-1 w-full">
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -269,10 +269,10 @@ export default function BondInsuranceManagement() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
                   <Filter className="h-4 w-4" />
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-full sm:w-40">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -437,8 +437,8 @@ export default function BondInsuranceManagement() {
           {/* Insurance Filters */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="flex-1 w-full">
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -449,10 +449,10 @@ export default function BondInsuranceManagement() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
                   <Filter className="h-4 w-4" />
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-full sm:w-40">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
