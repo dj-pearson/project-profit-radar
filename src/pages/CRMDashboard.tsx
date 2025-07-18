@@ -620,12 +620,25 @@ const CRMDashboard = () => {
 
   const updateLead = async (leadId: string, updates: Partial<Lead>) => {
     try {
+      console.log('Updating lead:', leadId, 'with updates:', updates);
+      
+      // Ensure company_id is included in the update for RLS
+      const updateData = {
+        ...updates,
+        company_id: userProfile?.company_id
+      };
+      
+      console.log('Final update data:', updateData);
+      
       const { error } = await supabase
         .from('leads')
-        .update(updates)
+        .update(updateData)
         .eq('id', leadId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: "Lead updated",
