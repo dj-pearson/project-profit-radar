@@ -3,16 +3,58 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, AlertTriangle, Calendar, CheckCircle, Clock, FileText, Building2 } from "lucide-react";
+import { Plus, Search, AlertTriangle, Calendar, CheckCircle, Clock, FileText, Building2, Edit2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export default function EnvironmentalPermitting() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("permits");
+  const [editingPermit, setEditingPermit] = useState<any>(null);
+  const [editingAssessment, setEditingAssessment] = useState<any>(null);
+  const [editingMonitoring, setEditingMonitoring] = useState<any>(null);
   const { toast } = useToast();
+
+  const handleEditPermit = (permit: any) => {
+    setEditingPermit({ ...permit });
+  };
+
+  const handleSavePermit = () => {
+    toast({
+      title: "Permit Updated",
+      description: "Environmental permit has been successfully updated.",
+    });
+    setEditingPermit(null);
+  };
+
+  const handleEditAssessment = (assessment: any) => {
+    setEditingAssessment({ ...assessment });
+  };
+
+  const handleSaveAssessment = () => {
+    toast({
+      title: "Assessment Updated", 
+      description: "NEPA assessment has been successfully updated.",
+    });
+    setEditingAssessment(null);
+  };
+
+  const handleEditMonitoring = (monitoring: any) => {
+    setEditingMonitoring({ ...monitoring });
+  };
+
+  const handleSaveMonitoring = () => {
+    toast({
+      title: "Monitoring Updated",
+      description: "Monitoring data has been successfully updated.",
+    });
+    setEditingMonitoring(null);
+  };
 
   // Mock data for demonstration
   const permits = [
@@ -169,20 +211,20 @@ export default function EnvironmentalPermitting() {
     <DashboardLayout title="Environmental Permitting" showTrialBanner={false}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Environmental Permitting</h1>
-            <p className="text-muted-foreground">NEPA compliance and environmental permits</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Environmental Permitting</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">NEPA compliance and environmental permits</p>
           </div>
-          <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
-                New Permit Application
+                <span className="hidden sm:inline">New Permit Application</span>
+                <span className="sm:hidden">New Permit</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>New Environmental Permit Application</DialogTitle>
                 <DialogDescription>
@@ -196,18 +238,17 @@ export default function EnvironmentalPermitting() {
               </div>
             </DialogContent>
           </Dialog>
-            </div>
-          </div>
+        </div>
 
         {/* Content */}
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="permits">Permits</TabsTrigger>
-          <TabsTrigger value="assessments">NEPA Assessments</TabsTrigger>
-          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          <TabsTrigger value="coordination">Agency Coordination</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1 h-auto p-1">
+          <TabsTrigger value="permits" className="text-xs sm:text-sm">Permits</TabsTrigger>
+          <TabsTrigger value="assessments" className="text-xs sm:text-sm">NEPA</TabsTrigger>
+          <TabsTrigger value="monitoring" className="text-xs sm:text-sm">Monitoring</TabsTrigger>
+          <TabsTrigger value="compliance" className="text-xs sm:text-sm">Compliance</TabsTrigger>
+          <TabsTrigger value="coordination" className="text-xs sm:text-sm col-span-2 sm:col-span-1">Agency Coord</TabsTrigger>
         </TabsList>
 
         <div className="flex items-center space-x-2">
@@ -216,7 +257,7 @@ export default function EnvironmentalPermitting() {
             placeholder="Search permits, assessments, or monitoring data..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
+            className="w-full sm:max-w-sm"
           />
         </div>
 
@@ -225,52 +266,52 @@ export default function EnvironmentalPermitting() {
             {permits.map((permit) => (
               <Card key={permit.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {permit.permit_name}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="space-y-1 flex-1">
+                      <CardTitle className="text-base sm:text-lg flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                        <span className="break-words">{permit.permit_name}</span>
                         {getPriorityBadge(permit.priority)}
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">
                         {permit.permit_number} • {permit.permit_type.replace('_', ' ')}
                       </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {getStatusBadge(permit.status)}
                       {getComplianceBadge(permit.compliance_status)}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm mb-4">
                     <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">Agency</div>
-                        <div>{permit.issuing_agency.replace('_', ' ').toUpperCase()}</div>
+                      <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-muted-foreground text-xs">Agency</div>
+                        <div className="text-xs sm:text-sm truncate">{permit.issuing_agency.replace('_', ' ').toUpperCase()}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">NEPA Category</div>
-                        <div className="capitalize">{permit.nepa_category?.replace('_', ' ')}</div>
+                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-muted-foreground text-xs">NEPA Category</div>
+                        <div className="capitalize text-xs sm:text-sm truncate">{permit.nepa_category?.replace('_', ' ')}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">Applied</div>
-                        <div>{formatDate(permit.application_date)}</div>
+                      <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-muted-foreground text-xs">Applied</div>
+                        <div className="text-xs sm:text-sm">{formatDate(permit.application_date)}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium text-muted-foreground">
+                      <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-muted-foreground text-xs">
                           {permit.expiration_date ? "Expires" : "Decision Due"}
                         </div>
-                        <div>
+                        <div className="text-xs sm:text-sm">
                           {permit.expiration_date ? 
                             formatDate(permit.expiration_date) : 
                             formatDate(permit.target_decision_date || permit.application_date)}
@@ -279,23 +320,131 @@ export default function EnvironmentalPermitting() {
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+                    <div className="text-xs sm:text-sm">
                       <span className="font-medium">Assigned to: </span>
-                      <span>{permit.assigned_to}</span>
+                      <span className="break-words">{permit.assigned_to}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Documents
+                    <div className="flex gap-1 sm:gap-2 flex-wrap">
+                      <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Documents</span>
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <AlertTriangle className="h-4 w-4 mr-2" />
-                        Compliance
+                      <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3">
+                        <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Compliance</span>
                       </Button>
-                      <Button size="sm">
-                        View Details
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" className="text-xs px-2 sm:px-3" onClick={() => handleEditPermit(permit)}>
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Edit</span>
+                            <span className="sm:hidden">Edit</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Edit Environmental Permit</DialogTitle>
+                            <DialogDescription>
+                              Update permit information and compliance status
+                            </DialogDescription>
+                          </DialogHeader>
+                          {editingPermit && (
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="permit-name">Permit Name</Label>
+                                  <Input
+                                    id="permit-name"
+                                    value={editingPermit.permit_name}
+                                    onChange={(e) => setEditingPermit({...editingPermit, permit_name: e.target.value})}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="permit-number">Permit Number</Label>
+                                  <Input
+                                    id="permit-number"
+                                    value={editingPermit.permit_number}
+                                    onChange={(e) => setEditingPermit({...editingPermit, permit_number: e.target.value})}
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="permit-type">Permit Type</Label>
+                                  <Select
+                                    value={editingPermit.permit_type}
+                                    onValueChange={(value) => setEditingPermit({...editingPermit, permit_type: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="wetlands">Wetlands</SelectItem>
+                                      <SelectItem value="storm_water">Storm Water</SelectItem>
+                                      <SelectItem value="endangered_species">Endangered Species</SelectItem>
+                                      <SelectItem value="air_quality">Air Quality</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="status">Status</Label>
+                                  <Select
+                                    value={editingPermit.status}
+                                    onValueChange={(value) => setEditingPermit({...editingPermit, status: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">Pending</SelectItem>
+                                      <SelectItem value="under_review">Under Review</SelectItem>
+                                      <SelectItem value="approved">Approved</SelectItem>
+                                      <SelectItem value="denied">Denied</SelectItem>
+                                      <SelectItem value="expired">Expired</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="priority">Priority</Label>
+                                  <Select
+                                    value={editingPermit.priority}
+                                    onValueChange={(value) => setEditingPermit({...editingPermit, priority: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="low">Low</SelectItem>
+                                      <SelectItem value="medium">Medium</SelectItem>
+                                      <SelectItem value="high">High</SelectItem>
+                                      <SelectItem value="critical">Critical</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="assigned-to">Assigned To</Label>
+                                  <Input
+                                    id="assigned-to"
+                                    value={editingPermit.assigned_to}
+                                    onChange={(e) => setEditingPermit({...editingPermit, assigned_to: e.target.value})}
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-2 pt-4">
+                                <Button variant="outline" onClick={() => setEditingPermit(null)}>
+                                  Cancel
+                                </Button>
+                                <Button onClick={handleSavePermit}>
+                                  Save Changes
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 </CardContent>
@@ -309,51 +458,131 @@ export default function EnvironmentalPermitting() {
             {assessments.map((assessment) => (
               <Card key={assessment.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="space-y-1 flex-1">
+                      <CardTitle className="text-base sm:text-lg">
                         {assessment.assessment_type.replace('_', ' ').toUpperCase()}
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">
                         Lead Agency: {assessment.lead_agency}
                       </CardDescription>
                     </div>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="self-start">
                       {assessment.nepa_process_stage.replace('_', ' ')}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm mb-4">
                     <div>
-                      <div className="font-medium text-muted-foreground">Assessment Type</div>
-                      <div className="capitalize">{assessment.assessment_type.replace('_', ' ')}</div>
+                      <div className="font-medium text-muted-foreground text-xs">Assessment Type</div>
+                      <div className="capitalize text-xs sm:text-sm">{assessment.assessment_type.replace('_', ' ')}</div>
                     </div>
                     <div>
-                      <div className="font-medium text-muted-foreground">Process Stage</div>
-                      <div className="capitalize">{assessment.nepa_process_stage.replace('_', ' ')}</div>
+                      <div className="font-medium text-muted-foreground text-xs">Process Stage</div>
+                      <div className="capitalize text-xs sm:text-sm">{assessment.nepa_process_stage.replace('_', ' ')}</div>
                     </div>
                     {assessment.finding && (
                       <div>
-                        <div className="font-medium text-muted-foreground">Finding</div>
-                        <div className="capitalize">{assessment.finding.replace('_', ' ')}</div>
+                        <div className="font-medium text-muted-foreground text-xs">Finding</div>
+                        <div className="capitalize text-xs sm:text-sm">{assessment.finding.replace('_', ' ')}</div>
                       </div>
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+                    <div className="text-xs sm:text-sm">
                       <span className="font-medium">Prepared by: </span>
-                      <span>{assessment.prepared_by}</span>
+                      <span className="break-words">{assessment.prepared_by}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Assessment Document
+                    <div className="flex gap-1 sm:gap-2 flex-wrap">
+                      <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Assessment Document</span>
+                        <span className="sm:hidden">Doc</span>
                       </Button>
-                      <Button size="sm">
-                        View Details
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" className="text-xs px-2 sm:px-3" onClick={() => handleEditAssessment(assessment)}>
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Edit</span>
+                            <span className="sm:hidden">Edit</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Edit NEPA Assessment</DialogTitle>
+                            <DialogDescription>
+                              Update assessment information and status
+                            </DialogDescription>
+                          </DialogHeader>
+                          {editingAssessment && (
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="assessment-type">Assessment Type</Label>
+                                  <Select
+                                    value={editingAssessment.assessment_type}
+                                    onValueChange={(value) => setEditingAssessment({...editingAssessment, assessment_type: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="environmental_assessment">Environmental Assessment</SelectItem>
+                                      <SelectItem value="environmental_impact_statement">Environmental Impact Statement</SelectItem>
+                                      <SelectItem value="categorical_exclusion">Categorical Exclusion</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="lead-agency">Lead Agency</Label>
+                                  <Input
+                                    id="lead-agency"
+                                    value={editingAssessment.lead_agency}
+                                    onChange={(e) => setEditingAssessment({...editingAssessment, lead_agency: e.target.value})}
+                                  />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="process-stage">Process Stage</Label>
+                                  <Select
+                                    value={editingAssessment.nepa_process_stage}
+                                    onValueChange={(value) => setEditingAssessment({...editingAssessment, nepa_process_stage: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="scoping">Scoping</SelectItem>
+                                      <SelectItem value="draft_document">Draft Document</SelectItem>
+                                      <SelectItem value="public_comment">Public Comment</SelectItem>
+                                      <SelectItem value="final_document">Final Document</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="prepared-by">Prepared By</Label>
+                                  <Input
+                                    id="prepared-by"
+                                    value={editingAssessment.prepared_by}
+                                    onChange={(e) => setEditingAssessment({...editingAssessment, prepared_by: e.target.value})}
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end gap-2 pt-4">
+                                <Button variant="outline" onClick={() => setEditingAssessment(null)}>
+                                  Cancel
+                                </Button>
+                                <Button onClick={handleSaveAssessment}>
+                                  Save Changes
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 </CardContent>
@@ -367,60 +596,154 @@ export default function EnvironmentalPermitting() {
             {monitoringData.map((monitoring) => (
               <Card key={monitoring.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="space-y-1 flex-1">
+                      <CardTitle className="text-base sm:text-lg">
                         {monitoring.parameter_measured}
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">
                         {monitoring.monitoring_type.replace('_', ' ')} monitoring at {monitoring.monitoring_location}
                       </CardDescription>
                     </div>
-                    <Badge variant={monitoring.within_limits ? "default" : "destructive"}>
+                    <Badge variant={monitoring.within_limits ? "default" : "destructive"} className="self-start">
                       {monitoring.within_limits ? "Within Limits" : "Exceedance"}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm mb-4">
                     <div>
-                      <div className="font-medium text-muted-foreground">Measured Value</div>
-                      <div className="text-lg font-semibold">
+                      <div className="font-medium text-muted-foreground text-xs">Measured Value</div>
+                      <div className="text-base sm:text-lg font-semibold">
                         {monitoring.measured_value} {monitoring.measurement_unit}
                       </div>
                     </div>
                     <div>
-                      <div className="font-medium text-muted-foreground">Permit Limit</div>
-                      <div>{monitoring.permit_limit} {monitoring.measurement_unit}</div>
+                      <div className="font-medium text-muted-foreground text-xs">Permit Limit</div>
+                      <div className="text-xs sm:text-sm">{monitoring.permit_limit} {monitoring.measurement_unit}</div>
                     </div>
                     <div>
-                      <div className="font-medium text-muted-foreground">Date Measured</div>
-                      <div>{formatDate(monitoring.measurement_date)}</div>
+                      <div className="font-medium text-muted-foreground text-xs">Date Measured</div>
+                      <div className="text-xs sm:text-sm">{formatDate(monitoring.measurement_date)}</div>
                     </div>
                     {monitoring.exceedance_level && (
                       <div>
-                        <div className="font-medium text-muted-foreground">Exceedance</div>
-                        <div className="text-red-600 font-semibold">+{monitoring.exceedance_level}%</div>
+                        <div className="font-medium text-muted-foreground text-xs">Exceedance</div>
+                        <div className="text-red-600 font-semibold text-xs sm:text-sm">+{monitoring.exceedance_level}%</div>
                       </div>
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+                    <div className="text-xs sm:text-sm">
                       <span className="font-medium">Location: </span>
-                      <span>{monitoring.monitoring_location}</span>
+                      <span className="break-words">{monitoring.monitoring_location}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-2" />
-                        View Data
+                    <div className="flex gap-1 sm:gap-2 flex-wrap">
+                      <Button variant="outline" size="sm" className="text-xs px-2 sm:px-3">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">View Data</span>
+                        <span className="sm:hidden">Data</span>
                       </Button>
                       {!monitoring.within_limits && (
-                        <Button variant="destructive" size="sm">
-                          <AlertTriangle className="h-4 w-4 mr-2" />
-                          Corrective Action
+                        <Button variant="destructive" size="sm" className="text-xs px-2 sm:px-3">
+                          <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Corrective Action</span>
+                          <span className="sm:hidden">Action</span>
                         </Button>
                       )}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" className="text-xs px-2 sm:px-3" onClick={() => handleEditMonitoring(monitoring)}>
+                            <Edit2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Edit</span>
+                            <span className="sm:hidden">Edit</span>
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Edit Monitoring Data</DialogTitle>
+                            <DialogDescription>
+                              Update monitoring information and measurement data
+                            </DialogDescription>
+                          </DialogHeader>
+                          {editingMonitoring && (
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="parameter">Parameter Measured</Label>
+                                  <Input
+                                    id="parameter"
+                                    value={editingMonitoring.parameter_measured}
+                                    onChange={(e) => setEditingMonitoring({...editingMonitoring, parameter_measured: e.target.value})}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="monitoring-type">Monitoring Type</Label>
+                                  <Select
+                                    value={editingMonitoring.monitoring_type}
+                                    onValueChange={(value) => setEditingMonitoring({...editingMonitoring, monitoring_type: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="water_quality">Water Quality</SelectItem>
+                                      <SelectItem value="storm_water">Storm Water</SelectItem>
+                                      <SelectItem value="air_quality">Air Quality</SelectItem>
+                                      <SelectItem value="noise">Noise</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="measured-value">Measured Value</Label>
+                                  <Input
+                                    id="measured-value"
+                                    type="number"
+                                    value={editingMonitoring.measured_value}
+                                    onChange={(e) => setEditingMonitoring({...editingMonitoring, measured_value: parseFloat(e.target.value)})}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="permit-limit">Permit Limit</Label>
+                                  <Input
+                                    id="permit-limit"
+                                    type="number"
+                                    value={editingMonitoring.permit_limit}
+                                    onChange={(e) => setEditingMonitoring({...editingMonitoring, permit_limit: parseFloat(e.target.value)})}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="unit">Unit</Label>
+                                  <Input
+                                    id="unit"
+                                    value={editingMonitoring.measurement_unit}
+                                    onChange={(e) => setEditingMonitoring({...editingMonitoring, measurement_unit: e.target.value})}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="location">Monitoring Location</Label>
+                                <Input
+                                  id="location"
+                                  value={editingMonitoring.monitoring_location}
+                                  onChange={(e) => setEditingMonitoring({...editingMonitoring, monitoring_location: e.target.value})}
+                                />
+                              </div>
+                              <div className="flex justify-end gap-2 pt-4">
+                                <Button variant="outline" onClick={() => setEditingMonitoring(null)}>
+                                  Cancel
+                                </Button>
+                                <Button onClick={handleSaveMonitoring}>
+                                  Save Changes
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 </CardContent>
