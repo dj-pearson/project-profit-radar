@@ -330,27 +330,29 @@ export default function EquipmentManagement() {
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg flex items-center gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
                           {item.name}
                           {getStatusBadge(item.status)}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">{item.type}</p>
                         <p className="text-xs text-muted-foreground">{item.model} • {item.serial_number}</p>
                       </div>
-                      <div className="flex items-start gap-2">
+                      <div className="flex flex-col items-end gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
+                            console.log('Edit button clicked for equipment:', item);
                             handleEditEquipment(item);
                           }}
+                          className="p-2"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <div className="text-right">
-                          <div className={`text-2xl font-bold ${getUtilizationColor(item.utilization_rate)}`}>
+                          <div className={`text-xl font-bold ${getUtilizationColor(item.utilization_rate)}`}>
                             {item.utilization_rate}%
                           </div>
                           <div className="text-xs text-muted-foreground">Utilization</div>
