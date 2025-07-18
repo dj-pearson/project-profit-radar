@@ -643,8 +643,7 @@ const CRMOpportunities = () => {
                   ) : (
                     <div className="space-y-4">
                       {filteredOpportunities.map((opportunity) => (
-                        <div key={opportunity.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                             onClick={() => navigate(`/crm/opportunities/${opportunity.id}`)}>
+                        <div key={opportunity.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-3 mb-2">
