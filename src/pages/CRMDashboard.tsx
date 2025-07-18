@@ -622,9 +622,21 @@ const CRMDashboard = () => {
     try {
       console.log('Updating lead:', leadId, 'with updates:', updates);
       
+      // Convert empty strings to null for date fields
+      const cleanedUpdates: any = {};
+      Object.keys(updates).forEach(key => {
+        const value = updates[key as keyof Lead];
+        // Convert empty strings to null for potential date fields
+        if (value === '') {
+          cleanedUpdates[key] = null;
+        } else {
+          cleanedUpdates[key] = value;
+        }
+      });
+      
       // Ensure company_id is included in the update for RLS
       const updateData = {
-        ...updates,
+        ...cleanedUpdates,
         company_id: userProfile?.company_id
       };
       
