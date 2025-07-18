@@ -451,6 +451,14 @@ const AppContent = () => {
         path="/equipment"
         element={
           <RouteGuard routePath="/equipment">
+            <EquipmentTracking />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/equipment-management"
+        element={
+          <RouteGuard routePath="/equipment-management">
             <Equipment />
           </RouteGuard>
         }
@@ -646,14 +654,6 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/environmental-permitting">
             <EnvironmentalPermitting />
-          </RouteGuard>
-        }
-      />
-      <Route
-        path="/equipment-management"
-        element={
-          <RouteGuard routePath="/equipment-management">
-            <EquipmentManagement />
           </RouteGuard>
         }
       />
