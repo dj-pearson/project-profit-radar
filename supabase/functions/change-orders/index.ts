@@ -248,7 +248,7 @@ serve(async (req) => {
       }
 
       if (action === "approve") {
-        const { orderId, approvalType, approved } = body;
+        const { orderId, approvalType, approved, rejectionReason } = body;
         logStep("Processing approval", { orderId, approvalType, approved });
 
         // Verify user can approve change orders
@@ -264,13 +264,26 @@ serve(async (req) => {
             internal_approved_by: approved ? user.id : null,
             internal_approved_date: approved ? new Date().toISOString() : null
           };
+          
+          // If rejected, also update the overall status and add rejection reason
+          if (!approved) {
+            updateData.status = 'rejected';
+            updateData.approval_notes = rejectionReason || 'Internal rejection';
+          }
         } else if (approvalType === 'client') {
           updateData = {
             client_approved: approved,
             client_approved_date: approved ? new Date().toISOString() : null
           };
+          
+          // If rejected by client, update status
+          if (!approved) {
+            updateData.status = 'rejected';
+            updateData.approval_notes = rejectionReason || 'Client rejection';
+          }
         }
 
+        // Update the change order with approval/rejection
         const { data: updatedOrder, error: updateError } = await supabaseClient
           .from('change_orders')
           .update(updateData)
@@ -283,7 +296,82 @@ serve(async (req) => {
 
         if (updateError) throw new Error(`Change order approval error: ${updateError.message}`);
 
+        // Update related approval tasks to completed
+        if (approved || !approved) {
+          const { error: taskUpdateError } = await supabaseClient
+            .from('tasks')
+            .update({ 
+              status: approved ? 'completed' : 'cancelled',
+              completion_percentage: approved ? 100 : 0,
+              updated_at: new Date().toISOString()
+            })
+            .eq('project_id', updatedOrder.project_id)
+            .eq('category', 'approval')
+            .ilike('name', `%${updatedOrder.change_order_number}%`);
+
+          if (taskUpdateError) {
+            logStep("Task update error", { error: taskUpdateError.message });
+            // Don't fail the main operation, just log
+          }
+        }
+
         logStep("Change order approval processed", { orderId, approvalType, approved });
+        return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      if (action === "reject") {
+        const { orderId, rejectionReason, rejectedBy } = body;
+        logStep("Processing rejection", { orderId, rejectionReason, rejectedBy });
+
+        // Verify user can reject change orders
+        if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+          throw new Error("Insufficient permissions to reject change orders");
+        }
+
+        const updateData = {
+          status: 'rejected',
+          internal_approved: false,
+          client_approved: false,
+          internal_approved_by: null,
+          internal_approved_date: null,
+          client_approved_date: null,
+          approval_notes: rejectionReason || 'Change order rejected',
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: updatedOrder, error: updateError } = await supabaseClient
+          .from('change_orders')
+          .update(updateData)
+          .eq('id', orderId)
+          .select(`
+            *,
+            projects(name, client_name)
+          `)
+          .single();
+
+        if (updateError) throw new Error(`Change order rejection error: ${updateError.message}`);
+
+        // Cancel related approval tasks
+        const { error: taskUpdateError } = await supabaseClient
+          .from('tasks')
+          .update({ 
+            status: 'cancelled',
+            completion_percentage: 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('project_id', updatedOrder.project_id)
+          .eq('category', 'approval')
+          .ilike('name', `%${updatedOrder.change_order_number}%`);
+
+        if (taskUpdateError) {
+          logStep("Task update error", { error: taskUpdateError.message });
+          // Don't fail the main operation, just log
+        }
+
+        logStep("Change order rejected", { orderId, reason: rejectionReason });
         return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,

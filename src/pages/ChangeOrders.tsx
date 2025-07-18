@@ -79,6 +79,10 @@ const ChangeOrders = () => {
   const [approvalDueDate, setApprovalDueDate] = useState<Date>();
   const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
   const [editingOrder, setEditingOrder] = useState<ChangeOrder | null>(null);
+  const [isRejectionDialogOpen, setIsRejectionDialogOpen] = useState(false);
+  const [rejectionOrderId, setRejectionOrderId] = useState<string>('');
+  const [rejectionType, setRejectionType] = useState<'internal' | 'client'>('internal');
+  const [rejectionReason, setRejectionReason] = useState('');
   
   const [newOrder, setNewOrder] = useState({
     project_id: '',
@@ -341,8 +345,58 @@ const ChangeOrders = () => {
     }
   };
 
+  const handleRejectWithReason = (orderId: string, approvalType: 'internal' | 'client') => {
+    setRejectionOrderId(orderId);
+    setRejectionType(approvalType);
+    setRejectionReason('');
+    setIsRejectionDialogOpen(true);
+  };
+
+  const submitRejection = async () => {
+    if (!rejectionReason.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide a reason for rejection"
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
+        body: { 
+          action: 'approve',
+          orderId: rejectionOrderId,
+          approvalType: rejectionType,
+          approved: false,
+          rejectionReason: rejectionReason
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Change order rejected successfully"
+      });
+      
+      setIsRejectionDialogOpen(false);
+      setRejectionReason('');
+      loadData();
+    } catch (error: any) {
+      console.error('Error rejecting change order:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to reject change order"
+      });
+    }
+  };
+
   const getStatusBadge = (order: ChangeOrder) => {
-    if (order.client_approved && order.internal_approved) {
+    if (order.status === 'rejected') {
+      return <Badge variant="destructive">Rejected</Badge>;
+    } else if (order.client_approved && order.internal_approved) {
       return <Badge className="bg-green-500">Approved</Badge>;
     } else if (!order.client_approved && !order.internal_approved) {
       return <Badge variant="secondary">Pending</Badge>;
@@ -703,7 +757,7 @@ const ChangeOrders = () => {
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                onClick={() => handleApproval(order.id, 'internal', false)}
+                                onClick={() => handleRejectWithReason(order.id, 'internal')}
                                 className={mobileButtonClasses.secondary}
                               >
                                 <XCircle className="h-3 w-3 mr-1" />
@@ -744,7 +798,7 @@ const ChangeOrders = () => {
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                onClick={() => handleApproval(order.id, 'client', false)}
+                                onClick={() => handleRejectWithReason(order.id, 'client')}
                               >
                                 <XCircle className="h-3 w-3 mr-1" />
                                 Client Rejected
@@ -761,6 +815,50 @@ const ChangeOrders = () => {
           )}
         </div>
       </div>
+
+      {/* Rejection Reason Dialog */}
+      <Dialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Change Order</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for rejecting this change order. This will be recorded and visible to all stakeholders.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="rejection-reason">Rejection Reason *</Label>
+              <Textarea
+                id="rejection-reason"
+                placeholder="Explain why this change order is being rejected..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsRejectionDialogOpen(false);
+                  setRejectionReason('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={submitRejection}
+                disabled={!rejectionReason.trim()}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Reject Change Order
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
