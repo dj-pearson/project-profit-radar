@@ -87,16 +87,27 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
 
       if (error) throw error;
       setActivities(data?.map(activity => {
-        const opp = activity.opportunity;
+        // Safely extract opportunity data
+        const opportunityData = activity.opportunity;
+        let processedOpportunity: { name: string; estimated_value: number; } | undefined;
+        
+        // Type guard to check if opportunityData is a valid object with required properties
+        if (opportunityData !== null && 
+            opportunityData !== undefined &&
+            typeof opportunityData === 'object' &&
+            !Array.isArray(opportunityData) &&
+            'name' in opportunityData) {
+          // Cast to any to bypass TypeScript's strict checking
+          const oppData = opportunityData as any;
+          processedOpportunity = {
+            name: String(oppData.name || ''),
+            estimated_value: Number(oppData.estimated_value || 0)
+          };
+        }
+        
         return {
           ...activity,
-          opportunity: opp &&
-                      typeof opp === 'object' &&
-                      opp !== null &&
-                      !('error' in opp) &&
-                      'name' in opp 
-            ? opp as { name: string; estimated_value: number; }
-            : undefined
+          opportunity: processedOpportunity
         };
       }) || []);
     } catch (error: any) {
