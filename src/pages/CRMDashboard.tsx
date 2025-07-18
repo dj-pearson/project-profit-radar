@@ -841,7 +841,9 @@ const CRMDashboard = () => {
                   </CardHeader>
                   <CardContent className="p-2 sm:p-6">
                     <div className="overflow-x-auto">
-                      <PipelineKanban onLeadClick={handleLeadClick} />
+                      <div className="min-w-0 max-w-full">
+                        <PipelineKanban onLeadClick={handleLeadClick} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
