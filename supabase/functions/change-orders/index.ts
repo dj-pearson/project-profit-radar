@@ -36,14 +36,23 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id });
 
     // Get user profile to check role
+    logStep("Looking up user profile", { userId: user.id });
     const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('role, company_id')
       .eq('id', user.id)
-      .maybeSingle();
+      .single();
 
-    if (profileError) throw new Error(`Profile error: ${profileError.message}`);
-    if (!userProfile) throw new Error(`User profile not found for user ${user.id}`);
+    if (profileError) {
+      logStep("Profile lookup error", { error: profileError.message, code: profileError.code });
+      throw new Error(`Profile error: ${profileError.message}`);
+    }
+    if (!userProfile) {
+      logStep("No user profile found", { userId: user.id });
+      throw new Error(`User profile not found for user ${user.id}`);
+    }
+    
+    logStep("User profile found", { userId: user.id, role: userProfile.role, companyId: userProfile.company_id });
 
     const url = new URL(req.url);
     const method = req.method;
