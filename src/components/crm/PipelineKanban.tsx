@@ -20,6 +20,7 @@ interface PipelineStage {
   name: string;
   order_number: number;
   color: string;
+  statusValue?: string;
 }
 
 interface Lead {
@@ -53,7 +54,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
 
   const loadPipelineData = async () => {
     try {
-      // Load pipeline stages
+      // Load pipeline stages - get user's company stages
       const { data: stagesData, error: stagesError } = await supabase
         .from('pipeline_stages')
         .select('*')
@@ -61,23 +62,38 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
 
       if (stagesError) throw stagesError;
 
-      // Map stages data to match our interface
+      // Map stages data to match our interface, using proper status values
       const mappedStages = stagesData?.map(stage => ({
         id: stage.id,
         name: stage.name,
         order_number: stage.stage_order,
-        color: stage.color_code || 'blue'
+        color: stage.color_code?.replace('#', '') || 'blue', // Remove # from hex color
+        statusValue: stage.name.toLowerCase().replace(/\s+/g, '_') // Convert name to status value
       })) || [];
 
-      // If no custom stages, use default ones
-      const defaultStages = mappedStages.length > 0 ? mappedStages : [
-        { id: 'new', name: 'New Leads', order_number: 1, color: 'blue' },
-        { id: 'contacted', name: 'Contacted', order_number: 2, color: 'yellow' },
-        { id: 'qualified', name: 'Qualified', order_number: 3, color: 'green' },
-        { id: 'proposal_sent', name: 'Proposal Sent', order_number: 4, color: 'purple' },
-        { id: 'negotiating', name: 'Negotiating', order_number: 5, color: 'orange' },
-        { id: 'won', name: 'Won', order_number: 6, color: 'emerald' },
-        { id: 'lost', name: 'Lost', order_number: 7, color: 'red' }
+      // Create status mapping for consistent terminology
+      const statusMapping = {
+        'initial_contact': 'new',
+        'qualification': 'contacted', 
+        'proposal': 'qualified',
+        'negotiation': 'proposal_sent',
+        'contract_review': 'negotiating',
+        'closed_won': 'won',
+        'closed_lost': 'lost'
+      };
+
+      // If no custom stages, use default ones with proper mapping
+      const defaultStages = mappedStages.length > 0 ? mappedStages.map(stage => ({
+        ...stage,
+        statusValue: statusMapping[stage.statusValue as keyof typeof statusMapping] || stage.statusValue
+      })) : [
+        { id: 'new', name: 'New Leads', order_number: 1, color: 'blue', statusValue: 'new' },
+        { id: 'contacted', name: 'Contacted', order_number: 2, color: 'yellow', statusValue: 'contacted' },
+        { id: 'qualified', name: 'Qualified', order_number: 3, color: 'green', statusValue: 'qualified' },
+        { id: 'proposal_sent', name: 'Proposal Sent', order_number: 4, color: 'purple', statusValue: 'proposal_sent' },
+        { id: 'negotiating', name: 'Negotiating', order_number: 5, color: 'orange', statusValue: 'negotiating' },
+        { id: 'won', name: 'Won', order_number: 6, color: 'emerald', statusValue: 'won' },
+        { id: 'lost', name: 'Lost', order_number: 7, color: 'red', statusValue: 'lost' }
       ];
 
       setStages(defaultStages);
@@ -90,9 +106,10 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
 
       if (leadsError) throw leadsError;
 
-      // Group leads by stage
+      // Group leads by stage using proper status mapping
       const grouped = defaultStages.reduce((acc, stage) => {
-        acc[stage.id] = leadsData?.filter(lead => lead.status === stage.id) || [];
+        const statusToMatch = stage.statusValue || stage.id;
+        acc[stage.id] = leadsData?.filter(lead => lead.status === statusToMatch) || [];
         return acc;
       }, {} as Record<string, Lead[]>);
 
@@ -126,9 +143,12 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
 
     // Update lead status in database
     try {
+      const destStage = stages.find(s => s.id === destStageId);
+      const newStatus = destStage?.statusValue || destStageId;
+      
       const { error } = await supabase
         .from('leads')
-        .update({ status: destStageId })
+        .update({ status: newStatus })
         .eq('id', leadId);
 
       if (error) throw error;
@@ -138,7 +158,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
       const destLeads = Array.from(leadsByStage[destStageId]);
       const [movedLead] = sourceLeads.splice(source.index, 1);
       
-      movedLead.status = destStageId;
+      movedLead.status = newStatus;
       destLeads.splice(destination.index, 0, movedLead);
 
       setLeadsByStage({
@@ -188,10 +208,10 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full w-full overflow-hidden">
       <DragDropContext onDragEnd={handleDragEnd}>
         {/* Mobile: Vertical Stack */}
-        <div className="md:hidden space-y-4">
+        <div className="block md:hidden space-y-4 max-w-full">
           {stages.map((stage) => (
             <Card key={stage.id} className="w-full">
               <CardHeader className="pb-3">
@@ -292,7 +312,7 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
         </div>
 
         {/* Desktop: Horizontal Kanban */}
-        <div className="hidden md:flex space-x-4 overflow-x-auto pb-4">
+        <div className="hidden md:flex space-x-4 overflow-x-auto pb-4 min-h-0">
           {stages.map((stage) => (
             <div key={stage.id} className="min-w-[300px] flex-shrink-0">
               <Card className="h-full">
