@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
@@ -32,7 +35,10 @@ import {
   BarChart3,
   Filter,
   Search,
-  Plus
+  Plus,
+  Edit,
+  Save,
+  X
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -78,6 +84,349 @@ interface CRMData {
   thisMonthNewLeads: number;
   followUpsDue: number;
 }
+
+// Lead Edit Dialog Component
+interface LeadEditDialogProps {
+  lead: Lead;
+  onUpdate: (leadId: string, updates: Partial<Lead>) => void;
+  children: React.ReactNode;
+}
+
+const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: lead.first_name,
+    last_name: lead.last_name,
+    email: lead.email,
+    phone: lead.phone,
+    company_name: lead.company_name || '',
+    project_name: lead.project_name || '',
+    project_type: lead.project_type || '',
+    estimated_budget: lead.estimated_budget || 0,
+    status: lead.status,
+    priority: lead.priority,
+    lead_source: lead.lead_source,
+    next_follow_up_date: lead.next_follow_up_date || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate(lead.id, formData);
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Lead: {lead.first_name} {lead.last_name}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="first_name">First Name</Label>
+              <Input
+                id="first_name"
+                value={formData.first_name}
+                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="last_name">Last Name</Label>
+              <Input
+                id="last_name"
+                value={formData.last_name}
+                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="company_name">Company</Label>
+              <Input
+                id="company_name"
+                value={formData.company_name}
+                onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="project_name">Project Name</Label>
+              <Input
+                id="project_name"
+                value={formData.project_name}
+                onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="project_type">Project Type</Label>
+              <Select value={formData.project_type} onValueChange={(value) => setFormData({ ...formData, project_type: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="residential_new">Residential New</SelectItem>
+                  <SelectItem value="residential_remodel">Residential Remodel</SelectItem>
+                  <SelectItem value="commercial">Commercial</SelectItem>
+                  <SelectItem value="industrial">Industrial</SelectItem>
+                  <SelectItem value="civil">Civil</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="estimated_budget">Estimated Budget</Label>
+              <Input
+                id="estimated_budget"
+                type="number"
+                value={formData.estimated_budget}
+                onChange={(e) => setFormData({ ...formData, estimated_budget: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem value="proposal_sent">Proposal Sent</SelectItem>
+                  <SelectItem value="negotiating">Negotiating</SelectItem>
+                  <SelectItem value="won">Won</SelectItem>
+                  <SelectItem value="lost">Lost</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lead_source">Lead Source</Label>
+              <Select value={formData.lead_source} onValueChange={(value) => setFormData({ ...formData, lead_source: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="website">Website</SelectItem>
+                  <SelectItem value="social_media">Social Media</SelectItem>
+                  <SelectItem value="google_ads">Google Ads</SelectItem>
+                  <SelectItem value="direct_mail">Direct Mail</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="next_follow_up_date">Next Follow-up Date</Label>
+            <Input
+              id="next_follow_up_date"
+              type="date"
+              value={formData.next_follow_up_date}
+              onChange={(e) => setFormData({ ...formData, next_follow_up_date: e.target.value })}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Opportunity Edit Dialog Component
+interface OpportunityEditDialogProps {
+  opportunity: Opportunity;
+  onUpdate: (opportunityId: string, updates: Partial<Opportunity>) => void;
+  children: React.ReactNode;
+}
+
+const OpportunityEditDialog: React.FC<OpportunityEditDialogProps> = ({ opportunity, onUpdate, children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: opportunity.name,
+    estimated_value: opportunity.estimated_value,
+    probability_percent: opportunity.probability_percent,
+    stage: opportunity.stage,
+    expected_close_date: opportunity.expected_close_date || '',
+    account_manager: opportunity.account_manager || '',
+    project_type: opportunity.project_type || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate(opportunity.id, formData);
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit Opportunity: {opportunity.name}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Opportunity Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="estimated_value">Estimated Value</Label>
+              <Input
+                id="estimated_value"
+                type="number"
+                value={formData.estimated_value}
+                onChange={(e) => setFormData({ ...formData, estimated_value: Number(e.target.value) })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="probability_percent">Probability (%)</Label>
+              <Input
+                id="probability_percent"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.probability_percent}
+                onChange={(e) => setFormData({ ...formData, probability_percent: Number(e.target.value) })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="stage">Stage</Label>
+              <Select value={formData.stage} onValueChange={(value) => setFormData({ ...formData, stage: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="prospecting">Prospecting</SelectItem>
+                  <SelectItem value="qualification">Qualification</SelectItem>
+                  <SelectItem value="proposal">Proposal</SelectItem>
+                  <SelectItem value="negotiation">Negotiation</SelectItem>
+                  <SelectItem value="closed_won">Closed Won</SelectItem>
+                  <SelectItem value="closed_lost">Closed Lost</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="project_type">Project Type</Label>
+              <Select value={formData.project_type} onValueChange={(value) => setFormData({ ...formData, project_type: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="residential_new">Residential New</SelectItem>
+                  <SelectItem value="residential_remodel">Residential Remodel</SelectItem>
+                  <SelectItem value="commercial">Commercial</SelectItem>
+                  <SelectItem value="industrial">Industrial</SelectItem>
+                  <SelectItem value="civil">Civil</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="expected_close_date">Expected Close Date</Label>
+              <Input
+                id="expected_close_date"
+                type="date"
+                value={formData.expected_close_date}
+                onChange={(e) => setFormData({ ...formData, expected_close_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="account_manager">Account Manager</Label>
+              <Input
+                id="account_manager"
+                value={formData.account_manager}
+                onChange={(e) => setFormData({ ...formData, account_manager: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CRMDashboard = () => {
   const { user, userProfile, signOut, loading } = useAuth();
@@ -267,6 +616,58 @@ const CRMDashboard = () => {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const updateLead = async (leadId: string, updates: Partial<Lead>) => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update(updates)
+        .eq('id', leadId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Lead updated",
+        description: "Lead information has been updated successfully.",
+      });
+
+      // Refresh data
+      loadCRMData(loadCRMDashboardData);
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update lead. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateOpportunity = async (opportunityId: string, updates: Partial<Opportunity>) => {
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .update(updates)
+        .eq('id', opportunityId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Opportunity updated",
+        description: "Opportunity information has been updated successfully.",
+      });
+
+      // Refresh data
+      loadCRMData(loadCRMDashboardData);
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update opportunity. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredLeads = crmData?.leads?.filter(lead => {
@@ -565,46 +966,47 @@ const CRMDashboard = () => {
                     ) : (
                       <div className="space-y-2">
                         {filteredLeads.map((lead) => (
-                          <div key={lead.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                               onClick={() => navigate(`/crm/leads/${lead.id}`)}>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-3">
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium truncate">
-                                    {lead.first_name} {lead.last_name}
+                          <LeadEditDialog key={lead.id} lead={lead} onUpdate={updateLead}>
+                            <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">
+                                      {lead.first_name} {lead.last_name}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {lead.email} • {lead.phone}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-center space-y-1">
+                                    <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600`}>
+                                      {lead.status}
+                                    </Badge>
+                                    <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600`}>
+                                      {lead.priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium">
+                                    {lead.project_name || lead.company_name || 'No project specified'}
                                   </p>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {lead.email} • {lead.phone}
+                                  <p className="text-sm text-muted-foreground">
+                                    {lead.project_type || 'Project type not specified'} • {lead.estimated_budget ? formatCurrency(lead.estimated_budget) : 'Budget TBD'}
                                   </p>
                                 </div>
-                                <div className="flex flex-col items-center space-y-1">
-                                  <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600`}>
-                                    {lead.status}
-                                  </Badge>
-                                  <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600`}>
-                                    {lead.priority}
-                                  </Badge>
-                                </div>
                               </div>
-                              <div className="mt-2">
-                                <p className="text-sm font-medium">
-                                  {lead.project_name || lead.company_name || 'No project specified'}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {lead.project_type || 'Project type not specified'} • {lead.estimated_budget ? formatCurrency(lead.estimated_budget) : 'Budget TBD'}
-                                </p>
+                              <div className="text-right space-y-1">
+                                <p className="text-sm text-muted-foreground">Source: {lead.lead_source}</p>
+                                <p className="text-xs text-muted-foreground">Created: {formatDate(lead.created_at)}</p>
+                                {lead.next_follow_up_date && (
+                                  <p className="text-xs text-orange-600">
+                                    Follow-up: {formatDate(lead.next_follow_up_date)}
+                                  </p>
+                                )}
                               </div>
                             </div>
-                            <div className="text-right space-y-1">
-                              <p className="text-sm text-muted-foreground">Source: {lead.lead_source}</p>
-                              <p className="text-xs text-muted-foreground">Created: {formatDate(lead.created_at)}</p>
-                              {lead.next_follow_up_date && (
-                                <p className="text-xs text-orange-600">
-                                  Follow-up: {formatDate(lead.next_follow_up_date)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
+                          </LeadEditDialog>
                         ))}
                       </div>
                     )}
@@ -639,31 +1041,32 @@ const CRMDashboard = () => {
                     ) : (
                       <div className="space-y-4">
                         {crmData.opportunities.map((opportunity) => (
-                          <div key={opportunity.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                               onClick={() => navigate(`/crm/opportunities/${opportunity.id}`)}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center space-x-2">
-                                  <p className="font-medium truncate">{opportunity.name}</p>
-                                  <Badge variant="outline" className={`text-${getStageColor(opportunity.stage)}-600`}>
-                                    {opportunity.stage}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {opportunity.project_type || 'General Construction'}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-medium text-lg">{formatCurrency(opportunity.estimated_value)}</p>
-                                <p className="text-sm text-muted-foreground">{opportunity.probability_percent}% probability</p>
-                                {opportunity.expected_close_date && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Expected close: {formatDate(opportunity.expected_close_date)}
+                          <OpportunityEditDialog key={opportunity.id} opportunity={opportunity} onUpdate={updateOpportunity}>
+                            <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center space-x-2">
+                                    <p className="font-medium truncate">{opportunity.name}</p>
+                                    <Badge variant="outline" className={`text-${getStageColor(opportunity.stage)}-600`}>
+                                      {opportunity.stage}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {opportunity.project_type || 'General Construction'}
                                   </p>
-                                )}
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-medium text-lg">{formatCurrency(opportunity.estimated_value)}</p>
+                                  <p className="text-sm text-muted-foreground">{opportunity.probability_percent}% probability</p>
+                                  {opportunity.expected_close_date && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Expected close: {formatDate(opportunity.expected_close_date)}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          </OpportunityEditDialog>
                         ))}
                       </div>
                     )}
