@@ -40,9 +40,10 @@ serve(async (req) => {
       .from('user_profiles')
       .select('role, company_id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (profileError) throw new Error(`Profile error: ${profileError.message}`);
+    if (!userProfile) throw new Error(`User profile not found for user ${user.id}`);
 
     const url = new URL(req.url);
     const method = req.method;
