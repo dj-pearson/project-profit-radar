@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BarChart3, 
   Package, 
@@ -86,12 +87,14 @@ export const ProjectSubSidebar: React.FC<ProjectSubSidebarProps> = ({
   onTabChange,
 }) => {
   return (
-    <div className="w-64 bg-card/50 border-r border-border h-full overflow-y-auto">
-      <div className="p-4">
+    <div className="w-64 bg-card/50 border-r border-border h-full flex flex-col">
+      <div className="p-4 pb-2 flex-shrink-0">
         <h3 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wide">
           Project Sections
         </h3>
-        <nav className="space-y-4">
+      </div>
+      <ScrollArea className="flex-1 px-4">
+        <nav className="space-y-4 pb-4">
           {navigationSections.map((section, sectionIndex) => (
             <div key={section.title}>
               {sectionIndex > 0 && (
@@ -130,7 +133,7 @@ export const ProjectSubSidebar: React.FC<ProjectSubSidebarProps> = ({
             </div>
           ))}
         </nav>
-      </div>
+      </ScrollArea>
     </div>
   );
 };
