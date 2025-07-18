@@ -2943,16 +2943,19 @@ const ProjectDetail = () => {
               <div className="space-y-4">
                 {changeOrders.map((order: any) => (
                   <Card key={order.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{order.title}</CardTitle>
-                          <CardDescription>
+                    <CardHeader className="pb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base sm:text-lg truncate">{order.title}</CardTitle>
+                          <CardDescription className="text-sm">
                             {order.change_order_number} • ${order.amount?.toLocaleString()}
                           </CardDescription>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={order.status === 'approved' ? 'default' : order.status === 'pending' ? 'secondary' : 'outline'}>
+                        <div className="flex items-center justify-between sm:justify-end gap-2">
+                          <Badge 
+                            variant={order.status === 'approved' ? 'default' : order.status === 'pending' ? 'secondary' : 'outline'}
+                            className="text-xs"
+                          >
                             {order.status}
                           </Badge>
                           <Button 
@@ -2962,21 +2965,23 @@ const ProjectDetail = () => {
                               setEditingChangeOrder(order);
                               setEditChangeOrderDialogOpen(true);
                             }}
+                            className="flex-shrink-0"
                           >
                             <Edit className="h-4 w-4" />
+                            <span className="sr-only sm:not-sr-only sm:ml-1">Edit</span>
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">{order.description}</p>
+                    <CardContent className="pt-0">
+                      <p className="text-muted-foreground text-sm break-words">{order.description}</p>
                       {order.reason && (
-                        <p className="text-sm text-muted-foreground mt-2">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                           <span className="font-medium">Reason:</span> {order.reason}
                         </p>
                       )}
                       {order.assigned_approvers && order.assigned_approvers.length > 0 && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                           <span className="font-medium">Approvers:</span> {order.assigned_approvers.length} assigned
                         </p>
                       )}
@@ -4160,12 +4165,12 @@ const ProjectDetail = () => {
 
       {/* Add Change Order Dialog */}
       <Dialog open={addChangeOrderDialogOpen} onOpenChange={setAddChangeOrderDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
             <DialogTitle>Add Change Order</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="change-order-number">Change Order Number</Label>
                 <Input
@@ -4219,7 +4224,7 @@ const ProjectDetail = () => {
             <div className="space-y-4">
               <div>
                 <Label>Assign Approvers</Label>
-                <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
+                <div className="max-h-32 sm:max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
                   {companyUsers.filter(user => ['admin', 'project_manager', 'root_admin'].includes(user.role)).map((user) => (
                     <div key={user.id} className="flex items-center space-x-2">
                       <Checkbox
@@ -4233,7 +4238,7 @@ const ProjectDetail = () => {
                           }
                         }}
                       />
-                      <Label htmlFor={`approver-${user.id}`} className="text-sm">
+                      <Label htmlFor={`approver-${user.id}`} className="text-sm break-words">
                         {user.first_name} {user.last_name} ({user.role})
                       </Label>
                     </div>
@@ -4241,7 +4246,7 @@ const ProjectDetail = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="approval-due-date">Approval Due Date</Label>
                   <Input
@@ -4259,6 +4264,7 @@ const ProjectDetail = () => {
                     onChange={(e) => setNewChangeOrder(prev => ({ ...prev, approval_notes: e.target.value }))}
                     placeholder="Notes for approvers"
                     rows={1}
+                    className="resize-none"
                   />
                 </div>
               </div>
@@ -4278,13 +4284,13 @@ const ProjectDetail = () => {
 
       {/* Edit Change Order Dialog */}
       <Dialog open={editChangeOrderDialogOpen} onOpenChange={setEditChangeOrderDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
             <DialogTitle>Edit Change Order</DialogTitle>
           </DialogHeader>
           {editingChangeOrder && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Change Order Number</Label>
                   <Input value={editingChangeOrder.change_order_number} disabled />
@@ -4334,7 +4340,7 @@ const ProjectDetail = () => {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Assigned Approvers</Label>
                   <Select 
@@ -4364,15 +4370,17 @@ const ProjectDetail = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal text-xs sm:text-sm",
                           !editingChangeOrder.approval_due_date && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {editingChangeOrder.approval_due_date ? format(new Date(editingChangeOrder.approval_due_date), "PPP") : <span>Pick a date</span>}
+                        <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          {editingChangeOrder.approval_due_date ? format(new Date(editingChangeOrder.approval_due_date), "MMM dd, yyyy") : "Pick a date"}
+                        </span>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={editingChangeOrder.approval_due_date ? new Date(editingChangeOrder.approval_due_date) : undefined}
@@ -4388,14 +4396,16 @@ const ProjectDetail = () => {
                 </div>
               </div>
               
-              <div>
-                <Label>Approval Notes</Label>
-                <Textarea
-                  placeholder="Special instructions for approvers..."
-                  value={editingChangeOrder.approval_notes || ''}
-                  onChange={(e) => setEditingChangeOrder({...editingChangeOrder, approval_notes: e.target.value})}
-                />
-              </div>
+                <div>
+                  <Label>Approval Notes</Label>
+                  <Textarea
+                    placeholder="Special instructions for approvers..."
+                    value={editingChangeOrder.approval_notes || ''}
+                    onChange={(e) => setEditingChangeOrder({...editingChangeOrder, approval_notes: e.target.value})}
+                    className="resize-none"
+                    rows={2}
+                  />
+                </div>
 
               <div>
                 <Label>Status</Label>
