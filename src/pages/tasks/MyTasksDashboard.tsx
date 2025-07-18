@@ -19,7 +19,12 @@ import {
   Calendar as CalendarIcon,
   LayoutGrid,
   List,
-  Kanban
+  Kanban,
+  Shield,
+  FileCheck,
+  HelpCircle,
+  ClipboardList,
+  MapPin
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,7 +39,7 @@ interface TaskItem {
   priority: string;
   due_date?: string;
   assigned_to?: string;
-  source: 'task' | 'rfi' | 'permit' | 'contact';
+  source: 'task' | 'rfi' | 'permit' | 'contact' | 'warranty' | 'bond' | 'submittal';
   source_data: {
     project_name?: string;
     project_id?: string;
@@ -53,9 +58,12 @@ const PRIORITY_COLORS = {
 
 const SOURCE_ICONS = {
   task: CheckSquare,
-  rfi: AlertTriangle,
+  rfi: HelpCircle,
   permit: FileText,
-  contact: Users
+  contact: Users,
+  warranty: Shield,
+  bond: FileCheck,
+  submittal: ClipboardList
 };
 
 export const MyTasksDashboard = () => {
@@ -123,14 +131,78 @@ export const MyTasksDashboard = () => {
         });
       }
 
-      // Load permits with upcoming deadlines (if they exist in your schema)
-      // This is an example - adjust based on your actual permit structure
-      // const { data: permits } = await supabase
-      //   .from('permits')
-      //   .select('id, name, expiry_date, status, assigned_to')
-      //   .eq('assigned_to', userProfile.id)
-      //   .gte('expiry_date', new Date().toISOString())
-      //   .lte('expiry_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
+      // Load warranties with upcoming expiry dates
+      const { data: warranties } = await supabase
+        .from('warranties')
+        .select(`
+          id,
+          warranty_type,
+          item_name,
+          item_description,
+          warranty_end_date,
+          status,
+          project_id,
+          project:projects(name)
+        `)
+        .eq('company_id', userProfile.company_id)
+        .gte('warranty_end_date', new Date().toISOString().split('T')[0])
+        .lte('warranty_end_date', new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .eq('status', 'active');
+
+      if (warranties) {
+        warranties.forEach(warranty => {
+          allItems.push({
+            id: warranty.id,
+            title: `Warranty Expiry: ${warranty.item_name}`,
+            description: warranty.item_description,
+            status: 'pending',
+            priority: 'medium',
+            due_date: warranty.warranty_end_date,
+            source: 'warranty',
+            source_data: {
+              project_name: warranty.project?.name,
+              project_id: warranty.project_id,
+              type: 'expiry'
+            }
+          });
+        });
+      }
+
+      // Load bonds with upcoming expiry dates
+      const { data: bonds } = await supabase
+        .from('bonds')
+        .select(`
+          id,
+          bond_name,
+          bond_type,
+          expiry_date,
+          status,
+          project_id,
+          project:projects(name)
+        `)
+        .eq('company_id', userProfile.company_id)
+        .gte('expiry_date', new Date().toISOString().split('T')[0])
+        .lte('expiry_date', new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .eq('status', 'active');
+
+      if (bonds) {
+        bonds.forEach(bond => {
+          allItems.push({
+            id: bond.id,
+            title: `Bond Expiry: ${bond.bond_name}`,
+            description: `${bond.bond_type} bond expiring`,
+            status: 'pending',
+            priority: 'high',
+            due_date: bond.expiry_date,
+            source: 'bond',
+            source_data: {
+              project_name: bond.project?.name,
+              project_id: bond.project_id,
+              type: 'expiry'
+            }
+          });
+        });
+      }
 
       // Load contacts that need follow-up
       const { data: contacts } = await supabase
@@ -459,6 +531,9 @@ export const MyTasksDashboard = () => {
                   <SelectItem value="rfi">RFIs</SelectItem>
                   <SelectItem value="permit">Permits</SelectItem>
                   <SelectItem value="contact">Contacts</SelectItem>
+                  <SelectItem value="warranty">Warranties</SelectItem>
+                  <SelectItem value="bond">Bonds</SelectItem>
+                  <SelectItem value="submittal">Submittals</SelectItem>
                 </SelectContent>
               </Select>
 
