@@ -26,6 +26,7 @@ import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { ProjectEstimates } from '@/components/project/ProjectEstimates';
 import { ContactSearchCombobox } from '@/components/contacts/ContactSearchCombobox';
 import { TaskManager } from '@/components/tasks/TaskManager';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -158,6 +159,8 @@ const ProjectDetail = () => {
   const [jobCosts, setJobCosts] = useState<any[]>([]);
   const [rfis, setRfis] = useState<any[]>([]);
   const [submittals, setSubmittals] = useState<any[]>([]);
+  const [changeOrders, setChangeOrders] = useState<any[]>([]);
+  const [changeOrdersLoading, setChangeOrdersLoading] = useState(false);
   const [punchListItems, setPunchListItems] = useState<PunchListItem[]>([]);
   const [punchListLoading, setPunchListLoading] = useState(false);
   const [editingRFI, setEditingRFI] = useState<any>(null);
@@ -335,8 +338,17 @@ const ProjectDetail = () => {
     description: '',
     amount: 0,
     reason: '',
-    status: 'pending'
+    status: 'pending',
+    assigned_approvers: [] as string[],
+    approval_due_date: '',
+    approval_notes: ''
   });
+
+  const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
+  const [approvalDueDate, setApprovalDueDate] = useState('');
+  const [companyUsers, setCompanyUsers] = useState<any[]>([]);
+  const [editingChangeOrder, setEditingChangeOrder] = useState<any>(null);
+  const [editChangeOrderDialogOpen, setEditChangeOrderDialogOpen] = useState(false);
 
   const [newPunchListItem, setNewPunchListItem] = useState({
     item_number: '',
@@ -375,6 +387,7 @@ const ProjectDetail = () => {
       loadContacts();
       loadProjectContacts();
       loadPermits();
+      loadChangeOrders();
     }
   }, [projectId, user, userProfile, loading, navigate]);
 
@@ -689,6 +702,7 @@ const ProjectDetail = () => {
 
       if (error) throw error;
       setAvailableUsers(data || []);
+      setCompanyUsers(data || []);
     } catch (error: any) {
       console.error('Error loading users:', error);
     }
@@ -1216,14 +1230,19 @@ const ProjectDetail = () => {
 
   const handleCreateChangeOrder = async () => {
     try {
-      const { error } = await supabase
-        .from('change_orders')
-        .insert({
-          ...newChangeOrder,
+      const { data, error } = await supabase.functions.invoke('change-orders', {
+        body: {
+          action: 'create',
           project_id: projectId,
-          company_id: userProfile?.company_id,
-          created_by: user?.id
-        });
+          title: newChangeOrder.title,
+          description: newChangeOrder.description,
+          amount: newChangeOrder.amount,
+          reason: newChangeOrder.reason,
+          assigned_approvers: selectedApprovers,
+          approval_due_date: approvalDueDate || null,
+          approval_notes: newChangeOrder.approval_notes || null
+        }
+      });
 
       if (error) throw error;
 
@@ -1234,8 +1253,16 @@ const ProjectDetail = () => {
         description: '',
         amount: 0,
         reason: '',
-        status: 'pending'
+        status: 'pending',
+        assigned_approvers: [],
+        approval_due_date: '',
+        approval_notes: ''
       });
+      setSelectedApprovers([]);
+      setApprovalDueDate('');
+
+      // Refresh change orders list
+      loadChangeOrders();
 
       toast({
         title: "Change order added",
@@ -1496,6 +1523,32 @@ const ProjectDetail = () => {
       });
     } finally {
       setWarrantiesLoading(false);
+    }
+  };
+
+  const loadChangeOrders = async () => {
+    if (!projectId) return;
+    
+    setChangeOrdersLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('change-orders', {
+        body: {
+          action: 'list',
+          project_id: projectId
+        }
+      });
+
+      if (error) throw error;
+      setChangeOrders(data?.changeOrders || []);
+    } catch (error: any) {
+      console.error('Error loading change orders:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading change orders",
+        description: "There was a problem loading the change orders."
+      });
+    } finally {
+      setChangeOrdersLoading(false);
     }
   };
 
@@ -2867,12 +2920,67 @@ const ProjectDetail = () => {
               </Dialog>
             </div>
             
-            <Card>
-              <CardContent className="text-center py-8">
-                <Edit className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Track project changes and cost adjustments</p>
-              </CardContent>
-            </Card>
+            {changeOrdersLoading ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading change orders...</p>
+                </CardContent>
+              </Card>
+            ) : changeOrders.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Edit className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No change orders yet</p>
+                  <p className="text-sm text-muted-foreground mt-2">Track project changes and cost adjustments</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {changeOrders.map((order: any) => (
+                  <Card key={order.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{order.title}</CardTitle>
+                          <CardDescription>
+                            {order.change_order_number} • ${order.amount?.toLocaleString()}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={order.status === 'approved' ? 'default' : order.status === 'pending' ? 'secondary' : 'outline'}>
+                            {order.status}
+                          </Badge>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingChangeOrder(order);
+                              setEditChangeOrderDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">{order.description}</p>
+                      {order.reason && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          <span className="font-medium">Reason:</span> {order.reason}
+                        </p>
+                      )}
+                      {order.assigned_approvers && order.assigned_approvers.length > 0 && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          <span className="font-medium">Approvers:</span> {order.assigned_approvers.length} assigned
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="punchlist" className="space-y-6">
@@ -4103,6 +4211,55 @@ const ProjectDetail = () => {
                 rows={2}
               />
             </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label>Assign Approvers</Label>
+                <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2">
+                  {companyUsers.filter(user => ['admin', 'project_manager', 'root_admin'].includes(user.role)).map((user) => (
+                    <div key={user.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`approver-${user.id}`}
+                        checked={selectedApprovers.includes(user.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedApprovers(prev => [...prev, user.id]);
+                          } else {
+                            setSelectedApprovers(prev => prev.filter(id => id !== user.id));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`approver-${user.id}`} className="text-sm">
+                        {user.first_name} {user.last_name} ({user.role})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="approval-due-date">Approval Due Date</Label>
+                  <Input
+                    id="approval-due-date"
+                    type="date"
+                    value={approvalDueDate}
+                    onChange={(e) => setApprovalDueDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="approval-notes">Approval Notes</Label>
+                  <Textarea
+                    id="approval-notes"
+                    value={newChangeOrder.approval_notes}
+                    onChange={(e) => setNewChangeOrder(prev => ({ ...prev, approval_notes: e.target.value }))}
+                    placeholder="Notes for approvers"
+                    rows={1}
+                  />
+                </div>
+              </div>
+            </div>
+            
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setAddChangeOrderDialogOpen(false)}>
                 Cancel
@@ -4112,6 +4269,99 @@ const ProjectDetail = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Change Order Dialog */}
+      <Dialog open={editChangeOrderDialogOpen} onOpenChange={setEditChangeOrderDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Change Order</DialogTitle>
+          </DialogHeader>
+          {editingChangeOrder && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Change Order Number</Label>
+                  <Input value={editingChangeOrder.change_order_number} disabled />
+                </div>
+                <div>
+                  <Label>Amount</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editingChangeOrder.amount}
+                    onChange={(e) => setEditingChangeOrder({...editingChangeOrder, amount: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Title</Label>
+                <Input
+                  value={editingChangeOrder.title}
+                  onChange={(e) => setEditingChangeOrder({...editingChangeOrder, title: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editingChangeOrder.description || ''}
+                  onChange={(e) => setEditingChangeOrder({...editingChangeOrder, description: e.target.value})}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={editingChangeOrder.status} onValueChange={(value) => setEditingChangeOrder({...editingChangeOrder, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setEditChangeOrderDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from('change_orders')
+                      .update({
+                        title: editingChangeOrder.title,
+                        description: editingChangeOrder.description,
+                        amount: editingChangeOrder.amount,
+                        status: editingChangeOrder.status
+                      })
+                      .eq('id', editingChangeOrder.id);
+
+                    if (error) throw error;
+
+                    setEditChangeOrderDialogOpen(false);
+                    setEditingChangeOrder(null);
+                    loadChangeOrders();
+
+                    toast({
+                      title: "Change order updated",
+                      description: "The change order has been updated successfully."
+                    });
+                  } catch (error: any) {
+                    toast({
+                      variant: "destructive",
+                      title: "Error updating change order",
+                      description: error.message
+                    });
+                  }
+                }}>
+                  Update Change Order
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
