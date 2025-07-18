@@ -177,7 +177,7 @@ export default function Equipment() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <div className="grid w-full grid-cols-2 sm:grid-cols-4 rounded-md bg-muted p-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="fleet" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Equipment Fleet</span>
               <span className="sm:hidden">Fleet</span>
@@ -191,7 +191,7 @@ export default function Equipment() {
               <span className="sm:hidden">Util.</span>
             </TabsTrigger>
             <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
-          </div>
+          </TabsList>
 
           <div className={mobileFilterClasses.container}>
             <div className="flex items-center space-x-2 w-full">
