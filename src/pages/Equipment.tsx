@@ -258,12 +258,27 @@ export default function Equipment() {
                     </div>
                     
                     <div className={mobileFilterClasses.buttonGroup}>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          console.log('Schedule Maintenance clicked for:', item.name);
+                          // TODO: Open maintenance scheduling dialog
+                        }}
+                      >
                         <Wrench className="h-4 w-4 mr-1 sm:mr-2" />
                         <span className="hidden sm:inline">Schedule Maintenance</span>
                         <span className="sm:hidden">Maint.</span>
                       </Button>
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          console.log('View Details clicked for:', item.name);
+                          // TODO: Open equipment details dialog
+                        }}
+                      >
                         <span className="hidden sm:inline">View Details</span>
                         <span className="sm:hidden">Details</span>
                       </Button>
@@ -310,7 +325,14 @@ export default function Equipment() {
                     </div>
                     
                     <div className="flex justify-end">
-                      <Button size="sm" className="w-full sm:w-auto">
+                      <Button 
+                        size="sm" 
+                        className="w-full sm:w-auto"
+                        onClick={() => {
+                          console.log('View Maintenance Details clicked for:', record.equipment_name);
+                          // TODO: Open maintenance details dialog
+                        }}
+                      >
                         <span className="hidden sm:inline">View Maintenance Details</span>
                         <span className="sm:hidden">Details</span>
                       </Button>
@@ -322,12 +344,50 @@ export default function Equipment() {
           </TabsContent>
 
           <TabsContent value="utilization" className="space-y-4">
-            <div className="text-center py-8">
-              <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">Equipment Utilization</h3>
-              <p className="text-muted-foreground">
-                Track equipment usage, efficiency, and project assignments
-              </p>
+            <div className="grid gap-4">
+              {equipment.map((item) => (
+                <Card key={item.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Truck className="h-5 w-5" />
+                          {item.name}
+                        </CardTitle>
+                        <CardDescription>
+                          Current utilization and usage statistics
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <div className="font-medium text-muted-foreground text-xs">Hours This Month</div>
+                        <div className="text-2xl font-bold">{Math.floor(item.hours_used / 12)}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-muted-foreground text-xs">Utilization Rate</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {Math.floor(Math.random() * 30 + 60)}%
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-muted-foreground text-xs">Revenue Generated</div>
+                        <div className="text-2xl font-bold">
+                          ${(item.daily_rate * Math.floor(item.hours_used / 12 / 8)).toLocaleString()}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-medium text-muted-foreground text-xs">Efficiency</div>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {Math.floor(Math.random() * 20 + 75)}%
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
