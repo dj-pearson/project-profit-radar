@@ -81,7 +81,12 @@ export const LeadScoring: React.FC<LeadScoringProps> = ({
       const { data, error } = await query;
 
       if (error) throw error;
-      setLeadScores(data || []);
+      setLeadScores(data?.map(score => ({
+        ...score,
+        score_factors: typeof score.score_factors === 'object' && score.score_factors !== null
+          ? score.score_factors as Record<string, number>
+          : {}
+      })) || []);
     } catch (error: any) {
       toast({
         title: "Error loading lead scores",

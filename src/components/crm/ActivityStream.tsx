@@ -86,7 +86,19 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
       const { data, error } = await query;
 
       if (error) throw error;
-      setActivities(data || []);
+      setActivities(data?.map(activity => {
+        const opp = activity.opportunity;
+        return {
+          ...activity,
+          opportunity: opp &&
+                      typeof opp === 'object' &&
+                      opp !== null &&
+                      !('error' in opp) &&
+                      'name' in opp 
+            ? opp as { name: string; estimated_value: number; }
+            : undefined
+        };
+      }) || []);
     } catch (error: any) {
       toast({
         title: "Error loading activities",
@@ -138,7 +150,7 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
     };
     
     return (
-      <Badge variant={variants[outcome as keyof typeof variants] || 'outline'}>
+      <Badge variant={(variants[outcome as keyof typeof variants] || 'outline') as "default" | "destructive" | "secondary" | "outline"}>
         {outcome.replace('_', ' ')}
       </Badge>
     );

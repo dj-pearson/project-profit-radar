@@ -443,6 +443,11 @@ const CRMDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'dashboard' | 'lead-detail'>('dashboard');
+
+  const handleLeadClick = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setViewMode('lead-detail');
+  };
   
   const { 
     data: crmData, 
@@ -981,10 +986,10 @@ const CRMDashboard = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                    <Button className={mobileButtonClasses.primary} onClick={() => {/* TODO: Add new lead functionality */}}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Lead
-                    </Button>
+                      <Button className={mobileButtonClasses.primary} onClick={() => {/* TODO: Add new lead functionality */}}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Lead
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1003,127 +1008,49 @@ const CRMDashboard = () => {
                         description="No leads match your current filters."
                       />
                     ) : (
-              {/* Pipeline Tab */}
-              <TabsContent value="pipeline" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Sales Pipeline</CardTitle>
-                    <CardDescription>Drag and drop leads between stages</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PipelineKanban onLeadClick={handleLeadClick} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Activities Tab */}
-              <TabsContent value="activities" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <ActivityStream />
-                  </div>
-                  <div>
-                    <LeadScoring showTopLeads={true} limit={5} />
-                  </div>
-                </div>
-                    {/* Filters */}
-                    <div className="flex flex-wrap gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
-                      <div className="flex-1 min-w-[250px]">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                          <Input
-                            placeholder="Search leads..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Statuses</SelectItem>
-                          <SelectItem value="new">New</SelectItem>
-                          <SelectItem value="contacted">Contacted</SelectItem>
-                          <SelectItem value="qualified">Qualified</SelectItem>
-                          <SelectItem value="proposal_sent">Proposal Sent</SelectItem>
-                          <SelectItem value="negotiating">Negotiating</SelectItem>
-                          <SelectItem value="won">Won</SelectItem>
-                          <SelectItem value="lost">Lost</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Filter by source" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Sources</SelectItem>
-                          <SelectItem value="referral">Referral</SelectItem>
-                          <SelectItem value="website">Website</SelectItem>
-                          <SelectItem value="social_media">Social Media</SelectItem>
-                          <SelectItem value="google_ads">Google Ads</SelectItem>
-                          <SelectItem value="direct_mail">Direct Mail</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {!crmData?.leads?.length ? (
-                      <EmptyState
-                        icon={Users}
-                        title="No leads found"
-                        description="Start building your pipeline by adding construction leads."
-                        action={{
-                          label: "Add Your First Lead",
-                          onClick: () => setActiveTab('leads')
-                        }}
-                      />
-                    ) : (
                       <div className="space-y-2">
                         {filteredLeads.map((lead) => (
-                          <div key={lead.id} 
-                               className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                               onClick={() => handleLeadClick(lead.id)}>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-3">
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium truncate">
-                                    {lead.first_name} {lead.last_name}
+                          <LeadEditDialog key={lead.id} lead={lead} onUpdate={updateLead}>
+                            <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">
+                                      {lead.first_name} {lead.last_name}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {lead.email} • {lead.phone}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-center space-y-1">
+                                    <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600`}>
+                                      {lead.status}
+                                    </Badge>
+                                    <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600`}>
+                                      {lead.priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium">
+                                    {lead.project_name || lead.company_name || 'No project specified'}
                                   </p>
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {lead.email} • {lead.phone}
+                                  <p className="text-sm text-muted-foreground">
+                                    {lead.project_type || 'Project type not specified'} • {lead.estimated_budget ? formatCurrency(lead.estimated_budget) : 'Budget TBD'}
                                   </p>
                                 </div>
-                                <div className="flex flex-col items-center space-y-1">
-                                  <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600`}>
-                                    {lead.status}
-                                  </Badge>
-                                  <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600`}>
-                                    {lead.priority}
-                                  </Badge>
-                                </div>
                               </div>
-                              <div className="mt-2">
-                                <p className="text-sm font-medium">
-                                  {lead.project_name || lead.company_name || 'No project specified'}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {lead.project_type || 'Project type not specified'} • {lead.estimated_budget ? formatCurrency(lead.estimated_budget) : 'Budget TBD'}
-                                </p>
+                              <div className="text-right space-y-1">
+                                <p className="text-sm text-muted-foreground">Source: {lead.lead_source}</p>
+                                <p className="text-xs text-muted-foreground">Created: {formatDate(lead.created_at)}</p>
+                                {lead.next_follow_up_date && (
+                                  <p className="text-xs text-orange-600">
+                                    Follow-up: {formatDate(lead.next_follow_up_date)}
+                                  </p>
+                                )}
                               </div>
                             </div>
-                            <div className="text-right space-y-1">
-                              <p className="text-sm text-muted-foreground">Source: {lead.lead_source}</p>
-                              <p className="text-xs text-muted-foreground">Created: {formatDate(lead.created_at)}</p>
-                              {lead.next_follow_up_date && (
-                                <p className="text-xs text-orange-600">
-                                  Follow-up: {formatDate(lead.next_follow_up_date)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
+                          </LeadEditDialog>
                         ))}
                       </div>
                     )}
@@ -1131,20 +1058,8 @@ const CRMDashboard = () => {
                 </Card>
               </TabsContent>
 
-              {/* Activities Tab */}
-              <TabsContent value="activities" className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <ActivityStream />
-                  </div>
-                  <div>
-                    <LeadScoring showTopLeads={true} limit={5} />
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Analytics Tab */}
-              <TabsContent value="reports" className="space-y-6">
+              {/* Opportunities Tab */}
+              <TabsContent value="opportunities" className="space-y-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
@@ -1224,32 +1139,19 @@ const CRMDashboard = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-
-              {/* Reports Tab */}
-              <TabsContent value="reports" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>CRM Analytics & Reports</CardTitle>
-                    <CardDescription>Insights into your sales performance</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-12">
-                      <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Reports Coming Soon</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Advanced analytics and reporting features are being developed.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
             </Tabs>
-        </div>
-      </div>
+    
+    {/* Lead Detail View */}
+    {viewMode === 'lead-detail' && selectedLeadId && (
+      <LeadDetailView 
+        leadId={selectedLeadId} 
+        onBack={() => setViewMode('dashboard')}
+        onUpdate={() => {/* TODO: Add lead update handler */}}
+      />
+    )}
+    
     </DashboardLayout>
   );
 };
-
-export default CRMDashboard;
 
 export default CRMDashboard;
