@@ -182,7 +182,9 @@ export default function EquipmentManagement() {
   };
 
   const handleEditEquipment = (item: any) => {
+    console.log('Edit button clicked for equipment:', item);
     setEditingEquipment(item);
+    console.log('editingEquipment state set to:', item);
   };
 
   const handleEquipmentUpdate = (updatedEquipment: any) => {
@@ -424,15 +426,24 @@ export default function EquipmentManagement() {
             <DialogHeader>
               <DialogTitle>Edit Equipment</DialogTitle>
             </DialogHeader>
-            {editingEquipment && (
+            {editingEquipment ? (
               <EquipmentEditForm
                 equipment={editingEquipment}
                 onSuccess={handleEquipmentUpdate}
                 onCancel={() => setEditingEquipment(null)}
               />
+            ) : (
+              <div>No equipment selected for editing</div>
             )}
           </DialogContent>
         </Dialog>
+        
+        {/* Debug info */}
+        {editingEquipment && (
+          <div className="fixed bottom-4 right-4 bg-red-500 text-white p-2 rounded z-50">
+            Dialog should be open: {editingEquipment.name}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
