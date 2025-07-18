@@ -7,8 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { ActivityStream } from './ActivityStream';
+import { LeadScoring } from './LeadScoring';
+import { format } from 'date-fns';
 import { 
   User, 
   Building2, 
@@ -22,40 +28,85 @@ import {
   Activity,
   Plus,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  Clock,
+  Target,
+  CheckCircle2,
+  AlertCircle,
+  Edit,
+  PhoneCall,
+  Send,
+  CalendarPlus,
+  Users,
+  MapPin,
+  Briefcase
 } from 'lucide-react';
 
 interface Lead {
   id: string;
   first_name: string;
   last_name: string;
-  email: string;
-  phone: string;
+  email?: string;
+  phone?: string;
   company_name?: string;
+  job_title?: string;
   project_name?: string;
   project_type?: string;
+  project_description?: string;
+  project_address?: string;
+  project_city?: string;
+  project_state?: string;
+  project_zip?: string;
   estimated_budget?: number;
-  status: string;
+  budget_range?: string;
+  desired_start_date?: string;
+  desired_completion_date?: string;
+  timeline_flexibility?: string;
   lead_source: string;
+  lead_source_detail?: string;
+  status: string;
   priority: string;
   assigned_to?: string;
+  property_type?: string;
+  permits_required?: boolean;
+  hoa_approval_needed?: boolean;
+  financing_secured?: boolean;
+  financing_type?: string;
+  site_accessible?: boolean;
+  site_conditions?: string;
+  decision_maker?: boolean;
+  decision_timeline?: string;
   next_follow_up_date?: string;
+  last_contact_date?: string;
+  notes?: string;
+  tags?: string[];
   created_at: string;
+  updated_at: string;
 }
 
 interface Activity {
   id: string;
   activity_type: string;
-  description: string;
-  created_at: string;
+  description?: string;
+  activity_date: string;
+  status?: string;
+  priority?: string;
+  lead_id?: string;
+  opportunity_id?: string;
   created_by: string;
+  created_at: string;
 }
 
 interface Note {
   id: string;
   content: string;
+  note_type: string;
   created_at: string;
   created_by: string;
+  user_profiles?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 interface LeadDetailViewProps {
@@ -65,6 +116,7 @@ interface LeadDetailViewProps {
 }
 
 export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, onUpdate }) => {
+  const { user, userProfile } = useAuth();
   const [lead, setLead] = useState<Lead | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -72,6 +124,12 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [loading, setLoading] = useState(true);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [newActivity, setNewActivity] = useState({
+    activity_type: 'call',
+    description: '',
+    activity_date: new Date().toISOString().split('T')[0]
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -80,6 +138,9 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
 
   const loadLeadDetails = async () => {
     try {
+      setLoading(true);
+      
+      // Load lead data
       const { data: leadData, error: leadError } = await supabase
         .from('leads')
         .select('*')
@@ -95,14 +156,20 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
         .from('lead_activities')
         .select('*')
         .eq('lead_id', leadId)
-        .order('created_at', { ascending: false });
+        .order('activity_date', { ascending: false });
 
       if (activitiesData) setActivities(activitiesData);
 
       // Load notes
       const { data: notesData } = await supabase
         .from('lead_notes')
-        .select('*')
+        .select(`
+          *,
+          user_profiles:created_by (
+            first_name,
+            last_name
+          )
+        `)
         .eq('lead_id', leadId)
         .order('created_at', { ascending: false });
 
@@ -148,7 +215,7 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
   };
 
   const addNote = async () => {
-    if (!newNote.trim()) return;
+    if (!newNote.trim() || !userProfile?.company_id) return;
 
     try {
       const { data, error } = await supabase
@@ -157,10 +224,16 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
           lead_id: leadId,
           content: newNote,
           note_type: 'general',
-          company_id: '', // We'll need to get this from user context
-          created_by: '' // We'll need to get this from auth context
+          company_id: userProfile.company_id,
+          created_by: user?.id
         })
-        .select()
+        .select(`
+          *,
+          user_profiles:created_by (
+            first_name,
+            last_name
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -175,6 +248,47 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
     } catch (error: any) {
       toast({
         title: "Error adding note",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addActivity = async () => {
+    if (!newActivity.description.trim() || !userProfile?.company_id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('lead_activities')
+        .insert({
+          lead_id: leadId,
+          activity_type: newActivity.activity_type,
+          description: newActivity.description,
+          subject: newActivity.activity_type,
+          activity_date: newActivity.activity_date,
+          company_id: userProfile.company_id,
+          created_by: user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setActivities([data, ...activities]);
+      setNewActivity({
+        activity_type: 'call',
+        description: '',
+        activity_date: new Date().toISOString().split('T')[0]
+      });
+      setShowActivityDialog(false);
+      
+      toast({
+        title: "Activity logged",
+        description: "Activity has been recorded"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error adding activity",
         description: error.message,
         variant: "destructive"
       });

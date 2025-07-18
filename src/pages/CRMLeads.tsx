@@ -36,6 +36,7 @@ import {
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
+import { LeadDetailView } from '@/components/crm/LeadDetailView';
 
 interface Lead {
   id: string;
@@ -100,6 +101,8 @@ const CRMLeads = () => {
     site_accessible: true,
     decision_maker: false
   });
+  const [selectedLead, setSelectedLead] = useState<string | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
   
   const { 
     data: leads, 
@@ -278,6 +281,32 @@ const CRMLeads = () => {
     });
   };
 
+  const updateLead = async (leadId: string, updates: Partial<Lead>) => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update(updates)
+        .eq('id', leadId);
+
+      if (error) throw error;
+
+      // Update local state
+      loadLeads(loadLeadsData);
+      
+      toast({
+        title: "Success",
+        description: "Lead updated successfully!",
+      });
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update lead. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const filteredLeads = leads?.filter(lead => {
     const matchesSearch = searchTerm === '' || 
       `${lead.first_name} ${lead.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -298,6 +327,19 @@ const CRMLeads = () => {
 
   if (!user) {
     return null;
+  }
+
+  // Show lead detail view if a lead is selected
+  if (selectedLead) {
+    return (
+      <DashboardLayout title="Lead Details">
+        <LeadDetailView 
+          leadId={selectedLead} 
+          onBack={() => setSelectedLead(null)}
+          onUpdate={updateLead}
+        />
+      </DashboardLayout>
+    );
   }
 
   return (
@@ -715,12 +757,12 @@ const CRMLeads = () => {
                   ) : (
                     <div className="space-y-4">
                       {filteredLeads.map((lead) => (
-                        <div key={lead.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                        <div key={lead.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead.id)}>
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-3 mb-2">
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-lg">
+                                  <p className="font-medium text-lg hover:text-primary">
                                     {lead.first_name} {lead.last_name}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
@@ -728,18 +770,31 @@ const CRMLeads = () => {
                                     {lead.company_name || 'Individual'}
                                   </p>
                                 </div>
-                                <div className="flex flex-col items-end space-y-1">
-                                  <div className="flex space-x-2">
-                                    <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600 border-${getStatusColor(lead.status)}-200`}>
-                                      {lead.status.replace('_', ' ')}
-                                    </Badge>
-                                    <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600 border-${getPriorityColor(lead.priority)}-200`}>
-                                      {lead.priority}
-                                    </Badge>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingLead(lead);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <div className="flex flex-col items-end space-y-1">
+                                    <div className="flex space-x-2">
+                                      <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600 border-${getStatusColor(lead.status)}-200`}>
+                                        {lead.status.replace('_', ' ')}
+                                      </Badge>
+                                      <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600 border-${getPriorityColor(lead.priority)}-200`}>
+                                        {lead.priority}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Source: {lead.lead_source.replace('_', ' ')}
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    Source: {lead.lead_source.replace('_', ' ')}
-                                  </p>
                                 </div>
                               </div>
                               
