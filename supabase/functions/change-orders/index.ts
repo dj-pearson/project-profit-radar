@@ -84,6 +84,8 @@ serve(async (req) => {
         // POST request for listing change orders
         const projectId = body.project_id;
         
+        logStep("Listing change orders", { projectId, companyId: userProfile.company_id });
+        
         let query = supabaseClient
           .from('change_orders')
           .select(`
@@ -93,15 +95,18 @@ serve(async (req) => {
           .eq('projects.company_id', userProfile.company_id)
           .order('created_at', { ascending: false });
 
-        if (projectId) {
+        if (projectId && projectId !== 'all') {
           query = query.eq('project_id', projectId);
         }
 
         const { data: changeOrders, error: ordersError } = await query;
 
-        if (ordersError) throw new Error(`Change orders fetch error: ${ordersError.message}`);
+        if (ordersError) {
+          logStep("Change orders fetch error", { error: ordersError.message });
+          throw new Error(`Change orders fetch error: ${ordersError.message}`);
+        }
         
-        logStep("Change orders retrieved", { count: changeOrders?.length });
+        logStep("Change orders retrieved successfully", { count: changeOrders?.length, orders: changeOrders });
         return new Response(JSON.stringify({ changeOrders }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -109,10 +114,11 @@ serve(async (req) => {
       }
 
       if (action === "create") {
-        logStep("Creating change order", body);
+        logStep("Creating change order", { body, userRole: userProfile.role });
 
         // Verify user can create change orders
         if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+          logStep("Permission denied", { role: userProfile.role });
           throw new Error("Insufficient permissions to create change orders");
         }
 

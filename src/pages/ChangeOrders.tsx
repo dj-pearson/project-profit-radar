@@ -107,12 +107,25 @@ const ChangeOrders = () => {
       setProjects(projectsData || []);
 
       // Load change orders
+      console.log('Loading change orders...');
       const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
         body: { action: 'list' }
       });
 
-      if (ordersError) throw ordersError;
-      setChangeOrders(ordersData.changeOrders || []);
+      console.log('Change orders response:', { ordersData, ordersError });
+
+      if (ordersError) {
+        console.error('Change orders error:', ordersError);
+        throw ordersError;
+      }
+      
+      if (ordersData?.changeOrders) {
+        console.log('Setting change orders:', ordersData.changeOrders);
+        setChangeOrders(ordersData.changeOrders);
+      } else {
+        console.log('No change orders in response');
+        setChangeOrders([]);
+      }
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -149,6 +162,12 @@ const ChangeOrders = () => {
     }
 
     try {
+      console.log('Creating change order with data:', { 
+        action: 'create',
+        ...newOrder,
+        amount: amount
+      });
+      
       const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'create',
@@ -156,6 +175,8 @@ const ChangeOrders = () => {
           amount: amount
         }
       });
+
+      console.log('Create response:', { data, error });
 
       if (error) throw error;
 
