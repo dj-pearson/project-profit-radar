@@ -440,6 +440,14 @@ const AppContent = () => {
         }
       />
       <Route
+        path="/material-tracking"
+        element={
+          <RouteGuard routePath="/material-tracking">
+            <MaterialTracking />
+          </RouteGuard>
+        }
+      />
+      <Route
         path="/equipment"
         element={
           <RouteGuard routePath="/equipment">
