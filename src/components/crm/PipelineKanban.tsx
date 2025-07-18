@@ -190,9 +190,111 @@ export const PipelineKanban: React.FC<PipelineKanbanProps> = ({ onLeadClick }) =
   return (
     <div className="h-full">
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex space-x-2 sm:space-x-4 overflow-x-auto pb-4">
+        {/* Mobile: Vertical Stack */}
+        <div className="md:hidden space-y-4">
           {stages.map((stage) => (
-            <div key={stage.id} className="min-w-[240px] sm:min-w-[300px] flex-shrink-0">
+            <Card key={stage.id} className="w-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">
+                    <Badge className={getStageColor(stage.color)}>
+                      {stage.name}
+                    </Badge>
+                  </CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-muted-foreground">
+                      {leadsByStage[stage.id]?.length || 0}
+                    </span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Total Value: {formatCurrency(
+                    leadsByStage[stage.id]?.reduce((sum, lead) => sum + (lead.estimated_budget || 0), 0) || 0
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Droppable droppableId={stage.id}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`space-y-2 min-h-[120px] ${
+                        snapshot.isDraggingOver ? 'bg-muted/50 rounded-md' : ''
+                      }`}
+                    >
+                      {leadsByStage[stage.id]?.map((lead, index) => (
+                        <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                          {(provided, snapshot) => (
+                            <Card
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`cursor-pointer transition-shadow hover:shadow-md border-l-4 ${getPriorityColor(lead.priority)} ${
+                                snapshot.isDragging ? 'shadow-lg' : ''
+                              }`}
+                              onClick={() => onLeadClick(lead.id)}
+                            >
+                              <CardContent className="p-3">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-medium text-sm truncate">
+                                      {lead.first_name} {lead.last_name}
+                                    </h4>
+                                    <Button variant="ghost" size="icon" className="h-4 w-4">
+                                      <MoreHorizontal className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                                    <Building2 className="h-3 w-3" />
+                                    <span className="truncate">
+                                      {lead.company_name || lead.project_name || 'Individual'}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-1 text-xs">
+                                      <DollarSign className="h-3 w-3 text-green-600" />
+                                      <span className="font-medium">
+                                        {formatCurrency(lead.estimated_budget || 0)}
+                                      </span>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs">
+                                      {lead.priority}
+                                    </Badge>
+                                  </div>
+
+                                  {lead.next_follow_up_date && (
+                                    <div className="flex items-center space-x-1 text-xs text-orange-600">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>
+                                        {new Date(lead.next_follow_up_date).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop: Horizontal Kanban */}
+        <div className="hidden md:flex space-x-4 overflow-x-auto pb-4">
+          {stages.map((stage) => (
+            <div key={stage.id} className="min-w-[300px] flex-shrink-0">
               <Card className="h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
