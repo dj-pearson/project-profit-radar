@@ -129,7 +129,7 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
           <DialogTitle>Edit Lead: {lead.first_name} {lead.last_name}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="first_name">First Name</Label>
               <Input
@@ -150,7 +150,7 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -172,7 +172,7 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="company_name">Company</Label>
               <Input
@@ -191,7 +191,7 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="project_type">Project Type</Label>
               <Select value={formData.project_type} onValueChange={(value) => setFormData({ ...formData, project_type: value })}>
@@ -218,7 +218,7 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
@@ -278,11 +278,11 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="w-full sm:w-auto">
               <Save className="h-4 w-4 mr-2" />
               Save Changes
             </Button>
@@ -825,41 +825,45 @@ const CRMDashboard = () => {
                 
                 {/* Pipeline Kanban - Primary Feature */}
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div>
-                      <CardTitle className="flex items-center">
-                        <Target className="h-5 w-5 mr-2 text-primary" />
+                      <CardTitle className="flex items-center text-lg sm:text-xl">
+                        <Target className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
                         Sales Pipeline
                       </CardTitle>
-                      <CardDescription>Visual overview of your opportunities and deals</CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">Visual overview of your opportunities and deals</CardDescription>
                     </div>
-                    <Button variant="outline" onClick={() => setActiveTab('opportunities')}>
+                    <Button variant="outline" size="sm" onClick={() => setActiveTab('opportunities')} className="w-full sm:w-auto">
                       <BarChart3 className="h-4 w-4 mr-2" />
-                      View Full Pipeline
+                      <span className="hidden sm:inline">View Full Pipeline</span>
+                      <span className="sm:hidden">Pipeline</span>
                     </Button>
                   </CardHeader>
-                  <CardContent className="p-0">
-                    <PipelineKanban onLeadClick={handleLeadClick} />
+                  <CardContent className="p-2 sm:p-6">
+                    <div className="overflow-x-auto">
+                      <PipelineKanban onLeadClick={handleLeadClick} />
+                    </div>
                   </CardContent>
                 </Card>
 
-                <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="sm">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   
                   {/* Lead Scoring - AI Feature */}
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                       <div>
-                        <CardTitle className="flex items-center">
-                          <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                        <CardTitle className="flex items-center text-base sm:text-lg">
+                          <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
                           Top Scoring Leads
                         </CardTitle>
-                        <CardDescription>AI-powered lead prioritization</CardDescription>
+                        <CardDescription className="text-xs sm:text-sm">AI-powered lead prioritization</CardDescription>
                       </div>
-                      <Button size="sm" onClick={() => setActiveTab('leads')}>
-                        View All Scores
+                      <Button size="sm" onClick={() => setActiveTab('leads')} className="w-full sm:w-auto">
+                        <span className="hidden sm:inline">View All Scores</span>
+                        <span className="sm:hidden">All Scores</span>
                       </Button>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-2 sm:p-6">
                       {!crmData?.leads?.length ? (
                         <EmptyState
                           icon={Users}
@@ -960,7 +964,7 @@ const CRMDashboard = () => {
                       )}
                     </CardContent>
                   </Card>
-                </ResponsiveGrid>
+                </div>
               </TabsContent>
 
               {/* Leads Tab */}
