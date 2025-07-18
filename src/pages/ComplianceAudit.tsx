@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 import { 
   Shield, 
@@ -22,7 +24,8 @@ import {
   Download,
   Search,
   Filter,
-  ArrowLeft
+  ArrowLeft,
+  Edit
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -84,6 +87,8 @@ const ComplianceAudit = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRisk, setFilterRisk] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [editingEvent, setEditingEvent] = useState<AuditEvent | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -300,141 +305,146 @@ const ComplianceAudit = () => {
     <DashboardLayout title="SOC 2 Compliance Audit">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold">SOC 2 Compliance Audit</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Comprehensive audit trail for compliance monitoring and reporting
             </p>
           </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button onClick={generateComplianceReport}>
-            <FileText className="mr-2 h-4 w-4" />
-            Generate Report
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+              <span className="sm:hidden">Refresh</span>
+            </Button>
+            <Button onClick={generateComplianceReport} className="w-full sm:w-auto">
+              <FileText className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Generate Report</span>
+              <span className="sm:hidden">Report</span>
+            </Button>
+          </div>
         </div>
+
+       {/* Statistics Cards */}
+       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6">
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-xs sm:text-sm font-medium">Total Events</CardTitle>
+             <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-construction-orange" />
+           </CardHeader>
+           <CardContent>
+             <div className="text-lg sm:text-2xl font-bold">{stats.totalEvents}</div>
+             <p className="text-xs text-muted-foreground">Last 30 days</p>
+           </CardContent>
+         </Card>
+
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-xs sm:text-sm font-medium">High Risk Events</CardTitle>
+             <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
+           </CardHeader>
+           <CardContent>
+             <div className="text-lg sm:text-2xl font-bold">{stats.highRiskEvents}</div>
+             <p className="text-xs text-muted-foreground">Last 7 days</p>
+           </CardContent>
+         </Card>
+
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-xs sm:text-sm font-medium">Data Access</CardTitle>
+             <Database className="h-3 w-3 sm:h-4 sm:w-4 text-construction-orange" />
+           </CardHeader>
+           <CardContent>
+             <div className="text-lg sm:text-2xl font-bold">{stats.dataAccessEvents}</div>
+             <p className="text-xs text-muted-foreground">Last 24 hours</p>
+           </CardContent>
+         </Card>
+
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-xs sm:text-sm font-medium">Config Changes</CardTitle>
+             <Settings className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+           </CardHeader>
+           <CardContent>
+             <div className="text-lg sm:text-2xl font-bold">{stats.configChanges}</div>
+             <p className="text-xs text-muted-foreground">Last 7 days</p>
+           </CardContent>
+         </Card>
+
+         <Card>
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+             <CardTitle className="text-xs sm:text-sm font-medium">Today's Events</CardTitle>
+             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+           </CardHeader>
+           <CardContent>
+             <div className="text-lg sm:text-2xl font-bold">{stats.todayEvents}</div>
+             <p className="text-xs text-muted-foreground">Since midnight</p>
+           </CardContent>
+         </Card>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <FileText className="h-4 w-4 text-construction-orange" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEvents}</div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
-          </CardContent>
-        </Card>
+       {/* Main Content */}
+       <Tabs defaultValue="audit-log" className="space-y-6">
+         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+           <TabsTrigger value="audit-log" className="text-xs sm:text-sm">Audit Log</TabsTrigger>
+           <TabsTrigger value="data-access" className="text-xs sm:text-sm">Data Access</TabsTrigger>
+           <TabsTrigger value="config-changes" className="text-xs sm:text-sm">Config Changes</TabsTrigger>
+           <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
+         </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Risk Events</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.highRiskEvents}</div>
-            <p className="text-xs text-muted-foreground">Last 7 days</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Data Access</CardTitle>
-            <Database className="h-4 w-4 text-construction-orange" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.dataAccessEvents}</div>
-            <p className="text-xs text-muted-foreground">Last 24 hours</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Config Changes</CardTitle>
-            <Settings className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.configChanges}</div>
-            <p className="text-xs text-muted-foreground">Last 7 days</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Events</CardTitle>
-            <Clock className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.todayEvents}</div>
-            <p className="text-xs text-muted-foreground">Since midnight</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <Tabs defaultValue="audit-log" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="audit-log">Audit Log</TabsTrigger>
-          <TabsTrigger value="data-access">Data Access</TabsTrigger>
-          <TabsTrigger value="config-changes">Config Changes</TabsTrigger>
-          <TabsTrigger value="reports">Compliance Reports</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="audit-log" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>System Audit Log</CardTitle>
-                  <CardDescription>
-                    Comprehensive log of all system activities and user actions
-                  </CardDescription>
-                </div>
-                
-                {/* Filters */}
-                <div className="flex gap-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search events..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-64"
-                    />
-                  </div>
-                  <Select value={filterRisk} onValueChange={setFilterRisk}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Risk Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Risk</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="data_access">Data Access</SelectItem>
-                      <SelectItem value="user_management">User Management</SelectItem>
-                      <SelectItem value="financial">Financial</SelectItem>
-                      <SelectItem value="security">Security</SelectItem>
-                      <SelectItem value="configuration_change">Config Change</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
+         <TabsContent value="audit-log" className="space-y-6">
+           <Card>
+             <CardHeader>
+               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                 <div>
+                   <CardTitle className="text-lg sm:text-xl">System Audit Log</CardTitle>
+                   <CardDescription className="text-sm">
+                     Comprehensive log of all system activities and user actions
+                   </CardDescription>
+                 </div>
+                 
+                 {/* Filters */}
+                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                   <div className="relative">
+                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                     <Input
+                       placeholder="Search events..."
+                       value={searchTerm}
+                       onChange={(e) => setSearchTerm(e.target.value)}
+                       className="pl-10 w-full sm:w-64"
+                     />
+                   </div>
+                   <div className="flex gap-2">
+                     <Select value={filterRisk} onValueChange={setFilterRisk}>
+                       <SelectTrigger className="w-full sm:w-32">
+                         <SelectValue placeholder="Risk Level" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">All Risk</SelectItem>
+                         <SelectItem value="low">Low</SelectItem>
+                         <SelectItem value="medium">Medium</SelectItem>
+                         <SelectItem value="high">High</SelectItem>
+                         <SelectItem value="critical">Critical</SelectItem>
+                       </SelectContent>
+                     </Select>
+                     <Select value={filterCategory} onValueChange={setFilterCategory}>
+                       <SelectTrigger className="w-full sm:w-40">
+                         <SelectValue placeholder="Category" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">All Categories</SelectItem>
+                         <SelectItem value="data_access">Data Access</SelectItem>
+                         <SelectItem value="user_management">User Management</SelectItem>
+                         <SelectItem value="financial">Financial</SelectItem>
+                         <SelectItem value="security">Security</SelectItem>
+                         <SelectItem value="configuration_change">Config Change</SelectItem>
+                       </SelectContent>
+                     </Select>
+                   </div>
+                 </div>
+               </div>
+             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {filteredEvents.length === 0 ? (
@@ -443,39 +453,51 @@ const ComplianceAudit = () => {
                     <p>No audit events match your filters</p>
                   </div>
                 ) : (
-                  filteredEvents.map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {getActionIcon(event.action_type)}
-                        <div>
-                          <div className="font-medium">
-                            {event.action_type.toUpperCase()} {event.resource_type}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {event.resource_name} • {event.user_profiles?.first_name} {event.user_profiles?.last_name}
-                          </div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {event.description}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex gap-2 mb-2">
-                          <Badge variant={getRiskBadgeVariant(event.risk_level)}>
-                            {event.risk_level}
-                          </Badge>
-                          <Badge variant="outline">
-                            {event.compliance_category}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(event.created_at), 'MMM d, HH:mm:ss')}
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                   filteredEvents.map((event) => (
+                     <div key={event.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-4">
+                       <div className="flex items-center gap-3">
+                         {getActionIcon(event.action_type)}
+                         <div className="flex-1">
+                           <div className="font-medium text-sm sm:text-base">
+                             {event.action_type.toUpperCase()} {event.resource_type}
+                           </div>
+                           <div className="text-xs sm:text-sm text-muted-foreground">
+                             {event.resource_name} • {event.user_profiles?.first_name} {event.user_profiles?.last_name}
+                           </div>
+                           {event.description && (
+                             <div className="text-xs text-muted-foreground mt-1">
+                               {event.description}
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:text-right">
+                         <div className="flex flex-wrap gap-2">
+                           <Badge variant={getRiskBadgeVariant(event.risk_level)}>
+                             {event.risk_level}
+                           </Badge>
+                           <Badge variant="outline">
+                             {event.compliance_category}
+                           </Badge>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <div className="text-xs text-muted-foreground">
+                             {format(new Date(event.created_at), 'MMM d, HH:mm:ss')}
+                           </div>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => {
+                               setEditingEvent(event);
+                               setEditDialogOpen(true);
+                             }}
+                           >
+                             <Edit className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </div>
+                     </div>
+                   ))
                 )}
               </div>
             </CardContent>
@@ -562,10 +584,126 @@ const ComplianceAudit = () => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-      </div>
-    </DashboardLayout>
-  );
-};
+       </Tabs>
 
-export default ComplianceAudit;
+       {/* Edit Dialog */}
+       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+         <DialogContent className="max-w-2xl">
+           <DialogHeader>
+             <DialogTitle>Edit Audit Event</DialogTitle>
+             <DialogDescription>
+               Update the details for this compliance audit event
+             </DialogDescription>
+           </DialogHeader>
+           
+           {editingEvent && (
+             <div className="space-y-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="edit-action-type">Action Type</Label>
+                   <Select defaultValue={editingEvent.action_type}>
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="create">Create</SelectItem>
+                       <SelectItem value="update">Update</SelectItem>
+                       <SelectItem value="delete">Delete</SelectItem>
+                       <SelectItem value="export">Export</SelectItem>
+                       <SelectItem value="view">View</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div>
+                   <Label htmlFor="edit-resource-type">Resource Type</Label>
+                   <Input 
+                     id="edit-resource-type" 
+                     defaultValue={editingEvent.resource_type}
+                     placeholder="Resource type" 
+                   />
+                 </div>
+               </div>
+               <div>
+                 <Label htmlFor="edit-resource-name">Resource Name</Label>
+                 <Input 
+                   id="edit-resource-name" 
+                   defaultValue={editingEvent.resource_name || ''}
+                   placeholder="Resource name" 
+                 />
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="edit-risk-level">Risk Level</Label>
+                   <Select defaultValue={editingEvent.risk_level}>
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="low">Low</SelectItem>
+                       <SelectItem value="medium">Medium</SelectItem>
+                       <SelectItem value="high">High</SelectItem>
+                       <SelectItem value="critical">Critical</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div>
+                   <Label htmlFor="edit-compliance-category">Compliance Category</Label>
+                   <Select defaultValue={editingEvent.compliance_category}>
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="data_access">Data Access</SelectItem>
+                       <SelectItem value="user_management">User Management</SelectItem>
+                       <SelectItem value="financial">Financial</SelectItem>
+                       <SelectItem value="security">Security</SelectItem>
+                       <SelectItem value="configuration_change">Configuration Change</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
+               <div>
+                 <Label htmlFor="edit-description">Description</Label>
+                 <Textarea 
+                   id="edit-description" 
+                   defaultValue={editingEvent.description || ''}
+                   placeholder="Event description..."
+                   rows={3}
+                 />
+               </div>
+
+               <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                 <Button 
+                   onClick={() => {
+                     setEditDialogOpen(false);
+                     setEditingEvent(null);
+                     toast({
+                       title: "Event Updated",
+                       description: "Audit event has been updated successfully",
+                     });
+                   }}
+                   className="w-full sm:flex-1"
+                 >
+                   Save Changes
+                 </Button>
+                 <Button 
+                   variant="outline" 
+                   onClick={() => {
+                     setEditDialogOpen(false);
+                     setEditingEvent(null);
+                   }}
+                   className="w-full sm:w-auto"
+                 >
+                   Cancel
+                 </Button>
+               </div>
+             </div>
+           )}
+         </DialogContent>
+       </Dialog>
+       </div>
+     </DashboardLayout>
+   );
+ };
+
+ export default ComplianceAudit;
