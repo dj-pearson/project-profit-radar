@@ -3,7 +3,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, FileText, Users, Calendar, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { Plus, Search, FileText, Users, Calendar, CheckCircle, AlertCircle, ArrowLeft, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -23,6 +23,7 @@ export default function PublicProcurement() {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [bidSubmissions, setBidSubmissions] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [editingOpportunity, setEditingOpportunity] = useState<any>(null);
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
@@ -79,23 +80,34 @@ export default function PublicProcurement() {
         procurement_type: formData.procurement_type || null,
         estimated_value: formData.estimated_value ? parseFloat(formData.estimated_value) : null,
         submission_deadline: formData.submission_deadline || null,
-        status: 'open'
+        ...(editingOpportunity ? {} : { status: 'open' })
       };
 
-      const { error } = await supabase
-        .from('procurement_opportunities')
-        .insert([opportunityData]);
+      let error;
+
+      if (editingOpportunity) {
+        const { error: updateError } = await supabase
+          .from('procurement_opportunities')
+          .update(opportunityData)
+          .eq('id', editingOpportunity.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('procurement_opportunities')
+          .insert([opportunityData]);
+        error = insertError;
+      }
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Procurement opportunity saved successfully"
+        description: editingOpportunity ? "Procurement opportunity updated successfully" : "Procurement opportunity saved successfully"
       });
       
       resetForm();
       setIsDialogOpen(false);
-      // Refresh the opportunities list
+      setEditingOpportunity(null);
       loadOpportunities();
     } catch (error) {
       console.error('Error saving opportunity:', error);
@@ -107,6 +119,20 @@ export default function PublicProcurement() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditOpportunity = (opportunity: any) => {
+    setEditingOpportunity(opportunity);
+    setFormData({
+      opportunity_number: opportunity.opportunity_number || '',
+      issuing_agency: opportunity.issuing_agency || '',
+      title: opportunity.title || '',
+      description: opportunity.description || '',
+      procurement_type: opportunity.procurement_type || '',
+      estimated_value: opportunity.estimated_value ? opportunity.estimated_value.toString() : '',
+      submission_deadline: opportunity.submission_deadline ? opportunity.submission_deadline.replace('Z', '').slice(0, 16) : ''
+    });
+    setIsDialogOpen(true);
   };
 
   const loadOpportunities = async () => {
@@ -217,9 +243,9 @@ export default function PublicProcurement() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Add Procurement Opportunity</DialogTitle>
+                <DialogTitle>{editingOpportunity ? 'Edit Procurement Opportunity' : 'Add Procurement Opportunity'}</DialogTitle>
                 <DialogDescription>
-                  Track a new public procurement opportunity
+                  {editingOpportunity ? 'Update procurement opportunity details' : 'Track a new public procurement opportunity'}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -305,6 +331,7 @@ export default function PublicProcurement() {
                     onClick={() => {
                       setIsDialogOpen(false);
                       resetForm();
+                      setEditingOpportunity(null);
                     }}
                   >
                     Cancel
@@ -324,21 +351,23 @@ export default function PublicProcurement() {
       <div className="space-y-6">
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-          <TabsTrigger value="bids">My Bids</TabsTrigger>
-          <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
-          <TabsTrigger value="requirements">Requirements</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsTrigger value="opportunities" className="text-xs sm:text-sm">Opportunities</TabsTrigger>
+          <TabsTrigger value="bids" className="text-xs sm:text-sm">My Bids</TabsTrigger>
+          <TabsTrigger value="subcontractors" className="text-xs sm:text-sm">Subcontractors</TabsTrigger>
+          <TabsTrigger value="requirements" className="text-xs sm:text-sm">Requirements</TabsTrigger>
         </TabsList>
 
-        <div className="flex items-center space-x-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search opportunities, bids, or subcontractors..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search opportunities, bids, or subcontractors..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:max-w-sm"
+            />
+          </div>
         </div>
 
         <TabsContent value="opportunities" className="space-y-4">
@@ -400,12 +429,21 @@ export default function PublicProcurement() {
                         <div>{opportunity.project_location || 'Not specified'}</div>
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button variant="outline" size="sm">
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditOpportunity(opportunity)}
+                        className="w-full sm:w-auto"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <FileText className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" className="w-full sm:w-auto">
                         <Plus className="h-4 w-4 mr-2" />
                         Submit Bid
                       </Button>
@@ -452,16 +490,17 @@ export default function PublicProcurement() {
                       <div className="capitalize">{bid.status.replace('_', ' ')}</div>
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" size="sm">
+                  <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       <Users className="h-4 w-4 mr-2" />
                       Subcontractors
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       <FileText className="h-4 w-4 mr-2" />
                       Documents
                     </Button>
-                    <Button size="sm">
+                    <Button size="sm" className="w-full sm:w-auto">
+                      <Edit className="h-4 w-4 mr-2" />
                       Edit Bid
                     </Button>
                   </div>
