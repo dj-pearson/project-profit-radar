@@ -127,11 +127,23 @@ const ChangeOrders = () => {
   };
 
   const handleCreateOrder = async () => {
-    if (!newOrder.project_id || !newOrder.title || !newOrder.amount) {
+    // Validate required fields
+    if (!newOrder.project_id || !newOrder.title || !newOrder.amount.trim()) {
       toast({
         variant: "destructive",
         title: "Validation Error",
         description: "Please fill in all required fields."
+      });
+      return;
+    }
+
+    // Validate amount is a valid number greater than 0
+    const amount = parseFloat(newOrder.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error", 
+        description: "Please enter a valid amount greater than 0"
       });
       return;
     }
@@ -141,7 +153,7 @@ const ChangeOrders = () => {
         body: { 
           action: 'create',
           ...newOrder,
-          amount: Number(newOrder.amount)
+          amount: amount
         }
       });
 
