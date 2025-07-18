@@ -4419,7 +4419,7 @@ const ProjectDetail = () => {
                     const { error } = await supabase.functions.invoke('change-orders', {
                       body: { 
                         action: 'update',
-                        id: editingChangeOrder.id,
+                        orderId: editingChangeOrder.id,
                         title: editingChangeOrder.title,
                         description: editingChangeOrder.description,
                         amount: editingChangeOrder.amount,

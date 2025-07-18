@@ -273,7 +273,7 @@ const ChangeOrders = () => {
       const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'update',
-          id: editingOrder.id,
+          orderId: editingOrder.id,
           ...newOrder,
           amount: amount,
           assigned_approvers: selectedApprovers,
