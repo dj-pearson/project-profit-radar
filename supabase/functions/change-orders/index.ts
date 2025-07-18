@@ -207,6 +207,46 @@ serve(async (req) => {
         });
       }
 
+      if (action === "update") {
+        const { orderId, title, description, amount, reason, assigned_approvers, approval_due_date, approval_notes } = body;
+        logStep("Updating change order", { orderId, title, userRole: userProfile.role });
+
+        // Verify user can update change orders
+        if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
+          logStep("Permission denied", { role: userProfile.role });
+          throw new Error("Insufficient permissions to update change orders");
+        }
+
+        const updateData = {
+          title,
+          description,
+          amount,
+          reason,
+          assigned_approvers: assigned_approvers || [],
+          approval_due_date: approval_due_date || null,
+          approval_notes: approval_notes || null,
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: updatedOrder, error: updateError } = await supabaseClient
+          .from('change_orders')
+          .update(updateData)
+          .eq('id', orderId)
+          .select(`
+            *,
+            projects(name, client_name)
+          `)
+          .single();
+
+        if (updateError) throw new Error(`Change order update error: ${updateError.message}`);
+
+        logStep("Change order updated", { orderId });
+        return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
       if (action === "approve") {
         const { orderId, approvalType, approved } = body;
         logStep("Processing approval", { orderId, approvalType, approved });
