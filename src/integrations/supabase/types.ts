@@ -1444,48 +1444,72 @@ export type Database = {
       }
       company_payment_settings: {
         Row: {
+          authorize_net_api_login: string | null
+          authorize_net_transaction_key_encrypted: string | null
           chargeback_fee: number | null
+          clover_app_id: string | null
+          clover_app_secret_encrypted: string | null
           company_id: string
           configured_at: string | null
           configured_by: string | null
           created_at: string
           id: string
           is_active: boolean
+          paypal_client_id: string | null
+          paypal_client_secret_encrypted: string | null
           per_transaction_fee: number | null
           processing_fee_percentage: number | null
           processor_type: string
+          square_access_token_encrypted: string | null
+          square_application_id: string | null
           stripe_publishable_key: string | null
           stripe_secret_key_encrypted: string | null
           stripe_webhook_secret_encrypted: string | null
           updated_at: string
         }
         Insert: {
+          authorize_net_api_login?: string | null
+          authorize_net_transaction_key_encrypted?: string | null
           chargeback_fee?: number | null
+          clover_app_id?: string | null
+          clover_app_secret_encrypted?: string | null
           company_id: string
           configured_at?: string | null
           configured_by?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          paypal_client_id?: string | null
+          paypal_client_secret_encrypted?: string | null
           per_transaction_fee?: number | null
           processing_fee_percentage?: number | null
           processor_type: string
+          square_access_token_encrypted?: string | null
+          square_application_id?: string | null
           stripe_publishable_key?: string | null
           stripe_secret_key_encrypted?: string | null
           stripe_webhook_secret_encrypted?: string | null
           updated_at?: string
         }
         Update: {
+          authorize_net_api_login?: string | null
+          authorize_net_transaction_key_encrypted?: string | null
           chargeback_fee?: number | null
+          clover_app_id?: string | null
+          clover_app_secret_encrypted?: string | null
           company_id?: string
           configured_at?: string | null
           configured_by?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          paypal_client_id?: string | null
+          paypal_client_secret_encrypted?: string | null
           per_transaction_fee?: number | null
           processing_fee_percentage?: number | null
           processor_type?: string
+          square_access_token_encrypted?: string | null
+          square_application_id?: string | null
           stripe_publishable_key?: string | null
           stripe_secret_key_encrypted?: string | null
           stripe_webhook_secret_encrypted?: string | null

@@ -97,20 +97,38 @@ export const PaymentSettings = () => {
           chargeback_fee: data.chargeback_fee || 15.00,
           stripe_publishable_key: data.stripe_publishable_key,
           square_application_id: data.square_application_id,
-          square_access_token: data.square_access_token,
+          square_access_token: data.square_access_token_encrypted,
           paypal_client_id: data.paypal_client_id,
-          paypal_client_secret: data.paypal_client_secret,
+          paypal_client_secret: data.paypal_client_secret_encrypted,
           authorize_net_api_login: data.authorize_net_api_login,
-          authorize_net_transaction_key: data.authorize_net_transaction_key,
+          authorize_net_transaction_key: data.authorize_net_transaction_key_encrypted,
           clover_app_id: data.clover_app_id,
-          clover_app_secret: data.clover_app_secret,
+          clover_app_secret: data.clover_app_secret_encrypted,
           is_active: data.is_active
         });
 
-        if (data.stripe_publishable_key) {
-          setStripeKeys(prev => ({
+        if (data.square_application_id) {
+          setSquareKeys(prev => ({
             ...prev,
-            publishable_key: data.stripe_publishable_key
+            application_id: data.square_application_id
+          }));
+        }
+        if (data.paypal_client_id) {
+          setPaypalKeys(prev => ({
+            ...prev,
+            client_id: data.paypal_client_id
+          }));
+        }
+        if (data.authorize_net_api_login) {
+          setAuthorizeNetKeys(prev => ({
+            ...prev,
+            api_login: data.authorize_net_api_login
+          }));
+        }
+        if (data.clover_app_id) {
+          setCloverKeys(prev => ({
+            ...prev,
+            app_id: data.clover_app_id
           }));
         }
       }
@@ -132,13 +150,49 @@ export const PaymentSettings = () => {
     try {
       setSaveLoading(true);
 
-      // If using own Stripe, validate keys are provided
+      // Validate required keys based on processor type
       if (settings.processor_type === 'own_stripe') {
         if (!stripeKeys.publishable_key || !stripeKeys.secret_key) {
           toast({
             variant: "destructive",
             title: "Missing Keys",
             description: "Please provide both publishable and secret keys for your Stripe account"
+          });
+          return;
+        }
+      } else if (settings.processor_type === 'square') {
+        if (!squareKeys.application_id || !squareKeys.access_token) {
+          toast({
+            variant: "destructive",
+            title: "Missing Keys",
+            description: "Please provide both Application ID and Access Token for Square"
+          });
+          return;
+        }
+      } else if (settings.processor_type === 'paypal_business') {
+        if (!paypalKeys.client_id || !paypalKeys.client_secret) {
+          toast({
+            variant: "destructive",
+            title: "Missing Keys",
+            description: "Please provide both Client ID and Client Secret for PayPal"
+          });
+          return;
+        }
+      } else if (settings.processor_type === 'authorize_net') {
+        if (!authorizeNetKeys.api_login || !authorizeNetKeys.transaction_key) {
+          toast({
+            variant: "destructive",
+            title: "Missing Keys",
+            description: "Please provide both API Login ID and Transaction Key for Authorize.Net"
+          });
+          return;
+        }
+      } else if (settings.processor_type === 'clover') {
+        if (!cloverKeys.app_id || !cloverKeys.app_secret) {
+          toast({
+            variant: "destructive",
+            title: "Missing Keys",
+            description: "Please provide both App ID and App Secret for Clover"
           });
           return;
         }
@@ -151,6 +205,10 @@ export const PaymentSettings = () => {
         per_transaction_fee: settings.per_transaction_fee,
         chargeback_fee: settings.chargeback_fee,
         stripe_publishable_key: settings.processor_type === 'own_stripe' ? stripeKeys.publishable_key : null,
+        square_application_id: settings.processor_type === 'square' ? squareKeys.application_id : null,
+        paypal_client_id: settings.processor_type === 'paypal_business' ? paypalKeys.client_id : null,
+        authorize_net_api_login: settings.processor_type === 'authorize_net' ? authorizeNetKeys.api_login : null,
+        clover_app_id: settings.processor_type === 'clover' ? cloverKeys.app_id : null,
         configured_by: userProfile.id,
         is_active: true
       };
@@ -171,7 +229,7 @@ export const PaymentSettings = () => {
         setSettings(prev => ({ ...prev, id: data.id }));
       }
 
-      // If using own Stripe, securely store the secret key
+      // Store encrypted credentials based on processor type
       if (settings.processor_type === 'own_stripe' && stripeKeys.secret_key) {
         const { error: keyError } = await supabase.functions.invoke('store-stripe-keys', {
           body: {
@@ -191,6 +249,9 @@ export const PaymentSettings = () => {
           return;
         }
       }
+
+      // TODO: Add similar secure storage for other payment processors
+      // Each processor will need its own edge function for secure credential storage
 
       toast({
         title: "Settings Saved",
