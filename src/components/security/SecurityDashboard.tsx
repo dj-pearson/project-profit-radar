@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { MFASetup } from './MFASetup';
 import { DataClassificationDashboard } from './DataClassificationDashboard';
+import { SecurityMonitoringDashboard } from './SecurityMonitoringDashboard';
 
 interface SecurityEvent {
   id: string;
@@ -238,6 +239,7 @@ export const SecurityDashboard: React.FC = () => {
           <TabsTrigger value="overview">Security Overview</TabsTrigger>
           <TabsTrigger value="mfa">Multi-Factor Auth</TabsTrigger>
           <TabsTrigger value="data-classification">Data Classification</TabsTrigger>
+          <TabsTrigger value="monitoring">Security Monitoring</TabsTrigger>
           <TabsTrigger value="activity">Security Activity</TabsTrigger>
         </TabsList>
 
@@ -290,6 +292,10 @@ export const SecurityDashboard: React.FC = () => {
 
         <TabsContent value="data-classification" className="space-y-4">
           <DataClassificationDashboard />
+        </TabsContent>
+
+        <TabsContent value="monitoring" className="space-y-4">
+          <SecurityMonitoringDashboard />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">

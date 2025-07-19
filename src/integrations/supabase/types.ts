@@ -464,6 +464,48 @@ export type Database = {
         }
         Relationships: []
       }
+      alert_notifications: {
+        Row: {
+          alert_id: string
+          created_at: string
+          delivery_confirmed_at: string | null
+          failure_reason: string | null
+          id: string
+          metadata: Json | null
+          notification_method: string
+          recipient: string
+          retry_count: number | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          alert_id: string
+          created_at?: string
+          delivery_confirmed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_method: string
+          recipient: string
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          alert_id?: string
+          created_at?: string
+          delivery_confirmed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_method?: string
+          recipient?: string
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action_type: string
@@ -10107,6 +10149,78 @@ export type Database = {
           },
         ]
       }
+      security_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          affected_resources: Json | null
+          alert_type: string
+          company_id: string
+          created_at: string
+          description: string | null
+          event_data: Json | null
+          false_positive_reason: string | null
+          id: string
+          impact_assessment: string | null
+          remediation_steps: string[] | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          rule_id: string | null
+          severity: string
+          status: string
+          title: string
+          triggered_at: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          affected_resources?: Json | null
+          alert_type: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          event_data?: Json | null
+          false_positive_reason?: string | null
+          id?: string
+          impact_assessment?: string | null
+          remediation_steps?: string[] | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          severity: string
+          status?: string
+          title: string
+          triggered_at?: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          affected_resources?: Json | null
+          alert_type?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          event_data?: Json | null
+          false_positive_reason?: string | null
+          id?: string
+          impact_assessment?: string | null
+          remediation_steps?: string[] | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_id?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          triggered_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -10248,6 +10362,105 @@ export type Database = {
           ip_address?: unknown | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_metrics: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          measured_at: string
+          measurement_period: string
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          metric_unit: string | null
+          metric_value: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          measured_at?: string
+          measurement_period?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_unit?: string | null
+          metric_value: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          measured_at?: string
+          measurement_period?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_unit?: string | null
+          metric_value?: number
+        }
+        Relationships: []
+      }
+      security_monitoring_rules: {
+        Row: {
+          alert_method: string[] | null
+          auto_respond: boolean | null
+          company_id: string
+          conditions: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          recipients: string[] | null
+          response_actions: Json | null
+          rule_name: string
+          rule_type: string
+          severity: string
+          threshold_period_minutes: number | null
+          threshold_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          alert_method?: string[] | null
+          auto_respond?: boolean | null
+          company_id: string
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          recipients?: string[] | null
+          response_actions?: Json | null
+          rule_name: string
+          rule_type: string
+          severity?: string
+          threshold_period_minutes?: number | null
+          threshold_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          alert_method?: string[] | null
+          auto_respond?: boolean | null
+          company_id?: string
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          recipients?: string[] | null
+          response_actions?: Json | null
+          rule_name?: string
+          rule_type?: string
+          severity?: string
+          threshold_period_minutes?: number | null
+          threshold_value?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -12842,6 +13055,10 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      calculate_security_metrics: {
+        Args: { p_company_id: string }
+        Returns: Json
+      }
       check_equipment_availability: {
         Args: {
           p_equipment_id: string
@@ -13067,6 +13284,18 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      trigger_security_alert: {
+        Args: {
+          p_company_id: string
+          p_alert_type: string
+          p_severity: string
+          p_title: string
+          p_description?: string
+          p_event_data?: Json
+          p_affected_resources?: Json
+        }
+        Returns: string
       }
     }
     Enums: {
