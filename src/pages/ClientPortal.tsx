@@ -19,7 +19,9 @@ import {
   Camera,
   CheckCircle2,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  CreditCard,
+  ExternalLink
 } from 'lucide-react';
 
 interface Project {
@@ -54,6 +56,20 @@ interface DailyReport {
   photos: string[];
 }
 
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  issue_date: string;
+  due_date: string;
+  total_amount: number;
+  amount_paid: number;
+  amount_due: number;
+  status: string;
+  stripe_invoice_id: string;
+  notes: string;
+  terms: string;
+}
+
 const ClientPortal = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
@@ -62,7 +78,9 @@ const ClientPortal = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
   const [dailyReports, setDailyReports] = useState<DailyReport[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,6 +160,18 @@ const ClientPortal = () => {
         setDailyReports(reportsData.dailyReports || []);
       }
 
+      // Load invoices for the project
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('client_email', user?.email)
+        .order('created_at', { ascending: false });
+
+      if (!invoicesError) {
+        setInvoices(invoicesData || []);
+      }
+
     } catch (error: any) {
       console.error('Error loading project details:', error);
     }
@@ -171,6 +201,65 @@ const ClientPortal = () => {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const getInvoiceStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'bg-green-500';
+      case 'sent':
+      case 'viewed':
+        return 'bg-blue-500';
+      case 'overdue':
+        return 'bg-red-500';
+      case 'draft':
+        return 'bg-gray-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const handlePayInvoice = async (invoice: Invoice) => {
+    if (!invoice.stripe_invoice_id) {
+      toast({
+        variant: "destructive",
+        title: "Payment Error",
+        description: "This invoice is not set up for online payment."
+      });
+      return;
+    }
+
+    setProcessingPayment(invoice.id);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('process-invoice-payment', {
+        body: { 
+          invoice_id: invoice.id,
+          stripe_invoice_id: invoice.stripe_invoice_id,
+          action: 'create_checkout_session'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.checkout_url) {
+        // Redirect to Stripe checkout
+        window.open(data.checkout_url, '_blank');
+        toast({
+          title: "Redirecting to Payment",
+          description: "You will be redirected to complete your payment securely.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Payment processing error:', error);
+      toast({
+        variant: "destructive",
+        title: "Payment Error",
+        description: error.message || "Failed to process payment"
+      });
+    } finally {
+      setProcessingPayment(null);
+    }
   };
 
   if (loading || loadingData) {
@@ -289,6 +378,7 @@ const ClientPortal = () => {
                   <TabsList>
                     <TabsTrigger value="progress">Progress Updates</TabsTrigger>
                     <TabsTrigger value="change-orders">Change Orders</TabsTrigger>
+                    <TabsTrigger value="invoices">Invoices & Payments</TabsTrigger>
                     <TabsTrigger value="communication">Communication</TabsTrigger>
                     <TabsTrigger value="documents">Documents</TabsTrigger>
                   </TabsList>
@@ -377,6 +467,106 @@ const ClientPortal = () => {
                                     <Button size="sm" variant="outline">
                                       Request Changes
                                     </Button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="invoices" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Invoices & Payments</CardTitle>
+                        <CardDescription>View and pay your project invoices</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {invoices.length === 0 ? (
+                          <div className="text-center py-8">
+                            <DollarSign className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-muted-foreground">No invoices available</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {invoices.map((invoice) => (
+                              <div key={invoice.id} className="border rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center space-x-2">
+                                    <h4 className="font-medium">Invoice #{invoice.invoice_number}</h4>
+                                    <Badge className={getInvoiceStatusColor(invoice.status)}>
+                                      {invoice.status.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-semibold">{formatCurrency(invoice.total_amount)}</p>
+                                    {invoice.amount_due > 0 && (
+                                      <p className="text-sm text-muted-foreground">
+                                        Due: {formatCurrency(invoice.amount_due)}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                                  <div>
+                                    <p className="text-muted-foreground">Issue Date</p>
+                                    <p>{new Date(invoice.issue_date).toLocaleDateString()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Due Date</p>
+                                    <p className={invoice.status === 'overdue' ? 'text-red-600 font-medium' : ''}>
+                                      {new Date(invoice.due_date).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {invoice.notes && (
+                                  <div className="mb-3">
+                                    <p className="text-sm text-muted-foreground mb-1">Notes</p>
+                                    <p className="text-sm">{invoice.notes}</p>
+                                  </div>
+                                )}
+
+                                {invoice.amount_due > 0 && invoice.status !== 'paid' && (
+                                  <div className="flex items-center justify-between pt-3 border-t">
+                                    <div className="flex items-center space-x-2">
+                                      <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                      <span className="text-sm text-muted-foreground">
+                                        Secure online payment available
+                                      </span>
+                                    </div>
+                                    <Button 
+                                      onClick={() => handlePayInvoice(invoice)}
+                                      disabled={processingPayment === invoice.id || !invoice.stripe_invoice_id}
+                                      className="bg-green-600 hover:bg-green-700"
+                                    >
+                                      {processingPayment === invoice.id ? (
+                                        <>
+                                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                                          Processing...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <ExternalLink className="h-4 w-4 mr-2" />
+                                          Pay Now
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {invoice.status === 'paid' && (
+                                  <div className="flex items-center pt-3 border-t text-green-600">
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    <span className="text-sm font-medium">Payment Complete</span>
+                                    {invoice.amount_paid > 0 && (
+                                      <span className="text-sm ml-2">
+                                        - Paid {formatCurrency(invoice.amount_paid)}
+                                      </span>
+                                    )}
                                   </div>
                                 )}
                               </div>
