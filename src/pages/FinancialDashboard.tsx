@@ -16,6 +16,7 @@ import { ExpenseTracker } from '@/components/financial/ExpenseTracker';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import Form1099Manager from '@/components/financial/Form1099Manager';
 import StripePaymentProcessor from '@/components/financial/StripePaymentProcessor';
+import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const FinancialDashboard = () => {
@@ -27,13 +28,14 @@ const FinancialDashboard = () => {
     <DashboardLayout title="Financial Dashboard">
       <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="budgets" className="text-xs sm:text-sm">Budget</TabsTrigger>
             <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">Cash</TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
             <TabsTrigger value="invoices" className="text-xs sm:text-sm">Invoices</TabsTrigger>
             <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
             <TabsTrigger value="1099s" className="text-xs sm:text-sm">1099s</TabsTrigger>
             <TabsTrigger value="reports" className="text-xs sm:text-sm">P&L</TabsTrigger>
           </TabsList>
@@ -95,6 +97,10 @@ const FinancialDashboard = () => {
 
           <TabsContent value="payments" className="space-y-6">
             <StripePaymentProcessor />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <PaymentSettings />
           </TabsContent>
 
           <TabsContent value="1099s" className="space-y-6">

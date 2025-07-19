@@ -32,9 +32,9 @@ interface PaymentSettings {
 export const PaymentSettings = () => {
   const [settings, setSettings] = useState<PaymentSettings>({
     processor_type: 'pearson_stripe',
-    processing_fee_percentage: 3.5,
+    processing_fee_percentage: 1.0, // Updated to 1% as requested
+    per_transaction_fee: 0.50, // Updated to $0.50 as requested
     chargeback_fee: 15.00,
-    per_transaction_fee: 0.50,
     is_active: true
   });
   const [stripeKeys, setStripeKeys] = useState({
@@ -191,10 +191,10 @@ export const PaymentSettings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Payment Processor Settings
+            Payment Processing Setup
           </CardTitle>
           <CardDescription>
-            Configure how your company processes payments from clients
+            Choose how your company processes invoice payments from clients. Start with our platform processing (1% + $0.50 per transaction) for easy setup, or connect your own Stripe account for direct processing.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import {
   Settings,
   Palette,
@@ -863,13 +864,16 @@ const CompanyAdminSettings = () => {
           <TabsContent value="billing" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Billing Configuration</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Payment Processing Setup
+                </CardTitle>
                 <CardDescription>
-                  Configure billing settings and payment processing
+                  Configure how your company processes payments from clients. Choose between platform processing or your own Stripe account.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Billing configuration features coming soon...</p>
+                <PaymentSettings />
               </CardContent>
             </Card>
           </TabsContent>
