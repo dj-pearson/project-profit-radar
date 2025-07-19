@@ -224,6 +224,7 @@ export const hierarchicalNavigation: NavigationArea[] = [
         id: 'system_admin',
         label: 'System Administration',
         items: [
+          { title: "Security Settings", url: "/security-settings", icon: Shield, roles: ["admin", "root_admin"] },
           { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Admin" },
           { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Admin" },
           { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ["root_admin"], badge: "Admin" }

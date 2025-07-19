@@ -283,6 +283,7 @@ export const dashboardAreas: DashboardArea[] = [
         label: "Company Management",
         items: [
           { title: "Company Settings", url: "/company-settings", icon: Settings, roles: ["admin", "root_admin"] },
+          { title: "Security Settings", url: "/security-settings", icon: Shield, roles: ["admin", "root_admin"] },
           { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Root Admin" }
         ]
