@@ -25,8 +25,11 @@ import {
   Upload,
   Shield,
   Wrench,
-  ClipboardList
+  ClipboardList,
+  MessageSquare,
+  ArrowRight
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Project {
   id: string;
@@ -50,6 +53,16 @@ interface DeadlineItem {
   project_id?: string;
 }
 
+interface ClientResponseItem {
+  id: string;
+  project_id: string;
+  project_name: string;
+  client_name: string;
+  last_client_message_date: string;
+  days_without_response: number;
+  unread_count: number;
+}
+
 interface DashboardMetrics {
   activeProjects: number;
   overdueTasks: number;
@@ -64,6 +77,8 @@ export const BusinessDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [deadlineItems, setDeadlineItems] = useState<DeadlineItem[]>([]);
+  const [clientResponses, setClientResponses] = useState<ClientResponseItem[]>([]);
+  const [responseSort, setResponseSort] = useState<'days' | 'project' | 'client'>('days');
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     activeProjects: 0,
     overdueTasks: 0,
@@ -318,6 +333,19 @@ export const BusinessDashboard = () => {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  const sortedClientResponses = [...clientResponses].sort((a, b) => {
+    switch (responseSort) {
+      case 'days':
+        return b.days_without_response - a.days_without_response;
+      case 'project':
+        return a.project_name.localeCompare(b.project_name);
+      case 'client':
+        return a.client_name.localeCompare(b.client_name);
+      default:
+        return b.days_without_response - a.days_without_response;
+    }
+  });
 
   if (loading) {
     return (
