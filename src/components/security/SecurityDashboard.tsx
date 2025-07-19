@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   Shield, 
   ShieldAlert, 
@@ -17,6 +19,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { MFASetup } from './MFASetup';
+import { DataClassificationDashboard } from './DataClassificationDashboard';
 
 interface SecurityEvent {
   id: string;
@@ -229,68 +232,124 @@ export const SecurityDashboard: React.FC = () => {
         </Alert>
       )}
 
-      {/* MFA Setup */}
-      <MFASetup onMFAStatusChange={(enabled) => {
-        setSecurityStatus(prev => prev ? { ...prev, mfa_enabled: enabled } : null);
-        loadSecurityData(); // Reload to get updated events
-      }} />
+      {/* Security Tabs */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Security Overview</TabsTrigger>
+          <TabsTrigger value="mfa">Multi-Factor Auth</TabsTrigger>
+          <TabsTrigger value="data-classification">Data Classification</TabsTrigger>
+          <TabsTrigger value="activity">Security Activity</TabsTrigger>
+        </TabsList>
 
-      {/* Recent Security Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Recent Security Activity
-          </CardTitle>
-          <CardDescription>
-            View your recent login attempts and security events
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {recentEvents.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No recent security events found
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {recentEvents.map((event, index) => (
-                <div key={event.id}>
-                  <div className="flex items-start gap-3">
-                    {getEventIcon(event.event_type)}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">
-                          {getEventDescription(event)}
-                        </p>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(event.created_at)}
-                        </span>
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Security Recommendations
+              </CardTitle>
+              <CardDescription>
+                Improve your security posture with these recommendations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {!securityStatus?.mfa_enabled && (
+                  <div className="flex items-center justify-between p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="h-5 w-5 text-orange-500" />
+                      <div>
+                        <p className="font-medium">Enable Two-Factor Authentication</p>
+                        <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
                       </div>
-                      {(event.ip_address || event.user_agent) && (
-                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                          {event.ip_address && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {event.ip_address}
-                            </div>
-                          )}
-                          {event.user_agent && (
-                            <div className="flex items-center gap-1">
-                              <Smartphone className="h-3 w-3" />
-                              {event.user_agent.split(' ')[0]}
+                    </div>
+                    <Button size="sm">Enable MFA</Button>
+                  </div>
+                )}
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50 dark:bg-green-950/20">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="font-medium">Strong Password Policy</p>
+                      <p className="text-sm text-muted-foreground">Your password meets security requirements</p>
+                    </div>
+                  </div>
+                  <Badge variant="default">Active</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mfa" className="space-y-4">
+          <MFASetup onMFAStatusChange={(enabled) => {
+            setSecurityStatus(prev => prev ? { ...prev, mfa_enabled: enabled } : null);
+            loadSecurityData(); // Reload to get updated events
+          }} />
+        </TabsContent>
+
+        <TabsContent value="data-classification" className="space-y-4">
+          <DataClassificationDashboard />
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Recent Security Activity
+              </CardTitle>
+              <CardDescription>
+                View your recent login attempts and security events
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentEvents.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No recent security events found
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {recentEvents.map((event, index) => (
+                    <div key={event.id}>
+                      <div className="flex items-start gap-3">
+                        {getEventIcon(event.event_type)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">
+                              {getEventDescription(event)}
+                            </p>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(event.created_at)}
+                            </span>
+                          </div>
+                          {(event.ip_address || event.user_agent) && (
+                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                              {event.ip_address && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {event.ip_address}
+                                </div>
+                              )}
+                              {event.user_agent && (
+                                <div className="flex items-center gap-1">
+                                  <Smartphone className="h-3 w-3" />
+                                  {event.user_agent.split(' ')[0]}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
+                      </div>
+                      {index < recentEvents.length - 1 && <Separator className="mt-4" />}
                     </div>
-                  </div>
-                  {index < recentEvents.length - 1 && <Separator className="mt-4" />}
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

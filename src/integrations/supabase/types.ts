@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_control_matrix: {
+        Row: {
+          approval_required: boolean | null
+          approval_workflow: Json | null
+          classification: Database["public"]["Enums"]["data_classification"]
+          company_id: string
+          conditions: Json | null
+          created_at: string
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          permission_level: string
+          resource_id: string | null
+          resource_type: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          approval_required?: boolean | null
+          approval_workflow?: Json | null
+          classification: Database["public"]["Enums"]["data_classification"]
+          company_id: string
+          conditions?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_level: string
+          resource_id?: string | null
+          resource_type: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          approval_required?: boolean | null
+          approval_workflow?: Json | null
+          classification?: Database["public"]["Enums"]["data_classification"]
+          company_id?: string
+          conditions?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_level?: string
+          resource_id?: string | null
+          resource_type?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affiliate_codes: {
         Row: {
           affiliate_code: string
@@ -2534,6 +2591,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      data_classifications: {
+        Row: {
+          access_restrictions: Json | null
+          classification: Database["public"]["Enums"]["data_classification"]
+          classification_reason: string | null
+          company_id: string
+          compliance_requirements: string[] | null
+          created_at: string
+          created_by: string | null
+          data_owner: string | null
+          data_steward: string | null
+          data_types: string[] | null
+          id: string
+          last_reviewed_at: string | null
+          last_reviewed_by: string | null
+          legal_basis: string | null
+          processing_purpose: string | null
+          resource_id: string
+          resource_name: string | null
+          resource_type: string
+          retention_period_months: number | null
+          review_date: string | null
+          sensitivity_tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          access_restrictions?: Json | null
+          classification?: Database["public"]["Enums"]["data_classification"]
+          classification_reason?: string | null
+          company_id: string
+          compliance_requirements?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          data_owner?: string | null
+          data_steward?: string | null
+          data_types?: string[] | null
+          id?: string
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
+          legal_basis?: string | null
+          processing_purpose?: string | null
+          resource_id: string
+          resource_name?: string | null
+          resource_type: string
+          retention_period_months?: number | null
+          review_date?: string | null
+          sensitivity_tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          access_restrictions?: Json | null
+          classification?: Database["public"]["Enums"]["data_classification"]
+          classification_reason?: string | null
+          company_id?: string
+          compliance_requirements?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          data_owner?: string | null
+          data_steward?: string | null
+          data_types?: string[] | null
+          id?: string
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
+          legal_basis?: string | null
+          processing_purpose?: string | null
+          resource_id?: string
+          resource_name?: string | null
+          resource_type?: string
+          retention_period_months?: number | null
+          review_date?: string | null
+          sensitivity_tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       data_retention_policies: {
         Row: {
@@ -12938,6 +13070,7 @@ export type Database = {
       }
     }
     Enums: {
+      data_classification: "public" | "internal" | "confidential" | "restricted"
       industry_type:
         | "residential"
         | "commercial"
@@ -13102,6 +13235,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      data_classification: ["public", "internal", "confidential", "restricted"],
       industry_type: [
         "residential",
         "commercial",
