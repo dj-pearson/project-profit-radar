@@ -220,16 +220,15 @@ export const hierarchicalNavigation: NavigationArea[] = [
     title: 'Admin',
     icon: Shield,
     sections: [
-      {
-        id: 'system_admin',
-        label: 'System Administration',
-        items: [
-          { title: "Security Settings", url: "/security-settings", icon: Shield, roles: ["admin", "root_admin"] },
-          { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Admin" },
-          { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Admin" },
-          { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ["root_admin"], badge: "Admin" }
-        ]
-      },
+        {
+          id: 'system_admin',
+          label: 'System Administration',
+          items: [
+            { title: "Companies", url: "/admin/companies", icon: Building2, roles: ["root_admin"], badge: "Admin" },
+            { title: "Users", url: "/admin/users", icon: Users, roles: ["root_admin"], badge: "Admin" },
+            { title: "System Settings", url: "/admin/settings", icon: Settings, roles: ["root_admin"], badge: "Admin" }
+          ]
+        },
       {
         id: 'business_admin',
         label: 'Business Administration',
@@ -258,14 +257,15 @@ export const hierarchicalNavigation: NavigationArea[] = [
             { title: "Customer Service", url: "/admin/customer-service", icon: MessageSquare, roles: ["admin", "root_admin"], badge: "Admin" }
           ]
         },
-      {
-        id: 'security_admin',
-        label: 'Security Administration',
-        items: [
-          { title: "Security Monitoring", url: "/security-monitoring", icon: Shield, roles: ["root_admin"], badge: "Admin" },
-          { title: "Rate Limiting", url: "/rate-limiting", icon: Settings, roles: ["root_admin"], badge: "Admin" }
-        ]
-      }
+        {
+          id: 'security_admin',
+          label: 'Security Administration',
+          items: [
+            { title: "Security Settings", url: "/security-settings", icon: Shield, roles: ["admin", "root_admin"] },
+            { title: "Security Monitoring", url: "/security-monitoring", icon: Shield, roles: ["root_admin"], badge: "Admin" },
+            { title: "Rate Limiting", url: "/rate-limiting", icon: Settings, roles: ["root_admin"], badge: "Admin" }
+          ]
+        }
     ]
   }
 ];
