@@ -6844,6 +6844,45 @@ export type Database = {
           },
         ]
       }
+      password_policies: {
+        Row: {
+          account_locked_until: string | null
+          company_id: string | null
+          created_at: string
+          failed_login_attempts: number | null
+          id: string
+          password_expires_at: string | null
+          password_history: string[] | null
+          password_last_changed: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_locked_until?: string | null
+          company_id?: string | null
+          created_at?: string
+          failed_login_attempts?: number | null
+          id?: string
+          password_expires_at?: string | null
+          password_history?: string[] | null
+          password_last_changed?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_locked_until?: string | null
+          company_id?: string | null
+          created_at?: string
+          failed_login_attempts?: number | null
+          id?: string
+          password_expires_at?: string | null
+          password_history?: string[] | null
+          password_last_changed?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payment_failures: {
         Row: {
           attempt_count: number | null
@@ -7854,6 +7893,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       project_bond_requirements: {
         Row: {
@@ -9706,6 +9772,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          description: string
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          location: string | null
+          metadata: Json | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          location?: string | null
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          location?: string | null
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       security_logs: {
         Row: {
@@ -11818,6 +11923,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_fingerprint: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_activity: string | null
+          location: string | null
+          session_token: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          location?: string | null
+          session_token: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          location?: string | null
+          session_token?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       vendors: {
         Row: {
           address: string | null
@@ -12473,13 +12623,24 @@ export type Database = {
         Returns: string
       }
       log_security_event: {
-        Args: {
-          p_user_id: string
-          p_event_type: string
-          p_ip_address?: unknown
-          p_user_agent?: string
-          p_details?: Json
-        }
+        Args:
+          | {
+              p_user_id: string
+              p_event_type: string
+              p_ip_address?: unknown
+              p_user_agent?: string
+              p_details?: Json
+            }
+          | {
+              p_user_id: string
+              p_event_type: string
+              p_severity?: string
+              p_description?: string
+              p_ip_address?: unknown
+              p_user_agent?: string
+              p_location?: string
+              p_metadata?: Json
+            }
         Returns: string
       }
       reset_failed_attempts: {
