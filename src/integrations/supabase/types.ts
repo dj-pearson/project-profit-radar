@@ -5316,6 +5316,208 @@ export type Database = {
           },
         ]
       }
+      incident_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string
+          id: string
+          incident_id: string
+          metadata: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description: string
+          id?: string
+          incident_id: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          incident_id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_activities_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "security_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_metrics: {
+        Row: {
+          acknowledgment_time_minutes: number | null
+          business_impact_score: number | null
+          company_id: string
+          created_at: string
+          detection_time_minutes: number | null
+          escalation_count: number | null
+          false_positive: boolean | null
+          id: string
+          incident_id: string
+          resolution_time_minutes: number | null
+          response_time_minutes: number | null
+          technical_impact_score: number | null
+        }
+        Insert: {
+          acknowledgment_time_minutes?: number | null
+          business_impact_score?: number | null
+          company_id: string
+          created_at?: string
+          detection_time_minutes?: number | null
+          escalation_count?: number | null
+          false_positive?: boolean | null
+          id?: string
+          incident_id: string
+          resolution_time_minutes?: number | null
+          response_time_minutes?: number | null
+          technical_impact_score?: number | null
+        }
+        Update: {
+          acknowledgment_time_minutes?: number | null
+          business_impact_score?: number | null
+          company_id?: string
+          created_at?: string
+          detection_time_minutes?: number | null
+          escalation_count?: number | null
+          false_positive?: boolean | null
+          id?: string
+          incident_id?: string
+          resolution_time_minutes?: number | null
+          response_time_minutes?: number | null
+          technical_impact_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_metrics_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: true
+            referencedRelation: "security_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_response_playbooks: {
+        Row: {
+          communication_plan: Json | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          escalation_criteria: Json | null
+          estimated_duration_minutes: number | null
+          id: string
+          incident_types: string[] | null
+          is_active: boolean | null
+          last_updated_by: string | null
+          name: string
+          responsibilities: Json | null
+          severity_levels: string[] | null
+          steps: Json
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          communication_plan?: Json | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          escalation_criteria?: Json | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          incident_types?: string[] | null
+          is_active?: boolean | null
+          last_updated_by?: string | null
+          name: string
+          responsibilities?: Json | null
+          severity_levels?: string[] | null
+          steps?: Json
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          communication_plan?: Json | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          escalation_criteria?: Json | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          incident_types?: string[] | null
+          is_active?: boolean | null
+          last_updated_by?: string | null
+          name?: string
+          responsibilities?: Json | null
+          severity_levels?: string[] | null
+          steps?: Json
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      incident_response_team: {
+        Row: {
+          availability_status: string | null
+          company_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          escalation_level: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notification_preferences: Json | null
+          role: string
+          specializations: string[] | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          availability_status?: string | null
+          company_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          escalation_level?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notification_preferences?: Json | null
+          role: string
+          specializations?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          availability_status?: string | null
+          company_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          escalation_level?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notification_preferences?: Json | null
+          role?: string
+          specializations?: string[] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       insurance_claims: {
         Row: {
           adjuster_company: string | null
@@ -9812,6 +10014,81 @@ export type Database = {
         }
         Relationships: []
       }
+      security_incidents: {
+        Row: {
+          acknowledged_at: string | null
+          assigned_to: string | null
+          company_id: string
+          created_at: string
+          description: string | null
+          detected_at: string | null
+          evidence: Json | null
+          id: string
+          impact_assessment: Json | null
+          incident_number: string
+          incident_type: string
+          lessons_learned: string | null
+          reported_at: string | null
+          reported_by: string | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          severity: string
+          source: string | null
+          status: string
+          timeline: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          assigned_to?: string | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          detected_at?: string | null
+          evidence?: Json | null
+          id?: string
+          impact_assessment?: Json | null
+          incident_number: string
+          incident_type: string
+          lessons_learned?: string | null
+          reported_at?: string | null
+          reported_by?: string | null
+          resolution_summary?: string | null
+          resolved_at?: string | null
+          severity: string
+          source?: string | null
+          status?: string
+          timeline?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          assigned_to?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          detected_at?: string | null
+          evidence?: Json | null
+          id?: string
+          impact_assessment?: Json | null
+          incident_number?: string
+          incident_type?: string
+          lessons_learned?: string | null
+          reported_at?: string | null
+          reported_by?: string | null
+          resolution_summary?: string | null
+          resolved_at?: string | null
+          severity?: string
+          source?: string | null
+          status?: string
+          timeline?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_logs: {
         Row: {
           created_at: string
@@ -12421,6 +12698,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_incident_metrics: {
+        Args: { p_incident_id: string }
+        Returns: undefined
+      }
       calculate_lead_score: {
         Args: { p_lead_id: string }
         Returns: number
@@ -12488,6 +12769,10 @@ export type Database = {
         Returns: string
       }
       generate_estimate_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_incident_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
