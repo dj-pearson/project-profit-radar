@@ -19,6 +19,7 @@ import CreateProject from "./pages/CreateProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import TeamManagement from "./pages/TeamManagement";
 import { MyTasksDashboard } from "./pages/tasks/MyTasksDashboard";
+import CommunicationHub from "./pages/CommunicationHub";
 import TimeTracking from "./pages/TimeTracking";
 import JobCosting from "./pages/JobCosting";
 import DocumentManagement from "./pages/DocumentManagement";
@@ -158,6 +159,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/my-tasks">
             <MyTasksDashboard />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/communication-hub"
+        element={
+          <RouteGuard routePath="/communication-hub">
+            <CommunicationHub />
           </RouteGuard>
         }
       />

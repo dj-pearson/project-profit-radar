@@ -21,6 +21,7 @@ import { WarrantyForm } from '@/components/warranty/WarrantyForm';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
 import ProjectProfitLoss from '@/components/project/ProjectProfitLoss';
 import EnhancedProjectOverview from '@/components/project/EnhancedProjectOverview';
+import { ProjectCommunication } from '@/components/communication/ProjectCommunication';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { ProjectEstimates } from '@/components/project/ProjectEstimates';
@@ -1818,24 +1819,25 @@ const ProjectDetail = () => {
             <div className="bg-card border rounded-lg p-3">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-medium text-muted-foreground">Project Section</h2>
-                <Badge variant="outline" className="text-xs">
-                  {activeTab === 'overview' ? 'Overview' :
-                   activeTab === 'materials' ? 'Materials' :
-                   activeTab === 'progress' ? 'Progress' :
-                   activeTab === 'dailyreports' ? 'Daily Reports' :
-                   activeTab === 'jobcosting' ? 'Job Costing' :
-                   activeTab === 'rfis' ? "RFI's" :
-                   activeTab === 'submittals' ? 'Submittals' :
-                   activeTab === 'changeorders' ? 'Change Orders' :
-                   activeTab === 'punchlist' ? 'Punch List' :
-                   activeTab === 'equipment' ? 'Equipment' :
-                   activeTab === 'permits' ? 'Permits' :
-                   activeTab === 'warranties' ? 'Warranties' :
-                   activeTab === 'contacts' ? 'Contacts' :
-                   activeTab === 'invoicing' ? 'Invoicing' :
-                   activeTab === 'tasks' ? 'Tasks' :
-                   activeTab === 'documents' ? 'Documents' : activeTab}
-                </Badge>
+                 <Badge variant="outline" className="text-xs">
+                   {activeTab === 'overview' ? 'Overview' :
+                    activeTab === 'materials' ? 'Materials' :
+                    activeTab === 'progress' ? 'Progress' :
+                    activeTab === 'dailyreports' ? 'Daily Reports' :
+                    activeTab === 'jobcosting' ? 'Job Costing' :
+                    activeTab === 'rfis' ? "RFI's" :
+                    activeTab === 'submittals' ? 'Submittals' :
+                    activeTab === 'changeorders' ? 'Change Orders' :
+                    activeTab === 'punchlist' ? 'Punch List' :
+                    activeTab === 'equipment' ? 'Equipment' :
+                    activeTab === 'permits' ? 'Permits' :
+                    activeTab === 'warranties' ? 'Warranties' :
+                    activeTab === 'contacts' ? 'Contacts' :
+                    activeTab === 'communication' ? 'Messages' :
+                    activeTab === 'invoicing' ? 'Invoicing' :
+                    activeTab === 'tasks' ? 'Tasks' :
+                    activeTab === 'documents' ? 'Documents' : activeTab}
+                 </Badge>
               </div>
               <Select value={activeTab} onValueChange={setActiveTab}>
                 <SelectTrigger className="w-full h-12 text-left">
@@ -1875,14 +1877,10 @@ const ProjectDetail = () => {
                   </div>
 
                   <div className="p-2 border-t">
-                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">PROJECT MANAGEMENT</div>
-                    <SelectItem value="jobcosting" className="flex items-center py-3">
-                      <span className="mr-3">💰</span>
-                      <span>Job Costing</span>
-                    </SelectItem>
-                    <SelectItem value="changeorders" className="flex items-center py-3">
-                      <span className="mr-3">🔄</span>
-                      <span>Change Orders</span>
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">COMMUNICATIONS</div>
+                    <SelectItem value="communication" className="flex items-center py-3">
+                      <span className="mr-3">💬</span>
+                      <span>Messages</span>
                     </SelectItem>
                     <SelectItem value="rfis" className="flex items-center py-3">
                       <span className="mr-3">❓</span>
@@ -1891,6 +1889,18 @@ const ProjectDetail = () => {
                     <SelectItem value="submittals" className="flex items-center py-3">
                       <span className="mr-3">📋</span>
                       <span>Submittals</span>
+                    </SelectItem>
+                  </div>
+
+                  <div className="p-2 border-t">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">PROJECT MANAGEMENT</div>
+                    <SelectItem value="jobcosting" className="flex items-center py-3">
+                      <span className="mr-3">💰</span>
+                      <span>Job Costing</span>
+                    </SelectItem>
+                    <SelectItem value="changeorders" className="flex items-center py-3">
+                      <span className="mr-3">🔄</span>
+                      <span>Change Orders</span>
                     </SelectItem>
                     <SelectItem value="punchlist" className="flex items-center py-3">
                       <span className="mr-3">✅</span>
@@ -2624,6 +2634,18 @@ const ProjectDetail = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="communication" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Project Communication</h2>
+              <p className="text-sm text-muted-foreground">Direct messaging with clients and team members</p>
+            </div>
+            
+            <ProjectCommunication 
+              projectId={projectId!}
+              userType="contractor"
+            />
           </TabsContent>
 
           <TabsContent value="invoicing" className="space-y-6">

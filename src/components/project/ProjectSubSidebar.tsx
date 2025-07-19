@@ -19,7 +19,8 @@ import {
   ListTodo,
   FolderOpen,
   Home,
-  Calculator
+  Calculator,
+  MessageSquare
 } from 'lucide-react';
 
 interface ProjectSubSidebarProps {
@@ -61,6 +62,7 @@ const navigationSections = [
   {
     title: 'Communications',
     items: [
+      { id: 'communication', label: 'Messages', icon: MessageSquare },
       { id: 'rfis', label: "RFI's", icon: HelpCircle },
       { id: 'submittals', label: 'Submittals', icon: Send },
       { id: 'contacts', label: 'Contacts', icon: Users },
