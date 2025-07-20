@@ -18,7 +18,6 @@ const Industries = () => {
       title: "Residential Contractors",
       description: "Home builders, remodelers, specialty trades",
       features: ["Custom home construction", "Kitchen & bath remodeling", "Additions & renovations", "Permit tracking"],
-      clients: "500+ contractors",
       badge: "Most Popular"
     },
     {
@@ -26,7 +25,6 @@ const Industries = () => {
       title: "Commercial Contractors", 
       description: "Office fit-outs, retail construction",
       features: ["Office buildings", "Retail spaces", "Warehouse construction", "Tenant improvements"],
-      clients: "200+ contractors",
       badge: null
     },
     {
@@ -34,7 +32,6 @@ const Industries = () => {
       title: "Civil & Infrastructure",
       description: "Municipal projects, utilities",
       features: ["Road construction", "Utility installation", "Municipal projects", "Infrastructure repair"],
-      clients: "150+ contractors", 
       badge: null
     },
     {
@@ -42,7 +39,6 @@ const Industries = () => {
       title: "Specialty Trades",
       description: "Electrical, plumbing, HVAC, roofing",
       features: ["Multi-trade coordination", "Service calls", "Maintenance contracts", "Emergency response"],
-      clients: "800+ contractors",
       badge: "Fastest Growing"
     }
   ];
@@ -93,8 +89,7 @@ const Industries = () => {
                   ))}
                 </div>
                 
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <span className="text-sm text-muted-foreground">{industry.clients}</span>
+                <div className="flex justify-end pt-4 border-t">
                   <Button 
                     variant="ghost" 
                     size="sm"

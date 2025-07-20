@@ -80,7 +80,7 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-2 text-white/70">
                   <MapPin className="h-4 w-4" />
-                  Austin, TX
+                  West Des Moines, IA
                 </div>
               </div>
             </div>
