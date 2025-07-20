@@ -18,25 +18,40 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Build optimizations for Cloudflare Pages
+  // Build optimizations for mobile performance
   build: {
-    target: 'esnext',
+    target: 'es2020',
     minify: 'esbuild',
     sourcemap: false,
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-slot', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-popover'],
-          radix: ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-tabs', '@radix-ui/react-toast', '@radix-ui/react-tooltip'],
-          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
-          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-          router: ['react-router-dom'],
-          supabase: ['@supabase/supabase-js'],
-          charts: ['recharts'],
-          pdf: ['jspdf', 'jspdf-autotable'],
-          excel: ['xlsx'],
-          query: ['@tanstack/react-query']
+        manualChunks: (id) => {
+          // Core React libraries
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react-vendor';
+          }
+          // UI libraries - split into smaller chunks for better caching
+          if (id.includes('@radix-ui')) {
+            if (id.includes('dialog') || id.includes('popover') || id.includes('select')) {
+              return 'ui-interactive';
+            }
+            return 'ui-display';
+          }
+          // Utilities that rarely change
+          if (id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+            return 'utils';
+          }
+          // Heavy libraries that should be separate
+          if (id.includes('recharts')) return 'charts';
+          if (id.includes('jspdf') || id.includes('xlsx')) return 'document-export';
+          if (id.includes('@supabase')) return 'supabase';
+          if (id.includes('@tanstack/react-query')) return 'query';
+          if (id.includes('react-router-dom')) return 'router';
+          // Node modules that aren't core
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
@@ -45,16 +60,25 @@ export default defineConfig(({ mode }) => ({
       // Reduce bundle size by excluding heavy dependencies not needed in production
       external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'] : []
     },
-    chunkSizeWarningLimit: 1000,
-    // Optimize for faster builds
+    chunkSizeWarningLimit: 500,
+    // Optimize for mobile performance
     reportCompressedSize: false,
-    // Enable build caching
-    emptyOutDir: true
+    emptyOutDir: true,
+    // Enable aggressive compression
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
   },
-  // Optimize dependency pre-bundling
+  // Optimize dependency pre-bundling for mobile
   optimizeDeps: {
-    include: ['react', 'react-dom'],
-    exclude: ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli']
+    include: ['react', 'react-dom', 'react-router-dom'],
+    exclude: ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'],
+    esbuildOptions: {
+      target: 'es2020',
+    },
   },
   // Reduce memory usage during build
   esbuild: {

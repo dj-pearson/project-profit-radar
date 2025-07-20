@@ -1,20 +1,27 @@
+import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
-import ProblemSolution from "@/components/ProblemSolution";
-import Features from "@/components/Features";
-import Industries from "@/components/Industries";
-import Pricing from "@/components/Pricing";
-import Implementation from "@/components/Implementation";
-import FAQ from "@/components/FAQ";
-import Footer from "@/components/Footer";
-import LazySection from "@/components/LazySection";
+import CriticalCSS from "@/components/CriticalCSS";
+import PerformanceOptimizer from "@/components/PerformanceOptimizer";
+import MobileOptimizedHero from "@/components/MobileOptimizedHero";
+import OptimizedLazySection from "@/components/OptimizedLazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 
+// Lazy load non-critical components for better performance
+const ProblemSolution = lazy(() => import("@/components/ProblemSolution"));
+const Features = lazy(() => import("@/components/Features"));
+const Industries = lazy(() => import("@/components/Industries"));
+const Pricing = lazy(() => import("@/components/Pricing"));
+const Implementation = lazy(() => import("@/components/Implementation"));
+const FAQ = lazy(() => import("@/components/FAQ"));
+const Footer = lazy(() => import("@/components/Footer"));
+
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="critical-layout">
+      <CriticalCSS />
+      <PerformanceOptimizer />
       <SEOMetaTags
         title="BuildDesk - Construction Management Software for Small & Medium Contractors | Save 23% on Project Costs"
         description="Stop losing money on delays and overruns. BuildDesk delivers real-time job costing, mobile field management, and OSHA compliance without enterprise complexity. Join 500+ contractors saving $50K+ annually."
@@ -42,35 +49,49 @@ const Index = () => {
       <Header />
       
       <main id="main-content" role="main">
-        <Hero />
+        <MobileOptimizedHero />
         <SocialProof />
         
-        <LazySection>
-          <ProblemSolution />
-        </LazySection>
+        <OptimizedLazySection priority="high">
+          <Suspense fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+            <ProblemSolution />
+          </Suspense>
+        </OptimizedLazySection>
         
-        <LazySection>
-          <Features />
-        </LazySection>
+        <OptimizedLazySection priority="normal">
+          <Suspense fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+            <Features />
+          </Suspense>
+        </OptimizedLazySection>
         
-        <LazySection>
-          <Industries />
-        </LazySection>
+        <OptimizedLazySection priority="normal">
+          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+            <Industries />
+          </Suspense>
+        </OptimizedLazySection>
         
-        <LazySection>
-          <Pricing />
-        </LazySection>
+        <OptimizedLazySection priority="high">
+          <Suspense fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+            <Pricing />
+          </Suspense>
+        </OptimizedLazySection>
         
-        <LazySection>
-          <Implementation />
-        </LazySection>
+        <OptimizedLazySection priority="low">
+          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+            <Implementation />
+          </Suspense>
+        </OptimizedLazySection>
         
-        <LazySection>
-          <FAQ />
-        </LazySection>
+        <OptimizedLazySection priority="low">
+          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+            <FAQ />
+          </Suspense>
+        </OptimizedLazySection>
       </main>
       
-      <Footer />
+      <Suspense fallback={<div className="h-32 bg-muted animate-pulse" />}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
