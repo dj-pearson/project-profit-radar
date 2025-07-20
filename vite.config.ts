@@ -18,69 +18,43 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Aggressive mobile performance optimization
+  // Build optimizations for Cloudflare Pages
   build: {
-    target: 'es2020',
+    target: 'esnext',
     minify: 'esbuild',
     sourcemap: false,
-    cssCodeSplit: true,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Core React - smallest possible bundle
-          if (id.includes('react/') || id.includes('react-dom/')) {
-            return 'react-core';
-          }
-          // Critical UI components
-          if (id.includes('@radix-ui/react-dialog') || id.includes('@radix-ui/react-button')) {
-            return 'ui-critical';
-          }
-          // Non-critical UI
-          if (id.includes('@radix-ui')) {
-            return 'ui-extended';
-          }
-          // Router - separate for caching
-          if (id.includes('react-router')) {
-            return 'router';
-          }
-          // Heavy features - load on demand
-          if (id.includes('recharts') || id.includes('jspdf') || id.includes('xlsx')) {
-            return 'heavy-features';
-          }
-          // Database
-          if (id.includes('@supabase') || id.includes('@tanstack/react-query')) {
-            return 'database';
-          }
-          // Icons - separate chunk
-          if (id.includes('lucide-react')) {
-            return 'icons';
-          }
-          // Utils - small and cacheable
-          if (id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
-            return 'utils';
-          }
-          // Everything else
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-slot', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-popover'],
+          radix: ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-tabs', '@radix-ui/react-toast', '@radix-ui/react-tooltip'],
+          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          router: ['react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          charts: ['recharts'],
+          pdf: ['jspdf', 'jspdf-autotable'],
+          excel: ['xlsx'],
+          query: ['@tanstack/react-query']
         },
-        chunkFileNames: 'js/[name]-[hash].js',
-        entryFileNames: 'js/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
-      external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios'] : []
+      // Reduce bundle size by excluding heavy dependencies not needed in production
+      external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'] : []
     },
-    chunkSizeWarningLimit: 300,
+    chunkSizeWarningLimit: 1000,
+    // Optimize for faster builds
     reportCompressedSize: false,
-    emptyOutDir: true,
+    // Enable build caching
+    emptyOutDir: true
   },
-  // Optimize dependency pre-bundling for mobile
+  // Optimize dependency pre-bundling
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-    exclude: ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'],
-    esbuildOptions: {
-      target: 'es2020',
-    },
+    include: ['react', 'react-dom'],
+    exclude: ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli']
   },
   // Reduce memory usage during build
   esbuild: {

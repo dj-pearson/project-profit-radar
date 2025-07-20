@@ -1,28 +1,20 @@
-import { lazy, Suspense } from "react";
-import CriticalCSS from "@/components/CriticalCSS";
-import PerformanceOptimizer from "@/components/PerformanceOptimizer";
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
+import SocialProof from "@/components/SocialProof";
+import ProblemSolution from "@/components/ProblemSolution";
+import Features from "@/components/Features";
+import Industries from "@/components/Industries";
+import Pricing from "@/components/Pricing";
+import Implementation from "@/components/Implementation";
+import FAQ from "@/components/FAQ";
+import Footer from "@/components/Footer";
+import LazySection from "@/components/LazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 
-// Load critical components immediately
-import Header from "@/components/Header";
-import MobileOptimizedHero from "@/components/MobileOptimizedHero";
-
-// Aggressively lazy load everything else
-const SocialProof = lazy(() => import("@/components/SocialProof"));
-const ProblemSolution = lazy(() => import("@/components/ProblemSolution"));
-const Features = lazy(() => import("@/components/Features"));
-const Industries = lazy(() => import("@/components/Industries"));
-const Pricing = lazy(() => import("@/components/Pricing"));
-const Implementation = lazy(() => import("@/components/Implementation"));
-const FAQ = lazy(() => import("@/components/FAQ"));
-const Footer = lazy(() => import("@/components/Footer"));
-
 const Index = () => {
   return (
-    <div className="critical-layout">
-      <CriticalCSS />
-      <PerformanceOptimizer />
+    <div className="min-h-screen bg-background">
       <SEOMetaTags
         title="BuildDesk - Construction Management Software for Small & Medium Contractors | Save 23% on Project Costs"
         description="Stop losing money on delays and overruns. BuildDesk delivers real-time job costing, mobile field management, and OSHA compliance without enterprise complexity. Join 500+ contractors saving $50K+ annually."
@@ -50,42 +42,35 @@ const Index = () => {
       <Header />
       
       <main id="main-content" role="main">
-        <MobileOptimizedHero />
+        <Hero />
+        <SocialProof />
         
-        {/* Load social proof immediately after hero */}
-        <Suspense fallback={<div className="h-32 bg-muted animate-pulse" />}>
-          <SocialProof />
-        </Suspense>
-        
-        {/* Lazy load remaining sections with minimal fallbacks */}
-        <Suspense fallback={<div className="h-64 bg-muted animate-pulse" />}>
+        <LazySection>
           <ProblemSolution />
-        </Suspense>
+        </LazySection>
         
-        <Suspense fallback={<div className="h-64 bg-muted animate-pulse" />}>
+        <LazySection>
           <Features />
-        </Suspense>
+        </LazySection>
         
-        <Suspense fallback={<div className="h-48 bg-muted animate-pulse" />}>
+        <LazySection>
           <Industries />
-        </Suspense>
+        </LazySection>
         
-        <Suspense fallback={<div className="h-64 bg-muted animate-pulse" />}>
+        <LazySection>
           <Pricing />
-        </Suspense>
+        </LazySection>
         
-        <Suspense fallback={<div className="h-48 bg-muted animate-pulse" />}>
+        <LazySection>
           <Implementation />
-        </Suspense>
+        </LazySection>
         
-        <Suspense fallback={<div className="h-48 bg-muted animate-pulse" />}>
+        <LazySection>
           <FAQ />
-        </Suspense>
+        </LazySection>
       </main>
       
-      <Suspense fallback={<div className="h-32 bg-muted animate-pulse" />}>
-        <Footer />
-      </Suspense>
+      <Footer />
     </div>
   );
 };
