@@ -64,7 +64,7 @@ class DosProtectionService {
         .eq('is_active', true);
       
       if (!error && data) {
-        this.blockedIPs = new Set(data.map(item => item.ip_address));
+        this.blockedIPs = new Set(data.map((item: any) => item.ip_address as string));
       }
     } catch (error) {
       console.error('Failed to load blocked IPs:', error);
@@ -80,7 +80,7 @@ class DosProtectionService {
         .eq('is_active', true);
       
       if (!error && data) {
-        this.whitelistedIPs = new Set(data.map(item => item.ip_address));
+        this.whitelistedIPs = new Set(data.map((item: any) => item.ip_address as string));
       }
     } catch (error) {
       console.error('Failed to load whitelisted IPs:', error);
