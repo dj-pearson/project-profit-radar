@@ -4,27 +4,27 @@ const SocialProof = () => {
   const testimonials = [
     {
       quote: "Increased project profit margins by 23% in our first year. The real-time cost tracking is a game-changer.",
-      author: "Mike Rodriguez",
-      company: "Rodriguez Construction",
+      author: "Mike R.",
+      company: "Regional Contractor",
       savings: "23% profit increase"
     },
     {
       quote: "Cut admin time from 6 hours to 30 minutes daily. Our team can focus on actual construction work now.",
-      author: "Sarah Chen",
-      company: "Urban Build Co.",
+      author: "Sarah C.",
+      company: "Commercial Builder",
       savings: "5.5 hours saved daily"
     },
     {
       quote: "First time we've completed a project on time and under budget in 3 years. The scheduling tools are incredible.",
-      author: "Jim Patterson",
-      company: "Patterson Builders",
+      author: "Jim P.",
+      company: "Residential Contractor",
       savings: "On-time delivery"
     }
   ];
 
   const companyLogos = [
-    "Rodriguez Construction", "Urban Build Co.", "Patterson Builders", 
-    "Skyline Contractors", "Foundation Pro", "Heritage Homes"
+    "ABC Construction", "Premier Builders", "Metro Contractors", 
+    "Elite Construction", "Apex Builders", "Summit Construction"
   ];
 
   return (
