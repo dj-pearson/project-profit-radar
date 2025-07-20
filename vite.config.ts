@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
   // Aggressive mobile performance optimization
   build: {
     target: 'es2020',
-    minify: 'terser',
+    minify: 'esbuild',
     sourcemap: false,
     cssCodeSplit: true,
     rollupOptions: {
@@ -73,20 +73,6 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 300,
     reportCompressedSize: false,
     emptyOutDir: true,
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info'],
-        passes: 2,
-      },
-      mangle: {
-        safari10: true,
-      },
-      format: {
-        comments: false,
-      },
-    },
   },
   // Optimize dependency pre-bundling for mobile
   optimizeDeps: {
