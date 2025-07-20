@@ -11384,6 +11384,355 @@ export type Database = {
           },
         ]
       }
+      social_media_accounts: {
+        Row: {
+          access_token: string | null
+          account_id: string | null
+          account_metadata: Json | null
+          account_name: string
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          account_id?: string | null
+          account_metadata?: Json | null
+          account_name: string
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          account_id?: string | null
+          account_metadata?: Json | null
+          account_name?: string
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform?: Database["public"]["Enums"]["social_platform"]
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_accounts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_analytics: {
+        Row: {
+          account_id: string
+          company_id: string
+          created_at: string | null
+          followers_count: number | null
+          id: string
+          metric_date: string
+          metrics_data: Json | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          posts_count: number | null
+          total_engagement: number | null
+          total_impressions: number | null
+          total_reach: number | null
+        }
+        Insert: {
+          account_id: string
+          company_id: string
+          created_at?: string | null
+          followers_count?: number | null
+          id?: string
+          metric_date: string
+          metrics_data?: Json | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          posts_count?: number | null
+          total_engagement?: number | null
+          total_impressions?: number | null
+          total_reach?: number | null
+        }
+        Update: {
+          account_id?: string
+          company_id?: string
+          created_at?: string | null
+          followers_count?: number | null
+          id?: string
+          metric_date?: string
+          metrics_data?: Json | null
+          platform?: Database["public"]["Enums"]["social_platform"]
+          posts_count?: number | null
+          total_engagement?: number | null
+          total_impressions?: number | null
+          total_reach?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_analytics_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_media_analytics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_post_results: {
+        Row: {
+          created_at: string | null
+          engagement_data: Json | null
+          error_message: string | null
+          id: string
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_post_id: string | null
+          post_id: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["post_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          engagement_data?: Json | null
+          error_message?: string | null
+          id?: string
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_post_id?: string | null
+          post_id: string
+          published_at?: string | null
+          status: Database["public"]["Enums"]["post_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          engagement_data?: Json | null
+          error_message?: string | null
+          id?: string
+          platform?: Database["public"]["Enums"]["social_platform"]
+          platform_post_id?: string | null
+          post_id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_post_results_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_posts: {
+        Row: {
+          company_id: string
+          content: string
+          content_type: Database["public"]["Enums"]["content_type"] | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          media_urls: Json | null
+          platforms: Json
+          post_metadata: Json | null
+          project_id: string | null
+          published_at: string | null
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["post_status"] | null
+          template_id: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          content: string
+          content_type?: Database["public"]["Enums"]["content_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          media_urls?: Json | null
+          platforms?: Json
+          post_metadata?: Json | null
+          project_id?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["post_status"] | null
+          template_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          content?: string
+          content_type?: Database["public"]["Enums"]["content_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          media_urls?: Json | null
+          platforms?: Json
+          post_metadata?: Json | null
+          project_id?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["post_status"] | null
+          template_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_posts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_media_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "social_media_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_templates: {
+        Row: {
+          category: string | null
+          company_id: string
+          content: string
+          content_type: Database["public"]["Enums"]["content_type"] | null
+          created_at: string | null
+          created_by: string | null
+          default_platforms: Json | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          template_variables: Json | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          company_id: string
+          content: string
+          content_type?: Database["public"]["Enums"]["content_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          default_platforms?: Json | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          template_variables?: Json | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          company_id?: string
+          content?: string
+          content_type?: Database["public"]["Enums"]["content_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          default_platforms?: Json | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          template_variables?: Json | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_platform_configs: {
+        Row: {
+          api_endpoints: Json | null
+          created_at: string | null
+          id: string
+          image_requirements: Json | null
+          is_active: boolean | null
+          max_text_length: number | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          rate_limits: Json | null
+          supports_images: boolean | null
+          supports_scheduling: boolean | null
+          supports_videos: boolean | null
+          updated_at: string | null
+          video_requirements: Json | null
+        }
+        Insert: {
+          api_endpoints?: Json | null
+          created_at?: string | null
+          id?: string
+          image_requirements?: Json | null
+          is_active?: boolean | null
+          max_text_length?: number | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          rate_limits?: Json | null
+          supports_images?: boolean | null
+          supports_scheduling?: boolean | null
+          supports_videos?: boolean | null
+          updated_at?: string | null
+          video_requirements?: Json | null
+        }
+        Update: {
+          api_endpoints?: Json | null
+          created_at?: string | null
+          id?: string
+          image_requirements?: Json | null
+          is_active?: boolean | null
+          max_text_length?: number | null
+          platform?: Database["public"]["Enums"]["social_platform"]
+          rate_limits?: Json | null
+          supports_images?: boolean | null
+          supports_scheduling?: boolean | null
+          supports_videos?: boolean | null
+          updated_at?: string | null
+          video_requirements?: Json | null
+        }
+        Relationships: []
+      }
       subcontractor_disclosures: {
         Row: {
           approval_date: string | null
@@ -13579,14 +13928,32 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_post_for_platform: {
+        Args: {
+          p_content: string
+          p_platform: Database["public"]["Enums"]["social_platform"]
+          p_media_urls?: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
+      content_type: "text" | "image" | "video" | "carousel" | "article"
       data_classification: "public" | "internal" | "confidential" | "restricted"
       industry_type:
         | "residential"
         | "commercial"
         | "civil_infrastructure"
         | "specialty_trades"
+      post_status: "draft" | "scheduled" | "published" | "failed" | "cancelled"
+      social_platform:
+        | "linkedin"
+        | "facebook"
+        | "instagram"
+        | "twitter"
+        | "threads"
+        | "buffer"
+        | "hootsuite"
       subscription_tier: "starter" | "professional" | "enterprise"
       task_category:
         | "general"
@@ -13746,12 +14113,23 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      content_type: ["text", "image", "video", "carousel", "article"],
       data_classification: ["public", "internal", "confidential", "restricted"],
       industry_type: [
         "residential",
         "commercial",
         "civil_infrastructure",
         "specialty_trades",
+      ],
+      post_status: ["draft", "scheduled", "published", "failed", "cancelled"],
+      social_platform: [
+        "linkedin",
+        "facebook",
+        "instagram",
+        "twitter",
+        "threads",
+        "buffer",
+        "hootsuite",
       ],
       subscription_tier: ["starter", "professional", "enterprise"],
       task_category: [
