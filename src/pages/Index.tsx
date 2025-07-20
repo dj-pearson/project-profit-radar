@@ -1,14 +1,15 @@
 import { lazy, Suspense } from "react";
-import Header from "@/components/Header";
-import SocialProof from "@/components/SocialProof";
 import CriticalCSS from "@/components/CriticalCSS";
 import PerformanceOptimizer from "@/components/PerformanceOptimizer";
-import MobileOptimizedHero from "@/components/MobileOptimizedHero";
-import OptimizedLazySection from "@/components/OptimizedLazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 
-// Lazy load non-critical components for better performance
+// Load critical components immediately
+import Header from "@/components/Header";
+import MobileOptimizedHero from "@/components/MobileOptimizedHero";
+
+// Aggressively lazy load everything else
+const SocialProof = lazy(() => import("@/components/SocialProof"));
 const ProblemSolution = lazy(() => import("@/components/ProblemSolution"));
 const Features = lazy(() => import("@/components/Features"));
 const Industries = lazy(() => import("@/components/Industries"));
@@ -50,43 +51,36 @@ const Index = () => {
       
       <main id="main-content" role="main">
         <MobileOptimizedHero />
-        <SocialProof />
         
-        <OptimizedLazySection priority="high">
-          <Suspense fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-            <ProblemSolution />
-          </Suspense>
-        </OptimizedLazySection>
+        {/* Load social proof immediately after hero */}
+        <Suspense fallback={<div className="h-32 bg-muted animate-pulse" />}>
+          <SocialProof />
+        </Suspense>
         
-        <OptimizedLazySection priority="normal">
-          <Suspense fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-            <Features />
-          </Suspense>
-        </OptimizedLazySection>
+        {/* Lazy load remaining sections with minimal fallbacks */}
+        <Suspense fallback={<div className="h-64 bg-muted animate-pulse" />}>
+          <ProblemSolution />
+        </Suspense>
         
-        <OptimizedLazySection priority="normal">
-          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
-            <Industries />
-          </Suspense>
-        </OptimizedLazySection>
+        <Suspense fallback={<div className="h-64 bg-muted animate-pulse" />}>
+          <Features />
+        </Suspense>
         
-        <OptimizedLazySection priority="high">
-          <Suspense fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-            <Pricing />
-          </Suspense>
-        </OptimizedLazySection>
+        <Suspense fallback={<div className="h-48 bg-muted animate-pulse" />}>
+          <Industries />
+        </Suspense>
         
-        <OptimizedLazySection priority="low">
-          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
-            <Implementation />
-          </Suspense>
-        </OptimizedLazySection>
+        <Suspense fallback={<div className="h-64 bg-muted animate-pulse" />}>
+          <Pricing />
+        </Suspense>
         
-        <OptimizedLazySection priority="low">
-          <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
-            <FAQ />
-          </Suspense>
-        </OptimizedLazySection>
+        <Suspense fallback={<div className="h-48 bg-muted animate-pulse" />}>
+          <Implementation />
+        </Suspense>
+        
+        <Suspense fallback={<div className="h-48 bg-muted animate-pulse" />}>
+          <FAQ />
+        </Suspense>
       </main>
       
       <Suspense fallback={<div className="h-32 bg-muted animate-pulse" />}>

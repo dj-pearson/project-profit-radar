@@ -1,85 +1,57 @@
 import { useEffect } from 'react';
 
-// Critical CSS for above-the-fold content
+// Ultra-minimal critical CSS for immediate paint
 const criticalStyles = `
-  /* Critical styles for immediate render */
-  .critical-layout {
-    min-height: 100vh;
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
-  }
-  
-  .critical-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: hsl(var(--background) / 0.95);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid hsl(var(--border));
-  }
-  
-  .critical-hero {
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, hsl(var(--construction-orange)), hsl(24 100% 45%));
-  }
-  
-  .critical-text-primary {
-    color: hsl(var(--primary-foreground));
-  }
-  
-  .critical-button {
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    transition: all 0.2s;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .critical-button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-  
-  /* Font preload optimization */
-  @font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: local('Inter Regular'), local('Inter-Regular');
-  }
+*,*::before,*::after{box-sizing:border-box}
+html{line-height:1.15;-webkit-text-size-adjust:100%}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#1a1a1a}
+.critical-layout{min-height:100vh}
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid #e5e7eb;height:64px;display:flex;align-items:center;padding:0 1rem}
+.hero-section{min-height:60vh;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;display:flex;align-items:center;padding:2rem 1rem}
+.container{max-width:1200px;margin:0 auto;padding:0 1rem}
+.text-center{text-align:center}
+.mb-4{margin-bottom:1rem}
+.mb-8{margin-bottom:2rem}
+.text-3xl{font-size:1.875rem;line-height:2.25rem}
+.font-bold{font-weight:700}
+.btn-primary{background:#f97316;color:white;padding:0.75rem 1.5rem;border-radius:0.5rem;font-weight:600;text-decoration:none;display:inline-block;border:none;cursor:pointer}
+.btn-primary:hover{background:#ea580c}
+.grid{display:grid}
+.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}
+@media(min-width:768px){.md\\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1024px){.lg\\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.gap-8{gap:2rem}
+.bg-card{background:#fff;border:1px solid #e5e7eb;border-radius:0.5rem}
+.p-6{padding:1.5rem}
+.h-96{height:24rem}
+.bg-muted{background:#f9fafb}
+.animate-pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+img{max-width:100%;height:auto;display:block}
 `;
 
 export function CriticalCSS() {
   useEffect(() => {
-    // Inject critical CSS immediately
+    // Skip if already injected
+    if (document.querySelector('#critical-css')) return;
+
+    // Inject critical CSS immediately for instant paint
     const style = document.createElement('style');
+    style.id = 'critical-css';
     style.textContent = criticalStyles;
-    style.setAttribute('data-critical', 'true');
     document.head.insertBefore(style, document.head.firstChild);
 
-    // Preload critical fonts
-    const fontLink = document.createElement('link');
-    fontLink.rel = 'preload';
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
-    fontLink.as = 'style';
-    fontLink.onload = function() {
-      (this as HTMLLinkElement).rel = 'stylesheet';
+    // Minimal font optimization - load system fonts first
+    const fontOptimizer = () => {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = 'https://fonts.googleapis.com';
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
     };
-    document.head.appendChild(fontLink);
 
-    return () => {
-      // Cleanup critical styles when component unmounts
-      const criticalStyle = document.querySelector('[data-critical="true"]');
-      if (criticalStyle) {
-        criticalStyle.remove();
-      }
-    };
+    // Defer font loading to avoid blocking
+    setTimeout(fontOptimizer, 100);
   }, []);
 
   return null;

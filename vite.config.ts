@@ -18,57 +18,73 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Build optimizations for mobile performance
+  // Aggressive mobile performance optimization
   build: {
     target: 'es2020',
-    minify: 'esbuild',
+    minify: 'terser',
     sourcemap: false,
     cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Core React libraries
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'react-vendor';
+          // Core React - smallest possible bundle
+          if (id.includes('react/') || id.includes('react-dom/')) {
+            return 'react-core';
           }
-          // UI libraries - split into smaller chunks for better caching
+          // Critical UI components
+          if (id.includes('@radix-ui/react-dialog') || id.includes('@radix-ui/react-button')) {
+            return 'ui-critical';
+          }
+          // Non-critical UI
           if (id.includes('@radix-ui')) {
-            if (id.includes('dialog') || id.includes('popover') || id.includes('select')) {
-              return 'ui-interactive';
-            }
-            return 'ui-display';
+            return 'ui-extended';
           }
-          // Utilities that rarely change
+          // Router - separate for caching
+          if (id.includes('react-router')) {
+            return 'router';
+          }
+          // Heavy features - load on demand
+          if (id.includes('recharts') || id.includes('jspdf') || id.includes('xlsx')) {
+            return 'heavy-features';
+          }
+          // Database
+          if (id.includes('@supabase') || id.includes('@tanstack/react-query')) {
+            return 'database';
+          }
+          // Icons - separate chunk
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+          // Utils - small and cacheable
           if (id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
             return 'utils';
           }
-          // Heavy libraries that should be separate
-          if (id.includes('recharts')) return 'charts';
-          if (id.includes('jspdf') || id.includes('xlsx')) return 'document-export';
-          if (id.includes('@supabase')) return 'supabase';
-          if (id.includes('@tanstack/react-query')) return 'query';
-          if (id.includes('react-router-dom')) return 'router';
-          // Node modules that aren't core
+          // Everything else
           if (id.includes('node_modules')) {
             return 'vendor';
           }
         },
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
-      // Reduce bundle size by excluding heavy dependencies not needed in production
-      external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'] : []
+      external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios'] : []
     },
-    chunkSizeWarningLimit: 500,
-    // Optimize for mobile performance
+    chunkSizeWarningLimit: 300,
     reportCompressedSize: false,
     emptyOutDir: true,
-    // Enable aggressive compression
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
       },
     },
   },

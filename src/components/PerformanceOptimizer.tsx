@@ -76,32 +76,11 @@ export function PerformanceOptimizer() {
       window.addEventListener('resize', requestTick, { passive: true });
     };
 
-    // Register optimized service worker
+    // Register ultra-fast service worker
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          // Unregister old service worker
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const registration of registrations) {
-            await registration.unregister();
-          }
-
-          // Register new optimized service worker
-          const registration = await navigator.serviceWorker.register('/mobile-optimized-sw.js');
-          console.log('Mobile-optimized SW registered:', registration);
-
-          // Listen for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New service worker is available
-                  console.log('New service worker available');
-                }
-              });
-            }
-          });
+          await navigator.serviceWorker.register('/ultra-fast-sw.js');
         } catch (error) {
           console.error('SW registration failed:', error);
         }
