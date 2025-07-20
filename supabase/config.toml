@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.customer-portal]
 verify_jwt = true
+
+[functions.dos-protection]
+verify_jwt = true
