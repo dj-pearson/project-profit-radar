@@ -46,7 +46,7 @@ import Billing from "./pages/admin/Billing";
 import Analytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
 import SEOManager from "./pages/admin/SEOManager";
-import SecurityMonitoring from "./pages/SecurityMonitoring";
+import SecurityMonitoringPage from "./pages/SecurityMonitoringPage";
 import Safety from "./pages/Safety";
 import ComplianceAudit from "./pages/ComplianceAudit";
 import GDPRCompliance from "./pages/GDPRCompliance";
@@ -413,7 +413,7 @@ const AppContent = () => {
         path="/security-monitoring"
         element={
           <RouteGuard routePath="/security-monitoring">
-            <SecurityMonitoring />
+            <SecurityMonitoringPage />
           </RouteGuard>
         }
       />
