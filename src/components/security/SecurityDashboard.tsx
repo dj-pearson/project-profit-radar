@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MFASetup } from './MFASetup';
 import { DataClassificationDashboard } from './DataClassificationDashboard';
 import { SecurityMonitoringDashboard } from './SecurityMonitoringDashboard';
+import { mobileGridClasses, mobileCardClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 
 interface SecurityEvent {
   id: string;
@@ -104,18 +105,18 @@ export const SecurityDashboard: React.FC = () => {
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
       case 'login_success':
-        return <ShieldCheck className="h-4 w-4 text-green-500" />;
+        return <ShieldCheck className="h-4 w-4 text-success" />;
       case 'login_failed':
-        return <ShieldAlert className="h-4 w-4 text-red-500" />;
+        return <ShieldAlert className="h-4 w-4 text-destructive" />;
       case 'mfa_enabled':
       case 'mfa_setup_initiated':
-        return <Shield className="h-4 w-4 text-blue-500" />;
+        return <Shield className="h-4 w-4 text-primary" />;
       case 'mfa_disabled':
-        return <ShieldAlert className="h-4 w-4 text-orange-500" />;
+        return <ShieldAlert className="h-4 w-4 text-warning" />;
       case 'account_locked':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -156,24 +157,24 @@ export const SecurityDashboard: React.FC = () => {
     new Date(securityStatus.account_locked_until) > new Date();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Security Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
+      <div className={mobileGridClasses.content}>
+        <Card className={mobileCardClasses.container}>
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Two-Factor Auth</p>
+                <p className={`${mobileTextClasses.body} font-medium text-muted-foreground`}>Two-Factor Auth</p>
                 <div className="flex items-center gap-2 mt-1">
                   {securityStatus?.mfa_enabled ? (
                     <>
-                      <ShieldCheck className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-medium text-green-600">Enabled</span>
+                      <ShieldCheck className="h-4 w-4 text-success" />
+                      <span className={`${mobileTextClasses.body} font-medium text-success`}>Enabled</span>
                     </>
                   ) : (
                     <>
-                      <Shield className="h-4 w-4 text-red-500" />
-                      <span className="text-sm font-medium text-red-600">Disabled</span>
+                      <Shield className="h-4 w-4 text-destructive" />
+                      <span className={`${mobileTextClasses.body} font-medium text-destructive`}>Disabled</span>
                     </>
                   )}
                 </div>
@@ -182,14 +183,14 @@ export const SecurityDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
+        <Card className={mobileCardClasses.container}>
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Failed Attempts</p>
+                <p className={`${mobileTextClasses.body} font-medium text-muted-foreground`}>Failed Attempts</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                  <span className="text-lg font-bold">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  <span className="text-base sm:text-lg font-bold">
                     {securityStatus?.failed_login_attempts || 0}
                   </span>
                 </div>
@@ -198,21 +199,21 @@ export const SecurityDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
+        <Card className={mobileCardClasses.container}>
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Account Status</p>
+                <p className={`${mobileTextClasses.body} font-medium text-muted-foreground`}>Account Status</p>
                 <div className="flex items-center gap-2 mt-1">
                   {isAccountLocked ? (
                     <>
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                      <span className="text-sm font-medium text-red-600">Locked</span>
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <span className={`${mobileTextClasses.body} font-medium text-destructive`}>Locked</span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="h-4 w-4 text-green-500" />
-                      <span className="text-sm font-medium text-green-600">Active</span>
+                      <ShieldCheck className="h-4 w-4 text-success" />
+                      <span className={`${mobileTextClasses.body} font-medium text-success`}>Active</span>
                     </>
                   )}
                 </div>
@@ -235,12 +236,12 @@ export const SecurityDashboard: React.FC = () => {
 
       {/* Security Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Security Overview</TabsTrigger>
-          <TabsTrigger value="mfa">Multi-Factor Auth</TabsTrigger>
-          <TabsTrigger value="data-classification">Data Classification</TabsTrigger>
-          <TabsTrigger value="monitoring">Security Monitoring</TabsTrigger>
-          <TabsTrigger value="activity">Security Activity</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
+          <TabsTrigger value="mfa" className="text-xs sm:text-sm py-2">MFA</TabsTrigger>
+          <TabsTrigger value="data-classification" className="text-xs sm:text-sm py-2 hidden sm:flex">Data Class</TabsTrigger>
+          <TabsTrigger value="monitoring" className="text-xs sm:text-sm py-2 hidden sm:flex">Monitoring</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs sm:text-sm py-2">Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -257,23 +258,23 @@ export const SecurityDashboard: React.FC = () => {
             <CardContent>
               <div className="space-y-3">
                 {!securityStatus?.mfa_enabled && (
-                  <div className="flex items-center justify-between p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20">
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="h-5 w-5 text-orange-500" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg bg-warning/10">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <AlertTriangle className="h-5 w-5 text-warning mt-0.5 sm:mt-0" />
                       <div>
-                        <p className="font-medium">Enable Two-Factor Authentication</p>
-                        <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                        <p className={`${mobileTextClasses.cardTitle} font-medium`}>Enable Two-Factor Authentication</p>
+                        <p className={`${mobileTextClasses.muted}`}>Add an extra layer of security to your account</p>
                       </div>
                     </div>
-                    <Button size="sm">Enable MFA</Button>
+                    <Button size="sm" className="w-full sm:w-auto">Enable MFA</Button>
                   </div>
                 )}
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50 dark:bg-green-950/20">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck className="h-5 w-5 text-green-500" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg bg-success/10">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-success mt-0.5 sm:mt-0" />
                     <div>
-                      <p className="font-medium">Strong Password Policy</p>
-                      <p className="text-sm text-muted-foreground">Your password meets security requirements</p>
+                      <p className={`${mobileTextClasses.cardTitle} font-medium`}>Strong Password Policy</p>
+                      <p className={`${mobileTextClasses.muted}`}>Your password meets security requirements</p>
                     </div>
                   </div>
                   <Badge variant="default">Active</Badge>
@@ -321,26 +322,26 @@ export const SecurityDashboard: React.FC = () => {
                       <div className="flex items-start gap-3">
                         {getEventIcon(event.event_type)}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
+                            <p className={`${mobileTextClasses.cardTitle} font-medium`}>
                               {getEventDescription(event)}
                             </p>
-                            <span className="text-xs text-muted-foreground">
+                            <span className={`${mobileTextClasses.muted} text-right`}>
                               {formatDate(event.created_at)}
                             </span>
                           </div>
                           {(event.ip_address || event.user_agent) && (
-                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-1 text-xs text-muted-foreground">
                               {event.ip_address && (
                                 <div className="flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {event.ip_address}
+                                  <span className="truncate">{event.ip_address}</span>
                                 </div>
                               )}
                               {event.user_agent && (
                                 <div className="flex items-center gap-1">
                                   <Smartphone className="h-3 w-3" />
-                                  {event.user_agent.split(' ')[0]}
+                                  <span className="truncate">{event.user_agent.split(' ')[0]}</span>
                                 </div>
                               )}
                             </div>
