@@ -506,6 +506,111 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          api_key_hash: string
+          api_key_prefix: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_name: string
+          last_used_at: string | null
+          permissions: Json
+          rate_limit_per_hour: number
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          api_key_hash: string
+          api_key_prefix: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_name: string
+          last_used_at?: string | null
+          permissions?: Json
+          rate_limit_per_hour?: number
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          api_key_hash?: string
+          api_key_prefix?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_name?: string
+          last_used_at?: string | null
+          permissions?: Json
+          rate_limit_per_hour?: number
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
+      api_request_logs: {
+        Row: {
+          api_key_id: string | null
+          company_id: string | null
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          method: string
+          processing_time_ms: number | null
+          request_body: Json | null
+          request_headers: Json | null
+          response_body: Json | null
+          response_headers: Json | null
+          response_status: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method: string
+          processing_time_ms?: number | null
+          request_body?: Json | null
+          request_headers?: Json | null
+          response_body?: Json | null
+          response_headers?: Json | null
+          response_status?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method?: string
+          processing_time_ms?: number | null
+          request_body?: Json | null
+          request_headers?: Json | null
+          response_body?: Json | null
+          response_headers?: Json | null
+          response_status?: number | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action_type: string
@@ -5948,6 +6053,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integration_configurations: {
+        Row: {
+          company_id: string
+          configuration: Json
+          created_at: string
+          created_by: string | null
+          credentials_encrypted: string | null
+          error_count: number
+          id: string
+          integration_name: string
+          integration_type: string
+          is_active: boolean
+          last_error: string | null
+          last_sync_at: string | null
+          sync_enabled: boolean
+          sync_frequency: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          configuration?: Json
+          created_at?: string
+          created_by?: string | null
+          credentials_encrypted?: string | null
+          error_count?: number
+          id?: string
+          integration_name: string
+          integration_type: string
+          is_active?: boolean
+          last_error?: string | null
+          last_sync_at?: string | null
+          sync_enabled?: boolean
+          sync_frequency?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          configuration?: Json
+          created_at?: string
+          created_by?: string | null
+          credentials_encrypted?: string | null
+          error_count?: number
+          id?: string
+          integration_name?: string
+          integration_type?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_sync_at?: string | null
+          sync_enabled?: boolean
+          sync_frequency?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       invoice_line_items: {
         Row: {
@@ -12978,6 +13137,105 @@ export type Database = {
           },
         ]
       }
+      webhook_delivery_logs: {
+        Row: {
+          attempt_number: number
+          created_at: string
+          delivered_at: string | null
+          delivery_status: string
+          error_message: string | null
+          event_type: string
+          id: string
+          next_retry_at: string | null
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          webhook_endpoint_id: string
+        }
+        Insert: {
+          attempt_number?: number
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          next_retry_at?: string | null
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_endpoint_id: string
+        }
+        Update: {
+          attempt_number?: number
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          next_retry_at?: string | null
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_endpoint_id?: string
+        }
+        Relationships: []
+      }
+      webhook_endpoints: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          endpoint_name: string
+          events: Json
+          failure_count: number
+          id: string
+          is_active: boolean
+          last_failure_at: string | null
+          last_success_at: string | null
+          retry_attempts: number
+          secret_token: string
+          timeout_seconds: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          endpoint_name: string
+          events?: Json
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          retry_attempts?: number
+          secret_token: string
+          timeout_seconds?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          endpoint_name?: string
+          events?: Json
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          retry_attempts?: number
+          secret_token?: string
+          timeout_seconds?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       webhook_events: {
         Row: {
           created_at: string
@@ -13105,6 +13363,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_api_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_bid_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -13219,6 +13481,18 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      log_api_usage: {
+        Args: {
+          p_api_key_hash: string
+          p_endpoint: string
+          p_method: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_processing_time_ms?: number
+          p_response_status?: number
+        }
+        Returns: string
+      }
       log_audit_event: {
         Args: {
           p_company_id: string
@@ -13296,6 +13570,14 @@ export type Database = {
           p_affected_resources?: Json
         }
         Returns: string
+      }
+      validate_api_permission: {
+        Args: {
+          p_api_key_hash: string
+          p_permission: string
+          p_company_id?: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

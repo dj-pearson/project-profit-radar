@@ -32,3 +32,6 @@ verify_jwt = true
 
 [functions.dos-protection]
 verify_jwt = true
+
+[functions.api-management]
+verify_jwt = true
