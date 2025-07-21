@@ -97,11 +97,11 @@ export const SocialMediaManager: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'published': return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'scheduled': return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'failed': return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'draft': return <AlertCircle className="h-4 w-4 text-yellow-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-400" />;
+      case 'published': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'scheduled': return <Clock className="h-4 w-4 text-blue-500" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-destructive" />;
+      case 'draft': return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 

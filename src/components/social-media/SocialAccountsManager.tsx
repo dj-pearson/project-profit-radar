@@ -53,7 +53,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
       id: 'twitter', 
       name: 'Twitter/X', 
       icon: Twitter, 
-      color: 'bg-black',
+      color: 'bg-foreground',
       description: 'Share quick updates and engage in conversations'
     },
     { 
@@ -199,7 +199,7 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded ${platformInfo?.color || 'bg-gray-500'} text-white`}>
+                    <div className={`p-2 rounded ${platformInfo?.color || 'bg-muted'} text-white`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
@@ -225,13 +225,13 @@ export const SocialAccountsManager: React.FC<SocialAccountsManagerProps> = ({
                     <div className="flex items-center gap-1">
                       {account.is_active ? (
                         <>
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="text-green-600">Active</span>
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-green-500">Active</span>
                         </>
                       ) : (
                         <>
-                          <XCircle className="h-4 w-4 text-red-600" />
-                          <span className="text-red-600">Inactive</span>
+                          <XCircle className="h-4 w-4 text-destructive" />
+                          <span className="text-destructive">Inactive</span>
                         </>
                       )}
                     </div>
