@@ -195,8 +195,21 @@ const SEOAnalyticsDashboard: React.FC = () => {
         fetchBingData.mutateAsync()
       ]);
       await generateInsights.mutateAsync();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refreshing data:', error);
+      
+      // Handle specific error types
+      if (error.message?.includes('OAuth credentials not configured')) {
+        toast.error('SEO Analytics Setup Required', {
+          description: 'Google Search Console requires OAuth credentials to be configured. Please contact your administrator.',
+          duration: 10000,
+        });
+      } else if (error.message?.includes('Please authenticate')) {
+        toast.error('Authentication Required', {
+          description: 'Please connect your Google Search Console account using the "Connect Google" button.',
+          duration: 5000,
+        });
+      }
     }
   };
 

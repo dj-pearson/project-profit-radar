@@ -60,6 +60,20 @@ serve(async (req) => {
 // OAuth flow functions
 async function getGoogleAuthUrl() {
   const clientId = Deno.env.get('GOOGLE_OAuth_CLIENT_ID')
+  
+  if (!clientId) {
+    return new Response(
+      JSON.stringify({ 
+        error: 'Google OAuth credentials not configured in Supabase environment variables',
+        requiresSetup: true 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+  
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
   
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -78,6 +92,20 @@ async function getGoogleAuthUrl() {
 
 async function getMicrosoftAuthUrl() {
   const clientId = Deno.env.get('Microsoft_WM_Client')
+  
+  if (!clientId) {
+    return new Response(
+      JSON.stringify({ 
+        error: 'Microsoft OAuth credentials not configured in Supabase environment variables',
+        requiresSetup: true 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+  
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
   
   const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
@@ -195,6 +223,33 @@ async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
   
   console.log('Fetching Google Search Console data for:', siteUrl)
   
+  // Check if OAuth credentials are configured
+  const clientId = Deno.env.get('GOOGLE_OAuth_CLIENT_ID')
+  const clientSecret = Deno.env.get('GOOGLE_OAuth_CLIENT_SECRET')
+  
+  if (!clientId || !clientSecret) {
+    console.log('Google OAuth credentials not configured')
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: 'Google Search Console requires OAuth credentials to be configured in Supabase environment variables. Please contact your administrator to set up GOOGLE_OAuth_CLIENT_ID and GOOGLE_OAuth_CLIENT_SECRET.',
+        requiresSetup: true,
+        provider: 'google',
+        setupInstructions: {
+          step1: 'Create a Google Cloud Project at https://console.cloud.google.com',
+          step2: 'Enable the Google Search Console API',
+          step3: 'Create OAuth 2.0 credentials',
+          step4: 'Add the credentials to Supabase environment variables',
+          step5: 'Verify your website in Google Search Console'
+        }
+      }),
+      { 
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+  
   try {
     // Get stored OAuth token
     const { data: tokenData, error: tokenError } = await supabaseClient
@@ -208,7 +263,7 @@ async function fetchGoogleSearchConsole(supabaseClient: any, data: any) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Google Search Console not configured. Please authenticate with Google first.',
+          error: 'Google Search Console not configured. Please authenticate with Google first using the "Connect Google" button.',
           requiresAuth: true,
           provider: 'google'
         }),
