@@ -174,6 +174,9 @@ const AdminHub = () => {
                 <Button variant="outline" onClick={() => navigate('/admin/seo-analytics')}>
                   SEO Analytics
                 </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/social-media')}>
+                  Social Media
+                </Button>
               </>
             )}
             <Button variant="outline" onClick={() => navigate('/admin/settings')}>
@@ -247,6 +250,7 @@ const getItemDescription = (title: string): string => {
     'Security Monitoring': 'Monitor security events and threats',
     'Rate Limiting': 'Configure API rate limits and quotas',
     'Blog Manager': 'Manage platform blog and content',
+    'Social Media Manager': 'Manage social media accounts and posts',
     'SEO Manager': 'Manage SEO settings and optimization',
     'SEO Analytics': 'Comprehensive SEO traffic analysis and insights'
   };

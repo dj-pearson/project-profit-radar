@@ -101,6 +101,7 @@ import { UserSettings } from "./pages/UserSettings";
 import CompanyAdminSettings from "./pages/CompanyAdminSettings";
 import SystemAdminSettings from "./pages/SystemAdminSettings";
 import SecuritySettings from "./pages/SecuritySettings";
+import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
@@ -346,7 +347,15 @@ const AppContent = () => {
             <SEOAnalyticsDashboard />
           </RouteGuard>
         }
-      />
+       />
+      <Route
+        path="/admin/social-media"
+        element={
+          <RouteGuard routePath="/admin/social-media">
+            <SocialMediaManager />
+          </RouteGuard>
+        }
+       />
       <Route
         path="/company-settings"
         element={
