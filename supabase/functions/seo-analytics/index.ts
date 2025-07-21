@@ -91,12 +91,12 @@ async function getGoogleAuthUrl() {
 }
 
 async function getMicrosoftAuthUrl() {
-  const clientId = Deno.env.get('Microsoft_WM_Client')
+  const clientId = Deno.env.get('Bing_Web_Client')
   
   if (!clientId) {
     return new Response(
       JSON.stringify({ 
-        error: 'Microsoft OAuth credentials not configured in Supabase environment variables',
+        error: 'Bing OAuth credentials not configured in Supabase environment variables',
         requiresSetup: true 
       }),
       { 
@@ -171,8 +171,8 @@ async function exchangeGoogleCode(supabaseClient: any, data: any) {
 
 async function exchangeMicrosoftCode(supabaseClient: any, data: any) {
   const { code } = data
-  const clientId = Deno.env.get('Microsoft_WM_Client')
-  const clientSecret = Deno.env.get('Microsoft_WM_Secret')
+  const clientId = Deno.env.get('Bing_Web_Client')
+  const clientSecret = Deno.env.get('Bing_Web_Secret')
   const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/seo-analytics`
 
   try {
@@ -446,8 +446,8 @@ async function refreshGoogleToken(supabaseClient: any, refreshToken: string) {
 
 async function refreshMicrosoftToken(supabaseClient: any, refreshToken: string) {
   try {
-    const clientId = Deno.env.get('Microsoft_WM_Client')
-    const clientSecret = Deno.env.get('Microsoft_WM_Secret')
+    const clientId = Deno.env.get('Bing_Web_Client')
+    const clientSecret = Deno.env.get('Bing_Web_Secret')
 
     const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
       method: 'POST',
