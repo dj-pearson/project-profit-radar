@@ -82,3 +82,4 @@ supabase-mcp-config.json
 **/*credential*
 !public-key*
 !*.public.key
+SupabaseErrors.md

@@ -149,6 +149,33 @@ const BlogManager = () => {
     try {
       const slug = generateSlug(newPost.title);
       
+      // Debug: Check current user and auth state
+      console.log('Current user:', user);
+      console.log('Current userProfile:', userProfile);
+      
+      const authState = await supabase.auth.getUser();
+      console.log('Auth state:', authState);
+      
+      const sessionState = await supabase.auth.getSession();
+      console.log('Session state:', sessionState);
+      
+      // Debug: Test if we can read from user_profiles
+      const { data: profileCheck, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, role')
+        .eq('id', user?.id)
+        .single();
+      
+      console.log('Profile check:', profileCheck, profileError);
+      
+      // Debug: Test a simple select to see if we have any access
+      const { data: testSelect, error: testError } = await supabase
+        .from('blog_posts')
+        .select('count')
+        .limit(1);
+      
+      console.log('Blog posts test select:', testSelect, testError);
+      
       const { data, error } = await supabase
         .from('blog_posts')
         .insert([{
@@ -160,7 +187,13 @@ const BlogManager = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Detailed error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -184,7 +217,7 @@ const BlogManager = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create blog post"
+        description: `Failed to create blog post: ${error.message || 'Unknown error'}`
       });
     }
   };
