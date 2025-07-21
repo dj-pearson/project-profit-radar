@@ -161,33 +161,6 @@ const BlogManager = () => {
     try {
       const slug = generateSlug(newPost.title);
       
-      // Debug: Check current user and auth state
-      console.log('Current user:', user);
-      console.log('Current userProfile:', userProfile);
-      
-      const authState = await supabase.auth.getUser();
-      console.log('Auth state:', authState);
-      
-      const sessionState = await supabase.auth.getSession();
-      console.log('Session state:', sessionState);
-      
-      // Debug: Test if we can read from user_profiles
-      const { data: profileCheck, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, role')
-        .eq('id', user?.id)
-        .single();
-      
-      console.log('Profile check:', profileCheck, profileError);
-      
-      // Debug: Test a simple select to see if we have any access
-      const { data: testSelect, error: testError } = await supabase
-        .from('blog_posts')
-        .select('count')
-        .limit(1);
-      
-      console.log('Blog posts test select:', testSelect, testError);
-      
       const { data, error } = await supabase
         .from('blog_posts')
         .insert([{
@@ -201,9 +174,6 @@ const BlogManager = () => {
 
       if (error) {
         console.error('Detailed error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error details:', error.details);
-        console.error('Error hint:', error.hint);
         throw error;
       }
 
@@ -235,9 +205,6 @@ const BlogManager = () => {
   };
 
   const handleEditPost = (post: BlogPost) => {
-    console.log('Edit button clicked for post:', post);
-    console.log('Setting editingPost to:', post);
-    
     setEditingPost(post);
     setEditPost({
       title: post.title,
@@ -248,10 +215,7 @@ const BlogManager = () => {
       seo_description: post.seo_description || '',
       status: post.status
     });
-    
-    console.log('Opening edit dialog');
     setIsEditDialogOpen(true);
-    console.log('Edit dialog state set to true');
   };
 
   const handleUpdatePost = async () => {
@@ -441,21 +405,6 @@ const BlogManager = () => {
   return (
     <DashboardLayout title="Blog Manager">
       <div className="space-y-6">
-        {/* Debug Info */}
-        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-          Debug: isEditDialogOpen = {isEditDialogOpen.toString()}, editingPost = {editingPost?.title || 'null'}
-          <Button 
-            size="sm" 
-            className="ml-2"
-            onClick={() => {
-              console.log('Test button clicked');
-              setIsEditDialogOpen(true);
-            }}
-          >
-            Test Open Edit Dialog
-          </Button>
-        </div>
-        
         {/* Header Actions */}
         <div className="flex items-center justify-between">
           <div>
