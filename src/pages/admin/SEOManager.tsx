@@ -199,9 +199,30 @@ const SEOManager = () => {
 
       if (error) throw error;
 
+      // Sync Google Analytics configuration to localStorage for immediate activation
+      if (config.google_analytics_id) {
+        const analyticsConfig = {
+          enabled: true,
+          trackingId: config.google_analytics_id,
+          eventTracking: true,
+          scrollTracking: true,
+          formTracking: true,
+        };
+        localStorage.setItem('analytics-config', JSON.stringify(analyticsConfig));
+        
+        // Trigger a reload to initialize Google Analytics
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      }
+
       toast({
         title: "Success",
-        description: "SEO configuration saved successfully"
+        description: config.google_analytics_id ? 
+          "SEO configuration saved successfully. Page will reload to activate Google Analytics." :
+          "SEO configuration saved successfully"
       });
     } catch (error: any) {
       console.error('Error saving configuration:', error);

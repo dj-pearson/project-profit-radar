@@ -8,7 +8,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { usePWA } from "@/hooks/usePWA";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
+import { initializeGoogleAnalytics, trackPageView } from "@/utils/googleAnalyticsSync";
 import { RouteGuard } from "@/components/ProtectedRoute";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -787,23 +790,40 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
-        <HelmetProvider>
+const App = () => {
+  useEffect(() => {
+    initializeGoogleAnalytics();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-            <CustomerSupportChat />
+            <HelmetProvider>
+              <BrowserRouter>
+                <PageTracker />
+                <AppContent />
+              </BrowserRouter>
+            </HelmetProvider>
           </TooltipProvider>
-        </HelmetProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
+
+// Component to track page views
+const PageTracker = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
+  
+  return null;
+};
 
 export default App;

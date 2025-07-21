@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 // Extend the Window interface to include gtag
 declare global {
@@ -22,29 +23,48 @@ interface AnalyticsConfig {
   formTracking: boolean;
 }
 
-// Get analytics config from localStorage
-const getAnalyticsConfig = (): AnalyticsConfig => {
+// Get analytics config from Supabase SEO configurations
+const getAnalyticsConfig = async (): Promise<AnalyticsConfig> => {
   try {
-    const saved = localStorage.getItem('analytics-config');
-    if (saved) {
-      return JSON.parse(saved);
+    const { data: seoConfig, error } = await supabase
+      .from('seo_configurations')
+      .select('google_analytics_id')
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.log('No SEO configuration found, checking localStorage fallback');
+      // Fallback to localStorage for backwards compatibility
+      const saved = localStorage.getItem('analytics-config');
+      if (saved) {
+        return JSON.parse(saved);
+      }
     }
+
+    const trackingId = seoConfig?.google_analytics_id || '';
+    
+    return {
+      enabled: !!trackingId,
+      trackingId: trackingId,
+      eventTracking: true,
+      scrollTracking: true,
+      formTracking: true,
+    };
   } catch (error) {
     console.error('Error loading analytics config:', error);
+    return {
+      enabled: false,
+      trackingId: '',
+      eventTracking: true,
+      scrollTracking: true,
+      formTracking: true,
+    };
   }
-  
-  return {
-    enabled: false,
-    trackingId: '',
-    eventTracking: true,
-    scrollTracking: true,
-    formTracking: true,
-  };
 };
 
 // Check if analytics should be loaded
-const shouldLoadAnalytics = (): boolean => {
-  const config = getAnalyticsConfig();
+const shouldLoadAnalytics = async (): Promise<boolean> => {
+  const config = await getAnalyticsConfig();
   return config.enabled && !!config.trackingId;
 };
 
@@ -52,8 +72,12 @@ const shouldLoadAnalytics = (): boolean => {
 const loadGoogleAnalytics = (trackingId: string) => {
   if (typeof window === 'undefined') return;
   
-  // Check if already loaded
-  if (window.gtag) return;
+  // Check if already loaded with the same tracking ID
+  if (window.gtag && document.querySelector(`script[src*="${trackingId}"]`)) return;
+  
+  // Remove any existing GA scripts to avoid conflicts
+  const existingScripts = document.querySelectorAll('script[src*="googletagmanager.com/gtag/js"]');
+  existingScripts.forEach(script => script.remove());
   
   // Create script tags
   const script1 = document.createElement('script');
@@ -72,13 +96,15 @@ const loadGoogleAnalytics = (trackingId: string) => {
     });
   `;
   document.head.appendChild(script2);
+  
+  console.log('Google Analytics loaded with tracking ID:', trackingId);
 };
 
 // Google Analytics utility functions
 export const gtag = {
   // Track page views
-  pageview: (url: string) => {
-    const config = getAnalyticsConfig();
+  pageview: async (url: string) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.trackingId) {
       window.gtag('config', config.trackingId, {
         page_path: url,
@@ -87,8 +113,8 @@ export const gtag = {
   },
 
   // Track events
-  event: (action: string, category: string, label?: string, value?: number) => {
-    const config = getAnalyticsConfig();
+  event: async (action: string, category: string, label?: string, value?: number) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
       window.gtag('event', action, {
         event_category: category,
@@ -99,8 +125,8 @@ export const gtag = {
   },
 
   // Track user actions
-  trackUserAction: (action: string, details?: any) => {
-    const config = getAnalyticsConfig();
+  trackUserAction: async (action: string, details?: any) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
       window.gtag('event', action, {
         event_category: 'user_action',
@@ -110,8 +136,8 @@ export const gtag = {
   },
 
   // Track business events
-  trackBusinessEvent: (event: string, data?: any) => {
-    const config = getAnalyticsConfig();
+  trackBusinessEvent: async (event: string, data?: any) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
       window.gtag('event', event, {
         event_category: 'business',
@@ -121,8 +147,8 @@ export const gtag = {
   },
 
   // Track navigation
-  trackNavigation: (from: string, to: string) => {
-    const config = getAnalyticsConfig();
+  trackNavigation: async (from: string, to: string) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
       window.gtag('event', 'navigation', {
         event_category: 'navigation',
@@ -132,71 +158,85 @@ export const gtag = {
   },
 
   // Track authentication events
-  trackAuth: (action: 'login' | 'logout' | 'signup' | 'password_reset', method?: string) => {
-    const config = getAnalyticsConfig();
+  trackAuth: async (action: string, method?: string) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
       window.gtag('event', action, {
         event_category: 'authentication',
-        method: method || 'email',
-      });
-    }
-  },
-
-  // Track subscription events
-  trackSubscription: (action: 'subscribe' | 'cancel' | 'upgrade' | 'downgrade', plan?: string) => {
-    const config = getAnalyticsConfig();
-    if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
-      window.gtag('event', action, {
-        event_category: 'subscription',
-        event_label: plan,
+        event_label: method,
       });
     }
   },
 
   // Track project events
-  trackProject: (action: 'create' | 'update' | 'delete' | 'complete', projectType?: string) => {
-    const config = getAnalyticsConfig();
+  trackProject: async (action: string, projectType?: string, value?: number) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
       window.gtag('event', action, {
         event_category: 'project',
         event_label: projectType,
+        value: value,
       });
     }
   },
 
   // Track feature usage
-  trackFeature: (feature: string, action: string, value?: number) => {
-    const config = getAnalyticsConfig();
+  trackFeature: async (feature: string, action: string, value?: number) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
-      window.gtag('event', 'feature_usage', {
+      window.gtag('event', action, {
         event_category: 'feature',
         event_label: feature,
-        custom_action: action,
+        value: value,
+      });
+    }
+  },
+
+  // Track subscription events
+  trackSubscription: async (action: string, plan?: string, value?: number) => {
+    const config = await getAnalyticsConfig();
+    if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
+      window.gtag('event', action, {
+        event_category: 'subscription',
+        event_label: plan,
+        value: value,
+      });
+    }
+  },
+
+  // Track conversions
+  trackConversion: async (conversionType: string, value?: number) => {
+    const config = await getAnalyticsConfig();
+    if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
+      window.gtag('event', 'conversion', {
+        event_category: 'conversion',
+        event_label: conversionType,
         value: value,
       });
     }
   },
 
   // Track errors
-  trackError: (error: string, location?: string) => {
-    const config = getAnalyticsConfig();
+  trackError: async (error: string, location?: string) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled) {
       window.gtag('event', 'exception', {
         description: error,
         fatal: false,
-        custom_location: location,
+        custom_parameter_1: location,
       });
     }
   },
 
-  // Track conversions
-  trackConversion: (conversionType: string, value?: number) => {
-    const config = getAnalyticsConfig();
+  // Track ecommerce events
+  trackPurchase: async (transactionId: string, value: number, currency: string = 'USD', items?: any[]) => {
+    const config = await getAnalyticsConfig();
     if (typeof window !== 'undefined' && window.gtag && config.enabled && config.eventTracking) {
-      window.gtag('event', 'conversion', {
-        event_category: 'conversion',
-        event_label: conversionType,
+      window.gtag('event', 'purchase', {
+        transaction_id: transactionId,
         value: value,
+        currency: currency,
+        items: items,
       });
     }
   },
@@ -206,22 +246,38 @@ export const gtag = {
 export const useGoogleAnalytics = () => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [config, setConfig] = useState<AnalyticsConfig | null>(null);
 
+  // Load config and initialize GA
   useEffect(() => {
-    // Load Google Analytics if configured
-    if (shouldLoadAnalytics() && !isLoaded) {
-      const config = getAnalyticsConfig();
-      loadGoogleAnalytics(config.trackingId);
-      setIsLoaded(true);
-    }
+    const initializeAnalytics = async () => {
+      try {
+        const analyticsConfig = await getAnalyticsConfig();
+        setConfig(analyticsConfig);
+        
+        if (analyticsConfig.enabled && analyticsConfig.trackingId && !isLoaded) {
+          loadGoogleAnalytics(analyticsConfig.trackingId);
+          setIsLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error initializing analytics:', error);
+      }
+    };
+
+    initializeAnalytics();
   }, [isLoaded]);
 
+  // Track page views when location changes
   useEffect(() => {
-    // Track page views when location changes
-    if (shouldLoadAnalytics()) {
-      gtag.pageview(location.pathname + location.search);
+    if (config?.enabled && config?.trackingId && isLoaded) {
+      // Use a non-async version for page views to avoid issues
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('config', config.trackingId, {
+          page_path: location.pathname + location.search,
+        });
+      }
     }
-  }, [location]);
+  }, [location, config, isLoaded]);
 
   return gtag;
 };
@@ -229,52 +285,52 @@ export const useGoogleAnalytics = () => {
 // Hook for tracking user interactions
 export const useAnalyticsTracker = () => {
   return {
-    trackClick: (element: string, location?: string) => {
-      const config = getAnalyticsConfig();
+    trackClick: async (element: string, location?: string) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled && config.eventTracking) {
-        gtag.event('click', 'interaction', `${element}${location ? ` - ${location}` : ''}`);
+        await gtag.event('click', 'interaction', `${element}${location ? ` - ${location}` : ''}`);
       }
     },
     
-    trackFormSubmit: (formName: string, success: boolean) => {
-      const config = getAnalyticsConfig();
+    trackFormSubmit: async (formName: string, success: boolean) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled && config.formTracking) {
-        gtag.event('form_submit', 'interaction', formName, success ? 1 : 0);
+        await gtag.event('form_submit', 'interaction', formName, success ? 1 : 0);
       }
     },
     
-    trackSearch: (query: string, results: number) => {
-      const config = getAnalyticsConfig();
+    trackSearch: async (query: string, results: number) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled && config.eventTracking) {
-        gtag.event('search', 'interaction', query, results);
+        await gtag.event('search', 'interaction', query, results);
       }
     },
     
-    trackDownload: (fileName: string) => {
-      const config = getAnalyticsConfig();
+    trackDownload: async (fileName: string) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled && config.eventTracking) {
-        gtag.event('download', 'interaction', fileName);
+        await gtag.event('download', 'interaction', fileName);
       }
     },
     
-    trackVideoPlay: (videoTitle: string) => {
-      const config = getAnalyticsConfig();
+    trackVideoPlay: async (videoTitle: string) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled && config.eventTracking) {
-        gtag.event('video_play', 'media', videoTitle);
+        await gtag.event('video_play', 'media', videoTitle);
       }
     },
     
-    trackError: (error: string, location?: string) => {
-      const config = getAnalyticsConfig();
+    trackError: async (error: string, location?: string) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled) {
-        gtag.trackError(error, location);
+        await gtag.trackError(error, location);
       }
     },
     
-    trackTiming: (category: string, variable: string, value: number) => {
-      const config = getAnalyticsConfig();
+    trackTiming: async (category: string, variable: string, value: number) => {
+      const config = await getAnalyticsConfig();
       if (config.enabled && config.eventTracking) {
-        gtag.event('timing_complete', category, variable, value);
+        await gtag.event('timing_complete', category, variable, value);
       }
     },
   };
