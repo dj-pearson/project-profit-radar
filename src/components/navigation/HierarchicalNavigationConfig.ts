@@ -244,7 +244,7 @@ export const hierarchicalNavigation: NavigationArea[] = [
           items: [
             { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
             { title: "Knowledge Base Admin", url: "/knowledge-base-admin", icon: FileText, roles: ["root_admin"], badge: "Admin" },
-            { title: "Social Media Manager", url: "/admin/social-media", icon: MessageSquare, roles: ["admin", "root_admin"], badge: "Admin" },
+            { title: "Social Media Manager", url: "/admin/social-media", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
             { title: "SEO Analytics", url: "/admin/seo-analytics", icon: BarChart4, roles: ["root_admin"], badge: "Admin" },
             { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Admin" },
             { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" }
