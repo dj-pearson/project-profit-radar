@@ -17,7 +17,9 @@
     "build:prod": "vite build --mode production",
     "build:cloudflare": "vite build --mode production",
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
-    "mcp:context7": "npx @upstash/context7-mcp"
+    "mcp:context7": "npx @upstash/context7-mcp",
+    "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id ilhzuvemiuyfuxfegtlv --access-token \"${SUPABASE_ACCESS_TOKEN}\"",
+    "security-check": "powershell -ExecutionPolicy Bypass -File scripts/security-check.ps1"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.1",
@@ -62,6 +64,7 @@
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.4",
+    "@supabase/mcp-utils": "0.2.1",
     "@supabase/supabase-js": "^2.50.3",
     "@tanstack/react-query": "^5.56.2",
     "@types/qrcode": "^1.5.5",

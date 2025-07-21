@@ -27,6 +27,8 @@ pnpm-lock.yaml
 *.njsproj
 *.sln
 *.sw?
+.mcprc
+
 
 # Cloudflare
 .wrangler
@@ -35,6 +37,30 @@ functions/api/_worker.js.map
 
 # MCP (Model Context Protocol) configuration with sensitive tokens
 .mcp.json
+.mcprc
+.mcprc.local
+mcp-server-config.json
+mcp-server-config.local.json
+mcp-config.local.json
+
+# MCP environment files with access tokens
+.env.mcp
+.env.mcp.local
+.env.mcp.production
+.env.mcp.dev
+.env.mcp.staging
+
+# Claude Desktop MCP configuration (may contain tokens)
+claude_desktop_config.json
+
+# VS Code MCP settings (may contain tokens)
+.vscode/mcp.json
+.vscode/settings.local.json
+
+# MCP server logs and debug files
+mcp-server.log
+mcp-*.log
+mcp-debug.*
 
 # Supabase secrets and sensitive files
 .env.local
@@ -44,3 +70,15 @@ supabase/functions/.env
 **/secrets.json
 **/*secret*
 **/*private*
+
+# Supabase MCP specific
+supabase-mcp-config.json
+**/supabase-access-token*
+**/supabase-service-key*
+
+# Any files containing access tokens or API keys
+**/*token*
+**/*key*
+**/*credential*
+!public-key*
+!*.public.key
