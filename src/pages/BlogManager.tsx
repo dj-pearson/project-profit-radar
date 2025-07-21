@@ -56,11 +56,23 @@ const BlogManager = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [aiSettings, setAiSettings] = useState<AISettings[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   
   const [newPost, setNewPost] = useState({
+    title: '',
+    body: '',
+    excerpt: '',
+    featured_image_url: '',
+    seo_title: '',
+    seo_description: '',
+    status: 'draft'
+  });
+
+  const [editPost, setEditPost] = useState({
     title: '',
     body: '',
     excerpt: '',
@@ -222,6 +234,113 @@ const BlogManager = () => {
     }
   };
 
+  const handleEditPost = (post: BlogPost) => {
+    console.log('Edit button clicked for post:', post);
+    console.log('Setting editingPost to:', post);
+    
+    setEditingPost(post);
+    setEditPost({
+      title: post.title,
+      body: post.body,
+      excerpt: post.excerpt || '',
+      featured_image_url: post.featured_image_url || '',
+      seo_title: post.seo_title || '',
+      seo_description: post.seo_description || '',
+      status: post.status
+    });
+    
+    console.log('Opening edit dialog');
+    setIsEditDialogOpen(true);
+    console.log('Edit dialog state set to true');
+  };
+
+  const handleUpdatePost = async () => {
+    if (!editingPost || !editPost.title || !editPost.body) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in title and body."
+      });
+      return;
+    }
+
+    try {
+      const slug = generateSlug(editPost.title);
+      
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .update({
+          ...editPost,
+          slug,
+          published_at: editPost.status === 'published' ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingPost.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Detailed error:', error);
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Blog post updated successfully"
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingPost(null);
+      setEditPost({
+        title: '',
+        body: '',
+        excerpt: '',
+        featured_image_url: '',
+        seo_title: '',
+        seo_description: '',
+        status: 'draft'
+      });
+      
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating post:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to update blog post: ${error.message || 'Unknown error'}`
+      });
+    }
+  };
+
+  const handleDeletePost = async (post: BlogPost) => {
+    if (!confirm(`Are you sure you want to delete "${post.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Blog post deleted successfully"
+      });
+      
+      loadData();
+    } catch (error: any) {
+      console.error('Error deleting post:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to delete blog post: ${error.message || 'Unknown error'}`
+      });
+    }
+  };
+
   const generateWithAI = async () => {
     if (!aiTopic.trim()) {
       toast({
@@ -322,6 +441,21 @@ const BlogManager = () => {
   return (
     <DashboardLayout title="Blog Manager">
       <div className="space-y-6">
+        {/* Debug Info */}
+        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+          Debug: isEditDialogOpen = {isEditDialogOpen.toString()}, editingPost = {editingPost?.title || 'null'}
+          <Button 
+            size="sm" 
+            className="ml-2"
+            onClick={() => {
+              console.log('Test button clicked');
+              setIsEditDialogOpen(true);
+            }}
+          >
+            Test Open Edit Dialog
+          </Button>
+        </div>
+        
         {/* Header Actions */}
         <div className="flex items-center justify-between">
           <div>
@@ -381,11 +515,19 @@ const BlogManager = () => {
                           <Eye className="h-3 w-3 mr-1" />
                           Preview
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditPost(post)}
+                        >
                           <Edit className="h-3 w-3 mr-1" />
                           Edit
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeletePost(post)}
+                        >
                           <Trash2 className="h-3 w-3 mr-1" />
                           Delete
                         </Button>
@@ -604,6 +746,123 @@ const BlogManager = () => {
           <div className="flex justify-end">
             <Button onClick={() => setIsSettingsDialogOpen(false)}>
               Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Post Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Blog Post</DialogTitle>
+            <DialogDescription>
+              Update your blog article content and settings
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs defaultValue="content" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="seo">SEO</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="content" className="space-y-4">
+              <div>
+                <Label htmlFor="edit_title">Title *</Label>
+                <Input
+                  id="edit_title"
+                  placeholder="Enter blog post title"
+                  value={editPost.title}
+                  onChange={(e) => setEditPost({...editPost, title: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_excerpt">Excerpt</Label>
+                <Textarea
+                  id="edit_excerpt"
+                  placeholder="Brief summary of the post"
+                  value={editPost.excerpt}
+                  onChange={(e) => setEditPost({...editPost, excerpt: e.target.value})}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_featured_image">Featured Image URL</Label>
+                <Input
+                  id="edit_featured_image"
+                  placeholder="https://example.com/image.jpg"
+                  value={editPost.featured_image_url}
+                  onChange={(e) => setEditPost({...editPost, featured_image_url: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_body">Content *</Label>
+                <Textarea
+                  id="edit_body"
+                  placeholder="Write your blog post content here (Markdown supported)"
+                  value={editPost.body}
+                  onChange={(e) => setEditPost({...editPost, body: e.target.value})}
+                  rows={12}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_status">Status</Label>
+                <Select value={editPost.status} onValueChange={(value) => setEditPost({...editPost, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="seo" className="space-y-4">
+              <div>
+                <Label htmlFor="edit_seo_title">SEO Title</Label>
+                <Input
+                  id="edit_seo_title"
+                  placeholder="SEO optimized title (max 60 characters)"
+                  value={editPost.seo_title}
+                  onChange={(e) => setEditPost({...editPost, seo_title: e.target.value})}
+                  maxLength={60}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {editPost.seo_title.length}/60 characters
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_seo_description">SEO Description</Label>
+                <Textarea
+                  id="edit_seo_description"
+                  placeholder="SEO description (max 160 characters)"
+                  value={editPost.seo_description}
+                  onChange={(e) => setEditPost({...editPost, seo_description: e.target.value})}
+                  maxLength={160}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {editPost.seo_description.length}/160 characters
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePost}>
+              <Save className="h-4 w-4 mr-2" />
+              Update Post
             </Button>
           </div>
         </DialogContent>
