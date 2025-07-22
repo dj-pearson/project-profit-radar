@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ToolsFooter from "@/components/ToolsFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -127,22 +127,22 @@ const ScheduleBuilder = () => {
 
   const testimonials = [
     {
-      name: "Mike Rodriguez",
-      company: "Rodriguez Construction",
-      savings: "4 hours saved per project",
-      quote: "This tool cut my scheduling time from 6 hours to 2 hours. The templates are spot-on for residential work."
+      name: "Mike R.",
+      company: "Small Construction Co.",
+      savings: "Several hours saved per project",
+      quote: "This tool significantly reduced my scheduling time. The templates work well for residential projects."
     },
     {
-      name: "Sarah Chen",
-      company: "Chen Renovations",
-      savings: "25% fewer delays",
-      quote: "The critical path visualization helps me spot potential bottlenecks before they become problems."
+      name: "Sarah C.",
+      company: "Regional Renovation",
+      savings: "Better project visibility",
+      quote: "The critical path visualization helps identify potential bottlenecks before they become problems."
     },
     {
-      name: "Tom Wilson",
-      company: "Wilson Commercial",
-      savings: "Professional presentations",
-      quote: "Clients love the professional PDF schedules. It sets us apart from competitors using handwritten timelines."
+      name: "Tom W.",
+      company: "Commercial Contractor",
+      savings: "Professional presentations", 
+      quote: "Clients appreciate the professional PDF schedules. It helps differentiate us from competitors."
     }
   ];
 
@@ -227,7 +227,7 @@ const ScheduleBuilder = () => {
           <ResponsiveContainer>
             <div className="text-center mb-8">
               <p className="text-construction-dark/80 font-medium">
-                Trusted by contractors who've created <span className="text-construction-orange font-bold">15,000+ schedules</span>
+                Trusted by contractors who use <span className="text-construction-orange font-bold">professional scheduling tools</span>
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
@@ -455,7 +455,7 @@ const ScheduleBuilder = () => {
         </section>
       </main>
 
-      <Footer />
+      <ToolsFooter />
     </div>
   );
 };

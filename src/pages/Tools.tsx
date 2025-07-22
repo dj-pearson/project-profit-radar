@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ToolsFooter from "@/components/ToolsFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -229,12 +229,79 @@ const Tools = () => {
           </ResponsiveContainer>
         </section>
 
+        {/* SEO Content Section */}
+        <section className="py-16 bg-white">
+          <ResponsiveContainer>
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-construction-dark mb-8 text-center">
+                Professional Construction Management Made Simple
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-8 mb-12">
+                <div>
+                  <h3 className="text-xl font-semibold text-construction-dark mb-4">
+                    Why Construction Scheduling Software Matters
+                  </h3>
+                  <p className="text-construction-dark/70 mb-4">
+                    Modern construction projects require precise timeline management to stay profitable. Traditional 
+                    methods like spreadsheets and paper calendars often lead to costly delays and miscommunication.
+                  </p>
+                  <p className="text-construction-dark/70">
+                    Professional construction scheduling software helps contractors create accurate project timelines, 
+                    identify critical path activities, and optimize resource allocation for better project outcomes.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-construction-dark mb-4">
+                    Free Construction Tools vs. Paid Software
+                  </h3>
+                  <p className="text-construction-dark/70 mb-4">
+                    While many construction management platforms require expensive subscriptions, these free tools 
+                    provide essential functionality for small to medium contractors who need professional results 
+                    without the overhead.
+                  </p>
+                  <p className="text-construction-dark/70">
+                    Perfect for independent contractors, small construction companies, and project managers who want 
+                    to test scheduling software before committing to a full platform.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-muted/30 rounded-lg p-8">
+                <h3 className="text-xl font-semibold text-construction-dark mb-4 text-center">
+                  What Construction Professionals Are Saying
+                </h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-construction-orange mb-2">89%</div>
+                    <div className="text-sm text-construction-dark/70">
+                      Report improved project visibility with digital scheduling tools
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-construction-orange mb-2">67%</div>
+                    <div className="text-sm text-construction-dark/70">
+                      Reduce project delays using critical path analysis
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-construction-orange mb-2">4.2hrs</div>
+                    <div className="text-sm text-construction-dark/70">
+                      Average time saved per project using digital schedules
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ResponsiveContainer>
+        </section>
+
         {/* CTA Section */}
         <section className="py-16 bg-construction-orange">
           <ResponsiveContainer>
             <div className="text-center text-white">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-                Ready for More Advanced Features?
+                Ready for Complete Project Management?
               </h2>
               <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
                 These free tools are just the beginning. See how much you could save with Build-Desk's comprehensive 
@@ -242,13 +309,13 @@ const Tools = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="secondary" size="lg" asChild>
-                  <Link to="/auth">
-                    Start Free Trial
+                  <Link to="/roi-calculator">
+                    Calculate Your ROI
                   </Link>
                 </Button>
                 <Button variant="outline" size="lg" className="bg-transparent border-white text-white hover:bg-white hover:text-construction-orange" asChild>
                   <Link to="/#features">
-                    Learn More
+                    See All Features
                   </Link>
                 </Button>
               </div>
@@ -257,7 +324,7 @@ const Tools = () => {
         </section>
       </main>
 
-      <Footer />
+      <ToolsFooter />
     </div>
   );
 };
