@@ -266,7 +266,20 @@ export const SecurityDashboard: React.FC = () => {
                         <p className={`${mobileTextClasses.muted}`}>Add an extra layer of security to your account</p>
                       </div>
                     </div>
-                    <Button size="sm" className="w-full sm:w-auto">Enable MFA</Button>
+                    <Button 
+                      size="sm" 
+                      className="w-full sm:w-auto"
+                      onClick={() => {
+                        // Switch to MFA tab and trigger setup
+                        const mfaTab = document.querySelector('[data-state="active"][value="mfa"]') as HTMLElement;
+                        if (!mfaTab) {
+                          const mfaTrigger = document.querySelector('[value="mfa"]') as HTMLElement;
+                          mfaTrigger?.click();
+                        }
+                      }}
+                    >
+                      Enable MFA
+                    </Button>
                   </div>
                 )}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg bg-success/10">
