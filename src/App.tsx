@@ -105,6 +105,7 @@ import CompanyAdminSettings from "./pages/CompanyAdminSettings";
 import SystemAdminSettings from "./pages/SystemAdminSettings";
 import SecuritySettings from "./pages/SecuritySettings";
 import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
+import SupportTickets from "./pages/admin/SupportTickets";
 import Sitemap from "./components/Sitemap";
 
 const queryClient = new QueryClient();
@@ -356,6 +357,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/admin/social-media">
             <SocialMediaManager />
+          </RouteGuard>
+        }
+       />
+      <Route
+        path="/admin/support-tickets"
+        element={
+          <RouteGuard routePath="/admin/support-tickets">
+            <SupportTickets />
           </RouteGuard>
         }
        />

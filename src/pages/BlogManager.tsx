@@ -25,6 +25,7 @@ import {
   Save,
   Send
 } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 interface BlogPost {
   id: string;
@@ -537,15 +538,14 @@ const BlogManager = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="featured_image">Featured Image URL</Label>
-                <Input
-                  id="featured_image"
-                  placeholder="https://example.com/image.jpg"
-                  value={newPost.featured_image_url}
-                  onChange={(e) => setNewPost({...newPost, featured_image_url: e.target.value})}
-                />
-              </div>
+              <ImageUpload
+                label="Featured Image"
+                value={newPost.featured_image_url}
+                onChange={(value) => setNewPost({...newPost, featured_image_url: value})}
+                bucket="blog-images"
+                path="featured"
+                placeholder="Upload an image or enter a URL"
+              />
 
               <div>
                 <Label htmlFor="body">Content *</Label>
@@ -738,15 +738,14 @@ const BlogManager = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="edit_featured_image">Featured Image URL</Label>
-                <Input
-                  id="edit_featured_image"
-                  placeholder="https://example.com/image.jpg"
-                  value={editPost.featured_image_url}
-                  onChange={(e) => setEditPost({...editPost, featured_image_url: e.target.value})}
-                />
-              </div>
+              <ImageUpload
+                label="Featured Image"
+                value={editPost.featured_image_url}
+                onChange={(value) => setEditPost({...editPost, featured_image_url: value})}
+                bucket="blog-images"
+                path="featured"
+                placeholder="Upload an image or enter a URL"
+              />
 
               <div>
                 <Label htmlFor="edit_body">Content *</Label>
