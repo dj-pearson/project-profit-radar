@@ -109,7 +109,6 @@ import SupportTickets from "./pages/admin/SupportTickets";
 import Sitemap from "./components/Sitemap";
 import Tools from "./pages/Tools";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
-import ProfitCalculator from "./pages/tools/ProfitCalculator";
 
 const queryClient = new QueryClient();
 
@@ -415,7 +414,6 @@ const AppContent = () => {
       <Route path="/resources/:slug" element={<BlogPost />} />
       <Route path="/tools" element={<Tools />} />
       <Route path="/tools/schedule-builder" element={<ScheduleBuilder />} />
-      <Route path="/tools/profit-calculator" element={<ProfitCalculator />} />
       <Route path="/roi-calculator" element={<ROICalculator />} />
       <Route path="/logo-showcase" element={<LogoShowcase />} />
       <Route path="/subscription" element={<SubscriptionSettings />} />

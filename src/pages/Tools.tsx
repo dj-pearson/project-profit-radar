@@ -35,12 +35,12 @@ const Tools = () => {
       available: true
     },
     {
-      id: 'profit-calculator',
-      title: 'Project Profit Calculator',
-      description: 'Calculate project profitability, analyze cost breakdowns, and optimize pricing strategies for better margins.',
+      id: 'roi-calculator',
+      title: 'Build-Desk ROI Calculator',
+      description: 'Calculate your return on investment and potential cost savings from implementing Build-Desk construction management software.',
       icon: Calculator,
-      href: '/tools/profit-calculator',
-      features: ['Profit Margin Analysis', 'Cost Breakdown', 'Pricing Optimization', 'ROI Calculations'],
+      href: '/roi-calculator',
+      features: ['Cost Savings Analysis', 'ROI Projections', 'Payback Period', 'Efficiency Gains'],
       badge: null,
       available: true
     },
@@ -237,8 +237,8 @@ const Tools = () => {
                 Ready for More Advanced Features?
               </h2>
               <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-                These free tools are just the beginning. Build-Desk offers comprehensive construction management 
-                with advanced scheduling, cost tracking, and team collaboration.
+                These free tools are just the beginning. See how much you could save with Build-Desk's comprehensive 
+                construction management platform using our ROI Calculator, then start building professional schedules today.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="secondary" size="lg" asChild>
