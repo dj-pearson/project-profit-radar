@@ -49,17 +49,11 @@ const Index = () => {
           <ProblemSolution />
         </LazySection>
         
-        <LazySection>
-          <Features />
-        </LazySection>
+        <Features />
         
-        <LazySection>
-          <Industries />
-        </LazySection>
+        <Industries />
         
-        <LazySection>
-          <Pricing />
-        </LazySection>
+        <Pricing />
         
         <LazySection>
           <Implementation />
