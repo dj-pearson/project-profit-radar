@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
+import GanttChart from "@/components/schedule/GanttChart";
+import { createSampleProject, updateTaskDates } from "@/utils/scheduleUtils";
+import { Project, Task, TemplateType } from "@/types/schedule";
 import { 
   Calendar, 
   ArrowLeft, 
@@ -26,8 +29,8 @@ import {
   Share
 } from 'lucide-react';
 
-interface ProjectTemplate {
-  id: string;
+interface ProjectTemplateDisplay {
+  id: TemplateType;
   name: string;
   description: string;
   duration: string;
@@ -36,24 +39,16 @@ interface ProjectTemplate {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
-interface Task {
-  id: string;
-  name: string;
-  duration: number;
-  dependencies: string[];
-  phase: string;
-  critical: boolean;
-}
-
 const ScheduleBuilder = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType | ''>('');
   const [projectName, setProjectName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [showSchedule, setShowSchedule] = useState(false);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
-  const templates: ProjectTemplate[] = [
+  const templates: ProjectTemplateDisplay[] = [
     {
-      id: 'single-family',
+      id: 'single-family-home',
       name: 'Single-Family Home Construction',
       description: 'Complete new home construction from foundation to finish',
       duration: '120-180 days',
@@ -108,18 +103,27 @@ const ScheduleBuilder = () => {
     }
   ];
 
-  const sampleTasks: Task[] = [
-    { id: '1', name: 'Site Preparation', duration: 3, dependencies: [], phase: 'Foundation', critical: true },
-    { id: '2', name: 'Excavation', duration: 2, dependencies: ['1'], phase: 'Foundation', critical: true },
-    { id: '3', name: 'Pour Foundation', duration: 1, dependencies: ['2'], phase: 'Foundation', critical: true },
-    { id: '4', name: 'Foundation Cure', duration: 7, dependencies: ['3'], phase: 'Foundation', critical: true },
-    { id: '5', name: 'Frame Walls', duration: 5, dependencies: ['4'], phase: 'Framing', critical: true },
-    { id: '6', name: 'Install Roof Trusses', duration: 2, dependencies: ['5'], phase: 'Framing', critical: true },
-    { id: '7', name: 'Sheathing & Roofing', duration: 3, dependencies: ['6'], phase: 'Framing', critical: true },
-    { id: '8', name: 'Rough Electrical', duration: 3, dependencies: ['5'], phase: 'MEP', critical: false },
-    { id: '9', name: 'Rough Plumbing', duration: 2, dependencies: ['5'], phase: 'MEP', critical: false },
-    { id: '10', name: 'HVAC Installation', duration: 2, dependencies: ['5'], phase: 'MEP', critical: false }
-  ];
+  // Handle task updates
+  const handleTaskUpdate = (taskId: string, updates: Partial<Task>) => {
+    if (!currentProject) return;
+    
+    const updatedTasks = currentProject.tasks.map(task => {
+      if (task.id === taskId) {
+        const updatedTask = { ...task, ...updates };
+        if (updates.startDate && !updates.endDate) {
+          // Auto-calculate end date if only start date is provided
+          return updateTaskDates(updatedTask, updates.startDate, currentProject.tasks);
+        }
+        return updatedTask;
+      }
+      return task;
+    });
+    
+    setCurrentProject({
+      ...currentProject,
+      tasks: updatedTasks
+    });
+  };
 
   const testimonials = [
     {
@@ -144,6 +148,12 @@ const ScheduleBuilder = () => {
 
   const handleStartBuilding = () => {
     if (selectedTemplate && projectName && startDate) {
+      const project = createSampleProject(
+        selectedTemplate as TemplateType, 
+        projectName, 
+        new Date(startDate)
+      );
+      setCurrentProject(project);
       setShowSchedule(true);
     }
   };
@@ -403,73 +413,15 @@ const ScheduleBuilder = () => {
                   </div>
                 </div>
 
-                {/* Timeline Placeholder */}
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle>Project Timeline</CardTitle>
-                    <CardDescription>
-                      Drag tasks to adjust dates • Red path shows critical tasks
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted/30 rounded-lg p-8 text-center">
-                      <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                        Interactive Gantt Chart Coming Soon
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        This will show your full project timeline with drag-and-drop functionality
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
-                        {sampleTasks.slice(0, 6).map((task) => (
-                          <div key={task.id} className={`p-3 rounded border ${
-                            task.critical ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'
-                          }`}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-sm">{task.name}</span>
-                              {task.critical && (
-                                <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                                  Critical
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {task.duration} days • {task.phase}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Project Stats */}
-                <div className="grid md:grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-construction-dark">45</div>
-                      <div className="text-sm text-muted-foreground">Total Tasks</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-red-600">12</div>
-                      <div className="text-sm text-muted-foreground">Critical Path Tasks</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-construction-orange">150</div>
-                      <div className="text-sm text-muted-foreground">Project Days</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold text-green-600">85%</div>
-                      <div className="text-sm text-muted-foreground">Schedule Efficiency</div>
-                    </CardContent>
-                  </Card>
-                </div>
+                {/* Interactive Gantt Chart */}
+                <GanttChart
+                  project={currentProject}
+                  onTaskUpdate={handleTaskUpdate}
+                  onAddTask={() => {
+                    // TODO: Implement add task functionality
+                    console.log('Add task clicked');
+                  }}
+                />
               </div>
             </ResponsiveContainer>
           </section>
