@@ -104,8 +104,66 @@ const BlogAIDebugger = () => {
         });
       }
 
-      // Test 3: Check Edge Functions
+      // Test 3: Check Edge Functions (try simple version first)
       try {
+        // First try the simple diagnostic function
+        const { data: simpleFunctionData, error: simpleFunctionError } = await supabase.functions.invoke('enhanced-blog-ai-simple', {
+          body: {
+            action: 'test-generation',
+            topic: testTopic
+          }
+        });
+
+        if (!simpleFunctionError && simpleFunctionData?.success) {
+          debugResults.push({
+            test: 'Edge Function (Simple)',
+            status: 'pass',
+            message: 'Simplified function working correctly',
+            details: simpleFunctionData
+          });
+
+          // If simple function works, try Claude test
+          if (simpleFunctionData.environment?.hasClaudeKey) {
+            const { data: claudeTestData, error: claudeTestError } = await supabase.functions.invoke('enhanced-blog-ai-simple', {
+              body: {
+                action: 'test-claude',
+                topic: testTopic
+              }
+            });
+
+            if (!claudeTestError && claudeTestData?.success) {
+              debugResults.push({
+                test: 'Claude API Test',
+                status: 'pass',
+                message: 'Claude API working correctly',
+                details: claudeTestData
+              });
+            } else {
+              debugResults.push({
+                test: 'Claude API Test',
+                status: 'fail',
+                message: 'Claude API test failed',
+                details: claudeTestError || claudeTestData
+              });
+            }
+          } else {
+            debugResults.push({
+              test: 'Claude API Test',
+              status: 'fail',
+              message: 'CLAUDE_API_KEY not configured',
+              details: 'Add CLAUDE_API_KEY to Supabase Edge Functions environment variables'
+            });
+          }
+        } else {
+          debugResults.push({
+            test: 'Edge Function (Simple)',
+            status: 'fail',
+            message: 'Simplified function failed - likely not deployed',
+            details: simpleFunctionError || simpleFunctionData
+          });
+        }
+
+        // Now try the full function
         const { data: functionData, error: functionError } = await supabase.functions.invoke('enhanced-blog-ai', {
           body: {
             action: 'test-generation',
@@ -317,12 +375,23 @@ const BlogAIDebugger = () => {
                 </Alert>
               )}
 
-              {results.some(r => r.test === 'Edge Function Test' && r.status === 'fail') && (
+              {(results.some(r => r.test.includes('Edge Function') && r.status === 'fail') || 
+                results.some(r => r.test === 'Edge Function Test' && r.status === 'fail')) && (
                 <Alert>
                   <Zap className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Edge Function Missing:</strong> Deploy the enhanced-blog-ai Edge Function.
-                    Copy the function code to your Supabase Edge Functions dashboard.
+                    <strong>Edge Functions Missing:</strong> Deploy the Edge Functions to your Supabase project:
+                    <br />
+                    <br />
+                    <strong>1. Go to Supabase Dashboard → Edge Functions</strong>
+                    <br />
+                    <strong>2. Create new function:</strong> <code>enhanced-blog-ai-simple</code>
+                    <br />
+                    <strong>3. Copy code from:</strong> <code>supabase/functions/enhanced-blog-ai-simple/index.ts</code>
+                    <br />
+                    <strong>4. Deploy the function</strong>
+                    <br />
+                    <strong>5. Repeat for:</strong> <code>enhanced-blog-ai</code> (main function)
                   </AlertDescription>
                 </Alert>
               )}
