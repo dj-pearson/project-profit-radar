@@ -548,15 +548,131 @@ function generateSEOInstructions(settings: GenerationSettings): string {
 }
 
 function createFallbackContent(topic: string, settings: GenerationSettings): BlogContent {
-  const slug = generateSlug(topic);
+  const currentYear = new Date().getFullYear();
+  const targetWordCount = settings.target_word_count || 1200;
+  
+  // Generate more comprehensive fallback content
+  const introduction = `In the rapidly evolving construction industry of ${currentYear}, ${topic.toLowerCase()} has become a critical factor for project success. Construction companies that fail to implement modern approaches to ${topic.toLowerCase()} often struggle with cost overruns, safety incidents, and project delays. This comprehensive guide explores the essential elements, best practices, and innovative strategies that construction professionals need to understand about ${topic.toLowerCase()}.`;
+
+  const challenges = [
+    "Budget constraints and cost management pressures",
+    "Evolving safety regulations and compliance requirements", 
+    "Skilled labor shortages across the industry",
+    "Integration of new technologies and digital tools",
+    "Environmental sustainability and green building standards",
+    "Complex project coordination and stakeholder management"
+  ];
+
+  const benefits = [
+    "**Enhanced Project Efficiency**: Streamlined processes reduce waste and optimize resource allocation",
+    "**Improved Safety Outcomes**: Proactive safety measures protect workers and reduce liability",
+    "**Cost Control and Budget Management**: Better planning and monitoring prevent cost overruns",
+    "**Quality Assurance**: Systematic approaches ensure high-quality deliverables",
+    "**Technology Integration**: Modern tools improve communication and project visibility",
+    "**Regulatory Compliance**: Staying current with industry standards and building codes"
+  ];
+
+  const bestPractices = [
+    "**Comprehensive Planning Phase**: Develop detailed project plans with clear milestones, resource requirements, and risk assessments before breaking ground",
+    "**Technology-Driven Project Management**: Implement construction management software, BIM modeling, and mobile communication tools for real-time project tracking",
+    "**Safety-First Culture**: Establish daily safety briefings, regular safety training, and zero-tolerance policies for safety violations",
+    "**Quality Control Systems**: Implement systematic inspection processes, material testing protocols, and documentation requirements at each project phase",
+    "**Stakeholder Communication**: Maintain regular communication with clients, subcontractors, suppliers, and regulatory bodies through scheduled meetings and progress reports",
+    "**Continuous Training and Development**: Invest in ongoing education for your team on new techniques, technologies, and industry best practices"
+  ];
+
+  const implementation = [
+    "Start with a thorough assessment of your current processes and identify areas for improvement",
+    "Develop a phased implementation plan that allows for gradual adoption and team training",
+    "Invest in the necessary tools, software, and equipment to support your new processes",
+    "Train your team comprehensively on new procedures and ensure everyone understands their role",
+    "Monitor progress closely and be prepared to make adjustments based on real-world results",
+    "Document lessons learned and continuously refine your approach based on project outcomes"
+  ];
+
+  const bodyContent = `# ${topic}
+
+${introduction}
+
+## Current Industry Challenges
+
+The construction industry faces numerous challenges that make ${topic.toLowerCase()} more important than ever:
+
+${challenges.map(challenge => `- ${challenge}`).join('\n')}
+
+These challenges require construction companies to adopt more sophisticated approaches to ${topic.toLowerCase()}, leveraging both proven methodologies and innovative solutions.
+
+## Key Benefits and Advantages
+
+Implementing effective ${topic.toLowerCase()} strategies delivers significant benefits:
+
+${benefits.join('\n\n')}
+
+## Essential Best Practices
+
+Based on industry research and real-world experience, here are the most effective practices for ${topic.toLowerCase()}:
+
+${bestPractices.map((practice, index) => `### ${index + 1}. ${practice.split(':')[0].replace(/\*\*/g, '')}\n\n${practice.split(':').slice(1).join(':').trim()}`).join('\n\n')}
+
+## Implementation Strategy
+
+To successfully implement these ${topic.toLowerCase()} strategies in your organization:
+
+${implementation.map((step, index) => `${index + 1}. **${step.split(' ')[0]} ${step.split(' ')[1]}**: ${step.split(' ').slice(2).join(' ')}`).join('\n\n')}
+
+## Technology Integration
+
+Modern construction projects benefit significantly from technology integration in ${topic.toLowerCase()}:
+
+- **Project Management Software**: Platforms like Procore, PlanGrid, or BuildingConnected provide comprehensive project oversight
+- **Building Information Modeling (BIM)**: 3D modeling helps visualize potential issues before construction begins
+- **Mobile Applications**: Field teams can access plans, submit reports, and communicate in real-time
+- **Drone Surveys and Monitoring**: Aerial imagery provides accurate progress tracking and site analysis
+- **IoT Sensors and Monitoring**: Real-time data collection improves safety and quality control
+
+## Measuring Success
+
+Track the effectiveness of your ${topic.toLowerCase()} implementation through key performance indicators:
+
+- Project completion times compared to planned schedules
+- Budget variance and cost control metrics
+- Safety incident rates and near-miss reporting
+- Quality scores and defect rates
+- Client satisfaction and repeat business rates
+- Team productivity and efficiency metrics
+
+## Future Trends and Considerations
+
+The construction industry continues to evolve, and ${topic.toLowerCase()} must adapt to new trends:
+
+- **Sustainable Construction**: Green building practices and environmental considerations
+- **Prefabrication and Modular Construction**: Off-site manufacturing for improved quality and efficiency  
+- **Artificial Intelligence**: AI-powered project management and predictive analytics
+- **Virtual and Augmented Reality**: Enhanced training and project visualization
+- **Blockchain Technology**: Improved contract management and supply chain transparency
+
+## Conclusion
+
+Success in ${topic.toLowerCase()} requires a combination of proven best practices, modern technology, and continuous improvement. Construction companies that invest in comprehensive ${topic.toLowerCase()} strategies position themselves for long-term success in an increasingly competitive market.
+
+By implementing the strategies outlined in this guide, construction professionals can improve project outcomes, enhance safety performance, control costs, and deliver superior value to their clients. The key is to start with solid fundamentals and gradually incorporate more advanced techniques as your team develops expertise and confidence.
+
+Remember that ${topic.toLowerCase()} is not a one-time implementation but an ongoing process of refinement and improvement. Stay current with industry developments, invest in your team's education, and remain flexible in your approach to achieve the best results.`;
+
   return {
-    title: topic,
-    body: `# ${topic}\n\nThis is a comprehensive guide about ${topic} in the construction industry.\n\n## Introduction\n\nIn today's competitive construction landscape, understanding ${topic} is crucial for project success.\n\n## Key Benefits\n\n- Improved efficiency\n- Better cost control\n- Enhanced safety measures\n- Streamlined processes\n\n## Best Practices\n\n1. Plan thoroughly\n2. Monitor progress regularly\n3. Maintain clear communication\n4. Use appropriate technology\n\n## Conclusion\n\nImplementing these strategies for ${topic} will help your construction projects succeed.`,
-    excerpt: `Learn essential strategies and best practices for ${topic} in construction management.`,
-    seo_title: topic.length <= 60 ? topic : topic.substring(0, 57) + "...",
-    seo_description: `Discover proven methods and expert insights for ${topic} in construction projects. Improve efficiency and success rates.`,
-    keywords: settings.target_keywords,
-    estimated_read_time: Math.ceil(settings.target_word_count / 200)
+    title: `${topic}: Complete Guide for Construction Professionals`,
+    body: bodyContent,
+    excerpt: `Comprehensive guide to ${topic.toLowerCase()} in construction, covering best practices, technology integration, and implementation strategies for ${currentYear}.`,
+    seo_title: `${topic} Guide for Construction | ${currentYear}`,
+    seo_description: `Master ${topic.toLowerCase()} in construction with proven strategies, best practices, and technology solutions. Complete guide for construction professionals.`,
+    keywords: settings.target_keywords.length > 0 ? settings.target_keywords : [
+      "construction management",
+      "project planning", 
+      "construction best practices",
+      "building industry",
+      "construction technology"
+    ],
+    estimated_read_time: Math.ceil(targetWordCount / 200)
   };
 }
 

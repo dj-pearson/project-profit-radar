@@ -25,10 +25,12 @@ import {
   Save,
   Send,
   Bot,
-  Zap
+  Zap,
+  Bug
 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import BlogAutoGeneration from '@/components/admin/BlogAutoGeneration';
+import BlogAIDebugger from '@/components/admin/BlogAIDebugger';
 
 interface BlogPost {
   id: string;
@@ -63,6 +65,7 @@ const BlogManager = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [isAutoGenDialogOpen, setIsAutoGenDialogOpen] = useState(false);
+  const [isDebugDialogOpen, setIsDebugDialogOpen] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
@@ -416,6 +419,14 @@ const BlogManager = () => {
             <p className="text-sm text-muted-foreground">Create and manage blog articles with AI assistance</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Dialog open={isDebugDialogOpen} onOpenChange={setIsDebugDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Bug className="h-4 w-4 mr-2" />
+                  Debug AI
+                </Button>
+              </DialogTrigger>
+            </Dialog>
             <Dialog open={isAutoGenDialogOpen} onOpenChange={setIsAutoGenDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
@@ -657,6 +668,25 @@ const BlogManager = () => {
               <Save className="h-4 w-4 mr-2" />
               Create Post
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Debug Dialog */}
+      <Dialog open={isDebugDialogOpen} onOpenChange={setIsDebugDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5" />
+              AI Blog Generation Diagnostics
+            </DialogTitle>
+            <DialogDescription>
+              Diagnose and fix issues with AI blog generation
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="overflow-y-auto max-h-[75vh]">
+            <BlogAIDebugger />
           </div>
         </DialogContent>
       </Dialog>
