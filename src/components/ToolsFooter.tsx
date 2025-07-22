@@ -28,10 +28,10 @@ const ToolsFooter = () => {
   ];
 
   const companyLinks = [
-    { name: 'About Build-Desk', href: '/#features' },
-    { name: 'All Features', href: '/#features' },
-    { name: 'Pricing', href: '/#pricing' },
-    { name: 'Contact Us', href: '/#contact' }
+    { name: 'About Build-Desk', href: '/', isSection: false },
+    { name: 'All Features', href: '/#features', isSection: true },
+    { name: 'Pricing', href: '/#pricing', isSection: true },
+    { name: 'Contact Us', href: '/#contact', isSection: true }
   ];
 
   const legalLinks = [
@@ -116,12 +116,21 @@ const ToolsFooter = () => {
               <ul className="space-y-3 mb-6">
                 {companyLinks.map((link) => (
                   <li key={link.name}>
-                    <Link 
-                      to={link.href} 
-                      className="text-gray-300 hover:text-construction-orange transition-colors text-sm"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.isSection ? (
+                      <a 
+                        href={link.href} 
+                        className="text-gray-300 hover:text-construction-orange transition-colors text-sm"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link 
+                        to={link.href} 
+                        className="text-gray-300 hover:text-construction-orange transition-colors text-sm"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
