@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -9,15 +9,38 @@ import SmartLogo from "@/components/ui/smart-logo";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   useGlobalShortcuts();
 
   const navItems = [
-    { name: "Features", href: "/#features", isSection: true },
-    { name: "Pricing", href: "/#pricing", isSection: true },
-    { name: "Industries", href: "/#industries", isSection: true },
+    { name: "Features", href: "/#features", isSection: true, sectionId: "features" },
+    { name: "Pricing", href: "/#pricing", isSection: true, sectionId: "pricing" },
+    { name: "Industries", href: "/#industries", isSection: true, sectionId: "industries" },
     { name: "Tools", href: "/tools", isSection: false },
     { name: "Resources", href: "/resources", isSection: false },
   ];
+
+  // Handle section navigation
+  const handleSectionNavigation = (sectionId: string) => {
+    if (location.pathname === '/') {
+      // Already on homepage, just scroll to section
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Navigate to homepage first, then scroll to section
+      navigate('/');
+      // Use setTimeout to ensure DOM is updated before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
 
   return (
     <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -34,13 +57,13 @@ const Header = () => {
           <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navItems.map((item) =>
               item.isSection ? (
-                <a
+                <button
                   key={item.name}
-                  href={item.href}
-                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium whitespace-nowrap"
+                  onClick={() => handleSectionNavigation(item.sectionId!)}
+                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium whitespace-nowrap cursor-pointer"
                 >
                   {item.name}
-                </a>
+                </button>
               ) : (
                 <Link
                   key={item.name}
@@ -92,14 +115,16 @@ const Header = () => {
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) =>
                 item.isSection ? (
-                  <a
+                  <button
                     key={item.name}
-                    href={item.href}
-                    className="text-construction-dark hover:text-construction-orange transition-colors font-medium py-2"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      handleSectionNavigation(item.sectionId!);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-left text-construction-dark hover:text-construction-orange transition-colors font-medium py-2 cursor-pointer"
                   >
                     {item.name}
-                  </a>
+                  </button>
                 ) : (
                   <Link
                     key={item.name}

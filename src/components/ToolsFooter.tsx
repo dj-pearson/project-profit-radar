@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import SmartLogo from '@/components/ui/smart-logo';
 import { 
@@ -14,6 +14,30 @@ import {
 } from 'lucide-react';
 
 const ToolsFooter = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle section navigation
+  const handleSectionNavigation = (sectionId: string) => {
+    if (location.pathname === '/') {
+      // Already on homepage, just scroll to section
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Navigate to homepage first, then scroll to section
+      navigate('/');
+      // Use setTimeout to ensure DOM is updated before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
   const toolLinks = [
     { name: 'Schedule Builder', href: '/tools/schedule-builder', icon: Calendar },
     { name: 'ROI Calculator', href: '/roi-calculator', icon: Calculator },
@@ -29,9 +53,9 @@ const ToolsFooter = () => {
 
   const companyLinks = [
     { name: 'About Build-Desk', href: '/', isSection: false },
-    { name: 'All Features', href: '/#features', isSection: true },
-    { name: 'Pricing', href: '/#pricing', isSection: true },
-    { name: 'Contact Us', href: '/#contact', isSection: true }
+    { name: 'All Features', href: '/#features', isSection: true, sectionId: 'features' },
+    { name: 'Pricing', href: '/#pricing', isSection: true, sectionId: 'pricing' },
+    { name: 'Support', href: '/support', isSection: false }
   ];
 
   const legalLinks = [
@@ -117,12 +141,12 @@ const ToolsFooter = () => {
                 {companyLinks.map((link) => (
                   <li key={link.name}>
                     {link.isSection ? (
-                      <a 
-                        href={link.href} 
-                        className="text-gray-300 hover:text-construction-orange transition-colors text-sm"
+                      <button 
+                        onClick={() => handleSectionNavigation(link.sectionId!)}
+                        className="text-left text-gray-300 hover:text-construction-orange transition-colors text-sm cursor-pointer"
                       >
                         {link.name}
-                      </a>
+                      </button>
                     ) : (
                       <Link 
                         to={link.href} 
