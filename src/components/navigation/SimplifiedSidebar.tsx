@@ -91,9 +91,13 @@ export const SimplifiedSidebar = () => {
   }, [currentPath]);
 
   const collapsed = state === 'collapsed';
+  
+  // Check if admin section is expanded to use wider sidebar
+  const isAdminExpanded = expandedSections.includes('admin');
+  const sidebarWidth = collapsed ? "w-14" : isAdminExpanded ? "w-72" : "w-60";
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+    <Sidebar className={sidebarWidth} collapsible="icon">
       <SidebarHeader className="p-2">
         <div className="flex items-center justify-between">
           <SidebarTrigger />
@@ -155,19 +159,21 @@ export const SimplifiedSidebar = () => {
                           to={item.url} 
                           className="flex items-center flex-1"
                         >
-                          <item.icon className="h-5 w-5" />
+                          <item.icon className="h-5 w-5 flex-shrink-0" />
                           {!collapsed && (
                             <div className="flex flex-col items-start flex-1 ml-2 min-w-0">
-                              <span className="font-medium text-sm truncate w-full">{item.title}</span>
+                              <span className="font-medium text-sm w-full leading-tight">
+                                {item.title}
+                              </span>
                               {item.description && (
-                                <span className="text-xs text-muted-foreground truncate w-full max-w-[140px]">
+                                <span className="text-xs text-muted-foreground w-full leading-tight break-words">
                                   {item.description}
                                 </span>
                               )}
                             </div>
                           )}
                           {item.badge && !collapsed && (
-                            <Badge variant="destructive" className="text-xs px-1 py-0">
+                            <Badge variant="destructive" className="text-xs px-1 py-0 flex-shrink-0">
                               {item.badge}
                             </Badge>
                           )}
@@ -181,10 +187,10 @@ export const SimplifiedSidebar = () => {
                     </SidebarMenuButton>
                     
                     {hasSubSections && isExpanded && !collapsed && (
-                      <SidebarMenuSub>
+                      <SidebarMenuSub className="space-y-1">
                         {sections.map((section) => (
-                          <div key={section.id}>
-                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          <div key={section.id} className="space-y-1">
+                            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/50">
                               {section.label}
                             </div>
                             {section.items.map((subItem: any) => {
@@ -193,25 +199,29 @@ export const SimplifiedSidebar = () => {
                               
                               return (
                                 <SidebarMenuSubItem key={subItem.url}>
-                                  <SidebarMenuSubButton asChild={hasAccess}>
+                                  <SidebarMenuSubButton asChild={hasAccess} className="min-h-[36px] py-2">
                                     {hasAccess ? (
                                       <NavLink 
                                         to={subItem.url} 
-                                        className={getNavClass({ isActive: subIsActive })}
+                                        className={`${getNavClass({ isActive: subIsActive })} flex items-center w-full px-3 py-2 rounded-md`}
                                       >
-                                        <subItem.icon className="h-4 w-4" />
-                                        <span>{subItem.title}</span>
+                                        <subItem.icon className="h-4 w-4 flex-shrink-0" />
+                                        <span className="ml-2 text-sm leading-tight flex-1 min-w-0 break-words">
+                                          {subItem.title}
+                                        </span>
                                         {subItem.badge && (
-                                          <Badge variant="destructive" className="text-xs px-1 py-0 ml-auto">
+                                          <Badge variant="destructive" className="text-xs px-1 py-0 ml-2 flex-shrink-0">
                                             {subItem.badge}
                                           </Badge>
                                         )}
                                       </NavLink>
                                     ) : (
-                                      <div className="flex items-center opacity-50 cursor-not-allowed px-2 py-1">
-                                        <subItem.icon className="h-4 w-4" />
-                                        <span>{subItem.title}</span>
-                                        <Lock className="h-3 w-3 ml-auto" />
+                                      <div className="flex items-center opacity-50 cursor-not-allowed px-3 py-2 w-full">
+                                        <subItem.icon className="h-4 w-4 flex-shrink-0" />
+                                        <span className="ml-2 text-sm leading-tight flex-1 min-w-0 break-words">
+                                          {subItem.title}
+                                        </span>
+                                        <Lock className="h-3 w-3 ml-2 flex-shrink-0" />
                                       </div>
                                     )}
                                   </SidebarMenuSubButton>
