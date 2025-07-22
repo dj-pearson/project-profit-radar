@@ -219,28 +219,53 @@ async function generateDiverseTopic(
     `- ${t.primary_topic} (${new Date(t.created_at).toLocaleDateString()})`
   ).join('\n') || "No recent topics found";
 
-  const topicPrompt = `You are an expert content strategist for a construction management platform. Generate a fresh, engaging blog topic that:
+  const topicPrompt = `You are an expert content strategist for a construction management platform. Generate a fresh, engaging blog topic using these proven formats:
 
 RECENT TOPICS TO AVOID (within ${settings.minimum_topic_gap_days} days):
 ${diversityContext}
+
+TOPIC FORMATS TO USE (choose one):
+- "X Essential [Topic] Every [Audience] Should Know"
+- "X Common [Problem] and How to Solve Them"
+- "Complete Guide to [Topic]: X Expert Tips"  
+- "X Proven Strategies for [Goal/Challenge]"
+- "How to [Action]: X Step-by-Step Process"
+- "X [Tool/Method] That Transform [Process]"
+- "X Hidden Costs of [Topic] and How to Avoid Them"
+- "Future of [Topic]: X Trends to Watch in 2025"
 
 REQUIREMENTS:
 - Target industry focus: ${settings.industry_focus.join(', ')}
 - Content style: ${settings.content_style}
 - Target word count: ${settings.target_word_count}
 - Geographic focus: ${settings.target_locations.join(', ') || 'General'}
-- Must be different from recent topics listed above
+- Must be completely different from recent topics listed above
+- Use specific numbers (5, 7, 10) to make titles more engaging
+
+TOPICS TO EXPLORE:
+- Project scheduling and delays
+- Safety protocols and compliance  
+- Cost management and budgeting
+- Technology integration (BIM, drones, software)
+- Team management and communication
+- Quality control and inspections
+- Equipment management and maintenance
+- Sustainable building practices
+- Risk management and insurance
+- Permit and regulatory compliance
 
 ${settings.seo_focus === 'geo' ? 'OPTIMIZE FOR GEO (Local search and "near me" queries)' : ''}
 ${settings.perplexity_optimization ? 'OPTIMIZE FOR AI SEARCH (Perplexity, ChatGPT browsing, etc.)' : ''}
 ${settings.ai_search_optimization ? 'OPTIMIZE FOR GOOGLE AI OVERVIEWS' : ''}
+
+Generate a topic that construction professionals would find immediately valuable and actionable.
 
 Please respond with ONLY the topic title (no quotes, no explanations).`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'x-api-key': apiKey,
       'Content-Type': 'application/json',
       'anthropic-version': '2023-06-01'
     },
@@ -254,7 +279,19 @@ Please respond with ONLY the topic title (no quotes, no explanations).`;
 
   if (!response.ok) {
     logStep("Claude API error, using fallback");
-    return `${settings.industry_focus[0] || 'Construction'} Best Practices for ${new Date().getFullYear()}`;
+    const fallbackTopics = [
+      "7 Construction Scheduling Challenges and How to Overcome Them",
+      "5 Essential Safety Protocols Every Construction Team Should Follow", 
+      "10 Cost Management Strategies for Construction Projects",
+      "8 Technology Tools Transforming Construction Management",
+      "6 Common Project Delays and Prevention Strategies",
+      "5 Quality Control Methods for Better Construction Outcomes",
+      "7 Equipment Management Best Practices for Construction Companies",
+      "10 Sustainable Building Practices for Modern Construction",
+      "5 Risk Management Strategies Every Contractor Should Know",
+      "8 Communication Tools That Improve Construction Team Efficiency"
+    ];
+    return fallbackTopics[Math.floor(Math.random() * fallbackTopics.length)];
   }
 
   const data = await response.json();
@@ -340,7 +377,7 @@ Make the content authoritative, actionable, and valuable for construction profes
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01'
       },
@@ -388,7 +425,7 @@ async function generateWithClaudeFallback(
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01'
       },
