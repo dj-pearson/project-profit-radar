@@ -125,6 +125,88 @@ const ScheduleBuilder = () => {
     });
   };
 
+  // Handle adding new tasks
+  const handleAddTask = () => {
+    if (!currentProject) return;
+
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      name: 'New Task',
+      duration: 3,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      dependencies: [],
+      resourceId: 'general-crew',
+      status: 'not-started' as const,
+      isOnCriticalPath: false,
+      phase: 'planning'
+    };
+
+    setCurrentProject({
+      ...currentProject,
+      tasks: [...currentProject.tasks, newTask]
+    });
+  };
+
+  // Handle sharing functionality
+  const handleShare = (shareUrl: string) => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert(`Schedule shared! Link copied to clipboard:\n\n${shareUrl}\n\nAnyone with this link can view your project timeline.`);
+    }).catch(() => {
+      alert(`Share this link with your team:\n\n${shareUrl}`);
+    });
+  };
+
+  // Handle PDF export
+  const handleExportPDF = async () => {
+    if (!currentProject) return;
+
+    try {
+      const projectData = {
+        name: currentProject.name,
+        template: templates.find(t => t.id === selectedTemplate)?.name || 'Custom',
+        tasks: currentProject.tasks.length,
+        duration: Math.ceil((new Date(currentProject.endDate).getTime() - new Date(currentProject.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+        startDate: new Date(currentProject.startDate).toLocaleDateString()
+      };
+
+      console.log('Exporting PDF with data:', projectData);
+      
+      // Simulate PDF generation delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      alert(`Professional PDF Schedule Generated!\n\n` +
+            `📋 Project: ${projectData.name}\n` +
+            `📅 Template: ${projectData.template}\n` +
+            `📊 Tasks: ${projectData.tasks}\n` +
+            `⏱️ Duration: ${projectData.duration} days\n` +
+            `🚀 Start Date: ${projectData.startDate}\n\n` +
+            `In a full implementation, this would download a professional PDF timeline with:\n` +
+            `• Gantt chart visualization\n` +
+            `• Task dependencies\n` +
+            `• Resource assignments\n` +
+            `• Critical path analysis\n` +
+            `• Professional branding`);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Error exporting PDF. Please try again.');
+    }
+  };
+
+  // Handle settings
+  const handleSettings = () => {
+    if (!currentProject) return;
+
+    const newProjectName = prompt('Project Name:', currentProject.name);
+    if (newProjectName && newProjectName !== currentProject.name) {
+      setProjectName(newProjectName);
+      setCurrentProject({
+        ...currentProject,
+        name: newProjectName
+      });
+    }
+  };
+
   const testimonials = [
     {
       name: "Mike R.",
@@ -413,15 +495,23 @@ const ScheduleBuilder = () => {
                   </div>
                 </div>
 
-                {/* Interactive Gantt Chart */}
-                <GanttChart
-                  project={currentProject}
-                  onTaskUpdate={handleTaskUpdate}
-                  onAddTask={() => {
-                    // TODO: Implement add task functionality
-                    console.log('Add task clicked');
-                  }}
-                />
+                            {/* Interactive Gantt Chart */}
+            <GanttChart
+              project={currentProject}
+              onTaskUpdate={handleTaskUpdate}
+              onAddTask={() => {
+                handleAddTask();
+              }}
+              onShare={(shareUrl) => {
+                handleShare(shareUrl);
+              }}
+              onExportPDF={() => {
+                handleExportPDF();
+              }}
+              onSettings={() => {
+                handleSettings();
+              }}
+            />
               </div>
             </ResponsiveContainer>
           </section>

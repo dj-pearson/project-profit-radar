@@ -10,13 +10,21 @@ import {
   AlertCircle, 
   GripVertical,
   Plus,
-  Settings
+  Settings,
+  Share,
+  Download,
+  Link2,
+  Copy,
+  Check
 } from 'lucide-react';
 
 interface GanttChartProps {
   project: Project;
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onAddTask?: () => void;
+  onShare?: (shareUrl: string) => void;
+  onExportPDF?: () => void;
+  onSettings?: () => void;
 }
 
 interface GanttTask extends Task {
@@ -29,11 +37,18 @@ interface GanttTask extends Task {
 export const GanttChart: React.FC<GanttChartProps> = ({
   project,
   onTaskUpdate,
-  onAddTask
+  onAddTask,
+  onShare,
+  onExportPDF,
+  onSettings
 }) => {
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewMode, setViewMode] = useState<'days' | 'weeks' | 'months'>('days');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const ganttRef = useRef<HTMLDivElement>(null);
 
   // Calculate date range
@@ -48,12 +63,20 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   const SIDEBAR_WIDTH = 300;
   const DAY_WIDTH = viewMode === 'days' ? 40 : viewMode === 'weeks' ? 80 : 160;
 
-  // Generate time scale
+  // Generate extended time scale with buffer
   const generateTimeScale = () => {
     const scale = [];
-    const current = new Date(startDate);
     
-    while (current <= endDate) {
+    // Add buffer before and after project dates
+    const bufferedStart = new Date(startDate);
+    bufferedStart.setDate(bufferedStart.getDate() - 7); // 1 week before
+    
+    const bufferedEnd = new Date(endDate);
+    bufferedEnd.setDate(bufferedEnd.getDate() + 30); // 1 month after
+    
+    const current = new Date(bufferedStart);
+    
+    while (current <= bufferedEnd) {
       scale.push(new Date(current));
       if (viewMode === 'days') {
         current.setDate(current.getDate() + 1);
@@ -68,9 +91,12 @@ export const GanttChart: React.FC<GanttChartProps> = ({
 
   const timeScale = generateTimeScale();
 
-  // Calculate task positions
+  // Calculate task positions relative to buffered start
   const calculateTaskPosition = (task: Task): GanttTask => {
-    const taskStartDays = Math.ceil((new Date(task.startDate).getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const bufferedStart = new Date(startDate);
+    bufferedStart.setDate(bufferedStart.getDate() - 7);
+    
+    const taskStartDays = Math.ceil((new Date(task.startDate).getTime() - bufferedStart.getTime()) / (1000 * 60 * 60 * 24));
     const taskIndex = project.tasks.findIndex(t => t.id === task.id);
     
     return {
@@ -104,7 +130,11 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     const newDaysFromStart = Math.round(x / DAY_WIDTH);
     
     if (newDaysFromStart >= 0) {
-      const newStartDate = new Date(startDate);
+      // Use buffered start date for calculations
+      const bufferedStart = new Date(startDate);
+      bufferedStart.setDate(bufferedStart.getDate() - 7);
+      
+      const newStartDate = new Date(bufferedStart);
       newStartDate.setDate(newStartDate.getDate() + newDaysFromStart);
       
       const newEndDate = new Date(newStartDate);
@@ -121,6 +151,63 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   const handleDragEnd = () => {
     setDraggedTask(null);
     setDragOffset({ x: 0, y: 0 });
+  };
+
+  // Handle share functionality
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      // Generate a shareable URL (in real implementation, this would save to backend)
+      const shareUrl = `${window.location.origin}/shared-schedule/${project.id}`;
+      setShareUrl(shareUrl);
+      
+      if (onShare) {
+        onShare(shareUrl);
+      }
+    } catch (error) {
+      console.error('Error sharing schedule:', error);
+    }
+    setIsSharing(false);
+  };
+
+  // Handle copy link
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying link:', error);
+    }
+  };
+
+  // Handle PDF export
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      if (onExportPDF) {
+        await onExportPDF();
+      } else {
+        // Default PDF export functionality
+        console.log('Exporting PDF for project:', project.name);
+        // In real implementation, this would generate a PDF
+        alert('PDF export feature coming soon! This will generate a professional project timeline.');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+    }
+    setIsExporting(false);
+  };
+
+  // Handle settings
+  const handleSettings = () => {
+    if (onSettings) {
+      onSettings();
+    } else {
+      // Default settings functionality
+      console.log('Opening settings for project:', project.name);
+      alert('Settings panel coming soon! Configure project details, resources, and preferences.');
+    }
   };
 
   // Calculate analytics
@@ -162,7 +249,36 @@ export const GanttChart: React.FC<GanttChartProps> = ({
               Add Task
             </Button>
           )}
-          <Button variant="outline" size="sm">
+          
+          {/* Share Button with Dropdown */}
+          {shareUrl ? (
+            <div className="relative">
+              <Button variant="outline" size="sm" onClick={handleCopyLink}>
+                {linkCopied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                {linkCopied ? 'Copied!' : 'Copy Link'}
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing}>
+              {isSharing ? (
+                <Clock className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Share className="mr-2 h-4 w-4" />
+              )}
+              Share
+            </Button>
+          )}
+          
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={isExporting}>
+            {isExporting ? (
+              <Clock className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Export PDF
+          </Button>
+          
+          <Button variant="outline" size="sm" onClick={handleSettings}>
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Button>
