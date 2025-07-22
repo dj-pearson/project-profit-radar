@@ -23,9 +23,12 @@ import {
   Settings,
   Image,
   Save,
-  Send
+  Send,
+  Bot,
+  Zap
 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
+import BlogAutoGeneration from '@/components/admin/BlogAutoGeneration';
 
 interface BlogPost {
   id: string;
@@ -59,6 +62,7 @@ const BlogManager = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [isAutoGenDialogOpen, setIsAutoGenDialogOpen] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
@@ -412,6 +416,14 @@ const BlogManager = () => {
             <p className="text-sm text-muted-foreground">Create and manage blog articles with AI assistance</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Dialog open={isAutoGenDialogOpen} onOpenChange={setIsAutoGenDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Bot className="h-4 w-4 mr-2" />
+                  Auto-Generation
+                </Button>
+              </DialogTrigger>
+            </Dialog>
             <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
@@ -645,6 +657,25 @@ const BlogManager = () => {
               <Save className="h-4 w-4 mr-2" />
               Create Post
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Auto-Generation Dialog */}
+      <Dialog open={isAutoGenDialogOpen} onOpenChange={setIsAutoGenDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              AI Blog Auto-Generation
+            </DialogTitle>
+            <DialogDescription>
+              Configure automated blog content generation with advanced AI models
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="overflow-y-auto max-h-[75vh]">
+            <BlogAutoGeneration />
           </div>
         </DialogContent>
       </Dialog>
