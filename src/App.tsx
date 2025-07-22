@@ -12,6 +12,7 @@ import { initializeGoogleAnalytics, trackPageView } from "@/utils/googleAnalytic
 import { RouteGuard } from "@/components/ProtectedRoute";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useHashScroll } from "@/hooks/useHashScroll";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -115,6 +116,7 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   usePWA();
   useGoogleAnalytics(); // Enable automatic page view tracking
+  useHashScroll(); // Enable hash scrolling for anchor links
 
   return (
     <Routes>

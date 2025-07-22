@@ -11,8 +11,8 @@ import Footer from "@/components/Footer";
 import LazySection from "@/components/LazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
-
 const Index = () => {
+
   return (
     <div className="min-h-screen bg-background">
       <SEOMetaTags
