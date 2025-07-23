@@ -13,6 +13,7 @@ import { Plus, Play, Pause, BarChart3, Users, Mail, TrendingUp } from "lucide-re
 import { useToast } from "@/hooks/use-toast";
 import { FunnelStepBuilder } from "@/components/funnel/FunnelStepBuilder";
 import { FunnelAnalytics } from "@/components/funnel/FunnelAnalytics";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 interface LeadFunnel {
   id: string;
@@ -131,226 +132,229 @@ export default function FunnelManager() {
 
   if (viewMode === 'builder' && selectedFunnel) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Funnel Builder</h1>
-            <p className="text-muted-foreground">
-              Build and customize your lead funnel steps
-            </p>
+      <DashboardLayout title="Funnel Builder">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground">
+                Build and customize your lead funnel steps
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setViewMode('list');
+                setSelectedFunnel(null);
+              }}
+            >
+              Back to Funnels
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setViewMode('list');
-              setSelectedFunnel(null);
-            }}
-          >
-            Back to Funnels
-          </Button>
+          <FunnelStepBuilder funnelId={selectedFunnel} />
         </div>
-        <FunnelStepBuilder funnelId={selectedFunnel} />
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (viewMode === 'analytics' && selectedFunnel) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Funnel Analytics</h1>
-            <p className="text-muted-foreground">
-              Track performance and optimize your funnel
-            </p>
+      <DashboardLayout title="Funnel Analytics">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground">
+                Track performance and optimize your funnel
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setViewMode('list');
+                setSelectedFunnel(null);
+              }}
+            >
+              Back to Funnels
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setViewMode('list');
-              setSelectedFunnel(null);
-            }}
-          >
-            Back to Funnels
-          </Button>
+          <FunnelAnalytics funnelId={selectedFunnel} />
         </div>
-        <FunnelAnalytics funnelId={selectedFunnel} />
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lead Funnels</h1>
-          <p className="text-muted-foreground">
-            Create and manage automated email sequences to nurture leads
-          </p>
-        </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Funnel
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Funnel</DialogTitle>
-              <DialogDescription>
-                Set up a new lead funnel with automated email sequences
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateFunnel} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Funnel Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="Trial Onboarding Sequence"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Nurture trial users through their 14-day journey..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="trigger_event">Trigger Event</Label>
-                <Select name="trigger_event" required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select trigger event" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {triggerEventOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createFunnelMutation.isPending}>
-                  Create Funnel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="space-y-2">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {funnels?.map((funnel) => (
-            <Card key={funnel.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{funnel.name}</CardTitle>
-                  <Badge variant={funnel.is_active ? "default" : "secondary"}>
-                    {funnel.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-                <CardDescription className="line-clamp-2">
-                  {funnel.description || "No description"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{funnel.total_steps} steps</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{funnel.total_subscribers} subscribers</span>
-                  </div>
-                  <div className="flex items-center space-x-2 col-span-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    <span>{funnel.completion_rate}% completion rate</span>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedFunnel(funnel.id);
-                      setViewMode('builder');
-                    }}
-                  >
-                    Edit Steps
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedFunnel(funnel.id);
-                      setViewMode('analytics');
-                    }}
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      toggleFunnelMutation.mutate({
-                        id: funnel.id,
-                        is_active: !funnel.is_active,
-                      })
-                    }
-                  >
-                    {funnel.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {funnels?.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Mail className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No funnels yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Create your first lead funnel to start nurturing prospects automatically
+    <DashboardLayout title="Lead Funnels">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground">
+              Create and manage automated email sequences to nurture leads
             </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Funnel
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Funnel
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Funnel</DialogTitle>
+                <DialogDescription>
+                  Set up a new lead funnel with automated email sequences
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateFunnel} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Funnel Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="Trial Onboarding Sequence"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    placeholder="Nurture trial users through their 14-day journey..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="trigger_event">Trigger Event</Label>
+                  <Select name="trigger_event" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select trigger event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {triggerEventOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createFunnelMutation.isPending}>
+                    Create Funnel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-muted rounded"></div>
+                    <div className="h-3 bg-muted rounded w-2/3"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {funnels?.map((funnel) => (
+              <Card key={funnel.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{funnel.name}</CardTitle>
+                    <Badge variant={funnel.is_active ? "default" : "secondary"}>
+                      {funnel.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <CardDescription className="line-clamp-2">
+                    {funnel.description || "No description"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{funnel.total_steps} steps</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>{funnel.total_subscribers} subscribers</span>
+                    </div>
+                    <div className="flex items-center space-x-2 col-span-2">
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <span>{funnel.completion_rate}% completion rate</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedFunnel(funnel.id);
+                        setViewMode('builder');
+                      }}
+                    >
+                      Edit Steps
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedFunnel(funnel.id);
+                        setViewMode('analytics');
+                      }}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        toggleFunnelMutation.mutate({
+                          id: funnel.id,
+                          is_active: !funnel.is_active,
+                        })
+                      }
+                    >
+                      {funnel.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {funnels?.length === 0 && (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Mail className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No funnels yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first lead funnel to start nurturing prospects automatically
+              </p>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Funnel
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

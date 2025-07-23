@@ -27,13 +27,14 @@ import {
   CalendarDays,
   Calculator,
   BarChart4,
-  ListTodo
+  ListTodo,
+  LucideIcon
 } from 'lucide-react';
 
 export interface NavigationItem {
   title: string;
   url: string;
-  icon: any;
+  icon: LucideIcon;
   roles: string[];
   badge?: string;
   description?: string;
@@ -49,7 +50,7 @@ export interface NavigationSection {
 export interface NavigationArea {
   id: string;
   title: string;
-  icon: any;
+  icon: LucideIcon;
   sections: NavigationSection[];
 }
 
@@ -247,7 +248,8 @@ export const hierarchicalNavigation: NavigationArea[] = [
             { title: "Social Media Manager", url: "/admin/social-media", icon: MessageSquare, roles: ["root_admin"], badge: "Admin" },
             { title: "SEO Analytics", url: "/admin/seo-analytics", icon: BarChart4, roles: ["root_admin"], badge: "Admin" },
             { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Admin" },
-            { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" }
+            { title: "Analytics", url: "/admin/analytics", icon: TrendingUp, roles: ["root_admin"], badge: "Admin" },
+            { title: "Funnels", url: "/admin/funnels", icon: Zap, roles: ["root_admin"], badge: "Admin" }
           ]
         },
         {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
-import { dashboardAreas } from '@/components/navigation/NavigationConfig';
+import { dashboardAreas, NavigationItem } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -86,7 +86,7 @@ const AdminHub = () => {
     );
   }
 
-  const filterItemsByRole = (items: any[]) => {
+  const filterItemsByRole = (items: NavigationItem[]) => {
     return items.filter(item => {
       return userProfile?.role === 'root_admin' || item.roles.includes(userProfile?.role || '');
     });
@@ -177,6 +177,9 @@ const AdminHub = () => {
                 <Button variant="outline" onClick={() => navigate('/admin/social-media')}>
                   Social Media
                 </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/funnels')}>
+                  Lead Funnels
+                </Button>
               </>
             )}
             <Button variant="outline" onClick={() => navigate('/admin/settings')}>
@@ -252,7 +255,8 @@ const getItemDescription = (title: string): string => {
     'Blog Manager': 'Manage platform blog and content',
     'Social Media Manager': 'Manage social media accounts and posts',
     'SEO Manager': 'Manage SEO settings and optimization',
-    'SEO Analytics': 'Comprehensive SEO traffic analysis and insights'
+    'SEO Analytics': 'Comprehensive SEO traffic analysis and insights',
+    'Funnels': 'Create and manage automated lead nurture sequences'
   };
   
   return descriptions[title] || 'Access this feature';

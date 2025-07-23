@@ -22,13 +22,15 @@ import {
   Lock,
   Tag,
   Gift,
-  Share
+  Share,
+  Zap,
+  LucideIcon
 } from 'lucide-react';
 
 export interface NavigationItem {
   title: string;
   url: string;
-  icon: any;
+  icon: LucideIcon;
   roles: string[];
   badge?: string;
   description?: string;
@@ -42,7 +44,7 @@ export interface NavigationCategory {
 export interface DashboardArea {
   id: string;
   title: string;
-  icon: any;
+  icon: LucideIcon;
   url: string;
   roles: string[];
   description: string;
@@ -311,7 +313,8 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Knowledge Base Admin", url: "/knowledge-base-admin", icon: FileText, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Root Admin" }
+          { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Root Admin" },
+          { title: "Funnels", url: "/admin/funnels", icon: Zap, roles: ["root_admin"], badge: "Root Admin" }
         ]
       },
       {
