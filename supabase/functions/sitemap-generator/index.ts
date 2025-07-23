@@ -65,18 +65,17 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
     { path: '/', priority: '1.0', changefreq: 'daily' },
     { path: '/features', priority: '0.9', changefreq: 'weekly' },
     { path: '/pricing', priority: '0.9', changefreq: 'weekly' },
+    { path: '/support', priority: '0.7', changefreq: 'monthly' },
+    { path: '/knowledge-base', priority: '0.7', changefreq: 'weekly' },
+    { path: '/tutorials', priority: '0.7', changefreq: 'weekly' },
     { path: '/resources', priority: '0.8', changefreq: 'weekly' },
-    { path: '/tools/roi-calculator', priority: '0.8', changefreq: 'monthly' },
+    { path: '/tools', priority: '0.7', changefreq: 'monthly' },
+    { path: '/roi-calculator', priority: '0.8', changefreq: 'monthly' },
     { path: '/tools/schedule-builder', priority: '0.8', changefreq: 'monthly' },
     
     // Authentication & onboarding
     { path: '/auth', priority: '0.3', changefreq: 'monthly' },
     { path: '/setup', priority: '0.3', changefreq: 'monthly' },
-    
-    // Public content pages
-    { path: '/blog-manager', priority: '0.6', changefreq: 'weekly' },
-    { path: '/knowledge-base', priority: '0.7', changefreq: 'weekly' },
-    { path: '/tutorials', priority: '0.7', changefreq: 'weekly' },
     
     // Legal pages
     { path: '/privacy-policy', priority: '0.4', changefreq: 'yearly' },
@@ -126,7 +125,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
 
   for (const page of allPages) {
     const url = `${canonicalDomain}${page.path}`
-    const lastmod = page.lastmod 
+    const lastmod = 'lastmod' in page && page.lastmod
       ? new Date(page.lastmod).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0]
 
