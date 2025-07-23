@@ -322,6 +322,21 @@ const SEOManager = () => {
 
       if (error) throw error;
 
+      // Also generate using the file-based sitemap generator
+      const { data: fileData, error: fileError } = await supabase.functions.invoke('generate-sitemap-file', {
+        body: {},
+      });
+
+      if (fileError) {
+        console.warn('File-based sitemap generation failed:', fileError);
+      }
+
+      // Log the generated sitemap for manual copying if needed
+      if (data) {
+        console.log('Generated Sitemap XML:', data);
+        console.log('Copy this content to public/sitemap.xml if needed');
+      }
+
       // Save sitemap to public directory (in a real implementation, this would save to your server)
       const sitemapUrl = `${config.canonical_domain}/sitemap.xml`;
       
@@ -334,7 +349,7 @@ const SEOManager = () => {
 
       toast({
         title: "Sitemap Generated",
-        description: "Your sitemap has been generated and is ready for submission to search engines."
+        description: "Your sitemap has been generated. The static sitemap.xml file will be updated on the next build deployment."
       });
       
     } catch (error: any) {
