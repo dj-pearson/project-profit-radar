@@ -11,6 +11,7 @@ import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import GanttChart from "@/components/schedule/GanttChart";
+import { PDFExportDialog } from "@/components/schedule/PDFExportDialog";
 import { createSampleProject, updateTaskDates } from "@/utils/scheduleUtils";
 import { Project, Task, TemplateType } from "@/types/schedule";
 import { 
@@ -45,6 +46,7 @@ const ScheduleBuilder = () => {
   const [startDate, setStartDate] = useState('');
   const [showSchedule, setShowSchedule] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [showPDFDialog, setShowPDFDialog] = useState(false);
 
   const templates: ProjectTemplateDisplay[] = [
     {
@@ -160,37 +162,7 @@ const ScheduleBuilder = () => {
   // Handle PDF export
   const handleExportPDF = async () => {
     if (!currentProject) return;
-
-    try {
-      const projectData = {
-        name: currentProject.name,
-        template: templates.find(t => t.id === selectedTemplate)?.name || 'Custom',
-        tasks: currentProject.tasks.length,
-        duration: Math.ceil((new Date(currentProject.endDate).getTime() - new Date(currentProject.startDate).getTime()) / (1000 * 60 * 60 * 24)),
-        startDate: new Date(currentProject.startDate).toLocaleDateString()
-      };
-
-      console.log('Exporting PDF with data:', projectData);
-      
-      // Simulate PDF generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      alert(`Professional PDF Schedule Generated!\n\n` +
-            `📋 Project: ${projectData.name}\n` +
-            `📅 Template: ${projectData.template}\n` +
-            `📊 Tasks: ${projectData.tasks}\n` +
-            `⏱️ Duration: ${projectData.duration} days\n` +
-            `🚀 Start Date: ${projectData.startDate}\n\n` +
-            `In a full implementation, this would download a professional PDF timeline with:\n` +
-            `• Gantt chart visualization\n` +
-            `• Task dependencies\n` +
-            `• Resource assignments\n` +
-            `• Critical path analysis\n` +
-            `• Professional branding`);
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-      alert('Error exporting PDF. Please try again.');
-    }
+    setShowPDFDialog(true);
   };
 
   // Handle settings
@@ -488,7 +460,7 @@ const ScheduleBuilder = () => {
                       <Share className="mr-2 h-4 w-4" />
                       Share
                     </Button>
-                    <Button size="sm">
+                    <Button size="sm" onClick={handleExportPDF}>
                       <Download className="mr-2 h-4 w-4" />
                       Export PDF
                     </Button>
@@ -546,6 +518,16 @@ const ScheduleBuilder = () => {
       </main>
 
       <ToolsFooter />
+
+      {/* PDF Export Dialog */}
+      {currentProject && (
+        <PDFExportDialog
+          isOpen={showPDFDialog}
+          onClose={() => setShowPDFDialog(false)}
+          project={currentProject}
+          templateName={templates.find(t => t.id === selectedTemplate)?.name}
+        />
+      )}
     </div>
   );
 };

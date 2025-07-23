@@ -189,12 +189,25 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         await onExportPDF();
       } else {
         // Default PDF export functionality
-        console.log('Exporting PDF for project:', project.name);
-        // In real implementation, this would generate a PDF
-        alert('PDF export feature coming soon! This will generate a professional project timeline.');
+        const { SchedulePDFExporter } = await import('@/utils/pdfExportUtils');
+        
+        const exporter = new SchedulePDFExporter(project, {
+          includeGantt: true,
+          includeCriticalPath: true,
+          includeTaskList: true,
+          includeAnalytics: true,
+          companyName: 'BuildDesk'
+        });
+        
+        await exporter.generatePDF();
+        const fileName = `${project.name.replace(/\s+/g, '_')}_Schedule.pdf`;
+        exporter.downloadPDF(fileName);
+        
+        console.log('PDF exported successfully:', fileName);
       }
     } catch (error) {
       console.error('Error exporting PDF:', error);
+      alert('Error generating PDF. Please try again.');
     }
     setIsExporting(false);
   };
