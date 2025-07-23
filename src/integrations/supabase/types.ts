@@ -428,6 +428,81 @@ export type Database = {
           },
         ]
       }
+      ai_model_configurations: {
+        Row: {
+          context_window: number | null
+          cost_rating: number | null
+          created_at: string
+          description: string | null
+          good_for_long_form: boolean | null
+          good_for_seo: boolean | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          max_tokens: number | null
+          model_display_name: string
+          model_family: string | null
+          model_name: string
+          provider: string
+          quality_rating: number | null
+          recommended_for_blog: boolean | null
+          release_date: string | null
+          requires_api_key: string | null
+          speed_rating: number | null
+          supports_function_calling: boolean | null
+          supports_vision: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          context_window?: number | null
+          cost_rating?: number | null
+          created_at?: string
+          description?: string | null
+          good_for_long_form?: boolean | null
+          good_for_seo?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          max_tokens?: number | null
+          model_display_name: string
+          model_family?: string | null
+          model_name: string
+          provider: string
+          quality_rating?: number | null
+          recommended_for_blog?: boolean | null
+          release_date?: string | null
+          requires_api_key?: string | null
+          speed_rating?: number | null
+          supports_function_calling?: boolean | null
+          supports_vision?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          context_window?: number | null
+          cost_rating?: number | null
+          created_at?: string
+          description?: string | null
+          good_for_long_form?: boolean | null
+          good_for_seo?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          max_tokens?: number | null
+          model_display_name?: string
+          model_family?: string | null
+          model_name?: string
+          provider?: string
+          quality_rating?: number | null
+          recommended_for_blog?: boolean | null
+          release_date?: string | null
+          requires_api_key?: string | null
+          speed_rating?: number | null
+          supports_function_calling?: boolean | null
+          supports_vision?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_settings: {
         Row: {
           api_key_name: string
@@ -932,6 +1007,307 @@ export type Database = {
           },
         ]
       }
+      blog_auto_generation_settings: {
+        Row: {
+          ai_search_optimization: boolean | null
+          auto_publish: boolean | null
+          brand_voice_guidelines: string | null
+          company_id: string
+          content_analysis_depth: string | null
+          content_style: string | null
+          content_template: string | null
+          created_at: string
+          created_by: string | null
+          custom_instructions: string | null
+          fallback_model: string | null
+          generation_frequency: string
+          generation_time: string
+          generation_timezone: string
+          geo_optimization: boolean | null
+          id: string
+          industry_focus: string[] | null
+          is_enabled: boolean
+          last_generation_at: string | null
+          minimum_topic_gap_days: number | null
+          model_temperature: number | null
+          next_generation_at: string | null
+          notification_emails: string[] | null
+          notify_on_generation: boolean | null
+          optimize_for_geographic: boolean | null
+          perplexity_optimization: boolean | null
+          preferred_ai_provider: string
+          preferred_model: string
+          publish_as_draft: boolean | null
+          require_review: boolean | null
+          seo_focus: string | null
+          target_keywords: string[] | null
+          target_locations: string[] | null
+          target_word_count: number | null
+          topic_diversity_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          ai_search_optimization?: boolean | null
+          auto_publish?: boolean | null
+          brand_voice_guidelines?: string | null
+          company_id: string
+          content_analysis_depth?: string | null
+          content_style?: string | null
+          content_template?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_instructions?: string | null
+          fallback_model?: string | null
+          generation_frequency?: string
+          generation_time?: string
+          generation_timezone?: string
+          geo_optimization?: boolean | null
+          id?: string
+          industry_focus?: string[] | null
+          is_enabled?: boolean
+          last_generation_at?: string | null
+          minimum_topic_gap_days?: number | null
+          model_temperature?: number | null
+          next_generation_at?: string | null
+          notification_emails?: string[] | null
+          notify_on_generation?: boolean | null
+          optimize_for_geographic?: boolean | null
+          perplexity_optimization?: boolean | null
+          preferred_ai_provider?: string
+          preferred_model?: string
+          publish_as_draft?: boolean | null
+          require_review?: boolean | null
+          seo_focus?: string | null
+          target_keywords?: string[] | null
+          target_locations?: string[] | null
+          target_word_count?: number | null
+          topic_diversity_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          ai_search_optimization?: boolean | null
+          auto_publish?: boolean | null
+          brand_voice_guidelines?: string | null
+          company_id?: string
+          content_analysis_depth?: string | null
+          content_style?: string | null
+          content_template?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_instructions?: string | null
+          fallback_model?: string | null
+          generation_frequency?: string
+          generation_time?: string
+          generation_timezone?: string
+          geo_optimization?: boolean | null
+          id?: string
+          industry_focus?: string[] | null
+          is_enabled?: boolean
+          last_generation_at?: string | null
+          minimum_topic_gap_days?: number | null
+          model_temperature?: number | null
+          next_generation_at?: string | null
+          notification_emails?: string[] | null
+          notify_on_generation?: boolean | null
+          optimize_for_geographic?: boolean | null
+          perplexity_optimization?: boolean | null
+          preferred_ai_provider?: string
+          preferred_model?: string
+          publish_as_draft?: boolean | null
+          require_review?: boolean | null
+          seo_focus?: string | null
+          target_keywords?: string[] | null
+          target_locations?: string[] | null
+          target_word_count?: number | null
+          topic_diversity_enabled?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_auto_generation_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_content_analysis: {
+        Row: {
+          ai_confidence: number | null
+          analyzed_at: string
+          blog_post_id: string
+          created_at: string
+          engagement_score: number | null
+          external_links_count: number | null
+          extracted_topics: string[] | null
+          generation_model: string | null
+          generation_prompt: string | null
+          generation_temperature: number | null
+          heading_structure: Json | null
+          id: string
+          internal_links_count: number | null
+          key_phrases: string[] | null
+          keyword_density: Json | null
+          meta_optimization_score: number | null
+          named_entities: Json | null
+          readability_score: number | null
+          search_clicks: number | null
+          search_impressions: number | null
+          sentiment_score: number | null
+          seo_score: number | null
+          topic_coherence_score: number | null
+          view_count: number | null
+          word_count: number | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          analyzed_at?: string
+          blog_post_id: string
+          created_at?: string
+          engagement_score?: number | null
+          external_links_count?: number | null
+          extracted_topics?: string[] | null
+          generation_model?: string | null
+          generation_prompt?: string | null
+          generation_temperature?: number | null
+          heading_structure?: Json | null
+          id?: string
+          internal_links_count?: number | null
+          key_phrases?: string[] | null
+          keyword_density?: Json | null
+          meta_optimization_score?: number | null
+          named_entities?: Json | null
+          readability_score?: number | null
+          search_clicks?: number | null
+          search_impressions?: number | null
+          sentiment_score?: number | null
+          seo_score?: number | null
+          topic_coherence_score?: number | null
+          view_count?: number | null
+          word_count?: number | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          analyzed_at?: string
+          blog_post_id?: string
+          created_at?: string
+          engagement_score?: number | null
+          external_links_count?: number | null
+          extracted_topics?: string[] | null
+          generation_model?: string | null
+          generation_prompt?: string | null
+          generation_temperature?: number | null
+          heading_structure?: Json | null
+          id?: string
+          internal_links_count?: number | null
+          key_phrases?: string[] | null
+          keyword_density?: Json | null
+          meta_optimization_score?: number | null
+          named_entities?: Json | null
+          readability_score?: number | null
+          search_clicks?: number | null
+          search_impressions?: number | null
+          sentiment_score?: number | null
+          seo_score?: number | null
+          topic_coherence_score?: number | null
+          view_count?: number | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_content_analysis_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_generation_queue: {
+        Row: {
+          ai_model: string | null
+          ai_provider: string | null
+          company_id: string
+          content_parameters: Json | null
+          created_at: string
+          error_message: string | null
+          generated_blog_id: string | null
+          generation_type: string | null
+          id: string
+          max_retries: number | null
+          priority: number | null
+          processing_completed_at: string | null
+          processing_started_at: string | null
+          requested_by: string | null
+          retry_count: number | null
+          scheduled_for: string
+          status: string
+          suggested_topic: string | null
+          target_keywords: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_provider?: string | null
+          company_id: string
+          content_parameters?: Json | null
+          created_at?: string
+          error_message?: string | null
+          generated_blog_id?: string | null
+          generation_type?: string | null
+          id?: string
+          max_retries?: number | null
+          priority?: number | null
+          processing_completed_at?: string | null
+          processing_started_at?: string | null
+          requested_by?: string | null
+          retry_count?: number | null
+          scheduled_for: string
+          status?: string
+          suggested_topic?: string | null
+          target_keywords?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string | null
+          ai_provider?: string | null
+          company_id?: string
+          content_parameters?: Json | null
+          created_at?: string
+          error_message?: string | null
+          generated_blog_id?: string | null
+          generation_type?: string | null
+          id?: string
+          max_retries?: number | null
+          priority?: number | null
+          processing_completed_at?: string | null
+          processing_started_at?: string | null
+          requested_by?: string | null
+          retry_count?: number | null
+          scheduled_for?: string
+          status?: string
+          suggested_topic?: string | null
+          target_keywords?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_generation_queue_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_generation_queue_generated_blog_id_fkey"
+            columns: ["generated_blog_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           body: string
@@ -979,6 +1355,78 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      blog_topic_history: {
+        Row: {
+          ai_confidence_score: number | null
+          blog_post_id: string | null
+          company_id: string
+          content_type: string | null
+          created_at: string
+          generation_model: string | null
+          generation_time_seconds: number | null
+          geo_targets: string[] | null
+          id: string
+          keywords_used: string[] | null
+          primary_topic: string
+          readability_score: number | null
+          secondary_topics: string[] | null
+          seo_score: number | null
+          target_keywords: string[] | null
+          topic_category: string | null
+        }
+        Insert: {
+          ai_confidence_score?: number | null
+          blog_post_id?: string | null
+          company_id: string
+          content_type?: string | null
+          created_at?: string
+          generation_model?: string | null
+          generation_time_seconds?: number | null
+          geo_targets?: string[] | null
+          id?: string
+          keywords_used?: string[] | null
+          primary_topic: string
+          readability_score?: number | null
+          secondary_topics?: string[] | null
+          seo_score?: number | null
+          target_keywords?: string[] | null
+          topic_category?: string | null
+        }
+        Update: {
+          ai_confidence_score?: number | null
+          blog_post_id?: string | null
+          company_id?: string
+          content_type?: string | null
+          created_at?: string
+          generation_model?: string | null
+          generation_time_seconds?: number | null
+          geo_targets?: string[] | null
+          id?: string
+          keywords_used?: string[] | null
+          primary_topic?: string
+          readability_score?: number | null
+          secondary_topics?: string[] | null
+          seo_score?: number | null
+          target_keywords?: string[] | null
+          topic_category?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_topic_history_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_topic_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bonds: {
         Row: {
@@ -5479,6 +5927,245 @@ export type Database = {
           },
         ]
       }
+      funnel_analytics: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          funnel_id: string
+          id: string
+          step_id: string | null
+          subscriber_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          funnel_id: string
+          id?: string
+          step_id?: string | null
+          subscriber_id: string
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          funnel_id?: string
+          id?: string
+          step_id?: string | null
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_analytics_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "lead_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_analytics_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_analytics_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "email_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funnel_email_queue: {
+        Row: {
+          created_at: string
+          email_template_id: string
+          error_message: string | null
+          funnel_subscriber_id: string
+          id: string
+          retry_count: number | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          step_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_template_id: string
+          error_message?: string | null
+          funnel_subscriber_id: string
+          id?: string
+          retry_count?: number | null
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string
+          step_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_template_id?: string
+          error_message?: string | null
+          funnel_subscriber_id?: string
+          id?: string
+          retry_count?: number | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          step_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_email_queue_email_template_id_fkey"
+            columns: ["email_template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_email_queue_funnel_subscriber_id_fkey"
+            columns: ["funnel_subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_subscribers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_email_queue_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funnel_steps: {
+        Row: {
+          click_rate: number | null
+          conditions: Json | null
+          created_at: string
+          delay_amount: number
+          delay_unit: string
+          email_template_id: string | null
+          funnel_id: string
+          id: string
+          is_active: boolean
+          name: string
+          open_rate: number | null
+          step_order: number
+          updated_at: string
+        }
+        Insert: {
+          click_rate?: number | null
+          conditions?: Json | null
+          created_at?: string
+          delay_amount?: number
+          delay_unit?: string
+          email_template_id?: string | null
+          funnel_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          open_rate?: number | null
+          step_order: number
+          updated_at?: string
+        }
+        Update: {
+          click_rate?: number | null
+          conditions?: Json | null
+          created_at?: string
+          delay_amount?: number
+          delay_unit?: string
+          email_template_id?: string | null
+          funnel_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          open_rate?: number | null
+          step_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_steps_email_template_id_fkey"
+            columns: ["email_template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_steps_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "lead_funnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funnel_subscribers: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_step: number | null
+          funnel_id: string
+          id: string
+          last_email_sent_at: string | null
+          metadata: Json | null
+          next_email_scheduled_at: string | null
+          started_at: string
+          status: string
+          subscriber_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number | null
+          funnel_id: string
+          id?: string
+          last_email_sent_at?: string | null
+          metadata?: Json | null
+          next_email_scheduled_at?: string | null
+          started_at?: string
+          status?: string
+          subscriber_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number | null
+          funnel_id?: string
+          id?: string
+          last_email_sent_at?: string | null
+          metadata?: Json | null
+          next_email_scheduled_at?: string | null
+          started_at?: string
+          status?: string
+          subscriber_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_subscribers_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "lead_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnel_subscribers_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "email_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_field_suggestions: {
         Row: {
           confidence_score: number
@@ -6709,6 +7396,59 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_funnels: {
+        Row: {
+          company_id: string
+          completion_rate: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          total_steps: number | null
+          total_subscribers: number | null
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completion_rate?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          total_steps?: number | null
+          total_subscribers?: number | null
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completion_rate?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          total_steps?: number | null
+          total_subscribers?: number | null
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_funnels_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -13650,6 +14390,16 @@ export type Database = {
       }
     }
     Functions: {
+      add_subscriber_to_funnel: {
+        Args: {
+          p_funnel_id: string
+          p_email: string
+          p_first_name?: string
+          p_last_name?: string
+          p_source?: string
+        }
+        Returns: string
+      }
       calculate_incident_metrics: {
         Args: { p_incident_id: string }
         Returns: undefined
@@ -13657,6 +14407,10 @@ export type Database = {
       calculate_lead_score: {
         Args: { p_lead_id: string }
         Returns: number
+      }
+      calculate_next_generation_time: {
+        Args: { frequency: string; generation_time: string; timezone?: string }
+        Returns: string
       }
       calculate_project_completion: {
         Args: { p_project_id: string }
@@ -13899,6 +14653,10 @@ export type Database = {
               p_metadata?: Json
             }
         Returns: string
+      }
+      queue_next_blog_generation: {
+        Args: { company_id_param: string }
+        Returns: undefined
       }
       reset_failed_attempts: {
         Args: {

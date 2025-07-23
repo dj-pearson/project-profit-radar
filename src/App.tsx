@@ -107,6 +107,7 @@ import SystemAdminSettings from "./pages/SystemAdminSettings";
 import SecuritySettings from "./pages/SecuritySettings";
 import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import SupportTickets from "./pages/admin/SupportTickets";
+import FunnelManager from "./pages/admin/FunnelManager";
 import Sitemap from "./components/Sitemap";
 import Tools from "./pages/Tools";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
@@ -369,6 +370,14 @@ const AppContent = () => {
         element={
           <RouteGuard routePath="/admin/support-tickets">
             <SupportTickets />
+          </RouteGuard>
+        }
+       />
+      <Route
+        path="/admin/funnels"
+        element={
+          <RouteGuard routePath="/admin/funnels">
+            <FunnelManager />
           </RouteGuard>
         }
        />

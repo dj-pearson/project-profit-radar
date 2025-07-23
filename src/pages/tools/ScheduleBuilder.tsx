@@ -375,7 +375,7 @@ const ScheduleBuilder = () => {
 
                         <div>
                           <Label htmlFor="template">Project Template</Label>
-                          <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                          <Select value={selectedTemplate} onValueChange={(value) => setSelectedTemplate(value as TemplateType | "")}>
                             <SelectTrigger>
                               <SelectValue placeholder="Choose a template..." />
                             </SelectTrigger>
