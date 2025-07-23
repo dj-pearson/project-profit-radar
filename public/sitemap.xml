@@ -106,10 +106,17 @@
   
   <!-- Utility Pages -->
   <url>
-    <loc>https://build-desk.com/roi-calculator</loc>
+    <loc>https://build-desk.com/tools/roi-calculator</loc>
     <lastmod>2025-01-11</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/tools/schedule-builder</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   
   <url>
@@ -124,6 +131,77 @@
     <lastmod>2025-01-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
+  </url>
+
+  <!-- Resource Articles -->
+  <url>
+    <loc>https://build-desk.com/resources/procore-alternatives-smb-contractors-guide</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/top-10-construction-platforms-august-2025</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-management-software-comparison</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/small-business-construction-software-guide</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-project-management-best-practices</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-roi-calculator-guide</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-scheduling-templates</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-cost-estimation-methods</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-compliance-checklist</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://build-desk.com/resources/construction-crm-implementation-guide</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   
   <!-- Legal Pages -->

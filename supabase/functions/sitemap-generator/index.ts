@@ -66,7 +66,8 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
     { path: '/features', priority: '0.9', changefreq: 'weekly' },
     { path: '/pricing', priority: '0.9', changefreq: 'weekly' },
     { path: '/resources', priority: '0.8', changefreq: 'weekly' },
-    { path: '/roi-calculator', priority: '0.8', changefreq: 'monthly' },
+    { path: '/tools/roi-calculator', priority: '0.8', changefreq: 'monthly' },
+    { path: '/tools/schedule-builder', priority: '0.8', changefreq: 'monthly' },
     
     // Authentication & onboarding
     { path: '/auth', priority: '0.3', changefreq: 'monthly' },
@@ -88,6 +89,25 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
     { path: '/job-costing-software', priority: '0.8', changefreq: 'monthly' },
     { path: '/construction-field-management', priority: '0.8', changefreq: 'monthly' },
     { path: '/osha-compliance-software', priority: '0.8', changefreq: 'monthly' },
+
+    // Industry pages
+    { path: '/residential-contractors', priority: '0.7', changefreq: 'monthly' },
+    { path: '/commercial-contractors', priority: '0.7', changefreq: 'monthly' },
+    { path: '/electrical-contractor-software', priority: '0.7', changefreq: 'monthly' },
+    { path: '/hvac-contractor-software', priority: '0.7', changefreq: 'monthly' },
+    { path: '/plumbing-contractor-software', priority: '0.7', changefreq: 'monthly' },
+
+    // Blog/Resource articles with /resources prefix
+    { path: '/resources/procore-alternatives-smb-contractors-guide', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/top-10-construction-platforms-august-2025', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/construction-management-software-comparison', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/small-business-construction-software-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-project-management-best-practices', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-roi-calculator-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-scheduling-templates', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-cost-estimation-methods', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-compliance-checklist', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-crm-implementation-guide', priority: '0.7', changefreq: 'monthly' },
   ]
 
   const allPages = [
