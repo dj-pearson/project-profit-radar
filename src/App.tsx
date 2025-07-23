@@ -108,7 +108,6 @@ import SecuritySettings from "./pages/SecuritySettings";
 import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import SupportTickets from "./pages/admin/SupportTickets";
 import FunnelManager from "./pages/admin/FunnelManager";
-import Sitemap from "./components/Sitemap";
 import Tools from "./pages/Tools";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
@@ -581,7 +580,6 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
-      <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/tutorials" element={<VideoTutorialSystem />} />
       <Route
         path="/email-marketing"
