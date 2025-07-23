@@ -214,9 +214,39 @@ const ScheduleBuilder = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Structured Data for SEO */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Free Construction Schedule Builder",
+          "url": "https://build-desk.com/tools/schedule-builder",
+          "description": "Free construction schedule builder with project templates, Gantt charts, and PDF export. Create professional construction timelines for residential and commercial projects.",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "6 Construction Project Templates",
+            "Drag-and-Drop Gantt Chart Builder", 
+            "Critical Path Analysis",
+            "Professional PDF Export",
+            "Residential Construction Scheduling",
+            "Commercial Project Planning"
+          ],
+          "provider": {
+            "@type": "Organization",
+            "name": "Build-Desk",
+            "url": "https://build-desk.com"
+          }
+        })}
+      </script>
       <SEOMetaTags
-        title="Free Construction Schedule Builder | Create Professional Project Timelines | Build-Desk"
-        description="Create professional construction schedules in minutes with our free drag-and-drop tool. Choose from 6 project templates, analyze critical paths, and export PDFs."
+        title="Free Construction Schedule Builder | Project Timeline Templates | Gantt Chart Maker | Build-Desk"
+        description="Free construction schedule builder with 6 project templates. Create professional Gantt charts, analyze critical paths, and export PDF timelines. Used by 10,000+ contractors nationwide for residential, commercial, and renovation projects."
         keywords={[
           'construction schedule builder',
           'construction scheduling software',
@@ -224,7 +254,15 @@ const ScheduleBuilder = () => {
           'construction project planner',
           'free scheduling tool',
           'gantt chart construction',
-          'critical path construction'
+          'critical path construction',
+          'construction timeline maker',
+          'project management template',
+          'construction gantt chart',
+          'free project scheduler',
+          'residential construction schedule',
+          'commercial construction timeline',
+          'renovation project planner',
+          'construction milestone tracker'
         ]}
         canonicalUrl="/tools/schedule-builder"
       />
@@ -248,42 +286,73 @@ const ScheduleBuilder = () => {
               <div className="flex items-center justify-center mb-4">
                 <Calendar className="h-10 w-10 text-construction-orange mr-3" />
                 <h1 className="text-3xl lg:text-5xl font-bold text-construction-dark">
-                  Construction Schedule Builder
+                  Free Construction Schedule Builder & Project Timeline Maker
                 </h1>
               </div>
-              <p className="text-lg lg:text-xl text-construction-dark/70 mb-6">
-                Create professional project timelines in minutes, not hours. Used by 10,000+ contractors nationwide.
+              <p className="text-lg lg:text-xl text-construction-dark/70 mb-4">
+                Create professional construction schedules and Gantt charts in minutes, not hours. Free project timeline templates for residential, commercial, and renovation projects. Used by 10,000+ contractors nationwide.
+              </p>
+              <p className="text-md text-construction-dark/60 mb-6">
+                Build construction schedules with drag-and-drop simplicity. Analyze critical paths, track project milestones, and export professional PDF timelines for clients and subcontractors.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-construction-dark/70">
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  <span>6 Project Templates</span>
+                  <span>6 Construction Project Templates</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  <span>Drag-and-Drop Interface</span>
+                  <span>Drag-and-Drop Gantt Chart Builder</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  <span>Critical Path Analysis</span>
+                  <span>Critical Path Analysis & Timeline Optimization</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  <span>Professional PDF Export</span>
+                  <span>Professional PDF Schedule Export</span>
                 </div>
               </div>
             </div>
           </ResponsiveContainer>
         </section>
 
-        {/* Social Proof */}
-        <section className="py-8 bg-white">
+        {/* SEO-Rich Benefits Section */}
+        <section className="py-12 bg-white">
           <ResponsiveContainer>
-            <div className="text-center mb-8">
-              <p className="text-construction-dark/80 font-medium">
-                Trusted by contractors who use <span className="text-construction-orange font-bold">professional scheduling tools</span>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-construction-dark mb-4">
+                Why Construction Companies Choose Our Free Schedule Builder
+              </h2>
+              <p className="text-lg text-construction-dark/80 font-medium mb-8">
+                Trusted by contractors who need <span className="text-construction-orange font-bold">professional construction scheduling software</span> without the complexity or cost
               </p>
             </div>
+            
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div className="text-center">
+                <div className="bg-construction-orange/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-construction-orange" />
+                </div>
+                <h3 className="text-xl font-semibold text-construction-dark mb-3">Construction Project Templates</h3>
+                <p className="text-gray-600">Pre-built schedules for residential homes, commercial buildouts, kitchen remodels, bathroom renovations, and deck construction projects.</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-construction-blue/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-construction-blue" />
+                </div>
+                <h3 className="text-xl font-semibold text-construction-dark mb-3">Critical Path Analysis</h3>
+                <p className="text-gray-600">Automatically identify which tasks impact your project completion date. Optimize schedules to prevent delays and reduce project risk.</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-600/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Download className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-construction-dark mb-3">Professional PDF Export</h3>
+                <p className="text-gray-600">Generate professional construction timeline PDFs for clients, subcontractors, and stakeholders. Include Gantt charts, task lists, and project analytics.</p>
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-3 gap-6">
               {testimonials.map((testimonial, index) => (
                 <Card key={index} className="border-l-4 border-l-construction-orange">
@@ -489,16 +558,193 @@ const ScheduleBuilder = () => {
           </section>
         )}
 
+        {/* Construction Scheduling Guide Section */}
+        <section className="py-16 bg-gray-50">
+          <ResponsiveContainer>
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-construction-dark mb-4">
+                  Complete Guide to Construction Project Scheduling
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Master construction scheduling with our comprehensive guide to project timelines, Gantt charts, and critical path management.
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="text-xl font-semibold text-construction-blue mb-4">Residential Construction Scheduling</h3>
+                  <div className="space-y-3 text-gray-700">
+                    <p>• <strong>Single-Family Home Construction:</strong> 120-180 day timeline with 14 major phases</p>
+                    <p>• <strong>Home Renovation Projects:</strong> 30-60 day schedules for major remodeling</p>
+                    <p>• <strong>Kitchen Remodel Scheduling:</strong> 15-30 day detailed timeline templates</p>
+                    <p>• <strong>Bathroom Renovation Planning:</strong> 10-20 day project schedules</p>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="text-xl font-semibold text-construction-blue mb-4">Commercial Construction Planning</h3>
+                  <div className="space-y-3 text-gray-700">
+                    <p>• <strong>Commercial Build-Out:</strong> 90-150 day tenant improvement schedules</p>
+                    <p>• <strong>Office Construction:</strong> Multi-phase commercial project timelines</p>
+                    <p>• <strong>Retail Space Development:</strong> Fast-track construction scheduling</p>
+                    <p>• <strong>Warehouse Construction:</strong> Large-scale project timeline management</p>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="text-xl font-semibold text-construction-blue mb-4">Specialty Construction Schedules</h3>
+                  <div className="space-y-3 text-gray-700">
+                    <p>• <strong>Deck Construction:</strong> 7-14 day outdoor project timelines</p>
+                    <p>• <strong>Addition Projects:</strong> Custom scheduling for home additions</p>
+                    <p>• <strong>Basement Finishing:</strong> Underground construction scheduling</p>
+                    <p>• <strong>Roofing Projects:</strong> Weather-dependent scheduling templates</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ResponsiveContainer>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-16 bg-white">
+          <ResponsiveContainer>
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-construction-dark mb-4">
+                  Construction Scheduling Frequently Asked Questions
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Get answers to common questions about construction project scheduling, Gantt charts, and timeline management.
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      What is a construction schedule and why do I need one?
+                    </h3>
+                    <p className="text-gray-700">
+                      A construction schedule is a detailed timeline showing when each phase of your project will start and finish. It helps prevent delays, manage resources, coordinate subcontractors, and keep clients informed about project progress.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      How do I create a Gantt chart for construction projects?
+                    </h3>
+                    <p className="text-gray-700">
+                      Use our free construction schedule builder to create professional Gantt charts. Select your project type, input tasks and durations, and the tool automatically generates a visual timeline with dependencies and critical path analysis.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      What is critical path in construction scheduling?
+                    </h3>
+                    <p className="text-gray-700">
+                      The critical path is the sequence of tasks that determines your project's minimum completion time. Any delay in critical path activities will delay the entire project. Our tool automatically identifies these crucial tasks.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      How accurate are construction project timeline templates?
+                    </h3>
+                    <p className="text-gray-700">
+                      Our templates are based on industry standards and real project data. They provide excellent starting points, but you should adjust durations based on your specific project requirements, local conditions, and team capabilities.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      Can I customize the construction schedule templates?
+                    </h3>
+                    <p className="text-gray-700">
+                      Yes! Our schedule builder allows you to modify task names, adjust durations, add or remove phases, and customize the timeline to match your specific project needs. All changes update the Gantt chart automatically.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      How do I share construction schedules with my team?
+                    </h3>
+                    <p className="text-gray-700">
+                      Export your construction schedule as a professional PDF that includes Gantt charts, task lists, and project analytics. Share these PDFs with clients, subcontractors, and team members for clear project communication.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      What construction project types work best with schedule templates?
+                    </h3>
+                    <p className="text-gray-700">
+                      Our templates work excellently for residential construction, commercial build-outs, renovations, kitchen remodels, bathroom updates, and specialty projects like decks. Each template is optimized for its specific project type.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-construction-blue mb-3">
+                      Is this construction schedule builder really free?
+                    </h3>
+                    <p className="text-gray-700">
+                      Yes! Our basic construction schedule builder is completely free. Create unlimited schedules, use all templates, export PDFs, and analyze critical paths at no cost. No signup required to get started.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ResponsiveContainer>
+        </section>
+
+        {/* Location-based SEO Section */}
+        <section className="py-16 bg-construction-light/10">
+          <ResponsiveContainer>
+            <div className="max-w-6xl mx-auto text-center">
+              <h2 className="text-3xl font-bold text-construction-dark mb-6">
+                Construction Scheduling Software for Contractors Nationwide
+              </h2>
+              <p className="text-lg text-gray-600 mb-12">
+                Contractors across the United States trust our free construction schedule builder for residential, commercial, and specialty projects. Create professional timelines that meet local building codes and construction standards.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="font-semibold text-construction-blue mb-2">California</div>
+                  <div className="text-sm text-gray-600">Seismic requirements & strict regulations</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="font-semibold text-construction-blue mb-2">Texas</div>
+                  <div className="text-sm text-gray-600">Large residential & commercial projects</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="font-semibold text-construction-blue mb-2">Florida</div>
+                  <div className="text-sm text-gray-600">Hurricane codes & weather scheduling</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="font-semibold text-construction-blue mb-2">New York</div>
+                  <div className="text-sm text-gray-600">Complex urban construction projects</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="font-semibold text-construction-blue mb-2">Georgia</div>
+                  <div className="text-sm text-gray-600">Growing residential market</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="font-semibold text-construction-blue mb-2">All States</div>
+                  <div className="text-sm text-gray-600">Nationwide construction support</div>
+                </div>
+              </div>
+            </div>
+          </ResponsiveContainer>
+        </section>
+
         {/* CTA Section */}
         <section className="py-16 bg-construction-orange">
           <ResponsiveContainer>
             <div className="text-center text-white max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold mb-4">
-                Ready for Advanced Project Management?
+                Ready for Advanced Construction Project Management?
               </h2>
               <p className="text-lg mb-8 opacity-90">
-                This free tool is just the beginning. Build-Desk offers real-time progress tracking, 
-                cost management, team collaboration, and automated reporting for your entire operation.
+                This free construction schedule builder is just the beginning. Build-Desk offers real-time progress tracking, 
+                cost management, team collaboration, and automated reporting for your entire construction operation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="secondary" size="lg" asChild>
