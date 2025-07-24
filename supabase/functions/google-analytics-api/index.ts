@@ -70,39 +70,13 @@ serve(async (req) => {
     const requestData: AnalyticsRequest = await req.json()
     console.log('Request data:', requestData)
 
-    // Get Google credentials from Supabase secrets with detailed debugging
-    console.log('=== Checking Environment Variables ===')
-    
+    // Get Google credentials from Supabase secrets
     const googleClientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL')
     const googlePrivateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
     const ga4PropertyId = Deno.env.get('GA4_PROPERTY_ID')
-    const searchConsoleSiteUrl = Deno.env.get('SEARCH_CONSOLE_SITE_URL')
-
-    console.log('Environment variable check:')
-    console.log('- GOOGLE_CLIENT_EMAIL exists:', !!googleClientEmail)
-    console.log('- GOOGLE_CLIENT_EMAIL length:', googleClientEmail?.length || 0)
-    console.log('- GOOGLE_CLIENT_EMAIL preview:', googleClientEmail?.substring(0, 20) || 'undefined')
-    
-    console.log('- GOOGLE_PRIVATE_KEY exists:', !!googlePrivateKey)
-    console.log('- GOOGLE_PRIVATE_KEY length:', googlePrivateKey?.length || 0)
-    console.log('- GOOGLE_PRIVATE_KEY starts with BEGIN:', googlePrivateKey?.includes('BEGIN PRIVATE KEY') || false)
-    
-    console.log('- GA4_PROPERTY_ID exists:', !!ga4PropertyId)
-    console.log('- GA4_PROPERTY_ID value:', ga4PropertyId || 'undefined')
-    
-    console.log('- SEARCH_CONSOLE_SITE_URL exists:', !!searchConsoleSiteUrl)
-    console.log('- SEARCH_CONSOLE_SITE_URL value:', searchConsoleSiteUrl || 'undefined')
-
-    // List all environment variables that start with GOOGLE or GA4
-    console.log('=== All Google-related Environment Variables ===')
-    for (const [key, value] of Object.entries(Deno.env.toObject())) {
-      if (key.startsWith('GOOGLE') || key.startsWith('GA4') || key.startsWith('SEARCH_CONSOLE')) {
-        console.log(`${key}: ${value ? `[SET - length: ${value.length}]` : '[NOT SET]'}`)
-      }
-    }
 
     if (!googleClientEmail || !googlePrivateKey || !ga4PropertyId) {
-      console.log('=== MISSING CREDENTIALS ERROR ===')
+      console.log('Missing credentials')
       return new Response(
         JSON.stringify({ 
           error: 'Google Analytics credentials not configured in Supabase Secrets',
@@ -110,59 +84,37 @@ serve(async (req) => {
             clientEmail: !googleClientEmail,
             privateKey: !googlePrivateKey,
             propertyId: !ga4PropertyId
-          },
-          debug: {
-            clientEmailLength: googleClientEmail?.length || 0,
-            privateKeyLength: googlePrivateKey?.length || 0,
-            propertyId: ga4PropertyId,
-            allEnvVars: Object.keys(Deno.env.toObject()).filter(k => 
-              k.startsWith('GOOGLE') || k.startsWith('GA4') || k.startsWith('SEARCH_CONSOLE')
-            )
           }
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('=== ALL CREDENTIALS FOUND ===')
-    console.log('Attempting to get access token...')
+    console.log('All credentials found, attempting to get access token...')
 
-    // Try to generate JWT token for Google API authentication
-    let accessToken: string;
-    try {
-      accessToken = await getGoogleAccessToken(googleClientEmail, googlePrivateKey)
-      console.log('Access token obtained successfully')
-    } catch (tokenError) {
-      console.error('Token generation failed:', tokenError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to generate Google access token',
-          details: tokenError.message,
-          credentials: {
-            clientEmail: googleClientEmail?.substring(0, 20) + '...',
-            privateKeyStart: googlePrivateKey?.substring(0, 50) + '...',
-            ga4PropertyId
-          }
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // Generate JWT token for Google API authentication
+    const accessToken = await getGoogleAccessToken(googleClientEmail, googlePrivateKey)
+
+    // Handle different actions
+    switch (requestData.action) {
+      case 'get-metrics':
+        return await getMetrics(accessToken, ga4PropertyId, requestData)
+      
+      case 'get-pages':
+        return await getPages(accessToken, ga4PropertyId, requestData)
+      
+      case 'get-traffic-sources':
+        return await getTrafficSources(accessToken, ga4PropertyId, requestData)
+      
+      case 'get-realtime':
+        return await getRealtimeData(accessToken, ga4PropertyId)
+
+      default:
+        return new Response(
+          JSON.stringify({ error: 'Invalid action' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
-
-    // Return success response with token confirmation
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        message: 'Google Analytics API function is working',
-        data: {
-          test: true,
-          action: requestData.action,
-          propertyId: ga4PropertyId,
-          tokenGenerated: true,
-          timestamp: new Date().toISOString()
-        }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
 
   } catch (error) {
     console.error('Google Analytics API Error:', error)
@@ -320,4 +272,241 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
     console.error('Data signing failed:', signError)
     throw new Error(`Data signing failed: ${signError.message}`)
   }
+}
+
+async function getMetrics(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching Analytics metrics...')
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+  
+  const requestBody = {
+    requests: [{
+      entity: { propertyId },
+      dateRanges: [{
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate
+      }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'pageviews' },
+        { name: 'averageSessionDuration' },
+        { name: 'bounceRate' }
+      ],
+      dimensions: request.dimensions || []
+    }]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  console.log('Analytics API response status:', response.status)
+  
+  if (!response.ok) {
+    console.error('Analytics API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process and return formatted data
+  const report = data.reports[0]
+  const metrics = {
+    activeUsers: parseInt(report.rows?.[0]?.metricValues?.[0]?.value || '0'),
+    sessions: parseInt(report.rows?.[0]?.metricValues?.[1]?.value || '0'),
+    pageviews: parseInt(report.rows?.[0]?.metricValues?.[2]?.value || '0'),
+    averageSessionDuration: parseFloat(report.rows?.[0]?.metricValues?.[3]?.value || '0'),
+    bounceRate: parseFloat(report.rows?.[0]?.metricValues?.[4]?.value || '0')
+  }
+
+  console.log('Analytics metrics processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: metrics,
+      period: dateRange 
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getPages(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching top pages...')
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+  
+  const requestBody = {
+    requests: [{
+      entity: { propertyId },
+      dateRanges: [{
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate
+      }],
+      metrics: [
+        { name: 'pageviews' },
+        { name: 'activeUsers' },
+        { name: 'averageSessionDuration' }
+      ],
+      dimensions: [
+        { name: 'pagePath' },
+        { name: 'pageTitle' }
+      ],
+      limit: 20,
+      orderBys: [{ metric: { metricName: 'pageviews' }, desc: true }]
+    }]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  console.log('Pages API response status:', response.status)
+  
+  if (!response.ok) {
+    console.error('Pages API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process page data
+  const report = data.reports[0]
+  const pages = report.rows?.map((row: any) => ({
+    path: row.dimensionValues[0].value,
+    title: row.dimensionValues[1].value,
+    pageviews: parseInt(row.metricValues[0].value),
+    users: parseInt(row.metricValues[1].value),
+    avgSessionDuration: parseFloat(row.metricValues[2].value)
+  })) || []
+
+  console.log('Pages data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: { pages },
+      period: dateRange 
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getTrafficSources(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching traffic sources...')
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+  
+  const requestBody = {
+    requests: [{
+      entity: { propertyId },
+      dateRanges: [{
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate
+      }],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'activeUsers' }
+      ],
+      dimensions: [
+        { name: 'sessionDefaultChannelGroup' },
+        { name: 'sessionSource' }
+      ],
+      limit: 10,
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }]
+    }]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  console.log('Traffic sources API response status:', response.status)
+  
+  if (!response.ok) {
+    console.error('Traffic sources API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process traffic source data
+  const report = data.reports[0]
+  const sources = report.rows?.map((row: any) => ({
+    channel: row.dimensionValues[0].value,
+    source: row.dimensionValues[1].value,
+    sessions: parseInt(row.metricValues[0].value),
+    users: parseInt(row.metricValues[1].value)
+  })) || []
+
+  console.log('Traffic sources data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: { sources },
+      period: dateRange 
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getRealtimeData(accessToken: string, propertyId: string) {
+  console.log('Fetching realtime data...')
+  
+  const requestBody = {
+    entity: { propertyId },
+    metrics: [
+      { name: 'activeUsers' }
+    ],
+    dimensions: [
+      { name: 'country' }
+    ],
+    limit: 10
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runRealtimeReport`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  console.log('Realtime API response status:', response.status)
+  
+  if (!response.ok) {
+    console.error('Realtime API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process realtime data
+  const totalActiveUsers = data.rows?.reduce((sum: number, row: any) => 
+    sum + parseInt(row.metricValues[0].value), 0) || 0
+
+  const topCountries = data.rows?.slice(0, 5).map((row: any) => ({
+    country: row.dimensionValues[0].value,
+    activeUsers: parseInt(row.metricValues[0].value)
+  })) || []
+
+  console.log('Realtime data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: { 
+        totalActiveUsers,
+        topCountries 
+      }
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
 } 
