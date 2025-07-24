@@ -43,6 +43,7 @@ interface BlogPost {
   seo_description: string;
   status: string;
   published_at: string;
+  scheduled_at?: string;
   created_at: string;
 }
 
@@ -77,7 +78,8 @@ const BlogManager = () => {
     featured_image_url: '',
     seo_title: '',
     seo_description: '',
-    status: 'draft'
+    status: 'draft',
+    scheduled_at: '' as string | undefined
   });
 
   const [editPost, setEditPost] = useState({
@@ -87,7 +89,8 @@ const BlogManager = () => {
     featured_image_url: '',
     seo_title: '',
     seo_description: '',
-    status: 'draft'
+    status: 'draft',
+    scheduled_at: ''
   });
 
   const [aiTopic, setAiTopic] = useState('');
@@ -124,7 +127,10 @@ const BlogManager = () => {
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
-      setPosts(postsData || []);
+      setPosts((postsData || []).map(post => ({
+        ...post,
+        scheduled_at: post.scheduled_at || ''
+      })));
 
       // Load AI settings
       const { data: settingsData, error: settingsError } = await supabase
@@ -166,17 +172,48 @@ const BlogManager = () => {
       return;
     }
 
+    // Validate scheduling
+    if (newPost.status === 'scheduled') {
+      if (!newPost.scheduled_at) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Please select a schedule date and time."
+        });
+        return;
+      }
+      
+      const scheduledDate = new Date(newPost.scheduled_at);
+      if (scheduledDate <= new Date()) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Scheduled date must be in the future."
+        });
+        return;
+      }
+    }
+
     try {
       const slug = generateSlug(newPost.title);
       
+      const postData = {
+        title: newPost.title,
+        body: newPost.body,
+        excerpt: newPost.excerpt,
+        featured_image_url: newPost.featured_image_url,
+        seo_title: newPost.seo_title,
+        seo_description: newPost.seo_description,
+        status: newPost.status,
+        slug,
+        created_by: user?.id,
+        published_at: newPost.status === 'published' ? new Date().toISOString() : null,
+        scheduled_at: newPost.status === 'scheduled' ? new Date(newPost.scheduled_at || '').toISOString() : null
+      };
+      
       const { data, error } = await supabase
         .from('blog_posts')
-        .insert([{
-          ...newPost,
-          slug,
-          created_by: user?.id,
-          published_at: newPost.status === 'published' ? new Date().toISOString() : null
-        }])
+        .insert([postData])
         .select()
         .single();
 
@@ -185,9 +222,13 @@ const BlogManager = () => {
         throw error;
       }
 
+      const statusMessage = newPost.status === 'scheduled' 
+        ? `Blog post scheduled for ${new Date(newPost.scheduled_at || '').toLocaleString()}`
+        : "Blog post created successfully";
+
       toast({
         title: "Success",
-        description: "Blog post created successfully"
+        description: statusMessage
       });
 
       setIsCreateDialogOpen(false);
@@ -198,7 +239,8 @@ const BlogManager = () => {
         featured_image_url: '',
         seo_title: '',
         seo_description: '',
-        status: 'draft'
+        status: 'draft',
+        scheduled_at: ''
       });
       
       loadData();
@@ -415,6 +457,8 @@ const BlogManager = () => {
     switch (status) {
       case 'published':
         return <Badge className="bg-green-500">Published</Badge>;
+      case 'scheduled':
+        return <Badge className="bg-blue-500">Scheduled</Badge>;
       case 'draft':
         return <Badge variant="secondary">Draft</Badge>;
       default:
@@ -604,17 +648,36 @@ const BlogManager = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={newPost.status} onValueChange={(value) => setNewPost({...newPost, status: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={newPost.status} onValueChange={(value) => setNewPost({...newPost, status: value, scheduled_at: value !== 'scheduled' ? '' : newPost.scheduled_at})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {newPost.status === 'scheduled' && (
+                  <div>
+                    <Label htmlFor="scheduled_at">Schedule Date & Time</Label>
+                    <Input
+                      id="scheduled_at"
+                      type="datetime-local"
+                      value={newPost.scheduled_at}
+                      onChange={(e) => setNewPost({...newPost, scheduled_at: e.target.value})}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Post will be automatically published at this time
+                    </p>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
