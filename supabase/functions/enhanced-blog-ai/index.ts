@@ -84,6 +84,10 @@ serve(async (req) => {
       return await handleAutoGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
     }
 
+    if (action === 'generate-manual-content') {
+      return await handleManualGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
+    }
+
     if (action === 'process-queue-item') {
       return await processQueueItem(supabaseClient, queueId);
     }
@@ -181,6 +185,67 @@ async function handleAutoGeneration(
     blogPost,
     content: generatedContent,
     topic: selectedTopic
+  }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleManualGeneration(
+  supabaseClient: any, 
+  companyId: string, 
+  suggestedTopic?: string, 
+  customSettings?: Partial<GenerationSettings>
+) {
+  logStep("Starting manual content generation", { companyId, suggestedTopic });
+
+  // Get generation settings or use defaults if not configured
+  const { data: settings, error: settingsError } = await supabaseClient
+    .from('blog_auto_generation_settings')
+    .select('*')
+    .eq('company_id', companyId)
+    .single();
+
+  let finalSettings: GenerationSettings;
+  
+  if (settingsError || !settings) {
+    // Use default settings if none configured
+    finalSettings = {
+      preferred_ai_provider: 'claude',
+      preferred_model: 'claude-3-5-sonnet-20241022',
+      fallback_model: 'claude-3-5-haiku-20241022',
+      model_temperature: 0.7,
+      target_word_count: 1200,
+      content_style: 'professional',
+      industry_focus: ['construction', 'project management', 'technology'],
+      target_keywords: [],
+      optimize_for_geographic: false,
+      target_locations: [],
+      seo_focus: 'balanced',
+      geo_optimization: true,
+      perplexity_optimization: true,
+      ai_search_optimization: true,
+      topic_diversity_enabled: false,
+      minimum_topic_gap_days: 30,
+      content_analysis_depth: 'excerpt',
+      brand_voice_guidelines: 'Professional, authoritative, but approachable. Use industry expertise while remaining accessible to various skill levels.',
+      ...customSettings
+    };
+  } else {
+    // Merge with existing settings
+    finalSettings = { ...settings, ...customSettings };
+  }
+
+  if (!suggestedTopic) {
+    throw new Error("Topic is required for manual generation");
+  }
+
+  // Generate content using the selected AI provider (don't create blog post)
+  const generatedContent = await generateContentWithAI(finalSettings, suggestedTopic, companyId, supabaseClient);
+
+  return new Response(JSON.stringify({ 
+    success: true,
+    generatedContent,
+    topic: suggestedTopic
   }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });

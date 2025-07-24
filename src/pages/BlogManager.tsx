@@ -326,37 +326,60 @@ const BlogManager = () => {
     try {
       setGeneratingAI(true);
       
-      const { data, error } = await supabase.functions.invoke('blog-ai', {
+      // Use the enhanced blog AI function with improved content generation
+      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai', {
         body: {
-          action: 'generate-content',
-          blogTopic: aiTopic
+          action: 'generate-manual-content',
+          topic: aiTopic,
+          customSettings: {
+            // Override some default settings for manual generation
+            target_word_count: 1200,
+            content_style: 'professional'
+          }
         }
       });
 
       if (error) throw error;
 
-      if (data.content) {
+      if (data.generatedContent) {
+        const content = data.generatedContent;
         setNewPost({
           ...newPost,
-          title: data.content.title || '',
-          body: data.content.body || '',
-          excerpt: data.content.excerpt || '',
-          seo_title: data.content.seo_title || '',
-          seo_description: data.content.seo_description || '',
+          title: content.title || '',
+          body: content.body || '',
+          excerpt: content.excerpt || '',
+          seo_title: content.seo_title || '',
+          seo_description: content.seo_description || '',
         });
 
         toast({
           title: "Success",
-          description: "AI content generated successfully"
+          description: "AI content generated successfully using enhanced generation system"
         });
+      } else {
+        throw new Error("No content generated");
       }
 
     } catch (error: any) {
       console.error('Error generating AI content:', error);
+      
+      // Enhanced error handling with specific guidance
+      let errorMessage = "Failed to generate AI content. ";
+      
+      if (error.message?.includes("not enabled or configured")) {
+        errorMessage += "Auto-generation settings not configured. Please set up AI auto-generation first.";
+      } else if (error.message?.includes("API key")) {
+        errorMessage += "API keys not configured. Please check your environment variables.";
+      } else if (error.message?.includes("Authentication")) {
+        errorMessage += "Authentication failed. Please check your permissions.";
+      } else {
+        errorMessage += error.message || "Unknown error occurred.";
+      }
+
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate AI content. Make sure API keys are configured."
+        title: "AI Generation Error",
+        description: errorMessage
       });
     } finally {
       setGeneratingAI(false);
