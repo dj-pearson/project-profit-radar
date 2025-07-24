@@ -92,25 +92,25 @@ const MCPSEODashboard: React.FC = () => {
 
   const checkMCPStatus = async () => {
     try {
-      // Check Supabase Secrets for MCP credentials
-      const { data, error } = await supabase.functions.invoke('mcp-credentials', {
-        body: { action: 'get-credentials' }
+      // Try to test the APIs directly to see if credentials are configured
+      const { data, error } = await supabase.functions.invoke('google-analytics-api', {
+        body: { action: 'get-metrics', dateRange: { startDate: '7daysAgo', endDate: 'today' } }
       });
 
-      if (error) throw error;
-
-      if (data.configured.both) {
-        setMcpStatus('connected');
-        localStorage.setItem('mcp_ga_configured', 'true');
-        localStorage.setItem('mcp_gsc_configured', 'true');
-      } else {
+      if (error || !data) {
         setMcpStatus('disconnected');
         localStorage.setItem('mcp_ga_configured', 'false');
         localStorage.setItem('mcp_gsc_configured', 'false');
+      } else {
+        setMcpStatus('connected');
+        localStorage.setItem('mcp_ga_configured', 'true');
+        localStorage.setItem('mcp_gsc_configured', 'true');
       }
     } catch (error) {
       console.error('Error checking MCP status:', error);
       setMcpStatus('error');
+      localStorage.setItem('mcp_ga_configured', 'false');
+      localStorage.setItem('mcp_gsc_configured', 'false');
     }
   };
 

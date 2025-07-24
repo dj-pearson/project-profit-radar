@@ -32,27 +32,29 @@ const MCPSEOAnalytics: React.FC = () => {
     try {
       setChecking(true);
       
-      // Check if Google Analytics and Search Console credentials are configured
-      const { data, error } = await supabase.functions.invoke('mcp-credentials', {
-        body: { action: 'get-credentials' }
+      // Try to test the APIs directly to see if credentials are configured
+      const { data, error } = await supabase.functions.invoke('google-analytics-api', {
+        body: { action: 'get-metrics', dateRange: { startDate: '7daysAgo', endDate: 'today' } }
       });
 
       if (error) {
-        console.error('Error checking credentials:', error);
+        console.error('API credentials not configured:', error);
         setMcpConfigured(false);
+        localStorage.setItem('mcp_ga_configured', 'false');
+        localStorage.setItem('mcp_gsc_configured', 'false');
         return;
       }
 
-      const isConfigured = data?.configured?.both || false;
-      setMcpConfigured(isConfigured);
-      
-      // Update localStorage for the dashboard component
-      localStorage.setItem('mcp_ga_configured', isConfigured ? 'true' : 'false');
-      localStorage.setItem('mcp_gsc_configured', isConfigured ? 'true' : 'false');
+      // If we get here, the APIs are working
+      setMcpConfigured(true);
+      localStorage.setItem('mcp_ga_configured', 'true');
+      localStorage.setItem('mcp_gsc_configured', 'true');
 
     } catch (error) {
       console.error('Error checking API credentials:', error);
       setMcpConfigured(false);
+      localStorage.setItem('mcp_ga_configured', 'false');
+      localStorage.setItem('mcp_gsc_configured', 'false');
     } finally {
       setChecking(false);
     }
@@ -153,6 +155,11 @@ const MCPSEOAnalytics: React.FC = () => {
                   <div>• <code>GOOGLE_PRIVATE_KEY</code> - Service account private key</div>
                   <div>• <code>GA4_PROPERTY_ID</code> - Your Google Analytics property ID</div>
                   <div>• <code>SEARCH_CONSOLE_SITE_URL</code> - Your website URL (e.g., https://build-desk.com)</div>
+                </div>
+                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                  <p className="text-xs text-blue-700">
+                    <strong>Note:</strong> Make sure you've deployed the Google Analytics and Search Console Edge Functions to your Supabase project.
+                  </p>
                 </div>
               </div>
               <div className="flex gap-2">
