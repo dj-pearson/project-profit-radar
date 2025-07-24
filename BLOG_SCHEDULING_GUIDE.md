@@ -28,6 +28,14 @@ This adds:
 4. **Pick Date & Time** using the datetime picker
 5. **Click "Create Post"**
 
+#### **Editing Posts to Schedule:**
+
+1. **Find your draft post** in the BlogManager list
+2. **Click "Edit"** on any existing post
+3. **Change Status to "Scheduled"**
+4. **Pick Date & Time** when the datetime picker appears
+5. **Click "Update Post"**
+
 #### **What Happens:**
 - ✅ Post is saved with status "scheduled"
 - ✅ Shows blue "Scheduled" badge in post list
@@ -100,6 +108,8 @@ console.log(`Published ${data} posts`);
 2. **Marketing Alignment** - Schedule blog posts to coincide with product launches
 3. **SEO Strategy** - Spread content releases for consistent SEO benefits
 4. **Time Zones** - The system uses your browser's timezone for scheduling
+5. **Draft to Scheduled** - Convert any draft post to scheduled by editing it
+6. **Reschedule Anytime** - Edit scheduled posts to change their publish time
 
 ---
 

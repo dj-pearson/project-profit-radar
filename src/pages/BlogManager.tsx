@@ -263,7 +263,8 @@ const BlogManager = () => {
       featured_image_url: post.featured_image_url || '',
       seo_title: post.seo_title || '',
       seo_description: post.seo_description || '',
-      status: post.status
+      status: post.status,
+      scheduled_at: post.scheduled_at ? new Date(post.scheduled_at).toISOString().slice(0, 16) : ''
     });
     setIsEditDialogOpen(true);
   };
@@ -278,17 +279,48 @@ const BlogManager = () => {
       return;
     }
 
+    // Validate scheduling
+    if (editPost.status === 'scheduled') {
+      if (!editPost.scheduled_at) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Please select a schedule date and time."
+        });
+        return;
+      }
+      
+      const scheduledDate = new Date(editPost.scheduled_at);
+      if (scheduledDate <= new Date()) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Scheduled date must be in the future."
+        });
+        return;
+      }
+    }
+
     try {
       const slug = generateSlug(editPost.title);
       
+      const updateData = {
+        title: editPost.title,
+        body: editPost.body,
+        excerpt: editPost.excerpt,
+        featured_image_url: editPost.featured_image_url,
+        seo_title: editPost.seo_title,
+        seo_description: editPost.seo_description,
+        status: editPost.status,
+        slug,
+        published_at: editPost.status === 'published' ? new Date().toISOString() : editingPost.published_at,
+        scheduled_at: editPost.status === 'scheduled' ? new Date(editPost.scheduled_at || '').toISOString() : null,
+        updated_at: new Date().toISOString()
+      };
+      
       const { data, error } = await supabase
         .from('blog_posts')
-        .update({
-          ...editPost,
-          slug,
-          published_at: editPost.status === 'published' ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', editingPost.id)
         .select()
         .single();
@@ -298,9 +330,13 @@ const BlogManager = () => {
         throw error;
       }
 
+      const statusMessage = editPost.status === 'scheduled' 
+        ? `Blog post scheduled for ${new Date(editPost.scheduled_at || '').toLocaleString()}`
+        : "Blog post updated successfully";
+
       toast({
         title: "Success",
-        description: "Blog post updated successfully"
+        description: statusMessage
       });
 
       setIsEditDialogOpen(false);
@@ -312,7 +348,8 @@ const BlogManager = () => {
         featured_image_url: '',
         seo_title: '',
         seo_description: '',
-        status: 'draft'
+        status: 'draft',
+        scheduled_at: ''
       });
       
       loadData();
@@ -905,17 +942,36 @@ const BlogManager = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="edit_status">Status</Label>
-                <Select value={editPost.status} onValueChange={(value) => setEditPost({...editPost, status: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_status">Status</Label>
+                  <Select value={editPost.status} onValueChange={(value) => setEditPost({...editPost, status: value, scheduled_at: value !== 'scheduled' ? '' : editPost.scheduled_at})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {editPost.status === 'scheduled' && (
+                  <div>
+                    <Label htmlFor="edit_scheduled_at">Schedule Date & Time</Label>
+                    <Input
+                      id="edit_scheduled_at"
+                      type="datetime-local"
+                      value={editPost.scheduled_at}
+                      onChange={(e) => setEditPost({...editPost, scheduled_at: e.target.value})}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Post will be automatically published at this time
+                    </p>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
