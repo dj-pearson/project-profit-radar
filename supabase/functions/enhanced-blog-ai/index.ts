@@ -455,20 +455,62 @@ Make the content authoritative, actionable, and valuable for construction profes
     });
 
     if (!response.ok) {
-      // Try fallback model
-      logStep("Primary model failed, trying fallback", { primary: settings.preferred_model, fallback: settings.fallback_model });
+      // Log the actual error response
+      const errorText = await response.text();
+      logStep("Primary model failed", { 
+        primary: settings.preferred_model, 
+        fallback: settings.fallback_model,
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
       return await generateWithClaudeFallback(settings, topic, existingContext);
     }
 
     const data = await response.json();
     const content = data.content[0].text;
     
-    // Extract JSON from response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    // Log the full Claude response for debugging
+    logStep("Raw Claude response", { 
+      contentLength: content.length,
+      contentPreview: content.substring(0, 1000),
+      contentEnd: content.substring(Math.max(0, content.length - 500))
+    });
+    
+    // Extract JSON from response - try multiple patterns
+    let jsonMatch = content.match(/\{[\s\S]*\}/);
+    
+    // If no match, try looking for JSON with markdown code blocks
+    if (!jsonMatch) {
+      jsonMatch = content.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+      if (jsonMatch) jsonMatch[0] = jsonMatch[1]; // Use the captured group
+    }
+    
+    // If still no match, try looking for JSON without markdown
+    if (!jsonMatch) {
+      jsonMatch = content.match(/```\s*(\{[\s\S]*?\})\s*```/);
+      if (jsonMatch) jsonMatch[0] = jsonMatch[1]; // Use the captured group
+    }
+    
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        logStep("Claude generation successful", { topic, title: parsed.title });
+        return parsed;
+      } catch (parseError) {
+        logStep("JSON parse error", { 
+          jsonText: jsonMatch[0],
+          error: parseError.message,
+          jsonLength: jsonMatch[0].length
+        });
+        throw new Error("Failed to parse JSON response from Claude");
+      }
     } else {
-      throw new Error("Failed to parse JSON response");
+      logStep("No JSON found in Claude response", { 
+        contentLength: content.length,
+        contentSample: content.substring(0, 1000)
+      });
+      throw new Error("No JSON found in Claude response");
     }
   } catch (error) {
     logStep("Claude generation error", { error: error.message });

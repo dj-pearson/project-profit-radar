@@ -69,6 +69,21 @@ INSERT INTO public.blog_auto_generation_settings (
 **Error: "Authentication failed"**
 - Make sure you're logged in as a root admin
 
+**Getting fallback content instead of AI content:**
+- This means the AI API call is failing
+- Run the model fix: `fix-claude-model-names.sql` in your SQL editor
+- Check that your `CLAUDE_API_KEY` is valid
+- Look at Supabase function logs for specific error details
+
+**Wrong Claude model errors:**
+- Run this SQL to fix incorrect model names:
+```sql
+-- Fix any incorrect Claude model names
+UPDATE public.blog_auto_generation_settings 
+SET preferred_model = 'claude-3-5-sonnet-20241022'
+WHERE preferred_model LIKE 'claude-sonnet-4%' OR preferred_model LIKE 'claude-opus-4%';
+```
+
 ### 5. **API Key Setup Instructions**
 
 #### Claude (Recommended)
