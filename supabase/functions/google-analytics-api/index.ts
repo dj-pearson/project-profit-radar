@@ -70,18 +70,39 @@ serve(async (req) => {
     const requestData: AnalyticsRequest = await req.json()
     console.log('Request data:', requestData)
 
-    // Get Google credentials from Supabase secrets
+    // Get Google credentials from Supabase secrets with detailed debugging
+    console.log('=== Checking Environment Variables ===')
+    
     const googleClientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL')
     const googlePrivateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
     const ga4PropertyId = Deno.env.get('GA4_PROPERTY_ID')
+    const searchConsoleSiteUrl = Deno.env.get('SEARCH_CONSOLE_SITE_URL')
 
-    console.log('Checking credentials...')
-    console.log('Client Email exists:', !!googleClientEmail)
-    console.log('Private Key exists:', !!googlePrivateKey)
-    console.log('GA4 Property ID exists:', !!ga4PropertyId)
+    console.log('Environment variable check:')
+    console.log('- GOOGLE_CLIENT_EMAIL exists:', !!googleClientEmail)
+    console.log('- GOOGLE_CLIENT_EMAIL length:', googleClientEmail?.length || 0)
+    console.log('- GOOGLE_CLIENT_EMAIL preview:', googleClientEmail?.substring(0, 20) || 'undefined')
+    
+    console.log('- GOOGLE_PRIVATE_KEY exists:', !!googlePrivateKey)
+    console.log('- GOOGLE_PRIVATE_KEY length:', googlePrivateKey?.length || 0)
+    console.log('- GOOGLE_PRIVATE_KEY starts with BEGIN:', googlePrivateKey?.includes('BEGIN PRIVATE KEY') || false)
+    
+    console.log('- GA4_PROPERTY_ID exists:', !!ga4PropertyId)
+    console.log('- GA4_PROPERTY_ID value:', ga4PropertyId || 'undefined')
+    
+    console.log('- SEARCH_CONSOLE_SITE_URL exists:', !!searchConsoleSiteUrl)
+    console.log('- SEARCH_CONSOLE_SITE_URL value:', searchConsoleSiteUrl || 'undefined')
+
+    // List all environment variables that start with GOOGLE or GA4
+    console.log('=== All Google-related Environment Variables ===')
+    for (const [key, value] of Object.entries(Deno.env.toObject())) {
+      if (key.startsWith('GOOGLE') || key.startsWith('GA4') || key.startsWith('SEARCH_CONSOLE')) {
+        console.log(`${key}: ${value ? `[SET - length: ${value.length}]` : '[NOT SET]'}`)
+      }
+    }
 
     if (!googleClientEmail || !googlePrivateKey || !ga4PropertyId) {
-      console.log('Missing credentials')
+      console.log('=== MISSING CREDENTIALS ERROR ===')
       return new Response(
         JSON.stringify({ 
           error: 'Google Analytics credentials not configured in Supabase Secrets',
@@ -93,14 +114,18 @@ serve(async (req) => {
           debug: {
             clientEmailLength: googleClientEmail?.length || 0,
             privateKeyLength: googlePrivateKey?.length || 0,
-            propertyId: ga4PropertyId
+            propertyId: ga4PropertyId,
+            allEnvVars: Object.keys(Deno.env.toObject()).filter(k => 
+              k.startsWith('GOOGLE') || k.startsWith('GA4') || k.startsWith('SEARCH_CONSOLE')
+            )
           }
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('All credentials found, attempting to get access token...')
+    console.log('=== ALL CREDENTIALS FOUND ===')
+    console.log('Attempting to get access token...')
 
     // Try to generate JWT token for Google API authentication
     let accessToken: string;
@@ -123,7 +148,7 @@ serve(async (req) => {
       )
     }
 
-    // For now, return a simple test response
+    // Return success response with token confirmation
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -132,7 +157,8 @@ serve(async (req) => {
           test: true,
           action: requestData.action,
           propertyId: ga4PropertyId,
-          tokenGenerated: true
+          tokenGenerated: true,
+          timestamp: new Date().toISOString()
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -187,12 +213,13 @@ async function getGoogleAccessToken(clientEmail: string, privateKey: string): Pr
 
   const tokenData = await tokenResponse.json()
   console.log('Token response status:', tokenResponse.status)
-  console.log('Token response:', tokenData)
   
   if (!tokenResponse.ok) {
+    console.log('Token response error:', tokenData)
     throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`)
   }
 
+  console.log('Token obtained successfully')
   return tokenData.access_token
 }
 
