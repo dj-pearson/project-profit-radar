@@ -21,6 +21,7 @@ import {
   Target
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SEOMetrics {
   // Google Analytics data
@@ -85,17 +86,24 @@ const MCPSEODashboard: React.FC = () => {
 
   const checkMCPStatus = async () => {
     try {
-      // In a real implementation, this would check if MCP servers are configured
-      // For now, we'll simulate the check
-      const hasGAConfig = localStorage.getItem('mcp_ga_configured') === 'true';
-      const hasGSCConfig = localStorage.getItem('mcp_gsc_configured') === 'true';
-      
-      if (hasGAConfig && hasGSCConfig) {
+      // Check Supabase Secrets for MCP credentials
+      const { data, error } = await supabase.functions.invoke('mcp-credentials', {
+        body: { action: 'get-credentials' }
+      });
+
+      if (error) throw error;
+
+      if (data.configured.both) {
         setMcpStatus('connected');
+        localStorage.setItem('mcp_ga_configured', 'true');
+        localStorage.setItem('mcp_gsc_configured', 'true');
       } else {
         setMcpStatus('disconnected');
+        localStorage.setItem('mcp_ga_configured', 'false');
+        localStorage.setItem('mcp_gsc_configured', 'false');
       }
     } catch (error) {
+      console.error('Error checking MCP status:', error);
       setMcpStatus('error');
     }
   };

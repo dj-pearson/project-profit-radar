@@ -21,7 +21,7 @@ const MCPSetupWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [gaPropertyId, setGaPropertyId] = useState('');
   const [gscSiteUrl, setGscSiteUrl] = useState('');
-  const [credentialsPath, setCredentialsPath] = useState('');
+  const [serviceAccountEmail, setServiceAccountEmail] = useState('');
   const { toast } = useToast();
 
   const steps: SetupStep[] = [
@@ -63,7 +63,9 @@ const MCPSetupWizard: React.FC = () => {
         "command": "npx",
         "args": ["-y", "@google-analytics/mcp-server"],
         "env": {
-          "GOOGLE_APPLICATION_CREDENTIALS": credentialsPath || "/path/to/your/credentials.json",
+          "GOOGLE_PRIVATE_KEY": "{{SUPABASE_SECRET:GOOGLE_PRIVATE_KEY}}",
+          "GOOGLE_PRIVATE_KEY_ID": "{{SUPABASE_SECRET:GOOGLE_PRIVATE_KEY_ID}}",
+          "GOOGLE_CLIENT_EMAIL": serviceAccountEmail || "service-account@project.iam.gserviceaccount.com",
           "GA_PROPERTY_ID": gaPropertyId || "your-ga4-property-id"
         }
       },
@@ -71,7 +73,8 @@ const MCPSetupWizard: React.FC = () => {
         "command": "npx",
         "args": ["-y", "mcp-server-gsc"],
         "env": {
-          "GOOGLE_APPLICATION_CREDENTIALS": credentialsPath || "/path/to/your/credentials.json"
+          "GOOGLE_SEARCH_CONSOLE_API": "{{SUPABASE_SECRET:Google_Search_Console_API}}",
+          "GOOGLE_CLIENT_EMAIL": serviceAccountEmail || "service-account@project.iam.gserviceaccount.com"
         }
       }
     }
@@ -298,9 +301,24 @@ const MCPSetupWizard: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-medium">Step 4: Grant Access</h4>
+                  <h4 className="font-medium">Step 4: Store Credentials in Supabase Secrets</h4>
                   <ol className="list-decimal list-inside space-y-2 text-sm ml-4">
-                    <li>Copy the service account email from the JSON file</li>
+                    <li>Go to your Supabase Project → Settings → Secrets</li>
+                    <li>Add these secrets from your service account JSON:
+                      <ul className="list-disc list-inside ml-4 mt-2">
+                        <li><code>GOOGLE_PRIVATE_KEY</code> - The private_key field</li>
+                        <li><code>GOOGLE_PRIVATE_KEY_ID</code> - The private_key_id field</li>
+                        <li><code>Google_Search_Console_API</code> - Your Search Console API key</li>
+                      </ul>
+                    </li>
+                    <li>Copy the service account email for the next step</li>
+                  </ol>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-medium">Step 5: Grant Access</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm ml-4">
+                    <li>Use the service account email from your JSON file</li>
                     <li>In Google Analytics: Admin → Account/Property → User Management → Add user</li>
                     <li>In Search Console: Settings → Users and permissions → Add user</li>
                     <li>Grant "Viewer" permissions in both</li>
@@ -308,15 +326,15 @@ const MCPSetupWizard: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="credentials-path">Credentials File Path</Label>
+                  <Label htmlFor="service-account-email">Service Account Email</Label>
                   <Input
-                    id="credentials-path"
-                    placeholder="/Users/yourname/path/to/credentials.json"
-                    value={credentialsPath}
-                    onChange={(e) => setCredentialsPath(e.target.value)}
+                    id="service-account-email"
+                    placeholder="service-account@your-project.iam.gserviceaccount.com"
+                    value={serviceAccountEmail}
+                    onChange={(e) => setServiceAccountEmail(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Full path to where you saved the JSON credentials file
+                    Email address of your Google Cloud service account
                   </p>
                 </div>
               </div>
@@ -508,8 +526,8 @@ const MCPSetupWizard: React.FC = () => {
                       <Badge variant="outline">{gscSiteUrl || 'Not set'}</Badge>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Credentials Path:</span>
-                      <Badge variant="outline">{credentialsPath ? 'Set' : 'Not set'}</Badge>
+                      <span>Service Account:</span>
+                      <Badge variant="outline">{serviceAccountEmail ? 'Set' : 'Not set'}</Badge>
                     </div>
                   </div>
                 </div>
