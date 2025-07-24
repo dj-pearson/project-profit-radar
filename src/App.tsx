@@ -98,6 +98,7 @@ import PeopleHub from "./pages/hubs/PeopleHub";
 import OperationsHub from "./pages/hubs/OperationsHub";
 import AdminHub from "./pages/hubs/AdminHub";
 import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
+import MCPSEOAnalytics from "./pages/MCPSEOAnalytics";
 import CompanySettings from "./pages/CompanySettings";
 import ScheduleManagement from "./pages/ScheduleManagement";
 import EstimatesHub from "./pages/EstimatesHub";
@@ -352,6 +353,14 @@ const AppContent = () => {
         path="/admin/seo-analytics"
         element={
           <RouteGuard routePath="/admin/seo-analytics">
+            <MCPSEOAnalytics />
+          </RouteGuard>
+        }
+       />
+      <Route
+        path="/admin/seo-analytics-legacy"
+        element={
+          <RouteGuard routePath="/admin/seo-analytics-legacy">
             <SEOAnalyticsDashboard />
           </RouteGuard>
         }
