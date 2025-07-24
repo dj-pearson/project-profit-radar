@@ -157,19 +157,75 @@ async function getGoogleAccessToken(clientEmail: string, privateKey: string): Pr
 }
 
 async function createJWT(header: any, payload: any, privateKey: string): Promise<string> {
-  // Simplified JWT creation - in production use a proper library
+  // Proper JWT creation with RSA signature
   const encoder = new TextEncoder()
   
-  const encodedHeader = btoa(JSON.stringify(header))
-  const encodedPayload = btoa(JSON.stringify(payload))
+  // Base64URL encode header and payload
+  const encodedHeader = base64urlEscape(btoa(JSON.stringify(header)))
+  const encodedPayload = base64urlEscape(btoa(JSON.stringify(payload)))
   
-  const data = `${encodedHeader}.${encodedPayload}`
+  const signingInput = `${encodedHeader}.${encodedPayload}`
   
-  // Sign with private key (simplified)
-  // In production, use proper RSA signing
-  const signature = btoa(data) // Placeholder - use proper RSA signature
+  // Parse the private key and create signature
+  const keyData = parsePrivateKey(privateKey)
+  const signature = await signData(signingInput, keyData)
   
-  return `${data}.${signature}`
+  return `${signingInput}.${signature}`
+}
+
+function base64urlEscape(str: string): string {
+  return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+function parsePrivateKey(privateKey: string): Uint8Array {
+  // Remove headers and newlines, handle both \n chars and actual newlines
+  const cleaned = privateKey
+    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+    .replace(/-----END PRIVATE KEY-----/g, '')
+    .replace(/\\n/g, '')
+    .replace(/\n/g, '')
+    .replace(/\r/g, '')
+    .replace(/\s/g, '')
+  
+  // Decode base64 to get DER format
+  const binaryString = atob(cleaned)
+  const bytes = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
+  }
+  return bytes
+}
+
+async function signData(data: string, privateKeyBytes: Uint8Array): Promise<string> {
+  // Import the private key for signing
+  const algorithm = {
+    name: 'RSASSA-PKCS1-v1_5',
+    hash: 'SHA-256'
+  }
+  
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    privateKeyBytes,
+    algorithm,
+    false,
+    ['sign']
+  )
+  
+  // Sign the data
+  const encoder = new TextEncoder()
+  const signature = await crypto.subtle.sign(
+    algorithm,
+    privateKey,
+    encoder.encode(data)
+  )
+  
+  // Convert to base64url
+  const signatureBytes = new Uint8Array(signature)
+  let binary = ''
+  for (let i = 0; i < signatureBytes.length; i++) {
+    binary += String.fromCharCode(signatureBytes[i])
+  }
+  return base64urlEscape(btoa(binary))
 }
 
 async function getMetrics(accessToken: string, propertyId: string, request: AnalyticsRequest) {
