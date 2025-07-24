@@ -279,24 +279,21 @@ async function getMetrics(accessToken: string, propertyId: string, request: Anal
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
   const requestBody = {
-    requests: [{
-      entity: { propertyId },
-      dateRanges: [{
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate
-      }],
-      metrics: [
-        { name: 'activeUsers' },
-        { name: 'sessions' },
-        { name: 'pageviews' },
-        { name: 'averageSessionDuration' },
-        { name: 'bounceRate' }
-      ],
-      dimensions: request.dimensions || []
-    }]
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'activeUsers' },
+      { name: 'sessions' },
+      { name: 'screenPageViews' },
+      { name: 'averageSessionDuration' },
+      { name: 'bounceRate' }
+    ],
+    dimensions: request.dimensions || []
   }
 
-  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -314,13 +311,12 @@ async function getMetrics(accessToken: string, propertyId: string, request: Anal
   }
 
   // Process and return formatted data
-  const report = data.reports[0]
   const metrics = {
-    activeUsers: parseInt(report.rows?.[0]?.metricValues?.[0]?.value || '0'),
-    sessions: parseInt(report.rows?.[0]?.metricValues?.[1]?.value || '0'),
-    pageviews: parseInt(report.rows?.[0]?.metricValues?.[2]?.value || '0'),
-    averageSessionDuration: parseFloat(report.rows?.[0]?.metricValues?.[3]?.value || '0'),
-    bounceRate: parseFloat(report.rows?.[0]?.metricValues?.[4]?.value || '0')
+    activeUsers: parseInt(data.rows?.[0]?.metricValues?.[0]?.value || '0'),
+    sessions: parseInt(data.rows?.[0]?.metricValues?.[1]?.value || '0'),
+    pageviews: parseInt(data.rows?.[0]?.metricValues?.[2]?.value || '0'),
+    averageSessionDuration: parseFloat(data.rows?.[0]?.metricValues?.[3]?.value || '0'),
+    bounceRate: parseFloat(data.rows?.[0]?.metricValues?.[4]?.value || '0')
   }
 
   console.log('Analytics metrics processed successfully')
@@ -339,27 +335,24 @@ async function getPages(accessToken: string, propertyId: string, request: Analyt
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
   const requestBody = {
-    requests: [{
-      entity: { propertyId },
-      dateRanges: [{
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate
-      }],
-      metrics: [
-        { name: 'pageviews' },
-        { name: 'activeUsers' },
-        { name: 'averageSessionDuration' }
-      ],
-      dimensions: [
-        { name: 'pagePath' },
-        { name: 'pageTitle' }
-      ],
-      limit: 20,
-      orderBys: [{ metric: { metricName: 'pageviews' }, desc: true }]
-    }]
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'screenPageViews' },
+      { name: 'activeUsers' },
+      { name: 'averageSessionDuration' }
+    ],
+    dimensions: [
+      { name: 'pagePath' },
+      { name: 'pageTitle' }
+    ],
+    limit: 20,
+    orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }]
   }
 
-  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -377,8 +370,7 @@ async function getPages(accessToken: string, propertyId: string, request: Analyt
   }
 
   // Process page data
-  const report = data.reports[0]
-  const pages = report.rows?.map((row: any) => ({
+  const pages = data.rows?.map((row: any) => ({
     path: row.dimensionValues[0].value,
     title: row.dimensionValues[1].value,
     pageviews: parseInt(row.metricValues[0].value),
@@ -402,26 +394,23 @@ async function getTrafficSources(accessToken: string, propertyId: string, reques
   const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
   
   const requestBody = {
-    requests: [{
-      entity: { propertyId },
-      dateRanges: [{
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate
-      }],
-      metrics: [
-        { name: 'sessions' },
-        { name: 'activeUsers' }
-      ],
-      dimensions: [
-        { name: 'sessionDefaultChannelGroup' },
-        { name: 'sessionSource' }
-      ],
-      limit: 10,
-      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }]
-    }]
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'sessions' },
+      { name: 'activeUsers' }
+    ],
+    dimensions: [
+      { name: 'sessionDefaultChannelGroup' },
+      { name: 'sessionSource' }
+    ],
+    limit: 10,
+    orderBys: [{ metric: { metricName: 'sessions' }, desc: true }]
   }
 
-  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -439,8 +428,7 @@ async function getTrafficSources(accessToken: string, propertyId: string, reques
   }
 
   // Process traffic source data
-  const report = data.reports[0]
-  const sources = report.rows?.map((row: any) => ({
+  const sources = data.rows?.map((row: any) => ({
     channel: row.dimensionValues[0].value,
     source: row.dimensionValues[1].value,
     sessions: parseInt(row.metricValues[0].value),
