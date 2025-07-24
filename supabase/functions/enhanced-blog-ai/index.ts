@@ -211,7 +211,7 @@ async function handleManualGeneration(
     // Use default settings if none configured
     finalSettings = {
       preferred_ai_provider: 'claude',
-      preferred_model: 'claude-3-5-sonnet-20241022',
+      preferred_model: 'claude-sonnet-4-20250514',
       fallback_model: 'claude-3-5-haiku-20241022',
       model_temperature: 0.7,
       target_word_count: 1200,
