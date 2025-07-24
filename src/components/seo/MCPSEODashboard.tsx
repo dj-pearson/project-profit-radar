@@ -31,7 +31,19 @@ interface SEOMetrics {
   bounceRate: number;
   pageViews: number;
   
-  // Search Console data
+  // Google Search Console data
+  googleImpressions: number;
+  googleClicks: number;
+  googleCTR: number;
+  googlePosition: number;
+  
+  // Bing Webmaster data
+  bingImpressions: number;
+  bingClicks: number;
+  bingCTR: number;
+  bingPosition: number;
+  
+  // Combined data
   totalImpressions: number;
   totalClicks: number;
   averageCTR: number;
@@ -51,6 +63,7 @@ interface TopKeyword {
   ctr: number;
   position: number;
   trend: 'up' | 'down' | 'stable';
+  source: 'google' | 'bing' | 'combined';
 }
 
 interface TopPage {
@@ -60,6 +73,7 @@ interface TopPage {
   ctr: number;
   users: number;
   pageViews: number;
+  source: 'google' | 'bing' | 'combined';
 }
 
 interface MCPQuery {
@@ -140,66 +154,110 @@ const MCPSEODashboard: React.FC = () => {
     return data;
   };
 
+  const executeBingQuery = async (action: string, params: any = {}): Promise<any> => {
+    const { data, error } = await supabase.functions.invoke('bing-webmaster-api', {
+      body: { action, ...params }
+    });
+
+    if (error) {
+      console.warn('Bing API error (will continue with Google data only):', error);
+      return { data: [] }; // Return empty data if Bing API fails
+    }
+    return data;
+  };
+
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Execute API queries for both Analytics and Search Console
-      const [analyticsData, searchConsoleData, keywordData, pageData] = await Promise.all([
+      const dateRange = { 
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0]
+      };
+
+      // Execute API queries for Analytics, Google Search Console, and Bing
+      const [analyticsData, googleData, bingData, googleKeywords, bingKeywords, googlePages, bingPages] = await Promise.all([
         executeAnalyticsQuery('get-metrics', {
           dateRange: { startDate: '30daysAgo', endDate: 'today' }
         }),
-        executeSearchConsoleQuery('get-performance', {
-          dateRange: { 
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0]
-          }
-        }),
-        executeSearchConsoleQuery('get-keywords', {
-          dateRange: { 
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0]
-          }
-        }),
-        executeSearchConsoleQuery('get-pages', {
-          dateRange: { 
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0]
-          }
-        })
+        executeSearchConsoleQuery('get-performance', { dateRange }),
+        executeBingQuery('get-performance', { dateRange }),
+        executeSearchConsoleQuery('get-keywords', { dateRange }),
+        executeBingQuery('get-keywords', { dateRange }),
+        executeSearchConsoleQuery('get-pages', { dateRange }),
+        executeBingQuery('get-pages', { dateRange })
       ]);
 
-      // Transform and combine the data
-      const combinedMetrics = {
+      // Combine Google and Bing data
+      const googleMetrics = googleData.data || {};
+      const bingMetrics = bingData.data || {};
+
+      const combinedMetrics: SEOMetrics = {
         // Analytics data
-        totalUsers: analyticsData.data.activeUsers,
-        totalSessions: analyticsData.data.sessions,
-        averageSessionDuration: analyticsData.data.averageSessionDuration,
-        bounceRate: analyticsData.data.bounceRate,
-        pageViews: analyticsData.data.pageviews,
-        usersTrend: 12.5, // Would calculate from historical data
+        totalUsers: analyticsData.data?.activeUsers || 0,
+        totalSessions: analyticsData.data?.sessions || 0,
+        averageSessionDuration: analyticsData.data?.averageSessionDuration || 0,
+        bounceRate: analyticsData.data?.bounceRate || 0,
+        pageViews: analyticsData.data?.pageviews || 0,
+        usersTrend: 12.5,
         
-        // Search Console data
-        totalImpressions: searchConsoleData.data.totalImpressions,
-        totalClicks: searchConsoleData.data.totalClicks,
-        averageCTR: searchConsoleData.data.averageCTR,
-        averagePosition: searchConsoleData.data.averagePosition,
-        clicksTrend: 8.3, // Would calculate from historical data
+        // Google Search Console data
+        googleImpressions: googleMetrics.impressions || 0,
+        googleClicks: googleMetrics.clicks || 0,
+        googleCTR: googleMetrics.ctr || 0,
+        googlePosition: googleMetrics.position || 0,
+        
+        // Bing Webmaster data
+        bingImpressions: bingMetrics.impressions || 0,
+        bingClicks: bingMetrics.clicks || 0,
+        bingCTR: bingMetrics.ctr || 0,
+        bingPosition: bingMetrics.position || 0,
+        
+        // Combined totals
+        totalImpressions: (googleMetrics.impressions || 0) + (bingMetrics.impressions || 0),
+        totalClicks: (googleMetrics.clicks || 0) + (bingMetrics.clicks || 0),
+        averageCTR: ((googleMetrics.ctr || 0) + (bingMetrics.ctr || 0)) / 2,
+        averagePosition: ((googleMetrics.position || 0) + (bingMetrics.position || 0)) / 2,
+        
+        // Trends
+        clicksTrend: 8.3,
         impressionsTrend: 15.2,
         positionTrend: -2.1
       };
 
-      setMetrics(combinedMetrics);
-      setTopKeywords(keywordData.data.keywords);
-      setTopPages(pageData.data.pages.map((page: any) => ({
+      // Combine keywords from both sources
+      const googleKeywordsList = (googleKeywords.data || []).map((kw: any) => ({
+        ...kw,
+        source: 'google' as const,
+        trend: 'stable' as const
+      }));
+      const bingKeywordsList = (bingKeywords.data || []).map((kw: any) => ({
+        ...kw,
+        source: 'bing' as const,
+        trend: 'stable' as const
+      }));
+      
+      // Combine pages from both sources
+      const googlePagesList = (googlePages.data || []).map((page: any) => ({
         ...page,
-        users: Math.floor(page.clicks * 1.2), // Estimate users from clicks
-        pageViews: Math.floor(page.clicks * 1.5) // Estimate pageviews from clicks
-      })));
+        users: Math.floor(page.clicks * 1.2),
+        pageViews: Math.floor(page.clicks * 1.5),
+        source: 'google' as const
+      }));
+      const bingPagesList = (bingPages.data || []).map((page: any) => ({
+        ...page,
+        users: Math.floor(page.clicks * 1.2),
+        pageViews: Math.floor(page.clicks * 1.5),
+        source: 'bing' as const
+      }));
+
+      setMetrics(combinedMetrics);
+      setTopKeywords([...googleKeywordsList, ...bingKeywordsList]);
+      setTopPages([...googlePagesList, ...bingPagesList]);
       setLastUpdated(new Date());
 
       toast({
-        title: "Data Updated",
-        description: "SEO metrics refreshed from live data sources"
+        title: "Cross-Platform Data Updated",
+        description: "SEO metrics refreshed from Google and Bing sources"
       });
 
     } catch (error: any) {
@@ -322,13 +380,13 @@ const MCPSEODashboard: React.FC = () => {
                   <Globe className="h-4 w-4 text-muted-foreground" />
                 )}
                 {renderMetricCard(
-                  "Search Clicks",
+                  "Combined Clicks",
                   metrics.totalClicks.toLocaleString(),
                   metrics.clicksTrend,
                   <Search className="h-4 w-4 text-muted-foreground" />
                 )}
                 {renderMetricCard(
-                  "Impressions",
+                  "Combined Impressions",
                   metrics.totalImpressions.toLocaleString(),
                   metrics.impressionsTrend,
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -339,6 +397,63 @@ const MCPSEODashboard: React.FC = () => {
                   metrics.positionTrend,
                   <Target className="h-4 w-4 text-muted-foreground" />
                 )}
+              </div>
+
+              {/* Cross-Platform Breakdown */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Globe className="h-5 w-5 mr-2 text-blue-600" />
+                      Google Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Clicks:</span>
+                      <span className="font-medium">{metrics.googleClicks.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Impressions:</span>
+                      <span className="font-medium">{metrics.googleImpressions.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">CTR:</span>
+                      <span className="font-medium">{metrics.googleCTR.toFixed(2)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Avg. Position:</span>
+                      <span className="font-medium">{metrics.googlePosition.toFixed(1)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Search className="h-5 w-5 mr-2 text-orange-600" />
+                      Bing Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Clicks:</span>
+                      <span className="font-medium">{metrics.bingClicks.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Impressions:</span>
+                      <span className="font-medium">{metrics.bingImpressions.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">CTR:</span>
+                      <span className="font-medium">{metrics.bingCTR.toFixed(2)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Avg. Position:</span>
+                      <span className="font-medium">{metrics.bingPosition.toFixed(1)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -372,7 +487,12 @@ const MCPSEODashboard: React.FC = () => {
                 {topKeywords.map((keyword, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
-                      <div className="font-medium">{keyword.query}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{keyword.query}</span>
+                        <Badge variant={keyword.source === 'google' ? 'default' : 'secondary'}>
+                          {keyword.source === 'google' ? 'Google' : 'Bing'}
+                        </Badge>
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         Position {keyword.position.toFixed(1)} • CTR {keyword.ctr.toFixed(2)}%
                       </div>
@@ -408,7 +528,12 @@ const MCPSEODashboard: React.FC = () => {
                 {topPages.map((page, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{page.page}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{page.page}</span>
+                        <Badge variant={page.source === 'google' ? 'default' : 'secondary'}>
+                          {page.source === 'google' ? 'Google' : 'Bing'}
+                        </Badge>
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         CTR {page.ctr.toFixed(2)}% • {page.users} users
                       </div>

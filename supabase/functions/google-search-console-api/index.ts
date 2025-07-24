@@ -123,6 +123,11 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Google Search Console API Error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
@@ -134,6 +139,8 @@ serve(async (req) => {
 })
 
 async function getGoogleAccessToken(clientEmail: string, privateKey: string): Promise<string> {
+  console.log('Creating JWT with proper RSA signing...')
+  
   // Create JWT for Google service account authentication
   const header = {
     alg: 'RS256',
@@ -149,7 +156,11 @@ async function getGoogleAccessToken(clientEmail: string, privateKey: string): Pr
     iat: now
   }
 
-  // Simplified JWT creation - in production, use proper RSA signing
+  console.log('Creating JWT token...')
+  const assertion = await createJWT(header, payload, privateKey)
+  console.log('JWT created, requesting token from Google...')
+
+  // Call Google's token endpoint
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: {
@@ -157,16 +168,19 @@ async function getGoogleAccessToken(clientEmail: string, privateKey: string): Pr
     },
     body: new URLSearchParams({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: await createJWT(header, payload, privateKey)
+      assertion: assertion
     })
   })
 
+  console.log('Token response status:', tokenResponse.status)
   const tokenData = await tokenResponse.json()
   
   if (!tokenResponse.ok) {
-    throw new Error(`Failed to get access token: ${tokenData.error}`)
+    console.error('Token request failed:', tokenData)
+    throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`)
   }
 
+  console.log('Token obtained successfully')
   return tokenData.access_token
 }
 
