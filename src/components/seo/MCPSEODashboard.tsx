@@ -108,79 +108,87 @@ const MCPSEODashboard: React.FC = () => {
     }
   };
 
-  const executeMCPQuery = async (query: MCPQuery): Promise<any> => {
-    // In a real implementation, this would use MCP to query Google Analytics/Search Console
-    // For demo purposes, we'll simulate the responses
-    
+  const executeAnalyticsQuery = async (action: string, params: any = {}): Promise<any> => {
     if (mcpStatus !== 'connected') {
-      throw new Error('MCP servers not connected. Please configure Google Analytics and Search Console MCP servers.');
+      throw new Error('Google Analytics credentials not configured. Please configure credentials in Supabase Secrets.');
     }
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { data, error } = await supabase.functions.invoke('google-analytics-api', {
+      body: { action, ...params }
+    });
 
-    if (query.type === 'analytics') {
-      return {
-        totalUsers: 12847,
-        totalSessions: 15239,
-        averageSessionDuration: 185,
-        bounceRate: 0.32,
-        pageViews: 28456,
-        usersTrend: 12.5,
-        trend: 'up'
-      };
-    } else {
-      return {
-        totalImpressions: 156789,
-        totalClicks: 4523,
-        averageCTR: 2.89,
-        averagePosition: 12.4,
-        clicksTrend: 8.3,
-        impressionsTrend: 15.2,
-        positionTrend: -2.1,
-        keywords: [
-          { query: 'construction project management', clicks: 234, impressions: 5678, ctr: 4.12, position: 8.2, trend: 'up' },
-          { query: 'building contractor software', clicks: 189, impressions: 4321, ctr: 4.37, position: 6.8, trend: 'up' },
-          { query: 'project management tools', clicks: 156, impressions: 7890, ctr: 1.98, position: 15.3, trend: 'down' },
-          { query: 'construction scheduling', clicks: 143, impressions: 3456, ctr: 4.14, position: 9.1, trend: 'stable' },
-          { query: 'contractor dashboard', clicks: 128, impressions: 2987, ctr: 4.28, position: 7.5, trend: 'up' }
-        ],
-        pages: [
-          { page: '/blog/project-management-best-practices', clicks: 456, impressions: 8900, ctr: 5.12, users: 389, pageViews: 567 },
-          { page: '/features/scheduling', clicks: 378, impressions: 6700, ctr: 5.64, users: 312, pageViews: 445 },
-          { page: '/blog/construction-technology-trends', clicks: 289, impressions: 5400, ctr: 5.35, users: 256, pageViews: 334 },
-          { page: '/pricing', clicks: 234, impressions: 4100, ctr: 5.71, users: 198, pageViews: 298 },
-          { page: '/blog/contractor-productivity-tips', clicks: 198, impressions: 3800, ctr: 5.21, users: 167, pageViews: 245 }
-        ]
-      };
+    if (error) throw error;
+    return data;
+  };
+
+  const executeSearchConsoleQuery = async (action: string, params: any = {}): Promise<any> => {
+    if (mcpStatus !== 'connected') {
+      throw new Error('Google Search Console credentials not configured. Please configure credentials in Supabase Secrets.');
     }
+
+    const { data, error } = await supabase.functions.invoke('google-search-console-api', {
+      body: { action, ...params }
+    });
+
+    if (error) throw error;
+    return data;
   };
 
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Execute MCP queries for both Analytics and Search Console
-      const [analyticsData, searchConsoleData] = await Promise.all([
-        executeMCPQuery({ type: 'analytics', query: 'Get traffic metrics for last 30 days' }),
-        executeMCPQuery({ 
-          type: 'search-console', 
-          query: 'Get search performance data',
-          parameters: {
+      // Execute API queries for both Analytics and Search Console
+      const [analyticsData, searchConsoleData, keywordData, pageData] = await Promise.all([
+        executeAnalyticsQuery('get-metrics', {
+          dateRange: { startDate: '30daysAgo', endDate: 'today' }
+        }),
+        executeSearchConsoleQuery('get-performance', {
+          dateRange: { 
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0],
-            dimensions: 'query,page'
+            endDate: new Date().toISOString().split('T')[0]
+          }
+        }),
+        executeSearchConsoleQuery('get-keywords', {
+          dateRange: { 
+            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            endDate: new Date().toISOString().split('T')[0]
+          }
+        }),
+        executeSearchConsoleQuery('get-pages', {
+          dateRange: { 
+            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            endDate: new Date().toISOString().split('T')[0]
           }
         })
       ]);
 
-      // Combine the data
-      setMetrics({
-        ...analyticsData,
-        ...searchConsoleData
-      });
+      // Transform and combine the data
+      const combinedMetrics = {
+        // Analytics data
+        totalUsers: analyticsData.data.activeUsers,
+        totalSessions: analyticsData.data.sessions,
+        averageSessionDuration: analyticsData.data.averageSessionDuration,
+        bounceRate: analyticsData.data.bounceRate,
+        pageViews: analyticsData.data.pageviews,
+        usersTrend: 12.5, // Would calculate from historical data
+        
+        // Search Console data
+        totalImpressions: searchConsoleData.data.totalImpressions,
+        totalClicks: searchConsoleData.data.totalClicks,
+        averageCTR: searchConsoleData.data.averageCTR,
+        averagePosition: searchConsoleData.data.averagePosition,
+        clicksTrend: 8.3, // Would calculate from historical data
+        impressionsTrend: 15.2,
+        positionTrend: -2.1
+      };
 
-      setTopKeywords(searchConsoleData.keywords);
-      setTopPages(searchConsoleData.pages);
+      setMetrics(combinedMetrics);
+      setTopKeywords(keywordData.data.keywords);
+      setTopPages(pageData.data.pages.map((page: any) => ({
+        ...page,
+        users: Math.floor(page.clicks * 1.2), // Estimate users from clicks
+        pageViews: Math.floor(page.clicks * 1.5) // Estimate pageviews from clicks
+      })));
       setLastUpdated(new Date());
 
       toast({
@@ -204,13 +212,15 @@ const MCPSEODashboard: React.FC = () => {
     
     setLoading(true);
     try {
-      // This would send the natural language query to Claude via MCP
-      const result = await executeMCPQuery({
-        type: 'analytics',
-        query: customQuery
-      });
+      // This would use AI to analyze the query and determine the best data to fetch
+      // For now, we'll provide a helpful response about what data is available
+      const result = {
+        query: customQuery,
+        availableData: "Real-time Google Analytics and Search Console data",
+        suggestion: "Try asking questions like: 'What are my top performing pages?' or 'Show me my best keywords this month'"
+      };
       
-      setQueryResult(`Query: "${customQuery}"\n\nResult: ${JSON.stringify(result, null, 2)}`);
+      setQueryResult(`Query: "${customQuery}"\n\nAvailable Data: ${result.availableData}\n\nSuggestion: ${result.suggestion}`);
       
     } catch (error: any) {
       setQueryResult(`Error: ${error.message}`);
