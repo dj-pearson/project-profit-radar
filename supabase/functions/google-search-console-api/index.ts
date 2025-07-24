@@ -61,15 +61,27 @@ serve(async (req) => {
       )
     }
 
+    console.log('=== Google Search Console API Function Called ===')
+    
     // Get request data
     const requestData: SearchConsoleRequest = await req.json()
+    console.log('Request data:', requestData)
 
     // Get Google credentials from Supabase secrets
     const googleClientEmail = Deno.env.get('GOOGLE_CLIENT_EMAIL')
     const googlePrivateKey = Deno.env.get('GOOGLE_PRIVATE_KEY')
     const searchConsoleSiteUrl = Deno.env.get('SEARCH_CONSOLE_SITE_URL')
 
+    console.log('Client Email exists:', !!googleClientEmail)
+    console.log('Private Key exists:', !!googlePrivateKey)
+    console.log('Search Console Site URL exists:', !!searchConsoleSiteUrl)
+
     if (!googleClientEmail || !googlePrivateKey || !searchConsoleSiteUrl) {
+      console.error('Missing credentials:', {
+        clientEmail: !!googleClientEmail,
+        privateKey: !!googlePrivateKey,
+        siteUrl: !!searchConsoleSiteUrl
+      })
       return new Response(
         JSON.stringify({ 
           error: 'Google Search Console credentials not configured in Supabase Secrets',
@@ -82,6 +94,8 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log('All credentials found, attempting to get access token...')
 
     // Generate JWT token for Google API authentication
     const accessToken = await getGoogleAccessToken(googleClientEmail, googlePrivateKey)
