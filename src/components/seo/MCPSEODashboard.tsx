@@ -18,7 +18,10 @@ import {
   Sparkles,
   RefreshCw,
   Calendar,
-  Target
+  Target,
+  Users,
+  MousePointer,
+  Eye
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +33,14 @@ interface SEOMetrics {
   averageSessionDuration: number;
   bounceRate: number;
   pageViews: number;
+  
+  // Enhanced Analytics data
+  organicSessions: number;
+  organicPercentage: number;
+  mobileUsers: number;
+  desktopUsers: number;
+  totalConversions: number;
+  conversionRate: number;
   
   // Google Search Console data
   googleImpressions: number;
@@ -156,11 +167,14 @@ const MCPSEODashboard: React.FC = () => {
         endDate: new Date().toISOString().split('T')[0]
       };
 
-      // Execute API queries for Analytics and Google Search Console
-      const [analyticsData, googleData, googleKeywords, googlePages] = await Promise.all([
+      // Execute enhanced API queries for Analytics and Google Search Console
+      const [analyticsData, organicData, deviceData, conversionData, googleData, googleKeywords, googlePages] = await Promise.all([
         executeAnalyticsQuery('get-metrics', {
           dateRange: { startDate: '30daysAgo', endDate: 'today' }
         }),
+        executeAnalyticsQuery('get-organic-traffic', { dateRange }),
+        executeAnalyticsQuery('get-device-breakdown', { dateRange }),
+        executeAnalyticsQuery('get-conversion-data', { dateRange }),
         executeSearchConsoleQuery('get-performance', { dateRange }),
         executeSearchConsoleQuery('get-keywords', { dateRange }),
         executeSearchConsoleQuery('get-pages', { dateRange })
@@ -168,6 +182,13 @@ const MCPSEODashboard: React.FC = () => {
 
       // Process Google data
       const googleMetrics = googleData.data || {};
+      const organicMetrics = organicData.data || {};
+      const deviceMetrics = deviceData.data || [];
+      const conversionMetrics = conversionData.data || {};
+
+      // Calculate device breakdown
+      const mobileDevice = deviceMetrics.find((d: any) => d.device === 'mobile') || {};
+      const desktopDevice = deviceMetrics.find((d: any) => d.device === 'desktop') || {};
 
       const combinedMetrics: SEOMetrics = {
         // Analytics data
@@ -177,6 +198,14 @@ const MCPSEODashboard: React.FC = () => {
         bounceRate: analyticsData.data?.bounceRate || 0,
         pageViews: analyticsData.data?.pageviews || 0,
         usersTrend: 12.5,
+        
+        // Enhanced Analytics data
+        organicSessions: organicMetrics.sessions || 0,
+        organicPercentage: organicMetrics.organicPercentage || 0,
+        mobileUsers: mobileDevice.users || 0,
+        desktopUsers: desktopDevice.users || 0,
+        totalConversions: conversionMetrics.totalConversions || 0,
+        conversionRate: conversionMetrics.conversionRate || 0,
         
         // Google Search Console data
         googleImpressions: googleMetrics.impressions || 0,
@@ -323,6 +352,7 @@ const MCPSEODashboard: React.FC = () => {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="traffic">Traffic Analysis</TabsTrigger>
           <TabsTrigger value="keywords">Keywords</TabsTrigger>
           <TabsTrigger value="pages">Pages</TabsTrigger>
           <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
@@ -339,16 +369,44 @@ const MCPSEODashboard: React.FC = () => {
                   <Globe className="h-4 w-4 text-muted-foreground" />
                 )}
                 {renderMetricCard(
-                  "Search Clicks",
-                  metrics.totalClicks.toLocaleString(),
-                  metrics.clicksTrend,
-                  <Search className="h-4 w-4 text-muted-foreground" />
+                  "Organic Sessions",
+                  `${metrics.organicSessions.toLocaleString()} (${metrics.organicPercentage.toFixed(1)}%)`,
+                  undefined,
+                  <Search className="h-4 w-4 text-green-600" />
                 )}
                 {renderMetricCard(
                   "Search Impressions",
                   metrics.totalImpressions.toLocaleString(),
                   metrics.impressionsTrend,
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                )}
+                {renderMetricCard(
+                  "Conversions",
+                  metrics.totalConversions.toLocaleString(),
+                  undefined,
+                  <Target className="h-4 w-4 text-blue-600" />
+                )}
+              </div>
+
+              {/* Additional Enhanced Metrics */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {renderMetricCard(
+                  "Mobile Users",
+                  metrics.mobileUsers.toLocaleString(),
+                  undefined,
+                  <Smartphone className="h-4 w-4 text-muted-foreground" />
+                )}
+                {renderMetricCard(
+                  "Desktop Users", 
+                  metrics.desktopUsers.toLocaleString(),
+                  undefined,
+                  <Monitor className="h-4 w-4 text-muted-foreground" />
+                )}
+                {renderMetricCard(
+                  "Search Clicks",
+                  metrics.totalClicks.toLocaleString(),
+                  metrics.clicksTrend,
+                  <Search className="h-4 w-4 text-muted-foreground" />
                 )}
                 {renderMetricCard(
                   "Avg. Position",
@@ -405,6 +463,115 @@ const MCPSEODashboard: React.FC = () => {
                   <Monitor className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="traffic" className="space-y-4">
+          {metrics && (
+            <>
+              {/* Organic Traffic Analysis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Search className="h-5 w-5 mr-2 text-green-600" />
+                    Organic Traffic Performance
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed analysis of organic search traffic from Google
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{metrics.organicSessions.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Organic Sessions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{metrics.organicPercentage.toFixed(1)}%</div>
+                    <div className="text-sm text-muted-foreground">of Total Traffic</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{metrics.totalImpressions.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Search Impressions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{metrics.totalClicks.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Search Clicks</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Device Breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Smartphone className="h-5 w-5 mr-2 text-blue-600" />
+                    Device Performance
+                  </CardTitle>
+                  <CardDescription>
+                    How your users access your site across different devices
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <Smartphone className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <div className="text-2xl font-bold">{metrics.mobileUsers.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Mobile Users</div>
+                    <div className="text-xs text-blue-600 mt-1">
+                      {((metrics.mobileUsers / (metrics.mobileUsers + metrics.desktopUsers)) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <Monitor className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                    <div className="text-2xl font-bold">{metrics.desktopUsers.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Desktop Users</div>
+                    <div className="text-xs text-purple-600 mt-1">
+                      {((metrics.desktopUsers / (metrics.mobileUsers + metrics.desktopUsers)) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <Target className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+                    <div className="text-2xl font-bold">{metrics.totalConversions.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Conversions</div>
+                    <div className="text-xs text-orange-600 mt-1">
+                      {(metrics.conversionRate || 0).toFixed(2)}% Rate
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Performance Insights */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2 text-indigo-600" />
+                    Performance Insights
+                  </CardTitle>
+                  <CardDescription>
+                    Key metrics showing how well your site performs
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
+                      <div className="text-lg font-semibold text-blue-800">{(metrics.bounceRate * 100).toFixed(1)}%</div>
+                      <div className="text-sm text-blue-600">Bounce Rate</div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg">
+                      <div className="text-lg font-semibold text-green-800">{metrics.averageCTR.toFixed(2)}%</div>
+                      <div className="text-sm text-green-600">Search CTR</div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                      <div className="text-lg font-semibold text-purple-800">{metrics.averagePosition.toFixed(1)}</div>
+                      <div className="text-sm text-purple-600">Avg Position</div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+                      <div className="text-lg font-semibold text-orange-800">{(metrics.averageSessionDuration / 60).toFixed(1)}m</div>
+                      <div className="text-sm text-orange-600">Session Duration</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </TabsContent>

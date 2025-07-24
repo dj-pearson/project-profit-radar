@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 interface AnalyticsRequest {
-  action: 'get-metrics' | 'get-pages' | 'get-traffic-sources' | 'get-realtime'
+  action: 'get-metrics' | 'get-pages' | 'get-traffic-sources' | 'get-realtime' | 'get-organic-traffic' | 'get-device-breakdown' | 'get-conversion-data' | 'get-geographic-data' | 'get-user-behavior'
   dateRange?: {
     startDate: string
     endDate: string
@@ -108,6 +108,21 @@ serve(async (req) => {
       
       case 'get-realtime':
         return await getRealtimeData(accessToken, ga4PropertyId)
+
+      case 'get-organic-traffic':
+        return await getOrganicTraffic(accessToken, ga4PropertyId, requestData)
+
+      case 'get-device-breakdown':
+        return await getDeviceBreakdown(accessToken, ga4PropertyId, requestData)
+
+      case 'get-conversion-data':
+        return await getConversionData(accessToken, ga4PropertyId, requestData)
+
+      case 'get-geographic-data':
+        return await getGeographicData(accessToken, ga4PropertyId, requestData)
+
+      case 'get-user-behavior':
+        return await getUserBehavior(accessToken, ga4PropertyId, requestData)
 
       default:
         return new Response(
@@ -494,6 +509,299 @@ async function getRealtimeData(accessToken: string, propertyId: string) {
         totalActiveUsers,
         topCountries 
       }
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getOrganicTraffic(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching organic traffic data...')
+  
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+
+  const requestBody = {
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'sessions' },
+      { name: 'screenPageViews' },
+      { name: 'bounceRate' },
+      { name: 'averageSessionDuration' }
+    ],
+    dimensions: [
+      { name: 'sessionDefaultChannelGrouping' }
+    ]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    console.error('Organic traffic API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process organic traffic data
+  const organicRow = data.rows?.find((row: any) => 
+    row.dimensionValues[0].value === 'Organic Search'
+  )
+
+  const organicData = {
+    sessions: parseInt(organicRow?.metricValues[0]?.value || '0'),
+    pageViews: parseInt(organicRow?.metricValues[1]?.value || '0'),
+    bounceRate: parseFloat(organicRow?.metricValues[2]?.value || '0'),
+    avgSessionDuration: parseFloat(organicRow?.metricValues[3]?.value || '0')
+  }
+
+  // Calculate organic percentage
+  const totalSessions = data.rows?.reduce((sum: number, row: any) => 
+    sum + parseInt(row.metricValues[0].value), 0) || 0
+  const organicPercentage = totalSessions > 0 ? (organicData.sessions / totalSessions) * 100 : 0
+
+  console.log('Organic traffic data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: { 
+        ...organicData,
+        organicPercentage: parseFloat(organicPercentage.toFixed(2))
+      }
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getDeviceBreakdown(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching device breakdown data...')
+  
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+
+  const requestBody = {
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'activeUsers' },
+      { name: 'sessions' },
+      { name: 'bounceRate' },
+      { name: 'averageSessionDuration' }
+    ],
+    dimensions: [
+      { name: 'deviceCategory' }
+    ]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    console.error('Device breakdown API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process device data
+  const deviceData = (data.rows || []).map((row: any) => ({
+    device: row.dimensionValues[0].value,
+    users: parseInt(row.metricValues[0].value),
+    sessions: parseInt(row.metricValues[1].value),
+    bounceRate: parseFloat(row.metricValues[2].value),
+    avgSessionDuration: parseFloat(row.metricValues[3].value)
+  }))
+
+  console.log('Device breakdown data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: deviceData
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getConversionData(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching conversion data...')
+  
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+
+  const requestBody = {
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'conversions' },
+      { name: 'totalRevenue' },
+      { name: 'conversionRate' },
+      { name: 'eventCount' }
+    ],
+    dimensions: [
+      { name: 'eventName' }
+    ]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    console.error('Conversion data API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process conversion data
+  const conversionEvents = (data.rows || []).map((row: any) => ({
+    eventName: row.dimensionValues[0].value,
+    conversions: parseInt(row.metricValues[0].value || '0'),
+    revenue: parseFloat(row.metricValues[1].value || '0'),
+    conversionRate: parseFloat(row.metricValues[2].value || '0'),
+    eventCount: parseInt(row.metricValues[3].value || '0')
+  })).filter(event => event.conversions > 0)
+
+  const totalConversions = conversionEvents.reduce((sum, event) => sum + event.conversions, 0)
+  const totalRevenue = conversionEvents.reduce((sum, event) => sum + event.revenue, 0)
+
+  console.log('Conversion data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: {
+        totalConversions,
+        totalRevenue,
+        conversionEvents: conversionEvents.slice(0, 10) // Top 10 events
+      }
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getGeographicData(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching geographic data...')
+  
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+
+  const requestBody = {
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'activeUsers' },
+      { name: 'sessions' },
+      { name: 'bounceRate' }
+    ],
+    dimensions: [
+      { name: 'country' },
+      { name: 'city' }
+    ]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    console.error('Geographic data API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process geographic data
+  const locationData = (data.rows || []).map((row: any) => ({
+    country: row.dimensionValues[0].value,
+    city: row.dimensionValues[1].value,
+    users: parseInt(row.metricValues[0].value),
+    sessions: parseInt(row.metricValues[1].value),
+    bounceRate: parseFloat(row.metricValues[2].value)
+  })).slice(0, 20) // Top 20 locations
+
+  console.log('Geographic data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: locationData
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+async function getUserBehavior(accessToken: string, propertyId: string, request: AnalyticsRequest) {
+  console.log('Fetching user behavior data...')
+  
+  const { dateRange = { startDate: '30daysAgo', endDate: 'today' } } = request
+
+  const requestBody = {
+    dateRanges: [{
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    }],
+    metrics: [
+      { name: 'screenPageViews' },
+      { name: 'averageSessionDuration' },
+      { name: 'bounceRate' },
+      { name: 'engagementRate' }
+    ],
+    dimensions: [
+      { name: 'pagePath' }
+    ]
+  }
+
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+
+  const data = await response.json()
+  if (!response.ok) {
+    console.error('User behavior API error:', data)
+    throw new Error(`Analytics API error: ${data.error?.message || 'Unknown error'}`)
+  }
+
+  // Process behavior data
+  const pageData = (data.rows || []).map((row: any) => ({
+    page: row.dimensionValues[0].value,
+    pageViews: parseInt(row.metricValues[0].value),
+    avgSessionDuration: parseFloat(row.metricValues[1].value),
+    bounceRate: parseFloat(row.metricValues[2].value),
+    engagementRate: parseFloat(row.metricValues[3].value || '0')
+  })).slice(0, 15) // Top 15 pages
+
+  console.log('User behavior data processed successfully')
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      data: pageData
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
