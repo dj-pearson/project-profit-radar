@@ -28,7 +28,7 @@ const MCPSetupWizard: React.FC = () => {
     {
       id: 'prerequisites',
       title: 'Prerequisites Check',
-      description: 'Verify you have the required accounts and properties',
+      description: 'Verify you have Google Analytics and Search Console access',
       completed: false
     },
     {
@@ -38,15 +38,15 @@ const MCPSetupWizard: React.FC = () => {
       completed: false
     },
     {
-      id: 'mcp-install',
-      title: 'Install MCP Servers',
-      description: 'Install and configure MCP servers',
+      id: 'supabase-secrets',
+      title: 'Configure Supabase Secrets',
+      description: 'Add your Google API credentials to Supabase',
       completed: false
     },
     {
-      id: 'claude-config',
-      title: 'Claude Desktop Configuration',
-      description: 'Configure Claude Desktop with MCP servers',
+      id: 'permissions',
+      title: 'Grant API Permissions',
+      description: 'Add service account to your Google properties',
       completed: false
     },
     {

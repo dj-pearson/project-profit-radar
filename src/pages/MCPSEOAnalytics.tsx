@@ -15,18 +15,49 @@ import {
 import MCPSEODashboard from "@/components/seo/MCPSEODashboard";
 import MCPSetupWizard from "@/components/seo/MCPSetupWizard";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const MCPSEOAnalytics: React.FC = () => {
   const { user, userProfile } = useAuth();
   const [mcpConfigured, setMcpConfigured] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check if MCP is configured
-    const gaConfigured = localStorage.getItem('mcp_ga_configured') === 'true';
-    const gscConfigured = localStorage.getItem('mcp_gsc_configured') === 'true';
-    setMcpConfigured(gaConfigured && gscConfigured);
+    checkAPICredentials();
   }, []);
+
+  const checkAPICredentials = async () => {
+    try {
+      setChecking(true);
+      
+      // Check if Google Analytics and Search Console credentials are configured
+      const { data, error } = await supabase.functions.invoke('mcp-credentials', {
+        body: { action: 'get-credentials' }
+      });
+
+      if (error) {
+        console.error('Error checking credentials:', error);
+        setMcpConfigured(false);
+        return;
+      }
+
+      const isConfigured = data?.configured?.both || false;
+      setMcpConfigured(isConfigured);
+      
+      // Update localStorage for the dashboard component
+      localStorage.setItem('mcp_ga_configured', isConfigured ? 'true' : 'false');
+      localStorage.setItem('mcp_gsc_configured', isConfigured ? 'true' : 'false');
+
+    } catch (error) {
+      console.error('Error checking API credentials:', error);
+      setMcpConfigured(false);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   if (!user || userProfile?.role !== 'root_admin') {
     return (
@@ -53,15 +84,46 @@ const MCPSEOAnalytics: React.FC = () => {
     return (
       <div className="min-h-screen bg-background">
         <div className="p-6">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowSetup(false)}
-            className="mb-4"
-          >
-            ← Back to Dashboard
-          </Button>
+          <div className="flex items-center gap-4 mb-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowSetup(false)}
+            >
+              ← Back to Dashboard
+            </Button>
+            <Button 
+              variant="default"
+              onClick={() => {
+                checkAPICredentials();
+                setShowSetup(false);
+              }}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Check Configuration
+            </Button>
+          </div>
           <MCPSetupWizard />
         </div>
+      </div>
+    );
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2 text-blue-500" />
+              Loading SEO Analytics...
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Checking Google Analytics and Search Console API configuration...
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -69,21 +131,64 @@ const MCPSEOAnalytics: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {!mcpConfigured && (
-        <Alert className="m-6 border-orange-200 bg-orange-50">
-          <Zap className="h-4 w-4 text-orange-600" />
-          <AlertDescription className="text-orange-800">
+        <div className="m-6">
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center text-orange-800">
+                <Zap className="h-5 w-5 mr-2" />
+                Google APIs Not Configured
+              </CardTitle>
+              <CardDescription className="text-orange-700">
+                Add your Google Analytics and Search Console credentials to see real SEO data
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-white/50 p-4 rounded-lg">
+                <h4 className="font-medium text-orange-800 mb-2">Required Supabase Secrets:</h4>
+                <div className="space-y-1 text-sm text-orange-700">
+                  <div>• <code>GOOGLE_CLIENT_EMAIL</code> - Service account email</div>
+                  <div>• <code>GOOGLE_PRIVATE_KEY</code> - Service account private key</div>
+                  <div>• <code>GA4_PROPERTY_ID</code> - Your Google Analytics property ID</div>
+                  <div>• <code>SEARCH_CONSOLE_SITE_URL</code> - Your website URL (e.g., https://build-desk.com)</div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="default"
+                  onClick={() => setShowSetup(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Setup Guide
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={checkAPICredentials}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Recheck Configuration
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {mcpConfigured && (
+        <Alert className="m-6 border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
             <div className="flex items-center justify-between">
               <div>
-                <strong>MCP Not Configured:</strong> Connect your Google Analytics and Search Console for live data insights.
+                <strong>APIs Configured:</strong> Google Analytics and Search Console are connected and providing real data.
               </div>
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setShowSetup(true)}
+                onClick={checkAPICredentials}
                 className="ml-4"
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Setup MCP
+                Refresh Status
               </Button>
             </div>
           </AlertDescription>

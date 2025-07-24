@@ -84,6 +84,12 @@ const MCPSEODashboard: React.FC = () => {
     checkMCPStatus();
   }, []);
 
+  useEffect(() => {
+    if (mcpStatus === 'connected') {
+      loadDashboardData();
+    }
+  }, [mcpStatus]);
+
   const checkMCPStatus = async () => {
     try {
       // Check Supabase Secrets for MCP credentials
@@ -261,11 +267,11 @@ const MCPSEODashboard: React.FC = () => {
         <Alert className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            MCP servers not configured. Please set up Google Analytics and Search Console MCP servers to access live data.
+            Google APIs not configured. Please add your Google Analytics and Search Console credentials to Supabase Secrets to access live data.
             <br />
-            <a href="/path/to/setup-guide" className="text-blue-600 underline mt-2 inline-block">
-              View setup guide →
-            </a>
+            <span className="text-muted-foreground text-sm mt-2 block">
+              Configure the required secrets: GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY, GA4_PROPERTY_ID, SEARCH_CONSOLE_SITE_URL
+            </span>
           </AlertDescription>
         </Alert>
       </div>
@@ -288,7 +294,7 @@ const MCPSEODashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={mcpStatus === 'connected' ? 'default' : 'destructive'}>
-            {mcpStatus === 'connected' ? 'MCP Connected' : 'MCP Error'}
+            {mcpStatus === 'connected' ? 'APIs Connected' : 'APIs Not Configured'}
           </Badge>
           <Button onClick={loadDashboardData} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
