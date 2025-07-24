@@ -86,11 +86,15 @@ serve(async (req) => {
           missing: {
             bingApiKey: !bingApiKey,
             siteUrl: !bingSiteUrl
-          }
+          },
+          help: 'Please add Microsoft_Bing_API key from Bing Webmaster Tools → Settings → API Access'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log('Using API key length:', bingApiKey.length)
+    console.log('Using site URL:', bingSiteUrl)
 
     console.log('All credentials found, calling Bing Webmaster API...')
 
