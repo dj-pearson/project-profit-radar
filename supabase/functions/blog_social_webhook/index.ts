@@ -212,7 +212,7 @@ serve(async (req) => {
           platforms: JSON.stringify([{ platform: platformContent.platform }]),
           status: "draft",
           blog_post_id: blog_post_id,
-          created_by: company_id,
+          created_by: blogPost.created_by, // Use the blog post's creator instead of company_id
         })
         .select()
         .single();
