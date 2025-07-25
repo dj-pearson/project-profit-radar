@@ -36,6 +36,7 @@ import { PostScheduler } from "@/components/social-media/PostScheduler";
 import { SocialAnalytics } from "@/components/social-media/SocialAnalytics";
 import { TemplateManager } from "@/components/social-media/TemplateManager";
 import SocialAutomationSettings from "@/components/social-media/SocialAutomationSettings";
+import { AutomatedSocialPosts } from "@/components/social-media/AutomatedSocialPosts";
 
 export const SocialMediaManager: React.FC = () => {
   const { userProfile } = useAuth();
@@ -254,7 +255,7 @@ export const SocialMediaManager: React.FC = () => {
 
             {/* Main Content */}
             <Tabs defaultValue="compose" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="compose" className="gap-2">
                   <Share2 className="h-4 w-4" />
                   Compose
@@ -265,7 +266,11 @@ export const SocialMediaManager: React.FC = () => {
                 </TabsTrigger>
                 <TabsTrigger value="automation" className="gap-2">
                   <Settings className="h-4 w-4" />
-                  Automation
+                  Blog Auto
+                </TabsTrigger>
+                <TabsTrigger value="auto-posts" className="gap-2">
+                  <Clock className="h-4 w-4" />
+                  Auto Posts
                 </TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-2">
                   <BarChart3 className="h-4 w-4" />
@@ -299,6 +304,10 @@ export const SocialMediaManager: React.FC = () => {
 
               <TabsContent value="automation" className="space-y-6">
                 <SocialAutomationSettings />
+              </TabsContent>
+
+              <TabsContent value="auto-posts" className="space-y-6">
+                <AutomatedSocialPosts />
               </TabsContent>
 
               <TabsContent value="analytics" className="space-y-6">
