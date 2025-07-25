@@ -47,6 +47,7 @@ import {
   Bot,
   Zap,
   Bug,
+  Share2,
 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
 import BlogAutoGeneration from "@/components/admin/BlogAutoGeneration";
@@ -686,6 +687,24 @@ const BlogManager = () => {
                         >
                           <Edit className="h-3 w-3 mr-1" />
                           Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await triggerAutomation({
+                                blogPostId: post.id,
+                                triggerType: "manual",
+                              });
+                            } catch (error) {
+                              // Error handling is done in the hook
+                            }
+                          }}
+                          disabled={loading}
+                        >
+                          <Share2 className="h-3 w-3 mr-1" />
+                          Social
                         </Button>
                         <Button
                           size="sm"
