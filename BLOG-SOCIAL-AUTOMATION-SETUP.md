@@ -284,9 +284,9 @@ supabase functions deploy blog_social_webhook --no-verify-jwt
 
 Set in Supabase Dashboard → Project Settings → Functions:
 
-- `OPENAI_API_KEY`: Your OpenAI API key for AI content generation
-- `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY`: Your service role key
+- `CLAUDE_API_KEY`: Your Claude API key for AI content generation
+- `SUPABASE_URL`: Your Supabase project URL (auto-configured)
+- `SUPABASE_SERVICE_ROLE_KEY`: Your service role key (auto-configured)
 
 ### 4. **Media Assets** (Action Required)
 

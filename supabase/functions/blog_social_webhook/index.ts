@@ -303,9 +303,9 @@ async function generateEnhancedPlatformContent(
   settings: any,
   supabaseClient: any
 ): Promise<SocialPlatformContent[]> {
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  const claudeKey = Deno.env.get("CLAUDE_API_KEY");
 
-  if (!openaiKey) {
+  if (!claudeKey) {
     return generateBasicEnhancedPlatformContent(
       blogPost,
       blogUrl,
@@ -473,7 +473,7 @@ async function generateAIContent({
   tone: string;
   requirements: string[];
 }) {
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  const claudeKey = Deno.env.get("CLAUDE_API_KEY");
 
   const prompt = `Create ${tone} social media content for ${platform} based on this blog post:
 
@@ -492,26 +492,41 @@ Return format:
 Main content
 #hashtag1 #hashtag2 #hashtag3`;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${openaiKey}`,
+      Authorization: `Bearer ${claudeKey}`,
       "Content-Type": "application/json",
+      "x-api-key": claudeKey,
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 600,
       temperature: 0.7,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`AI API error: ${response.status}`);
+    const errorText = await response.text();
+    logStep("Claude API Error", { status: response.status, error: errorText });
+    throw new Error(`Claude API error: ${response.status} - ${errorText}`);
   }
 
-  const aiResponse = await response.json();
-  const fullContent = aiResponse.choices[0]?.message?.content || "";
+  const claudeResponse = await response.json();
+  const fullContent = claudeResponse.content?.[0]?.text || "";
+
+  logStep("Claude API Response", {
+    platform,
+    contentLength: fullContent.length,
+    truncated: fullContent.substring(0, 100) + "...",
+  });
 
   // Split content and hashtags
   const lines = fullContent.split("\n");
