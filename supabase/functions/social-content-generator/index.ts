@@ -230,25 +230,39 @@ async function generateAIContent({
 }) {
   const claudeKey = Deno.env.get("CLAUDE_API_KEY");
 
-  const prompt = `Create a ${platform} social media post about "${
+  const prompt = `You are a senior social media director for a successful B2B SaaS company. Create a compelling ${platform} post about "${
     template.topic
-  }" for ${template.target_audience}.
+  }" that will engage ${template.target_audience} and drive trial signups.
 
-Key Points to Include:
-${template.key_points.map((point) => `- ${point}`).join("\n")}
+Your post should:
+- Hook readers with a compelling opening that addresses a real pain point
+- Use industry-specific language that resonates with construction professionals
+- Include concrete benefits and value propositions
+- Sound authoritative yet approachable
+- Drive action with a strong, specific call-to-action
 
-Requirements:
-${requirements.map((req) => `- ${req}`).join("\n")}
+Key Value Points to Weave In:
+${template.key_points.map((point) => `• ${point}`).join("\n")}
 
-Tone: ${tone}
-Max Length: ${maxLength} characters (excluding hashtags)
-CTA Focus: ${template.cta_focus}
+Platform Requirements:
+${requirements.map((req) => `• ${req}`).join("\n")}
 
-Include a strong call-to-action for a 14-day free trial of BuildDesk.
+Writing Style: ${tone}, but authoritative and results-focused
+Character Limit: ${maxLength} characters (excluding hashtags)
+Business Outcome Focus: ${template.cta_focus}
+
+Your CTA should specifically mention BuildDesk's 14-day free trial and build-desk.com.
+
+Examples of strong openings:
+- "Still losing money on projects that go over budget?"
+- "What if I told you there's a way to increase project profitability by 25%?"
+- "The #1 mistake contractors make when managing project costs..."
+
+Write like a seasoned marketing professional who understands both construction and technology.
 
 Format your response as:
-CONTENT: [your post content here]
-HASHTAGS: [relevant hashtags separated by spaces]`;
+CONTENT: [your professional post content here]
+HASHTAGS: [strategic hashtags separated by spaces]`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -300,29 +314,89 @@ function generateFallbackContent(
   platform: string,
   template: ContentTemplate
 ): { content: string; hashtags: string[] } {
-  const baseContent = `🚀 ${template.topic}: ${template.key_points[0]} 
+  const platformSpecificContent = {
+    twitter: {
+      content: `💡 Game-changing insight: ${template.key_points[0]}
 
-Start your 14-day free trial with BuildDesk and experience ${template.cta_focus} firsthand!
+This is exactly why successful ${template.target_audience} choose BuildDesk to stay ahead of the competition.
 
-Visit build-desk.com to get started today.`;
+Ready to transform your operations? Start your free 14-day trial at build-desk.com`,
+      hashtags: ["#BuildDesk", "#Construction", "#ProjectManagement"],
+    },
+    linkedin: {
+      content: `🚀 Industry Insight: ${template.topic}
 
-  const baseHashtags = [
-    "#BuildDesk",
-    "#Construction",
-    "#ProjectManagement",
-    "#FreeTrial",
-  ];
+${
+  template.key_points[0]
+} This isn't just about efficiency—it's about gaining a competitive edge in today's construction market.
 
-  if (platform === "twitter") {
-    return {
-      content: baseContent.slice(0, 240),
-      hashtags: baseHashtags.slice(0, 3),
-    };
-  }
+Here's what this means for ${template.target_audience}:
+• ${template.key_points[1] || "Streamlined operations that save time and money"}
+• ${template.key_points[2] || "Better project visibility and control"}
+• ${template.key_points[3] || "Data-driven insights for smarter decisions"}
+
+The construction industry is evolving, and the companies that embrace smart technology are the ones that thrive. Don't get left behind.
+
+Ready to see how BuildDesk can revolutionize your ${
+        template.cta_focus
+      }? Start your 14-day free trial today.`,
+      hashtags: [
+        "#BuildDesk",
+        "#ConstructionTech",
+        "#ProjectManagement",
+        "#BusinessGrowth",
+        "#Innovation",
+      ],
+    },
+    facebook: {
+      content: `🏗️ Attention ${template.target_audience}!
+
+Did you know that ${template.key_points[0]}? 
+
+This is just one of the ways smart construction companies are staying ahead of the curve. With BuildDesk, you get:
+✅ ${template.key_points[1] || "Streamlined project management"}
+✅ ${template.key_points[2] || "Real-time cost tracking"}
+✅ ${template.key_points[3] || "Better team communication"}
+
+Don't let outdated processes hold your business back. Join the growing community of successful contractors who've transformed their operations with BuildDesk.
+
+🎯 Start your 14-day free trial at build-desk.com and see the difference for yourself!`,
+      hashtags: [
+        "#BuildDesk",
+        "#Construction",
+        "#SmallBusiness",
+        "#ProjectManagement",
+      ],
+    },
+    instagram: {
+      content: `✨ Transform your construction business ✨
+
+${template.key_points[0]} 🚀
+
+This is what ${template.target_audience} love about BuildDesk:
+📊 ${template.key_points[1] || "Real-time project insights"}
+⏰ ${template.key_points[2] || "Time-saving automation"}
+💰 ${template.key_points[3] || "Better profit margins"}
+
+Ready to level up your business? 💪`,
+      hashtags: [
+        "#BuildDesk",
+        "#Construction",
+        "#SmallBusiness",
+        "#ProjectManagement",
+        "#BusinessGrowth",
+        "#ConstructionTech",
+      ],
+    },
+  };
+
+  const platformContent =
+    platformSpecificContent[platform as keyof typeof platformSpecificContent] ||
+    platformSpecificContent.linkedin;
 
   return {
-    content: baseContent,
-    hashtags: baseHashtags,
+    content: platformContent.content,
+    hashtags: platformContent.hashtags,
   };
 }
 
