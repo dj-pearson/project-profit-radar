@@ -150,7 +150,7 @@ export const useSocialMediaAutomation = () => {
 
       // Call the webhook function
       const { data, error } = await supabase.functions.invoke(
-        "blog-social-webhook",
+        "blog_social_webhook",
         {
           body: {
             blog_post_id: blogPostId,

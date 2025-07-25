@@ -70,7 +70,7 @@ async function testAutomationSystem() {
 
     try {
       const { data, error } = await supabase.functions.invoke(
-        "blog-social-webhook",
+        "blog_social_webhook",
         {
           body: {
             test: true,
@@ -83,7 +83,7 @@ async function testAutomationSystem() {
       if (error) {
         console.error("❌ Function error:", error.message);
       } else {
-        console.log("✅ blog-social-webhook function is accessible");
+        console.log("✅ blog_social_webhook function is accessible");
       }
     } catch (err) {
       console.error("❌ Function deployment issue:", err.message);
@@ -159,7 +159,7 @@ async function testAutomationSystem() {
       console.log("\nNext steps:");
       console.log("1. Set OPENAI_API_KEY in Supabase Function environment");
       console.log(
-        "2. Deploy function: supabase functions deploy blog-social-webhook"
+        "2. Deploy function: supabase functions deploy blog_social_webhook"
       );
       console.log(
         "3. Configure automation in Admin → Social Media Manager → Automation"
