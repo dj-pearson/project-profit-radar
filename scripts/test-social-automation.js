@@ -186,3 +186,4 @@ testAutomationSystem()
     console.error("💥 Test script error:", error);
     process.exit(1);
   });
+ 

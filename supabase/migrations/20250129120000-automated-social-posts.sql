@@ -56,7 +56,7 @@ CREATE POLICY "Users can view own company's automated social posts config" ON pu
   FOR SELECT USING (
     company_id IN (
       SELECT company_id FROM public.user_profiles 
-      WHERE user_id = auth.uid()
+      WHERE id = auth.uid()
     )
   );
 
@@ -64,7 +64,7 @@ CREATE POLICY "Users can insert own company's automated social posts config" ON 
   FOR INSERT WITH CHECK (
     company_id IN (
       SELECT company_id FROM public.user_profiles 
-      WHERE user_id = auth.uid()
+      WHERE id = auth.uid()
     )
   );
 
@@ -72,7 +72,7 @@ CREATE POLICY "Users can update own company's automated social posts config" ON 
   FOR UPDATE USING (
     company_id IN (
       SELECT company_id FROM public.user_profiles 
-      WHERE user_id = auth.uid()
+      WHERE id = auth.uid()
     )
   );
 
@@ -81,7 +81,7 @@ CREATE POLICY "Users can view own company's automated social posts queue" ON pub
   FOR SELECT USING (
     company_id IN (
       SELECT company_id FROM public.user_profiles 
-      WHERE user_id = auth.uid()
+      WHERE id = auth.uid()
     )
   );
 
@@ -96,7 +96,7 @@ CREATE POLICY "Only admins can manage automated social content library" ON publi
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.user_profiles 
-      WHERE user_id = auth.uid() 
+      WHERE id = auth.uid() 
       AND role IN ('root_admin', 'admin')
     )
   );

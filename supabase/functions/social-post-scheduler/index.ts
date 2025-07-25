@@ -20,17 +20,55 @@ serve(async (req) => {
   try {
     logStep("Social post scheduler started");
 
+    // Parse request body for manual trigger parameters
+    let requestBody: any = {};
+    try {
+      const contentType = req.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        requestBody = await req.json();
+      }
+    } catch (e) {
+      // If no valid JSON body, continue with empty object
+      logStep("Failed to parse request body", e);
+    }
+
+    const {
+      manual_trigger,
+      company_id: targetCompanyId,
+      content_type: targetContentType,
+    } = requestBody;
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get all active configurations where it's time to post
-    const { data: dueConfigs, error: configError } = await supabaseClient
-      .from("automated_social_posts_config")
-      .select("*")
-      .eq("enabled", true)
-      .lt("next_post_at", new Date().toISOString());
+    let dueConfigs;
+    let configError;
+
+    if (manual_trigger && targetCompanyId) {
+      // For manual triggers, get the specific company's config regardless of next_post_at
+      logStep("Manual trigger detected for company", targetCompanyId);
+
+      const result = await supabaseClient
+        .from("automated_social_posts_config")
+        .select("*")
+        .eq("company_id", targetCompanyId)
+        .eq("enabled", true);
+
+      dueConfigs = result.data;
+      configError = result.error;
+    } else {
+      // Regular scheduled check - get all active configurations where it's time to post
+      const result = await supabaseClient
+        .from("automated_social_posts_config")
+        .select("*")
+        .eq("enabled", true)
+        .lt("next_post_at", new Date().toISOString());
+
+      dueConfigs = result.data;
+      configError = result.error;
+    }
 
     if (configError) {
       throw new Error(
@@ -39,11 +77,14 @@ serve(async (req) => {
     }
 
     if (!dueConfigs || dueConfigs.length === 0) {
-      logStep("No posts due at this time");
+      const message = manual_trigger
+        ? "No enabled configuration found for manual trigger"
+        : "No posts due at this time";
+      logStep(message);
       return new Response(
         JSON.stringify({
           success: true,
-          message: "No posts due",
+          message,
           processed: 0,
         }),
         {
@@ -53,13 +94,29 @@ serve(async (req) => {
       );
     }
 
-    logStep(`Found ${dueConfigs.length} configurations due for posting`);
+    logStep(
+      `Found ${dueConfigs.length} configurations ${
+        manual_trigger ? "for manual trigger" : "due for posting"
+      }`
+    );
 
-    const results = [];
+    const results: any[] = [];
 
     for (const config of dueConfigs) {
       try {
         logStep(`Processing config for company ${config.company_id}`);
+
+        // Filter content types if specified in manual trigger
+        const contentTypes = targetContentType
+          ? [targetContentType].filter((type) =>
+              config.content_types.includes(type)
+            )
+          : config.content_types;
+
+        if (contentTypes.length === 0) {
+          logStep(`No matching content types for company ${config.company_id}`);
+          continue;
+        }
 
         // Select content from library
         const { data: contentOptions, error: contentError } =
@@ -67,7 +124,7 @@ serve(async (req) => {
             .from("automated_social_content_library")
             .select("*")
             .eq("active", true)
-            .in("content_type", config.content_types)
+            .in("content_type", contentTypes)
             .order("priority", { ascending: false })
             .order("usage_count", { ascending: true })
             .limit(10);
@@ -164,24 +221,27 @@ serve(async (req) => {
           })
           .eq("id", selectedContent.id);
 
-        // Update config with next post time
-        const nextPostTime = new Date();
-        nextPostTime.setHours(
-          nextPostTime.getHours() + config.post_interval_hours
-        );
+        // Update config with next post time (only for scheduled posts, not manual triggers)
+        let nextPostTime;
+        if (!manual_trigger) {
+          nextPostTime = new Date();
+          nextPostTime.setHours(
+            nextPostTime.getHours() + config.post_interval_hours
+          );
 
-        await supabaseClient
-          .from("automated_social_posts_config")
-          .update({
-            next_post_at: nextPostTime.toISOString(),
-          })
-          .eq("id", config.id);
+          await supabaseClient
+            .from("automated_social_posts_config")
+            .update({
+              next_post_at: nextPostTime.toISOString(),
+            })
+            .eq("id", config.id);
+        }
 
         results.push({
           company_id: config.company_id,
           content_topic: selectedContent.topic,
           queue_id: queueEntry.id,
-          next_post_at: nextPostTime.toISOString(),
+          next_post_at: nextPostTime ? nextPostTime.toISOString() : null,
           success: true,
         });
 
