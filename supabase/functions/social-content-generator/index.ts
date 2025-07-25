@@ -265,6 +265,12 @@ CONTENT: [your professional post content here]
 HASHTAGS: [strategic hashtags separated by spaces]`;
 
   try {
+    logStep(`Attempting ${platform} AI generation`, {
+      has_claude_key: !!claudeKey,
+      claude_key_length: claudeKey ? claudeKey.length : 0,
+      prompt_length: prompt.length,
+    });
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -274,38 +280,102 @@ HASHTAGS: [strategic hashtags separated by spaces]`;
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-sonnet-4-0",
         max_tokens: 1000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
+    logStep(`Claude API response status: ${response.status}`, {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+    });
+
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`);
+      const errorText = await response.text();
+      logStep(`Claude API error details`, {
+        status: response.status,
+        error: errorText,
+      });
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
     }
 
     const claudeResponse = await response.json();
+    logStep(`Claude raw response`, {
+      has_content: !!claudeResponse.content,
+      content_array_length: claudeResponse.content?.length || 0,
+      raw_text:
+        claudeResponse.content?.[0]?.text?.substring(0, 200) || "No text",
+    });
+
     const fullContent = claudeResponse.content?.[0]?.text || "";
 
-    const contentMatch = fullContent.match(/CONTENT: (.*?)(?=\nHASHTAGS:|$)/s);
-    const hashtagsMatch = fullContent.match(/HASHTAGS: (.*?)$/s);
+    // More flexible content parsing - handle various formats
+    let content = "";
+    let hashtags: string[] = [];
 
-    const content = contentMatch ? contentMatch[1].trim() : "";
-    const hashtags = hashtagsMatch
-      ? hashtagsMatch[1]
-          .trim()
-          .split(/\s+/)
-          .filter((tag) => tag.startsWith("#"))
-      : [];
+    // Try different parsing approaches
+    const contentMatch1 = fullContent.match(
+      /CONTENT:\s*(.*?)(?=\n\s*HASHTAGS:|$)/s
+    );
+    const contentMatch2 = fullContent.match(
+      /CONTENT:\n(.*?)(?=\n\s*HASHTAGS:|$)/s
+    );
+    const contentMatch3 = fullContent.match(
+      /^(.*?)(?=\n\s*#|\n\s*HASHTAGS:|$)/s
+    );
+
+    if (contentMatch1) {
+      content = contentMatch1[1].trim();
+    } else if (contentMatch2) {
+      content = contentMatch2[1].trim();
+    } else if (contentMatch3 && !fullContent.startsWith("HASHTAGS:")) {
+      content = contentMatch3[1].trim();
+    } else {
+      // If no structured format, use the whole response
+      content = fullContent.trim();
+    }
+
+    // Extract hashtags
+    const hashtagsMatch1 = fullContent.match(/HASHTAGS:\s*(.*?)$/s);
+    const hashtagsMatch2 = fullContent.match(/\n\s*(#\w+(?:\s+#\w+)*)\s*$/);
+    const hashtagsMatch3 = fullContent.match(/(#\w+(?:\s+#\w+)*)/g);
+
+    if (hashtagsMatch1) {
+      hashtags = hashtagsMatch1[1]
+        .trim()
+        .split(/\s+/)
+        .filter((tag) => tag.startsWith("#"));
+    } else if (hashtagsMatch2) {
+      hashtags = hashtagsMatch2[1]
+        .trim()
+        .split(/\s+/)
+        .filter((tag) => tag.startsWith("#"));
+    } else if (hashtagsMatch3) {
+      hashtags = hashtagsMatch3
+        .join(" ")
+        .split(/\s+/)
+        .filter((tag) => tag.startsWith("#"));
+    }
+
+    // Remove hashtags from content if they appear at the end
+    content = content.replace(/\n\s*(#\w+(?:\s+#\w+)*)\s*$/, "").trim();
 
     logStep(`Generated ${platform} AI content`, {
       content_length: content.length,
       hashtags_count: hashtags.length,
+      content_preview: content.substring(0, 100),
+      hashtags_preview: hashtags.slice(0, 3),
     });
 
     return { content, hashtags };
   } catch (error) {
-    logStep(`${platform} AI generation failed`, error);
+    logStep(`${platform} AI generation failed`, {
+      error_message: error.message,
+      error_type: error.constructor.name,
+      has_claude_key: !!claudeKey,
+    });
     throw error;
   }
 }
@@ -316,11 +386,9 @@ function generateFallbackContent(
 ): { content: string; hashtags: string[] } {
   const platformSpecificContent = {
     twitter: {
-      content: `💡 Game-changing insight: ${template.key_points[0]}
+      content: `💡 ${template.key_points[0]} 
 
-This is exactly why successful ${template.target_audience} choose BuildDesk to stay ahead of the competition.
-
-Ready to transform your operations? Start your free 14-day trial at build-desk.com`,
+Ready to see the difference? Start your 14-day free trial: build-desk.com`,
       hashtags: ["#BuildDesk", "#Construction", "#ProjectManagement"],
     },
     linkedin: {
@@ -413,21 +481,24 @@ async function generatePlatformContent(
       ? await generateAIContent({
           platform: "twitter",
           template,
-          maxLength: 250,
-          tone: "concise and engaging",
+          maxLength: 200,
+          tone: "concise and punchy",
           requirements: [
-            "Maximum 250 characters to leave room for URL",
-            "Include key insight about the feature/benefit",
-            "End with a strong call to action for 14-day trial",
-            "Use relevant hashtags",
-            "Professional yet engaging tone",
+            "Maximum 200 characters total including URL and hashtags",
+            "Very short, punchy opening (under 100 characters)",
+            "One key benefit or statistic",
+            "Brief call to action",
+            "Must fit Twitter's 280 character limit with URL",
+            "Keep it simple and direct",
           ],
         })
       : generateFallbackContent("twitter", template);
 
     platformContents.push({
       platform: "twitter",
-      content: `${twitterContent.content}\n\n🔗 build-desk.com`,
+      content: twitterContent.content.includes("build-desk.com")
+        ? twitterContent.content
+        : `${twitterContent.content}\n\n🔗 build-desk.com`,
       hashtags: twitterContent.hashtags,
       media_urls: [],
       optimal_length: 280,
@@ -469,7 +540,9 @@ async function generatePlatformContent(
 
     platformContents.push({
       platform: "linkedin",
-      content: `${linkedinContent.content}\n\n📈 Ready to transform your ${template.cta_focus}? Start your 14-day free trial: build-desk.com`,
+      content: linkedinContent.content.includes("build-desk.com")
+        ? linkedinContent.content
+        : `${linkedinContent.content}\n\n📈 Ready to transform your ${template.cta_focus}? Start your 14-day free trial: build-desk.com`,
       hashtags: linkedinContent.hashtags,
       media_urls: [],
       optimal_length: 3000,
@@ -690,7 +763,7 @@ serve(async (req) => {
           media_urls: JSON.stringify(platformContent.media_urls || []),
           platforms: JSON.stringify([{ platform: platformContent.platform }]),
           status: "draft",
-          created_by: company_id, // Using company_id as creator for automated posts
+          // Don't set created_by for automated posts to avoid foreign key constraint
         })
         .select()
         .single();
