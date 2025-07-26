@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -94,11 +94,7 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
-  useEffect(() => {
-    loadPipelineMetrics();
-  }, [selectedTimeRange]);
-
-  const loadPipelineMetrics = async () => {
+  const loadPipelineMetrics = useCallback(async () => {
     try {
       if (!userProfile?.company_id) return;
 
@@ -139,10 +135,22 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
       if (stagesError) throw stagesError;
 
       // Create stages lookup map
-      const stagesMap = (stagesData || []).reduce((acc, stage) => {
-        acc[stage.id] = stage;
-        return acc;
-      }, {} as Record<string, any>);
+      const stagesMap = (stagesData || []).reduce(
+        (acc, stage) => {
+          acc[stage.id] = stage;
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            id: string;
+            name: string;
+            color_code: string;
+            probability_weight: number;
+            stage_order: number;
+          }
+        >
+      );
 
       // Load stage history without complex joins
       const { data: historyData, error: historyError } = await supabase
@@ -259,7 +267,7 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
         dealsByStage,
         trendData,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Pipeline analytics error:", error);
       toast({
         title: "Error loading pipeline analytics",
@@ -282,7 +290,11 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTimeRange, userProfile?.company_id, toast]);
+
+  useEffect(() => {
+    loadPipelineMetrics();
+  }, [selectedTimeRange, loadPipelineMetrics]);
 
   const COLORS = [
     "#3B82F6",

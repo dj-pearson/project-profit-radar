@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -106,11 +106,7 @@ export const PipelineSettings: React.FC = () => {
     required_fields: [],
   });
 
-  useEffect(() => {
-    loadPipelineSettings();
-  }, []);
-
-  const loadPipelineSettings = async () => {
+  const loadPipelineSettings = useCallback(async () => {
     try {
       if (!userProfile?.company_id) return;
 
@@ -154,7 +150,11 @@ export const PipelineSettings: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userProfile?.company_id, toast]);
+
+  useEffect(() => {
+    loadPipelineSettings();
+  }, [loadPipelineSettings]);
 
   const handleDragEnd = async (result: {
     destination?: { droppableId: string; index: number } | null;

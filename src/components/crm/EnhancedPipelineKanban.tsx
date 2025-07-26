@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,14 @@ interface PipelineStage {
   is_lost_stage: boolean;
   expected_duration_days?: number;
   conversion_rate?: number;
+}
+
+interface Contact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company_name?: string;
+  contact_type: "lead" | "customer" | "vendor";
 }
 
 interface Deal {
@@ -79,11 +87,7 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
   const { toast } = useToast();
   const { userProfile } = useAuth();
 
-  useEffect(() => {
-    loadPipelineData();
-  }, []);
-
-  const loadPipelineData = async () => {
+  const loadPipelineData = useCallback(async () => {
     try {
       if (!userProfile?.company_id) return;
 
@@ -181,7 +185,7 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
         dealsData?.map((deal) => deal.primary_contact_id).filter(Boolean) || [];
 
       // Load contacts separately if we have contact IDs
-      let contactsMap: Record<string, any> = {};
+      let contactsMap: Record<string, Contact> = {};
       if (contactIds.length > 0) {
         setLoadingContacts(true);
         const { data: contactsData, error: contactsError } = await supabase
@@ -191,15 +195,15 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
 
         if (!contactsError && contactsData) {
           contactsMap = contactsData.reduce((acc, contact) => {
-            acc[contact.id] = contact;
+            acc[contact.id] = contact as Contact;
             return acc;
-          }, {} as Record<string, any>);
+          }, {} as Record<string, Contact>);
         }
         setLoadingContacts(false);
       }
 
       // Type-cast the deals data and attach contact information
-      const typedDealsData = (dealsData || []).map((deal: any) => {
+      const typedDealsData = (dealsData || []).map((deal) => {
         const contact = deal.primary_contact_id
           ? contactsMap[deal.primary_contact_id]
           : null;
@@ -213,8 +217,8 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
             contact?.contact_type === "vendor"
               ? contact
               : null,
-        };
-      }) as Deal[];
+        } as Deal;
+      });
 
       // Group deals by stage
       const grouped = currentStages.reduce((acc, stage) => {
@@ -226,26 +230,39 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
       }, {} as Record<string, Deal[]>);
 
       setDealsByStage(grouped);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast({
         title: "Error loading pipeline data",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
       setLoadingContacts(false);
     }
-  };
+  }, [userProfile?.company_id, toast]);
 
-  const handleDragStart = (start: any) => {
+  useEffect(() => {
+    loadPipelineData();
+  }, [loadPipelineData]);
+
+  const handleDragStart = (start: {
+    draggableId: string;
+    source: { droppableId: string };
+  }) => {
     const dealId = start.draggableId;
     const sourceStageId = start.source.droppableId;
     const deal = dealsByStage[sourceStageId]?.find((d) => d.id === dealId);
     setDraggedDeal(deal || null);
   };
 
-  const handleDragEnd = async (result: any) => {
+  const handleDragEnd = async (result: {
+    destination?: { droppableId: string; index: number } | null;
+    source: { droppableId: string; index: number };
+    draggableId: string;
+  }) => {
     const { destination, source, draggableId } = result;
     setDraggedDeal(null);
 
@@ -328,10 +345,12 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
         description: `"${deal.name}" moved to ${destStage.name}`,
         variant: destStage.is_won_stage ? "default" : undefined,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast({
         title: "Error moving deal",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }

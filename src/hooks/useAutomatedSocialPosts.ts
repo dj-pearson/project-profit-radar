@@ -59,7 +59,7 @@ export const useAutomatedSocialPosts = () => {
   );
 
   // Load configuration
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     if (!userProfile?.company_id) return;
 
     try {
@@ -166,7 +166,16 @@ export const useAutomatedSocialPosts = () => {
 
       if (error) throw error;
 
-      setQueue(data || []);
+      setQueue(
+        (data || []).map((item) => ({
+          ...item,
+          status: item.status as
+            | "failed"
+            | "completed"
+            | "pending"
+            | "processing",
+        }))
+      );
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
@@ -192,7 +201,7 @@ export const useAutomatedSocialPosts = () => {
       if (error) throw error;
 
       setContentLibrary(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading content library:", error);
       toast({
         title: "Error",
@@ -282,7 +291,7 @@ export const useAutomatedSocialPosts = () => {
       loadQueue();
       loadContentLibrary();
     }
-  }, [userProfile?.company_id]);
+  }, [userProfile?.company_id, loadConfig, loadQueue, loadContentLibrary]);
 
   return {
     config,
