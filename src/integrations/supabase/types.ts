@@ -428,6 +428,115 @@ export type Database = {
           },
         ]
       }
+      ai_lead_scores: {
+        Row: {
+          behavioral_score: number | null
+          calculated_at: string | null
+          churn_risk: number | null
+          company_id: string
+          confidence_level: number | null
+          conversion_probability: number | null
+          created_at: string | null
+          demographic_score: number | null
+          engagement_score: number | null
+          estimated_close_time_days: number | null
+          estimated_deal_size: number | null
+          expires_at: string | null
+          feature_importance: Json | null
+          fit_score: number | null
+          id: string
+          intent_score: number | null
+          key_insights: Json | null
+          lead_id: string
+          model_id: string | null
+          model_version: string | null
+          next_best_actions: Json | null
+          opportunities: Json | null
+          overall_score: number
+          risk_factors: Json | null
+          score_explanation: string | null
+          timing_score: number | null
+        }
+        Insert: {
+          behavioral_score?: number | null
+          calculated_at?: string | null
+          churn_risk?: number | null
+          company_id: string
+          confidence_level?: number | null
+          conversion_probability?: number | null
+          created_at?: string | null
+          demographic_score?: number | null
+          engagement_score?: number | null
+          estimated_close_time_days?: number | null
+          estimated_deal_size?: number | null
+          expires_at?: string | null
+          feature_importance?: Json | null
+          fit_score?: number | null
+          id?: string
+          intent_score?: number | null
+          key_insights?: Json | null
+          lead_id: string
+          model_id?: string | null
+          model_version?: string | null
+          next_best_actions?: Json | null
+          opportunities?: Json | null
+          overall_score: number
+          risk_factors?: Json | null
+          score_explanation?: string | null
+          timing_score?: number | null
+        }
+        Update: {
+          behavioral_score?: number | null
+          calculated_at?: string | null
+          churn_risk?: number | null
+          company_id?: string
+          confidence_level?: number | null
+          conversion_probability?: number | null
+          created_at?: string | null
+          demographic_score?: number | null
+          engagement_score?: number | null
+          estimated_close_time_days?: number | null
+          estimated_deal_size?: number | null
+          expires_at?: string | null
+          feature_importance?: Json | null
+          fit_score?: number | null
+          id?: string
+          intent_score?: number | null
+          key_insights?: Json | null
+          lead_id?: string
+          model_id?: string | null
+          model_version?: string | null
+          next_best_actions?: Json | null
+          opportunities?: Json | null
+          overall_score?: number
+          risk_factors?: Json | null
+          score_explanation?: string | null
+          timing_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_lead_scores_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_lead_scores_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_lead_scores_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "predictive_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_model_configurations: {
         Row: {
           context_window: number | null
@@ -757,6 +866,157 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automated_social_content_library: {
+        Row: {
+          active: boolean | null
+          content_type: string
+          created_at: string
+          cta_template: string | null
+          description: string
+          id: string
+          key_points: string[] | null
+          last_used_at: string | null
+          priority: number | null
+          title: string
+          topic: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          content_type: string
+          created_at?: string
+          cta_template?: string | null
+          description: string
+          id?: string
+          key_points?: string[] | null
+          last_used_at?: string | null
+          priority?: number | null
+          title: string
+          topic: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          content_type?: string
+          created_at?: string
+          cta_template?: string | null
+          description?: string
+          id?: string
+          key_points?: string[] | null
+          last_used_at?: string | null
+          priority?: number | null
+          title?: string
+          topic?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      automated_social_posts_config: {
+        Row: {
+          auto_schedule: boolean | null
+          company_id: string
+          content_types: string[] | null
+          created_at: string
+          enabled: boolean | null
+          id: string
+          next_post_at: string | null
+          platforms: string[] | null
+          post_interval_hours: number | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          auto_schedule?: boolean | null
+          company_id: string
+          content_types?: string[] | null
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          next_post_at?: string | null
+          platforms?: string[] | null
+          post_interval_hours?: number | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          auto_schedule?: boolean | null
+          company_id?: string
+          content_types?: string[] | null
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          next_post_at?: string | null
+          platforms?: string[] | null
+          post_interval_hours?: number | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automated_social_posts_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automated_social_posts_queue: {
+        Row: {
+          company_id: string
+          content_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          platforms_processed: string[] | null
+          posts_created: number | null
+          processed_at: string | null
+          scheduled_for: string
+          status: string | null
+          topic: string
+          webhook_sent: boolean | null
+        }
+        Insert: {
+          company_id: string
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platforms_processed?: string[] | null
+          posts_created?: number | null
+          processed_at?: string | null
+          scheduled_for: string
+          status?: string | null
+          topic: string
+          webhook_sent?: boolean | null
+        }
+        Update: {
+          company_id?: string
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          platforms_processed?: string[] | null
+          posts_created?: number | null
+          processed_at?: string | null
+          scheduled_for?: string
+          status?: string | null
+          topic?: string
+          webhook_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automated_social_posts_queue_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -7705,6 +7965,181 @@ export type Database = {
           },
         ]
       }
+      lead_attribution: {
+        Row: {
+          attribution_type: string
+          attribution_weight: number | null
+          company_id: string
+          conversion_value: number | null
+          converted_at: string | null
+          converted_to_customer: boolean | null
+          converted_to_opportunity: boolean | null
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          lead_id: string
+          page_url: string | null
+          referrer_url: string | null
+          source_id: string
+          touched_at: string
+          touchpoint_sequence: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          attribution_type: string
+          attribution_weight?: number | null
+          company_id: string
+          conversion_value?: number | null
+          converted_at?: string | null
+          converted_to_customer?: boolean | null
+          converted_to_opportunity?: boolean | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          lead_id: string
+          page_url?: string | null
+          referrer_url?: string | null
+          source_id: string
+          touched_at: string
+          touchpoint_sequence?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          attribution_type?: string
+          attribution_weight?: number | null
+          company_id?: string
+          conversion_value?: number | null
+          converted_at?: string | null
+          converted_to_customer?: boolean | null
+          converted_to_opportunity?: boolean | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          lead_id?: string
+          page_url?: string | null
+          referrer_url?: string | null
+          source_id?: string
+          touched_at?: string
+          touchpoint_sequence?: number | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_attribution_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_attribution_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_attribution_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_behavioral_data: {
+        Row: {
+          activity_frequency: number | null
+          best_contact_time: string | null
+          company_id: string
+          content_interests: Json | null
+          created_at: string | null
+          device_types: Json | null
+          document_downloads: number | null
+          email_clicks: number | null
+          email_opens: number | null
+          engagement_score: number | null
+          form_submissions: number | null
+          id: string
+          last_activity_at: string | null
+          lead_id: string
+          locations: Json | null
+          meeting_requests: number | null
+          page_views: number | null
+          phone_calls: number | null
+          preferred_communication: string | null
+          response_time_avg: number | null
+          time_zone: string | null
+          updated_at: string | null
+          website_visits: number | null
+        }
+        Insert: {
+          activity_frequency?: number | null
+          best_contact_time?: string | null
+          company_id: string
+          content_interests?: Json | null
+          created_at?: string | null
+          device_types?: Json | null
+          document_downloads?: number | null
+          email_clicks?: number | null
+          email_opens?: number | null
+          engagement_score?: number | null
+          form_submissions?: number | null
+          id?: string
+          last_activity_at?: string | null
+          lead_id: string
+          locations?: Json | null
+          meeting_requests?: number | null
+          page_views?: number | null
+          phone_calls?: number | null
+          preferred_communication?: string | null
+          response_time_avg?: number | null
+          time_zone?: string | null
+          updated_at?: string | null
+          website_visits?: number | null
+        }
+        Update: {
+          activity_frequency?: number | null
+          best_contact_time?: string | null
+          company_id?: string
+          content_interests?: Json | null
+          created_at?: string | null
+          device_types?: Json | null
+          document_downloads?: number | null
+          email_clicks?: number | null
+          email_opens?: number | null
+          engagement_score?: number | null
+          form_submissions?: number | null
+          id?: string
+          last_activity_at?: string | null
+          lead_id?: string
+          locations?: Json | null
+          meeting_requests?: number | null
+          page_views?: number | null
+          phone_calls?: number | null
+          preferred_communication?: string | null
+          response_time_avg?: number | null
+          time_zone?: string | null
+          updated_at?: string | null
+          website_visits?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_behavioral_data_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_behavioral_data_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_funnels: {
         Row: {
           company_id: string
@@ -7826,6 +8261,248 @@ export type Database = {
           },
         ]
       }
+      lead_nurturing_campaigns: {
+        Row: {
+          auto_enrollment: boolean | null
+          behavioral_triggers: Json | null
+          campaign_name: string
+          campaign_type: string | null
+          company_id: string
+          completion_count: number | null
+          conversion_count: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          enrollment_count: number | null
+          id: string
+          is_active: boolean | null
+          score_threshold: number | null
+          start_delay_hours: number | null
+          step_delay_hours: number | null
+          stop_on_conversion: boolean | null
+          stop_on_reply: boolean | null
+          target_segments: Json | null
+          total_steps: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_enrollment?: boolean | null
+          behavioral_triggers?: Json | null
+          campaign_name: string
+          campaign_type?: string | null
+          company_id: string
+          completion_count?: number | null
+          conversion_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          enrollment_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          score_threshold?: number | null
+          start_delay_hours?: number | null
+          step_delay_hours?: number | null
+          stop_on_conversion?: boolean | null
+          stop_on_reply?: boolean | null
+          target_segments?: Json | null
+          total_steps?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_enrollment?: boolean | null
+          behavioral_triggers?: Json | null
+          campaign_name?: string
+          campaign_type?: string | null
+          company_id?: string
+          completion_count?: number | null
+          conversion_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          enrollment_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          score_threshold?: number | null
+          start_delay_hours?: number | null
+          step_delay_hours?: number | null
+          stop_on_conversion?: boolean | null
+          stop_on_reply?: boolean | null
+          target_segments?: Json | null
+          total_steps?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_nurturing_campaigns_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_nurturing_enrollments: {
+        Row: {
+          calls_made: number | null
+          campaign_id: string
+          company_id: string
+          completed_at: string | null
+          conversion_date: string | null
+          conversion_step: number | null
+          converted: boolean | null
+          created_at: string | null
+          current_step: number | null
+          emails_clicked: number | null
+          emails_opened: number | null
+          emails_sent: number | null
+          enrolled_at: string | null
+          id: string
+          last_step_sent_at: string | null
+          lead_id: string
+          next_step_scheduled_at: string | null
+          status: string | null
+          steps_completed: number | null
+          stop_reason: string | null
+          tasks_created: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          calls_made?: number | null
+          campaign_id: string
+          company_id: string
+          completed_at?: string | null
+          conversion_date?: string | null
+          conversion_step?: number | null
+          converted?: boolean | null
+          created_at?: string | null
+          current_step?: number | null
+          emails_clicked?: number | null
+          emails_opened?: number | null
+          emails_sent?: number | null
+          enrolled_at?: string | null
+          id?: string
+          last_step_sent_at?: string | null
+          lead_id: string
+          next_step_scheduled_at?: string | null
+          status?: string | null
+          steps_completed?: number | null
+          stop_reason?: string | null
+          tasks_created?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          calls_made?: number | null
+          campaign_id?: string
+          company_id?: string
+          completed_at?: string | null
+          conversion_date?: string | null
+          conversion_step?: number | null
+          converted?: boolean | null
+          created_at?: string | null
+          current_step?: number | null
+          emails_clicked?: number | null
+          emails_opened?: number | null
+          emails_sent?: number | null
+          enrolled_at?: string | null
+          id?: string
+          last_step_sent_at?: string | null
+          lead_id?: string
+          next_step_scheduled_at?: string | null
+          status?: string | null
+          steps_completed?: number | null
+          stop_reason?: string | null
+          tasks_created?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_nurturing_enrollments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "lead_nurturing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_nurturing_enrollments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_nurturing_enrollments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_qualification_workflows: {
+        Row: {
+          auto_route_qualified: boolean | null
+          auto_route_to_user: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          disqualified_status: string | null
+          id: string
+          is_active: boolean | null
+          qualification_criteria: Json | null
+          qualified_status: string | null
+          requires_approval: boolean | null
+          trigger_events: Json | null
+          updated_at: string | null
+          workflow_name: string
+          workflow_steps: Json | null
+        }
+        Insert: {
+          auto_route_qualified?: boolean | null
+          auto_route_to_user?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          disqualified_status?: string | null
+          id?: string
+          is_active?: boolean | null
+          qualification_criteria?: Json | null
+          qualified_status?: string | null
+          requires_approval?: boolean | null
+          trigger_events?: Json | null
+          updated_at?: string | null
+          workflow_name: string
+          workflow_steps?: Json | null
+        }
+        Update: {
+          auto_route_qualified?: boolean | null
+          auto_route_to_user?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          disqualified_status?: string | null
+          id?: string
+          is_active?: boolean | null
+          qualification_criteria?: Json | null
+          qualified_status?: string | null
+          requires_approval?: boolean | null
+          trigger_events?: Json | null
+          updated_at?: string | null
+          workflow_name?: string
+          workflow_steps?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_qualification_workflows_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_routing_rules: {
         Row: {
           add_tags: string[] | null
@@ -7939,6 +8616,80 @@ export type Database = {
           },
         ]
       }
+      lead_sources: {
+        Row: {
+          attribution_model: string | null
+          attribution_window_days: number | null
+          average_deal_size: number | null
+          campaign_id: string | null
+          campaign_name: string | null
+          company_id: string
+          content: string | null
+          conversion_rate: number | null
+          cost_per_lead: number | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          medium: string | null
+          roi_percentage: number | null
+          source_category: string | null
+          source_name: string
+          source_type: string
+          term: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attribution_model?: string | null
+          attribution_window_days?: number | null
+          average_deal_size?: number | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          company_id: string
+          content?: string | null
+          conversion_rate?: number | null
+          cost_per_lead?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          medium?: string | null
+          roi_percentage?: number | null
+          source_category?: string | null
+          source_name: string
+          source_type: string
+          term?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attribution_model?: string | null
+          attribution_window_days?: number | null
+          average_deal_size?: number | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          company_id?: string
+          content?: string | null
+          conversion_rate?: number | null
+          cost_per_lead?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          medium?: string | null
+          roi_percentage?: number | null
+          source_category?: string | null
+          source_name?: string
+          source_type?: string
+          term?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_sources_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
@@ -7958,13 +8709,17 @@ export type Database = {
           first_name: string
           hoa_approval_needed: boolean | null
           id: string
+          intent_signals: Json | null
           job_title: string | null
           last_contact_date: string | null
           last_name: string
           lead_source: string
           lead_source_detail: string | null
+          lead_source_id: string | null
+          lead_temperature: string | null
           next_follow_up_date: string | null
           notes: string | null
+          nurturing_status: string | null
           permits_required: boolean | null
           phone: string | null
           priority: string
@@ -7976,6 +8731,8 @@ export type Database = {
           project_type: string | null
           project_zip: string | null
           property_type: string | null
+          qualification_date: string | null
+          qualification_status: string | null
           site_accessible: boolean | null
           site_conditions: string | null
           status: string
@@ -8001,13 +8758,17 @@ export type Database = {
           first_name: string
           hoa_approval_needed?: boolean | null
           id?: string
+          intent_signals?: Json | null
           job_title?: string | null
           last_contact_date?: string | null
           last_name: string
           lead_source?: string
           lead_source_detail?: string | null
+          lead_source_id?: string | null
+          lead_temperature?: string | null
           next_follow_up_date?: string | null
           notes?: string | null
+          nurturing_status?: string | null
           permits_required?: boolean | null
           phone?: string | null
           priority?: string
@@ -8019,6 +8780,8 @@ export type Database = {
           project_type?: string | null
           project_zip?: string | null
           property_type?: string | null
+          qualification_date?: string | null
+          qualification_status?: string | null
           site_accessible?: boolean | null
           site_conditions?: string | null
           status?: string
@@ -8044,13 +8807,17 @@ export type Database = {
           first_name?: string
           hoa_approval_needed?: boolean | null
           id?: string
+          intent_signals?: Json | null
           job_title?: string | null
           last_contact_date?: string | null
           last_name?: string
           lead_source?: string
           lead_source_detail?: string | null
+          lead_source_id?: string | null
+          lead_temperature?: string | null
           next_follow_up_date?: string | null
           notes?: string | null
+          nurturing_status?: string | null
           permits_required?: boolean | null
           phone?: string | null
           priority?: string
@@ -8062,6 +8829,8 @@ export type Database = {
           project_type?: string | null
           project_zip?: string | null
           property_type?: string | null
+          qualification_date?: string | null
+          qualification_status?: string | null
           site_accessible?: boolean | null
           site_conditions?: string | null
           status?: string
@@ -8089,6 +8858,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_lead_source_id_fkey"
+            columns: ["lead_source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_sources"
             referencedColumns: ["id"]
           },
         ]
@@ -8238,6 +9014,74 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nurturing_campaign_steps: {
+        Row: {
+          campaign_id: string
+          content: string | null
+          created_at: string | null
+          delay_unit: string | null
+          delay_value: number | null
+          id: string
+          is_active: boolean | null
+          send_conditions: Json | null
+          step_name: string
+          step_number: number
+          step_type: string
+          subject_line: string | null
+          template_id: string | null
+          track_clicks: boolean | null
+          track_opens: boolean | null
+          updated_at: string | null
+          wait_conditions: Json | null
+        }
+        Insert: {
+          campaign_id: string
+          content?: string | null
+          created_at?: string | null
+          delay_unit?: string | null
+          delay_value?: number | null
+          id?: string
+          is_active?: boolean | null
+          send_conditions?: Json | null
+          step_name: string
+          step_number: number
+          step_type: string
+          subject_line?: string | null
+          template_id?: string | null
+          track_clicks?: boolean | null
+          track_opens?: boolean | null
+          updated_at?: string | null
+          wait_conditions?: Json | null
+        }
+        Update: {
+          campaign_id?: string
+          content?: string | null
+          created_at?: string | null
+          delay_unit?: string | null
+          delay_value?: number | null
+          id?: string
+          is_active?: boolean | null
+          send_conditions?: Json | null
+          step_name?: string
+          step_number?: number
+          step_type?: string
+          subject_line?: string | null
+          template_id?: string | null
+          track_clicks?: boolean | null
+          track_opens?: boolean | null
+          updated_at?: string | null
+          wait_conditions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nurturing_campaign_steps_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "lead_nurturing_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -9266,6 +10110,86 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "platform_revenue_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      predictive_models: {
+        Row: {
+          accuracy: number | null
+          algorithm: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          f1_score: number | null
+          features: Json
+          id: string
+          is_active: boolean | null
+          is_production: boolean | null
+          last_retrained: string | null
+          model_name: string
+          model_type: string
+          model_version: string | null
+          precision_score: number | null
+          recall_score: number | null
+          thresholds: Json | null
+          training_data_size: number | null
+          training_date: string | null
+          updated_at: string | null
+          weights: Json | null
+        }
+        Insert: {
+          accuracy?: number | null
+          algorithm?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          f1_score?: number | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          is_production?: boolean | null
+          last_retrained?: string | null
+          model_name: string
+          model_type: string
+          model_version?: string | null
+          precision_score?: number | null
+          recall_score?: number | null
+          thresholds?: Json | null
+          training_data_size?: number | null
+          training_date?: string | null
+          updated_at?: string | null
+          weights?: Json | null
+        }
+        Update: {
+          accuracy?: number | null
+          algorithm?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          f1_score?: number | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          is_production?: boolean | null
+          last_retrained?: string | null
+          model_name?: string
+          model_type?: string
+          model_version?: string | null
+          precision_score?: number | null
+          recall_score?: number | null
+          thresholds?: Json | null
+          training_data_size?: number | null
+          training_date?: string | null
+          updated_at?: string | null
+          weights?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictive_models_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -12833,6 +13757,122 @@ export type Database = {
           },
         ]
       }
+      social_media_automation_logs: {
+        Row: {
+          blog_post_id: string | null
+          company_id: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          platforms_processed: Json
+          posts_created: number | null
+          status: string
+          trigger_type: string
+          updated_at: string | null
+          webhook_response: Json | null
+          webhook_sent: boolean | null
+        }
+        Insert: {
+          blog_post_id?: string | null
+          company_id: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          platforms_processed?: Json
+          posts_created?: number | null
+          status?: string
+          trigger_type: string
+          updated_at?: string | null
+          webhook_response?: Json | null
+          webhook_sent?: boolean | null
+        }
+        Update: {
+          blog_post_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          platforms_processed?: Json
+          posts_created?: number | null
+          status?: string
+          trigger_type?: string
+          updated_at?: string | null
+          webhook_response?: Json | null
+          webhook_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_automation_logs_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_media_automation_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_automation_settings: {
+        Row: {
+          ai_content_generation: boolean | null
+          auto_post_on_publish: boolean | null
+          company_id: string
+          content_templates: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          platforms_enabled: Json | null
+          posting_schedule: Json | null
+          updated_at: string | null
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          ai_content_generation?: boolean | null
+          auto_post_on_publish?: boolean | null
+          company_id: string
+          content_templates?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          platforms_enabled?: Json | null
+          posting_schedule?: Json | null
+          updated_at?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          ai_content_generation?: boolean | null
+          auto_post_on_publish?: boolean | null
+          company_id?: string
+          content_templates?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          platforms_enabled?: Json | null
+          posting_schedule?: Json | null
+          updated_at?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_automation_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_media_post_results: {
         Row: {
           created_at: string | null
@@ -12882,6 +13922,7 @@ export type Database = {
       }
       social_media_posts: {
         Row: {
+          blog_post_id: string | null
           company_id: string
           content: string
           content_type: Database["public"]["Enums"]["content_type"] | null
@@ -12900,6 +13941,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          blog_post_id?: string | null
           company_id: string
           content: string
           content_type?: Database["public"]["Enums"]["content_type"] | null
@@ -12918,6 +13960,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          blog_post_id?: string | null
           company_id?: string
           content?: string
           content_type?: Database["public"]["Enums"]["content_type"] | null
@@ -12936,6 +13979,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "social_media_posts_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "social_media_posts_company_id_fkey"
             columns: ["company_id"]
@@ -14993,6 +16043,10 @@ export type Database = {
               p_source?: string
             }
         Returns: string
+      }
+      calculate_enhanced_lead_score: {
+        Args: { p_lead_id: string }
+        Returns: Json
       }
       calculate_incident_metrics: {
         Args: { p_incident_id: string }
