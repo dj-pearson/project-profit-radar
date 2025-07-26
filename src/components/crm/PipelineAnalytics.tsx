@@ -120,36 +120,44 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
           break;
       }
 
-      // Load deals data
+      // Load deals data without joins to avoid relationship errors
       const { data: dealsData, error: dealsError } = await supabase
         .from("deals")
-        .select(
-          `
-          *,
-          current_stage:pipeline_stages(name, color_code, probability_weight, stage_order)
-        `
-        )
+        .select("*")
         .eq("company_id", userProfile.company_id)
         .gte("created_at", startDate.toISOString())
         .lte("created_at", endDate.toISOString());
 
       if (dealsError) throw dealsError;
 
-      // Load stage history for velocity analysis
+      // Load pipeline stages separately
+      const { data: stagesData, error: stagesError } = await supabase
+        .from("pipeline_stages")
+        .select("*")
+        .eq("company_id", userProfile.company_id);
+
+      if (stagesError) throw stagesError;
+
+      // Create stages lookup map
+      const stagesMap = (stagesData || []).reduce((acc, stage) => {
+        acc[stage.id] = stage;
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Load stage history without complex joins
       const { data: historyData, error: historyError } = await supabase
         .from("deal_stage_history")
-        .select(
-          `
-          *,
-          deal:deals!inner(company_id),
-          to_stage:pipeline_stages(name, stage_order)
-        `
-        )
-        .eq("deal.company_id", userProfile.company_id)
+        .select("*")
         .gte("moved_at", startDate.toISOString())
         .lte("moved_at", endDate.toISOString());
 
       if (historyError) throw historyError;
+
+      // Filter history for company deals
+      const companyDealIds = (dealsData || []).map((deal) => deal.id);
+      const filteredHistory = (historyData || []).filter((history) =>
+        companyDealIds.includes(history.deal_id)
+      );
 
       // Calculate metrics
       const activeDeals = dealsData?.filter((d) => d.status === "active") || [];
@@ -161,7 +169,8 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
         0
       );
       const weightedPipelineValue = activeDeals.reduce((sum, deal) => {
-        const probability = deal.current_stage?.probability_weight || 0;
+        const stage = stagesMap[deal.current_stage_id];
+        const probability = stage?.probability_weight || 0;
         return sum + (deal.estimated_value * probability) / 100;
       }, 0);
 
@@ -175,14 +184,10 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
           ? (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100
           : 0;
 
-      // Calculate velocity by stage
-      const velocityByStage = historyData?.reduce((acc, history) => {
-        const stageName =
-          history.to_stage &&
-          typeof history.to_stage === "object" &&
-          "name" in history.to_stage
-            ? history.to_stage.name
-            : "Unknown";
+      // Calculate velocity by stage using the filtered history
+      const velocityByStage = filteredHistory?.reduce((acc, history) => {
+        const stage = stagesMap[history.to_stage_id];
+        const stageName = stage?.name || "Unknown";
         if (!acc[stageName]) {
           acc[stageName] = { totalDays: 0, count: 0 };
         }
@@ -200,10 +205,11 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
         })
       );
 
-      // Deals by stage
+      // Deals by stage using stages map
       const dealsByStage = activeDeals.reduce((acc, deal) => {
-        const stageName = deal.current_stage?.name || "Unknown";
-        const stageColor = deal.current_stage?.color_code || "#6B7280";
+        const stage = stagesMap[deal.current_stage_id];
+        const stageName = stage?.name || "Unknown";
+        const stageColor = stage?.color_code || "#6B7280";
 
         const existing = acc.find((item) => item.stageName === stageName);
         if (existing) {
@@ -254,10 +260,24 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
         trendData,
       });
     } catch (error: any) {
+      console.error("Pipeline analytics error:", error);
       toast({
         title: "Error loading pipeline analytics",
-        description: error.message,
+        description: "Unable to load analytics data. Please try again.",
         variant: "destructive",
+      });
+      // Set default empty metrics on error
+      setMetrics({
+        totalPipelineValue: 0,
+        weightedPipelineValue: 0,
+        dealsCount: 0,
+        averageDealSize: 0,
+        averageCycleTime: 0,
+        winRate: 0,
+        conversionRate: 0,
+        velocityByStage: [],
+        dealsByStage: [],
+        trendData: [],
       });
     } finally {
       setLoading(false);
