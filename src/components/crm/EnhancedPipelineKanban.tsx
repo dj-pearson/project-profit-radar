@@ -74,6 +74,7 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [dealsByStage, setDealsByStage] = useState<Record<string, Deal[]>>({});
   const [loading, setLoading] = useState(true);
+  const [loadingContacts, setLoadingContacts] = useState(false);
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
   const { userProfile } = useAuth();
@@ -165,38 +166,55 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
 
       setStages(currentStages);
 
-      // Load deals
+      // Load deals without joins to avoid relationship ambiguity
       const { data: dealsData, error: dealsError } = await supabase
         .from("deals")
-        .select(
-          `
-          *,
-          lead:leads(first_name, last_name, company_name),
-          contact:contacts(first_name, last_name, company_name)
-        `
-        )
+        .select("*")
         .eq("company_id", userProfile.company_id)
         .eq("status", "active")
         .order("created_at", { ascending: false });
 
       if (dealsError) throw dealsError;
 
-      // Filter and type-cast the deals data to ensure proper typing
-      const typedDealsData = (dealsData || []).map((deal: any) => ({
-        ...deal,
-        lead:
-          deal.lead &&
-          typeof deal.lead === "object" &&
-          "first_name" in deal.lead
-            ? deal.lead
-            : null,
-        contact:
-          deal.contact &&
-          typeof deal.contact === "object" &&
-          "first_name" in deal.contact
-            ? deal.contact
-            : null,
-      })) as Deal[];
+      // Get unique contact IDs from deals
+      const contactIds =
+        dealsData?.map((deal) => deal.primary_contact_id).filter(Boolean) || [];
+
+      // Load contacts separately if we have contact IDs
+      let contactsMap: Record<string, any> = {};
+      if (contactIds.length > 0) {
+        setLoadingContacts(true);
+        const { data: contactsData, error: contactsError } = await supabase
+          .from("contacts")
+          .select("id, first_name, last_name, company_name, contact_type")
+          .in("id", contactIds);
+
+        if (!contactsError && contactsData) {
+          contactsMap = contactsData.reduce((acc, contact) => {
+            acc[contact.id] = contact;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+        setLoadingContacts(false);
+      }
+
+      // Type-cast the deals data and attach contact information
+      const typedDealsData = (dealsData || []).map((deal: any) => {
+        const contact = deal.primary_contact_id
+          ? contactsMap[deal.primary_contact_id]
+          : null;
+
+        return {
+          ...deal,
+          // If contact is a lead, put it in lead field, otherwise in contact field
+          lead: contact?.contact_type === "lead" ? contact : null,
+          contact:
+            contact?.contact_type === "customer" ||
+            contact?.contact_type === "vendor"
+              ? contact
+              : null,
+        };
+      }) as Deal[];
 
       // Group deals by stage
       const grouped = currentStages.reduce((acc, stage) => {
@@ -216,6 +234,7 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
       });
     } finally {
       setLoading(false);
+      setLoadingContacts(false);
     }
   };
 
@@ -379,19 +398,29 @@ export const EnhancedPipelineKanban: React.FC<EnhancedPipelineKanbanProps> = ({
     if (deal.lead) {
       return `${deal.lead.first_name} ${deal.lead.last_name}`;
     }
-    return "No contact";
+    return "No contact assigned";
   };
 
   const getCompanyName = (deal: Deal) => {
     return (
-      deal.contact?.company_name || deal.lead?.company_name || "Individual"
+      deal.contact?.company_name ||
+      deal.lead?.company_name ||
+      deal.name ||
+      "Construction Project"
     );
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex flex-col items-center space-y-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">
+            {loadingContacts
+              ? "Loading contact information..."
+              : "Loading pipeline data..."}
+          </p>
+        </div>
       </div>
     );
   }
