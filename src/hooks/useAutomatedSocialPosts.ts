@@ -167,7 +167,9 @@ export const useAutomatedSocialPosts = () => {
       if (error) throw error;
 
       setQueue(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Error loading queue:", error);
       toast({
         title: "Error",

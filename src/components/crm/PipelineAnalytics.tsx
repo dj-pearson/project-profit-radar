@@ -1,16 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { formatCurrency } from '@/utils/formatters';
-import { 
-  TrendingUp, 
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatCurrency } from "@/utils/formatters";
+import {
+  TrendingUp,
   TrendingDown,
   Target,
   DollarSign,
@@ -22,23 +34,23 @@ import {
   AlertTriangle,
   CheckCircle,
   Calendar,
-  Users
-} from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  Users,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart as RechartsPieChart,
   Cell,
   LineChart,
   Line,
   Area,
-  AreaChart
-} from 'recharts';
+  AreaChart,
+} from "recharts";
 
 interface PipelineMetrics {
   totalPipelineValue: number;
@@ -73,8 +85,8 @@ interface PipelineAnalyticsProps {
   timeRange?: string;
 }
 
-export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({ 
-  timeRange = '30d' 
+export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
+  timeRange = "30d",
 }) => {
   const [metrics, setMetrics] = useState<PipelineMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,69 +104,85 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
 
       const endDate = new Date();
       const startDate = new Date();
-      
+
       switch (selectedTimeRange) {
-        case '7d':
+        case "7d":
           startDate.setDate(endDate.getDate() - 7);
           break;
-        case '30d':
+        case "30d":
           startDate.setDate(endDate.getDate() - 30);
           break;
-        case '90d':
+        case "90d":
           startDate.setDate(endDate.getDate() - 90);
           break;
-        case '1y':
+        case "1y":
           startDate.setFullYear(endDate.getFullYear() - 1);
           break;
       }
 
       // Load deals data
       const { data: dealsData, error: dealsError } = await supabase
-        .from('deals')
-        .select(`
+        .from("deals")
+        .select(
+          `
           *,
           current_stage:pipeline_stages(name, color_code, probability_weight, stage_order)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+        `
+        )
+        .eq("company_id", userProfile.company_id)
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString());
 
       if (dealsError) throw dealsError;
 
       // Load stage history for velocity analysis
       const { data: historyData, error: historyError } = await supabase
-        .from('deal_stage_history')
-        .select(`
+        .from("deal_stage_history")
+        .select(
+          `
           *,
           deal:deals!inner(company_id),
           to_stage:pipeline_stages(name, stage_order)
-        `)
-        .eq('deal.company_id', userProfile.company_id)
-        .gte('moved_at', startDate.toISOString())
-        .lte('moved_at', endDate.toISOString());
+        `
+        )
+        .eq("deal.company_id", userProfile.company_id)
+        .gte("moved_at", startDate.toISOString())
+        .lte("moved_at", endDate.toISOString());
 
       if (historyError) throw historyError;
 
       // Calculate metrics
-      const activeDeals = dealsData?.filter(d => d.status === 'active') || [];
-      const wonDeals = dealsData?.filter(d => d.status === 'won') || [];
-      const lostDeals = dealsData?.filter(d => d.status === 'lost') || [];
+      const activeDeals = dealsData?.filter((d) => d.status === "active") || [];
+      const wonDeals = dealsData?.filter((d) => d.status === "won") || [];
+      const lostDeals = dealsData?.filter((d) => d.status === "lost") || [];
 
-      const totalPipelineValue = activeDeals.reduce((sum, deal) => sum + deal.estimated_value, 0);
+      const totalPipelineValue = activeDeals.reduce(
+        (sum, deal) => sum + deal.estimated_value,
+        0
+      );
       const weightedPipelineValue = activeDeals.reduce((sum, deal) => {
         const probability = deal.current_stage?.probability_weight || 0;
-        return sum + (deal.estimated_value * probability / 100);
+        return sum + (deal.estimated_value * probability) / 100;
       }, 0);
 
-      const averageDealSize = dealsData?.length ? 
-        dealsData.reduce((sum, deal) => sum + deal.estimated_value, 0) / dealsData.length : 0;
+      const averageDealSize = dealsData?.length
+        ? dealsData.reduce((sum, deal) => sum + deal.estimated_value, 0) /
+          dealsData.length
+        : 0;
 
-      const winRate = wonDeals.length + lostDeals.length > 0 ? 
-        (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100 : 0;
+      const winRate =
+        wonDeals.length + lostDeals.length > 0
+          ? (wonDeals.length / (wonDeals.length + lostDeals.length)) * 100
+          : 0;
 
       // Calculate velocity by stage
       const velocityByStage = historyData?.reduce((acc, history) => {
-        const stageName = history.to_stage?.name || 'Unknown';
+        const stageName =
+          history.to_stage &&
+          typeof history.to_stage === "object" &&
+          "name" in history.to_stage
+            ? history.to_stage.name
+            : "Unknown";
         if (!acc[stageName]) {
           acc[stageName] = { totalDays: 0, count: 0 };
         }
@@ -163,19 +191,21 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
         return acc;
       }, {} as Record<string, { totalDays: number; count: number }>);
 
-      const velocityArray = Object.entries(velocityByStage || {}).map(([stageName, data]) => ({
-        stageName,
-        averageDays: data.count > 0 ? data.totalDays / data.count : 0,
-        dealsCount: data.count,
-        conversionRate: 0 // Calculate based on progression
-      }));
+      const velocityArray = Object.entries(velocityByStage || {}).map(
+        ([stageName, data]) => ({
+          stageName,
+          averageDays: data.count > 0 ? data.totalDays / data.count : 0,
+          dealsCount: data.count,
+          conversionRate: 0, // Calculate based on progression
+        })
+      );
 
       // Deals by stage
       const dealsByStage = activeDeals.reduce((acc, deal) => {
-        const stageName = deal.current_stage?.name || 'Unknown';
-        const stageColor = deal.current_stage?.color_code || '#6B7280';
-        
-        const existing = acc.find(item => item.stageName === stageName);
+        const stageName = deal.current_stage?.name || "Unknown";
+        const stageColor = deal.current_stage?.color_code || "#6B7280";
+
+        const existing = acc.find((item) => item.stageName === stageName);
         if (existing) {
           existing.count += 1;
           existing.value += deal.estimated_value;
@@ -184,7 +214,7 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
             stageName,
             count: 1,
             value: deal.estimated_value,
-            color: stageColor
+            color: stageColor,
           });
         }
         return acc;
@@ -194,18 +224,20 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
       const trendData = Array.from({ length: 30 }, (_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - (29 - i));
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const dayDeals = dealsData?.filter(d => 
-          d.created_at?.split('T')[0] === dateStr
-        ) || [];
-        
+        const dateStr = date.toISOString().split("T")[0];
+
+        const dayDeals =
+          dealsData?.filter((d) => d.created_at?.split("T")[0] === dateStr) ||
+          [];
+
         return {
           date: dateStr,
           created: dayDeals.length,
-          won: dayDeals.filter(d => d.status === 'won').length,
-          lost: dayDeals.filter(d => d.status === 'lost').length,
-          pipeline: dayDeals.filter(d => d.status === 'active').reduce((sum, d) => sum + d.estimated_value, 0)
+          won: dayDeals.filter((d) => d.status === "won").length,
+          lost: dayDeals.filter((d) => d.status === "lost").length,
+          pipeline: dayDeals
+            .filter((d) => d.status === "active")
+            .reduce((sum, d) => sum + d.estimated_value, 0),
         };
       });
 
@@ -219,21 +251,28 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
         conversionRate: 0, // Calculate from funnel
         velocityByStage: velocityArray,
         dealsByStage,
-        trendData
+        trendData,
       });
-
     } catch (error: any) {
       toast({
         title: "Error loading pipeline analytics",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6B7280'];
+  const COLORS = [
+    "#3B82F6",
+    "#EF4444",
+    "#10B981",
+    "#F59E0B",
+    "#8B5CF6",
+    "#EC4899",
+    "#6B7280",
+  ];
 
   if (loading) {
     return (
@@ -259,7 +298,9 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Pipeline Analytics</h2>
-          <p className="text-muted-foreground">Performance insights and trends</p>
+          <p className="text-muted-foreground">
+            Performance insights and trends
+          </p>
         </div>
         <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
           <SelectTrigger className="w-32">
@@ -281,11 +322,17 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
             <div className="flex items-center space-x-2">
               <Target className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Pipeline</p>
-                <p className="text-2xl font-bold">{formatCurrency(metrics.totalPipelineValue)}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Pipeline
+                </p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(metrics.totalPipelineValue)}
+                </p>
                 <div className="flex items-center space-x-1 text-xs text-green-600">
                   <TrendingUp className="h-3 w-3" />
-                  <span>Weighted: {formatCurrency(metrics.weightedPipelineValue)}</span>
+                  <span>
+                    Weighted: {formatCurrency(metrics.weightedPipelineValue)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -297,7 +344,9 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
             <div className="flex items-center space-x-2">
               <Activity className="h-5 w-5 text-purple-600" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Deals</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Active Deals
+                </p>
                 <p className="text-2xl font-bold">{metrics.dealsCount}</p>
                 <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                   <DollarSign className="h-3 w-3" />
@@ -313,8 +362,12 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
             <div className="flex items-center space-x-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Win Rate</p>
-                <p className="text-2xl font-bold">{metrics.winRate.toFixed(1)}%</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Win Rate
+                </p>
+                <p className="text-2xl font-bold">
+                  {metrics.winRate.toFixed(1)}%
+                </p>
                 <Progress value={metrics.winRate} className="h-1 mt-1" />
               </div>
             </div>
@@ -326,8 +379,12 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-orange-600" />
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Cycle Time</p>
-                <p className="text-2xl font-bold">{metrics.averageCycleTime.toFixed(0)}d</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Avg Cycle Time
+                </p>
+                <p className="text-2xl font-bold">
+                  {metrics.averageCycleTime.toFixed(0)}d
+                </p>
                 <div className="text-xs text-muted-foreground">
                   Deal lifecycle
                 </div>
@@ -363,13 +420,19 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="stageName" />
                   <YAxis />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value, name) => [
-                      name === 'averageDays' ? `${Number(value).toFixed(1)} days` : value,
-                      name === 'averageDays' ? 'Average Days' : 'Deals Count'
+                      name === "averageDays"
+                        ? `${Number(value).toFixed(1)} days`
+                        : value,
+                      name === "averageDays" ? "Average Days" : "Deals Count",
                     ]}
                   />
-                  <Bar dataKey="averageDays" fill="#3B82F6" name="averageDays" />
+                  <Bar
+                    dataKey="averageDays"
+                    fill="#3B82F6"
+                    name="averageDays"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -391,7 +454,10 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
                     <Tooltip formatter={(value, name) => [value, name]} />
                     <RechartsPieChart data={metrics.dealsByStage}>
                       {metrics.dealsByStage.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color || COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </RechartsPieChart>
                   </RechartsPieChart>
@@ -406,19 +472,29 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
               <CardContent>
                 <div className="space-y-3">
                   {metrics.dealsByStage.map((stage, index) => (
-                    <div key={stage.stageName} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={stage.stageName}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-3">
-                        <div 
+                        <div
                           className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: stage.color || COLORS[index % COLORS.length] }}
+                          style={{
+                            backgroundColor:
+                              stage.color || COLORS[index % COLORS.length],
+                          }}
                         />
                         <div>
                           <p className="font-medium">{stage.stageName}</p>
-                          <p className="text-sm text-muted-foreground">{stage.count} deals</p>
+                          <p className="text-sm text-muted-foreground">
+                            {stage.count} deals
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(stage.value)}</p>
+                        <p className="font-medium">
+                          {formatCurrency(stage.value)}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {formatCurrency(stage.value / stage.count)} avg
                         </p>
@@ -449,9 +525,30 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Area type="monotone" dataKey="created" stackId="1" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
-                  <Area type="monotone" dataKey="won" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.3} />
-                  <Area type="monotone" dataKey="lost" stackId="1" stroke="#EF4444" fill="#EF4444" fillOpacity={0.3} />
+                  <Area
+                    type="monotone"
+                    dataKey="created"
+                    stackId="1"
+                    stroke="#3B82F6"
+                    fill="#3B82F6"
+                    fillOpacity={0.3}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="won"
+                    stackId="1"
+                    stroke="#10B981"
+                    fill="#10B981"
+                    fillOpacity={0.3}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="lost"
+                    stackId="1"
+                    stroke="#EF4444"
+                    fill="#EF4444"
+                    fillOpacity={0.3}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -476,11 +573,18 @@ export const PipelineAnalytics: React.FC<PipelineAnalyticsProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{stage.stageName}</span>
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-muted-foreground">{stage.dealsCount} deals</span>
-                        <span className="text-sm font-medium">{stage.averageDays.toFixed(1)} days avg</span>
+                        <span className="text-sm text-muted-foreground">
+                          {stage.dealsCount} deals
+                        </span>
+                        <span className="text-sm font-medium">
+                          {stage.averageDays.toFixed(1)} days avg
+                        </span>
                       </div>
                     </div>
-                    <Progress value={(stage.dealsCount / metrics.dealsCount) * 100} className="h-2" />
+                    <Progress
+                      value={(stage.dealsCount / metrics.dealsCount) * 100}
+                      className="h-2"
+                    />
                   </div>
                 ))}
               </div>

@@ -2,13 +2,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HelmetProvider } from 'react-helmet-async';
+import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { usePWA } from "@/hooks/usePWA";
 import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
-import { initializeGoogleAnalytics, trackPageView } from "@/utils/googleAnalyticsSync";
+import {
+  initializeGoogleAnalytics,
+  trackPageView,
+} from "@/utils/googleAnalyticsSync";
 import { RouteGuard } from "@/components/ProtectedRoute";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -91,6 +94,11 @@ import CRMDashboard from "./pages/CRMDashboard";
 import CRMLeads from "./pages/CRMLeads";
 import CRMOpportunities from "./pages/CRMOpportunities";
 import CRMContacts from "./pages/CRMContacts";
+import CRMPipeline from "./pages/CRMPipeline";
+import CRMLeadIntelligence from "./pages/CRMLeadIntelligence";
+import CRMWorkflows from "./pages/CRMWorkflows";
+import CRMCampaigns from "./pages/CRMCampaigns";
+import CRMAnalytics from "./pages/CRMAnalytics";
 import QuickBooksRouting from "./pages/QuickBooksRouting";
 import ProjectsHub from "./pages/hubs/ProjectsHub";
 import FinancialHub from "./pages/hubs/FinancialHub";
@@ -356,7 +364,7 @@ const AppContent = () => {
             <MCPSEOAnalytics />
           </RouteGuard>
         }
-       />
+      />
       <Route
         path="/admin/seo-analytics-legacy"
         element={
@@ -364,7 +372,7 @@ const AppContent = () => {
             <SEOAnalyticsDashboard />
           </RouteGuard>
         }
-       />
+      />
       <Route
         path="/admin/social-media"
         element={
@@ -372,7 +380,7 @@ const AppContent = () => {
             <SocialMediaManager />
           </RouteGuard>
         }
-       />
+      />
       <Route
         path="/admin/support-tickets"
         element={
@@ -380,7 +388,7 @@ const AppContent = () => {
             <SupportTickets />
           </RouteGuard>
         }
-       />
+      />
       <Route
         path="/admin/funnels"
         element={
@@ -388,7 +396,7 @@ const AppContent = () => {
             <FunnelManager />
           </RouteGuard>
         }
-       />
+      />
       <Route
         path="/company-settings"
         element={
@@ -557,29 +565,29 @@ const AppContent = () => {
           </RouteGuard>
         }
       />
-      <Route 
-        path="/knowledge-base" 
+      <Route
+        path="/knowledge-base"
         element={
           <RouteGuard routePath="/knowledge-base">
             <KnowledgeBase />
           </RouteGuard>
-        } 
+        }
       />
-      <Route 
-        path="/knowledge-base/category/:categorySlug" 
+      <Route
+        path="/knowledge-base/category/:categorySlug"
         element={
           <RouteGuard routePath="/knowledge-base">
             <KnowledgeBase />
           </RouteGuard>
-        } 
+        }
       />
-      <Route 
-        path="/knowledge-base/article/:slug" 
+      <Route
+        path="/knowledge-base/article/:slug"
         element={
           <RouteGuard routePath="/knowledge-base">
             <KnowledgeBaseArticle />
           </RouteGuard>
-        } 
+        }
       />
       <Route
         path="/knowledge-base-admin"
@@ -767,6 +775,46 @@ const AppContent = () => {
         }
       />
       <Route
+        path="/crm/pipeline"
+        element={
+          <RouteGuard routePath="/crm/pipeline">
+            <CRMPipeline />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/lead-intelligence"
+        element={
+          <RouteGuard routePath="/crm/lead-intelligence">
+            <CRMLeadIntelligence />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/workflows"
+        element={
+          <RouteGuard routePath="/crm/workflows">
+            <CRMWorkflows />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/campaigns"
+        element={
+          <RouteGuard routePath="/crm/campaigns">
+            <CRMCampaigns />
+          </RouteGuard>
+        }
+      />
+      <Route
+        path="/crm/analytics"
+        element={
+          <RouteGuard routePath="/crm/analytics">
+            <CRMAnalytics />
+          </RouteGuard>
+        }
+      />
+      <Route
         path="/quickbooks-routing"
         element={
           <RouteGuard routePath="/quickbooks-routing">
@@ -849,11 +897,11 @@ const App = () => {
 // Component to track page views
 const PageTracker = () => {
   const location = useLocation();
-  
+
   useEffect(() => {
     trackPageView(location.pathname + location.search);
   }, [location]);
-  
+
   return null;
 };
 
