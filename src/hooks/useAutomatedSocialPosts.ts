@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -96,7 +96,7 @@ export const useAutomatedSocialPosts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userProfile?.company_id, toast]);
 
   // Save configuration
   const saveConfig = async (newConfig: Partial<AutomatedSocialConfig>) => {

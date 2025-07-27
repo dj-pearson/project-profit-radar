@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Filter, 
   Plus, 
@@ -62,6 +63,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
   const [selectedWorkflow, setSelectedWorkflow] = useState<QualificationWorkflow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const { userProfile } = useAuth();
   const { toast } = useToast();
 
   const [newWorkflow, setNewWorkflow] = useState({
@@ -131,7 +133,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
         .from('lead_qualification_workflows')
         .insert({
           ...newWorkflow,
-          company_id: 'your-company-id', // This should come from user context
+          company_id: userProfile?.company_id || '',
           qualification_criteria: qualificationCriteria,
           workflow_steps: workflowSteps,
           trigger_events: ['lead_created', 'lead_updated', 'score_calculated']
