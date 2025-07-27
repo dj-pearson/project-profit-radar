@@ -132,11 +132,15 @@ export const LeadQualificationWorkflows: React.FC = () => {
       const { data, error } = await supabase
         .from('lead_qualification_workflows')
         .insert({
-          ...newWorkflow,
+          workflow_name: newWorkflow.workflow_name,
+          description: newWorkflow.description,
           company_id: userProfile?.company_id || '',
-          qualification_criteria: qualificationCriteria,
-          workflow_steps: workflowSteps,
-          trigger_events: ['lead_created', 'lead_updated', 'score_calculated']
+          qualification_criteria: JSON.stringify(qualificationCriteria),
+          workflow_steps: JSON.stringify(workflowSteps),
+          trigger_events: JSON.stringify(['lead_created', 'lead_updated', 'score_calculated']),
+          is_active: true,
+          requires_approval: newWorkflow.requires_approval || false,
+          auto_route_qualified: newWorkflow.auto_route_qualified || false
         })
         .select()
         .single();
