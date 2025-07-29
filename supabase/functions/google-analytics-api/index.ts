@@ -648,7 +648,6 @@ async function getConversionData(accessToken: string, propertyId: string, reques
     metrics: [
       { name: 'conversions' },
       { name: 'totalRevenue' },
-      { name: 'conversionRate' },
       { name: 'eventCount' }
     ],
     dimensions: [
@@ -676,8 +675,7 @@ async function getConversionData(accessToken: string, propertyId: string, reques
     eventName: row.dimensionValues[0].value,
     conversions: parseInt(row.metricValues[0].value || '0'),
     revenue: parseFloat(row.metricValues[1].value || '0'),
-    conversionRate: parseFloat(row.metricValues[2].value || '0'),
-    eventCount: parseInt(row.metricValues[3].value || '0')
+    eventCount: parseInt(row.metricValues[2].value || '0')
   })).filter(event => event.conversions > 0)
 
   const totalConversions = conversionEvents.reduce((sum, event) => sum + event.conversions, 0)
