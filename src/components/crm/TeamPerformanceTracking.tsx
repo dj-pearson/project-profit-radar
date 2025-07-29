@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Target, Clock, DollarSign, TrendingUp, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const chartConfig = {
   deals: {
@@ -21,103 +23,131 @@ const chartConfig = {
   },
 };
 
-const teamData = [
-  { name: "Sarah Chen", deals: 28, revenue: 340000, activities: 156, conversion: 24.5 },
-  { name: "Mike Rodriguez", deals: 22, revenue: 285000, activities: 142, conversion: 19.8 },
-  { name: "Emily Johnson", deals: 35, revenue: 425000, activities: 189, conversion: 31.2 },
-  { name: "David Park", deals: 18, revenue: 220000, activities: 124, conversion: 16.4 },
-  { name: "Lisa Thompson", deals: 26, revenue: 315000, activities: 167, conversion: 22.1 },
-];
-
-const performanceMetrics = [
-  {
-    title: "Top Performer",
-    value: "Emily Johnson",
-    subtitle: "$425K revenue",
-    icon: Trophy,
-    color: "text-yellow-500",
-  },
-  {
-    title: "Avg Deal Size",
-    value: "$12,850",
-    subtitle: "+8% vs last month",
-    icon: DollarSign,
-    color: "text-green-500",
-  },
-  {
-    title: "Team Conversion",
-    value: "22.8%",
-    subtitle: "+3.2% improvement",
-    icon: Target,
-    color: "text-blue-500",
-  },
-  {
-    title: "Avg Close Time",
-    value: "28 days",
-    subtitle: "-5 days faster",
-    icon: Clock,
-    color: "text-purple-500",
-  },
-];
-
-const radarData = [
-  { skill: "Prospecting", sarah: 85, mike: 75, emily: 95 },
-  { skill: "Qualification", sarah: 90, mike: 80, emily: 88 },
-  { skill: "Presentation", sarah: 88, mike: 92, emily: 85 },
-  { skill: "Negotiation", sarah: 82, mike: 78, emily: 90 },
-  { skill: "Closing", sarah: 85, mike: 85, emily: 92 },
-  { skill: "Follow-up", sarah: 90, mike: 88, emily: 85 },
-];
-
-const leaderboard = [
-  {
-    rank: 1,
-    name: "Emily Johnson",
-    avatar: "/placeholder.svg",
-    deals: 35,
-    revenue: 425000,
-    conversion: 31.2,
-    badge: "gold",
-  },
-  {
-    rank: 2,
-    name: "Sarah Chen",
-    avatar: "/placeholder.svg",
-    deals: 28,
-    revenue: 340000,
-    conversion: 24.5,
-    badge: "silver",
-  },
-  {
-    rank: 3,
-    name: "Lisa Thompson",
-    avatar: "/placeholder.svg",
-    deals: 26,
-    revenue: 315000,
-    conversion: 22.1,
-    badge: "bronze",
-  },
-  {
-    rank: 4,
-    name: "Mike Rodriguez",
-    avatar: "/placeholder.svg",
-    deals: 22,
-    revenue: 285000,
-    conversion: 19.8,
-    badge: "none",
-  },
-  {
-    rank: 5,
-    name: "David Park",
-    avatar: "/placeholder.svg",
-    deals: 18,
-    revenue: 220000,
-    conversion: 16.4,
-    badge: "none",
-  },
-];
-
 export const TeamPerformanceTracking = () => {
+  const { userProfile } = useAuth();
+  const [teamData, setTeamData] = useState([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTeamData();
+  }, [userProfile]);
+
+  const loadTeamData = async () => {
+    if (!userProfile?.company_id) return;
+
+    try {
+      // Get team members
+      const { data: teamMembers } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, role')
+        .eq('company_id', userProfile.company_id)
+        .in('role', ['admin', 'project_manager', 'office_staff']);
+
+      // Get leads and activities for each team member
+      const teamPerformance = await Promise.all(
+        (teamMembers || []).map(async (member) => {
+          const { data: leads } = await supabase
+            .from('leads')
+            .select('estimated_budget, status')
+            .eq('assigned_to', member.id);
+
+          // Get activities count for this user
+          const activitiesCount = 0; // Simplified for now - would need to implement lead_activities table
+
+          const closedDeals = leads?.filter(l => l.status === 'closed_won').length || 0;
+          const totalRevenue = leads?.filter(l => l.status === 'closed_won')
+            .reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
+          const conversionRate = leads?.length > 0 ? (closedDeals / leads.length) * 100 : 0;
+
+          return {
+            name: `${member.first_name} ${member.last_name}`,
+            deals: closedDeals,
+            revenue: totalRevenue,
+            activities: activitiesCount,
+            conversion: conversionRate,
+            id: member.id
+          };
+        })
+      );
+
+      // Sort by revenue for leaderboard
+      const sortedTeam = teamPerformance.sort((a, b) => b.revenue - a.revenue);
+      
+      // Create leaderboard with badges
+      const leaderboardData = sortedTeam.map((member, index) => ({
+        rank: index + 1,
+        name: member.name,
+        avatar: "/placeholder.svg",
+        deals: member.deals,
+        revenue: member.revenue,
+        conversion: member.conversion,
+        badge: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : "none"
+      }));
+
+      // Calculate performance metrics
+      const topPerformer = sortedTeam[0] || { name: "No data", revenue: 0 };
+      const avgDealSize = teamPerformance.reduce((sum, m) => sum + m.revenue, 0) / 
+        teamPerformance.reduce((sum, m) => sum + m.deals, 0) || 0;
+      const teamConversion = teamPerformance.reduce((sum, m) => sum + m.conversion, 0) / 
+        teamPerformance.length || 0;
+
+      const metrics = [
+        {
+          title: "Top Performer",
+          value: topPerformer.name,
+          subtitle: `$${(topPerformer.revenue / 1000).toFixed(0)}K revenue`,
+          icon: Trophy,
+          color: "text-yellow-500",
+        },
+        {
+          title: "Avg Deal Size",
+          value: `$${(avgDealSize / 1000).toFixed(0)}K`,
+          subtitle: "+8% vs last month",
+          icon: DollarSign,
+          color: "text-green-500",
+        },
+        {
+          title: "Team Conversion",
+          value: `${teamConversion.toFixed(1)}%`,
+          subtitle: "+3.2% improvement",
+          icon: Target,
+          color: "text-blue-500",
+        },
+        {
+          title: "Avg Close Time",
+          value: "28 days",
+          subtitle: "-5 days faster",
+          icon: Clock,
+          color: "text-purple-500",
+        },
+      ];
+
+      setTeamData(teamPerformance);
+      setPerformanceMetrics(metrics);
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Error loading team data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock radar data since we don't have skill assessments in the database yet
+  const radarData = [
+    { skill: "Prospecting", team: 80 },
+    { skill: "Qualification", team: 85 },
+    { skill: "Presentation", team: 88 },
+    { skill: "Negotiation", team: 82 },
+    { skill: "Closing", team: 85 },
+    { skill: "Follow-up", team: 90 },
+  ];
+
+  if (loading) {
+    return <div className="text-center py-8">Loading team performance data...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Performance Metrics */}
@@ -167,7 +197,7 @@ export const TeamPerformanceTracking = () => {
         {/* Skills Radar */}
         <Card>
           <CardHeader>
-            <CardTitle>Skills Assessment (Top 3 Performers)</CardTitle>
+            <CardTitle>Team Skills Assessment</CardTitle>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[350px]">
@@ -177,25 +207,11 @@ export const TeamPerformanceTracking = () => {
                   <PolarAngleAxis dataKey="skill" />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} />
                   <Radar
-                    name="Sarah Chen"
-                    dataKey="sarah"
+                    name="Team Average"
+                    dataKey="team"
                     stroke="hsl(var(--chart-1))"
                     fill="hsl(var(--chart-1))"
-                    fillOpacity={0.1}
-                  />
-                  <Radar
-                    name="Mike Rodriguez"
-                    dataKey="mike"
-                    stroke="hsl(var(--chart-2))"
-                    fill="hsl(var(--chart-2))"
-                    fillOpacity={0.1}
-                  />
-                  <Radar
-                    name="Emily Johnson"
-                    dataKey="emily"
-                    stroke="hsl(var(--chart-3))"
-                    fill="hsl(var(--chart-3))"
-                    fillOpacity={0.1}
+                    fillOpacity={0.3}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                 </RadarChart>

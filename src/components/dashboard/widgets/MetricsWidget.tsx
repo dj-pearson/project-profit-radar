@@ -23,49 +23,84 @@ export const MetricsWidget = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      // Calculate basic metrics
-      const { data: projects } = await supabase
-        .from('projects')
-        .select('status, budget, completion_percentage')
+      // Calculate basic metrics from CRM data
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('status, estimated_budget, created_at')
         .eq('company_id', userProfile.company_id);
 
-      const { data: changeOrders } = await supabase
-        .from('change_orders')
-        .select('amount, project:projects!inner(company_id)')
-        .eq('project.company_id', userProfile.company_id);
+      const { data: activities } = await supabase
+        .from('lead_activities')
+        .select('id, created_at')
+        .eq('company_id', userProfile.company_id);
 
-      const activeProjects = projects?.filter(p => ['active', 'in_progress'].includes(p.status)) || [];
-      const completedProjects = projects?.filter(p => p.status === 'completed') || [];
-      const totalBudget = projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
-      const avgCompletion = projects?.length 
-        ? projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length 
+      // Calculate current month vs previous month for trends
+      const currentDate = new Date();
+      const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const previousMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      const previousMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
+
+      const currentMonthLeads = leads?.filter(l => new Date(l.created_at) >= currentMonthStart) || [];
+      const previousMonthLeads = leads?.filter(l => {
+        const date = new Date(l.created_at);
+        return date >= previousMonthStart && date <= previousMonthEnd;
+      }) || [];
+
+      const currentMonthActivities = activities?.filter(a => new Date(a.created_at) >= currentMonthStart) || [];
+      const previousMonthActivities = activities?.filter(a => {
+        const date = new Date(a.created_at);
+        return date >= previousMonthStart && date <= previousMonthEnd;
+      }) || [];
+
+      // Calculate metrics
+      const activeLeads = leads?.filter(l => ['new', 'qualified', 'proposal', 'negotiation'].includes(l.status)).length || 0;
+      const previousActiveLeads = previousMonthLeads.filter(l => ['new', 'qualified', 'proposal', 'negotiation'].includes(l.status)).length || 0;
+
+      const conversionRate = leads?.length > 0 
+        ? (leads.filter(l => l.status === 'closed_won').length / leads.length) * 100 
         : 0;
-      const totalChangeOrders = changeOrders?.reduce((sum, co) => sum + (co.amount || 0), 0) || 0;
+      const previousConversionRate = previousMonthLeads?.length > 0 
+        ? (previousMonthLeads.filter(l => l.status === 'closed_won').length / previousMonthLeads.length) * 100 
+        : 0;
+
+      const totalPipeline = leads?.filter(l => ['qualified', 'proposal', 'negotiation'].includes(l.status))
+        .reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
+      const previousPipeline = previousMonthLeads?.filter(l => ['qualified', 'proposal', 'negotiation'].includes(l.status))
+        .reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
+
+      const totalActivities = currentMonthActivities.length;
+      const previousActivities = previousMonthActivities.length;
+
+      // Calculate percentage changes
+      const leadsChange = previousActiveLeads > 0 ? ((activeLeads - previousActiveLeads) / previousActiveLeads) * 100 : 0;
+      const conversionChange = previousConversionRate > 0 ? conversionRate - previousConversionRate : 0;
+      const pipelineChange = previousPipeline > 0 ? ((totalPipeline - previousPipeline) / previousPipeline) * 100 : 0;
+      const activitiesChange = previousActivities > 0 ? ((totalActivities - previousActivities) / previousActivities) * 100 : 0;
 
       const calculatedMetrics: Metric[] = [
         {
-          label: 'Active Projects',
-          value: activeProjects.length.toString(),
-          change: 0, // TODO: Calculate vs last period
-          changeType: 'neutral'
+          label: 'Active Leads',
+          value: activeLeads.toString(),
+          change: Math.abs(leadsChange),
+          changeType: leadsChange > 0 ? 'positive' : leadsChange < 0 ? 'negative' : 'neutral'
         },
         {
-          label: 'Avg Completion',
-          value: `${Math.round(avgCompletion)}%`,
-          change: 0,
-          changeType: 'neutral'
+          label: 'Conversion Rate',
+          value: `${conversionRate.toFixed(1)}%`,
+          change: Math.abs(conversionChange),
+          changeType: conversionChange > 0 ? 'positive' : conversionChange < 0 ? 'negative' : 'neutral'
         },
         {
-          label: 'Total Budget',
-          value: `$${(totalBudget / 1000).toFixed(0)}K`,
-          change: 0,
-          changeType: 'neutral'
+          label: 'Pipeline Value',
+          value: `$${(totalPipeline / 1000).toFixed(0)}K`,
+          change: Math.abs(pipelineChange),
+          changeType: pipelineChange > 0 ? 'positive' : pipelineChange < 0 ? 'negative' : 'neutral'
         },
         {
-          label: 'Change Orders',
-          value: `$${(totalChangeOrders / 1000).toFixed(0)}K`,
-          change: 0,
-          changeType: 'neutral'
+          label: 'Activities',
+          value: totalActivities.toString(),
+          change: Math.abs(activitiesChange),
+          changeType: activitiesChange > 0 ? 'positive' : activitiesChange < 0 ? 'negative' : 'neutral'
         }
       ];
 

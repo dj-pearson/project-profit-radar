@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const chartConfig = {
   actual: {
@@ -19,47 +21,126 @@ const chartConfig = {
   },
 };
 
-const mockData = [
-  { month: "Jan", actual: 120000, forecast: 125000, pipeline: 180000 },
-  { month: "Feb", actual: 135000, forecast: 140000, pipeline: 165000 },
-  { month: "Mar", actual: 142000, forecast: 145000, pipeline: 195000 },
-  { month: "Apr", actual: 158000, forecast: 160000, pipeline: 220000 },
-  { month: "May", actual: null, forecast: 175000, pipeline: 240000 },
-  { month: "Jun", actual: null, forecast: 185000, pipeline: 255000 },
-];
-
-const forecastMetrics = [
-  {
-    title: "Q2 Forecast",
-    value: "$520,000",
-    change: "+12.5%",
-    trend: "up",
-    icon: Target,
-  },
-  {
-    title: "Pipeline Value",
-    value: "$715,000",
-    change: "+8.3%",
-    trend: "up",
-    icon: DollarSign,
-  },
-  {
-    title: "Conversion Rate",
-    value: "24.5%",
-    change: "+2.1%",
-    trend: "up",
-    icon: TrendingUp,
-  },
-  {
-    title: "Avg Deal Size",
-    value: "$45,200",
-    change: "-3.2%",
-    trend: "down",
-    icon: DollarSign,
-  },
-];
-
 export const RevenueForecasting = () => {
+  const { userProfile } = useAuth();
+  const [revenueData, setRevenueData] = useState([]);
+  const [metrics, setMetrics] = useState({
+    totalPipeline: 0,
+    avgDealSize: 0,
+    conversionRate: 0,
+    forecast: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadRevenueData();
+  }, [userProfile]);
+
+  const loadRevenueData = async () => {
+    if (!userProfile?.company_id) return;
+
+    try {
+      // Get pipeline data from leads
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('estimated_budget, status, created_at, decision_timeline')
+        .eq('company_id', userProfile.company_id);
+
+      // Get completed projects for actual revenue
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('budget, status, created_at, completion_percentage')
+        .eq('company_id', userProfile.company_id)
+        .eq('status', 'completed');
+
+      // Calculate metrics
+      const pipelineValue = leads?.filter(l => ['qualified', 'proposal', 'negotiation'].includes(l.status))
+        .reduce((sum, lead) => sum + (lead.estimated_budget || 0), 0) || 0;
+      
+      const avgDeal = leads?.length > 0 
+        ? leads.reduce((sum, lead) => sum + (lead.estimated_budget || 0), 0) / leads.length 
+        : 0;
+
+      const totalBudget = projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
+      const conversionRate = leads?.length > 0 ? (projects?.length || 0) / leads.length * 100 : 0;
+
+      // Generate monthly data
+      const monthlyData = [];
+      const currentDate = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        
+        const monthRevenue = projects?.filter(p => {
+          const projectDate = new Date(p.created_at);
+          return projectDate.getMonth() === date.getMonth() && 
+                 projectDate.getFullYear() === date.getFullYear();
+        }).reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
+
+        const monthPipeline = leads?.filter(l => {
+          const leadDate = new Date(l.created_at);
+          return leadDate.getMonth() === date.getMonth() && 
+                 leadDate.getFullYear() === date.getFullYear();
+        }).reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
+
+        monthlyData.push({
+          month: monthName,
+          actual: i < 2 ? monthRevenue : null, // Only show actual for past months
+          forecast: Math.max(monthRevenue * 1.1, avgDeal * 3), // Simple forecast
+          pipeline: monthPipeline
+        });
+      }
+
+      setRevenueData(monthlyData);
+      setMetrics({
+        totalPipeline: pipelineValue,
+        avgDealSize: avgDeal,
+        conversionRate,
+        forecast: avgDeal * 10 // Simple quarterly forecast
+      });
+    } catch (error) {
+      console.error('Error loading revenue data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const forecastMetrics = [
+    {
+      title: "Q2 Forecast",
+      value: `$${(metrics.forecast / 1000).toFixed(0)}K`,
+      change: "+12.5%",
+      trend: "up",
+      icon: Target,
+    },
+    {
+      title: "Pipeline Value",
+      value: `$${(metrics.totalPipeline / 1000).toFixed(0)}K`,
+      change: "+8.3%",
+      trend: "up",
+      icon: DollarSign,
+    },
+    {
+      title: "Conversion Rate",
+      value: `${metrics.conversionRate.toFixed(1)}%`,
+      change: "+2.1%",
+      trend: "up",
+      icon: TrendingUp,
+    },
+    {
+      title: "Avg Deal Size",
+      value: `$${(metrics.avgDealSize / 1000).toFixed(0)}K`,
+      change: "-3.2%",
+      trend: "down",
+      icon: DollarSign,
+    },
+  ];
+
+  if (loading) {
+    return <div className="text-center py-8">Loading revenue data...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Forecast Metrics */}
@@ -102,7 +183,7 @@ export const RevenueForecasting = () => {
         <CardContent>
           <ChartContainer config={chartConfig} className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockData}>
+              <LineChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />

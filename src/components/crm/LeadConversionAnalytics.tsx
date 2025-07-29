@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel, LabelList } from "recharts";
 import { Users, UserCheck, Clock, Target } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const chartConfig = {
   leads: {
@@ -19,59 +21,128 @@ const chartConfig = {
   },
 };
 
-const conversionData = [
-  { month: "Jan", leads: 120, qualified: 85, converted: 18 },
-  { month: "Feb", leads: 135, qualified: 92, converted: 22 },
-  { month: "Mar", leads: 142, qualified: 98, converted: 24 },
-  { month: "Apr", leads: 158, qualified: 110, converted: 28 },
-  { month: "May", leads: 165, qualified: 118, converted: 31 },
-  { month: "Jun", leads: 172, qualified: 125, converted: 34 },
-];
-
-const sourceData = [
-  { name: "Website", value: 35, color: "hsl(var(--chart-1))" },
-  { name: "Referrals", value: 28, color: "hsl(var(--chart-2))" },
-  { name: "Social Media", value: 20, color: "hsl(var(--chart-3))" },
-  { name: "Email", value: 12, color: "hsl(var(--chart-4))" },
-  { name: "Other", value: 5, color: "hsl(var(--chart-5))" },
-];
-
-const funnelData = [
-  { name: "Leads", value: 1000, fill: "hsl(var(--chart-1))" },
-  { name: "Qualified", value: 680, fill: "hsl(var(--chart-2))" },
-  { name: "Proposal", value: 340, fill: "hsl(var(--chart-3))" },
-  { name: "Negotiation", value: 170, fill: "hsl(var(--chart-4))" },
-  { name: "Closed Won", value: 85, fill: "hsl(var(--chart-5))" },
-];
-
-const conversionMetrics = [
-  {
-    title: "Lead-to-Customer",
-    value: "8.5%",
-    change: "+1.2%",
-    icon: Target,
-  },
-  {
-    title: "Avg. Time to Close",
-    value: "32 days",
-    change: "-3 days",
-    icon: Clock,
-  },
-  {
-    title: "Qualification Rate",
-    value: "68%",
-    change: "+5%",
-    icon: UserCheck,
-  },
-  {
-    title: "Monthly Leads",
-    value: "172",
-    change: "+4%",
-    icon: Users,
-  },
-];
-
 export const LeadConversionAnalytics = () => {
+  const { userProfile } = useAuth();
+  const [conversionData, setConversionData] = useState([]);
+  const [sourceData, setSourceData] = useState([]);
+  const [funnelData, setFunnelData] = useState([]);
+  const [conversionMetrics, setConversionMetrics] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadConversionData();
+  }, [userProfile]);
+
+  const loadConversionData = async () => {
+    if (!userProfile?.company_id) return;
+
+    try {
+      // Get all leads for the company
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('status, lead_source, created_at, estimated_budget')
+        .eq('company_id', userProfile.company_id);
+
+      // Generate monthly conversion data
+      const monthlyData = [];
+      const currentDate = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        
+        const monthLeads = leads?.filter(l => {
+          const leadDate = new Date(l.created_at);
+          return leadDate.getMonth() === date.getMonth() && 
+                 leadDate.getFullYear() === date.getFullYear();
+        }) || [];
+
+        const qualified = monthLeads.filter(l => ['qualified', 'proposal', 'negotiation', 'closed_won'].includes(l.status)).length;
+        const converted = monthLeads.filter(l => l.status === 'closed_won').length;
+
+        monthlyData.push({
+          month: monthName,
+          leads: monthLeads.length,
+          qualified,
+          converted
+        });
+      }
+
+      // Calculate lead sources
+      const sourceCounts = {};
+      leads?.forEach(lead => {
+        const source = lead.lead_source || 'Other';
+        sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+      });
+
+      const sourceChartData = Object.entries(sourceCounts).map(([name, value], index) => ({
+        name,
+        value,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`
+      }));
+
+      // Calculate funnel data
+      const totalLeads = leads?.length || 0;
+      const qualifiedLeads = leads?.filter(l => ['qualified', 'proposal', 'negotiation', 'closed_won'].includes(l.status)).length || 0;
+      const proposalLeads = leads?.filter(l => ['proposal', 'negotiation', 'closed_won'].includes(l.status)).length || 0;
+      const negotiationLeads = leads?.filter(l => ['negotiation', 'closed_won'].includes(l.status)).length || 0;
+      const closedWonLeads = leads?.filter(l => l.status === 'closed_won').length || 0;
+
+      const funnelChartData = [
+        { name: "Leads", value: totalLeads, fill: "hsl(var(--chart-1))" },
+        { name: "Qualified", value: qualifiedLeads, fill: "hsl(var(--chart-2))" },
+        { name: "Proposal", value: proposalLeads, fill: "hsl(var(--chart-3))" },
+        { name: "Negotiation", value: negotiationLeads, fill: "hsl(var(--chart-4))" },
+        { name: "Closed Won", value: closedWonLeads, fill: "hsl(var(--chart-5))" },
+      ];
+
+      // Calculate metrics
+      const conversionRate = totalLeads > 0 ? (closedWonLeads / totalLeads) * 100 : 0;
+      const qualificationRate = totalLeads > 0 ? (qualifiedLeads / totalLeads) * 100 : 0;
+      const currentMonthLeads = monthlyData[monthlyData.length - 1]?.leads || 0;
+
+      const metrics = [
+        {
+          title: "Lead-to-Customer",
+          value: `${conversionRate.toFixed(1)}%`,
+          change: "+1.2%",
+          icon: Target,
+        },
+        {
+          title: "Avg. Time to Close",
+          value: "32 days",
+          change: "-3 days",
+          icon: Clock,
+        },
+        {
+          title: "Qualification Rate",
+          value: `${qualificationRate.toFixed(0)}%`,
+          change: "+5%",
+          icon: UserCheck,
+        },
+        {
+          title: "Monthly Leads",
+          value: currentMonthLeads.toString(),
+          change: "+4%",
+          icon: Users,
+        },
+      ];
+
+      setConversionData(monthlyData);
+      setSourceData(sourceChartData);
+      setFunnelData(funnelChartData);
+      setConversionMetrics(metrics);
+    } catch (error) {
+      console.error('Error loading conversion data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading conversion analytics...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Conversion Metrics */}

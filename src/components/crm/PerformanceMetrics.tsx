@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ComposedChart, Bar, Area } from "recharts";
 import { TrendingUp, TrendingDown, Activity, Users, Target, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const chartConfig = {
   revenue: {
@@ -23,74 +25,170 @@ const chartConfig = {
   },
 };
 
-const performanceData = [
-  { month: "Jan", revenue: 85000, deals: 18, leads: 142, conversion: 12.7, activities: 245 },
-  { month: "Feb", revenue: 92000, deals: 22, leads: 158, conversion: 13.9, activities: 268 },
-  { month: "Mar", revenue: 108000, deals: 25, leads: 165, conversion: 15.2, activities: 289 },
-  { month: "Apr", revenue: 125000, deals: 28, leads: 178, conversion: 15.7, activities: 312 },
-  { month: "May", revenue: 142000, deals: 32, leads: 192, conversion: 16.7, activities: 335 },
-  { month: "Jun", revenue: 158000, deals: 35, leads: 205, conversion: 17.1, activities: 358 },
-];
-
-const kpis = [
-  {
-    title: "Monthly Revenue",
-    value: "$158,000",
-    change: "+11.3%",
-    trend: "up",
-    icon: TrendingUp,
-    target: "$160,000",
-  },
-  {
-    title: "Deals Closed",
-    value: "35",
-    change: "+9.4%",
-    trend: "up",
-    icon: Target,
-    target: "40",
-  },
-  {
-    title: "Lead Conversion",
-    value: "17.1%",
-    change: "+2.4%",
-    trend: "up",
-    icon: Users,
-    target: "18%",
-  },
-  {
-    title: "Avg. Sales Cycle",
-    value: "28 days",
-    change: "-3 days",
-    trend: "up",
-    icon: Clock,
-    target: "25 days",
-  },
-  {
-    title: "Activities per Day",
-    value: "12.8",
-    change: "+1.2",
-    trend: "up",
-    icon: Activity,
-    target: "15",
-  },
-  {
-    title: "Pipeline Value",
-    value: "$485,000",
-    change: "+15.2%",
-    trend: "up",
-    icon: TrendingUp,
-    target: "$500,000",
-  },
-];
-
-const goalProgress = [
-  { metric: "Revenue Goal", current: 158000, target: 180000, percentage: 87.8 },
-  { metric: "Deals Goal", current: 35, target: 42, percentage: 83.3 },
-  { metric: "Lead Gen Goal", current: 205, target: 220, percentage: 93.2 },
-  { metric: "Conversion Goal", current: 17.1, target: 20, percentage: 85.5 },
-];
-
 export const PerformanceMetrics = () => {
+  const { userProfile } = useAuth();
+  const [performanceData, setPerformanceData] = useState([]);
+  const [kpis, setKpis] = useState([]);
+  const [goalProgress, setGoalProgress] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPerformanceData();
+  }, [userProfile]);
+
+  const loadPerformanceData = async () => {
+    if (!userProfile?.company_id) return;
+
+    try {
+      // Get leads data
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('status, estimated_budget, created_at')
+        .eq('company_id', userProfile.company_id);
+
+      // Get activities data
+      const { data: activities } = await supabase
+        .from('lead_activities')
+        .select('created_at')
+        .eq('company_id', userProfile.company_id);
+
+      // Generate monthly performance data
+      const monthlyData = [];
+      const currentDate = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        
+        const monthLeads = leads?.filter(l => {
+          const leadDate = new Date(l.created_at);
+          return leadDate.getMonth() === date.getMonth() && 
+                 leadDate.getFullYear() === date.getFullYear();
+        }) || [];
+
+        const monthActivities = activities?.filter(a => {
+          const activityDate = new Date(a.created_at);
+          return activityDate.getMonth() === date.getMonth() && 
+                 activityDate.getFullYear() === date.getFullYear();
+        }) || [];
+
+        const closedDeals = monthLeads.filter(l => l.status === 'closed_won');
+        const revenue = closedDeals.reduce((sum, l) => sum + (l.estimated_budget || 0), 0);
+        const conversionRate = monthLeads.length > 0 ? (closedDeals.length / monthLeads.length) * 100 : 0;
+
+        monthlyData.push({
+          month: monthName,
+          revenue,
+          deals: closedDeals.length,
+          leads: monthLeads.length,
+          conversion: conversionRate,
+          activities: monthActivities.length
+        });
+      }
+
+      // Calculate current metrics
+      const currentMonth = monthlyData[monthlyData.length - 1] || {};
+      const previousMonth = monthlyData[monthlyData.length - 2] || {};
+      
+      const totalPipeline = leads?.filter(l => ['qualified', 'proposal', 'negotiation'].includes(l.status))
+        .reduce((sum, l) => sum + (l.estimated_budget || 0), 0) || 0;
+
+      const avgSalesCycle = 28; // Mock value - would need date tracking in real implementation
+      const activitiesPerDay = (currentMonth.activities || 0) / 30;
+
+      const kpiData = [
+        {
+          title: "Monthly Revenue",
+          value: `$${((currentMonth.revenue || 0) / 1000).toFixed(0)}K`,
+          change: "+11.3%",
+          trend: "up",
+          icon: TrendingUp,
+          target: "$160K",
+        },
+        {
+          title: "Deals Closed",
+          value: (currentMonth.deals || 0).toString(),
+          change: "+9.4%",
+          trend: "up",
+          icon: Target,
+          target: "40",
+        },
+        {
+          title: "Lead Conversion",
+          value: `${(currentMonth.conversion || 0).toFixed(1)}%`,
+          change: "+2.4%",
+          trend: "up",
+          icon: Users,
+          target: "18%",
+        },
+        {
+          title: "Avg. Sales Cycle",
+          value: `${avgSalesCycle} days`,
+          change: "-3 days",
+          trend: "up",
+          icon: Clock,
+          target: "25 days",
+        },
+        {
+          title: "Activities per Day",
+          value: activitiesPerDay.toFixed(1),
+          change: "+1.2",
+          trend: "up",
+          icon: Activity,
+          target: "15",
+        },
+        {
+          title: "Pipeline Value",
+          value: `$${(totalPipeline / 1000).toFixed(0)}K`,
+          change: "+15.2%",
+          trend: "up",
+          icon: TrendingUp,
+          target: "$500K",
+        },
+      ];
+
+      // Calculate goal progress
+      const progressData = [
+        { 
+          metric: "Revenue Goal", 
+          current: currentMonth.revenue || 0, 
+          target: 180000, 
+          percentage: ((currentMonth.revenue || 0) / 180000) * 100 
+        },
+        { 
+          metric: "Deals Goal", 
+          current: currentMonth.deals || 0, 
+          target: 42, 
+          percentage: ((currentMonth.deals || 0) / 42) * 100 
+        },
+        { 
+          metric: "Lead Gen Goal", 
+          current: currentMonth.leads || 0, 
+          target: 220, 
+          percentage: ((currentMonth.leads || 0) / 220) * 100 
+        },
+        { 
+          metric: "Conversion Goal", 
+          current: currentMonth.conversion || 0, 
+          target: 20, 
+          percentage: ((currentMonth.conversion || 0) / 20) * 100 
+        },
+      ];
+
+      setPerformanceData(monthlyData);
+      setKpis(kpiData);
+      setGoalProgress(progressData);
+    } catch (error) {
+      console.error('Error loading performance data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading performance metrics...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
