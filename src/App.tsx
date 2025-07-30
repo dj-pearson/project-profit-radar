@@ -1,5 +1,3 @@
-import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,8 +13,9 @@ import {
   trackPageView,
 } from "@/utils/googleAnalyticsSync";
 import { RouteGuard } from "@/components/ProtectedRoute";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useHashScroll } from "@/hooks/useHashScroll";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -124,10 +123,9 @@ import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  // Temporarily removed problematic hooks
-  // usePWA();
-  // useGoogleAnalytics();
-  // useHashScroll();
+  usePWA();
+  useGoogleAnalytics(); // Enable automatic page view tracking
+  useHashScroll(); // Enable hash scrolling for anchor links
 
   return (
     <Routes>
@@ -872,39 +870,37 @@ const AppContent = () => {
 };
 
 const App = () => {
-  // Temporarily remove useEffect
-  // useEffect(() => {
-  //   initializeGoogleAnalytics();
-  // }, []);
+  useEffect(() => {
+    initializeGoogleAnalytics();
+  }, []);
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ErrorBoundary>
-          <ThemeProvider>
-            <AuthProvider>
-              <HelmetProvider>
-                <BrowserRouter>
-                  <PageTracker />
-                  <AppContent />
-                </BrowserRouter>
-              </HelmetProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <HelmetProvider>
+              <BrowserRouter>
+                <PageTracker />
+                <AppContent />
+              </BrowserRouter>
+            </HelmetProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
 // Component to track page views
 const PageTracker = () => {
-  // Temporarily disable location tracking
-  // const location = useLocation();
+  const location = useLocation();
 
-  // useEffect(() => {
-  //   trackPageView(location.pathname + location.search);
-  // }, [location]);
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
 
   return null;
 };
