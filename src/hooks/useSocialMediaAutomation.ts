@@ -83,6 +83,7 @@ export const useSocialMediaAutomation = () => {
       setLoading(true);
 
       const settingsData = {
+        ...(settings?.id && { id: settings.id }), // Include ID if updating existing record
         company_id: userProfile.company_id,
         created_by: userProfile.id,
         ...newSettings,
