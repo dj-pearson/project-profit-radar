@@ -91,23 +91,15 @@ export const useSocialMediaAutomation = () => {
         platforms_enabled: JSON.stringify(newSettings.platforms_enabled || [])
       };
 
-      let result;
-      if (settings?.id) {
-        // Update existing settings
-        result = await supabase
-          .from("social_media_automation_settings")
-          .update(settingsData)
-          .eq("id", settings.id)
-          .select()
-          .single();
-      } else {
-        // Create new settings
-        result = await supabase
-          .from("social_media_automation_settings")
-          .insert(settingsData)
-          .select()
-          .single();
-      }
+      // Use UPSERT to handle both insert and update cases
+      const result = await supabase
+        .from("social_media_automation_settings")
+        .upsert(settingsData, {
+          onConflict: 'company_id',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
 
       if (result.error) throw result.error;
 
