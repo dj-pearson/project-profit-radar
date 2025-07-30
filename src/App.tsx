@@ -1,3 +1,5 @@
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,9 +15,8 @@ import {
   trackPageView,
 } from "@/utils/googleAnalyticsSync";
 import { RouteGuard } from "@/components/ProtectedRoute";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { useHashScroll } from "@/hooks/useHashScroll";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -875,22 +876,26 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <HelmetProvider>
-              <BrowserRouter>
-                <PageTracker />
-                <AppContent />
-              </BrowserRouter>
-            </HelmetProvider>
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <HelmetProvider>
+                  <BrowserRouter>
+                    <PageTracker />
+                    <AppContent />
+                  </BrowserRouter>
+                </HelmetProvider>
+              </TooltipProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
