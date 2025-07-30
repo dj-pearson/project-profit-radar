@@ -226,17 +226,19 @@ const MCPSEODashboard: React.FC = () => {
       };
 
       // Process keywords from Google
-      const keywordsList = (googleKeywords.data || []).map((kw: any) => ({
+      const keywordsData = googleKeywords?.data?.keywords || googleKeywords?.data || [];
+      const keywordsList = Array.isArray(keywordsData) ? keywordsData.map((kw: any) => ({
         ...kw,
         trend: 'stable' as const
-      }));
+      })) : [];
       
       // Process pages from Google
-      const pagesList = (googlePages.data || []).map((page: any) => ({
+      const pagesData = googlePages?.data?.pages || googlePages?.data || [];
+      const pagesList = Array.isArray(pagesData) ? pagesData.map((page: any) => ({
         ...page,
-        users: Math.floor(page.clicks * 1.2),
-        pageViews: Math.floor(page.clicks * 1.5)
-      }));
+        users: Math.floor((page.clicks || 0) * 1.2),
+        pageViews: Math.floor((page.clicks || 0) * 1.5)
+      })) : [];
 
       setMetrics(combinedMetrics);
       setTopKeywords(keywordsList);

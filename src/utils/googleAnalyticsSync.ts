@@ -8,7 +8,7 @@ export const initializeGoogleAnalytics = async () => {
       .from('seo_configurations')
       .select('google_analytics_id')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error || !seoConfig?.google_analytics_id) {
       console.log('No Google Analytics ID found in SEO configuration');
