@@ -881,16 +881,14 @@ const App = () => {
         <ErrorBoundary>
           <ThemeProvider>
             <AuthProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <HelmetProvider>
-                  <BrowserRouter>
-                    <PageTracker />
-                    <AppContent />
-                  </BrowserRouter>
-                </HelmetProvider>
-              </TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <HelmetProvider>
+                <BrowserRouter>
+                  <PageTracker />
+                  <AppContent />
+                </BrowserRouter>
+              </HelmetProvider>
             </AuthProvider>
           </ThemeProvider>
         </ErrorBoundary>
