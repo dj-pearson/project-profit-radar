@@ -95,7 +95,10 @@ export const useSocialMediaAutomation = () => {
       // Use UPSERT to handle both insert and update cases
       const result = await supabase
         .from("social_media_automation_settings")
-        .upsert(settingsData)
+        .upsert(settingsData, { 
+          onConflict: 'company_id',
+          ignoreDuplicates: false 
+        })
         .select()
         .single();
 
