@@ -1,1 +1,154 @@
- 
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const logStep = (step: string, data?: any) => {
+  console.log(`[CRON Social Scheduler] ${step}:`, data || "");
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    logStep("CRON social scheduler started");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Find all active configurations where it's time to post
+    const { data: dueConfigs, error: configError } = await supabaseClient
+      .from("automated_social_posts_config")
+      .select("*")
+      .eq("enabled", true)
+      .eq("auto_schedule", true)
+      .lt("next_post_at", new Date().toISOString());
+
+    if (configError) {
+      throw new Error(
+        `Error fetching due configurations: ${configError.message}`
+      );
+    }
+
+    if (!dueConfigs || dueConfigs.length === 0) {
+      logStep("No posts due at this time");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "No posts due at this time",
+          processed: 0,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    logStep(`Found ${dueConfigs.length} configurations due for posting`);
+
+    const results: any[] = [];
+
+    for (const config of dueConfigs) {
+      try {
+        logStep(`Processing config for company ${config.company_id}`);
+
+        // Call the social-post-scheduler function for this company
+        const { data: schedulerResult, error: schedulerError } =
+          await supabaseClient.functions.invoke("social-post-scheduler", {
+            body: {
+              company_id: config.company_id,
+              manual_trigger: false, // This is a scheduled trigger
+            },
+          });
+
+        if (schedulerError) {
+          logStep(
+            `Error calling scheduler for company ${config.company_id}`,
+            schedulerError
+          );
+
+          results.push({
+            company_id: config.company_id,
+            success: false,
+            error: schedulerError.message,
+          });
+          continue;
+        }
+
+        // Update config with next post time
+        const nextPostTime = new Date();
+        nextPostTime.setHours(
+          nextPostTime.getHours() + config.post_interval_hours
+        );
+
+        await supabaseClient
+          .from("automated_social_posts_config")
+          .update({
+            next_post_at: nextPostTime.toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", config.id);
+
+        results.push({
+          company_id: config.company_id,
+          success: true,
+          next_post_at: nextPostTime.toISOString(),
+          scheduler_result: schedulerResult,
+        });
+
+        logStep(
+          `Successfully processed config for company ${config.company_id}`
+        );
+      } catch (error) {
+        logStep(
+          `Error processing config for company ${config.company_id}`,
+          error
+        );
+        results.push({
+          company_id: config.company_id,
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+
+    logStep(`CRON scheduler completed, processed ${results.length} configurations`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        processed: results.length,
+        results,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", errorMessage);
+
+    return new Response(
+      JSON.stringify({
+        error: errorMessage,
+        success: false,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+});

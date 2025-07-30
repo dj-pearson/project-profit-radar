@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -28,7 +29,6 @@ serve(async (req) => {
         requestBody = await req.json();
       }
     } catch (e) {
-      // If no valid JSON body, continue with empty object
       logStep("Failed to parse request body", e);
     }
 
@@ -47,7 +47,6 @@ serve(async (req) => {
     let configError;
 
     if (manual_trigger && targetCompanyId) {
-      // For manual triggers, get the specific company's config regardless of next_post_at
       logStep("Manual trigger detected for company", targetCompanyId);
 
       const result = await supabaseClient
@@ -64,6 +63,7 @@ serve(async (req) => {
         .from("automated_social_posts_config")
         .select("*")
         .eq("enabled", true)
+        .eq("auto_schedule", true)
         .lt("next_post_at", new Date().toISOString());
 
       dueConfigs = result.data;
@@ -222,17 +222,17 @@ serve(async (req) => {
           .eq("id", selectedContent.id);
 
         // Update config with next post time (only for scheduled posts, not manual triggers)
-        let nextPostTime;
+        let nextPostTime = null;
         if (!manual_trigger) {
+          const intervalHours = config.post_interval_hours || 48; // Default to 48 hours
           nextPostTime = new Date();
-          nextPostTime.setHours(
-            nextPostTime.getHours() + config.post_interval_hours
-          );
+          nextPostTime.setHours(nextPostTime.getHours() + intervalHours);
 
           await supabaseClient
             .from("automated_social_posts_config")
             .update({
               next_post_at: nextPostTime.toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .eq("id", config.id);
         }
@@ -242,11 +242,12 @@ serve(async (req) => {
           content_topic: selectedContent.topic,
           queue_id: queueEntry.id,
           next_post_at: nextPostTime ? nextPostTime.toISOString() : null,
+          interval_hours: config.post_interval_hours || 48,
           success: true,
         });
 
         logStep(
-          `Successfully processed config for company ${config.company_id}`
+          `Successfully processed config for company ${config.company_id} with ${config.post_interval_hours || 48}h interval`
         );
       } catch (error) {
         logStep(

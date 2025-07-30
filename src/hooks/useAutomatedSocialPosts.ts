@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
@@ -54,9 +55,7 @@ export const useAutomatedSocialPosts = () => {
   const [loading, setLoading] = useState(false);
   const [config, setConfig] = useState<AutomatedSocialConfig | null>(null);
   const [queue, setQueue] = useState<AutomatedSocialQueue[]>([]);
-  const [contentLibrary, setContentLibrary] = useState<ContentLibraryItem[]>(
-    []
-  );
+  const [contentLibrary, setContentLibrary] = useState<ContentLibraryItem[]>([]);
 
   // Load configuration
   const loadConfig = useCallback(async () => {
@@ -72,7 +71,6 @@ export const useAutomatedSocialPosts = () => {
         .single();
 
       if (error && error.code !== "PGRST116") {
-        // PGRST116 is "no rows returned"
         throw error;
       }
 
@@ -80,7 +78,7 @@ export const useAutomatedSocialPosts = () => {
         data || {
           company_id: userProfile.company_id,
           enabled: false,
-          post_interval_hours: 24,
+          post_interval_hours: 48, // Default to 48 hours
           content_types: ["features", "benefits", "knowledge"],
           platforms: ["twitter", "linkedin", "facebook", "instagram"],
           auto_schedule: true,
@@ -98,62 +96,8 @@ export const useAutomatedSocialPosts = () => {
     }
   }, [userProfile?.company_id, toast]);
 
-  // Save configuration
-  const saveConfig = async (newConfig: Partial<AutomatedSocialConfig>) => {
-    if (!userProfile?.company_id) return;
-
-    try {
-      setLoading(true);
-
-      const configData = {
-        ...config,
-        ...newConfig,
-        company_id: userProfile.company_id,
-      };
-
-      let result;
-      if (config?.id) {
-        // Update existing
-        result = await supabase
-          .from("automated_social_posts_config")
-          .update(configData)
-          .eq("id", config.id)
-          .select()
-          .single();
-      } else {
-        // Create new
-        result = await supabase
-          .from("automated_social_posts_config")
-          .insert(configData)
-          .select()
-          .single();
-      }
-
-      if (result.error) throw result.error;
-
-      setConfig(result.data);
-
-      toast({
-        title: "Success",
-        description: "Automation settings saved successfully",
-      });
-
-      return result.data;
-    } catch (error: any) {
-      console.error("Error saving automated social config:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save automation settings",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Load queue
-  const loadQueue = async () => {
+  const loadQueue = useCallback(async () => {
     if (!userProfile?.company_id) return;
 
     try {
@@ -186,10 +130,10 @@ export const useAutomatedSocialPosts = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [userProfile?.company_id, toast]);
 
   // Load content library
-  const loadContentLibrary = async () => {
+  const loadContentLibrary = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("automated_social_content_library")
@@ -208,6 +152,58 @@ export const useAutomatedSocialPosts = () => {
         description: "Failed to load content library",
         variant: "destructive",
       });
+    }
+  }, [toast]);
+
+  // Save configuration
+  const saveConfig = async (newConfig: Partial<AutomatedSocialConfig>) => {
+    if (!userProfile?.company_id) return;
+
+    try {
+      setLoading(true);
+
+      const configData = {
+        ...config,
+        ...newConfig,
+        company_id: userProfile.company_id,
+      };
+
+      let result;
+      if (config?.id) {
+        result = await supabase
+          .from("automated_social_posts_config")
+          .update(configData)
+          .eq("id", config.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from("automated_social_posts_config")
+          .insert(configData)
+          .select()
+          .single();
+      }
+
+      if (result.error) throw result.error;
+
+      setConfig(result.data);
+
+      toast({
+        title: "Success",
+        description: "Automation settings saved successfully",
+      });
+
+      return result.data;
+    } catch (error: any) {
+      console.error("Error saving automated social config:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save automation settings",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -284,14 +280,14 @@ export const useAutomatedSocialPosts = () => {
     }
   };
 
-  // Load initial data
+  // Load initial data only when company_id changes
   useEffect(() => {
     if (userProfile?.company_id) {
       loadConfig();
       loadQueue();
       loadContentLibrary();
     }
-  }, [userProfile?.company_id, loadConfig, loadQueue, loadContentLibrary]);
+  }, [userProfile?.company_id]);
 
   return {
     config,
