@@ -124,9 +124,10 @@ import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  usePWA();
-  useGoogleAnalytics(); // Enable automatic page view tracking
-  useHashScroll(); // Enable hash scrolling for anchor links
+  // Temporarily removed problematic hooks
+  // usePWA();
+  // useGoogleAnalytics();
+  // useHashScroll();
 
   return (
     <Routes>
@@ -871,9 +872,10 @@ const AppContent = () => {
 };
 
 const App = () => {
-  useEffect(() => {
-    initializeGoogleAnalytics();
-  }, []);
+  // Temporarily remove useEffect
+  // useEffect(() => {
+  //   initializeGoogleAnalytics();
+  // }, []);
 
   return (
     <ErrorBoundary>
@@ -881,8 +883,6 @@ const App = () => {
         <ErrorBoundary>
           <ThemeProvider>
             <AuthProvider>
-              <Toaster />
-              <Sonner />
               <HelmetProvider>
                 <BrowserRouter>
                   <PageTracker />
@@ -899,11 +899,12 @@ const App = () => {
 
 // Component to track page views
 const PageTracker = () => {
-  const location = useLocation();
+  // Temporarily disable location tracking
+  // const location = useLocation();
 
-  useEffect(() => {
-    trackPageView(location.pathname + location.search);
-  }, [location]);
+  // useEffect(() => {
+  //   trackPageView(location.pathname + location.search);
+  // }, [location]);
 
   return null;
 };
