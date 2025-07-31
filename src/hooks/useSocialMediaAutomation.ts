@@ -82,10 +82,18 @@ export const useSocialMediaAutomation = () => {
     try {
       setLoading(true);
 
-      // If we have existing settings, update them; otherwise insert new ones
-      if (settings?.id) {
+      // First, check if a record exists for this company
+      const { data: existingRecord } = await supabase
+        .from("social_media_automation_settings")
+        .select("*")
+        .eq("company_id", userProfile.company_id)
+        .maybeSingle();
+
+      let result;
+      
+      if (existingRecord) {
         // Update existing record
-        const result = await supabase
+        result = await supabase
           .from("social_media_automation_settings")
           .update({
             ...newSettings,
@@ -93,26 +101,9 @@ export const useSocialMediaAutomation = () => {
             posting_schedule: JSON.stringify(newSettings.posting_schedule || {}),
             platforms_enabled: JSON.stringify(newSettings.platforms_enabled || [])
           })
-          .eq('id', settings.id)
+          .eq('company_id', userProfile.company_id)
           .select()
           .single();
-
-        if (result.error) throw result.error;
-
-        if (result.data) {
-          setSettings({
-            ...result.data,
-            platforms_enabled: Array.isArray(result.data.platforms_enabled) 
-              ? result.data.platforms_enabled.map(String) 
-              : [],
-            content_templates: typeof result.data.content_templates === 'object' && result.data.content_templates !== null
-              ? result.data.content_templates as Record<string, unknown>
-              : {},
-            posting_schedule: typeof result.data.posting_schedule === 'object' && result.data.posting_schedule !== null
-              ? result.data.posting_schedule as Record<string, unknown>
-              : {}
-          });
-        }
       } else {
         // Insert new record
         const settingsData = {
@@ -124,28 +115,28 @@ export const useSocialMediaAutomation = () => {
           platforms_enabled: JSON.stringify(newSettings.platforms_enabled || [])
         };
 
-        const result = await supabase
+        result = await supabase
           .from("social_media_automation_settings")
           .insert(settingsData)
           .select()
           .single();
+      }
 
-        if (result.error) throw result.error;
+      if (result.error) throw result.error;
 
-        if (result.data) {
-          setSettings({
-            ...result.data,
-            platforms_enabled: Array.isArray(result.data.platforms_enabled) 
-              ? result.data.platforms_enabled.map(String) 
-              : [],
-            content_templates: typeof result.data.content_templates === 'object' && result.data.content_templates !== null
-              ? result.data.content_templates as Record<string, unknown>
-              : {},
-            posting_schedule: typeof result.data.posting_schedule === 'object' && result.data.posting_schedule !== null
-              ? result.data.posting_schedule as Record<string, unknown>
-              : {}
-          });
-        }
+      if (result.data) {
+        setSettings({
+          ...result.data,
+          platforms_enabled: Array.isArray(result.data.platforms_enabled) 
+            ? result.data.platforms_enabled.map(String) 
+            : [],
+          content_templates: typeof result.data.content_templates === 'object' && result.data.content_templates !== null
+            ? result.data.content_templates as Record<string, unknown>
+            : {},
+          posting_schedule: typeof result.data.posting_schedule === 'object' && result.data.posting_schedule !== null
+            ? result.data.posting_schedule as Record<string, unknown>
+            : {}
+        });
       }
 
       toast({
