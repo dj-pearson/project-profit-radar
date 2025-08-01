@@ -16431,6 +16431,10 @@ export type Database = {
           | { p_document_id: string; p_version_data: Json }
         Returns: string
       }
+      decrypt_stripe_key: {
+        Args: { encrypted_key: string }
+        Returns: string
+      }
       generate_affiliate_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -16621,6 +16625,16 @@ export type Database = {
               p_metadata?: Json
             }
         Returns: string
+      }
+      log_sensitive_data_access: {
+        Args: {
+          p_company_id: string
+          p_user_id: string
+          p_resource_type: string
+          p_resource_id: string
+          p_access_type?: string
+        }
+        Returns: undefined
       }
       publish_scheduled_blog_posts: {
         Args: Record<PropertyKey, never>
