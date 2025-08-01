@@ -11,11 +11,48 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STORE-STRIPE-KEYS] ${step}${detailsStr}`);
 };
 
-// Simple encryption function (in production, use proper encryption)
-const encryptKey = (key: string): string => {
-  // In a real implementation, use proper encryption with a master key
-  // For now, we'll use base64 encoding as a placeholder
-  return btoa(key);
+// SECURITY: Strong AES-256-GCM encryption for sensitive data
+const encryptKey = async (key: string): Promise<string> => {
+  try {
+    // Get encryption key from environment (should be 32 bytes for AES-256)
+    const encryptionKey = Deno.env.get("STRIPE_ENCRYPTION_KEY");
+    if (!encryptionKey) {
+      throw new Error("STRIPE_ENCRYPTION_KEY environment variable not set");
+    }
+
+    // Convert the encryption key to bytes
+    const keyBuffer = new TextEncoder().encode(encryptionKey.padEnd(32, '0').slice(0, 32));
+    
+    // Generate a random IV (12 bytes for GCM)
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    // Import the key for AES-GCM
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyBuffer,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt"]
+    );
+    
+    // Encrypt the data
+    const encodedData = new TextEncoder().encode(key);
+    const encryptedData = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      cryptoKey,
+      encodedData
+    );
+    
+    // Combine IV and encrypted data, then base64 encode
+    const combined = new Uint8Array(iv.length + encryptedData.byteLength);
+    combined.set(iv);
+    combined.set(new Uint8Array(encryptedData), iv.length);
+    
+    return btoa(String.fromCharCode(...combined));
+  } catch (error) {
+    logStep("ERROR encrypting key", { error: error.message });
+    throw new Error("Failed to encrypt key securely");
+  }
 };
 
 serve(async (req) => {
@@ -51,9 +88,9 @@ serve(async (req) => {
 
     logStep("Request data received", { company_id, hasSecretKey: !!secret_key, hasWebhookSecret: !!webhook_secret });
 
-    // Encrypt the sensitive keys
-    const encryptedSecretKey = encryptKey(secret_key);
-    const encryptedWebhookSecret = webhook_secret ? encryptKey(webhook_secret) : null;
+    // Encrypt the sensitive keys using strong AES-256-GCM encryption
+    const encryptedSecretKey = await encryptKey(secret_key);
+    const encryptedWebhookSecret = webhook_secret ? await encryptKey(webhook_secret) : null;
 
     // Update the company payment settings with encrypted keys
     const { error: updateError } = await supabaseClient
