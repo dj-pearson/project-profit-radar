@@ -97,9 +97,10 @@ export const useSocialMediaAutomation = () => {
           .from("social_media_automation_settings")
           .update({
             ...newSettings,
-            content_templates: JSON.stringify(newSettings.content_templates || {}),
-            posting_schedule: JSON.stringify(newSettings.posting_schedule || {}),
-            platforms_enabled: JSON.stringify(newSettings.platforms_enabled || [])
+            // Cast to Json type for Supabase
+            content_templates: (newSettings.content_templates || {}) as any,
+            posting_schedule: (newSettings.posting_schedule || {}) as any,
+            platforms_enabled: (newSettings.platforms_enabled || []) as any
           })
           .eq('company_id', userProfile.company_id)
           .select()
@@ -110,9 +111,10 @@ export const useSocialMediaAutomation = () => {
           company_id: userProfile.company_id,
           created_by: userProfile.id,
           ...newSettings,
-          content_templates: JSON.stringify(newSettings.content_templates || {}),
-          posting_schedule: JSON.stringify(newSettings.posting_schedule || {}),
-          platforms_enabled: JSON.stringify(newSettings.platforms_enabled || [])
+          // Cast to Json type for Supabase
+          content_templates: (newSettings.content_templates || {}) as any,
+          posting_schedule: (newSettings.posting_schedule || {}) as any,
+          platforms_enabled: (newSettings.platforms_enabled || []) as any
         };
 
         result = await supabase
