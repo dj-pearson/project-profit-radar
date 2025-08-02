@@ -44,33 +44,41 @@ export const SecurityAuditPanel: React.FC = () => {
 
       if (metricsError) throw metricsError;
 
-      // Transform metrics data
+      // Transform metrics data with proper typing
+      const metrics = metricsData as {
+        failed_logins_24h?: number;
+        critical_alerts?: number;
+        total_alerts?: number;
+        resolution_rate?: number;
+        avg_resolution_time_hours?: number;
+      };
+
       const securityMetrics: SecurityMetric[] = [
         {
           name: 'Failed Login Attempts (24h)',
-          status: metricsData?.failed_logins_24h > 10 ? 'critical' : metricsData?.failed_logins_24h > 5 ? 'warning' : 'good',
-          value: metricsData?.failed_logins_24h?.toString() || '0',
+          status: (metrics?.failed_logins_24h || 0) > 10 ? 'critical' : (metrics?.failed_logins_24h || 0) > 5 ? 'warning' : 'good',
+          value: (metrics?.failed_logins_24h || 0).toString(),
           description: 'Recent failed authentication attempts',
           lastChecked: new Date().toISOString()
         },
         {
           name: 'Security Alerts (30d)',
-          status: metricsData?.critical_alerts > 0 ? 'critical' : metricsData?.total_alerts > 5 ? 'warning' : 'good',
-          value: `${metricsData?.total_alerts || 0} (${metricsData?.critical_alerts || 0} critical)`,
+          status: (metrics?.critical_alerts || 0) > 0 ? 'critical' : (metrics?.total_alerts || 0) > 5 ? 'warning' : 'good',
+          value: `${metrics?.total_alerts || 0} (${metrics?.critical_alerts || 0} critical)`,
           description: 'Security incidents and violations',
           lastChecked: new Date().toISOString()
         },
         {
           name: 'Alert Resolution Rate',
-          status: metricsData?.resolution_rate < 70 ? 'critical' : metricsData?.resolution_rate < 90 ? 'warning' : 'good',
-          value: `${metricsData?.resolution_rate || 0}%`,
+          status: (metrics?.resolution_rate || 0) < 70 ? 'critical' : (metrics?.resolution_rate || 0) < 90 ? 'warning' : 'good',
+          value: `${metrics?.resolution_rate || 0}%`,
           description: 'Percentage of resolved security alerts',
           lastChecked: new Date().toISOString()
         },
         {
           name: 'Average Resolution Time',
-          status: metricsData?.avg_resolution_time_hours > 24 ? 'critical' : metricsData?.avg_resolution_time_hours > 12 ? 'warning' : 'good',
-          value: `${metricsData?.avg_resolution_time_hours || 0}h`,
+          status: (metrics?.avg_resolution_time_hours || 0) > 24 ? 'critical' : (metrics?.avg_resolution_time_hours || 0) > 12 ? 'warning' : 'good',
+          value: `${metrics?.avg_resolution_time_hours || 0}h`,
           description: 'Time taken to resolve security incidents',
           lastChecked: new Date().toISOString()
         }
@@ -91,7 +99,7 @@ export const SecurityAuditPanel: React.FC = () => {
       const transformedAlerts: SecurityAlert[] = (alertsData || []).map(alert => ({
         id: alert.id,
         type: alert.alert_type,
-        severity: alert.severity,
+        severity: alert.severity as 'low' | 'medium' | 'high' | 'critical',
         title: alert.title,
         description: alert.description || '',
         timestamp: alert.triggered_at,
