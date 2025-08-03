@@ -13755,6 +13755,320 @@ export type Database = {
           },
         ]
       }
+      scaling_assessments: {
+        Row: {
+          assessment_data: Json
+          assessment_type: string
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          current_score: number
+          due_date: string | null
+          id: string
+          priority_level: string
+          recommendations: Json
+          status: string
+          target_score: number
+          updated_at: string
+        }
+        Insert: {
+          assessment_data?: Json
+          assessment_type: string
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_score: number
+          due_date?: string | null
+          id?: string
+          priority_level?: string
+          recommendations?: Json
+          status?: string
+          target_score: number
+          updated_at?: string
+        }
+        Update: {
+          assessment_data?: Json
+          assessment_type?: string
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_score?: number
+          due_date?: string | null
+          id?: string
+          priority_level?: string
+          recommendations?: Json
+          status?: string
+          target_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scaling_guidance: {
+        Row: {
+          applicable_company_size: string
+          common_pitfalls: Json | null
+          created_at: string
+          description: string
+          detailed_guidance: string
+          estimated_timeframe: string | null
+          expected_roi: string | null
+          guidance_category: string
+          id: string
+          implementation_difficulty: string
+          industry_focus: string[] | null
+          investment_required: string | null
+          is_active: boolean
+          prerequisites: Json | null
+          priority_score: number | null
+          related_guidance_ids: string[] | null
+          step_by_step_guide: Json | null
+          success_indicators: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applicable_company_size: string
+          common_pitfalls?: Json | null
+          created_at?: string
+          description: string
+          detailed_guidance: string
+          estimated_timeframe?: string | null
+          expected_roi?: string | null
+          guidance_category: string
+          id?: string
+          implementation_difficulty?: string
+          industry_focus?: string[] | null
+          investment_required?: string | null
+          is_active?: boolean
+          prerequisites?: Json | null
+          priority_score?: number | null
+          related_guidance_ids?: string[] | null
+          step_by_step_guide?: Json | null
+          success_indicators?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applicable_company_size?: string
+          common_pitfalls?: Json | null
+          created_at?: string
+          description?: string
+          detailed_guidance?: string
+          estimated_timeframe?: string | null
+          expected_roi?: string | null
+          guidance_category?: string
+          id?: string
+          implementation_difficulty?: string
+          industry_focus?: string[] | null
+          investment_required?: string | null
+          is_active?: boolean
+          prerequisites?: Json | null
+          priority_score?: number | null
+          related_guidance_ids?: string[] | null
+          step_by_step_guide?: Json | null
+          success_indicators?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scaling_milestones: {
+        Row: {
+          achievement_date: string | null
+          company_id: string
+          created_at: string
+          current_value: number | null
+          description: string | null
+          difficulty_level: string
+          id: string
+          is_achieved: boolean
+          milestone_category: string
+          milestone_name: string
+          prerequisites: Json | null
+          success_metrics: Json | null
+          target_date: string | null
+          target_value: number | null
+          unit_type: string
+          updated_at: string
+        }
+        Insert: {
+          achievement_date?: string | null
+          company_id: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          difficulty_level?: string
+          id?: string
+          is_achieved?: boolean
+          milestone_category: string
+          milestone_name: string
+          prerequisites?: Json | null
+          success_metrics?: Json | null
+          target_date?: string | null
+          target_value?: number | null
+          unit_type?: string
+          updated_at?: string
+        }
+        Update: {
+          achievement_date?: string | null
+          company_id?: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          difficulty_level?: string
+          id?: string
+          is_achieved?: boolean
+          milestone_category?: string
+          milestone_name?: string
+          prerequisites?: Json | null
+          success_metrics?: Json | null
+          target_date?: string | null
+          target_value?: number | null
+          unit_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scaling_plans: {
+        Row: {
+          action_items: Json
+          actual_completion_date: string | null
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          current_stage: string
+          description: string | null
+          expected_revenue_increase: number | null
+          id: string
+          key_objectives: Json
+          plan_name: string
+          plan_status: string
+          risk_factors: Json | null
+          start_date: string | null
+          success_metrics: Json | null
+          target_completion_date: string | null
+          target_stage: string
+          timeline_months: number
+          total_investment_budget: number | null
+          updated_at: string
+        }
+        Insert: {
+          action_items?: Json
+          actual_completion_date?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          current_stage: string
+          description?: string | null
+          expected_revenue_increase?: number | null
+          id?: string
+          key_objectives?: Json
+          plan_name: string
+          plan_status?: string
+          risk_factors?: Json | null
+          start_date?: string | null
+          success_metrics?: Json | null
+          target_completion_date?: string | null
+          target_stage: string
+          timeline_months: number
+          total_investment_budget?: number | null
+          updated_at?: string
+        }
+        Update: {
+          action_items?: Json
+          actual_completion_date?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_stage?: string
+          description?: string | null
+          expected_revenue_increase?: number | null
+          id?: string
+          key_objectives?: Json
+          plan_name?: string
+          plan_status?: string
+          risk_factors?: Json | null
+          start_date?: string | null
+          success_metrics?: Json | null
+          target_completion_date?: string | null
+          target_stage?: string
+          timeline_months?: number
+          total_investment_budget?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scaling_progress: {
+        Row: {
+          baseline_value: number
+          company_id: string
+          created_at: string
+          current_value: number
+          data_source: string | null
+          id: string
+          measurement_date: string
+          measurement_unit: string
+          metric_name: string
+          metric_type: string
+          notes: string | null
+          progress_percentage: number | null
+          scaling_plan_id: string | null
+          target_value: number
+          updated_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          baseline_value: number
+          company_id: string
+          created_at?: string
+          current_value: number
+          data_source?: string | null
+          id?: string
+          measurement_date?: string
+          measurement_unit: string
+          metric_name: string
+          metric_type: string
+          notes?: string | null
+          progress_percentage?: number | null
+          scaling_plan_id?: string | null
+          target_value: number
+          updated_at?: string
+          verified_by?: string | null
+        }
+        Update: {
+          baseline_value?: number
+          company_id?: string
+          created_at?: string
+          current_value?: number
+          data_source?: string | null
+          id?: string
+          measurement_date?: string
+          measurement_unit?: string
+          metric_name?: string
+          metric_type?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          scaling_plan_id?: string | null
+          target_value?: number
+          updated_at?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scaling_progress_scaling_plan_id_fkey"
+            columns: ["scaling_plan_id"]
+            isOneToOne: false
+            referencedRelation: "scaling_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_alerts: {
         Row: {
           acknowledged_at: string | null
