@@ -10114,6 +10114,116 @@ export type Database = {
           },
         ]
       }
+      optimized_resource_assignments: {
+        Row: {
+          allocation_percentage: number | null
+          applied_at: string | null
+          applied_by: string | null
+          assignment_type: string | null
+          availability_score: number | null
+          breakdown_time_minutes: number | null
+          company_id: string
+          confidence_score: number | null
+          constraints_applied: Json | null
+          cost_impact: number | null
+          created_at: string
+          efficiency_score: number | null
+          feedback_notes: string | null
+          feedback_rating: number | null
+          id: string
+          is_applied: boolean | null
+          optimization_reason: string | null
+          optimization_run_id: string
+          optimized_end_datetime: string
+          optimized_start_datetime: string
+          original_end_datetime: string | null
+          original_start_datetime: string | null
+          priority_level: number | null
+          project_id: string
+          resource_id: string
+          resource_type: string
+          setup_time_minutes: number | null
+          skill_match_score: number | null
+          task_id: string | null
+          travel_time_minutes: number | null
+          weather_impact_considered: boolean | null
+        }
+        Insert: {
+          allocation_percentage?: number | null
+          applied_at?: string | null
+          applied_by?: string | null
+          assignment_type?: string | null
+          availability_score?: number | null
+          breakdown_time_minutes?: number | null
+          company_id: string
+          confidence_score?: number | null
+          constraints_applied?: Json | null
+          cost_impact?: number | null
+          created_at?: string
+          efficiency_score?: number | null
+          feedback_notes?: string | null
+          feedback_rating?: number | null
+          id?: string
+          is_applied?: boolean | null
+          optimization_reason?: string | null
+          optimization_run_id: string
+          optimized_end_datetime: string
+          optimized_start_datetime: string
+          original_end_datetime?: string | null
+          original_start_datetime?: string | null
+          priority_level?: number | null
+          project_id: string
+          resource_id: string
+          resource_type: string
+          setup_time_minutes?: number | null
+          skill_match_score?: number | null
+          task_id?: string | null
+          travel_time_minutes?: number | null
+          weather_impact_considered?: boolean | null
+        }
+        Update: {
+          allocation_percentage?: number | null
+          applied_at?: string | null
+          applied_by?: string | null
+          assignment_type?: string | null
+          availability_score?: number | null
+          breakdown_time_minutes?: number | null
+          company_id?: string
+          confidence_score?: number | null
+          constraints_applied?: Json | null
+          cost_impact?: number | null
+          created_at?: string
+          efficiency_score?: number | null
+          feedback_notes?: string | null
+          feedback_rating?: number | null
+          id?: string
+          is_applied?: boolean | null
+          optimization_reason?: string | null
+          optimization_run_id?: string
+          optimized_end_datetime?: string
+          optimized_start_datetime?: string
+          original_end_datetime?: string | null
+          original_start_datetime?: string | null
+          priority_level?: number | null
+          project_id?: string
+          resource_id?: string
+          resource_type?: string
+          setup_time_minutes?: number | null
+          skill_match_score?: number | null
+          task_id?: string | null
+          travel_time_minutes?: number | null
+          weather_impact_considered?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "optimized_resource_assignments_optimization_run_id_fkey"
+            columns: ["optimization_run_id"]
+            isOneToOne: false
+            referencedRelation: "resource_optimization_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       osha_compliance_deadlines: {
         Row: {
           company_id: string
@@ -13610,6 +13720,411 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_availability_patterns: {
+        Row: {
+          company_id: string
+          confidence_score: number | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          last_validated_at: string | null
+          pattern_data: Json
+          pattern_type: string
+          resource_id: string
+          resource_type: string
+          updated_at: string
+          usage_frequency: number | null
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          pattern_data?: Json
+          pattern_type: string
+          resource_id: string
+          resource_type: string
+          updated_at?: string
+          usage_frequency?: number | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          pattern_data?: Json
+          pattern_type?: string
+          resource_id?: string
+          resource_type?: string
+          updated_at?: string
+          usage_frequency?: number | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      resource_conflicts: {
+        Row: {
+          ai_recommendation: string | null
+          auto_resolvable: boolean | null
+          business_impact_score: number | null
+          capacity_available: number | null
+          capacity_required: number | null
+          company_id: string
+          conflict_end_datetime: string
+          conflict_start_datetime: string
+          conflict_type: string
+          created_at: string
+          detected_at: string
+          escalation_reason: string | null
+          human_review_required: boolean | null
+          id: string
+          optimization_run_id: string | null
+          overlap_duration_minutes: number | null
+          primary_project_id: string
+          primary_task_id: string | null
+          priority_score: number | null
+          resolution_applied: boolean | null
+          resolution_details: Json | null
+          resolution_strategy: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resource_id: string
+          resource_type: string
+          secondary_project_id: string | null
+          secondary_task_id: string | null
+          severity: string
+          skill_available: string | null
+          skill_required: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_recommendation?: string | null
+          auto_resolvable?: boolean | null
+          business_impact_score?: number | null
+          capacity_available?: number | null
+          capacity_required?: number | null
+          company_id: string
+          conflict_end_datetime: string
+          conflict_start_datetime: string
+          conflict_type: string
+          created_at?: string
+          detected_at?: string
+          escalation_reason?: string | null
+          human_review_required?: boolean | null
+          id?: string
+          optimization_run_id?: string | null
+          overlap_duration_minutes?: number | null
+          primary_project_id: string
+          primary_task_id?: string | null
+          priority_score?: number | null
+          resolution_applied?: boolean | null
+          resolution_details?: Json | null
+          resolution_strategy?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resource_id: string
+          resource_type: string
+          secondary_project_id?: string | null
+          secondary_task_id?: string | null
+          severity?: string
+          skill_available?: string | null
+          skill_required?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_recommendation?: string | null
+          auto_resolvable?: boolean | null
+          business_impact_score?: number | null
+          capacity_available?: number | null
+          capacity_required?: number | null
+          company_id?: string
+          conflict_end_datetime?: string
+          conflict_start_datetime?: string
+          conflict_type?: string
+          created_at?: string
+          detected_at?: string
+          escalation_reason?: string | null
+          human_review_required?: boolean | null
+          id?: string
+          optimization_run_id?: string | null
+          overlap_duration_minutes?: number | null
+          primary_project_id?: string
+          primary_task_id?: string | null
+          priority_score?: number | null
+          resolution_applied?: boolean | null
+          resolution_details?: Json | null
+          resolution_strategy?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resource_id?: string
+          resource_type?: string
+          secondary_project_id?: string | null
+          secondary_task_id?: string | null
+          severity?: string
+          skill_available?: string | null
+          skill_required?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_conflicts_optimization_run_id_fkey"
+            columns: ["optimization_run_id"]
+            isOneToOne: false
+            referencedRelation: "resource_optimization_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_optimization_configs: {
+        Row: {
+          allow_overtime: boolean | null
+          auto_reschedule: boolean | null
+          availability_weight: number | null
+          company_id: string
+          cost_weight: number | null
+          created_at: string
+          id: string
+          max_crew_utilization: number | null
+          max_equipment_utilization: number | null
+          max_overtime_hours: number | null
+          notification_enabled: boolean | null
+          optimization_strategy: string
+          prefer_dedicated_crews: boolean | null
+          priority_weight: number | null
+          skill_matching_weight: number | null
+          travel_time_factor: number | null
+          updated_at: string
+          weather_consideration: boolean | null
+        }
+        Insert: {
+          allow_overtime?: boolean | null
+          auto_reschedule?: boolean | null
+          availability_weight?: number | null
+          company_id: string
+          cost_weight?: number | null
+          created_at?: string
+          id?: string
+          max_crew_utilization?: number | null
+          max_equipment_utilization?: number | null
+          max_overtime_hours?: number | null
+          notification_enabled?: boolean | null
+          optimization_strategy?: string
+          prefer_dedicated_crews?: boolean | null
+          priority_weight?: number | null
+          skill_matching_weight?: number | null
+          travel_time_factor?: number | null
+          updated_at?: string
+          weather_consideration?: boolean | null
+        }
+        Update: {
+          allow_overtime?: boolean | null
+          auto_reschedule?: boolean | null
+          availability_weight?: number | null
+          company_id?: string
+          cost_weight?: number | null
+          created_at?: string
+          id?: string
+          max_crew_utilization?: number | null
+          max_equipment_utilization?: number | null
+          max_overtime_hours?: number | null
+          notification_enabled?: boolean | null
+          optimization_strategy?: string
+          prefer_dedicated_crews?: boolean | null
+          priority_weight?: number | null
+          skill_matching_weight?: number | null
+          travel_time_factor?: number | null
+          updated_at?: string
+          weather_consideration?: boolean | null
+        }
+        Relationships: []
+      }
+      resource_optimization_metrics: {
+        Row: {
+          ai_confidence_average: number | null
+          company_id: string
+          conflicts_resolved: number | null
+          cost_after: number | null
+          cost_before: number | null
+          cost_savings: number | null
+          created_at: string
+          crew_utilization_average: number | null
+          efficiency_after_percentage: number | null
+          efficiency_before_percentage: number | null
+          efficiency_improvement: number | null
+          equipment_utilization_average: number | null
+          id: string
+          metric_date: string
+          optimization_run_id: string
+          overtime_hours_reduced: number | null
+          processing_time_seconds: number | null
+          projects_impacted: number | null
+          tasks_rescheduled: number | null
+          total_hours_optimized: number | null
+          total_hours_scheduled: number | null
+          total_resources: number | null
+          travel_time_reduced_minutes: number | null
+          user_satisfaction_score: number | null
+        }
+        Insert: {
+          ai_confidence_average?: number | null
+          company_id: string
+          conflicts_resolved?: number | null
+          cost_after?: number | null
+          cost_before?: number | null
+          cost_savings?: number | null
+          created_at?: string
+          crew_utilization_average?: number | null
+          efficiency_after_percentage?: number | null
+          efficiency_before_percentage?: number | null
+          efficiency_improvement?: number | null
+          equipment_utilization_average?: number | null
+          id?: string
+          metric_date?: string
+          optimization_run_id: string
+          overtime_hours_reduced?: number | null
+          processing_time_seconds?: number | null
+          projects_impacted?: number | null
+          tasks_rescheduled?: number | null
+          total_hours_optimized?: number | null
+          total_hours_scheduled?: number | null
+          total_resources?: number | null
+          travel_time_reduced_minutes?: number | null
+          user_satisfaction_score?: number | null
+        }
+        Update: {
+          ai_confidence_average?: number | null
+          company_id?: string
+          conflicts_resolved?: number | null
+          cost_after?: number | null
+          cost_before?: number | null
+          cost_savings?: number | null
+          created_at?: string
+          crew_utilization_average?: number | null
+          efficiency_after_percentage?: number | null
+          efficiency_before_percentage?: number | null
+          efficiency_improvement?: number | null
+          equipment_utilization_average?: number | null
+          id?: string
+          metric_date?: string
+          optimization_run_id?: string
+          overtime_hours_reduced?: number | null
+          processing_time_seconds?: number | null
+          projects_impacted?: number | null
+          tasks_rescheduled?: number | null
+          total_hours_optimized?: number | null
+          total_hours_scheduled?: number | null
+          total_resources?: number | null
+          travel_time_reduced_minutes?: number | null
+          user_satisfaction_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_optimization_metrics_optimization_run_id_fkey"
+            columns: ["optimization_run_id"]
+            isOneToOne: false
+            referencedRelation: "resource_optimization_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_optimization_runs: {
+        Row: {
+          ai_model_used: string | null
+          company_id: string
+          completed_at: string | null
+          config_id: string | null
+          conflicts_detected: number | null
+          conflicts_resolved: number | null
+          cost_savings_estimated: number | null
+          created_at: string
+          created_by: string | null
+          date_range_end: string
+          date_range_start: string
+          efficiency_improvement_percentage: number | null
+          error_message: string | null
+          id: string
+          optimization_data: Json | null
+          optimization_scope: string
+          processing_time_seconds: number | null
+          recommendations: Json | null
+          run_type: string
+          scope_id: string | null
+          started_at: string
+          status: string
+          total_resources_analyzed: number | null
+        }
+        Insert: {
+          ai_model_used?: string | null
+          company_id: string
+          completed_at?: string | null
+          config_id?: string | null
+          conflicts_detected?: number | null
+          conflicts_resolved?: number | null
+          cost_savings_estimated?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_range_end: string
+          date_range_start: string
+          efficiency_improvement_percentage?: number | null
+          error_message?: string | null
+          id?: string
+          optimization_data?: Json | null
+          optimization_scope?: string
+          processing_time_seconds?: number | null
+          recommendations?: Json | null
+          run_type?: string
+          scope_id?: string | null
+          started_at?: string
+          status?: string
+          total_resources_analyzed?: number | null
+        }
+        Update: {
+          ai_model_used?: string | null
+          company_id?: string
+          completed_at?: string | null
+          config_id?: string | null
+          conflicts_detected?: number | null
+          conflicts_resolved?: number | null
+          cost_savings_estimated?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_range_end?: string
+          date_range_start?: string
+          efficiency_improvement_percentage?: number | null
+          error_message?: string | null
+          id?: string
+          optimization_data?: Json | null
+          optimization_scope?: string
+          processing_time_seconds?: number | null
+          recommendations?: Json | null
+          run_type?: string
+          scope_id?: string | null
+          started_at?: string
+          status?: string
+          total_resources_analyzed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_optimization_runs_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "resource_optimization_configs"
             referencedColumns: ["id"]
           },
         ]

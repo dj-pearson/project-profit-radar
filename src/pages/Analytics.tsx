@@ -14,6 +14,7 @@ import PredictiveAnalytics from '@/components/analytics/PredictiveAnalytics';
 import RiskAssessment from '@/components/analytics/RiskAssessment';
 import TimelineOptimization from '@/components/analytics/TimelineOptimization';
 import PerformanceBenchmarking from '@/components/analytics/PerformanceBenchmarking';
+import ResourceOptimization from '@/components/analytics/ResourceOptimization';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
 import { 
   TrendingUp, 
@@ -286,14 +287,15 @@ const Analytics = () => {
       {/* Main Content */}
       <ResponsiveContainer className="py-6">
         <Tabs value={selectedView} onValueChange={setSelectedView} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
             <TabsTrigger value="resources" className="text-xs sm:text-sm">Resources</TabsTrigger>
+            <TabsTrigger value="optimization" className="text-xs sm:text-sm">AI Optimize</TabsTrigger>
             <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
             <TabsTrigger value="predictive" className="text-xs sm:text-sm">Predictive</TabsTrigger>
             <TabsTrigger value="risk" className="text-xs sm:text-sm">Risk</TabsTrigger>
-            <TabsTrigger value="optimization" className="text-xs sm:text-sm">Timeline</TabsTrigger>
+            <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
             <TabsTrigger value="benchmarks" className="text-xs sm:text-sm">Benchmarks</TabsTrigger>
           </TabsList>
 
@@ -606,6 +608,10 @@ const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="optimization">
+            <ResourceOptimization />
+          </TabsContent>
+
+          <TabsContent value="timeline">
             <TimelineOptimization />
           </TabsContent>
 
