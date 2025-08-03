@@ -1834,6 +1834,69 @@ export type Database = {
           },
         ]
       }
+      budget_alerts: {
+        Row: {
+          acknowledged: boolean
+          alert_type: string
+          category: string
+          created_at: string
+          id: string
+          message: string
+          project_id: string
+          threshold_exceeded: number
+        }
+        Insert: {
+          acknowledged?: boolean
+          alert_type: string
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          project_id: string
+          threshold_exceeded: number
+        }
+        Update: {
+          acknowledged?: boolean
+          alert_type?: string
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          project_id?: string
+          threshold_exceeded?: number
+        }
+        Relationships: []
+      }
+      budget_tracking: {
+        Row: {
+          actual_amount: number
+          budgeted_amount: number
+          category: string
+          created_at: string
+          id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_amount?: number
+          budgeted_amount?: number
+          category: string
+          created_at?: string
+          id?: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_amount?: number
+          budgeted_amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           calendar_provider: string

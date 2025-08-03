@@ -16,7 +16,7 @@ interface BudgetItem {
   variance: number;
   variance_percentage: number;
   status: 'on_track' | 'warning' | 'overbudget';
-  last_updated: string;
+  updated_at: string;
 }
 
 interface BudgetAlert {
@@ -68,7 +68,7 @@ export default function LiveBudgetTracking() {
       let query = supabase
         .from('budget_tracking')
         .select('*')
-        .order('last_updated', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (selectedProject !== 'all') {
         query = query.eq('project_id', selectedProject);
@@ -106,7 +106,7 @@ export default function LiveBudgetTracking() {
       const { data, error } = await query;
       if (error) throw error;
 
-      setAlerts(data || []);
+      setAlerts((data || []) as BudgetAlert[]);
     } catch (error) {
       console.error('Error loading alerts:', error);
     } finally {
@@ -262,7 +262,7 @@ export default function LiveBudgetTracking() {
                     </span>
                   </div>
                   <span className="text-muted-foreground">
-                    Updated: {new Date(item.last_updated).toLocaleString()}
+                    Updated: {new Date(item.updated_at).toLocaleString()}
                   </span>
                 </div>
               </div>
