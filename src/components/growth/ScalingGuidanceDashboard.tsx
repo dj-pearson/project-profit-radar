@@ -51,7 +51,7 @@ interface ScalingAssessment {
   id: string;
   current_score: number;
   target_score: number;
-  recommendations: ScalingRecommendation[];
+  recommendations: any; // JSON type from Supabase
   priority_level: string;
   created_at: string;
 }
@@ -289,7 +289,7 @@ export const ScalingGuidanceDashboard: React.FC = () => {
             <CardContent>
               {latestAssessment?.recommendations?.length > 0 ? (
                 <div className="space-y-4">
-                  {latestAssessment.recommendations.map((rec, index) => (
+                  {(Array.isArray(latestAssessment.recommendations) ? latestAssessment.recommendations : []).map((rec: any, index: number) => (
                     <Card key={index} className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export const ScalingGuidanceDashboard: React.FC = () => {
                       {rec.actionItems?.length > 0 && (
                         <div className="space-y-2">
                           <h4 className="font-medium text-sm">Action Items:</h4>
-                          {rec.actionItems.map((item, itemIndex) => (
+                          {rec.actionItems.map((item: any, itemIndex: number) => (
                             <div key={itemIndex} className="flex items-center gap-2 text-sm">
                               <CheckCircle className="w-4 h-4 text-muted-foreground" />
                               <span>{item.action}</span>
@@ -391,7 +391,7 @@ export const ScalingGuidanceDashboard: React.FC = () => {
                     <div>
                       <h3 className="font-medium">{milestone.milestone_name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Achieved: {milestone.achievement_date ? new Date(milestone.achievement_date).toLocaleDateString() : 'Recently'}
+                        Completed milestone
                       </p>
                     </div>
                   </div>
