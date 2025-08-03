@@ -1,68 +1,107 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-interface VoiceToTextRequest {
-  audioBlob: string; // base64 encoded audio
-  language?: string;
-  model?: string;
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+// Process base64 in chunks to prevent memory issues
+function processBase64Chunks(base64String: string, chunkSize = 32768) {
+  const chunks: Uint8Array[] = [];
+  let position = 0;
+  
+  while (position < base64String.length) {
+    const chunk = base64String.slice(position, position + chunkSize);
+    const binaryChunk = atob(chunk);
+    const bytes = new Uint8Array(binaryChunk.length);
+    
+    for (let i = 0; i < binaryChunk.length; i++) {
+      bytes[i] = binaryChunk.charCodeAt(i);
+    }
+    
+    chunks.push(bytes);
+    position += chunkSize;
+  }
+
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return result;
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { audioBlob, language = "en", model = "whisper-1" }: VoiceToTextRequest = await req.json();
-
-    console.log("Processing voice-to-text request...");
-
-    // Convert base64 to blob
-    const audioBuffer = Uint8Array.from(atob(audioBlob), c => c.charCodeAt(0));
-    const audioFile = new File([audioBuffer], "audio.webm", { type: "audio/webm" });
-
-    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!openAIApiKey) {
-      throw new Error("OpenAI API key not configured");
+    console.log('Voice-to-text request received');
+    
+    const { audio } = await req.json()
+    
+    if (!audio) {
+      throw new Error('No audio data provided')
     }
 
-    // Create form data for OpenAI Whisper API
-    const formData = new FormData();
-    formData.append("file", audioFile);
-    formData.append("model", model);
-    formData.append("language", language);
+    console.log('Processing audio data...');
+    
+    // Process audio in chunks to prevent memory issues
+    const binaryAudio = processBase64Chunks(audio)
+    
+    console.log(`Processed audio size: ${binaryAudio.length} bytes`);
+    
+    // Prepare form data for OpenAI Whisper API
+    const formData = new FormData()
+    const blob = new Blob([binaryAudio], { type: 'audio/webm' })
+    formData.append('file', blob, 'audio.webm')
+    formData.append('model', 'whisper-1')
+    formData.append('language', 'en') // Optimize for English
+    formData.append('temperature', '0') // More deterministic results
 
-    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-      method: "POST",
+    console.log('Sending to OpenAI Whisper API...');
+
+    // Send to OpenAI Whisper API
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
       headers: {
-        "Authorization": `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
       },
       body: formData,
-    });
+    })
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`)
     }
 
-    const result = await response.json();
-    console.log("Transcription completed successfully");
+    const result = await response.json()
+    console.log('Transcription successful');
 
-    return new Response(JSON.stringify({ 
-      text: result.text,
-      success: true 
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return new Response(
+      JSON.stringify({ 
+        text: result.text,
+        success: true 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    )
 
-  } catch (error: any) {
-    console.error("Error in voice-to-text function:", error);
+  } catch (error) {
+    console.error('Voice-to-text error:', error);
+    
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -70,10 +109,11 @@ const handler = async (req: Request): Promise<Response> => {
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
       }
-    );
+    )
   }
-};
-
-serve(handler);
+})

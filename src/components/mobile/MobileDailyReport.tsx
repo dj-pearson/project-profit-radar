@@ -1,482 +1,542 @@
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { 
+  Mic, 
+  MicOff, 
   Camera, 
-  Users, 
-  Cloud, 
-  AlertTriangle, 
-  CheckCircle,
+  MapPin, 
+  Clock,
+  Save,
   Upload,
   Wifi,
   WifiOff,
-  Save
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { supabase } from '@/integrations/supabase/client';
-import MobileCamera from './MobileCamera';
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-}
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Geolocation } from '@capacitor/geolocation';
 
 interface DailyReportData {
-  id?: string;
   project_id: string;
-  date: string;
-  work_performed: string;
-  crew_count: number;
   weather_conditions: string;
-  materials_delivered: string;
-  equipment_used: string;
-  delays_issues: string;
-  safety_incidents: string;
-  photos: File[];
-  offline?: boolean;
-  synced?: boolean;
+  temperature?: number;
+  work_performed: string;
+  issues_encountered: string;
+  safety_notes: string;
+  crew_count: number;
+  visitor_count: number;
+  photos: string[];
+  voice_notes: string[];
+  location: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+  };
 }
 
 interface MobileDailyReportProps {
-  companyId: string;
-  userId: string;
-  onReportSaved: () => void;
+  projectId?: string;
+  companyId?: string;
+  userId?: string;
+  onReportSaved?: (report: any) => void;
 }
 
 const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
-  companyId,
-  userId,
+  projectId,
   onReportSaved
 }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showCamera, setShowCamera] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [pendingReports, setPendingReports] = useState<DailyReportData[]>([]);
-  
   const [reportData, setReportData] = useState<DailyReportData>({
-    project_id: '',
-    date: new Date().toISOString().split('T')[0],
-    work_performed: '',
-    crew_count: 1,
+    project_id: projectId,
     weather_conditions: '',
-    materials_delivered: '',
-    equipment_used: '',
-    delays_issues: '',
-    safety_incidents: '',
-    photos: []
+    work_performed: '',
+    issues_encountered: '',
+    safety_notes: '',
+    crew_count: 1,
+    visitor_count: 0,
+    photos: [],
+    voice_notes: [],
+    location: { latitude: 0, longitude: 0, accuracy: 0 }
   });
 
-  useEffect(() => {
-    loadProjects();
-    loadPendingReports();
+  const [isRecording, setIsRecording] = useState(false);
+  const [currentRecording, setCurrentRecording] = useState<MediaRecorder | null>(null);
+  const [recordingField, setRecordingField] = useState<string | null>(null);
+  const [location, setLocation] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-    // Listen for online/offline events
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [companyId]);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { isOnline, saveOfflineData } = useOfflineSync();
 
   useEffect(() => {
-    if (isOnline && pendingReports.length > 0) {
-      syncPendingReports();
-    }
-  }, [isOnline, pendingReports]);
+    getCurrentLocation();
+  }, []);
 
-  const loadProjects = async () => {
+  const getCurrentLocation = async () => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, status')
-        .eq('company_id', companyId)
-        .in('status', ['active', 'in_progress'])
-        .order('name');
+      const coordinates = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000
+      });
+
+      const locationData = {
+        latitude: coordinates.coords.latitude,
+        longitude: coordinates.coords.longitude,
+        accuracy: coordinates.coords.accuracy || 0
+      };
+
+      setLocation(locationData);
+      setReportData(prev => ({
+        ...prev,
+        location: locationData
+      }));
+    } catch (error) {
+      console.error('Error getting location:', error);
+      toast({
+        title: "Location Access",
+        description: "Could not get current location. Report will be saved without GPS data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
+        width: 1920,
+        height: 1080
+      });
+
+      if (image.base64String) {
+        setReportData(prev => ({
+          ...prev,
+          photos: [...prev.photos, image.base64String!]
+        }));
+
+        toast({
+          title: "Photo Added",
+          description: "Photo captured and added to daily report",
+        });
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      toast({
+        title: "Camera Error",
+        description: "Failed to capture photo",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startVoiceRecording = async (fieldName: string) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
+      });
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        await processVoiceRecording(audioBlob, fieldName);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setCurrentRecording(mediaRecorder);
+      setIsRecording(true);
+      setRecordingField(fieldName);
+
+      toast({
+        title: "Recording Started",
+        description: `Recording voice note for ${fieldName.replace('_', ' ')}`,
+      });
+
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: "Recording Error",
+        description: "Could not start voice recording",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (currentRecording && isRecording) {
+      currentRecording.stop();
+      setIsRecording(false);
+      setCurrentRecording(null);
+    }
+  };
+
+  const processVoiceRecording = async (audioBlob: Blob, fieldName: string) => {
+    try {
+      // Convert blob to base64
+      const base64Audio = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          resolve(base64String.split(',')[1]);
+        };
+        reader.readAsDataURL(audioBlob);
+      });
+
+      // Transcribe using voice-to-text edge function
+      const { data: transcriptionData, error } = await supabase.functions.invoke('voice-to-text', {
+        body: { audio: base64Audio }
+      });
 
       if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      if (isOnline) {
+
+      if (transcriptionData.success && transcriptionData.text) {
+        // Append transcribed text to the appropriate field
+        setReportData(prev => ({
+          ...prev,
+          [fieldName]: prev[fieldName as keyof typeof prev] + 
+            (prev[fieldName as keyof typeof prev] ? ' ' : '') + 
+            transcriptionData.text
+        }));
+
         toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load projects"
+          title: "Voice Note Transcribed",
+          description: "Voice recording has been converted to text and added to the report",
         });
       }
-    }
-  };
 
-  const loadPendingReports = () => {
-    const stored = localStorage.getItem('pending_daily_reports');
-    if (stored) {
-      try {
-        setPendingReports(JSON.parse(stored));
-      } catch (error) {
-        console.error('Error loading pending reports:', error);
-      }
-    }
-  };
-
-  const savePendingReport = (report: DailyReportData) => {
-    const updated = [...pendingReports, { ...report, offline: true, synced: false }];
-    setPendingReports(updated);
-    localStorage.setItem('pending_daily_reports', JSON.stringify(updated));
-  };
-
-  const syncPendingReports = async () => {
-    for (const report of pendingReports) {
-      if (!report.synced) {
-        try {
-          await saveReportToServer(report);
-          // Mark as synced
-          const updated = pendingReports.map(r => 
-            r === report ? { ...r, synced: true } : r
-          );
-          setPendingReports(updated);
-          localStorage.setItem('pending_daily_reports', JSON.stringify(updated));
-        } catch (error) {
-          console.error('Error syncing report:', error);
-        }
-      }
+    } catch (error) {
+      console.error('Error processing voice recording:', error);
+      toast({
+        title: "Transcription Error",
+        description: "Could not transcribe voice recording",
+        variant: "destructive"
+      });
     }
     
-    // Remove synced reports
-    const unsynced = pendingReports.filter(r => !r.synced);
-    setPendingReports(unsynced);
-    localStorage.setItem('pending_daily_reports', JSON.stringify(unsynced));
+    setRecordingField(null);
   };
 
-  const saveReportToServer = async (report: DailyReportData) => {
-    const { error } = await supabase.functions.invoke('daily-reports', {
-      method: 'POST',
-      body: {
-        path: 'create',
-        project_id: report.project_id,
-        date: report.date,
-        work_performed: report.work_performed,
-        crew_count: report.crew_count,
-        weather_conditions: report.weather_conditions,
-        materials_delivered: report.materials_delivered,
-        equipment_used: report.equipment_used,
-        delays_issues: report.delays_issues,
-        safety_incidents: report.safety_incidents
-      }
-    });
-
-    if (error) throw error;
-  };
-
-  const handleSaveReport = async () => {
-    if (!reportData.project_id || !reportData.work_performed.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please select a project and describe work performed"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
+  const saveReport = async () => {
     try {
+      setIsSaving(true);
+
+      const reportPayload = {
+        ...reportData,
+        user_id: user?.id,
+        report_date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        company_id: (await supabase.from('user_profiles').select('company_id').eq('id', user?.id).single()).data?.company_id
+      };
+
       if (isOnline) {
-        await saveReportToServer(reportData);
+        // Save directly to database
+        const { data, error } = await supabase
+          .from('daily_reports')
+          .insert(reportPayload)
+          .select()
+          .single();
+
+        if (error) throw error;
+
         toast({
           title: "Report Saved",
-          description: "Daily report saved successfully"
+          description: "Daily report has been saved successfully",
         });
+
+        onReportSaved?.(data);
       } else {
-        savePendingReport(reportData);
+        // Save offline for later sync
+        await saveOfflineData('daily_report', reportPayload);
+        
         toast({
           title: "Report Saved Offline",
-          description: "Report will sync when connection is restored"
+          description: "Report will be synced when connection is restored",
         });
       }
 
       // Reset form
       setReportData({
-        project_id: '',
-        date: new Date().toISOString().split('T')[0],
-        work_performed: '',
-        crew_count: 1,
+        project_id: projectId,
         weather_conditions: '',
-        materials_delivered: '',
-        equipment_used: '',
-        delays_issues: '',
-        safety_incidents: '',
-        photos: []
+        work_performed: '',
+        issues_encountered: '',
+        safety_notes: '',
+        crew_count: 1,
+        visitor_count: 0,
+        photos: [],
+        voice_notes: [],
+        location: location || { latitude: 0, longitude: 0, accuracy: 0 }
       });
 
-      onReportSaved();
     } catch (error) {
       console.error('Error saving report:', error);
-      if (isOnline) {
-        // If online save fails, save offline as backup
-        savePendingReport(reportData);
-        toast({
-          title: "Saved Offline",
-          description: "Failed to sync but saved locally"
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to save report"
-        });
-      }
+      toast({
+        title: "Save Error",
+        description: "Failed to save daily report",
+        variant: "destructive"
+      });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const handlePhotoCapture = (file: File) => {
-    setReportData(prev => ({
-      ...prev,
-      photos: [...prev.photos, file]
-    }));
-    setShowCamera(false);
-    toast({
-      title: "Photo Added",
-      description: "Photo captured and added to report"
-    });
-  };
-
-  const removePhoto = (index: number) => {
-    setReportData(prev => ({
-      ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
-
-  if (showCamera) {
-    return (
-      <MobileCamera
-        onCapture={handlePhotoCapture}
-        onCancel={() => setShowCamera(false)}
-        maxPhotos={10}
-        currentCount={reportData.photos.length}
-      />
-    );
-  }
-
   return (
-    <div className="space-y-4 pb-20">
+    <div className="space-y-4 p-4">
       {/* Connection Status */}
-      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-        <div className="flex items-center space-x-2">
-          {isOnline ? (
-            <>
-              <Wifi className="h-4 w-4 text-green-600" />
-              <span className="text-sm">Online</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="h-4 w-4 text-orange-600" />
-              <span className="text-sm">Offline Mode</span>
-            </>
-          )}
-        </div>
+      <div className="flex items-center justify-between mb-4">
+        <Badge variant={isOnline ? "default" : "destructive"} className="flex items-center gap-2">
+          {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+          {isOnline ? "Online" : "Offline"}
+        </Badge>
         
-        {pendingReports.length > 0 && (
-          <Badge variant="outline">
-            {pendingReports.length} pending
+        {location && (
+          <Badge variant="outline" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            GPS: {location.accuracy < 10 ? "High" : "Low"} Accuracy
           </Badge>
         )}
       </div>
 
-      {/* Form */}
+      {/* Weather & Crew Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Daily Report</CardTitle>
+          <CardTitle className="text-lg">Site Conditions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Project Selection */}
           <div>
-            <Label htmlFor="project">Project *</Label>
-            <Select 
-              value={reportData.project_id} 
-              onValueChange={(value) => setReportData(prev => ({ ...prev, project_id: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date */}
-          <div>
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={reportData.date}
-              onChange={(e) => setReportData(prev => ({ ...prev, date: e.target.value }))}
-            />
-          </div>
-
-          {/* Work Performed */}
-          <div>
-            <Label htmlFor="work_performed">Work Performed *</Label>
-            <Textarea
-              id="work_performed"
-              placeholder="Describe work completed today..."
-              value={reportData.work_performed}
-              onChange={(e) => setReportData(prev => ({ ...prev, work_performed: e.target.value }))}
-              rows={3}
-            />
-          </div>
-
-          {/* Crew Count & Weather */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="crew_count">Crew Count</Label>
-              <Input
-                id="crew_count"
-                type="number"
-                min="1"
-                value={reportData.crew_count}
-                onChange={(e) => setReportData(prev => ({ ...prev, crew_count: Number(e.target.value) }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="weather">Weather</Label>
-              <Input
-                id="weather"
-                placeholder="Sunny, 75°F"
+            <label className="text-sm font-medium mb-2 block">Weather Conditions</label>
+            <div className="flex gap-2">
+              <Textarea
                 value={reportData.weather_conditions}
                 onChange={(e) => setReportData(prev => ({ ...prev, weather_conditions: e.target.value }))}
+                placeholder="Describe weather conditions..."
+                className="flex-1"
+                rows={2}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => startVoiceRecording('weather_conditions')}
+                disabled={isRecording}
+                className="shrink-0"
+              >
+                {isRecording && recordingField === 'weather_conditions' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Crew Count</label>
+              <input
+                type="number"
+                value={reportData.crew_count}
+                onChange={(e) => setReportData(prev => ({ ...prev, crew_count: parseInt(e.target.value) || 0 }))}
+                className="w-full p-2 border rounded"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Visitors</label>
+              <input
+                type="number"
+                value={reportData.visitor_count}
+                onChange={(e) => setReportData(prev => ({ ...prev, visitor_count: parseInt(e.target.value) || 0 }))}
+                className="w-full p-2 border rounded"
+                min="0"
               />
             </div>
           </div>
-
-          {/* Materials & Equipment */}
-          <div>
-            <Label htmlFor="materials">Materials Delivered</Label>
-            <Textarea
-              id="materials"
-              placeholder="Materials received today..."
-              value={reportData.materials_delivered}
-              onChange={(e) => setReportData(prev => ({ ...prev, materials_delivered: e.target.value }))}
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="equipment">Equipment Used</Label>
-            <Textarea
-              id="equipment"
-              placeholder="Equipment in use..."
-              value={reportData.equipment_used}
-              onChange={(e) => setReportData(prev => ({ ...prev, equipment_used: e.target.value }))}
-              rows={2}
-            />
-          </div>
-
-          {/* Issues */}
-          <div>
-            <Label htmlFor="delays">Delays & Issues</Label>
-            <Textarea
-              id="delays"
-              placeholder="Any delays or issues..."
-              value={reportData.delays_issues}
-              onChange={(e) => setReportData(prev => ({ ...prev, delays_issues: e.target.value }))}
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="safety">Safety Incidents</Label>
-            <Textarea
-              id="safety"
-              placeholder="Safety incidents or concerns..."
-              value={reportData.safety_incidents}
-              onChange={(e) => setReportData(prev => ({ ...prev, safety_incidents: e.target.value }))}
-              rows={2}
-            />
-          </div>
-
-          {/* Photos */}
-          <div>
-            <Label>Photos ({reportData.photos.length}/10)</Label>
-            <div className="space-y-2">
-              <Button
-                variant="outline" 
-                onClick={() => setShowCamera(true)}
-                disabled={reportData.photos.length >= 10}
-                className="w-full"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Take Photo
-              </Button>
-              
-              {reportData.photos.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {reportData.photos.map((photo, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={URL.createObjectURL(photo)}
-                        alt={`Photo ${index + 1}`}
-                        className="w-full h-20 object-cover rounded border"
-                      />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                        onClick={() => removePhoto(index)}
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Safety Warning */}
-          {reportData.safety_incidents.trim() && (
-            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <span className="text-sm text-red-700">Safety incident reported</span>
-            </div>
-          )}
-
-          {/* Save Button */}
-          <Button 
-            onClick={handleSaveReport}
-            disabled={isLoading || !reportData.project_id || !reportData.work_performed.trim()}
-            className="w-full"
-            size="lg"
-          >
-            {isLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            {isOnline ? 'Save Report' : 'Save Offline'}
-          </Button>
         </CardContent>
       </Card>
+
+      {/* Work Performed */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Work Performed</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Textarea
+              value={reportData.work_performed}
+              onChange={(e) => setReportData(prev => ({ ...prev, work_performed: e.target.value }))}
+              placeholder="Describe work completed today..."
+              className="flex-1"
+              rows={3}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startVoiceRecording('work_performed')}
+              disabled={isRecording}
+              className="shrink-0"
+            >
+              {isRecording && recordingField === 'work_performed' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Issues & Safety */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Issues & Safety</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Issues Encountered</label>
+            <div className="flex gap-2">
+              <Textarea
+                value={reportData.issues_encountered}
+                onChange={(e) => setReportData(prev => ({ ...prev, issues_encountered: e.target.value }))}
+                placeholder="Any issues or delays..."
+                className="flex-1"
+                rows={2}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => startVoiceRecording('issues_encountered')}
+                disabled={isRecording}
+                className="shrink-0"
+              >
+                {isRecording && recordingField === 'issues_encountered' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Safety Notes</label>
+            <div className="flex gap-2">
+              <Textarea
+                value={reportData.safety_notes}
+                onChange={(e) => setReportData(prev => ({ ...prev, safety_notes: e.target.value }))}
+                placeholder="Safety observations and incidents..."
+                className="flex-1"
+                rows={2}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => startVoiceRecording('safety_notes')}
+                disabled={isRecording}
+                className="shrink-0"
+              >
+                {isRecording && recordingField === 'safety_notes' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Photos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center justify-between">
+            Photos ({reportData.photos.length})
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={takePhoto}
+              className="flex items-center gap-2"
+            >
+              <Camera className="h-4 w-4" />
+              Take Photo
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {reportData.photos.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {reportData.photos.map((photo, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={`data:image/jpeg;base64,${photo}`}
+                    alt={`Site photo ${index + 1}`}
+                    className="w-full h-24 object-cover rounded"
+                  />
+                  <Badge variant="secondary" className="absolute top-1 right-1 text-xs">
+                    {index + 1}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+          {reportData.photos.length === 0 && (
+            <p className="text-muted-foreground text-center py-4">
+              No photos taken yet
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recording Status */}
+      {isRecording && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-sm font-medium">
+                  Recording for {recordingField?.replace('_', ' ')}...
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={stopVoiceRecording}
+              >
+                Stop Recording
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Save Button */}
+      <Button
+        onClick={saveReport}
+        disabled={isSaving || isRecording}
+        className="w-full"
+        size="lg"
+      >
+        {isSaving ? (
+          <>
+            <Upload className="mr-2 h-4 w-4 animate-spin" />
+            Saving Report...
+          </>
+        ) : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Save Daily Report
+          </>
+        )}
+      </Button>
     </div>
   );
 };
