@@ -869,37 +869,12 @@ const AppContent = () => {
 };
 
 const App = () => {
-  useEffect(() => {
-    initializeGoogleAnalytics();
-  }, []);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <HelmetProvider>
-            <BrowserRouter>
-              <PageTracker />
-              <AppContent />
-            </BrowserRouter>
-          </HelmetProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-background text-foreground">
+      <h1 className="text-4xl font-bold text-center py-8">BuildDesk Loading...</h1>
+      <p className="text-center text-muted-foreground">Testing basic React functionality</p>
+    </div>
   );
-};
-
-// Component to track page views
-const PageTracker = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    trackPageView(location.pathname + location.search);
-  }, [location]);
-
-  return null;
 };
 
 export default App;
