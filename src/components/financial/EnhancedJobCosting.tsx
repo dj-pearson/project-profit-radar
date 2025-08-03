@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -9,16 +8,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   TrendingUp, 
   TrendingDown, 
   AlertTriangle, 
   DollarSign, 
-  Users, 
-  Package, 
-  Clock,
   Calculator,
   Target,
   RefreshCw
@@ -76,97 +71,134 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
   const [projectCosts, setProjectCosts] = useState<ProjectCosts | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects] = useState([
+    { id: 'project-1', project_name: 'Downtown Office Building', status: 'active' },
+    { id: 'project-2', project_name: 'Residential Complex Phase 1', status: 'active' },
+    { id: 'project-3', project_name: 'Highway Bridge Repair', status: 'active' }
+  ]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load projects
+  // Mock data for demonstration
   useEffect(() => {
-    const loadProjects = async () => {
-      if (!userProfile?.company_id) return;
+    if (selectedProject) {
+      setLoading(true);
+      
+      // Simulate API call with mock data
+      setTimeout(() => {
+        // Mock cost codes
+        const mockCostCodes: CostCode[] = [
+          {
+            id: '1',
+            code: 'LAB-001',
+            description: 'General Labor',
+            category: 'labor',
+            budget_amount: 125000,
+            actual_amount: 135000,
+            variance: 10000,
+            variance_percentage: 8.0
+          },
+          {
+            id: '2',
+            code: 'MAT-001',
+            description: 'Concrete Materials',
+            category: 'materials',
+            budget_amount: 75000,
+            actual_amount: 82500,
+            variance: 7500,
+            variance_percentage: 10.0
+          },
+          {
+            id: '3',
+            code: 'EQP-001',
+            description: 'Heavy Equipment',
+            category: 'equipment',
+            budget_amount: 45000,
+            actual_amount: 43200,
+            variance: -1800,
+            variance_percentage: -4.0
+          },
+          {
+            id: '4',
+            code: 'OVH-001',
+            description: 'Project Overhead',
+            category: 'overhead',
+            budget_amount: 25000,
+            actual_amount: 26800,
+            variance: 1800,
+            variance_percentage: 7.2
+          }
+        ];
 
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, project_name, status')
-        .eq('company_id', userProfile.company_id)
-        .eq('status', 'active');
+        // Mock labor rates
+        const mockLaborRates: LaborRate[] = [
+          {
+            id: '1',
+            trade: 'General Labor',
+            base_rate: 25.00,
+            overtime_rate: 37.50,
+            current_rate: 25.00,
+            efficiency_factor: 1.0
+          },
+          {
+            id: '2',
+            trade: 'Carpenter',
+            base_rate: 35.00,
+            overtime_rate: 52.50,
+            current_rate: 38.50,
+            efficiency_factor: 1.1
+          },
+          {
+            id: '3',
+            trade: 'Electrician',
+            base_rate: 45.00,
+            overtime_rate: 67.50,
+            current_rate: 47.25,
+            efficiency_factor: 1.2
+          }
+        ];
 
-      if (data) setProjects(data);
-    };
+        // Mock material pricing
+        const mockMaterialPricing: MaterialPricing[] = [
+          {
+            id: '1',
+            material_name: 'Lumber 2x4x8',
+            current_price: 8.50,
+            last_updated: new Date().toISOString(),
+            supplier: 'Home Depot',
+            price_trend: 'up',
+            price_change_percentage: 6.25
+          },
+          {
+            id: '2',
+            material_name: 'Concrete Mix',
+            current_price: 4.25,
+            last_updated: new Date().toISOString(),
+            supplier: 'ABC Supply',
+            price_trend: 'stable',
+            price_change_percentage: 0.5
+          },
+          {
+            id: '3',
+            material_name: 'Steel Rebar',
+            current_price: 0.85,
+            last_updated: new Date().toISOString(),
+            supplier: 'Steel Supply Co',
+            price_trend: 'down',
+            price_change_percentage: -2.1
+          }
+        ];
 
-    loadProjects();
-  }, [userProfile?.company_id]);
+        setCostCodes(mockCostCodes);
+        setLaborRates(mockLaborRates);
+        setMaterialPricing(mockMaterialPricing);
 
-  // Load job costing data
-  const loadJobCostingData = async () => {
-    if (!selectedProject || !userProfile?.company_id) return;
-
-    setLoading(true);
-    try {
-      // Load cost codes with actual costs
-      const { data: costCodeData } = await supabase
-        .from('project_cost_codes')
-        .select(`
-          *,
-          cost_entries:project_cost_entries(amount, entry_type)
-        `)
-        .eq('project_id', selectedProject);
-
-      if (costCodeData) {
-        const processedCostCodes = costCodeData.map(code => {
-          const actualAmount = code.cost_entries?.reduce((sum: number, entry: any) => 
-            sum + (entry.amount || 0), 0) || 0;
-          const variance = actualAmount - (code.budget_amount || 0);
-          const variancePercentage = code.budget_amount > 0 
-            ? (variance / code.budget_amount) * 100 
-            : 0;
-
-          return {
-            ...code,
-            actual_amount: actualAmount,
-            variance,
-            variance_percentage: variancePercentage
-          };
-        });
-        setCostCodes(processedCostCodes);
-      }
-
-      // Load labor rates
-      const { data: laborData } = await supabase
-        .from('labor_rates')
-        .select('*')
-        .eq('company_id', userProfile.company_id);
-
-      if (laborData) setLaborRates(laborData);
-
-      // Load material pricing
-      const { data: materialData } = await supabase
-        .from('material_pricing')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .order('last_updated', { ascending: false });
-
-      if (materialData) setMaterialPricing(materialData);
-
-      // Calculate project costs summary
-      if (costCodeData) {
-        const laborCosts = costCodeData
-          .filter(c => c.category === 'labor')
-          .reduce((sum, c) => sum + (c.cost_entries?.reduce((s: number, e: any) => s + e.amount, 0) || 0), 0);
-
-        const materialCosts = costCodeData
-          .filter(c => c.category === 'materials')
-          .reduce((sum, c) => sum + (c.cost_entries?.reduce((s: number, e: any) => s + e.amount, 0) || 0), 0);
-
-        const equipmentCosts = costCodeData
-          .filter(c => c.category === 'equipment')
-          .reduce((sum, c) => sum + (c.cost_entries?.reduce((s: number, e: any) => s + e.amount, 0) || 0), 0);
-
-        const overheadCosts = costCodeData
-          .filter(c => c.category === 'overhead')
-          .reduce((sum, c) => sum + (c.cost_entries?.reduce((s: number, e: any) => s + e.amount, 0) || 0), 0);
-
-        const totalBudget = costCodeData.reduce((sum, c) => sum + (c.budget_amount || 0), 0);
-        const totalActual = laborCosts + materialCosts + equipmentCosts + overheadCosts;
+        // Calculate project costs summary
+        const totalBudget = mockCostCodes.reduce((sum, c) => sum + c.budget_amount, 0);
+        const totalActual = mockCostCodes.reduce((sum, c) => sum + c.actual_amount, 0);
+        const laborCosts = mockCostCodes.filter(c => c.category === 'labor').reduce((sum, c) => sum + c.actual_amount, 0);
+        const materialCosts = mockCostCodes.filter(c => c.category === 'materials').reduce((sum, c) => sum + c.actual_amount, 0);
+        const equipmentCosts = mockCostCodes.filter(c => c.category === 'equipment').reduce((sum, c) => sum + c.actual_amount, 0);
+        const overheadCosts = mockCostCodes.filter(c => c.category === 'overhead').reduce((sum, c) => sum + c.actual_amount, 0);
         const profitMargin = totalBudget - totalActual;
         const profitMarginPercentage = totalBudget > 0 ? (profitMargin / totalBudget) * 100 : 0;
 
@@ -180,21 +212,13 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
           overhead_costs: overheadCosts,
           profit_margin: profitMargin,
           profit_margin_percentage: profitMarginPercentage,
-          completion_percentage: 75 // This would come from project completion data
+          completion_percentage: 75
         });
-      }
 
-    } catch (error) {
-      console.error('Error loading job costing data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load job costing data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+        setLoading(false);
+      }, 1000);
     }
-  };
+  }, [selectedProject]);
 
   // Refresh material pricing
   const refreshMaterialPricing = async () => {
@@ -207,8 +231,6 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
         title: "Success",
         description: "Material pricing updated successfully"
       });
-      
-      await loadJobCostingData();
     } catch (error) {
       toast({
         title: "Error", 
@@ -219,12 +241,6 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    if (selectedProject) {
-      loadJobCostingData();
-    }
-  }, [selectedProject]);
 
   const getProfitMarginColor = (percentage: number) => {
     if (percentage >= 15) return "text-green-600";
@@ -349,7 +365,6 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
                     <p className="text-2xl font-bold">{projectCosts.completion_percentage}%</p>
                     <Progress value={projectCosts.completion_percentage} className="mt-2" />
                   </div>
-                  <Clock className="h-8 w-8 text-purple-600" />
                 </div>
               </CardContent>
             </Card>

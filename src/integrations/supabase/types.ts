@@ -8088,6 +8088,53 @@ export type Database = {
           },
         ]
       }
+      labor_rates: {
+        Row: {
+          base_rate: number
+          company_id: string
+          created_at: string
+          current_rate: number
+          effective_date: string
+          efficiency_factor: number | null
+          id: string
+          overtime_rate: number
+          trade: string
+          updated_at: string
+        }
+        Insert: {
+          base_rate: number
+          company_id: string
+          created_at?: string
+          current_rate: number
+          effective_date?: string
+          efficiency_factor?: number | null
+          id?: string
+          overtime_rate: number
+          trade: string
+          updated_at?: string
+        }
+        Update: {
+          base_rate?: number
+          company_id?: string
+          created_at?: string
+          current_rate?: number
+          effective_date?: string
+          efficiency_factor?: number | null
+          id?: string
+          overtime_rate?: number
+          trade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "labor_rates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_activities: {
         Row: {
           activity_date: string
@@ -9084,6 +9131,59 @@ export type Database = {
             columns: ["lead_source_id"]
             isOneToOne: false
             referencedRelation: "lead_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_pricing: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_price: number
+          id: string
+          last_updated: string
+          material_name: string
+          previous_price: number | null
+          price_change_percentage: number | null
+          price_trend: string | null
+          supplier: string | null
+          unit_of_measure: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_price: number
+          id?: string
+          last_updated?: string
+          material_name: string
+          previous_price?: number | null
+          price_change_percentage?: number | null
+          price_trend?: string | null
+          supplier?: string | null
+          unit_of_measure?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_price?: number
+          id?: string
+          last_updated?: string
+          material_name?: string
+          previous_price?: number | null
+          price_change_percentage?: number | null
+          price_trend?: string | null
+          supplier?: string | null
+          unit_of_measure?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_pricing_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -11258,6 +11358,124 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_cost_codes: {
+        Row: {
+          budget_amount: number | null
+          category: string
+          code: string
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          budget_amount?: number | null
+          category: string
+          code: string
+          company_id: string
+          created_at?: string
+          description: string
+          id?: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          budget_amount?: number | null
+          category?: string
+          code?: string
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_cost_codes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_cost_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_cost_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_cost_entries: {
+        Row: {
+          amount: number
+          company_id: string
+          cost_code_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entry_date: string
+          entry_type: string
+          id: string
+          quantity: number | null
+          unit_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          cost_code_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_type: string
+          id?: string
+          quantity?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          cost_code_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          quantity?: number | null
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_cost_entries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_cost_entries_cost_code_id_fkey"
+            columns: ["cost_code_id"]
+            isOneToOne: false
+            referencedRelation: "project_cost_codes"
             referencedColumns: ["id"]
           },
         ]
