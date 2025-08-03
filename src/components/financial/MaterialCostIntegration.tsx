@@ -57,60 +57,83 @@ export default function MaterialCostIntegration() {
 
   const loadMaterials = async () => {
     try {
+      // Load materials with supplier information
       const { data, error } = await supabase
         .from('material_costs')
-        .select('*')
+        .select(`
+          *,
+          supplier:material_suppliers(name)
+        `)
         .order('name');
 
       if (error) throw error;
 
-      // Mock data for demonstration
-      const mockMaterials: MaterialItem[] = [
-        {
-          id: '1',
-          name: '2x4 Lumber 8ft',
-          category: 'Lumber',
-          supplier: 'Home Depot',
-          current_price: 4.87,
-          last_price: 4.65,
-          price_change: 4.7,
-          sku: 'HD-2X4-8',
-          unit: 'piece',
-          last_updated: new Date().toISOString(),
-          price_alerts_enabled: true,
-          alert_threshold: 10
-        },
-        {
-          id: '2',
-          name: 'Concrete Mix 80lb',
-          category: 'Concrete',
-          supplier: 'Lowes',
-          current_price: 6.48,
-          last_price: 6.75,
-          price_change: -4.0,
-          sku: 'LW-CON-80',
-          unit: 'bag',
-          last_updated: new Date().toISOString(),
-          price_alerts_enabled: true,
-          alert_threshold: 15
-        },
-        {
-          id: '3',
-          name: 'Drywall Sheet 4x8',
-          category: 'Drywall',
-          supplier: 'Home Depot',
-          current_price: 15.98,
-          last_price: 14.50,
-          price_change: 10.2,
-          sku: 'HD-DRY-48',
-          unit: 'sheet',
-          last_updated: new Date().toISOString(),
-          price_alerts_enabled: true,
-          alert_threshold: 8
-        }
-      ];
+      // Transform data to match our interface
+      const transformedMaterials: MaterialItem[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        supplier: item.supplier?.name || 'Unknown',
+        current_price: Number(item.current_price),
+        last_price: Number(item.last_price),
+        price_change: Number(item.price_change),
+        sku: item.sku || '',
+        unit: item.unit,
+        last_updated: item.last_updated,
+        price_alerts_enabled: item.price_alerts_enabled,
+        alert_threshold: Number(item.alert_threshold)
+      }));
 
-      setMaterials(data || mockMaterials);
+      // If no data, show mock data for demonstration
+      if (transformedMaterials.length === 0) {
+        const mockMaterials: MaterialItem[] = [
+          {
+            id: '1',
+            name: '2x4 Lumber 8ft',
+            category: 'Lumber',
+            supplier: 'Home Depot',
+            current_price: 4.87,
+            last_price: 4.65,
+            price_change: 4.7,
+            sku: 'HD-2X4-8',
+            unit: 'piece',
+            last_updated: new Date().toISOString(),
+            price_alerts_enabled: true,
+            alert_threshold: 10
+          },
+          {
+            id: '2',
+            name: 'Concrete Mix 80lb',
+            category: 'Concrete',
+            supplier: 'Lowes',
+            current_price: 6.48,
+            last_price: 6.75,
+            price_change: -4.0,
+            sku: 'LW-CON-80',
+            unit: 'bag',
+            last_updated: new Date().toISOString(),
+            price_alerts_enabled: true,
+            alert_threshold: 15
+          },
+          {
+            id: '3',
+            name: 'Drywall Sheet 4x8',
+            category: 'Drywall',
+            supplier: 'Home Depot',
+            current_price: 15.98,
+            last_price: 14.50,
+            price_change: 10.2,
+            sku: 'HD-DRY-48',
+            unit: 'sheet',
+            last_updated: new Date().toISOString(),
+            price_alerts_enabled: true,
+            alert_threshold: 8
+          }
+        ];
+        setMaterials(mockMaterials);
+      } else {
+        setMaterials(transformedMaterials);
+      }
     } catch (error) {
       console.error('Error loading materials:', error);
       toast.error('Failed to load material costs');
@@ -128,35 +151,48 @@ export default function MaterialCostIntegration() {
 
       if (error) throw error;
 
-      // Mock data for demonstration
-      const mockSuppliers: Supplier[] = [
-        {
-          id: '1',
-          name: 'Home Depot',
-          api_endpoint: 'https://api.homedepot.com/v1',
-          api_key_configured: true,
-          last_sync: new Date().toISOString(),
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Lowes',
-          api_endpoint: 'https://api.lowes.com/v1',
-          api_key_configured: true,
-          last_sync: new Date().toISOString(),
-          status: 'active'
-        },
-        {
-          id: '3',
-          name: 'Menards',
-          api_endpoint: 'https://api.menards.com/v1',
-          api_key_configured: false,
-          last_sync: '',
-          status: 'inactive'
-        }
-      ];
+      // Transform data to match our interface
+      const transformedSuppliers: Supplier[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        api_endpoint: item.api_endpoint || '',
+        api_key_configured: item.api_key_configured,
+        last_sync: item.last_sync || '',
+        status: (item.status as 'active' | 'inactive' | 'error') || 'inactive'
+      }));
 
-      setSuppliers(data || mockSuppliers);
+      // If no data, show mock data for demonstration
+      if (transformedSuppliers.length === 0) {
+        const mockSuppliers: Supplier[] = [
+          {
+            id: '1',
+            name: 'Home Depot',
+            api_endpoint: 'https://api.homedepot.com/v1',
+            api_key_configured: true,
+            last_sync: new Date().toISOString(),
+            status: 'active'
+          },
+          {
+            id: '2',
+            name: 'Lowes',
+            api_endpoint: 'https://api.lowes.com/v1',
+            api_key_configured: true,
+            last_sync: new Date().toISOString(),
+            status: 'active'
+          },
+          {
+            id: '3',
+            name: 'Menards',
+            api_endpoint: 'https://api.menards.com/v1',
+            api_key_configured: false,
+            last_sync: '',
+            status: 'inactive'
+          }
+        ];
+        setSuppliers(mockSuppliers);
+      } else {
+        setSuppliers(transformedSuppliers);
+      }
     } catch (error) {
       console.error('Error loading suppliers:', error);
       toast.error('Failed to load suppliers');
@@ -208,23 +244,59 @@ export default function MaterialCostIntegration() {
 
   const addMaterial = async () => {
     try {
+      // Get current user's company
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!profile?.company_id) {
+        throw new Error('User company not found');
+      }
+
+      // Find supplier ID by name
+      const supplier = suppliers.find(s => s.name === newMaterial.supplier);
+
       const materialData = {
-        ...newMaterial,
-        id: Date.now().toString(),
+        name: newMaterial.name,
+        category: newMaterial.category,
+        sku: newMaterial.sku,
+        unit: newMaterial.unit,
+        alert_threshold: newMaterial.alert_threshold,
+        company_id: profile.company_id,
+        supplier_id: supplier?.id || null,
         current_price: 0,
         last_price: 0,
         price_change: 0,
-        last_updated: new Date().toISOString(),
         price_alerts_enabled: true
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('material_costs')
-        .insert([materialData]);
+        .insert([materialData])
+        .select()
+        .single();
 
       if (error) throw error;
 
-      setMaterials([...materials, materialData]);
+      // Add to local state with UI-friendly format
+      const newMaterialForUI: MaterialItem = {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        supplier: newMaterial.supplier,
+        current_price: 0,
+        last_price: 0,
+        price_change: 0,
+        sku: data.sku || '',
+        unit: data.unit,
+        last_updated: data.created_at,
+        price_alerts_enabled: true,
+        alert_threshold: Number(data.alert_threshold)
+      };
+
+      setMaterials([...materials, newMaterialForUI]);
       setNewMaterial({
         name: '',
         category: '',

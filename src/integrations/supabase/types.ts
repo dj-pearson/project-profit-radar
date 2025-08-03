@@ -9135,6 +9135,110 @@ export type Database = {
           },
         ]
       }
+      material_costs: {
+        Row: {
+          alert_threshold: number | null
+          category: string
+          company_id: string
+          created_at: string
+          current_price: number | null
+          id: string
+          last_price: number | null
+          last_updated: string | null
+          name: string
+          price_alerts_enabled: boolean | null
+          price_change: number | null
+          sku: string | null
+          supplier_id: string | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          alert_threshold?: number | null
+          category: string
+          company_id: string
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          last_price?: number | null
+          last_updated?: string | null
+          name: string
+          price_alerts_enabled?: boolean | null
+          price_change?: number | null
+          sku?: string | null
+          supplier_id?: string | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alert_threshold?: number | null
+          category?: string
+          company_id?: string
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          last_price?: number | null
+          last_updated?: string | null
+          name?: string
+          price_alerts_enabled?: boolean | null
+          price_change?: number | null
+          sku?: string | null
+          supplier_id?: string | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_costs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_costs_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "material_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_price_history: {
+        Row: {
+          change_percentage: number | null
+          created_at: string
+          id: string
+          material_id: string
+          price: number
+          sync_source: string | null
+        }
+        Insert: {
+          change_percentage?: number | null
+          created_at?: string
+          id?: string
+          material_id: string
+          price: number
+          sync_source?: string | null
+        }
+        Update: {
+          change_percentage?: number | null
+          created_at?: string
+          id?: string
+          material_id?: string
+          price?: number
+          sync_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_price_history_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "material_costs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       material_pricing: {
         Row: {
           company_id: string
@@ -9181,6 +9285,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "material_pricing_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_suppliers: {
+        Row: {
+          api_endpoint: string | null
+          api_key_configured: boolean | null
+          company_id: string
+          configuration: Json | null
+          created_at: string
+          id: string
+          last_sync: string | null
+          name: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          api_key_configured?: boolean | null
+          company_id: string
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          last_sync?: string | null
+          name: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          api_key_configured?: boolean | null
+          company_id?: string
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          last_sync?: string | null
+          name?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_suppliers_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
