@@ -16960,6 +16960,98 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_templates: {
+        Row: {
+          company_id: string | null
+          complexity_level: string | null
+          compliance_requirements: Json | null
+          cost_breakdown_template: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          equipment_requirements: Json | null
+          id: string
+          industry_type: string
+          is_active: boolean | null
+          is_system_template: boolean | null
+          labor_roles: Json | null
+          material_categories: Json | null
+          quality_checkpoints: Json | null
+          region_specific: string | null
+          required_permits: Json | null
+          safety_protocols: Json | null
+          standard_tasks: Json
+          template_name: string
+          trade_specialization: string | null
+          typical_duration_days: number | null
+          updated_at: string
+          usage_count: number | null
+          workflow_phases: Json
+        }
+        Insert: {
+          company_id?: string | null
+          complexity_level?: string | null
+          compliance_requirements?: Json | null
+          cost_breakdown_template?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          equipment_requirements?: Json | null
+          id?: string
+          industry_type: string
+          is_active?: boolean | null
+          is_system_template?: boolean | null
+          labor_roles?: Json | null
+          material_categories?: Json | null
+          quality_checkpoints?: Json | null
+          region_specific?: string | null
+          required_permits?: Json | null
+          safety_protocols?: Json | null
+          standard_tasks?: Json
+          template_name: string
+          trade_specialization?: string | null
+          typical_duration_days?: number | null
+          updated_at?: string
+          usage_count?: number | null
+          workflow_phases?: Json
+        }
+        Update: {
+          company_id?: string | null
+          complexity_level?: string | null
+          compliance_requirements?: Json | null
+          cost_breakdown_template?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          equipment_requirements?: Json | null
+          id?: string
+          industry_type?: string
+          is_active?: boolean | null
+          is_system_template?: boolean | null
+          labor_roles?: Json | null
+          material_categories?: Json | null
+          quality_checkpoints?: Json | null
+          region_specific?: string | null
+          required_permits?: Json | null
+          safety_protocols?: Json | null
+          standard_tasks?: Json
+          template_name?: string
+          trade_specialization?: string | null
+          typical_duration_days?: number | null
+          updated_at?: string
+          usage_count?: number | null
+          workflow_phases?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       project_pl_summary: {
