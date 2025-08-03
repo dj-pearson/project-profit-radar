@@ -690,6 +690,45 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_dashboard_cache: {
+        Row: {
+          cache_data: Json
+          cache_key: string
+          cache_version: string | null
+          company_id: string
+          dashboard_type: string
+          data_sources: Json | null
+          expires_at: string
+          generation_time_ms: number | null
+          id: string
+          last_updated: string
+        }
+        Insert: {
+          cache_data: Json
+          cache_key: string
+          cache_version?: string | null
+          company_id: string
+          dashboard_type: string
+          data_sources?: Json | null
+          expires_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          last_updated?: string
+        }
+        Update: {
+          cache_data?: Json
+          cache_key?: string
+          cache_version?: string | null
+          company_id?: string
+          dashboard_type?: string
+          data_sources?: Json | null
+          expires_at?: string
+          generation_time_ms?: number | null
+          id?: string
+          last_updated?: string
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           api_key_hash: string
@@ -11138,6 +11177,66 @@ export type Database = {
           },
         ]
       }
+      prediction_performance: {
+        Row: {
+          accuracy_rate: number | null
+          accurate_predictions: number
+          average_confidence: number | null
+          average_error_margin: number | null
+          company_id: string
+          created_at: string
+          evaluation_period_end: string
+          evaluation_period_start: string
+          false_negative_rate: number | null
+          false_positive_rate: number | null
+          id: string
+          model_drift_indicator: number | null
+          model_id: string
+          recommendations_followed_count: number | null
+          recommendations_success_rate: number | null
+          total_predictions: number
+          updated_at: string
+        }
+        Insert: {
+          accuracy_rate?: number | null
+          accurate_predictions?: number
+          average_confidence?: number | null
+          average_error_margin?: number | null
+          company_id: string
+          created_at?: string
+          evaluation_period_end: string
+          evaluation_period_start: string
+          false_negative_rate?: number | null
+          false_positive_rate?: number | null
+          id?: string
+          model_drift_indicator?: number | null
+          model_id: string
+          recommendations_followed_count?: number | null
+          recommendations_success_rate?: number | null
+          total_predictions?: number
+          updated_at?: string
+        }
+        Update: {
+          accuracy_rate?: number | null
+          accurate_predictions?: number
+          average_confidence?: number | null
+          average_error_margin?: number | null
+          company_id?: string
+          created_at?: string
+          evaluation_period_end?: string
+          evaluation_period_start?: string
+          false_negative_rate?: number | null
+          false_positive_rate?: number | null
+          id?: string
+          model_drift_indicator?: number | null
+          model_id?: string
+          recommendations_followed_count?: number | null
+          recommendations_success_rate?: number | null
+          total_predictions?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       predictive_models: {
         Row: {
           accuracy: number | null
@@ -12147,6 +12246,99 @@ export type Database = {
           },
         ]
       }
+      project_historical_data: {
+        Row: {
+          actual_duration_days: number | null
+          change_orders_count: number | null
+          change_orders_value: number | null
+          client_satisfaction_score: number | null
+          company_id: string
+          completion_status: string | null
+          complexity_score: number | null
+          cost_overrun_reasons: Json | null
+          created_at: string
+          delay_reasons: Json | null
+          final_cost: number | null
+          id: string
+          labor_cost_variance_percentage: number | null
+          lessons_learned: Json | null
+          material_cost_variance_percentage: number | null
+          original_budget: number | null
+          original_duration_days: number | null
+          project_end_date: string | null
+          project_id: string | null
+          project_name: string | null
+          project_start_date: string | null
+          project_type: string | null
+          resource_utilization_rate: number | null
+          seasonal_factors: Json | null
+          success_factors: Json | null
+          team_size: number | null
+          updated_at: string
+          weather_delays_days: number | null
+        }
+        Insert: {
+          actual_duration_days?: number | null
+          change_orders_count?: number | null
+          change_orders_value?: number | null
+          client_satisfaction_score?: number | null
+          company_id: string
+          completion_status?: string | null
+          complexity_score?: number | null
+          cost_overrun_reasons?: Json | null
+          created_at?: string
+          delay_reasons?: Json | null
+          final_cost?: number | null
+          id?: string
+          labor_cost_variance_percentage?: number | null
+          lessons_learned?: Json | null
+          material_cost_variance_percentage?: number | null
+          original_budget?: number | null
+          original_duration_days?: number | null
+          project_end_date?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          project_start_date?: string | null
+          project_type?: string | null
+          resource_utilization_rate?: number | null
+          seasonal_factors?: Json | null
+          success_factors?: Json | null
+          team_size?: number | null
+          updated_at?: string
+          weather_delays_days?: number | null
+        }
+        Update: {
+          actual_duration_days?: number | null
+          change_orders_count?: number | null
+          change_orders_value?: number | null
+          client_satisfaction_score?: number | null
+          company_id?: string
+          completion_status?: string | null
+          complexity_score?: number | null
+          cost_overrun_reasons?: Json | null
+          created_at?: string
+          delay_reasons?: Json | null
+          final_cost?: number | null
+          id?: string
+          labor_cost_variance_percentage?: number | null
+          lessons_learned?: Json | null
+          material_cost_variance_percentage?: number | null
+          original_budget?: number | null
+          original_duration_days?: number | null
+          project_end_date?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          project_start_date?: string | null
+          project_type?: string | null
+          resource_utilization_rate?: number | null
+          seasonal_factors?: Json | null
+          success_factors?: Json | null
+          team_size?: number | null
+          updated_at?: string
+          weather_delays_days?: number | null
+        }
+        Relationships: []
+      }
       project_insurance_requirements: {
         Row: {
           additional_insured_required: boolean | null
@@ -12365,6 +12557,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      project_predictions: {
+        Row: {
+          actual_outcome: number | null
+          baseline_value: number | null
+          company_id: string
+          confidence_score: number
+          contributing_factors: Json | null
+          created_at: string
+          id: string
+          is_validated: boolean | null
+          metadata: Json | null
+          model_id: string
+          predicted_unit: string
+          predicted_value: number
+          prediction_accuracy: number | null
+          prediction_date: string
+          prediction_type: string
+          project_id: string | null
+          recommendations: Json | null
+          risk_level: string
+          target_date: string | null
+          validation_date: string | null
+          variance_from_baseline: number | null
+        }
+        Insert: {
+          actual_outcome?: number | null
+          baseline_value?: number | null
+          company_id: string
+          confidence_score: number
+          contributing_factors?: Json | null
+          created_at?: string
+          id?: string
+          is_validated?: boolean | null
+          metadata?: Json | null
+          model_id: string
+          predicted_unit: string
+          predicted_value: number
+          prediction_accuracy?: number | null
+          prediction_date?: string
+          prediction_type: string
+          project_id?: string | null
+          recommendations?: Json | null
+          risk_level: string
+          target_date?: string | null
+          validation_date?: string | null
+          variance_from_baseline?: number | null
+        }
+        Update: {
+          actual_outcome?: number | null
+          baseline_value?: number | null
+          company_id?: string
+          confidence_score?: number
+          contributing_factors?: Json | null
+          created_at?: string
+          id?: string
+          is_validated?: boolean | null
+          metadata?: Json | null
+          model_id?: string
+          predicted_unit?: string
+          predicted_value?: number
+          prediction_accuracy?: number | null
+          prediction_date?: string
+          prediction_type?: string
+          project_id?: string | null
+          recommendations?: Json | null
+          risk_level?: string
+          target_date?: string | null
+          validation_date?: string | null
+          variance_from_baseline?: number | null
+        }
+        Relationships: []
       }
       project_revenue: {
         Row: {
@@ -17694,6 +17958,10 @@ export type Database = {
       calculate_project_completion: {
         Args: { p_project_id: string }
         Returns: number
+      }
+      calculate_project_risk_score: {
+        Args: { p_project_id: string; p_company_id: string }
+        Returns: Json
       }
       calculate_security_metrics: {
         Args: { p_company_id: string }
