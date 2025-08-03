@@ -13195,6 +13195,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_rate_limits: {
+        Row: {
+          created_at: string | null
+          id: string
+          operation_type: string
+          request_count: number | null
+          user_id: string | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          operation_type: string
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          operation_type?: string
+          request_count?: number | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       seo_ai_insights: {
         Row: {
           action_plan: Json | null
@@ -16325,15 +16352,23 @@ export type Database = {
         Row: {
           company_id: string | null
           completion_percentage: number | null
-          end_date: string | null
-          profit_loss: number | null
-          profit_margin_percentage: number | null
           project_id: string | null
           project_name: string | null
-          start_date: string | null
-          status: string | null
-          total_actual_costs: number | null
           total_budget: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          completion_percentage?: number | null
+          project_id?: string | null
+          project_name?: string | null
+          total_budget?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          completion_percentage?: number | null
+          project_id?: string | null
+          project_name?: string | null
+          total_budget?: number | null
         }
         Relationships: [
           {
