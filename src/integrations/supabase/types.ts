@@ -18314,6 +18314,213 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_analytics: {
+        Row: {
+          average_execution_time_ms: number | null
+          company_id: string
+          created_at: string
+          failed_executions: number | null
+          id: string
+          period_end: string
+          period_start: string
+          successful_executions: number | null
+          total_executions: number | null
+          total_time_saved_hours: number | null
+          updated_at: string
+          workflow_id: string
+        }
+        Insert: {
+          average_execution_time_ms?: number | null
+          company_id: string
+          created_at?: string
+          failed_executions?: number | null
+          id?: string
+          period_end: string
+          period_start: string
+          successful_executions?: number | null
+          total_executions?: number | null
+          total_time_saved_hours?: number | null
+          updated_at?: string
+          workflow_id: string
+        }
+        Update: {
+          average_execution_time_ms?: number | null
+          company_id?: string
+          created_at?: string
+          failed_executions?: number | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          successful_executions?: number | null
+          total_executions?: number | null
+          total_time_saved_hours?: number | null
+          updated_at?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_analytics_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_definitions: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+          workflow_steps: Json
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          trigger_config?: Json
+          trigger_type: string
+          updated_at?: string
+          workflow_steps?: Json
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          workflow_steps?: Json
+        }
+        Relationships: []
+      }
+      workflow_executions: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          completed_steps: number | null
+          created_at: string
+          error_message: string | null
+          execution_log: Json | null
+          id: string
+          started_at: string
+          status: string
+          total_steps: number | null
+          trigger_data: Json | null
+          workflow_id: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          completed_steps?: number | null
+          created_at?: string
+          error_message?: string | null
+          execution_log?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          total_steps?: number | null
+          trigger_data?: Json | null
+          workflow_id: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          completed_steps?: number | null
+          created_at?: string
+          error_message?: string | null
+          execution_log?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          total_steps?: number | null
+          trigger_data?: Json | null
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_executions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_step_executions: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          execution_id: string
+          id: string
+          input_data: Json | null
+          output_data: Json | null
+          started_at: string | null
+          status: string
+          step_config: Json
+          step_index: number
+          step_name: string
+          step_type: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_id: string
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          started_at?: string | null
+          status?: string
+          step_config?: Json
+          step_index: number
+          step_name: string
+          step_type: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_id?: string
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          started_at?: string | null
+          status?: string
+          step_config?: Json
+          step_index?: number
+          step_name?: string
+          step_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_step_executions_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_executions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workflow_templates: {
         Row: {
           company_id: string | null
@@ -18402,6 +18609,53 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_triggers: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_execution_at: string | null
+          next_execution_at: string | null
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+          workflow_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_execution_at?: string | null
+          next_execution_at?: string | null
+          trigger_config?: Json
+          trigger_type: string
+          updated_at?: string
+          workflow_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_execution_at?: string | null
+          next_execution_at?: string | null
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_triggers_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
             referencedColumns: ["id"]
           },
         ]
