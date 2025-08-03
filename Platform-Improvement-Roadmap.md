@@ -130,10 +130,11 @@ This document outlines the strategic improvements needed to make BuildDesk the g
   - ✅ Status tracking with overdue alerts and upcoming release notifications
   - ✅ Built: `RetentionTrackingScheduling.tsx`
 
-- [ ] **Subcontractor payment workflows**
-  - Current: Basic vendor management
-  - Target: Automated sub payment processing
-  - Lien waiver collection and tracking
+- [x] **Subcontractor payment workflows**
+  - ✅ Automated sub payment processing with approval workflows
+  - ✅ Lien waiver collection and tracking with document management
+  - ✅ Payment method integration (check, ACH, wire) with audit trail
+  - ✅ Built: `SubcontractorPaymentWorkflows.tsx`
 
 - [ ] **Late payment alerts and collection tools**
   - Current: Basic invoice tracking
