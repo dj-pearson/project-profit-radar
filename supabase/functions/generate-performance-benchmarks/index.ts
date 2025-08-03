@@ -1,249 +1,341 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js@2.45.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", 
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    // Verify the user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authError || !user) {
+      throw new Error('Invalid authorization');
+    }
 
     const { company_id } = await req.json();
-    if (!company_id) throw new Error("Company ID is required");
-
-    // Load comprehensive performance data
-    const [
-      { data: projects },
-      { data: expenses },
-      { data: company }
-    ] = await Promise.all([
-      supabaseClient.from('projects').select('*').eq('company_id', company_id),
-      supabaseClient.from('expenses').select('*').eq('company_id', company_id),
-      supabaseClient.from('companies').select('*').eq('id', company_id).single()
-    ]);
-
-    const performanceMetrics = calculatePerformanceMetrics(projects || [], expenses || []);
-
-    const benchmarkingPrompt = `
-    Analyze the following construction company performance and generate industry benchmarking data:
-
-    Company Performance:
-    - Total Projects: ${projects?.length || 0}
-    - Completed Projects: ${projects?.filter(p => p.status === 'completed').length || 0}
-    - Success Rate: ${performanceMetrics.successRate}%
-    - Average Profit Margin: ${performanceMetrics.profitMargin}%
-    - Project Completion Time: ${performanceMetrics.avgCompletionTime} days
-    - Total Revenue: $${performanceMetrics.totalRevenue.toLocaleString()}
-    - Company Size: ${company?.company_size || 'small'}
-
-    Generate a JSON response with this structure:
-    {
-      "industryComparison": [
-        {
-          "category": "Profit Margin",
-          "yourScore": 18.5,
-          "industryAverage": 15.2,
-          "topPercentile": 25.8,
-          "rank": "Above Average",
-          "improvement": 2.3
-        }
-      ],
-      "performanceMetrics": [
-        {
-          "metric": "Project Success Rate",
-          "current": 87.5,
-          "target": 90.0,
-          "benchmark": 82.0,
-          "trend": "up",
-          "percentile": 75,
-          "unit": "%"
-        }
-      ],
-      "competitiveAnalysis": {
-        "companySize": "Small (10-50 employees)",
-        "profitMargin": 18.5,
-        "projectSuccessRate": 87.5,
-        "timelyDelivery": 78.2,
-        "customerSatisfaction": 4.2,
-        "costEfficiency": 85.6,
-        "yourRanking": 23,
-        "totalCompanies": 150
-      },
-      "historicalTrends": [
-        {
-          "period": "2024-01",
-          "efficiency": 82.5,
-          "profitability": 18.2,
-          "quality": 87.8,
-          "timeline": 78.9,
-          "industryAvg": 75.5
-        }
-      ],
-      "improvementOpportunities": [
-        {
-          "area": "Project Timeline Management",
-          "currentScore": 75.2,
-          "potentialScore": 85.5,
-          "impact": "high",
-          "difficulty": "medium",
-          "timeframe": "3-6 months",
-          "actions": ["Implement project tracking software", "Train project managers", "Standardize workflows"]
-        }
-      ],
-      "kpiDashboard": {
-        "projectSuccessRate": {"value": 87.5, "target": 90.0, "benchmark": 82.0},
-        "avgProfitMargin": {"value": 18.5, "target": 20.0, "benchmark": 15.2},
-        "clientRetentionRate": {"value": 78.5, "target": 85.0, "benchmark": 72.0},
-        "timeToCompletion": {"value": 95.2, "target": 90.0, "benchmark": 105.0},
-        "costVariance": {"value": 8.5, "target": 5.0, "benchmark": 12.0},
-        "qualityScore": {"value": 4.2, "target": 4.5, "benchmark": 3.8}
-      }
+    if (!company_id) {
+      throw new Error('Company ID is required');
     }
-    `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('Generating performance benchmarks for company:', company_id);
+
+    // Get company and project data
+    const { data: company } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('id', company_id)
+      .single();
+
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('company_id', company_id);
+
+    const { data: expenses } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('company_id', company_id);
+
+    // Calculate company metrics
+    const metrics = calculatePerformanceMetrics(projects || [], expenses || []);
+    console.log('Calculated metrics:', metrics);
+
+    // Generate industry benchmarks using AI
+    const prompt = `You are a construction industry analyst. Based on the following company data, generate realistic industry benchmarks and competitive analysis.
+
+Company Profile:
+- Name: ${company?.name || 'Construction Company'}
+- Size: ${projects?.length || 0} projects
+- Performance Metrics: ${JSON.stringify(metrics, null, 2)}
+
+Please provide a JSON response with the following structure:
+{
+  "industryComparison": {
+    "avgProfitMargin": 15.2,
+    "avgCompletionRate": 89.5,
+    "avgBudgetVariance": 8.3,
+    "avgSafetyIncidents": 2.1,
+    "avgClientSatisfaction": 4.2,
+    "avgProductivity": 85.7
+  },
+  "performanceMetrics": [
+    {
+      "metric": "Project Success Rate",
+      "current": ${metrics.successRate},
+      "target": 95,
+      "benchmark": 89,
+      "trend": "up"
+    },
+    {
+      "metric": "Profit Margin",
+      "current": ${metrics.profitMargin},
+      "target": 20,
+      "benchmark": 15.2,
+      "trend": "stable"
+    },
+    {
+      "metric": "Budget Variance",
+      "current": ${Math.abs(metrics.budgetVariance)},
+      "target": 5,
+      "benchmark": 8.3,
+      "trend": "down"
+    }
+  ],
+  "competitiveAnalysis": {
+    "marketPosition": ${Math.floor(Math.random() * 30) + 60},
+    "strengths": ["Strong project completion rate", "Effective cost management"],
+    "weaknesses": ["Safety incident frequency", "Client communication"],
+    "opportunities": ["Digital transformation", "Specialized services"],
+    "threats": ["Increased competition", "Material cost inflation"]
+  },
+  "historicalTrends": [
+    { "month": "Jan", "performance": ${Math.max(0, metrics.successRate - 10)}, "industry": 89 },
+    { "month": "Feb", "performance": ${Math.max(0, metrics.successRate - 5)}, "industry": 90 },
+    { "month": "Mar", "performance": ${metrics.successRate}, "industry": 89 }
+  ],
+  "improvementOpportunities": [
+    {
+      "area": "Safety Management",
+      "currentScore": ${Math.floor(Math.random() * 20) + 70},
+      "potentialScore": 95,
+      "impact": "high",
+      "difficulty": "medium",
+      "actions": ["Implement digital safety reporting", "Enhanced training programs"]
+    },
+    {
+      "area": "Cost Control",
+      "currentScore": ${Math.floor(Math.random() * 15) + 75},
+      "potentialScore": 92,
+      "impact": "high",
+      "difficulty": "low",
+      "actions": ["Real-time budget tracking", "Automated expense categorization"]
+    }
+  ],
+  "kpiDashboard": {
+    "overallScore": ${Math.floor(Math.random() * 20) + 75},
+    "categories": [
+      { "name": "Financial", "score": ${Math.floor(Math.random() * 15) + 80}, "trend": "up" },
+      { "name": "Operational", "score": ${Math.floor(Math.random() * 20) + 75}, "trend": "stable" },
+      { "name": "Safety", "score": ${Math.floor(Math.random() * 25) + 70}, "trend": "up" },
+      { "name": "Quality", "score": ${Math.floor(Math.random() * 10) + 85}, "trend": "down" }
+    ]
+  }
+}
+
+Ensure all numbers are realistic for the construction industry and consistent with the company's actual performance data.`;
+
+    // Call OpenAI API
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a construction industry analyst specializing in performance benchmarking and competitive analysis.' },
-          { role: 'user', content: benchmarkingPrompt }
+          { role: 'system', content: 'You are a construction industry analyst. Provide accurate, realistic benchmark data in valid JSON format.' },
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.2,
+        temperature: 0.3,
+        max_tokens: 2000,
       }),
     });
 
-    const aiResult = await response.json();
-    const benchmarkData = JSON.parse(aiResult.choices[0].message.content);
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
+    }
 
-    // Enhance with calculated metrics
-    const enhancedBenchmarks = enhanceBenchmarkData(benchmarkData, performanceMetrics, company);
+    const openaiData = await openaiResponse.json();
+    const benchmarkData = JSON.parse(openaiData.choices[0].message.content);
 
-    return new Response(JSON.stringify(enhancedBenchmarks), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Enhance with actual company metrics
+    const enhancedBenchmarks = enhanceBenchmarkData(benchmarkData, metrics, company);
+
+    // Store in database
+    const { data: savedBenchmark, error: saveError } = await supabase
+      .from('performance_benchmarks')
+      .insert({
+        company_id,
+        benchmark_period: 'quarterly',
+        period_start: new Date(new Date().getFullYear(), Math.floor(new Date().getMonth() / 3) * 3, 1).toISOString().split('T')[0],
+        period_end: new Date().toISOString().split('T')[0],
+        company_profit_margin: metrics.profitMargin,
+        company_project_completion_rate: metrics.successRate,
+        company_budget_variance: metrics.budgetVariance,
+        company_safety_incidents: 0,
+        company_client_satisfaction: 4.5,
+        company_employee_productivity: metrics.onTimeRate,
+        industry_avg_profit_margin: enhancedBenchmarks.industryComparison.avgProfitMargin,
+        industry_avg_completion_rate: enhancedBenchmarks.industryComparison.avgCompletionRate,
+        industry_avg_budget_variance: enhancedBenchmarks.industryComparison.avgBudgetVariance,
+        industry_avg_safety_incidents: enhancedBenchmarks.industryComparison.avgSafetyIncidents,
+        industry_avg_client_satisfaction: enhancedBenchmarks.industryComparison.avgClientSatisfaction,
+        industry_avg_productivity: enhancedBenchmarks.industryComparison.avgProductivity,
+        top_performer_profit_margin: enhancedBenchmarks.industryComparison.avgProfitMargin * 1.3,
+        top_performer_completion_rate: 95,
+        top_performer_budget_variance: 3,
+        top_performer_safety_incidents: 0,
+        top_performer_client_satisfaction: 4.8,
+        top_performer_productivity: 95,
+        market_position_percentile: enhancedBenchmarks.competitiveAnalysis.marketPosition,
+        areas_for_improvement: enhancedBenchmarks.improvementOpportunities,
+        competitive_advantages: enhancedBenchmarks.competitiveAnalysis.strengths,
+        company_size_category: projects?.length > 20 ? 'large' : projects?.length > 5 ? 'medium' : 'small',
+        geographic_region: 'North America'
+      })
+      .select()
+      .single();
+
+    if (saveError) {
+      console.error('Error saving benchmark:', saveError);
+    }
+
+    return new Response(
+      JSON.stringify(enhancedBenchmarks),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
 
   } catch (error) {
-    console.error('Performance benchmarking error:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error('Error generating performance benchmarks:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
   }
 });
 
 function calculatePerformanceMetrics(projects: any[], expenses: any[]): any {
   const completedProjects = projects.filter(p => p.status === 'completed');
+  const totalProjects = projects.length || 1;
+  
+  const successRate = (completedProjects.length / totalProjects) * 100;
+  
   const totalRevenue = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-  const totalCosts = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue) * 100 : 0;
+  
+  const avgCompletionTime = calculateAverageCompletionTime(completedProjects);
+  const onTimeRate = calculateOnTimeRate(completedProjects);
+  const budgetVariance = calculateBudgetVariance(projects, expenses);
   
   return {
-    successRate: projects.length > 0 ? (completedProjects.length / projects.length) * 100 : 0,
-    profitMargin: totalRevenue > 0 ? ((totalRevenue - totalCosts) / totalRevenue) * 100 : 0,
-    avgCompletionTime: calculateAverageCompletionTime(completedProjects),
-    totalRevenue: totalRevenue,
-    onTimeDeliveryRate: calculateOnTimeRate(completedProjects),
-    budgetVariance: calculateBudgetVariance(projects, expenses)
+    successRate: Math.round(successRate * 10) / 10,
+    profitMargin: Math.round(profitMargin * 10) / 10,
+    avgCompletionTime,
+    totalRevenue,
+    onTimeRate: Math.round(onTimeRate * 10) / 10,
+    budgetVariance: Math.round(budgetVariance * 10) / 10
   };
 }
 
 function calculateAverageCompletionTime(completedProjects: any[]): number {
-  if (completedProjects.length === 0) return 90;
+  if (completedProjects.length === 0) return 0;
   
-  const totalDays = completedProjects.reduce((sum, project) => {
-    if (project.start_date && project.end_date) {
-      const start = new Date(project.start_date);
-      const end = new Date(project.end_date);
-      return sum + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    }
-    return sum + 90; // Default if dates missing
-  }, 0);
-  
-  return Math.round(totalDays / completedProjects.length);
+  const completionTimes = completedProjects
+    .filter(p => p.start_date && p.end_date)
+    .map(p => {
+      const start = new Date(p.start_date);
+      const end = new Date(p.end_date);
+      return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    });
+    
+  return completionTimes.length > 0 
+    ? Math.round(completionTimes.reduce((sum, time) => sum + time, 0) / completionTimes.length)
+    : 0;
 }
 
 function calculateOnTimeRate(completedProjects: any[]): number {
-  if (completedProjects.length === 0) return 85; // Default estimate
+  if (completedProjects.length === 0) return 0;
   
-  const onTimeProjects = completedProjects.filter(project => {
-    if (project.start_date && project.end_date && project.planned_end_date) {
-      return new Date(project.end_date) <= new Date(project.planned_end_date);
-    }
-    return true; // Assume on time if data missing
+  const onTimeProjects = completedProjects.filter(p => {
+    if (!p.planned_end_date || !p.end_date) return false;
+    const planned = new Date(p.planned_end_date);
+    const actual = new Date(p.end_date);
+    return actual <= planned;
   });
   
   return (onTimeProjects.length / completedProjects.length) * 100;
 }
 
 function calculateBudgetVariance(projects: any[], expenses: any[]): number {
-  const projectsWithBudgets = projects.filter(p => p.budget > 0);
-  if (projectsWithBudgets.length === 0) return 10; // Default estimate
+  if (projects.length === 0) return 0;
   
-  const totalVariance = projectsWithBudgets.reduce((sum, project) => {
+  const projectVariances = projects.map(project => {
+    const budget = project.budget || 0;
     const projectExpenses = expenses
       .filter(e => e.project_id === project.id)
-      .reduce((total, e) => total + (e.amount || 0), 0);
+      .reduce((sum, e) => sum + (e.amount || 0), 0);
     
-    if (project.budget > 0) {
-      return sum + Math.abs((projectExpenses - project.budget) / project.budget) * 100;
-    }
-    return sum;
-  }, 0);
+    return budget > 0 ? ((projectExpenses - budget) / budget) * 100 : 0;
+  });
   
-  return totalVariance / projectsWithBudgets.length;
+  return projectVariances.length > 0
+    ? projectVariances.reduce((sum, variance) => sum + variance, 0) / projectVariances.length
+    : 0;
 }
 
 function enhanceBenchmarkData(benchmarkData: any, metrics: any, company: any): any {
-  // Update KPI dashboard with real metrics
-  benchmarkData.kpiDashboard.projectSuccessRate.value = metrics.successRate;
-  benchmarkData.kpiDashboard.avgProfitMargin.value = metrics.profitMargin;
-  benchmarkData.kpiDashboard.timeToCompletion.value = metrics.avgCompletionTime;
-  
-  // Generate realistic historical trends
+  // Update benchmark data with actual company metrics
+  benchmarkData.performanceMetrics = benchmarkData.performanceMetrics.map((metric: any) => {
+    if (metric.metric === 'Project Success Rate') {
+      metric.current = metrics.successRate;
+    } else if (metric.metric === 'Profit Margin') {
+      metric.current = metrics.profitMargin;
+    } else if (metric.metric === 'Budget Variance') {
+      metric.current = Math.abs(metrics.budgetVariance);
+    }
+    return metric;
+  });
+
+  // Generate more realistic historical trends
   benchmarkData.historicalTrends = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const baseEfficiency = 75 + Math.random() * 15;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    const monthIndex = (currentMonth - 11 + i + 12) % 12;
     
     return {
-      period: date.toISOString().slice(0, 7),
-      efficiency: Math.round(baseEfficiency * 10) / 10,
-      profitability: Math.round((metrics.profitMargin + (Math.random() * 6 - 3)) * 10) / 10,
-      quality: Math.round((85 + Math.random() * 10) * 10) / 10,
-      timeline: Math.round((metrics.onTimeDeliveryRate + (Math.random() * 10 - 5)) * 10) / 10,
-      industryAvg: Math.round((baseEfficiency - 5 + Math.random() * 10) * 10) / 10
+      month: monthNames[monthIndex],
+      performance: Math.max(0, metrics.successRate + (Math.random() - 0.5) * 20),
+      industry: 89 + (Math.random() - 0.5) * 6
     };
-  }).reverse();
+  });
 
-  // Update competitive analysis
-  benchmarkData.competitiveAnalysis.profitMargin = metrics.profitMargin;
-  benchmarkData.competitiveAnalysis.projectSuccessRate = metrics.successRate;
-  benchmarkData.competitiveAnalysis.timelyDelivery = metrics.onTimeDeliveryRate;
-
+  // Enhance competitive analysis with company-specific insights
+  benchmarkData.competitiveAnalysis.companyName = company?.name || 'Your Company';
+  
   return benchmarkData;
 }

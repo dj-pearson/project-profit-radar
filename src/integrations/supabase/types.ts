@@ -10341,6 +10341,114 @@ export type Database = {
           },
         ]
       }
+      performance_benchmarks: {
+        Row: {
+          areas_for_improvement: Json | null
+          benchmark_period: string
+          company_budget_variance: number | null
+          company_client_satisfaction: number | null
+          company_employee_productivity: number | null
+          company_id: string
+          company_profit_margin: number | null
+          company_project_completion_rate: number | null
+          company_safety_incidents: number | null
+          company_size_category: string | null
+          competitive_advantages: Json | null
+          confidence_score: number | null
+          created_at: string
+          data_source: string | null
+          geographic_region: string | null
+          id: string
+          industry_avg_budget_variance: number | null
+          industry_avg_client_satisfaction: number | null
+          industry_avg_completion_rate: number | null
+          industry_avg_productivity: number | null
+          industry_avg_profit_margin: number | null
+          industry_avg_safety_incidents: number | null
+          industry_sector: string | null
+          market_position_percentile: number | null
+          period_end: string
+          period_start: string
+          top_performer_budget_variance: number | null
+          top_performer_client_satisfaction: number | null
+          top_performer_completion_rate: number | null
+          top_performer_productivity: number | null
+          top_performer_profit_margin: number | null
+          top_performer_safety_incidents: number | null
+          updated_at: string
+        }
+        Insert: {
+          areas_for_improvement?: Json | null
+          benchmark_period: string
+          company_budget_variance?: number | null
+          company_client_satisfaction?: number | null
+          company_employee_productivity?: number | null
+          company_id: string
+          company_profit_margin?: number | null
+          company_project_completion_rate?: number | null
+          company_safety_incidents?: number | null
+          company_size_category?: string | null
+          competitive_advantages?: Json | null
+          confidence_score?: number | null
+          created_at?: string
+          data_source?: string | null
+          geographic_region?: string | null
+          id?: string
+          industry_avg_budget_variance?: number | null
+          industry_avg_client_satisfaction?: number | null
+          industry_avg_completion_rate?: number | null
+          industry_avg_productivity?: number | null
+          industry_avg_profit_margin?: number | null
+          industry_avg_safety_incidents?: number | null
+          industry_sector?: string | null
+          market_position_percentile?: number | null
+          period_end: string
+          period_start: string
+          top_performer_budget_variance?: number | null
+          top_performer_client_satisfaction?: number | null
+          top_performer_completion_rate?: number | null
+          top_performer_productivity?: number | null
+          top_performer_profit_margin?: number | null
+          top_performer_safety_incidents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          areas_for_improvement?: Json | null
+          benchmark_period?: string
+          company_budget_variance?: number | null
+          company_client_satisfaction?: number | null
+          company_employee_productivity?: number | null
+          company_id?: string
+          company_profit_margin?: number | null
+          company_project_completion_rate?: number | null
+          company_safety_incidents?: number | null
+          company_size_category?: string | null
+          competitive_advantages?: Json | null
+          confidence_score?: number | null
+          created_at?: string
+          data_source?: string | null
+          geographic_region?: string | null
+          id?: string
+          industry_avg_budget_variance?: number | null
+          industry_avg_client_satisfaction?: number | null
+          industry_avg_completion_rate?: number | null
+          industry_avg_productivity?: number | null
+          industry_avg_profit_margin?: number | null
+          industry_avg_safety_incidents?: number | null
+          industry_sector?: string | null
+          market_position_percentile?: number | null
+          period_end?: string
+          period_start?: string
+          top_performer_budget_variance?: number | null
+          top_performer_client_satisfaction?: number | null
+          top_performer_completion_rate?: number | null
+          top_performer_productivity?: number | null
+          top_performer_profit_margin?: number | null
+          top_performer_safety_incidents?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       permit_compliance_events: {
         Row: {
           areas_inspected: string[] | null
