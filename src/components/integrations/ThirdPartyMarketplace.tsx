@@ -181,106 +181,118 @@ const ThirdPartyMarketplace: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Integration Marketplace</h1>
-          <p className="text-muted-foreground mt-2">
-            Connect your construction management platform with the tools you already use
-          </p>
-        </div>
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+      {/* Mobile-optimized header */}
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Integration Marketplace</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2">
+          Connect your platform with the tools you already use
+        </p>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
+      {/* Search and Filters - Mobile Optimized */}
+      <div className="flex flex-col gap-4">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search integrations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11 text-base" // Larger touch target for mobile
           />
         </div>
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-          <TabsList>
-            {categories.map(category => (
-              <TabsTrigger key={category} value={category} className="capitalize">
-                {category === 'all' ? 'All' : category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        
+        {/* Mobile-friendly category selection */}
+        <div className="w-full overflow-x-auto">
+          <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+            <TabsList className="grid w-max grid-cols-6 min-w-full">
+              {categories.map(category => (
+                <TabsTrigger 
+                  key={category} 
+                  value={category} 
+                  className="capitalize whitespace-nowrap px-3 py-2 text-sm"
+                >
+                  {category === 'all' ? 'All' : category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
-      {/* Integration Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Integration Grid - Mobile First */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredIntegrations.map((integration) => (
           <Card key={integration.id} className="relative overflow-hidden hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-foreground rounded-lg flex items-center justify-center text-white font-bold text-lg">
+            <CardHeader className="pb-3 sm:pb-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-foreground rounded-lg flex items-center justify-center text-white font-bold text-sm sm:text-lg flex-shrink-0">
                     {integration.name.charAt(0)}
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">{integration.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{integration.provider}</p>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base sm:text-lg leading-tight truncate">{integration.name}</CardTitle>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">{integration.provider}</p>
                   </div>
                 </div>
                 {integration.status === 'installed' && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs flex-shrink-0">
                     Installed
                   </Badge>
                 )}
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground line-clamp-2">
+            <CardContent className="space-y-3 sm:space-y-4">
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                 {integration.description}
               </p>
 
-              <div className="flex items-center justify-between text-sm">
+              {/* Mobile-optimized metrics */}
+              <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
                 <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 fill-current" />
                   <span className="font-medium">{integration.rating}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{integration.installs.toLocaleString()}</span>
+                  <Download className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground hidden sm:inline">{integration.installs.toLocaleString()}</span>
+                  <span className="text-muted-foreground sm:hidden">{(integration.installs / 1000).toFixed(0)}k</span>
                 </div>
-                <Badge className={getPriceColor(integration.price)}>
+                <Badge className={getPriceColor(integration.price) + " text-xs"}>
                   {integration.price}
                 </Badge>
               </div>
 
+              {/* Features section - Mobile optimized */}
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Key Features:</p>
+                <p className="text-xs sm:text-sm font-medium text-foreground">Key Features:</p>
                 <div className="flex flex-wrap gap-1">
-                  {integration.features.slice(0, 3).map((feature, index) => (
+                  {integration.features.slice(0, 2).map((feature, index) => (
                     <Badge key={index} variant="outline" className="text-xs">
                       {feature}
                     </Badge>
                   ))}
-                  {integration.features.length > 3 && (
+                  {integration.features.length > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      +{integration.features.length - 3} more
+                      +{integration.features.length - 2} more
                     </Badge>
                   )}
                 </div>
               </div>
 
-              <div className="flex space-x-2 pt-2">
+              {/* Action buttons - Mobile optimized */}
+              <div className="flex flex-col sm:flex-row gap-2 pt-1 sm:pt-2">
                 {integration.status === 'installed' ? (
                   <>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Settings className="h-4 w-4 mr-2" />
+                    <Button variant="outline" size="sm" className="w-full sm:flex-1 h-9 text-xs sm:text-sm">
+                      <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       Configure
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
+                      className="w-full sm:w-auto h-9 text-xs sm:text-sm"
                       onClick={() => handleUninstall(integration)}
                       disabled={loading}
                     >
@@ -292,17 +304,18 @@ const ThirdPartyMarketplace: React.FC = () => {
                     <Button 
                       onClick={() => handleInstall(integration)} 
                       size="sm" 
-                      className="flex-1"
+                      className="w-full sm:flex-1 h-9 text-xs sm:text-sm"
                       disabled={loading}
                     >
                       {integration.name === 'Zapier Automation' ? (
-                        <><Zap className="h-4 w-4 mr-2" /> Connect</>
+                        <><Zap className="h-3 w-3 sm:h-4 sm:w-4 mr-2" /> Connect</>
                       ) : (
                         <>Install</>
                       )}
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <ExternalLink className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto h-9">
+                      <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="sm:hidden ml-2">Details</span>
                     </Button>
                   </>
                 )}
