@@ -71,6 +71,48 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_feed: {
+        Row: {
+          activity_type: string
+          company_id: string
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       affiliate_codes: {
         Row: {
           affiliate_code: string
@@ -2410,6 +2452,155 @@ export type Database = {
           },
         ]
       }
+      chat_channel_members: {
+        Row: {
+          channel_id: string
+          company_id: string
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          notifications_enabled: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          company_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          notifications_enabled?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          company_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          notifications_enabled?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_channel_members_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_channels: {
+        Row: {
+          archived_at: string | null
+          channel_type: string
+          company_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_private: boolean
+          last_activity_at: string | null
+          name: string
+          project_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          channel_type?: string
+          company_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          last_activity_at?: string | null
+          name: string
+          project_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          channel_type?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          last_activity_at?: string | null
+          name?: string
+          project_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          channel_id: string
+          company_id: string
+          content: string | null
+          created_at: string
+          edited_at: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          message_type: string
+          metadata: Json | null
+          reply_to: string | null
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          company_id: string
+          content?: string | null
+          created_at?: string
+          edited_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          reply_to?: string | null
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          company_id?: string
+          content?: string | null
+          created_at?: string
+          edited_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          message_type?: string
+          metadata?: Json | null
+          reply_to?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_document_shares: {
         Row: {
           access_level: string | null
@@ -2508,6 +2699,57 @@ export type Database = {
           is_active?: boolean
           last_accessed_at?: string | null
           project_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      collaboration_sessions: {
+        Row: {
+          company_id: string
+          created_by: string
+          description: string | null
+          document_id: string | null
+          ended_at: string | null
+          id: string
+          participants: Json | null
+          project_id: string | null
+          session_data: Json | null
+          session_type: string
+          started_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_by: string
+          description?: string | null
+          document_id?: string | null
+          ended_at?: string | null
+          id?: string
+          participants?: Json | null
+          project_id?: string | null
+          session_data?: Json | null
+          session_type: string
+          started_at?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_by?: string
+          description?: string | null
+          document_id?: string | null
+          ended_at?: string | null
+          id?: string
+          participants?: Json | null
+          project_id?: string | null
+          session_data?: Json | null
+          session_type?: string
+          started_at?: string
+          status?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -17650,6 +17892,47 @@ export type Database = {
           working_hours?: Json | null
         }
         Relationships: []
+      }
+      user_presence: {
+        Row: {
+          company_id: string
+          current_channel_id: string | null
+          id: string
+          last_seen_at: string
+          metadata: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          current_channel_id?: string | null
+          id?: string
+          last_seen_at?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          current_channel_id?: string | null
+          id?: string
+          last_seen_at?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_presence_current_channel_id_fkey"
+            columns: ["current_channel_id"]
+            isOneToOne: false
+            referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {
