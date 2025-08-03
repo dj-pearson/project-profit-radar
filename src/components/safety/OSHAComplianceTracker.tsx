@@ -70,6 +70,8 @@ const OSHAComplianceTracker: React.FC<OSHAComplianceTrackerProps> = ({
       // Calculate status for each requirement
       const requirementsWithStatus = data?.map(req => ({
         ...req,
+        frequency: req.frequency as 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually',
+        category: req.category as 'training' | 'inspection' | 'documentation' | 'reporting',
         status: calculateStatus(req.next_due_date, req.last_completed_date)
       })) || [];
 
