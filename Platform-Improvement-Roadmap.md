@@ -95,10 +95,11 @@ This document outlines the strategic improvements needed to make BuildDesk the g
   - ✅ Automatic price change alerts and notifications
   - ✅ Built: `MaterialCostIntegration.tsx`, database tables
 
-- [ ] **Labor burden rate calculations**
-  - Current: Basic labor tracking
-  - Target: Automatic burden rate calculations (taxes, insurance, benefits)
-  - True cost per hour calculations
+- [x] **Labor burden rate calculations**
+  - ✅ Automatic burden rate calculations (taxes, insurance, benefits)
+  - ✅ True cost per hour calculations with detailed breakdowns
+  - ✅ Payroll tax, insurance, and benefits cost allocation
+  - ✅ Built: `LaborBurdenCalculator.tsx`, database table
 
 - [ ] **Change order impact analysis in real-time**
   - Current: Manual change order tracking

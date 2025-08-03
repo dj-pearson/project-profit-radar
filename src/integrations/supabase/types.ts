@@ -8088,6 +8088,99 @@ export type Database = {
           },
         ]
       }
+      labor_burden_rates: {
+        Row: {
+          annual_hours: number | null
+          base_hourly_rate: number
+          burden_rate_percentage: number
+          company_id: string
+          created_at: string
+          effective_date: string
+          employee_id: string | null
+          equipment_allowance_monthly: number | null
+          federal_tax_rate: number | null
+          fica_rate: number | null
+          general_liability_rate: number | null
+          health_insurance_monthly: number | null
+          id: string
+          is_active: boolean | null
+          job_title: string
+          other_benefits_monthly: number | null
+          retirement_contribution_rate: number | null
+          state_tax_rate: number | null
+          total_hourly_cost: number
+          unemployment_rate: number | null
+          updated_at: string
+          vehicle_allowance_monthly: number | null
+          workers_comp_rate: number | null
+        }
+        Insert: {
+          annual_hours?: number | null
+          base_hourly_rate: number
+          burden_rate_percentage?: number
+          company_id: string
+          created_at?: string
+          effective_date?: string
+          employee_id?: string | null
+          equipment_allowance_monthly?: number | null
+          federal_tax_rate?: number | null
+          fica_rate?: number | null
+          general_liability_rate?: number | null
+          health_insurance_monthly?: number | null
+          id?: string
+          is_active?: boolean | null
+          job_title: string
+          other_benefits_monthly?: number | null
+          retirement_contribution_rate?: number | null
+          state_tax_rate?: number | null
+          total_hourly_cost?: number
+          unemployment_rate?: number | null
+          updated_at?: string
+          vehicle_allowance_monthly?: number | null
+          workers_comp_rate?: number | null
+        }
+        Update: {
+          annual_hours?: number | null
+          base_hourly_rate?: number
+          burden_rate_percentage?: number
+          company_id?: string
+          created_at?: string
+          effective_date?: string
+          employee_id?: string | null
+          equipment_allowance_monthly?: number | null
+          federal_tax_rate?: number | null
+          fica_rate?: number | null
+          general_liability_rate?: number | null
+          health_insurance_monthly?: number | null
+          id?: string
+          is_active?: boolean | null
+          job_title?: string
+          other_benefits_monthly?: number | null
+          retirement_contribution_rate?: number | null
+          state_tax_rate?: number | null
+          total_hourly_cost?: number
+          unemployment_rate?: number | null
+          updated_at?: string
+          vehicle_allowance_monthly?: number | null
+          workers_comp_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "labor_burden_rates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "labor_burden_rates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       labor_rates: {
         Row: {
           base_rate: number
