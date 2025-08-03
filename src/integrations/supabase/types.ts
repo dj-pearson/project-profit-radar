@@ -9603,6 +9603,95 @@ export type Database = {
           },
         ]
       }
+      osha_compliance_log: {
+        Row: {
+          company_id: string
+          completed_at: string
+          completed_by: string | null
+          created_at: string
+          evidence_photos: string[] | null
+          id: string
+          notes: string | null
+          project_id: string | null
+          requirement_id: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string
+          completed_by?: string | null
+          created_at?: string
+          evidence_photos?: string[] | null
+          id?: string
+          notes?: string | null
+          project_id?: string | null
+          requirement_id: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string
+          completed_by?: string | null
+          created_at?: string
+          evidence_photos?: string[] | null
+          id?: string
+          notes?: string | null
+          project_id?: string | null
+          requirement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "osha_compliance_log_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "osha_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      osha_requirements: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          company_id: string
+          created_at: string
+          description: string | null
+          frequency: string
+          id: string
+          last_completed_date: string | null
+          next_due_date: string
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          company_id: string
+          created_at?: string
+          description?: string | null
+          frequency: string
+          id?: string
+          last_completed_date?: string | null
+          next_due_date: string
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          last_completed_date?: string | null
+          next_due_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       password_policies: {
         Row: {
           account_locked_until: string | null
