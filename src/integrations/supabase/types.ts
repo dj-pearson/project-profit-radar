@@ -1021,6 +1021,75 @@ export type Database = {
           },
         ]
       }
+      bid_analytics: {
+        Row: {
+          analysis_period: string
+          average_bid_amount: number | null
+          average_margin_percentage: number | null
+          company_id: string
+          created_at: string | null
+          id: string
+          performance_trends: Json | null
+          period_end: string
+          period_start: string
+          roi_percentage: number | null
+          top_competitors: Json | null
+          top_loss_reasons: Json | null
+          total_bid_costs: number | null
+          total_bid_value: number | null
+          total_bids_lost: number | null
+          total_bids_submitted: number | null
+          total_bids_won: number | null
+          total_won_value: number | null
+          updated_at: string | null
+          win_rate_percentage: number | null
+        }
+        Insert: {
+          analysis_period: string
+          average_bid_amount?: number | null
+          average_margin_percentage?: number | null
+          company_id: string
+          created_at?: string | null
+          id?: string
+          performance_trends?: Json | null
+          period_end: string
+          period_start: string
+          roi_percentage?: number | null
+          top_competitors?: Json | null
+          top_loss_reasons?: Json | null
+          total_bid_costs?: number | null
+          total_bid_value?: number | null
+          total_bids_lost?: number | null
+          total_bids_submitted?: number | null
+          total_bids_won?: number | null
+          total_won_value?: number | null
+          updated_at?: string | null
+          win_rate_percentage?: number | null
+        }
+        Update: {
+          analysis_period?: string
+          average_bid_amount?: number | null
+          average_margin_percentage?: number | null
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          performance_trends?: Json | null
+          period_end?: string
+          period_start?: string
+          roi_percentage?: number | null
+          top_competitors?: Json | null
+          top_loss_reasons?: Json | null
+          total_bid_costs?: number | null
+          total_bid_value?: number | null
+          total_bids_lost?: number | null
+          total_bids_submitted?: number | null
+          total_bids_won?: number | null
+          total_won_value?: number | null
+          updated_at?: string | null
+          win_rate_percentage?: number | null
+        }
+        Relationships: []
+      }
       bid_documents: {
         Row: {
           bid_submission_id: string | null
@@ -1116,6 +1185,54 @@ export type Database = {
           },
         ]
       }
+      bid_performance_benchmarks: {
+        Row: {
+          benchmark_type: string
+          benchmark_value: number
+          company_size_category: string
+          confidence_level: number | null
+          created_at: string | null
+          data_source: string | null
+          id: string
+          industry_sector: string
+          is_active: boolean | null
+          last_updated: string | null
+          region: string | null
+          sample_size: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          benchmark_type: string
+          benchmark_value: number
+          company_size_category: string
+          confidence_level?: number | null
+          created_at?: string | null
+          data_source?: string | null
+          id?: string
+          industry_sector: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          region?: string | null
+          sample_size?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          benchmark_type?: string
+          benchmark_value?: number
+          company_size_category?: string
+          confidence_level?: number | null
+          created_at?: string | null
+          data_source?: string | null
+          id?: string
+          industry_sector?: string
+          is_active?: boolean | null
+          last_updated?: string | null
+          region?: string | null
+          sample_size?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bid_submissions: {
         Row: {
           addenda_acknowledged: string[] | null
@@ -1126,9 +1243,14 @@ export type Database = {
           base_bid_amount: number | null
           bid_amount: number
           bid_bond_amount: number | null
+          bid_cost: number | null
           bid_documents_path: string | null
           bid_number: string | null
+          bid_preparation_hours: number | null
+          client_feedback: string | null
           company_id: string
+          competitor_bid_amount: number | null
+          competitor_winner: string | null
           confirmation_number: string | null
           cost_proposal_path: string | null
           created_at: string
@@ -1137,13 +1259,18 @@ export type Database = {
           debriefing_requested: boolean | null
           equipment_list: Json | null
           exceptions_taken: string | null
+          follow_up_opportunities: string | null
           id: string
           key_personnel: Json | null
           lessons_learned: string | null
+          lessons_learned_summary: string | null
+          loss_reason: string | null
+          margin_percentage: number | null
           notes: string | null
           opportunity_id: string
           payment_bond_percentage: number | null
           performance_bond_percentage: number | null
+          probability_score: number | null
           project_duration_days: number | null
           project_manager_name: string | null
           proposed_completion_date: string | null
@@ -1151,6 +1278,7 @@ export type Database = {
           protest_filed: boolean | null
           protest_outcome: string | null
           ranking: number | null
+          roi_if_won: number | null
           status: string
           submission_method: string | null
           submitted_at: string | null
@@ -1158,6 +1286,7 @@ export type Database = {
           technical_proposal_path: string | null
           unit_prices: Json | null
           updated_at: string
+          win_loss_status: string | null
         }
         Insert: {
           addenda_acknowledged?: string[] | null
@@ -1168,9 +1297,14 @@ export type Database = {
           base_bid_amount?: number | null
           bid_amount: number
           bid_bond_amount?: number | null
+          bid_cost?: number | null
           bid_documents_path?: string | null
           bid_number?: string | null
+          bid_preparation_hours?: number | null
+          client_feedback?: string | null
           company_id: string
+          competitor_bid_amount?: number | null
+          competitor_winner?: string | null
           confirmation_number?: string | null
           cost_proposal_path?: string | null
           created_at?: string
@@ -1179,13 +1313,18 @@ export type Database = {
           debriefing_requested?: boolean | null
           equipment_list?: Json | null
           exceptions_taken?: string | null
+          follow_up_opportunities?: string | null
           id?: string
           key_personnel?: Json | null
           lessons_learned?: string | null
+          lessons_learned_summary?: string | null
+          loss_reason?: string | null
+          margin_percentage?: number | null
           notes?: string | null
           opportunity_id: string
           payment_bond_percentage?: number | null
           performance_bond_percentage?: number | null
+          probability_score?: number | null
           project_duration_days?: number | null
           project_manager_name?: string | null
           proposed_completion_date?: string | null
@@ -1193,6 +1332,7 @@ export type Database = {
           protest_filed?: boolean | null
           protest_outcome?: string | null
           ranking?: number | null
+          roi_if_won?: number | null
           status?: string
           submission_method?: string | null
           submitted_at?: string | null
@@ -1200,6 +1340,7 @@ export type Database = {
           technical_proposal_path?: string | null
           unit_prices?: Json | null
           updated_at?: string
+          win_loss_status?: string | null
         }
         Update: {
           addenda_acknowledged?: string[] | null
@@ -1210,9 +1351,14 @@ export type Database = {
           base_bid_amount?: number | null
           bid_amount?: number
           bid_bond_amount?: number | null
+          bid_cost?: number | null
           bid_documents_path?: string | null
           bid_number?: string | null
+          bid_preparation_hours?: number | null
+          client_feedback?: string | null
           company_id?: string
+          competitor_bid_amount?: number | null
+          competitor_winner?: string | null
           confirmation_number?: string | null
           cost_proposal_path?: string | null
           created_at?: string
@@ -1221,13 +1367,18 @@ export type Database = {
           debriefing_requested?: boolean | null
           equipment_list?: Json | null
           exceptions_taken?: string | null
+          follow_up_opportunities?: string | null
           id?: string
           key_personnel?: Json | null
           lessons_learned?: string | null
+          lessons_learned_summary?: string | null
+          loss_reason?: string | null
+          margin_percentage?: number | null
           notes?: string | null
           opportunity_id?: string
           payment_bond_percentage?: number | null
           performance_bond_percentage?: number | null
+          probability_score?: number | null
           project_duration_days?: number | null
           project_manager_name?: string | null
           proposed_completion_date?: string | null
@@ -1235,6 +1386,7 @@ export type Database = {
           protest_filed?: boolean | null
           protest_outcome?: string | null
           ranking?: number | null
+          roi_if_won?: number | null
           status?: string
           submission_method?: string | null
           submitted_at?: string | null
@@ -1242,6 +1394,7 @@ export type Database = {
           technical_proposal_path?: string | null
           unit_prices?: Json | null
           updated_at?: string
+          win_loss_status?: string | null
         }
         Relationships: [
           {
