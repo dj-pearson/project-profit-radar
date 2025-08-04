@@ -2,15 +2,13 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
-import Features from "@/components/Features";
-import Industries from "@/components/Industries";
-import Pricing from "@/components/Pricing";
 import Implementation from "@/components/Implementation";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import LazySection from "@/components/LazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
+import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
 const Index = () => {
 
   return (
@@ -49,11 +47,17 @@ const Index = () => {
           <ProblemSolution />
         </LazySection>
         
-        <Features />
+        <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+          <LazyFeatures />
+        </PerformanceLazyWrapper>
         
-        <Industries />
+        <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+          <LazyIndustries />
+        </PerformanceLazyWrapper>
         
-        <Pricing />
+        <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+          <LazyPricing />
+        </PerformanceLazyWrapper>
         
         <LazySection>
           <Implementation />
