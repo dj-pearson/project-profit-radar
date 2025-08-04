@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import Index from "./pages/Index";
 import APIMarketplace from "./pages/APIMarketplace";
 import Collaboration from "./pages/Collaboration";
@@ -24,6 +26,10 @@ const App = () => {
               </div>
             } />
           </Routes>
+          
+          {/* PWA Components */}
+          <PWAInstallPrompt />
+          <OfflineIndicator />
         </BrowserRouter>
       </HelmetProvider>
     </ThemeProvider>
