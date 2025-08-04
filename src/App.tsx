@@ -4,6 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { NotificationPermission } from "@/components/NotificationPermission";
 import Index from "./pages/Index";
 import APIMarketplace from "./pages/APIMarketplace";
 import Collaboration from "./pages/Collaboration";
@@ -30,6 +31,7 @@ const App = () => {
           {/* PWA Components */}
           <PWAInstallPrompt />
           <OfflineIndicator />
+          <NotificationPermission />
         </BrowserRouter>
       </HelmetProvider>
     </ThemeProvider>
