@@ -100,10 +100,12 @@ export const SimplifiedSidebar = () => {
     <Sidebar className={sidebarWidth} collapsible="icon">
       <SidebarHeader className="p-2">
         <div className="flex items-center justify-between">
-          <SidebarTrigger />
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-          </div>
+          <SidebarTrigger className="h-8 w-8 p-1" />
+          {!collapsed && (
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+            </div>
+          )}
         </div>
       </SidebarHeader>
       
@@ -145,7 +147,7 @@ export const SimplifiedSidebar = () => {
                 
                 return (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild className="h-12">
+                    <SidebarMenuButton asChild className="h-10 sm:h-12">
                       <div 
                         className={`flex items-center w-full cursor-pointer ${getNavClass({ isActive })}`}
                         onClick={() => {
@@ -157,30 +159,30 @@ export const SimplifiedSidebar = () => {
                       >
                         <NavLink 
                           to={item.url} 
-                          className="flex items-center flex-1"
+                          className="flex items-center flex-1 min-w-0"
                         >
-                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                           {!collapsed && (
                             <div className="flex flex-col items-start flex-1 ml-2 min-w-0">
-                              <span className="font-medium text-sm w-full leading-tight">
+                              <span className="font-medium text-xs sm:text-sm w-full leading-tight truncate">
                                 {item.title}
                               </span>
                               {item.description && (
-                                <span className="text-xs text-muted-foreground w-full leading-tight break-words">
+                                <span className="text-xs text-muted-foreground w-full leading-tight truncate">
                                   {item.description}
                                 </span>
                               )}
                             </div>
                           )}
                           {item.badge && !collapsed && (
-                            <Badge variant="destructive" className="text-xs px-1 py-0 flex-shrink-0">
+                            <Badge variant="destructive" className="text-xs px-1 py-0 flex-shrink-0 ml-1">
                               {item.badge}
                             </Badge>
                           )}
                         </NavLink>
                         {forceDropdown && (
                           <ChevronRight 
-                            className={`h-4 w-4 transition-transform ml-auto flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`} 
+                            className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ml-auto flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`} 
                           />
                         )}
                       </div>
