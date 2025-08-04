@@ -16,6 +16,7 @@ const Header = () => {
     { name: "Pricing", href: "/#pricing", isSection: true },
     { name: "Industries", href: "/#industries", isSection: true },
     { name: "Tools", href: "/tools", isSection: false },
+    { name: "Mobile", href: "/mobile-dashboard", isSection: false },
     { name: "Resources", href: "/resources", isSection: false },
   ];
 
