@@ -45,48 +45,53 @@ export const RecentActivity = ({ activities }: RecentActivityProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-6 pb-2 sm:pb-6">
-        <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+    <Card className="w-full">
+      <CardHeader className="p-3 sm:p-4 lg:p-6">
+        <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold">Recent Activity</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
+      <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
         {activities.length === 0 ? (
-          <div className="text-center text-muted-foreground py-4 text-xs sm:text-sm">
+          <div className="text-center text-muted-foreground py-6 sm:py-8 text-sm">
             No recent activity
           </div>
         ) : (
-          activities.slice(0, 5).map((activity) => (
-            <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3">
-              <div className={`mt-1 shrink-0 ${getActivityColor(activity.type, activity.urgent)}`}>
-                {getActivityIcon(activity.type)}
-              </div>
-              <div className="flex-1 space-y-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs sm:text-sm font-medium truncate">{activity.title}</p>
-                  {activity.urgent && (
-                    <Badge variant="destructive" className="text-xs shrink-0">
-                      Urgent
-                    </Badge>
-                  )}
+          <div className="space-y-3 sm:space-y-4">
+            {activities.slice(0, 5).map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3 p-2.5 sm:p-3 bg-muted/20 rounded-lg border border-border/30 hover:bg-muted/40 transition-colors">
+                <div className={`mt-0.5 shrink-0 ${getActivityColor(activity.type, activity.urgent)}`}>
+                  {getActivityIcon(activity.type)}
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {activity.description}
-                </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
-                  <div className="flex items-center">
-                    <Clock className="h-3 w-3 mr-1 shrink-0" />
-                    <span>{new Date(activity.timestamp).toLocaleDateString()}</span>
+                <div className="flex-1 space-y-1.5 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1.5 sm:gap-2">
+                    <p className="text-sm sm:text-base font-medium text-foreground leading-tight pr-2">{activity.title}</p>
+                    {activity.urgent && (
+                      <Badge variant="destructive" className="text-xs self-start shrink-0">
+                        Urgent
+                      </Badge>
+                    )}
                   </div>
-                  {activity.user && (
-                    <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1 shrink-0" />
-                      <span className="truncate">{activity.user}</span>
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                    {activity.description}
+                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 shrink-0" />
+                      <span>{new Date(activity.timestamp).toLocaleDateString()}</span>
                     </div>
-                  )}
+                    {activity.user && (
+                      <>
+                        <span className="hidden sm:inline text-muted-foreground/50">•</span>
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{activity.user}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>

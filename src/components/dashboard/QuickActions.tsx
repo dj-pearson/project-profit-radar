@@ -65,23 +65,25 @@ export const QuickActions = ({ userRole, onAction }: QuickActionsProps) => {
   const actions = getActionsForRole();
 
   return (
-    <Card>
-      <CardHeader className="px-3 sm:px-6 pt-3 sm:pt-6 pb-2 sm:pb-6">
-        <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
+    <Card className="w-full">
+      <CardHeader className="p-3 sm:p-4 lg:p-6">
+        <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold">Quick Actions</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 px-3 sm:px-6 pb-3 sm:pb-6">
-        {actions.map((action) => (
-          <Button
-            key={action.key}
-            variant="outline"
-            size="sm"
-            className="w-full justify-start text-xs sm:text-sm"
-            onClick={() => onAction(action.key)}
-          >
-            <action.icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            <span className="truncate">{action.label}</span>
-          </Button>
-        ))}
+      <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3">
+          {actions.map((action) => (
+            <Button
+              key={action.key}
+              variant="outline"
+              size="sm"
+              className="w-full justify-start text-xs sm:text-sm min-h-[44px] sm:min-h-[40px] px-3 py-2.5 hover:bg-accent transition-colors"
+              onClick={() => onAction(action.key)}
+            >
+              <action.icon className="h-4 w-4 mr-2 shrink-0 text-muted-foreground" />
+              <span className="truncate text-left">{action.label}</span>
+            </Button>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
