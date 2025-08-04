@@ -1,559 +1,298 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
-import { Geolocation } from '@capacitor/geolocation';
-import { Device } from '@capacitor/device';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Camera as CameraIcon, MapPin, Tag, Upload, X, Image } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { Card } from '@/components/ui/card';
+import { Camera, RotateCcw, Check, X, SwitchCamera } from 'lucide-react';
+import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 
-interface PhotoMetadata {
-  id: string;
-  filename: string;
-  filepath: string;
-  description: string;
-  tags: string[];
-  projectId?: string;
-  latitude?: number;
-  longitude?: number;
-  accuracy?: number;
-  timestamp: string;
-  deviceInfo: string;
-  uploaded: boolean;
+interface MobileCameraProps {
+  onCapture: (file: File, metadata?: CameraMetadata) => void;
+  onCancel: () => void;
+  maxPhotos?: number;
+  currentCount?: number;
+  enableGeolocation?: boolean;
+  quality?: number; // 0.1 to 1.0
 }
 
-interface EnhancedMobileCameraProps {
-  projectId?: string;
-  onPhotosCaptured?: (photos: PhotoMetadata[]) => void;
+interface CameraMetadata {
+  timestamp: Date;
+  location?: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  };
+  deviceInfo?: {
+    platform: string;
+    model: string;
+  };
 }
 
-const EnhancedMobileCamera: React.FC<EnhancedMobileCameraProps> = ({
-  projectId,
-  onPhotosCaptured
-}) => {
-  const [photos, setPhotos] = useState<PhotoMetadata[]>([]);
-  const [currentPhoto, setCurrentPhoto] = useState<Photo | null>(null);
-  const [description, setDescription] = useState('');
-  const [tags, setTags] = useState<string>('');
-  const [selectedProject, setSelectedProject] = useState(projectId || '');
-  const [projects, setProjects] = useState<any[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+export const EnhancedMobileCamera = ({
+  onCapture,
+  onCancel,
+  maxPhotos = 10,
+  currentCount = 0,
+  enableGeolocation = true,
+  quality = 0.8
+}: MobileCameraProps) => {
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [error, setError] = useState<string | null>(null);
   
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  
+  const { deviceInfo, capabilities, triggerHapticFeedback } = useDeviceInfo();
 
-  useEffect(() => {
-    loadProjects();
-    loadStoredPhotos();
+  const startCamera = useCallback(async () => {
+    try {
+      setError(null);
+      
+      if (!capabilities.hasCamera) {
+        setError('Camera not available on this device');
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode,
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 }
+        }
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setIsStreaming(true);
+        
+        // Wait for video to load metadata
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      setError('Failed to access camera. Please check permissions.');
+    }
+  }, [facingMode, capabilities.hasCamera]);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsStreaming(false);
   }, []);
 
-  const loadProjects = async () => {
-    try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
+  const capturePhoto = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current) return;
 
-      if (profile?.company_id) {
-        const { data } = await supabase
-          .from('projects')
-          .select('id, name')
-          .eq('company_id', profile.company_id)
-          .order('name');
-        
-        setProjects(data || []);
+    triggerHapticFeedback('medium');
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert to data URL
+    const dataURL = canvas.toDataURL('image/jpeg', quality);
+    setCapturedImage(dataURL);
+    stopCamera();
+  }, [triggerHapticFeedback, quality, stopCamera]);
+
+  const retakePhoto = useCallback(() => {
+    setCapturedImage(null);
+    startCamera();
+  }, [startCamera]);
+
+  const confirmCapture = useCallback(async () => {
+    if (!capturedImage || !canvasRef.current) return;
+
+    // Convert data URL to File
+    const response = await fetch(capturedImage);
+    const blob = await response.blob();
+    const timestamp = new Date();
+    const filename = `photo-${timestamp.getTime()}.jpg`;
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+
+    // Gather metadata
+    const metadata: CameraMetadata = {
+      timestamp,
+      deviceInfo: {
+        platform: deviceInfo.platform,
+        model: deviceInfo.model
       }
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
+    };
 
-  const loadStoredPhotos = async () => {
-    try {
-      const { files } = await Filesystem.readdir({
-        path: 'construction-photos',
-        directory: Directory.Data
-      });
-
-      const photoMetadata = await Promise.all(
-        files.map(async (file) => {
-          try {
-            const { data } = await Filesystem.readFile({
-              path: `construction-photos/${file.name}.meta`,
-              directory: Directory.Data,
-              encoding: Encoding.UTF8
-            });
-            return JSON.parse(data as string);
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      setPhotos(photoMetadata.filter(Boolean));
-    } catch (error) {
-      // Directory doesn't exist yet, that's okay
-      console.log('No stored photos found');
-    }
-  };
-
-  const requestCameraPermissions = async () => {
-    try {
-      const permissions = await Camera.requestPermissions();
-      return permissions.camera === 'granted';
-    } catch (error) {
-      toast({
-        title: "Permission Error",
-        description: "Camera permissions are required to take photos",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
-  const capturePhoto = async () => {
-    try {
-      const hasPermission = await requestCameraPermissions();
-      if (!hasPermission) return;
-
-      const photo = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Base64,
-        source: CameraSource.Camera,
-        saveToGallery: true
-      });
-
-      setCurrentPhoto(photo);
-      setShowPhotoDialog(true);
-    } catch (error) {
-      toast({
-        title: "Camera Error",
-        description: "Failed to capture photo",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const captureFromGallery = async () => {
-    try {
-      const hasPermission = await requestCameraPermissions();
-      if (!hasPermission) return;
-
-      const photo = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Base64,
-        source: CameraSource.Photos
-      });
-
-      setCurrentPhoto(photo);
-      setShowPhotoDialog(true);
-    } catch (error) {
-      toast({
-        title: "Gallery Error",
-        description: "Failed to select photo from gallery",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const savePhotoWithMetadata = async () => {
-    if (!currentPhoto) return;
-
-    try {
-      // Get current location
-      let location = null;
+    // Get location if enabled and available
+    if (enableGeolocation && capabilities.hasGeolocation) {
       try {
-        const position = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: true,
-          timeout: 10000
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 30000
+          });
         });
-        location = {
+
+        metadata.location = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy
         };
-      } catch (locationError) {
-        console.log('Location not available:', locationError);
+      } catch (error) {
+        console.warn('Could not get location for photo:', error);
       }
-
-      // Get device info
-      const deviceInfo = await Device.getInfo();
-      
-      // Create unique filename
-      const timestamp = new Date().toISOString();
-      const filename = `photo_${Date.now()}.jpg`;
-      const filepath = `construction-photos/${filename}`;
-
-      // Ensure directory exists
-      try {
-        await Filesystem.mkdir({
-          path: 'construction-photos',
-          directory: Directory.Data,
-          recursive: true
-        });
-      } catch {
-        // Directory might already exist
-      }
-
-      // Save photo
-      await Filesystem.writeFile({
-        path: filepath,
-        data: currentPhoto.base64String as string,
-        directory: Directory.Data
-      });
-
-      // Create metadata
-      const metadata: PhotoMetadata = {
-        id: `photo_${Date.now()}`,
-        filename,
-        filepath,
-        description,
-        tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        projectId: selectedProject || undefined,
-        latitude: location?.latitude,
-        longitude: location?.longitude,
-        accuracy: location?.accuracy,
-        timestamp,
-        deviceInfo: `${deviceInfo.platform} ${deviceInfo.osVersion}`,
-        uploaded: false
-      };
-
-      // Save metadata
-      await Filesystem.writeFile({
-        path: `${filepath}.meta`,
-        data: JSON.stringify(metadata),
-        directory: Directory.Data,
-        encoding: Encoding.UTF8
-      });
-
-      // Update state
-      const updatedPhotos = [...photos, metadata];
-      setPhotos(updatedPhotos);
-
-      // Reset form
-      setCurrentPhoto(null);
-      setDescription('');
-      setTags('');
-      setShowPhotoDialog(false);
-
-      toast({
-        title: "Photo Saved",
-        description: "Photo has been saved with metadata",
-      });
-
-      // Callback to parent
-      onPhotosCaptured?.(updatedPhotos);
-
-    } catch (error) {
-      console.error('Error saving photo:', error);
-      toast({
-        title: "Save Error",
-        description: "Failed to save photo",
-        variant: "destructive"
-      });
     }
-  };
 
-  const uploadPhoto = async (photoMetadata: PhotoMetadata) => {
-    try {
-      setIsUploading(true);
+    onCapture(file, metadata);
+    triggerHapticFeedback('light');
+  }, [capturedImage, deviceInfo, capabilities, enableGeolocation, onCapture, triggerHapticFeedback]);
 
-      // Read the photo file
-      const { data } = await Filesystem.readFile({
-        path: photoMetadata.filepath,
-        directory: Directory.Data
-      });
-
-      // Convert base64 to blob
-      const response = await fetch(`data:image/jpeg;base64,${data}`);
-      const blob = await response.blob();
-
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('project-documents')
-        .upload(`photos/${photoMetadata.filename}`, blob, {
-          contentType: 'image/jpeg',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('project-documents')
-        .getPublicUrl(`photos/${photoMetadata.filename}`);
-
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert({
-          company_id: (await supabase.from('user_profiles').select('company_id').eq('id', user?.id).single()).data?.company_id,
-          project_id: photoMetadata.projectId,
-          name: photoMetadata.description || photoMetadata.filename,
-          description: `${photoMetadata.description}\nTags: ${photoMetadata.tags.join(', ')}\nLocation: ${photoMetadata.latitude ? `${photoMetadata.latitude}, ${photoMetadata.longitude}` : 'Not available'}`,
-          file_path: urlData.publicUrl,
-          file_type: 'image/jpeg',
-          uploaded_by: user?.id,
-          ai_classification: {
-            tags: photoMetadata.tags,
-            location: photoMetadata.latitude ? {
-              latitude: photoMetadata.latitude,
-              longitude: photoMetadata.longitude,
-              accuracy: photoMetadata.accuracy
-            } : null,
-            timestamp: photoMetadata.timestamp,
-            device: photoMetadata.deviceInfo
-          }
-        });
-
-      if (dbError) throw dbError;
-
-      // Update metadata to mark as uploaded
-      const updatedMetadata = { ...photoMetadata, uploaded: true };
-      await Filesystem.writeFile({
-        path: `${photoMetadata.filepath}.meta`,
-        data: JSON.stringify(updatedMetadata),
-        directory: Directory.Data,
-        encoding: Encoding.UTF8
-      });
-
-      // Update state
-      setPhotos(prev => prev.map(p => 
-        p.id === photoMetadata.id ? updatedMetadata : p
-      ));
-
-      toast({
-        title: "Upload Successful",
-        description: "Photo has been uploaded to the project",
-      });
-
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      toast({
-        title: "Upload Error",
-        description: "Failed to upload photo",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
+  const switchCamera = useCallback(() => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+    if (isStreaming) {
+      stopCamera();
+      // Small delay to ensure camera is stopped
+      setTimeout(startCamera, 100);
     }
-  };
+  }, [isStreaming, stopCamera, startCamera]);
 
-  const deletePhoto = async (photoMetadata: PhotoMetadata) => {
-    try {
-      // Delete photo file
-      await Filesystem.deleteFile({
-        path: photoMetadata.filepath,
-        directory: Directory.Data
-      });
+  // Auto-start camera when component mounts
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, [startCamera, stopCamera]);
 
-      // Delete metadata file
-      await Filesystem.deleteFile({
-        path: `${photoMetadata.filepath}.meta`,
-        directory: Directory.Data
-      });
+  if (currentCount >= maxPhotos) {
+    return (
+      <Card className="p-6 text-center">
+        <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold mb-2">Photo Limit Reached</h3>
+        <p className="text-muted-foreground mb-4">
+          You've reached the maximum of {maxPhotos} photos for this session.
+        </p>
+        <Button onClick={onCancel} variant="outline">
+          Close Camera
+        </Button>
+      </Card>
+    );
+  }
 
-      // Update state
-      const updatedPhotos = photos.filter(p => p.id !== photoMetadata.id);
-      setPhotos(updatedPhotos);
-
-      toast({
-        title: "Photo Deleted",
-        description: "Photo has been removed",
-      });
-
-      onPhotosCaptured?.(updatedPhotos);
-
-    } catch (error) {
-      console.error('Error deleting photo:', error);
-      toast({
-        title: "Delete Error",
-        description: "Failed to delete photo",
-        variant: "destructive"
-      });
-    }
-  };
+  if (error) {
+    return (
+      <Card className="p-6 text-center">
+        <Camera className="w-16 h-16 mx-auto mb-4 text-destructive" />
+        <h3 className="text-lg font-semibold mb-2">Camera Error</h3>
+        <p className="text-muted-foreground mb-4">{error}</p>
+        <div className="flex gap-2 justify-center">
+          <Button onClick={startCamera} variant="outline">
+            Try Again
+          </Button>
+          <Button onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      {/* Camera Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CameraIcon className="h-5 w-5 text-construction-orange" />
-            Photo Capture & Documentation
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={capturePhoto} className="bg-construction-orange hover:bg-construction-orange/90">
-              <CameraIcon className="h-4 w-4 mr-2" />
-              Take Photo
-            </Button>
-            <Button variant="outline" onClick={captureFromGallery}>
-              <Image className="h-4 w-4 mr-2" />
-              From Gallery
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Photo Sheet for Mobile */}
-      <Sheet open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
-        <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Add Photo Details</SheetTitle>
-          </SheetHeader>
+    <div className="fixed inset-0 z-50 bg-black">
+      <div className="relative h-full flex flex-col">
+        {/* Camera View */}
+        <div className="flex-1 relative overflow-hidden">
+          {capturedImage ? (
+            <img
+              src={capturedImage}
+              alt="Captured"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              playsInline
+              muted
+            />
+          )}
           
-          {currentPhoto && (
-            <div className="space-y-4">
-              {/* Photo Preview */}
-              <div className="relative">
-                <img 
-                  src={`data:image/jpeg;base64,${currentPhoto.base64String}`}
-                  alt="Captured"
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-              </div>
+          {/* Photo Counter */}
+          <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+            {currentCount + 1} / {maxPhotos}
+          </div>
+        </div>
 
-              {/* Project Selection */}
-              <div>
-                <Label htmlFor="project">Project</Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select project (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* Controls */}
+        <div className="p-4 bg-black">
+          {capturedImage ? (
+            /* Captured Image Controls */
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                onClick={retakePhoto}
+                size="lg"
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                <RotateCcw className="w-5 h-5 mr-2" />
+                Retake
+              </Button>
+              <Button
+                onClick={confirmCapture}
+                size="lg"
+                className="bg-primary text-primary-foreground"
+              >
+                <Check className="w-5 h-5 mr-2" />
+                Use Photo
+              </Button>
+            </div>
+          ) : (
+            /* Camera Controls */
+            <div className="flex items-center justify-between">
+              <Button
+                onClick={onCancel}
+                size="lg"
+                variant="ghost"
+                className="text-white hover:bg-white/10"
+              >
+                <X className="w-6 h-6" />
+              </Button>
 
-              {/* Description */}
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea 
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe what this photo shows..."
-                  rows={3}
-                />
-              </div>
+              <Button
+                onClick={capturePhoto}
+                disabled={!isStreaming}
+                size="lg"
+                className="w-16 h-16 rounded-full bg-white text-black hover:bg-gray-200"
+              >
+                <Camera className="w-8 h-8" />
+              </Button>
 
-              {/* Tags */}
-              <div>
-                <Label htmlFor="tags">Tags</Label>
-                <Input 
-                  id="tags"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="foundation, plumbing, electrical, safety (comma-separated)"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Add tags to categorize this photo for easy searching
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowPhotoDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={savePhotoWithMetadata} className="bg-construction-orange hover:bg-construction-orange/90">
-                  Save Photo
-                </Button>
-              </div>
+              <Button
+                onClick={switchCamera}
+                disabled={!isStreaming}
+                size="lg"
+                variant="ghost"
+                className="text-white hover:bg-white/10"
+              >
+                <SwitchCamera className="w-6 h-6" />
+              </Button>
             </div>
           )}
-        </SheetContent>
-      </Sheet>
+        </div>
+      </div>
 
-      {/* Saved Photos */}
-      {photos.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Captured Photos ({photos.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {photos.map((photo) => (
-                <div key={photo.id} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium truncate">
-                      {photo.description || photo.filename}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      {photo.uploaded ? (
-                        <Badge variant="default">Uploaded</Badge>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          onClick={() => uploadPhoto(photo)}
-                          disabled={isUploading}
-                          className="bg-construction-orange hover:bg-construction-orange/90"
-                        >
-                          <Upload className="h-3 w-3 mr-1" />
-                          Upload
-                        </Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => deletePhoto(photo)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {photo.tags.length > 0 && (
-                    <div className="flex gap-1 flex-wrap">
-                      {photo.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {photo.latitude && photo.longitude && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      Location: {photo.latitude.toFixed(6)}, {photo.longitude.toFixed(6)}
-                      {photo.accuracy && ` (±${Math.round(photo.accuracy)}m)`}
-                    </div>
-                  )}
-                  
-                  <div className="text-xs text-muted-foreground">
-                    Captured: {new Date(photo.timestamp).toLocaleString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Hidden canvas for image processing */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 };
-
-export default EnhancedMobileCamera;
