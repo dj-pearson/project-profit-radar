@@ -63,7 +63,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
   const [selectedWorkflow, setSelectedWorkflow] = useState<QualificationWorkflow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const { userProfile } = useAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
 
   const [newWorkflow, setNewWorkflow] = useState({
@@ -134,7 +134,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
         .insert({
           workflow_name: newWorkflow.workflow_name,
           description: newWorkflow.description,
-          company_id: userProfile?.company_id || '',
+          company_id: profile?.company_id || '',
           qualification_criteria: JSON.stringify(qualificationCriteria),
           workflow_steps: JSON.stringify(workflowSteps),
           trigger_events: JSON.stringify(['lead_created', 'lead_updated', 'score_calculated']),

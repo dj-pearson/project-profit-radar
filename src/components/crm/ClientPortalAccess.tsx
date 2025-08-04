@@ -47,7 +47,7 @@ interface Project {
 }
 
 export const ClientPortalAccess = () => {
-  const { userProfile } = useAuth();
+  const { profile } = useAuth();
   const [portalAccess, setPortalAccess] = useState<ClientPortalAccess[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,10 +59,10 @@ export const ClientPortalAccess = () => {
   });
 
   useEffect(() => {
-    if (userProfile?.company_id) {
+    if (profile?.company_id) {
       loadPortalData();
     }
-  }, [userProfile?.company_id]);
+  }, [profile?.company_id]);
 
   const loadPortalData = async () => {
     try {
@@ -75,7 +75,7 @@ export const ClientPortalAccess = () => {
           *,
           projects:project_id (name)
         `)
-        .eq('company_id', userProfile?.company_id)
+        .eq('company_id', profile?.company_id)
         .order('created_at', { ascending: false });
 
       if (accessError) throw accessError;
@@ -84,7 +84,7 @@ export const ClientPortalAccess = () => {
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, client_name, client_email')
-        .eq('company_id', userProfile?.company_id)
+        .eq('company_id', profile?.company_id)
         .order('name', { ascending: true });
 
       if (projectsError) throw projectsError;
@@ -125,13 +125,13 @@ export const ClientPortalAccess = () => {
       const { error } = await supabase
         .from('client_portal_access')
         .insert({
-          company_id: userProfile?.company_id,
+          company_id: profile?.company_id,
           project_id: newAccess.project_id,
           client_email: newAccess.client_email,
           access_token: accessToken,
           access_level: newAccess.access_level,
           expires_at: expiresAt,
-          created_by: userProfile?.id
+          created_by: profile?.id
         });
 
       if (error) throw error;

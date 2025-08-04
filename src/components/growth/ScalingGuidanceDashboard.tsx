@@ -70,7 +70,7 @@ interface ScalingMilestone {
 }
 
 export const ScalingGuidanceDashboard: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
   const [assessments, setAssessments] = useState<ScalingAssessment[]>([]);
   const [milestones, setMilestones] = useState<ScalingMilestone[]>([]);
@@ -87,17 +87,17 @@ export const ScalingGuidanceDashboard: React.FC = () => {
   useEffect(() => {
     loadScalingData();
     loadGuidance();
-  }, [userProfile]);
+  }, [profile]);
 
   const loadScalingData = async () => {
-    if (!userProfile?.company_id) return;
+    if (!profile?.company_id) return;
 
     try {
       // Load assessments
       const { data: assessmentData, error: assessmentError } = await supabase
         .from('scaling_assessments')
         .select('*')
-        .eq('company_id', userProfile.company_id)
+        .eq('company_id', profile.company_id)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -108,7 +108,7 @@ export const ScalingGuidanceDashboard: React.FC = () => {
       const { data: milestoneData, error: milestoneError } = await supabase
         .from('scaling_milestones')
         .select('*')
-        .eq('company_id', userProfile.company_id)
+        .eq('company_id', profile.company_id)
         .order('target_date', { ascending: true });
 
       if (milestoneError) throw milestoneError;
@@ -141,13 +141,13 @@ export const ScalingGuidanceDashboard: React.FC = () => {
   };
 
   const generateScalingPlan = async () => {
-    if (!userProfile?.company_id) return;
+    if (!profile?.company_id) return;
 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-scaling-plan', {
         body: {
-          company_id: userProfile.company_id,
+          company_id: profile.company_id,
           current_metrics: metrics
         }
       });

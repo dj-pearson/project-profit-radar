@@ -26,21 +26,21 @@ interface TriggerAutomationParams {
 }
 
 export const useSocialMediaAutomation = () => {
-  const { userProfile } = useAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<SocialAutomationSettings | null>(null);
 
   // Load automation settings
   const loadSettings = async () => {
-    if (!userProfile?.company_id) return;
+    if (!profile?.company_id) return;
 
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from("social_media_automation_settings")
         .select("*")
-        .eq("company_id", userProfile.company_id)
+        .eq("company_id", profile.company_id)
         .single();
 
       if (error && error.code !== "PGRST116") {
@@ -75,7 +75,7 @@ export const useSocialMediaAutomation = () => {
 
   // Save automation settings
   const saveSettings = async (newSettings: Partial<SocialAutomationSettings>) => {
-    if (!userProfile?.company_id) {
+    if (!profile?.company_id) {
       throw new Error("Company ID not found");
     }
 
@@ -86,7 +86,7 @@ export const useSocialMediaAutomation = () => {
       const { data: existingRecord } = await supabase
         .from("social_media_automation_settings")
         .select("*")
-        .eq("company_id", userProfile.company_id)
+        .eq("company_id", profile.company_id)
         .maybeSingle();
 
       let result;
@@ -102,14 +102,14 @@ export const useSocialMediaAutomation = () => {
             posting_schedule: (newSettings.posting_schedule || {}) as any,
             platforms_enabled: (newSettings.platforms_enabled || []) as any
           })
-          .eq('company_id', userProfile.company_id)
+          .eq('company_id', profile.company_id)
           .select()
           .single();
       } else {
         // Insert new record
         const settingsData = {
-          company_id: userProfile.company_id,
-          created_by: userProfile.id,
+          company_id: profile.company_id,
+          created_by: profile.id,
           ...newSettings,
           // Cast to Json type for Supabase
           content_templates: (newSettings.content_templates || {}) as any,
@@ -164,7 +164,7 @@ export const useSocialMediaAutomation = () => {
 
   // Simplified trigger automation function
   const triggerAutomation = async ({ blogPostId }: TriggerAutomationParams) => {
-    if (!userProfile?.company_id) {
+    if (!profile?.company_id) {
       throw new Error("Company ID not found");
     }
 
