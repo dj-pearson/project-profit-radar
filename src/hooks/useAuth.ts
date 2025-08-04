@@ -2,68 +2,109 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-interface UserProfile {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-  company_id: string | null;
+interface AuthState {
+  user: User | null;
+  loading: boolean;
+  profile: any | null;
 }
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [auth, setAuth] = useState<AuthState>({
+    user: null,
+    loading: true,
+    profile: null
+  });
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (session?.user) {
-        loadUserProfile(session.user.id);
+        // Get user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        setAuth({
+          user: session.user,
+          loading: false,
+          profile: profile || null
+        });
       } else {
-        setLoading(false);
+        setAuth({
+          user: null,
+          loading: false,
+          profile: null
+        });
       }
-    });
+    };
+
+    getSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          loadUserProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-          setLoading(false);
-        }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // Get user profile when user signs in
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        setAuth({
+          user: session.user,
+          loading: false,
+          profile: profile || null
+        });
+      } else {
+        setAuth({
+          user: null,
+          loading: false,
+          profile: null
+        });
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      setUserProfile(data);
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    } finally {
-      setLoading(false);
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
     }
   };
 
+  const updateProfile = async (updates: any) => {
+    if (!auth.user) throw new Error('No user logged in');
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('user_id', auth.user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    setAuth(prev => ({
+      ...prev,
+      profile: data
+    }));
+
+    return data;
+  };
+
   return {
-    user,
-    userProfile,
-    loading,
-    signOut: () => supabase.auth.signOut(),
+    user: auth.user,
+    profile: auth.profile,
+    loading: auth.loading,
+    isAuthenticated: !!auth.user,
+    signOut,
+    updateProfile
   };
 };

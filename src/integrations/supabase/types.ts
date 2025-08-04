@@ -11212,6 +11212,83 @@ export type Database = {
           },
         ]
       }
+      photo_attachments: {
+        Row: {
+          caption: string | null
+          created_at: string
+          daily_report_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          gps_coordinates: unknown | null
+          id: string
+          mime_type: string | null
+          project_id: string | null
+          taken_at: string | null
+          time_entry_id: string | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          daily_report_id?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          gps_coordinates?: unknown | null
+          id?: string
+          mime_type?: string | null
+          project_id?: string | null
+          taken_at?: string | null
+          time_entry_id?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          daily_report_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          gps_coordinates?: unknown | null
+          id?: string
+          mime_type?: string | null
+          project_id?: string | null
+          taken_at?: string | null
+          time_entry_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_attachments_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "photo_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_attachments_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "time_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pipeline_metrics: {
         Row: {
           average_cycle_time: number | null
@@ -12095,6 +12172,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          company_id: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -12103,6 +12181,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string | null
           email?: string | null
           id: string
@@ -12111,6 +12190,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -12118,7 +12198,60 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_assignments: {
+        Row: {
+          assigned_at: string
+          hourly_rate: number | null
+          id: string
+          project_id: string
+          removed_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          hourly_rate?: number | null
+          id?: string
+          project_id: string
+          removed_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          hourly_rate?: number | null
+          id?: string
+          project_id?: string
+          removed_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_bond_requirements: {
         Row: {
