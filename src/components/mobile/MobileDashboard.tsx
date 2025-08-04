@@ -26,6 +26,7 @@ import MobileDailyReportManager from './MobileDailyReportManager';
 import MobileEquipmentManager from './MobileEquipmentManager';
 import { MobileMaterialTracker } from './MobileMaterialTracker';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
+import MobileTimeTracker from './MobileTimeTracker';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { toast } from 'sonner';
 
@@ -68,6 +69,14 @@ export const MobileDashboard: React.FC = () => {
 
   const quickActions: QuickAction[] = [
     {
+      id: 'time-tracking',
+      title: 'Time Tracking',
+      description: 'Clock in/out & crew management',
+      icon: Clock,
+      color: 'text-blue-600',
+      component: 'time-tracking'
+    },
+    {
       id: 'safety',
       title: 'Safety Report',
       description: 'Report incidents & hazards',
@@ -81,7 +90,7 @@ export const MobileDashboard: React.FC = () => {
       title: 'Daily Report',
       description: 'Log progress & activities',
       icon: FileText,
-      color: 'text-blue-600',
+      color: 'text-green-600',
       component: 'daily-report'
     },
     {
@@ -89,7 +98,7 @@ export const MobileDashboard: React.FC = () => {
       title: 'Equipment',
       description: 'Check in/out equipment',
       icon: Package,
-      color: 'text-green-600',
+      color: 'text-yellow-600',
       component: 'equipment'
     },
     {
@@ -301,6 +310,8 @@ export const MobileDashboard: React.FC = () => {
 
   const renderActiveComponent = () => {
     switch (activeView) {
+      case 'time-tracking':
+        return <MobileTimeTracker />;
       case 'safety':
         return <MobileSafetyIncidentManager />;
       case 'daily-report':
@@ -431,6 +442,15 @@ export const MobileDashboard: React.FC = () => {
               className="flex flex-col items-center gap-1"
               onClick={() => handleActionClick(quickActions[0])}
             >
+              <Clock className="h-5 w-5" />
+              <span className="text-xs">Time</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex flex-col items-center gap-1"
+              onClick={() => handleActionClick(quickActions[1])}
+            >
               <Shield className="h-5 w-5" />
               <span className="text-xs">Safety</span>
             </Button>
@@ -438,7 +458,7 @@ export const MobileDashboard: React.FC = () => {
               variant="ghost"
               size="sm"
               className="flex flex-col items-center gap-1"
-              onClick={() => handleActionClick(quickActions[4])}
+              onClick={() => handleActionClick(quickActions[5])}
             >
               <Camera className="h-5 w-5" />
               <span className="text-xs">Camera</span>
