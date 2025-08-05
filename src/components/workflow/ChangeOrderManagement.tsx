@@ -11,14 +11,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from '@supabase/supabase-js';
 import { Plus, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Create a separate supabase client to avoid type recursion
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Use the global supabase client to avoid import issues
+declare global {
+  interface Window {
+    supabase: any;
+  }
+}
 
 export const ChangeOrderManagement: React.FC = () => {
   const { userProfile } = useAuth();
@@ -38,6 +39,15 @@ export const ChangeOrderManagement: React.FC = () => {
     amount: 0
   });
 
+  // Initialize Supabase client directly to avoid type issues
+  const getSupabaseClient = () => {
+    const { createClient } = require('@supabase/supabase-js');
+    return createClient(
+      'https://ilhzuvemiuyfuxfegtlv.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHp1dmVtaXV5ZnV4ZmVndGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0OTU1NDQsImV4cCI6MjA2NzA3MTU0NH0.1JSYhiiJRohQnt8feFbTza9VnmKFprwsOxW0jBRcM2s'
+    );
+  };
+
   useEffect(() => {
     loadData();
   }, [userProfile?.company_id]);
@@ -46,28 +56,28 @@ export const ChangeOrderManagement: React.FC = () => {
     if (!userProfile?.company_id) return;
 
     try {
+      const supabase = getSupabaseClient();
+      
       // Load change orders
-      const ordersResponse: any = await supabase
+      const ordersResult = await supabase
         .from('change_orders')
         .select('*, projects:project_id(name)')
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
       
-      const { data: ordersData, error: ordersError } = ordersResponse;
-
-      if (ordersError) throw ordersError;
+      if (ordersResult.error) throw ordersResult.error;
 
       // Load projects for dropdown
-      const { data: projectsData, error: projectsError } = await supabase
+      const projectsResult = await supabase
         .from('projects')
         .select('id, name')
         .eq('company_id', userProfile.company_id)
         .order('name');
 
-      if (projectsError) throw projectsError;
+      if (projectsResult.error) throw projectsResult.error;
 
-      setChangeOrders(ordersData || []);
-      setProjects(projectsData || []);
+      setChangeOrders(ordersResult.data || []);
+      setProjects(projectsResult.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -84,6 +94,7 @@ export const ChangeOrderManagement: React.FC = () => {
     if (!userProfile?.company_id || !changeOrderForm.project_id || !changeOrderForm.title) return;
 
     try {
+      const supabase = getSupabaseClient();
       const changeOrderData = {
         company_id: userProfile.company_id,
         change_order_number: `CO-${Date.now().toString().slice(-8)}`,
@@ -133,6 +144,7 @@ export const ChangeOrderManagement: React.FC = () => {
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     try {
+      const supabase = getSupabaseClient();
       const updateData: any = { status: newStatus };
       
       if (newStatus === 'approved') {
