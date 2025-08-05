@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import type { ReactNode, FC } from "react";
 
@@ -65,8 +65,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
-  const [isProfileFetchInProgress, setIsProfileFetchInProgress] =
-    useState(false);
+  const [isProfileFetchInProgress, setIsProfileFetchInProgress] = useState(false);
+  const { toast } = useToast();
 
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
 
