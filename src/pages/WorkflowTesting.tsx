@@ -4,7 +4,7 @@ import { ChangeOrderManagement } from '@/components/workflow/ChangeOrderManageme
 import { QualityControlManagement } from '@/components/workflow/QualityControlManagement';
 import { RFISubmittalManagement } from '@/components/workflow/RFISubmittalManagement';
 import { ClientCommunicationPortal } from '@/components/workflow/ClientCommunicationPortal';
-import { MockAuthProvider } from '@/contexts/MockAuthContext';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,8 +15,7 @@ const WorkflowTestPage = () => {
   const [activeTab, setActiveTab] = React.useState('testing-guide');
 
   return (
-    <MockAuthProvider>
-      <DashboardLayout title="Workflow Management Testing">
+    <DashboardLayout title="Workflow Management Testing">
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-6 rounded-lg">
             <h1 className="text-3xl font-bold mb-2">🔍 Workflow Management Deep Dive Testing</h1>
@@ -193,7 +192,6 @@ const WorkflowTestPage = () => {
           </Tabs>
         </div>
       </DashboardLayout>
-    </MockAuthProvider>
   );
 };
 

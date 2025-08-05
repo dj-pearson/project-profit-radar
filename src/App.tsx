@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
@@ -16,9 +17,10 @@ import WorkflowTesting from "./pages/WorkflowTesting";
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <HelmetProvider>
-        <BrowserRouter>
+    <AuthProvider>
+      <ThemeProvider>
+        <HelmetProvider>
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/marketplace" element={<APIMarketplace />} />
@@ -42,9 +44,10 @@ const App = () => {
           <PWAInstallPrompt />
           <OfflineIndicator />
           <NotificationPermission />
-        </BrowserRouter>
-      </HelmetProvider>
-    </ThemeProvider>
+          </BrowserRouter>
+        </HelmetProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 };
 
