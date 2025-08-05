@@ -12,32 +12,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, Calendar, FileText, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ChangeOrder {
   id: string;
-  number: string;
-  title: string;
-  description?: string;
-  justification?: string;
-  category: string;
-  status: string;
-  priority: string;
-  amount: number;
-  labor_cost: number;
-  material_cost: number;
-  equipment_cost: number;
-  overhead_cost: number;
-  impact_days: number;
+  change_order_number: string;
   project_id: string;
-  project?: { name: string };
+  title: string;
+  description: string;
+  justification?: string;
+  amount: number;
+  status: string;
   requested_by?: string;
-  assigned_to?: string;
   approved_by?: string;
+  approval_date?: string;
   created_at: string;
-  submitted_at?: string;
-  approved_at?: string;
+  projects?: { name: string };
 }
 
 export const ChangeOrderManagement: React.FC = () => {
@@ -48,19 +39,14 @@ export const ChangeOrderManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<ChangeOrder | null>(null);
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState('all');
+
+  const [changeOrderForm, setChangeOrderForm] = useState({
     project_id: '',
     title: '',
     description: '',
     justification: '',
-    category: 'scope_change',
-    priority: 'medium',
-    amount: 0,
-    labor_cost: 0,
-    material_cost: 0,
-    equipment_cost: 0,
-    overhead_cost: 0,
-    impact_days: 0
+    amount: 0
   });
 
   useEffect(() => {
@@ -98,7 +84,7 @@ export const ChangeOrderManagement: React.FC = () => {
       console.error('Error loading data:', error);
       toast({
         title: "Error",
-        description: "Failed to load change orders",
+        description: "Failed to load change order data",
         variant: "destructive"
       });
     } finally {
@@ -107,21 +93,21 @@ export const ChangeOrderManagement: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!userProfile?.company_id || !formData.project_id || !formData.title) return;
+    if (!userProfile?.company_id || !changeOrderForm.project_id || !changeOrderForm.title) return;
 
     try {
-      const orderData = {
-        ...formData,
+      const changeOrderData = {
         company_id: userProfile.company_id,
-        number: `CO-${Date.now().toString().slice(-8)}`,
+        change_order_number: `CO-${Date.now().toString().slice(-8)}`,
         requested_by: userProfile.id,
-        status: 'draft'
+        status: 'pending',
+        ...changeOrderForm
       };
 
       if (editingOrder) {
         const { error } = await supabase
           .from('change_orders')
-          .update(orderData)
+          .update(changeOrderData)
           .eq('id', editingOrder.id);
 
         if (error) throw error;
@@ -133,7 +119,7 @@ export const ChangeOrderManagement: React.FC = () => {
       } else {
         const { error } = await supabase
           .from('change_orders')
-          .insert([orderData]);
+          .insert([changeOrderData]);
 
         if (error) throw error;
 
@@ -145,20 +131,7 @@ export const ChangeOrderManagement: React.FC = () => {
 
       setDialogOpen(false);
       setEditingOrder(null);
-      setFormData({
-        project_id: '',
-        title: '',
-        description: '',
-        justification: '',
-        category: 'scope_change',
-        priority: 'medium',
-        amount: 0,
-        labor_cost: 0,
-        material_cost: 0,
-        equipment_cost: 0,
-        overhead_cost: 0,
-        impact_days: 0
-      });
+      resetForm();
       loadData();
     } catch (error) {
       console.error('Error saving change order:', error);
@@ -170,15 +143,13 @@ export const ChangeOrderManagement: React.FC = () => {
     }
   };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const updateStatus = async (orderId: string, newStatus: string) => {
     try {
       const updateData: any = { status: newStatus };
       
-      if (newStatus === 'submitted') {
-        updateData.submitted_at = new Date().toISOString();
-      } else if (newStatus === 'approved') {
-        updateData.approved_at = new Date().toISOString();
+      if (newStatus === 'approved') {
         updateData.approved_by = userProfile?.id;
+        updateData.approval_date = new Date().toISOString();
       }
 
       const { error } = await supabase
@@ -195,19 +166,28 @@ export const ChangeOrderManagement: React.FC = () => {
       
       loadData();
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error updating change order:', error);
       toast({
         title: "Error",
-        description: "Failed to update change order status",
+        description: "Failed to update change order",
         variant: "destructive"
       });
     }
   };
 
+  const resetForm = () => {
+    setChangeOrderForm({
+      project_id: '',
+      title: '',
+      description: '',
+      justification: '',
+      amount: 0
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft': return 'secondary';
-      case 'submitted': return 'default';
+      case 'pending': return 'default';
       case 'approved': return 'default';
       case 'rejected': return 'destructive';
       case 'implemented': return 'default';
@@ -215,14 +195,10 @@ export const ChangeOrderManagement: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'secondary';
-    }
-  };
+  const filteredOrders = changeOrders.filter(order => {
+    if (activeTab === 'all') return true;
+    return order.status === activeTab;
+  });
 
   if (loading) {
     return (
@@ -237,26 +213,13 @@ export const ChangeOrderManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Change Order Management</h2>
-          <p className="text-muted-foreground">Manage project change requests and approvals</p>
+          <p className="text-muted-foreground">Track and manage project changes and their impacts</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingOrder(null);
-              setFormData({
-                project_id: '',
-                title: '',
-                description: '',
-                justification: '',
-                category: 'scope_change',
-                priority: 'medium',
-                amount: 0,
-                labor_cost: 0,
-                material_cost: 0,
-                equipment_cost: 0,
-                overhead_cost: 0,
-                impact_days: 0
-              });
+              resetForm();
             }}>
               <Plus className="h-4 w-4 mr-2" />
               Create Change Order
@@ -266,67 +229,47 @@ export const ChangeOrderManagement: React.FC = () => {
             <DialogHeader>
               <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create New Change Order'}</DialogTitle>
               <DialogDescription>
-                Fill out the details for the change order
+                Document project changes, scope modifications, and cost impacts
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="project">Project *</Label>
-                  <Select 
-                    value={formData.project_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map(project => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={formData.category} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="scope_change">Scope Change</SelectItem>
-                      <SelectItem value="design_change">Design Change</SelectItem>
-                      <SelectItem value="material_change">Material Change</SelectItem>
-                      <SelectItem value="schedule_change">Schedule Change</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="project">Project *</Label>
+                <Select 
+                  value={changeOrderForm.project_id} 
+                  onValueChange={(value) => setChangeOrderForm(prev => ({ ...prev, project_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map(project => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Change order title"
+                  value={changeOrderForm.title}
+                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Brief description of the change"
                 />
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Description *</Label>
                 <Textarea
                   id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  value={changeOrderForm.description}
+                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Detailed description of the change"
-                  rows={3}
+                  rows={4}
                 />
               </div>
 
@@ -334,89 +277,23 @@ export const ChangeOrderManagement: React.FC = () => {
                 <Label htmlFor="justification">Justification</Label>
                 <Textarea
                   id="justification"
-                  value={formData.justification}
-                  onChange={(e) => setFormData(prev => ({ ...prev, justification: e.target.value }))}
-                  placeholder="Reason for the change"
-                  rows={2}
+                  value={changeOrderForm.justification}
+                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, justification: e.target.value }))}
+                  placeholder="Reason for the change order"
+                  rows={3}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select 
-                    value={formData.priority} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="impact_days">Schedule Impact (Days)</Label>
-                  <Input
-                    id="impact_days"
-                    type="number"
-                    value={formData.impact_days}
-                    onChange={(e) => setFormData(prev => ({ ...prev, impact_days: parseInt(e.target.value) || 0 }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="labor_cost">Labor Cost</Label>
-                  <Input
-                    id="labor_cost"
-                    type="number"
-                    step="0.01"
-                    value={formData.labor_cost}
-                    onChange={(e) => setFormData(prev => ({ ...prev, labor_cost: parseFloat(e.target.value) || 0 }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="material_cost">Material Cost</Label>
-                  <Input
-                    id="material_cost"
-                    type="number"
-                    step="0.01"
-                    value={formData.material_cost}
-                    onChange={(e) => setFormData(prev => ({ ...prev, material_cost: parseFloat(e.target.value) || 0 }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="equipment_cost">Equipment Cost</Label>
-                  <Input
-                    id="equipment_cost"
-                    type="number"
-                    step="0.01"
-                    value={formData.equipment_cost}
-                    onChange={(e) => setFormData(prev => ({ ...prev, equipment_cost: parseFloat(e.target.value) || 0 }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="overhead_cost">Overhead Cost</Label>
-                  <Input
-                    id="overhead_cost"
-                    type="number"
-                    step="0.01"
-                    value={formData.overhead_cost}
-                    onChange={(e) => setFormData(prev => ({ ...prev, overhead_cost: parseFloat(e.target.value) || 0 }))}
-                  />
-                </div>
-              </div>
-
               <div>
-                <Label>Total Amount: ${(formData.labor_cost + formData.material_cost + formData.equipment_cost + formData.overhead_cost).toLocaleString()}</Label>
+                <Label htmlFor="amount">Cost Impact ($) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={changeOrderForm.amount}
+                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0.00"
+                />
               </div>
 
               <div className="flex justify-end space-x-2">
@@ -430,26 +307,26 @@ export const ChangeOrderManagement: React.FC = () => {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="all" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="all">All Orders</TabsTrigger>
-          <TabsTrigger value="draft">Draft</TabsTrigger>
-          <TabsTrigger value="submitted">Submitted</TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
+          <TabsTrigger value="all">All ({changeOrders.length})</TabsTrigger>
+          <TabsTrigger value="pending">Pending ({changeOrders.filter(o => o.status === 'pending').length})</TabsTrigger>
+          <TabsTrigger value="approved">Approved ({changeOrders.filter(o => o.status === 'approved').length})</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Change Orders</CardTitle>
-              <CardDescription>All change orders for your projects</CardDescription>
+              <CardDescription>All project change orders and modifications</CardDescription>
             </CardHeader>
             <CardContent>
-              {changeOrders.length === 0 ? (
+              {filteredOrders.length === 0 ? (
                 <div className="text-center py-8">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Change Orders</h3>
-                  <p className="text-muted-foreground mb-4">Get started by creating your first change order</p>
+                  <p className="text-muted-foreground mb-4">Create your first change order</p>
                   <Button onClick={() => setDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Change Order
@@ -462,79 +339,119 @@ export const ChangeOrderManagement: React.FC = () => {
                       <TableHead>Number</TableHead>
                       <TableHead>Project</TableHead>
                       <TableHead>Title</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Priority</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Impact</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {changeOrders.map((order) => (
+                    {filteredOrders.map((order) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.number}</TableCell>
-                        <TableCell>{order.project?.name}</TableCell>
-                        <TableCell>{order.title}</TableCell>
+                        <TableCell className="font-medium">{order.change_order_number}</TableCell>
+                        <TableCell>{order.projects?.name}</TableCell>
+                        <TableCell className="max-w-xs truncate">{order.title}</TableCell>
+                        <TableCell>${order.amount.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusColor(order.status)}>
-                            {order.status.replace('_', ' ')}
+                            {order.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant={getPriorityColor(order.priority)}>
-                            {order.priority}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>${order.amount.toLocaleString()}</TableCell>
-                        <TableCell>{order.impact_days} days</TableCell>
                         <TableCell>{format(new Date(order.created_at), 'MMM d, yyyy')}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingOrder(order);
-                                setFormData({
-                                  project_id: order.project_id,
-                                  title: order.title,
-                                  description: order.description || '',
-                                  justification: order.justification || '',
-                                  category: order.category,
-                                  priority: order.priority,
-                                  amount: order.amount,
-                                  labor_cost: order.labor_cost,
-                                  material_cost: order.material_cost,
-                                  equipment_cost: order.equipment_cost,
-                                  overhead_cost: order.overhead_cost,
-                                  impact_days: order.impact_days
-                                });
-                                setDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            {order.status === 'draft' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleStatusUpdate(order.id, 'submitted')}
-                              >
-                                Submit
-                              </Button>
-                            )}
-                            {order.status === 'submitted' && ['admin', 'project_manager'].includes(userProfile?.role) && (
+                            {order.status === 'pending' && ['admin', 'project_manager'].includes(userProfile?.role) && (
                               <>
                                 <Button
                                   size="sm"
-                                  onClick={() => handleStatusUpdate(order.id, 'approved')}
+                                  onClick={() => updateStatus(order.id, 'approved')}
                                 >
                                   <CheckCircle className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => handleStatusUpdate(order.id, 'rejected')}
+                                  onClick={() => updateStatus(order.id, 'rejected')}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingOrder(order);
+                                setChangeOrderForm({
+                                  project_id: order.project_id,
+                                  title: order.title,
+                                  description: order.description,
+                                  justification: order.justification || '',
+                                  amount: order.amount
+                                });
+                                setDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Change Orders</CardTitle>
+              <CardDescription>Change orders awaiting approval</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {changeOrders.filter(o => o.status === 'pending').length === 0 ? (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Pending Change Orders</h3>
+                  <p className="text-muted-foreground">All change orders have been reviewed</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Number</TableHead>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {changeOrders.filter(o => o.status === 'pending').map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.change_order_number}</TableCell>
+                        <TableCell>{order.projects?.name}</TableCell>
+                        <TableCell className="max-w-xs truncate">{order.title}</TableCell>
+                        <TableCell>${order.amount.toLocaleString()}</TableCell>
+                        <TableCell>{format(new Date(order.created_at), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            {['admin', 'project_manager'].includes(userProfile?.role) && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateStatus(order.id, 'approved')}
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => updateStatus(order.id, 'rejected')}
                                 >
                                   <XCircle className="h-4 w-4" />
                                 </Button>
@@ -551,102 +468,113 @@ export const ChangeOrderManagement: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* Filter tabs by status */}
-        {['draft', 'submitted', 'approved'].map(status => (
-          <TabsContent key={status} value={status} className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{status.charAt(0).toUpperCase() + status.slice(1)} Change Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
+        <TabsContent value="approved">
+          <Card>
+            <CardHeader>
+              <CardTitle>Approved Change Orders</CardTitle>
+              <CardDescription>Change orders that have been approved</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {changeOrders.filter(o => o.status === 'approved').length === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Approved Change Orders</h3>
+                  <p className="text-muted-foreground">No change orders have been approved yet</p>
+                </div>
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Number</TableHead>
                       <TableHead>Project</TableHead>
                       <TableHead>Title</TableHead>
-                      <TableHead>Priority</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Impact</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>Approved Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {changeOrders.filter(order => order.status === status).map((order) => (
+                    {changeOrders.filter(o => o.status === 'approved').map((order) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.number}</TableCell>
-                        <TableCell>{order.project?.name}</TableCell>
-                        <TableCell>{order.title}</TableCell>
-                        <TableCell>
-                          <Badge variant={getPriorityColor(order.priority)}>
-                            {order.priority}
-                          </Badge>
-                        </TableCell>
+                        <TableCell className="font-medium">{order.change_order_number}</TableCell>
+                        <TableCell>{order.projects?.name}</TableCell>
+                        <TableCell className="max-w-xs truncate">{order.title}</TableCell>
                         <TableCell>${order.amount.toLocaleString()}</TableCell>
-                        <TableCell>{order.impact_days} days</TableCell>
-                        <TableCell>{format(new Date(order.created_at), 'MMM d, yyyy')}</TableCell>
                         <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingOrder(order);
-                                setFormData({
-                                  project_id: order.project_id,
-                                  title: order.title,
-                                  description: order.description || '',
-                                  justification: order.justification || '',
-                                  category: order.category,
-                                  priority: order.priority,
-                                  amount: order.amount,
-                                  labor_cost: order.labor_cost,
-                                  material_cost: order.material_cost,
-                                  equipment_cost: order.equipment_cost,
-                                  overhead_cost: order.overhead_cost,
-                                  impact_days: order.impact_days
-                                });
-                                setDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            {order.status === 'draft' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleStatusUpdate(order.id, 'submitted')}
-                              >
-                                Submit
-                              </Button>
-                            )}
-                            {order.status === 'submitted' && ['admin', 'project_manager'].includes(userProfile?.role) && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleStatusUpdate(order.id, 'approved')}
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleStatusUpdate(order.id, 'rejected')}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
+                          {order.approval_date ? format(new Date(order.approval_date), 'MMM d, yyyy') : '-'}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Change Orders</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{changeOrders.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {changeOrders.filter(o => o.status === 'pending').length} pending approval
+                </p>
               </CardContent>
             </Card>
-          </TabsContent>
-        ))}
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ${changeOrders.reduce((sum, order) => sum + order.amount, 0).toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  All change orders combined
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Approval Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {changeOrders.filter(o => ['approved', 'rejected'].includes(o.status)).length > 0 ? 
+                    Math.round((changeOrders.filter(o => o.status === 'approved').length / 
+                    changeOrders.filter(o => ['approved', 'rejected'].includes(o.status)).length) * 100) : 0}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Of reviewed change orders
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Value</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ${changeOrders.length > 0 ? 
+                    Math.round(changeOrders.reduce((sum, order) => sum + order.amount, 0) / changeOrders.length).toLocaleString() : 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Per change order
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );

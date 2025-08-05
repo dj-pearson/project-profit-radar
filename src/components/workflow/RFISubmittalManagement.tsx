@@ -17,51 +17,34 @@ import { format } from 'date-fns';
 
 interface RFI {
   id: string;
-  number: string;
+  rfi_number: string;
+  project_id: string;
   subject: string;
-  description: string;
-  category: string;
+  description?: string;
   priority: string;
   status: string;
-  requested_by?: string;
-  assigned_to?: string;
+  created_by?: string;
+  submitted_to?: string;
   due_date?: string;
-  response?: string;
   response_date?: string;
-  attachments: string[];
-  cost_impact: number;
-  schedule_impact_days: number;
-  project_id: string;
-  project?: { name: string };
   created_at: string;
-  closed_at?: string;
+  projects?: { name: string };
 }
 
 interface Submittal {
   id: string;
-  number: string;
+  submittal_number: string;
+  project_id: string;
   title: string;
   description?: string;
-  category: string;
-  specification_section?: string;
-  submittal_type: string;
-  status: string;
+  spec_section?: string;
   priority: string;
-  submitted_by?: string;
-  reviewed_by?: string;
-  approved_by?: string;
+  status: string;
+  created_by?: string;
   due_date?: string;
-  submitted_date?: string;
-  reviewed_date?: string;
   approved_date?: string;
-  revision_number: number;
-  files: string[];
-  review_comments?: string;
-  rejection_reason?: string;
-  resubmission_required: boolean;
-  project_id: string;
-  project?: { name: string };
   created_at: string;
+  projects?: { name: string };
 }
 
 export const RFISubmittalManagement: React.FC = () => {
@@ -82,24 +65,18 @@ export const RFISubmittalManagement: React.FC = () => {
     project_id: '',
     subject: '',
     description: '',
-    category: 'general',
     priority: 'medium',
-    assigned_to: '',
-    due_date: '',
-    cost_impact: 0,
-    schedule_impact_days: 0
+    submitted_to: '',
+    due_date: ''
   });
 
   const [submittalForm, setSubmittalForm] = useState({
     project_id: '',
     title: '',
     description: '',
-    category: 'shop_drawings',
-    specification_section: '',
-    submittal_type: 'shop_drawings',
+    spec_section: '',
     priority: 'medium',
-    due_date: '',
-    review_comments: ''
+    due_date: ''
   });
 
   useEffect(() => {
@@ -174,10 +151,9 @@ export const RFISubmittalManagement: React.FC = () => {
       const rfiData = {
         ...rfiForm,
         company_id: userProfile.company_id,
-        number: `RFI-${Date.now().toString().slice(-8)}`,
-        requested_by: userProfile.id,
-        status: 'open',
-        attachments: []
+        rfi_number: `RFI-${Date.now().toString().slice(-8)}`,
+        created_by: userProfile.id,
+        status: 'open'
       };
 
       if (editingRfi) {
@@ -226,12 +202,9 @@ export const RFISubmittalManagement: React.FC = () => {
       const submittalData = {
         ...submittalForm,
         company_id: userProfile.company_id,
-        number: `SUB-${Date.now().toString().slice(-8)}`,
-        submitted_by: userProfile.id,
-        status: 'not_submitted',
-        revision_number: 1,
-        files: [],
-        resubmission_required: false
+        submittal_number: `SUB-${Date.now().toString().slice(-8)}`,
+        created_by: userProfile.id,
+        status: 'not_submitted'
       };
 
       if (editingSubmittal) {
@@ -278,7 +251,6 @@ export const RFISubmittalManagement: React.FC = () => {
       const updateData: any = { status: newStatus };
       
       if (newStatus === 'closed') {
-        updateData.closed_at = new Date().toISOString();
         updateData.response_date = new Date().toISOString();
         if (response) updateData.response = response;
       }
@@ -313,18 +285,9 @@ export const RFISubmittalManagement: React.FC = () => {
       
       if (newStatus === 'submitted') {
         updateData.submitted_date = now;
-      } else if (newStatus === 'under_review') {
-        updateData.reviewed_date = now;
-        updateData.reviewed_by = userProfile?.id;
       } else if (newStatus === 'approved') {
         updateData.approved_date = now;
-        updateData.approved_by = userProfile?.id;
-      } else if (newStatus === 'rejected') {
-        updateData.rejection_reason = comments;
-        updateData.resubmission_required = true;
       }
-
-      if (comments) updateData.review_comments = comments;
 
       const { error } = await supabase
         .from('submittals')
@@ -354,12 +317,9 @@ export const RFISubmittalManagement: React.FC = () => {
       project_id: '',
       subject: '',
       description: '',
-      category: 'general',
       priority: 'medium',
-      assigned_to: '',
-      due_date: '',
-      cost_impact: 0,
-      schedule_impact_days: 0
+      submitted_to: '',
+      due_date: ''
     });
   };
 
@@ -368,12 +328,9 @@ export const RFISubmittalManagement: React.FC = () => {
       project_id: '',
       title: '',
       description: '',
-      category: 'shop_drawings',
-      specification_section: '',
-      submittal_type: 'shop_drawings',
+      spec_section: '',
       priority: 'medium',
-      due_date: '',
-      review_comments: ''
+      due_date: ''
     });
   };
 
@@ -384,7 +341,6 @@ export const RFISubmittalManagement: React.FC = () => {
       case 'closed': return 'default';
       case 'not_submitted': return 'secondary';
       case 'submitted': return 'default';
-      case 'under_review': return 'default';
       case 'approved': return 'default';
       case 'rejected': return 'destructive';
       default: return 'secondary';
@@ -434,44 +390,23 @@ export const RFISubmittalManagement: React.FC = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="project">Project *</Label>
-                    <Select 
-                      value={rfiForm.project_id} 
-                      onValueChange={(value) => setRfiForm(prev => ({ ...prev, project_id: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects.map(project => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select 
-                      value={rfiForm.category} 
-                      onValueChange={(value) => setRfiForm(prev => ({ ...prev, category: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="general">General</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="specification">Specification</SelectItem>
-                        <SelectItem value="material">Material</SelectItem>
-                        <SelectItem value="schedule">Schedule</SelectItem>
-                        <SelectItem value="quality">Quality</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <Label htmlFor="project">Project *</Label>
+                  <Select 
+                    value={rfiForm.project_id} 
+                    onValueChange={(value) => setRfiForm(prev => ({ ...prev, project_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -485,7 +420,7 @@ export const RFISubmittalManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
                     value={rfiForm.description}
@@ -513,52 +448,12 @@ export const RFISubmittalManagement: React.FC = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="assigned_to">Assigned To</Label>
-                    <Select 
-                      value={rfiForm.assigned_to} 
-                      onValueChange={(value) => setRfiForm(prev => ({ ...prev, assigned_to: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select assignee" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {teamMembers.map(member => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.first_name} {member.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
                     <Label htmlFor="due_date">Due Date</Label>
                     <Input
                       id="due_date"
                       type="date"
                       value={rfiForm.due_date}
                       onChange={(e) => setRfiForm(prev => ({ ...prev, due_date: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cost_impact">Cost Impact ($)</Label>
-                    <Input
-                      id="cost_impact"
-                      type="number"
-                      step="0.01"
-                      value={rfiForm.cost_impact}
-                      onChange={(e) => setRfiForm(prev => ({ ...prev, cost_impact: parseFloat(e.target.value) || 0 }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="schedule_impact">Schedule Impact (Days)</Label>
-                    <Input
-                      id="schedule_impact"
-                      type="number"
-                      value={rfiForm.schedule_impact_days}
-                      onChange={(e) => setRfiForm(prev => ({ ...prev, schedule_impact_days: parseInt(e.target.value) || 0 }))}
                     />
                   </div>
                 </div>
@@ -591,44 +486,23 @@ export const RFISubmittalManagement: React.FC = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="project">Project *</Label>
-                    <Select 
-                      value={submittalForm.project_id} 
-                      onValueChange={(value) => setSubmittalForm(prev => ({ ...prev, project_id: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects.map(project => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="submittal_type">Submittal Type</Label>
-                    <Select 
-                      value={submittalForm.submittal_type} 
-                      onValueChange={(value) => setSubmittalForm(prev => ({ ...prev, submittal_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="shop_drawings">Shop Drawings</SelectItem>
-                        <SelectItem value="product_data">Product Data</SelectItem>
-                        <SelectItem value="samples">Samples</SelectItem>
-                        <SelectItem value="material_list">Material List</SelectItem>
-                        <SelectItem value="test_reports">Test Reports</SelectItem>
-                        <SelectItem value="calculations">Calculations</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <Label htmlFor="project">Project *</Label>
+                  <Select 
+                    value={submittalForm.project_id} 
+                    onValueChange={(value) => setSubmittalForm(prev => ({ ...prev, project_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -654,36 +528,14 @@ export const RFISubmittalManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select 
-                      value={submittalForm.category} 
-                      onValueChange={(value) => setSubmittalForm(prev => ({ ...prev, category: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="shop_drawings">Shop Drawings</SelectItem>
-                        <SelectItem value="structural">Structural</SelectItem>
-                        <SelectItem value="mechanical">Mechanical</SelectItem>
-                        <SelectItem value="electrical">Electrical</SelectItem>
-                        <SelectItem value="plumbing">Plumbing</SelectItem>
-                        <SelectItem value="finishes">Finishes</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="specification_section">Specification Section</Label>
+                    <Label htmlFor="spec_section">Specification Section</Label>
                     <Input
-                      id="specification_section"
-                      value={submittalForm.specification_section}
-                      onChange={(e) => setSubmittalForm(prev => ({ ...prev, specification_section: e.target.value }))}
+                      id="spec_section"
+                      value={submittalForm.spec_section}
+                      onChange={(e) => setSubmittalForm(prev => ({ ...prev, spec_section: e.target.value }))}
                       placeholder="e.g., 03 30 00"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="priority">Priority</Label>
                     <Select 
@@ -700,15 +552,16 @@ export const RFISubmittalManagement: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="due_date">Due Date</Label>
-                    <Input
-                      id="due_date"
-                      type="date"
-                      value={submittalForm.due_date}
-                      onChange={(e) => setSubmittalForm(prev => ({ ...prev, due_date: e.target.value }))}
-                    />
-                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="due_date">Due Date</Label>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={submittalForm.due_date}
+                    onChange={(e) => setSubmittalForm(prev => ({ ...prev, due_date: e.target.value }))}
+                  />
                 </div>
 
                 <div className="flex justify-end space-x-2">
@@ -754,7 +607,6 @@ export const RFISubmittalManagement: React.FC = () => {
                       <TableHead>Number</TableHead>
                       <TableHead>Project</TableHead>
                       <TableHead>Subject</TableHead>
-                      <TableHead>Category</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Due Date</TableHead>
@@ -765,10 +617,9 @@ export const RFISubmittalManagement: React.FC = () => {
                   <TableBody>
                     {rfis.map((rfi) => (
                       <TableRow key={rfi.id}>
-                        <TableCell className="font-medium">{rfi.number}</TableCell>
-                        <TableCell>{rfi.project?.name}</TableCell>
+                        <TableCell className="font-medium">{rfi.rfi_number}</TableCell>
+                        <TableCell>{rfi.projects?.name}</TableCell>
                         <TableCell className="max-w-xs truncate">{rfi.subject}</TableCell>
-                        <TableCell>{rfi.category}</TableCell>
                         <TableCell>
                           <Badge variant={getPriorityColor(rfi.priority)}>
                             {rfi.priority}
@@ -801,13 +652,10 @@ export const RFISubmittalManagement: React.FC = () => {
                                 setRfiForm({
                                   project_id: rfi.project_id,
                                   subject: rfi.subject,
-                                  description: rfi.description,
-                                  category: rfi.category,
+                                  description: rfi.description || '',
                                   priority: rfi.priority,
-                                  assigned_to: rfi.assigned_to || '',
-                                  due_date: rfi.due_date || '',
-                                  cost_impact: rfi.cost_impact,
-                                  schedule_impact_days: rfi.schedule_impact_days
+                                  submitted_to: rfi.submitted_to || '',
+                                  due_date: rfi.due_date || ''
                                 });
                                 setRfiDialogOpen(true);
                               }}
@@ -849,10 +697,8 @@ export const RFISubmittalManagement: React.FC = () => {
                       <TableHead>Number</TableHead>
                       <TableHead>Project</TableHead>
                       <TableHead>Title</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Revision</TableHead>
                       <TableHead>Due Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -860,10 +706,9 @@ export const RFISubmittalManagement: React.FC = () => {
                   <TableBody>
                     {submittals.map((submittal) => (
                       <TableRow key={submittal.id}>
-                        <TableCell className="font-medium">{submittal.number}</TableCell>
-                        <TableCell>{submittal.project?.name}</TableCell>
+                        <TableCell className="font-medium">{submittal.submittal_number}</TableCell>
+                        <TableCell>{submittal.projects?.name}</TableCell>
                         <TableCell className="max-w-xs truncate">{submittal.title}</TableCell>
-                        <TableCell>{submittal.submittal_type.replace('_', ' ')}</TableCell>
                         <TableCell>
                           <Badge variant={getPriorityColor(submittal.priority)}>
                             {submittal.priority}
@@ -874,7 +719,6 @@ export const RFISubmittalManagement: React.FC = () => {
                             {submittal.status.replace('_', ' ')}
                           </Badge>
                         </TableCell>
-                        <TableCell>Rev {submittal.revision_number}</TableCell>
                         <TableCell>
                           {submittal.due_date ? format(new Date(submittal.due_date), 'MMM d, yyyy') : '-'}
                         </TableCell>
@@ -899,7 +743,7 @@ export const RFISubmittalManagement: React.FC = () => {
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => updateSubmittalStatus(submittal.id, 'rejected', 'Needs revision')}
+                                  onClick={() => updateSubmittalStatus(submittal.id, 'rejected')}
                                 >
                                   <XCircle className="h-4 w-4" />
                                 </Button>
@@ -914,12 +758,9 @@ export const RFISubmittalManagement: React.FC = () => {
                                   project_id: submittal.project_id,
                                   title: submittal.title,
                                   description: submittal.description || '',
-                                  category: submittal.category,
-                                  specification_section: submittal.specification_section || '',
-                                  submittal_type: submittal.submittal_type,
+                                  spec_section: submittal.spec_section || '',
                                   priority: submittal.priority,
-                                  due_date: submittal.due_date || '',
-                                  review_comments: submittal.review_comments || ''
+                                  due_date: submittal.due_date || ''
                                 });
                                 setSubmittalDialogOpen(true);
                               }}
