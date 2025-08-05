@@ -85,6 +85,13 @@ const Navigation = ({ userRole }: NavigationProps) => {
           icon: Wrench,
           path: "/change-orders",
           roles: ["admin", "project_manager", "root_admin"]
+        },
+        {
+          title: "Workflow Management",
+          description: "Comprehensive workflow tools",
+          icon: MessageSquare,
+          path: "/workflow-management",
+          roles: ["admin", "project_manager", "office_staff", "root_admin"]
         }
       ]
     },

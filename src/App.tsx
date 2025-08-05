@@ -11,6 +11,7 @@ import Collaboration from "./pages/Collaboration";
 import MobileTesting from "./pages/MobileTesting";
 import MobileDashboard from "./pages/MobileDashboard";
 import Dashboard from "./pages/Dashboard";
+import WorkflowManagement from "./pages/WorkflowManagement";
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
             <Route path="/mobile-testing" element={<MobileTesting />} />
             <Route path="/mobile-dashboard" element={<MobileDashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/workflow-management" element={<WorkflowManagement />} />
             <Route path="*" element={
               <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="text-center">

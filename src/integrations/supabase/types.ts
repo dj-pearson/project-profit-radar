@@ -2601,6 +2601,88 @@ export type Database = {
           },
         ]
       }
+      client_communications: {
+        Row: {
+          attachments: Json | null
+          client_contact_id: string | null
+          communication_type: string | null
+          company_id: string
+          created_at: string
+          id: string
+          message: string
+          priority: string | null
+          project_id: string | null
+          read_at: string | null
+          replied_at: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string | null
+          subject: string
+          tags: Json | null
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          client_contact_id?: string | null
+          communication_type?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          message: string
+          priority?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          replied_at?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string | null
+          subject: string
+          tags?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          client_contact_id?: string | null
+          communication_type?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          priority?: string | null
+          project_id?: string | null
+          read_at?: string | null
+          replied_at?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string | null
+          subject?: string
+          tags?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_communications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_communications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "client_communications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_document_shares: {
         Row: {
           access_level: string | null
@@ -13690,6 +13772,94 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quality_inspections: {
+        Row: {
+          checklist_items: Json | null
+          company_id: string
+          created_at: string
+          deficiencies: Json | null
+          id: string
+          inspection_date: string
+          inspection_number: string
+          inspection_type: string
+          inspector_id: string | null
+          location: string | null
+          notes: string | null
+          passed: boolean | null
+          phase: string | null
+          photos: Json | null
+          project_id: string
+          reinspection_date: string | null
+          reinspection_required: boolean | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          checklist_items?: Json | null
+          company_id: string
+          created_at?: string
+          deficiencies?: Json | null
+          id?: string
+          inspection_date: string
+          inspection_number: string
+          inspection_type: string
+          inspector_id?: string | null
+          location?: string | null
+          notes?: string | null
+          passed?: boolean | null
+          phase?: string | null
+          photos?: Json | null
+          project_id: string
+          reinspection_date?: string | null
+          reinspection_required?: boolean | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checklist_items?: Json | null
+          company_id?: string
+          created_at?: string
+          deficiencies?: Json | null
+          id?: string
+          inspection_date?: string
+          inspection_number?: string
+          inspection_type?: string
+          inspector_id?: string | null
+          location?: string | null
+          notes?: string | null
+          passed?: boolean | null
+          phase?: string | null
+          photos?: Json | null
+          project_id?: string
+          reinspection_date?: string | null
+          reinspection_required?: boolean | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_inspections_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "quality_inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
