@@ -25,7 +25,7 @@ interface QualityInspection {
   status: string;
   checklist_items: any;
   deficiencies: any;
-  photos: string[];
+  photos: any;
   notes: string;
   created_at: string;
   projects?: { name: string };
@@ -190,7 +190,7 @@ export const QualityControlManagement: React.FC = () => {
     setInspectionForm({
       project_id: '',
       inspection_type: 'pre_construction',
-      scheduled_date: '',
+      inspection_date: '',
       inspector_id: '',
       notes: ''
     });
@@ -286,12 +286,12 @@ export const QualityControlManagement: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="scheduled_date">Scheduled Date *</Label>
+                  <Label htmlFor="inspection_date">Inspection Date *</Label>
                   <Input
-                    id="scheduled_date"
+                    id="inspection_date"
                     type="datetime-local"
-                    value={inspectionForm.scheduled_date}
-                    onChange={(e) => setInspectionForm(prev => ({ ...prev, scheduled_date: e.target.value }))}
+                    value={inspectionForm.inspection_date}
+                    onChange={(e) => setInspectionForm(prev => ({ ...prev, inspection_date: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -379,7 +379,7 @@ export const QualityControlManagement: React.FC = () => {
                         <TableCell className="font-medium">{inspection.inspection_number}</TableCell>
                         <TableCell>{inspection.projects?.name}</TableCell>
                         <TableCell className="capitalize">{inspection.inspection_type.replace('_', ' ')}</TableCell>
-                        <TableCell>{format(new Date(inspection.scheduled_date), 'MMM d, yyyy h:mm a')}</TableCell>
+                        <TableCell>{format(new Date(inspection.inspection_date), 'MMM d, yyyy h:mm a')}</TableCell>
                         <TableCell>
                           {teamMembers.find(m => m.id === inspection.inspector_id)?.first_name || 'Unassigned'}
                         </TableCell>
@@ -415,7 +415,7 @@ export const QualityControlManagement: React.FC = () => {
                                 setInspectionForm({
                                   project_id: inspection.project_id,
                                   inspection_type: inspection.inspection_type,
-                                  scheduled_date: inspection.scheduled_date,
+                                  inspection_date: inspection.inspection_date,
                                   inspector_id: inspection.inspector_id,
                                   notes: inspection.notes
                                 });
@@ -510,7 +510,7 @@ export const QualityControlManagement: React.FC = () => {
               <CardContent>
                 <div className="text-2xl font-bold">
                   {inspections.filter(i => {
-                    const inspectionDate = new Date(i.scheduled_date);
+                    const inspectionDate = new Date(i.inspection_date);
                     const now = new Date();
                     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
                     return inspectionDate >= now && inspectionDate <= weekFromNow;

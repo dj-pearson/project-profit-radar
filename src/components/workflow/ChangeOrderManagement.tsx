@@ -11,34 +11,23 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { Plus, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 
-interface ChangeOrder {
-  id: string;
-  change_order_number: string;
-  project_id: string;
-  title: string;
-  description: string;
-  justification?: string;
-  amount: number;
-  status: string;
-  requested_by?: string;
-  approved_by?: string;
-  approval_date?: string;
-  created_at: string;
-  projects?: { name: string };
-}
+// Create a separate supabase client to avoid type recursion
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const ChangeOrderManagement: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+  const [changeOrders, setChangeOrders] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<ChangeOrder | null>(null);
+  const [editingOrder, setEditingOrder] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('all');
 
   const [changeOrderForm, setChangeOrderForm] = useState({
@@ -58,14 +47,13 @@ export const ChangeOrderManagement: React.FC = () => {
 
     try {
       // Load change orders
-      const { data: ordersData, error: ordersError } = await supabase
+      const ordersResponse: any = await supabase
         .from('change_orders')
-        .select(`
-          *,
-          projects:project_id(name)
-        `)
+        .select('*, projects:project_id(name)')
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
+      
+      const { data: ordersData, error: ordersError } = ordersResponse;
 
       if (ordersError) throw ordersError;
 
