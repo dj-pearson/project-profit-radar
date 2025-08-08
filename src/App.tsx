@@ -14,6 +14,7 @@ import MobileDashboard from "./pages/MobileDashboard";
 import Dashboard from "./pages/Dashboard";
 import WorkflowManagement from "./pages/WorkflowManagement";
 import WorkflowTesting from "./pages/WorkflowTesting";
+import Auth from "./pages/Auth";
 
 const App = () => {
   return (
@@ -30,6 +31,7 @@ const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/workflow-management" element={<WorkflowManagement />} />
             <Route path="/workflow-testing" element={<WorkflowTesting />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="*" element={
               <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="text-center">
