@@ -16,20 +16,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="BuildDesk">
     
-    <!-- Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('[SW] Service Worker registered:', registration);
-            })
-            .catch(error => {
-              console.log('[SW] Service Worker registration failed:', error);
-            });
-        });
-      }
-    </script>
+    
     <link
       rel="apple-touch-icon"
       href="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png"
@@ -76,7 +63,7 @@
     <!-- Cache Management & Loop Protection O -->
     <script>
       (function () {
-        const CURRENT_VERSION = "2025.08.08.002";
+        const CURRENT_VERSION = "2025.08.08.003";
         const lastCacheClear = localStorage.getItem("last_cache_clear");
         const now = Date.now();
 

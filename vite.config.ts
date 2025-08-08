@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    dedupe: ["react", "react-dom"],
   },
   // Build optimizations for mobile performance
   build: {
@@ -68,6 +69,7 @@ export default defineConfig(({ mode }) => ({
     include: [
       'react', 
       'react-dom',
+      'react/jsx-runtime',
       '@radix-ui/react-slot',
       'clsx',
       'tailwind-merge'
