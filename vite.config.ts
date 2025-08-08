@@ -53,8 +53,7 @@ export default defineConfig(({ mode }) => ({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
-      // Reduce bundle size by excluding development dependencies
-      external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'] : []
+      // Do not externalize runtime deps; let Vite bundle everything to avoid unresolved module specifiers in the browser
     },
     chunkSizeWarningLimit: 800, // Reduced for mobile optimization
     reportCompressedSize: false,
