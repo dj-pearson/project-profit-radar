@@ -72,7 +72,7 @@ export default defineConfig(({ mode }) => ({
       'clsx',
       'tailwind-merge'
     ],
-    exclude: ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli']
+    exclude: []
   },
   
   // Mobile-optimized esbuild settings
