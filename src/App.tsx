@@ -159,7 +159,10 @@ const App = () => {
               <Route path="/reports" element={<Reports />} />
               <Route path="/purchase-orders" element={<PurchaseOrders />} />
               <Route path="/vendors" element={<Vendors />} />
-              <Route path="/quickbooks-routing" element={<QuickBooksRouting />} />
+              <Route
+                path="/quickbooks-routing"
+                element={<QuickBooksRouting />}
+              />
 
               {/* People area routes */}
               <Route path="/team" element={<TeamManagement />} />
@@ -170,7 +173,10 @@ const App = () => {
               <Route path="/crm/contacts" element={<CRMContacts />} />
               <Route path="/crm/opportunities" element={<CRMOpportunities />} />
               <Route path="/crm/pipeline" element={<CRMPipeline />} />
-              <Route path="/crm/lead-intelligence" element={<CRMLeadIntelligence />} />
+              <Route
+                path="/crm/lead-intelligence"
+                element={<CRMLeadIntelligence />}
+              />
               <Route path="/crm/workflows" element={<CRMWorkflows />} />
               <Route path="/crm/campaigns" element={<CRMCampaigns />} />
               <Route path="/crm/analytics" element={<CRMAnalytics />} />
@@ -182,13 +188,28 @@ const App = () => {
               <Route path="/compliance-audit" element={<ComplianceAudit />} />
               <Route path="/gdpr-compliance" element={<GDPRCompliance />} />
               <Route path="/permit-management" element={<PermitManagement />} />
-              <Route path="/environmental-permitting" element={<EnvironmentalPermitting />} />
-              <Route path="/bond-insurance" element={<BondInsuranceManagement />} />
-              <Route path="/warranty-management" element={<WarrantyManagement />} />
-              <Route path="/public-procurement" element={<PublicProcurement />} />
+              <Route
+                path="/environmental-permitting"
+                element={<EnvironmentalPermitting />}
+              />
+              <Route
+                path="/bond-insurance"
+                element={<BondInsuranceManagement />}
+              />
+              <Route
+                path="/warranty-management"
+                element={<WarrantyManagement />}
+              />
+              <Route
+                path="/public-procurement"
+                element={<PublicProcurement />}
+              />
               <Route path="/service-dispatch" element={<ServiceDispatch />} />
               <Route path="/calendar" element={<CalendarSync />} />
-              <Route path="/equipment-management" element={<EquipmentManagement />} />
+              <Route
+                path="/equipment-management"
+                element={<EquipmentManagement />}
+              />
               <Route path="/workflows" element={<AutomatedWorkflows />} />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
 
@@ -201,16 +222,37 @@ const App = () => {
               <Route path="/admin/promotions" element={<Promotions />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               <Route path="/admin/settings" element={<Settings />} />
-              <Route path="/system-admin/settings" element={<SystemAdminSettings />} />
-              <Route path="/security-monitoring" element={<SecurityMonitoring />} />
-              <Route path="/rate-limiting" element={<RateLimitingDashboard />} />
+              <Route
+                path="/system-admin/settings"
+                element={<SystemAdminSettings />}
+              />
+              <Route
+                path="/security-monitoring"
+                element={<SecurityMonitoring />}
+              />
+              <Route
+                path="/rate-limiting"
+                element={<RateLimitingDashboard />}
+              />
               <Route path="/blog-manager" element={<BlogManager />} />
-              <Route path="/knowledge-base-admin" element={<KnowledgeBaseAdmin />} />
+              <Route
+                path="/knowledge-base-admin"
+                element={<KnowledgeBaseAdmin />}
+              />
               <Route path="/admin/seo" element={<SEOManager />} />
               <Route path="/admin/funnels" element={<FunnelManager />} />
-              <Route path="/admin/support-tickets" element={<SupportTickets />} />
-              <Route path="/admin/social-media" element={<SocialMediaManager />} />
-              <Route path="/admin/seo-analytics" element={<SEOAnalyticsDashboard />} />
+              <Route
+                path="/admin/support-tickets"
+                element={<SupportTickets />}
+              />
+              <Route
+                path="/admin/social-media"
+                element={<SocialMediaManager />}
+              />
+              <Route
+                path="/admin/seo-analytics"
+                element={<SEOAnalyticsDashboard />}
+              />
               <Route path="/upgrade" element={<Upgrade />} />
 
               <Route
