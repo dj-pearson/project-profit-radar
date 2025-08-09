@@ -14,7 +14,7 @@ SKIP_DEPENDENCY_INSTALL = "false"
 
 # Build configuration for faster deployments
 [build]
-command = "npm run build:prod"
+command = "npm run build"
 publish = "dist"
 
 # Enable logging for debugging
