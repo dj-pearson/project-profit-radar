@@ -132,6 +132,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
 
         console.log("Profile fetched successfully:", data.role);
+        try {
+          localStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(data));
+        } catch {}
         return data as UserProfile;
       } catch (error) {
         console.error("Profile fetch exception:", error);
@@ -182,6 +185,19 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           setLoading(false);
           return;
         }
+
+        // Check localStorage profile cache
+        try {
+          const stored = localStorage.getItem(`bd.userProfile.${session.user.id}`);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            console.log("Initial session: Using stored profile");
+            setUserProfile(parsed);
+            successfulProfiles.current.set(parsed.id, parsed);
+            setLoading(false);
+            return;
+          }
+        } catch {}
 
         // Check current profile
         if (userProfile?.id === session.user.id) {
