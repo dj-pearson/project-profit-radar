@@ -1,150 +1,63 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  useSidebar,
-  SidebarHeader,
-  SidebarFooter,
-} from '@/components/ui/sidebar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { HierarchicalSidebar } from '@/components/navigation/HierarchicalSidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Zap } from 'lucide-react';
-import { hierarchicalNavigation, findSectionByUrl, getNavigationForSection } from './HierarchicalNavigationConfig';
+import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
+import TrialStatusBanner from '@/components/TrialStatusBanner';
 
-export const HierarchicalSidebar = () => {
-  const { state } = useSidebar();
-  const location = useLocation();
-  const { userProfile } = useAuth();
-  const currentPath = location.pathname;
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+  showTrialBanner?: boolean;
+}
 
-  const getNavClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-accent text-accent-foreground font-medium" : "hover:bg-accent/50";
-
-  const collapsed = state === 'collapsed';
-
-  // Find current section based on URL
-  const currentSectionInfo = findSectionByUrl(currentPath);
-  
-  // Get navigation items for current section
-  const sectionItems = currentSectionInfo 
-    ? getNavigationForSection(currentSectionInfo.section.id, userProfile?.role || '')
-    : [];
-
-  // Get top-level navigation (areas)
-  const topLevelNavigation = hierarchicalNavigation.filter(area => {
-    // Check if user has access to any item in any section of this area
-    return area.sections.some(section => 
-      section.items.some(item => 
-        userProfile?.role === 'root_admin' || item.roles.includes(userProfile?.role || '')
-      )
-    );
-  });
+export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
+  children, 
+  title = "Build Desk",
+  showTrialBanner = true 
+}) => {
+  const { user, userProfile, signOut } = useAuth();
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
-      <SidebarHeader className="p-2">
-        <div className="flex items-center justify-between">
-          <SidebarTrigger />
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-          </div>
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent>
-        {/* Main Areas Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>{!collapsed && "Main Areas"}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {topLevelNavigation.map((area) => {
-                const isCurrentArea = currentSectionInfo?.area.id === area.id;
-                
-                return (
-                  <SidebarMenuItem key={area.id}>
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={`/${area.id === 'overview' ? 'dashboard' : area.id}`} 
-                        className={getNavClass({ isActive: isCurrentArea })}
-                      >
-                        <area.icon className="h-4 w-4" />
-                        {!collapsed && <span>{area.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background flex w-full">
+        <HierarchicalSidebar />
+        
+        <div className="flex-1">
+          {/* Header */}
+          <nav className="border-b bg-background/95 backdrop-blur-sm">
+            <div className="flex justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
+              <div className="flex items-center min-w-0 flex-1">
+                <SidebarTrigger className="mr-2 sm:mr-3 flex-shrink-0" />
+                <h1 className="text-base sm:text-lg lg:text-2xl font-bold text-foreground truncate">
+                  {title}
+                </h1>
+              </div>
+              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-shrink-0">
+                <span className="hidden md:block text-xs sm:text-sm text-muted-foreground truncate max-w-32 lg:max-w-none">
+                  Welcome, {userProfile?.first_name || user?.email}
+                </span>
+                <ThemeToggle />
+                <Button variant="outline" size="sm" className="hidden sm:flex text-xs lg:text-sm px-2 lg:px-3" onClick={signOut}>
+                  Sign Out
+                </Button>
+                <Button variant="outline" size="sm" className="sm:hidden text-xs px-2" onClick={signOut}>
+                  Exit
+                </Button>
+              </div>
+            </div>
+          </nav>
 
-        {/* Current Section Items */}
-        {currentSectionInfo && sectionItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {!collapsed && currentSectionInfo.section.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {sectionItems.map((item) => {
-                  const isActive = currentPath === item.url;
-                  
-                  return (
-                    <SidebarMenuItem key={item.url}>
-                      <SidebarMenuButton asChild>
-                        <NavLink to={item.url} className={getNavClass({ isActive })}>
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && (
-                            <div className="flex items-center justify-between w-full">
-                              <span>{item.title}</span>
-                              {item.badge && (
-                                <Badge variant="destructive" className="text-xs px-1 py-0">
-                                  {item.badge}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-      </SidebarContent>
-      
-      <SidebarFooter className="p-4">
-        {!collapsed && (
-          <div className="space-y-2">
-            <NavLink to="/upgrade">
-              <Button variant="default" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-                <Zap className="h-4 w-4 mr-2" />
-                Upgrade Plan
-              </Button>
-            </NavLink>
-          </div>
-        )}
-        {collapsed && (
-          <NavLink to="/upgrade">
-            <Button variant="default" size="icon" className="w-full">
-              <Zap className="h-4 w-4" />
-            </Button>
-          </NavLink>
-        )}
-      </SidebarFooter>
-    </Sidebar>
+          {/* Main Content */}
+          <ResponsiveContainer className="py-4 sm:py-6" padding="sm">
+            {showTrialBanner && <TrialStatusBanner />}
+            {children}
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
