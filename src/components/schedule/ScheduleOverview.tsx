@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
-  Clock, 
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Calendar,
+  DollarSign,
+  Users,
+  TrendingUp,
+  Clock,
   AlertTriangle,
   Search,
   Filter,
-  ArrowRight
-} from 'lucide-react';
-import { format, parseISO, differenceInDays } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+  ArrowRight,
+} from "lucide-react";
+import { format, parseISO, differenceInDays } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Project {
   id: string;
@@ -29,7 +29,7 @@ interface Project {
   completion_percentage: number;
   project_manager: string;
   client_name: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
 }
 
 interface ScheduleOverviewProps {
@@ -41,64 +41,81 @@ interface ScheduleOverviewProps {
 export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
   projects,
   onProjectUpdate,
-  selectedYear
+  selectedYear,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
   const navigate = useNavigate();
 
   // Filter projects
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.project_manager.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
-    
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.project_manager.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || project.status === statusFilter;
+    const matchesPriority =
+      priorityFilter === "all" || project.priority === priorityFilter;
+
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
   // Calculate metrics
   const totalProjects = projects.length;
-  const activeProjects = projects.filter(p => p.status === 'active').length;
-  const completedProjects = projects.filter(p => p.status === 'completed').length;
-  const overDueProjects = projects.filter(p => {
+  const activeProjects = projects.filter((p) => p.status === "active").length;
+  const completedProjects = projects.filter(
+    (p) => p.status === "completed"
+  ).length;
+  const overDueProjects = projects.filter((p) => {
     const endDate = parseISO(p.end_date);
-    return endDate < new Date() && p.status !== 'completed';
+    return endDate < new Date() && p.status !== "completed";
   }).length;
 
   const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-  const averageProgress = projects.length > 0 
-    ? projects.reduce((sum, p) => sum + p.completion_percentage, 0) / projects.length 
-    : 0;
+  const averageProgress =
+    projects.length > 0
+      ? projects.reduce((sum, p) => sum + p.completion_percentage, 0) /
+        projects.length
+      : 0;
 
   const upcomingDeadlines = projects
-    .filter(p => p.status === 'active')
-    .map(p => ({
+    .filter((p) => p.status === "active")
+    .map((p) => ({
       ...p,
-      daysUntilEnd: differenceInDays(parseISO(p.end_date), new Date())
+      daysUntilEnd: differenceInDays(parseISO(p.end_date), new Date()),
     }))
-    .filter(p => p.daysUntilEnd >= 0 && p.daysUntilEnd <= 30)
+    .filter((p) => p.daysUntilEnd >= 0 && p.daysUntilEnd <= 30)
     .sort((a, b) => a.daysUntilEnd - b.daysUntilEnd);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'destructive';
-      case 'high': return 'secondary';
-      case 'medium': return 'outline';
-      case 'low': return 'outline';
-      default: return 'outline';
+      case "critical":
+        return "destructive";
+      case "high":
+        return "secondary";
+      case "medium":
+        return "outline";
+      case "low":
+        return "outline";
+      default:
+        return "outline";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'default';
-      case 'completed': return 'secondary';
-      case 'on_hold': return 'outline';
-      case 'cancelled': return 'destructive';
-      default: return 'outline';
+      case "active":
+        return "default";
+      case "completed":
+        return "secondary";
+      case "on_hold":
+        return "outline";
+      case "cancelled":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
@@ -110,7 +127,9 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Projects
+                </p>
                 <p className="text-3xl font-bold">{totalProjects}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {activeProjects} active, {completedProjects} completed
@@ -127,8 +146,12 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Budget</p>
-                <p className="text-3xl font-bold">${(totalBudget / 1000000).toFixed(1)}M</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Budget
+                </p>
+                <p className="text-3xl font-bold">
+                  ${(totalBudget / 1000000).toFixed(1)}M
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Across all projects
                 </p>
@@ -144,8 +167,12 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Average Progress</p>
-                <p className="text-3xl font-bold">{averageProgress.toFixed(0)}%</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Average Progress
+                </p>
+                <p className="text-3xl font-bold">
+                  {averageProgress.toFixed(0)}%
+                </p>
                 <Progress value={averageProgress} className="mt-2" />
               </div>
               <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -159,8 +186,12 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Overdue Projects</p>
-                <p className="text-3xl font-bold text-red-600">{overDueProjects}</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Overdue Projects
+                </p>
+                <p className="text-3xl font-bold text-red-600">
+                  {overDueProjects}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Require attention
                 </p>
@@ -191,7 +222,7 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
                 />
               </div>
             </div>
-            
+
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -224,14 +255,12 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>
-                Projects ({filteredProjects.length})
-              </CardTitle>
+              <CardTitle>Projects ({filteredProjects.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {filteredProjects.map((project) => (
-                  <div 
+                  <div
                     key={project.id}
                     className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => navigate(`/projects/${project.id}`)}
@@ -248,7 +277,8 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Client: {project.client_name} • PM: {project.project_manager}
+                          Client: {project.client_name} • PM:{" "}
+                          {project.project_manager}
                         </p>
                       </div>
                       <ArrowRight className="h-5 w-5 text-muted-foreground" />
@@ -256,15 +286,19 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                       <div>
-                        <p className="text-xs text-muted-foreground">Start Date</p>
+                        <p className="text-xs text-muted-foreground">
+                          Start Date
+                        </p>
                         <p className="text-sm font-medium">
-                          {format(parseISO(project.start_date), 'MMM dd, yyyy')}
+                          {format(parseISO(project.start_date), "MMM dd, yyyy")}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">End Date</p>
+                        <p className="text-xs text-muted-foreground">
+                          End Date
+                        </p>
                         <p className="text-sm font-medium">
-                          {format(parseISO(project.end_date), 'MMM dd, yyyy')}
+                          {format(parseISO(project.end_date), "MMM dd, yyyy")}
                         </p>
                       </div>
                       <div>
@@ -274,14 +308,19 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Progress</p>
+                        <p className="text-xs text-muted-foreground">
+                          Progress
+                        </p>
                         <p className="text-sm font-medium">
                           {project.completion_percentage}%
                         </p>
                       </div>
                     </div>
 
-                    <Progress value={project.completion_percentage} className="h-2" />
+                    <Progress
+                      value={project.completion_percentage}
+                      className="h-2"
+                    />
                   </div>
                 ))}
 
@@ -307,21 +346,30 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
             <CardContent>
               <div className="space-y-3">
                 {upcomingDeadlines.slice(0, 5).map((project) => (
-                  <div 
+                  <div
                     key={project.id}
                     className="border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-sm truncate">{project.name}</h5>
-                      <Badge variant={project.daysUntilEnd <= 7 ? 'destructive' : 'outline'}>
+                      <h5 className="font-medium text-sm truncate">
+                        {project.name}
+                      </h5>
+                      <Badge
+                        variant={
+                          project.daysUntilEnd <= 7 ? "destructive" : "outline"
+                        }
+                      >
                         {project.daysUntilEnd}d
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Due: {format(parseISO(project.end_date), 'MMM dd, yyyy')}
+                      Due: {format(parseISO(project.end_date), "MMM dd, yyyy")}
                     </p>
-                    <Progress value={project.completion_percentage} className="h-1" />
+                    <Progress
+                      value={project.completion_percentage}
+                      className="h-1"
+                    />
                   </div>
                 ))}
 

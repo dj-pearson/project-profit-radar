@@ -1,24 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeft, 
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  ArrowLeft,
   ArrowRight,
-  Calendar, 
-  DollarSign, 
-  MapPin, 
-  User, 
+  Calendar,
+  DollarSign,
+  MapPin,
+  User,
   Building2,
   Clock,
   Plus,
@@ -27,8 +45,8 @@ import {
   Wrench,
   Truck,
   Factory,
-  CheckCircle2
-} from 'lucide-react';
+  CheckCircle2,
+} from "lucide-react";
 
 interface ProjectTemplate {
   id: string;
@@ -44,71 +62,114 @@ interface ProjectTemplate {
 
 const PROJECT_TEMPLATES: ProjectTemplate[] = [
   {
-    id: 'residential_kitchen',
-    name: 'Kitchen Renovation',
-    description: 'Complete kitchen remodel including cabinets, countertops, and appliances',
+    id: "residential_kitchen",
+    name: "Kitchen Renovation",
+    description:
+      "Complete kitchen remodel including cabinets, countertops, and appliances",
     icon: Home,
-    projectType: 'residential_renovation',
-    estimatedDuration: '4-6 weeks',
-    avgBudget: '$25,000 - $75,000',
-    phases: ['Demolition', 'Electrical & Plumbing', 'Installation', 'Finishing'],
-    costCodes: ['02-Demolition', '16-Electrical', '22-Plumbing', '06-Carpentry', '09-Finishes']
+    projectType: "residential_renovation",
+    estimatedDuration: "4-6 weeks",
+    avgBudget: "$25,000 - $75,000",
+    phases: [
+      "Demolition",
+      "Electrical & Plumbing",
+      "Installation",
+      "Finishing",
+    ],
+    costCodes: [
+      "02-Demolition",
+      "16-Electrical",
+      "22-Plumbing",
+      "06-Carpentry",
+      "09-Finishes",
+    ],
   },
   {
-    id: 'residential_bathroom',
-    name: 'Bathroom Remodel',
-    description: 'Full bathroom renovation with modern fixtures and finishes',
+    id: "residential_bathroom",
+    name: "Bathroom Remodel",
+    description: "Full bathroom renovation with modern fixtures and finishes",
     icon: Home,
-    projectType: 'residential_renovation',
-    estimatedDuration: '2-4 weeks',
-    avgBudget: '$15,000 - $40,000',
-    phases: ['Demolition', 'Plumbing & Electrical', 'Tiling', 'Fixtures & Finishing'],
-    costCodes: ['02-Demolition', '16-Electrical', '22-Plumbing', '09-Finishes']
+    projectType: "residential_renovation",
+    estimatedDuration: "2-4 weeks",
+    avgBudget: "$15,000 - $40,000",
+    phases: [
+      "Demolition",
+      "Plumbing & Electrical",
+      "Tiling",
+      "Fixtures & Finishing",
+    ],
+    costCodes: ["02-Demolition", "16-Electrical", "22-Plumbing", "09-Finishes"],
   },
   {
-    id: 'commercial_office',
-    name: 'Office Build-Out',
-    description: 'Commercial office space construction and fit-out',
+    id: "commercial_office",
+    name: "Office Build-Out",
+    description: "Commercial office space construction and fit-out",
     icon: Building2,
-    projectType: 'commercial_renovation',
-    estimatedDuration: '8-12 weeks',
-    avgBudget: '$50,000 - $200,000',
-    phases: ['Design & Permits', 'Framing', 'MEP Installation', 'Finishes', 'FF&E'],
-    costCodes: ['01-General', '06-Carpentry', '16-Electrical', '22-Plumbing', '09-Finishes']
+    projectType: "commercial_renovation",
+    estimatedDuration: "8-12 weeks",
+    avgBudget: "$50,000 - $200,000",
+    phases: [
+      "Design & Permits",
+      "Framing",
+      "MEP Installation",
+      "Finishes",
+      "FF&E",
+    ],
+    costCodes: [
+      "01-General",
+      "06-Carpentry",
+      "16-Electrical",
+      "22-Plumbing",
+      "09-Finishes",
+    ],
   },
   {
-    id: 'residential_addition',
-    name: 'Home Addition',
-    description: 'Room addition or second story construction',
+    id: "residential_addition",
+    name: "Home Addition",
+    description: "Room addition or second story construction",
     icon: Home,
-    projectType: 'residential_new',
-    estimatedDuration: '12-20 weeks',
-    avgBudget: '$75,000 - $250,000',
-    phases: ['Foundation', 'Framing', 'Roofing', 'MEP', 'Insulation & Drywall', 'Finishes'],
-    costCodes: ['03-Concrete', '06-Carpentry', '07-Roofing', '16-Electrical', '22-Plumbing', '09-Finishes']
+    projectType: "residential_new",
+    estimatedDuration: "12-20 weeks",
+    avgBudget: "$75,000 - $250,000",
+    phases: [
+      "Foundation",
+      "Framing",
+      "Roofing",
+      "MEP",
+      "Insulation & Drywall",
+      "Finishes",
+    ],
+    costCodes: [
+      "03-Concrete",
+      "06-Carpentry",
+      "07-Roofing",
+      "16-Electrical",
+      "22-Plumbing",
+      "09-Finishes",
+    ],
   },
   {
-    id: 'specialty_hvac',
-    name: 'HVAC Installation',
-    description: 'Complete HVAC system installation and commissioning',
+    id: "specialty_hvac",
+    name: "HVAC Installation",
+    description: "Complete HVAC system installation and commissioning",
     icon: Wrench,
-    projectType: 'specialty',
-    estimatedDuration: '1-3 weeks',
-    avgBudget: '$8,000 - $25,000',
-    phases: ['Planning & Permits', 'Installation', 'Testing & Commissioning'],
-    costCodes: ['23-HVAC', '16-Electrical']
+    projectType: "specialty",
+    estimatedDuration: "1-3 weeks",
+    avgBudget: "$8,000 - $25,000",
+    phases: ["Planning & Permits", "Installation", "Testing & Commissioning"],
+    costCodes: ["23-HVAC", "16-Electrical"],
   },
   {
-    id: 'custom_project',
-    name: 'Custom Project',
-    description: 'Start from scratch with your own specifications',
+    id: "custom_project",
+    name: "Custom Project",
+    description: "Start from scratch with your own specifications",
     icon: Building2,
-    projectType: 'custom',
-    estimatedDuration: 'Variable',
-    avgBudget: 'Variable',
+    projectType: "custom",
+    estimatedDuration: "Variable",
+    avgBudget: "Variable",
     phases: [],
-    costCodes: []
-  }
+    costCodes: [],
+  },
 ];
 
 interface ProjectWizardProps {
@@ -116,68 +177,81 @@ interface ProjectWizardProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => {
+const ProjectWizard: React.FC<ProjectWizardProps> = ({
+  open,
+  onOpenChange,
+}) => {
   const { user, userProfile } = useAuth();
   const navigate = useNavigate();
-  
+
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<ProjectTemplate | null>(null);
   const [creating, setCreating] = useState(false);
-  
+
   // Form data
   const [formData, setFormData] = useState({
     // Template Selection
-    templateId: '',
-    
+    templateId: "",
+
     // Basic Information
-    name: '',
-    description: '',
-    projectType: '',
-    
+    name: "",
+    description: "",
+    projectType: "",
+
     // Client & Location
-    clientName: '',
-    clientEmail: '',
-    siteAddress: '',
-    
+    clientName: "",
+    clientEmail: "",
+    siteAddress: "",
+
     // Timeline & Budget
-    startDate: '',
-    endDate: '',
-    budget: '',
-    estimatedHours: '',
-    
+    startDate: "",
+    endDate: "",
+    budget: "",
+    estimatedHours: "",
+
     // Additional Details
     permitNumbers: [] as string[],
-    specialRequirements: ''
+    specialRequirements: "",
   });
 
-  const [newPermit, setNewPermit] = useState('');
+  const [newPermit, setNewPermit] = useState("");
 
   const totalSteps = 5;
 
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const addPermit = () => {
-    if (newPermit.trim() && !formData.permitNumbers.includes(newPermit.trim())) {
-      updateFormData('permitNumbers', [...formData.permitNumbers, newPermit.trim()]);
-      setNewPermit('');
+    if (
+      newPermit.trim() &&
+      !formData.permitNumbers.includes(newPermit.trim())
+    ) {
+      updateFormData("permitNumbers", [
+        ...formData.permitNumbers,
+        newPermit.trim(),
+      ]);
+      setNewPermit("");
     }
   };
 
   const removePermit = (permit: string) => {
-    updateFormData('permitNumbers', formData.permitNumbers.filter(p => p !== permit));
+    updateFormData(
+      "permitNumbers",
+      formData.permitNumbers.filter((p) => p !== permit)
+    );
   };
 
   const handleTemplateSelect = (template: ProjectTemplate) => {
     setSelectedTemplate(template);
-    updateFormData('templateId', template.id);
-    updateFormData('projectType', template.projectType);
-    
+    updateFormData("templateId", template.id);
+    updateFormData("projectType", template.projectType);
+
     // Pre-fill name based on template
-    if (template.id !== 'custom_project') {
-      updateFormData('name', template.name + ' Project');
-      updateFormData('description', template.description);
+    if (template.id !== "custom_project") {
+      updateFormData("name", template.name + " Project");
+      updateFormData("description", template.description);
     }
   };
 
@@ -198,7 +272,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
       case 1:
         return selectedTemplate !== null;
       case 2:
-        return formData.name.trim() !== '';
+        return formData.name.trim() !== "";
       case 3:
         return true; // Client info is optional
       case 4:
@@ -212,7 +286,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
 
   const createProject = async () => {
     if (!userProfile?.company_id || !user) return;
-    
+
     setCreating(true);
     try {
       // Create project
@@ -220,21 +294,24 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
         name: formData.name,
         description: formData.description || null,
         project_type: formData.projectType || null,
-        status: 'planning',
+        status: "planning",
         client_name: formData.clientName || null,
         client_email: formData.clientEmail || null,
         site_address: formData.siteAddress || null,
         start_date: formData.startDate || null,
         end_date: formData.endDate || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
-        estimated_hours: formData.estimatedHours ? parseInt(formData.estimatedHours) : null,
-        permit_numbers: formData.permitNumbers.length > 0 ? formData.permitNumbers : null,
+        estimated_hours: formData.estimatedHours
+          ? parseInt(formData.estimatedHours)
+          : null,
+        permit_numbers:
+          formData.permitNumbers.length > 0 ? formData.permitNumbers : null,
         company_id: userProfile.company_id,
         created_by: user.id,
       };
 
       const { data: project, error: projectError } = await supabase
-        .from('projects')
+        .from("projects")
         .insert([projectData])
         .select()
         .single();
@@ -247,59 +324,67 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
           project_id: project.id,
           name: phaseName,
           description: `${phaseName} phase for ${formData.name}`,
-          status: 'planning',
+          status: "planning",
           order_index: index + 1,
-          estimated_budget: formData.budget ? Math.round(parseFloat(formData.budget) / selectedTemplate.phases.length) : null
+          estimated_budget: formData.budget
+            ? Math.round(
+                parseFloat(formData.budget) / selectedTemplate.phases.length
+              )
+            : null,
         }));
 
         const { error: phasesError } = await supabase
-          .from('project_phases')
+          .from("project_phases")
           .insert(phasesData);
 
-        if (phasesError) console.warn('Failed to create phases:', phasesError);
+        if (phasesError) console.warn("Failed to create phases:", phasesError);
       }
 
       // Create cost codes if template has them
       if (selectedTemplate && selectedTemplate.costCodes.length > 0) {
         const existingCostCodes = await supabase
-          .from('cost_codes')
-          .select('code')
-          .eq('company_id', userProfile.company_id);
+          .from("cost_codes")
+          .select("code")
+          .eq("company_id", userProfile.company_id);
 
-        const existingCodes = existingCostCodes.data?.map(cc => cc.code) || [];
+        const existingCodes =
+          existingCostCodes.data?.map((cc) => cc.code) || [];
         const newCostCodes = selectedTemplate.costCodes
-          .filter(code => !existingCodes.includes(code))
-          .map(code => ({
+          .filter((code) => !existingCodes.includes(code))
+          .map((code) => ({
             company_id: userProfile.company_id,
             code: code,
-            name: code.split('-')[1] || code,
-            category: 'construction',
-            is_active: true
+            name: code.split("-")[1] || code,
+            category: "construction",
+            is_active: true,
           }));
 
         if (newCostCodes.length > 0) {
           const { error: costCodesError } = await supabase
-            .from('cost_codes')
+            .from("cost_codes")
             .insert(newCostCodes);
 
-          if (costCodesError) console.warn('Failed to create cost codes:', costCodesError);
+          if (costCodesError)
+            console.warn("Failed to create cost codes:", costCodesError);
         }
       }
 
       toast({
         title: "Project Created Successfully!",
-        description: `${formData.name} has been created with ${selectedTemplate?.phases.length || 0} phases.`
+        description: `${formData.name} has been created with ${
+          selectedTemplate?.phases.length || 0
+        } phases.`,
       });
 
       onOpenChange(false);
       navigate(`/projects/${project.id}`);
-
     } catch (error: any) {
-      console.error('Project creation error:', error);
+      console.error("Project creation error:", error);
       toast({
         variant: "destructive",
         title: "Failed to Create Project",
-        description: error.message || "An error occurred while creating the project"
+        description:
+          error.message || "An error occurred while creating the project",
       });
     } finally {
       setCreating(false);
@@ -312,22 +397,24 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Choose a Project Template</h2>
+              <h2 className="text-2xl font-bold mb-2">
+                Choose a Project Template
+              </h2>
               <p className="text-muted-foreground">
                 Start with a pre-configured template or create a custom project
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {PROJECT_TEMPLATES.map((template) => {
                 const IconComponent = template.icon;
                 const isSelected = selectedTemplate?.id === template.id;
-                
+
                 return (
-                  <Card 
+                  <Card
                     key={template.id}
                     className={`cursor-pointer transition-all hover:shadow-md ${
-                      isSelected ? 'ring-2 ring-primary border-primary' : ''
+                      isSelected ? "ring-2 ring-primary border-primary" : ""
                     }`}
                     onClick={() => handleTemplateSelect(template)}
                   >
@@ -338,7 +425,9 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                             <IconComponent className="h-6 w-6 text-primary" />
                           </div>
                           <div>
-                            <CardTitle className="text-lg">{template.name}</CardTitle>
+                            <CardTitle className="text-lg">
+                              {template.name}
+                            </CardTitle>
                             <p className="text-sm text-muted-foreground mt-1">
                               {template.description}
                             </p>
@@ -352,21 +441,31 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     <CardContent className="pt-0">
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                          <span className="font-medium text-muted-foreground">Duration:</span>
+                          <span className="font-medium text-muted-foreground">
+                            Duration:
+                          </span>
                           <p>{template.estimatedDuration}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-muted-foreground">Budget Range:</span>
+                          <span className="font-medium text-muted-foreground">
+                            Budget Range:
+                          </span>
                           <p>{template.avgBudget}</p>
                         </div>
                       </div>
-                      
+
                       {template.phases.length > 0 && (
                         <div className="mt-3">
-                          <span className="font-medium text-muted-foreground text-sm">Phases:</span>
+                          <span className="font-medium text-muted-foreground text-sm">
+                            Phases:
+                          </span>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {template.phases.slice(0, 3).map((phase) => (
-                              <Badge key={phase} variant="outline" className="text-xs">
+                              <Badge
+                                key={phase}
+                                variant="outline"
+                                className="text-xs"
+                              >
                                 {phase}
                               </Badge>
                             ))}
@@ -385,7 +484,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
             </div>
           </div>
         );
-      
+
       case 2:
         return (
           <div className="space-y-6">
@@ -395,46 +494,60 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 Basic details about your construction project
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="projectName">Project Name *</Label>
                 <Input
                   id="projectName"
                   value={formData.name}
-                  onChange={(e) => updateFormData('name', e.target.value)}
+                  onChange={(e) => updateFormData("name", e.target.value)}
                   placeholder="Kitchen Renovation - Smith Residence"
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="projectType">Project Type</Label>
-                <Select 
-                  value={formData.projectType} 
-                  onValueChange={(value) => updateFormData('projectType', value)}
+                <Select
+                  value={formData.projectType}
+                  onValueChange={(value) =>
+                    updateFormData("projectType", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select project type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="residential_new">Residential - New Construction</SelectItem>
-                    <SelectItem value="residential_renovation">Residential - Renovation</SelectItem>
-                    <SelectItem value="commercial_new">Commercial - New Construction</SelectItem>
-                    <SelectItem value="commercial_renovation">Commercial - Renovation</SelectItem>
-                    <SelectItem value="infrastructure">Infrastructure</SelectItem>
+                    <SelectItem value="residential_new">
+                      Residential - New Construction
+                    </SelectItem>
+                    <SelectItem value="residential_renovation">
+                      Residential - Renovation
+                    </SelectItem>
+                    <SelectItem value="commercial_new">
+                      Commercial - New Construction
+                    </SelectItem>
+                    <SelectItem value="commercial_renovation">
+                      Commercial - Renovation
+                    </SelectItem>
+                    <SelectItem value="infrastructure">
+                      Infrastructure
+                    </SelectItem>
                     <SelectItem value="specialty">Specialty Trade</SelectItem>
                     <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Project Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => updateFormData('description', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("description", e.target.value)
+                  }
                   placeholder="Describe the scope of work, key objectives, and any special requirements..."
                   rows={4}
                 />
@@ -442,7 +555,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
             </div>
           </div>
         );
-      
+
       case 3:
         return (
           <div className="space-y-6">
@@ -452,7 +565,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 Client contact information and project location
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -460,7 +573,9 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                   <Input
                     id="clientName"
                     value={formData.clientName}
-                    onChange={(e) => updateFormData('clientName', e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("clientName", e.target.value)
+                    }
                     placeholder="John & Jane Smith"
                   />
                 </div>
@@ -470,12 +585,14 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     id="clientEmail"
                     type="email"
                     value={formData.clientEmail}
-                    onChange={(e) => updateFormData('clientEmail', e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("clientEmail", e.target.value)
+                    }
                     placeholder="client@example.com"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="siteAddress">
                   <MapPin className="h-4 w-4 inline mr-1" />
@@ -484,14 +601,16 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 <Input
                   id="siteAddress"
                   value={formData.siteAddress}
-                  onChange={(e) => updateFormData('siteAddress', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("siteAddress", e.target.value)
+                  }
                   placeholder="123 Main Street, City, State, ZIP"
                 />
               </div>
             </div>
           </div>
         );
-      
+
       case 4:
         return (
           <div className="space-y-6">
@@ -501,7 +620,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 Project schedule and financial planning
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -510,7 +629,9 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     id="startDate"
                     type="date"
                     value={formData.startDate}
-                    onChange={(e) => updateFormData('startDate', e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("startDate", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -519,11 +640,11 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     id="endDate"
                     type="date"
                     value={formData.endDate}
-                    onChange={(e) => updateFormData('endDate', e.target.value)}
+                    onChange={(e) => updateFormData("endDate", e.target.value)}
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="budget">
@@ -536,7 +657,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     step="0.01"
                     min="0"
                     value={formData.budget}
-                    onChange={(e) => updateFormData('budget', e.target.value)}
+                    onChange={(e) => updateFormData("budget", e.target.value)}
                     placeholder="50000.00"
                   />
                 </div>
@@ -550,12 +671,14 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     type="number"
                     min="0"
                     value={formData.estimatedHours}
-                    onChange={(e) => updateFormData('estimatedHours', e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("estimatedHours", e.target.value)
+                    }
                     placeholder="200"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Permits & Documentation</Label>
                 <div className="flex space-x-2">
@@ -563,17 +686,23 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                     value={newPermit}
                     onChange={(e) => setNewPermit(e.target.value)}
                     placeholder="Enter permit number"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPermit())}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addPermit())
+                    }
                   />
                   <Button type="button" onClick={addPermit} variant="outline">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 {formData.permitNumbers.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {formData.permitNumbers.map((permit) => (
-                      <Badge key={permit} variant="secondary" className="flex items-center gap-1">
+                      <Badge
+                        key={permit}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
                         {permit}
                         <button
                           type="button"
@@ -590,7 +719,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
             </div>
           </div>
         );
-      
+
       case 5:
         return (
           <div className="space-y-6">
@@ -600,7 +729,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 Review your project details before creating
               </p>
             </div>
-            
+
             <div className="space-y-4">
               <Card>
                 <CardHeader>
@@ -612,59 +741,89 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-muted-foreground">Template:</span>
+                      <span className="font-medium text-muted-foreground">
+                        Template:
+                      </span>
                       <p>{selectedTemplate?.name}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-muted-foreground">Type:</span>
-                      <p>{formData.projectType?.replace('_', ' ') || 'Custom'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-muted-foreground">Budget:</span>
-                      <p>{formData.budget ? `$${parseFloat(formData.budget).toLocaleString()}` : 'Not set'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-muted-foreground">Duration:</span>
+                      <span className="font-medium text-muted-foreground">
+                        Type:
+                      </span>
                       <p>
-                        {formData.startDate && formData.endDate 
-                          ? `${new Date(formData.startDate).toLocaleDateString()} - ${new Date(formData.endDate).toLocaleDateString()}`
-                          : 'Not set'
-                        }
+                        {formData.projectType?.replace("_", " ") || "Custom"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground">
+                        Budget:
+                      </span>
+                      <p>
+                        {formData.budget
+                          ? `$${parseFloat(formData.budget).toLocaleString()}`
+                          : "Not set"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground">
+                        Duration:
+                      </span>
+                      <p>
+                        {formData.startDate && formData.endDate
+                          ? `${new Date(
+                              formData.startDate
+                            ).toLocaleDateString()} - ${new Date(
+                              formData.endDate
+                            ).toLocaleDateString()}`
+                          : "Not set"}
                       </p>
                     </div>
                   </div>
-                  
+
                   {selectedTemplate && selectedTemplate.phases.length > 0 && (
                     <div>
-                      <span className="font-medium text-muted-foreground text-sm">Phases to be created:</span>
+                      <span className="font-medium text-muted-foreground text-sm">
+                        Phases to be created:
+                      </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {selectedTemplate.phases.map((phase) => (
-                          <Badge key={phase} variant="outline" className="text-xs">
+                          <Badge
+                            key={phase}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {phase}
                           </Badge>
                         ))}
                       </div>
                     </div>
                   )}
-                  
-                  {selectedTemplate && selectedTemplate.costCodes.length > 0 && (
-                    <div>
-                      <span className="font-medium text-muted-foreground text-sm">Cost codes to be created:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedTemplate.costCodes.map((code) => (
-                          <Badge key={code} variant="secondary" className="text-xs">
-                            {code}
-                          </Badge>
-                        ))}
+
+                  {selectedTemplate &&
+                    selectedTemplate.costCodes.length > 0 && (
+                      <div>
+                        <span className="font-medium text-muted-foreground text-sm">
+                          Cost codes to be created:
+                        </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedTemplate.costCodes.map((code) => (
+                            <Badge
+                              key={code}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {code}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </CardContent>
               </Card>
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -679,12 +838,15 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
             Step {currentStep} of {totalSteps}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
-          <Progress value={(currentStep / totalSteps) * 100} className="w-full" />
-          
+          <Progress
+            value={(currentStep / totalSteps) * 100}
+            className="w-full"
+          />
+
           {renderStep()}
-          
+
           <div className="flex justify-between pt-4">
             <Button
               variant="outline"
@@ -694,12 +856,9 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
               <ArrowLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
-            
+
             {currentStep < totalSteps ? (
-              <Button
-                onClick={nextStep}
-                disabled={!canProceed()}
-              >
+              <Button onClick={nextStep} disabled={!canProceed()}>
                 Next
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -708,7 +867,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
                 onClick={createProject}
                 disabled={creating || !canProceed()}
               >
-                {creating ? 'Creating...' : 'Create Project'}
+                {creating ? "Creating..." : "Create Project"}
               </Button>
             )}
           </div>
