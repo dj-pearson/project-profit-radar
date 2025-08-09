@@ -2717,7 +2717,7 @@ const ProjectDetail = () => {
                     </Button>
                   </DialogTrigger>
                 </Dialog>
-                <Button variant="outline" onClick={() => navigate(`/project/${projectId}/documents`)}>
+                <Button variant="outline" onClick={() => navigate(`/projects/${projectId}/documents`)}>
                   <FileText className="h-4 w-4 mr-2" />
                   View All Documents
                 </Button>

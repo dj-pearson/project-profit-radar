@@ -112,7 +112,7 @@ const GlobalSearch = () => {
             title: project.name,
             description: project.description || 'No description available',
             type: 'project' as const,
-            url: `/project/${project.id}`,
+            url: `/projects/${project.id}`,
             lastModified: project.created_at,
             relevanceScore: calculateRelevance(query, project.name + ' ' + (project.description || '')),
             metadata: { projectId: project.id }

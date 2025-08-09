@@ -292,7 +292,7 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({ open, onOpenChange }) => 
       });
 
       onOpenChange(false);
-      navigate(`/project/${project.id}`);
+      navigate(`/projects/${project.id}`);
 
     } catch (error: any) {
       console.error('Project creation error:', error);

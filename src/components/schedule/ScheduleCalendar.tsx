@@ -205,7 +205,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
                       <div
                         key={project.id}
                         className="border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate(`/project/${project.id}`)}
+                        onClick={() => navigate(`/projects/${project.id}`)}
                       >
                         <div className="flex items-start justify-between mb-2">
                           <h4 className="font-medium text-sm">{project.name}</h4>

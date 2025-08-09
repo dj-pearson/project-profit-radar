@@ -313,11 +313,11 @@ const Projects = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate(`/project/${project.id}`)}>
+                <DropdownMenuItem onClick={() => navigate(`/projects/${project.id}`)}>
                   <Eye className="h-4 w-4 mr-2" />
                   View Project Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/project/${project.id}`)}>
+                <DropdownMenuItem onClick={() => navigate(`/projects/${project.id}`)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Project
                 </DropdownMenuItem>

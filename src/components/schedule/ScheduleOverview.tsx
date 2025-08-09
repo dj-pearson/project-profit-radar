@@ -234,7 +234,7 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
                   <div 
                     key={project.id}
                     className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/project/${project.id}`)}
+                    onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -310,7 +310,7 @@ export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
                   <div 
                     key={project.id}
                     className="border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate(`/project/${project.id}`)}
+                    onClick={() => navigate(`/projects/${project.id}`)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h5 className="font-medium text-sm truncate">{project.name}</h5>

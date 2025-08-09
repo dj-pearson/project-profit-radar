@@ -464,7 +464,7 @@ export const BusinessDashboard = () => {
           <div className="grid gap-4">
             {projects.map((project) => (
               <Card key={project.id} className="hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/project/${project.id}`)}>
+                    onClick={() => navigate(`/projects/${project.id}`)}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
