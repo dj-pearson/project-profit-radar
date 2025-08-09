@@ -30,7 +30,9 @@ import SubscriptionSettings from "./pages/SubscriptionSettings";
 
 // Project area pages
 import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 import CreateProject from "./pages/CreateProject";
+import ScheduleManagement from "./pages/ScheduleManagement";
 import JobCosting from "./pages/JobCosting";
 import DailyReports from "./pages/DailyReports";
 import RFIs from "./pages/RFIs";
@@ -101,6 +103,7 @@ import SupportTickets from "./pages/admin/SupportTickets";
 import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
 import Upgrade from "./pages/Upgrade";
+import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 
@@ -141,7 +144,12 @@ const App = () => {
 
               {/* Project area routes */}
               <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:projectId" element={<ProjectDetail />} />
               <Route path="/create-project" element={<CreateProject />} />
+              <Route
+                path="/schedule-management"
+                element={<ScheduleManagement />}
+              />
               <Route path="/job-costing" element={<JobCosting />} />
               <Route path="/daily-reports" element={<DailyReports />} />
               <Route path="/rfis" element={<RFIs />} />
@@ -254,6 +262,7 @@ const App = () => {
                 element={<SEOAnalyticsDashboard />}
               />
               <Route path="/upgrade" element={<Upgrade />} />
+              <Route path="/schedule-builder" element={<ScheduleBuilder />} />
 
               <Route
                 path="*"
