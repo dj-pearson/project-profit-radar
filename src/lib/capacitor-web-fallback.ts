@@ -53,6 +53,18 @@ export const Encoding = {
   UTF16: "utf16",
 } as const;
 
+// Camera constants
+export const CameraResultType = {
+  Uri: "uri",
+  Base64: "base64",
+} as const;
+
+export const CameraSource = {
+  Prompt: "PROMPT",
+  Camera: "CAMERA",
+  Photos: "PHOTOS",
+} as const;
+
 // App Plugin
 export const App = {
   addListener: () => ({ remove: () => {} }),
