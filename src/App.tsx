@@ -12,6 +12,7 @@ import Collaboration from "./pages/Collaboration";
 import MobileTesting from "./pages/MobileTesting";
 import MobileDashboard from "./pages/MobileDashboard";
 import Dashboard from "./pages/Dashboard";
+import FieldManagement from "./pages/FieldManagement";
 import WorkflowManagement from "./pages/WorkflowManagement";
 import WorkflowTesting from "./pages/WorkflowTesting";
 import Auth from "./pages/Auth";
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/mobile-testing" element={<MobileTesting />} />
             <Route path="/mobile-dashboard" element={<MobileDashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/field-management" element={<FieldManagement />} />
             <Route path="/workflow-management" element={<WorkflowManagement />} />
             <Route path="/workflow-testing" element={<WorkflowTesting />} />
             <Route path="/auth" element={<Auth />} />

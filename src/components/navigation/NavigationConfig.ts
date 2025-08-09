@@ -24,6 +24,7 @@ import {
   Gift,
   Share,
   Zap,
+  Smartphone,
   LucideIcon
 } from 'lucide-react';
 
@@ -94,6 +95,13 @@ export const mainNavigation: NavigationItem[] = [
     icon: Clipboard, 
     roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"],
     description: "Daily operations and compliance"
+  },
+  {
+    title: "Field Management",
+    url: "/field-management",
+    icon: Smartphone,
+    roles: ["admin", "project_manager", "field_supervisor", "foreman", "technician", "office_staff", "root_admin"],
+    description: "Mobile field tools and testing"
   },
   { 
     title: "Settings", 
