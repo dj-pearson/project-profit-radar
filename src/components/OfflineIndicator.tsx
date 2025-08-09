@@ -1,13 +1,14 @@
 import { usePWA } from '@/hooks/usePWA';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { WifiOff, Wifi } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export const OfflineIndicator = () => {
   const { isOffline } = usePWA();
   const [showReconnected, setShowReconnected] = useState(false);
   const location = useLocation();
+  const prevIsOffline = useRef<boolean>(isOffline);
 
   // Only show offline indicator on backend/dashboard routes
   const isBackendRoute = [
@@ -18,14 +19,17 @@ export const OfflineIndicator = () => {
     '/mobile-testing'
   ].some(route => location.pathname.startsWith(route));
 
-  useEffect(() => {
-    if (!isOffline && showReconnected === false) {
+useEffect(() => {
+    const wasOffline = prevIsOffline.current;
+    prevIsOffline.current = isOffline;
+
+    if (wasOffline && !isOffline) {
       // Just came back online
       setShowReconnected(true);
-      const timer = setTimeout(() => setShowReconnected(false), 3000);
+      const timer = setTimeout(() => setShowReconnected(false), 2000);
       return () => clearTimeout(timer);
     }
-  }, [isOffline, showReconnected]);
+  }, [isOffline]);
 
   if (!isBackendRoute || (!isOffline && !showReconnected)) {
     return null;
