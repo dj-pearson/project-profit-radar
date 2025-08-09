@@ -17,7 +17,6 @@
     "build:prod": "npm run generate-sitemap && vite build --mode production",
     "build:cloudflare": "npm run generate-sitemap && vite build --mode production",
     "generate-sitemap": "node scripts/generate-sitemap.js",
-    "postinstall": "npm audit fix --force || true",
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
     "mcp:context7": "npx @upstash/context7-mcp",
     "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id ilhzuvemiuyfuxfegtlv --access-token \"${SUPABASE_ACCESS_TOKEN}\"",

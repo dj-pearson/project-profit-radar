@@ -1,36 +1,3 @@
 name = "builddesk"
 compatibility_date = "2024-07-01"
-
-# Cloudflare Pages configuration
-[env.production]
 pages_build_output_dir = "dist"
-
-# Environment variables for build optimization
-[env.production.vars]
-NODE_VERSION = "20"
-NPM_FLAGS = "--prefer-offline"
-NODE_OPTIONS = "--max-old-space-size=4096"
-SKIP_DEPENDENCY_INSTALL = "false"
-
-# Build configuration for faster deployments
-[build]
-command = "npm run build"
-publish = "dist"
-
-# Enable logging for debugging
-[observability.logs]
-enabled = true
-
-# Custom domain configuration
-# Note: Update these with your actual domains
-[[env.production.routes]]
-pattern = "builddesk.pearsonperformance.workers.dev/*"
-zone_name = "pearsonperformance.workers.dev"
-
-[[env.production.routes]]
-pattern = "build-desk.com/*"
-zone_name = "build-desk.com"
-
-[[env.production.routes]]
-pattern = "www.build-desk.com/*"
-zone_name = "build-desk.com"
