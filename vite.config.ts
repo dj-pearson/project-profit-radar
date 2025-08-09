@@ -15,6 +15,43 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Provide web fallbacks for Capacitor modules
+      "@capacitor/core": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/app": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/camera": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/device": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/filesystem": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/geolocation": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/local-notifications": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/preferences": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
+      "@capacitor/push-notifications": path.resolve(
+        __dirname,
+        "./src/lib/capacitor-web-fallback.ts"
+      ),
     },
     dedupe: [
       "react",
