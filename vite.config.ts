@@ -17,7 +17,6 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
   // Build optimizations for mobile performance
   build: {
@@ -54,7 +53,8 @@ export default defineConfig(({ mode }) => ({
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]'
       },
-      // Do not externalize runtime deps; let Vite bundle everything to avoid unresolved module specifiers in the browser
+      // Reduce bundle size by excluding development dependencies
+      external: mode === 'production' ? ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli'] : []
     },
     chunkSizeWarningLimit: 800, // Reduced for mobile optimization
     reportCompressedSize: false,
@@ -69,13 +69,11 @@ export default defineConfig(({ mode }) => ({
     include: [
       'react', 
       'react-dom',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
       '@radix-ui/react-slot',
       'clsx',
       'tailwind-merge'
     ],
-    exclude: []
+    exclude: ['@capacitor/core', '@capacitor/android', '@capacitor/ios', '@capacitor/cli']
   },
   
   // Mobile-optimized esbuild settings
