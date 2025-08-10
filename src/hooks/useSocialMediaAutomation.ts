@@ -188,18 +188,31 @@ export const useSocialMediaAutomation = () => {
 
     try {
       setLoading(true);
-      
+
+      const { data, error } = await supabase.functions.invoke(
+        "social-post-scheduler",
+        {
+          body: {
+            manual_trigger: true,
+            company_id: userProfile.company_id,
+          },
+        }
+      );
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Social media automation triggered successfully",
       });
 
-      return { success: true };
+      return { success: true, data };
     } catch (error: any) {
       console.error("Error triggering automation:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to trigger social media automation",
+        description:
+          error?.message || "Failed to trigger social media automation",
         variant: "destructive",
       });
       throw error;

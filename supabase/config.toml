@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.api-management]
 verify_jwt = true
+
+[functions.social-content-generator]
+verify_jwt = false
