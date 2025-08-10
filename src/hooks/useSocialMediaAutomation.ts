@@ -37,30 +37,60 @@ export const useSocialMediaAutomation = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("social_media_automation_settings")
-        .select("*")
-        .eq("company_id", profile.company_id)
-        .single();
+      // Load blog-auto social settings and also sync webhook from automated config if present
+      const [{ data: smData, error: smError }, { data: autoConfig }] = await Promise.all([
+        supabase
+          .from("social_media_automation_settings")
+          .select("*")
+          .eq("company_id", profile.company_id)
+          .maybeSingle(),
+        supabase
+          .from("automated_social_posts_config")
+          .select("webhook_url, platforms, enabled, auto_schedule")
+          .eq("company_id", profile.company_id)
+          .maybeSingle(),
+      ]);
 
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
+      if (smError && smError.code !== "PGRST116") throw smError;
 
-      if (data) {
-        setSettings({
-          ...data,
-          platforms_enabled: Array.isArray(data.platforms_enabled) 
-            ? data.platforms_enabled.map(String) 
-            : [],
-          content_templates: typeof data.content_templates === 'object' && data.content_templates !== null
-            ? data.content_templates as Record<string, unknown>
+      const merged = smData
+        ? {
+            ...smData,
+            // Prefer explicit webhook_url from settings, otherwise fall back to automated config
+            webhook_url: smData.webhook_url || autoConfig?.webhook_url || "",
+            platforms_enabled: Array.isArray(smData.platforms_enabled)
+              ? smData.platforms_enabled.map(String)
+              : Array.isArray(autoConfig?.platforms)
+              ? (autoConfig!.platforms as string[])
+              : [],
+          }
+        : {
+            // If there is no row yet, hydrate sensible defaults from automated config
+            company_id: profile.company_id,
+            is_active: !!autoConfig?.enabled,
+            auto_post_on_publish: !!autoConfig?.auto_schedule,
+            webhook_url: autoConfig?.webhook_url || "",
+            webhook_secret: "",
+            ai_content_generation: true,
+            platforms_enabled: Array.isArray(autoConfig?.platforms)
+              ? (autoConfig!.platforms as string[])
+              : [],
+            posting_schedule: {},
+            content_templates: {},
+          } as SocialAutomationSettings;
+
+      // Normalize JSON fields
+      setSettings({
+        ...merged,
+        content_templates:
+          typeof (merged as any).content_templates === "object" && (merged as any).content_templates !== null
+            ? ((merged as any).content_templates as Record<string, unknown>)
             : {},
-          posting_schedule: typeof data.posting_schedule === 'object' && data.posting_schedule !== null
-            ? data.posting_schedule as Record<string, unknown>
-            : {}
-        });
-      }
+        posting_schedule:
+          typeof (merged as any).posting_schedule === "object" && (merged as any).posting_schedule !== null
+            ? ((merged as any).posting_schedule as Record<string, unknown>)
+            : {},
+      });
     } catch (error) {
       console.error("Error loading automation settings:", error);
       toast({
@@ -82,7 +112,7 @@ export const useSocialMediaAutomation = () => {
     try {
       setLoading(true);
 
-      // First, check if a record exists for this company
+      // Upsert into blog auto-settings
       const { data: existingRecord } = await supabase
         .from("social_media_automation_settings")
         .select("*")
@@ -92,29 +122,25 @@ export const useSocialMediaAutomation = () => {
       let result;
       
       if (existingRecord) {
-        // Update existing record
         result = await supabase
           .from("social_media_automation_settings")
           .update({
             ...newSettings,
-            // Cast to Json type for Supabase
             content_templates: (newSettings.content_templates || {}) as any,
             posting_schedule: (newSettings.posting_schedule || {}) as any,
-            platforms_enabled: (newSettings.platforms_enabled || []) as any
+            platforms_enabled: (newSettings.platforms_enabled || []) as any,
           })
-          .eq('company_id', profile.company_id)
+          .eq("company_id", profile.company_id)
           .select()
           .single();
       } else {
-        // Insert new record
         const settingsData = {
           company_id: profile.company_id,
-          created_by: profile.id,
+          created_by: (profile as any)?.id,
           ...newSettings,
-          // Cast to Json type for Supabase
           content_templates: (newSettings.content_templates || {}) as any,
           posting_schedule: (newSettings.posting_schedule || {}) as any,
-          platforms_enabled: (newSettings.platforms_enabled || []) as any
+          platforms_enabled: (newSettings.platforms_enabled || []) as any,
         };
 
         result = await supabase
@@ -125,6 +151,37 @@ export const useSocialMediaAutomation = () => {
       }
 
       if (result.error) throw result.error;
+
+      // Keep webhook_url in sync with automated_social_posts_config
+      if (typeof newSettings.webhook_url === "string") {
+        const { data: autoCfg } = await supabase
+          .from("automated_social_posts_config")
+          .select("id")
+          .eq("company_id", profile.company_id)
+          .maybeSingle();
+
+        if (autoCfg?.id) {
+          await supabase
+            .from("automated_social_posts_config")
+            .update({ webhook_url: newSettings.webhook_url })
+            .eq("id", autoCfg.id);
+        } else {
+          await supabase.from("automated_social_posts_config").insert({
+            company_id: profile.company_id,
+            enabled: false,
+            post_interval_hours: 48,
+            content_types: ["features", "benefits", "knowledge"] as any,
+            platforms: (newSettings.platforms_enabled || [
+              "twitter",
+              "linkedin",
+              "facebook",
+              "instagram",
+            ]) as any,
+            auto_schedule: true,
+            webhook_url: newSettings.webhook_url,
+          } as any);
+        }
+      }
 
       if (result.data) {
         setSettings({
@@ -148,9 +205,7 @@ export const useSocialMediaAutomation = () => {
     } catch (error) {
       console.error("Error saving automation settings:", error);
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to save automation settings";
+        error instanceof Error ? error.message : "Failed to save automation settings";
       toast({
         title: "Error",
         description: errorMessage,
