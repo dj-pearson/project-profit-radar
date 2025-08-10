@@ -21,6 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAutomatedSocialPosts } from "@/hooks/useAutomatedSocialPosts";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Clock,
   Play,
@@ -46,7 +49,33 @@ export const AutomatedSocialPosts = () => {
     loadQueue,
   } = useAutomatedSocialPosts();
 
+  const { userProfile } = useAuth();
+  const { toast } = useToast();
   const [localConfig, setLocalConfig] = useState(config);
+
+  const handleSendNowForItem = async (item: { content_type: string }) => {
+    try {
+      await triggerManualPost(item.content_type);
+      toast({ title: "Queued", description: "Send now triggered for this topic" });
+      await loadQueue();
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "Failed to send now", variant: "destructive" });
+    }
+  };
+
+  const handleRedeployForItem = async (item: { topic: string }) => {
+    try {
+      await supabase.functions.invoke("social-post-redeploy", {
+        body: {
+          company_id: userProfile?.company_id,
+          topic: item.topic,
+        },
+      });
+      toast({ title: "Redeployed", description: "Previous content resent via webhook" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "Failed to redeploy", variant: "destructive" });
+    }
+  };
 
   // Update local config when config changes
   React.useEffect(() => {
@@ -444,6 +473,25 @@ export const AutomatedSocialPosts = () => {
                             {item.webhook_sent ? "Sent" : "Pending"}
                           </div>
                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleSendNowForItem(item)}
+                          disabled={loading}
+                        >
+                          Send Now
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRedeployForItem(item)}
+                          disabled={loading}
+                        >
+                          Redeploy
+                        </Button>
                       </div>
 
                       {item.error_message && (

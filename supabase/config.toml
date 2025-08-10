@@ -38,3 +38,7 @@ verify_jwt = true
 
 [functions.social-content-generator]
 verify_jwt = false
+
+[functions.social-post-redeploy]
+verify_jwt = false
+
