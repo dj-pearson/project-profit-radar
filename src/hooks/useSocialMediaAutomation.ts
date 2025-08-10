@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,14 +26,14 @@ interface TriggerAutomationParams {
 }
 
 export const useSocialMediaAutomation = () => {
-  const { profile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<SocialAutomationSettings | null>(null);
 
   // Load automation settings
   const loadSettings = async () => {
-    if (!profile?.company_id) return;
+    if (!userProfile?.company_id) return;
 
     try {
       setLoading(true);
@@ -41,14 +41,14 @@ export const useSocialMediaAutomation = () => {
       const { data: autoConfig, error: autoError } = await supabase
         .from("automated_social_posts_config")
         .select("webhook_url, platforms, enabled, auto_schedule, company_id")
-        .eq("company_id", profile.company_id)
+        .eq("company_id", userProfile.company_id)
         .maybeSingle();
 
       if (autoError && autoError.code !== "PGRST116") throw autoError;
 
       const merged: SocialAutomationSettings = autoConfig
         ? {
-            company_id: autoConfig.company_id || profile.company_id,
+            company_id: autoConfig.company_id || userProfile.company_id,
             is_active: !!autoConfig.enabled,
             auto_post_on_publish: !!autoConfig.auto_schedule,
             webhook_url: autoConfig.webhook_url || "",
@@ -61,7 +61,7 @@ export const useSocialMediaAutomation = () => {
             content_templates: {},
           }
         : {
-            company_id: profile.company_id,
+            company_id: userProfile.company_id,
             is_active: false,
             auto_post_on_publish: true,
             webhook_url: "",
@@ -85,9 +85,15 @@ export const useSocialMediaAutomation = () => {
     }
   };
 
+  // Auto-load settings when the authenticated company changes
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadSettings();
+    }
+  }, [userProfile?.company_id]);
   // Save automation settings
   const saveSettings = async (newSettings: Partial<SocialAutomationSettings>) => {
-    if (!profile?.company_id) {
+    if (!userProfile?.company_id) {
       throw new Error("Company ID not found");
     }
 
@@ -98,7 +104,7 @@ export const useSocialMediaAutomation = () => {
       const { data: existingConfig } = await supabase
         .from("automated_social_posts_config")
         .select("id")
-        .eq("company_id", profile.company_id)
+        .eq("company_id", userProfile.company_id)
         .maybeSingle();
 
       let result;
@@ -118,12 +124,12 @@ export const useSocialMediaAutomation = () => {
         result = await supabase
           .from("automated_social_posts_config")
           .update(updateData)
-          .eq("company_id", profile.company_id)
+          .eq("company_id", userProfile.company_id)
           .select()
           .single();
       } else {
         const insertData: any = {
-          company_id: profile.company_id,
+          company_id: userProfile.company_id,
           enabled: newSettings.is_active ?? false,
           auto_schedule: newSettings.auto_post_on_publish ?? true,
           webhook_url: newSettings.webhook_url ?? "",
@@ -141,7 +147,7 @@ export const useSocialMediaAutomation = () => {
 
       if (result.data) {
         setSettings({
-          company_id: profile.company_id,
+          company_id: userProfile.company_id,
           is_active: !!result.data.enabled,
           auto_post_on_publish: !!result.data.auto_schedule,
           webhook_url: result.data.webhook_url || "",
@@ -176,7 +182,7 @@ export const useSocialMediaAutomation = () => {
 
   // Simplified trigger automation function
   const triggerAutomation = async ({ blogPostId }: TriggerAutomationParams) => {
-    if (!profile?.company_id) {
+    if (!userProfile?.company_id) {
       throw new Error("Company ID not found");
     }
 
