@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import RealTimeJobCosting from '@/components/financial/RealTimeJobCosting';
+import CostVarianceAlerts from '@/components/alerts/CostVarianceAlerts';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 const JobCosting = () => {
@@ -37,7 +39,15 @@ const JobCosting = () => {
 
   return (
     <DashboardLayout title="Job Costing">
-      <RealTimeJobCosting projectId={projectFilter} />
+      <Helmet>
+        <title>Job Costing – Real-time Variance Alerts | BuildDesk</title>
+        <meta name="description" content="Track live job costing and variance alerts to catch overruns early." />
+        <link rel="canonical" href="/job-costing" />
+      </Helmet>
+      <main className="space-y-4">
+        <CostVarianceAlerts />
+        <RealTimeJobCosting projectId={projectFilter} />
+      </main>
     </DashboardLayout>
   );
 };
