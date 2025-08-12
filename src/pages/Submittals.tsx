@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Helmet } from 'react-helmet-async';
 import { 
   ArrowLeft, 
   FileText,
@@ -177,6 +178,11 @@ const Submittals = () => {
     }
 
     try {
+      // Default SLA: 10 days if not provided
+      const defaultDue = new Date();
+      defaultDue.setDate(defaultDue.getDate() + 10);
+      const dueDateVal = newSubmittal.due_date || defaultDue.toISOString().split('T')[0];
+
       // Generate submittal number
       const submittalCount = submittals.length + 1;
       const submittalNumber = `SUB-${new Date().getFullYear()}-${submittalCount.toString().padStart(3, '0')}`;
@@ -189,7 +195,7 @@ const Submittals = () => {
           title: newSubmittal.title,
           description: newSubmittal.description,
           spec_section: newSubmittal.spec_section,
-          due_date: newSubmittal.due_date || null,
+          due_date: dueDateVal,
           priority: newSubmittal.priority,
           status: 'draft',
           submittal_number: submittalNumber,
@@ -246,6 +252,17 @@ const Submittals = () => {
         .eq('id', selectedSubmittal.id);
 
       if (error) throw error;
+
+      // Log review entry for accountability
+      await (supabase as any)
+        .from('submittal_reviews')
+        .insert({
+          submittal_id: selectedSubmittal.id,
+          reviewer_id: user?.id,
+          review_status: reviewStatus,
+          comments: reviewComments || null,
+          company_id: userProfile?.company_id
+        });
 
       toast({
         title: "Success",
@@ -368,6 +385,11 @@ const Submittals = () => {
 
   return (
     <DashboardLayout title="Submittals">
+      <Helmet>
+        <title>Submittals Tracker – Approvals & Accountability | BuildDesk</title>
+        <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
+        <link rel="canonical" href="/submittals" />
+      </Helmet>
       <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="border-b bg-card">

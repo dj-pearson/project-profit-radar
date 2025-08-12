@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Helmet } from 'react-helmet-async';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
   ArrowLeft, 
@@ -178,7 +179,32 @@ const RFIs = () => {
         responses: []
       }));
 
-      setRFIs(transformedRFIs);
+      // Fetch responses for these RFIs
+      const rfiIds = (rfisData || []).map((r: any) => r.id);
+      let responsesByRfi: Record<string, RFIResponse[]> = {};
+      if (rfiIds.length > 0) {
+        const { data: responsesData } = await (supabase as any)
+          .from('rfi_responses')
+          .select('*')
+          .in('rfi_id', rfiIds)
+          .order('response_date', { ascending: true });
+
+        (responsesData || []).forEach((resp: any) => {
+          const arr = responsesByRfi[resp.rfi_id] || [] as RFIResponse[];
+          arr.push({
+            ...resp,
+            responder: { first_name: 'User', last_name: '' }
+          } as RFIResponse);
+          responsesByRfi[resp.rfi_id] = arr;
+        });
+      }
+
+      const enrichedRFIs = transformedRFIs.map((r: any) => ({
+        ...r,
+        responses: responsesByRfi[r.id] || []
+      }));
+
+      setRFIs(enrichedRFIs);
 
     } catch (error: any) {
       console.error('Error loading data:', error);
@@ -203,6 +229,11 @@ const RFIs = () => {
     }
 
     try {
+      // Default SLA: 7 days if not provided
+      const defaultDue = new Date();
+      defaultDue.setDate(defaultDue.getDate() + 7);
+      const dueDateVal = newRFI.due_date || defaultDue.toISOString().split('T')[0];
+
       const { error } = await supabase
         .from('rfis')
         .insert({
@@ -211,7 +242,7 @@ const RFIs = () => {
           description: newRFI.description,
           priority: newRFI.priority,
           submitted_to: newRFI.assigned_to || null,
-          due_date: newRFI.due_date || null,
+          due_date: dueDateVal,
           status: 'submitted',
           company_id: userProfile?.company_id,
           created_by: user?.id,
@@ -325,24 +356,44 @@ const RFIs = () => {
     }
 
     try {
-      // In a real implementation, this would add the response
+      if (!selectedRFI || !user || !userProfile) return;
+
+      const { error: insertErr } = await (supabase as any)
+        .from('rfi_responses')
+        .insert({
+          rfi_id: selectedRFI.id,
+          response_text: responseText.trim(),
+          responded_by: user.id,
+          is_final_response: isFinalResponse,
+          company_id: userProfile.company_id
+        });
+
+      if (insertErr) throw insertErr;
+
+      // Optionally close the RFI if marked final
+      if (isFinalResponse) {
+        await supabase
+          .from('rfis')
+          .update({ status: 'closed', response_date: new Date().toISOString() })
+          .eq('id', selectedRFI.id);
+      }
+
       toast({
-        title: "Success",
-        description: "Response added successfully"
+        title: 'Success',
+        description: 'Response added successfully'
       });
 
       setIsResponseDialogOpen(false);
       setResponseText('');
       setIsFinalResponse(false);
       setSelectedRFI(null);
-      
       loadData();
     } catch (error: any) {
       console.error('Error adding response:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add response"
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add response'
       });
     }
   };
@@ -396,6 +447,11 @@ const RFIs = () => {
 
   return (
     <DashboardLayout title="Request for Information (RFI)">
+      <Helmet>
+        <title>RFIs Tracker – Formal Questions & Approvals | BuildDesk</title>
+        <meta name="description" content="Create and track RFIs with due dates, responses, and audit trail for accountability." />
+        <link rel="canonical" href="/rfis" />
+      </Helmet>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
