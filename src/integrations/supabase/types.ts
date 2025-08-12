@@ -14674,6 +14674,57 @@ export type Database = {
           },
         ]
       }
+      rfi_responses: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_final_response: boolean
+          responded_by: string
+          response_date: string
+          response_text: string
+          rfi_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_final_response?: boolean
+          responded_by: string
+          response_date?: string
+          response_text: string
+          rfi_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_final_response?: boolean
+          responded_by?: string
+          response_date?: string
+          response_text?: string
+          rfi_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfi_responses_responded_by_fkey"
+            columns: ["responded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfi_responses_rfi_id_fkey"
+            columns: ["rfi_id"]
+            isOneToOne: false
+            referencedRelation: "rfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfis: {
         Row: {
           company_id: string
@@ -17114,6 +17165,54 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submittal_reviews: {
+        Row: {
+          comments: string | null
+          company_id: string
+          created_at: string
+          id: string
+          review_status: string
+          reviewer_id: string
+          submittal_id: string
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          review_status: string
+          reviewer_id: string
+          submittal_id: string
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          review_status?: string
+          reviewer_id?: string
+          submittal_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submittal_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submittal_reviews_submittal_id_fkey"
+            columns: ["submittal_id"]
+            isOneToOne: false
+            referencedRelation: "submittals"
             referencedColumns: ["id"]
           },
         ]
