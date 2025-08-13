@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Plus, Search, Filter, FileText, Calendar, DollarSign, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ export default function EstimatesHub() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
+  const location = useLocation();
 
   const handleCreateEstimate = () => {
     setIsCreateDialogOpen(true);
@@ -29,6 +31,16 @@ export default function EstimatesHub() {
       description: "New estimate has been created successfully.",
     });
   };
+
+  // LEAN Navigation: Auto-open estimate form from opportunity
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const opportunityId = urlParams.get('opportunity');
+    
+    if (opportunityId) {
+      setIsCreateDialogOpen(true);
+    }
+  }, [location.search]);
 
   return (
     <DashboardLayout title="Estimates">

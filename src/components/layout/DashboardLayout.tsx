@@ -6,6 +6,8 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
+import { Breadcrumb } from '@/components/navigation/Breadcrumb';
+import { ProcessGuide } from '@/components/navigation/ProcessGuide';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 
 interface DashboardLayoutProps {
@@ -54,8 +56,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Main Content */}
           <ResponsiveContainer className="py-4 sm:py-6" padding="sm">
             {showTrialBanner && <TrialStatusBanner />}
+            <Breadcrumb />
             {children}
           </ResponsiveContainer>
+          
+          {/* Floating Process Guide */}
+          <ProcessGuide />
         </div>
       </div>
     </SidebarProvider>

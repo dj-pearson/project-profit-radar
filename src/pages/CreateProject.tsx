@@ -28,6 +28,7 @@ import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, m
 const CreateProject = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [createLoading, setCreateLoading] = useState(false);
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
   
@@ -62,6 +63,30 @@ const CreateProject = () => {
       navigate('/setup');
     }
   }, [user, userProfile, loading, navigate]);
+
+  // LEAN Navigation: Pre-fill form from URL parameters (from CRM conversion)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const opportunityId = urlParams.get('opportunity');
+    const name = urlParams.get('name');
+    const budgetParam = urlParams.get('budget');
+    const type = urlParams.get('type');
+    
+    if (opportunityId && name) {
+      setProjectName(name);
+      setDescription(`Project created from CRM opportunity (ID: ${opportunityId})`);
+      
+      if (budgetParam) {
+        setBudget(budgetParam);
+      }
+      
+      if (type) {
+        setProjectType(type);
+      }
+      
+      setStatus('active'); // Set to active since this is from a won opportunity
+    }
+  }, [location.search]);
 
   if (loading) {
     return (

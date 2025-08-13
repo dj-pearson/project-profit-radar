@@ -1077,6 +1077,23 @@ const CRMDashboard = () => {
                                     Follow-up: {formatDate(lead.next_follow_up_date)}
                                   </p>
                                 )}
+                                
+                                {/* LEAN Navigation: Quick action buttons */}
+                                <div className="flex space-x-1 mt-2">
+                                  {['qualified', 'proposal_sent', 'negotiating'].includes(lead.status) && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-xs px-2 py-1 h-6"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/crm/opportunities?lead=${lead.id}&name=${encodeURIComponent(lead.project_name || `${lead.first_name} ${lead.last_name} Project`)}&budget=${lead.estimated_budget || ''}&type=${lead.project_type || ''}`);
+                                      }}
+                                    >
+                                      Convert
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </LeadEditDialog>

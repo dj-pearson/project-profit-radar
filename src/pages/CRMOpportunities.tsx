@@ -128,6 +128,29 @@ const CRMOpportunities = () => {
     }
   }, [location.pathname]);
 
+  // LEAN Navigation: Pre-fill opportunity form from lead conversion
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const leadId = urlParams.get('lead');
+    const name = urlParams.get('name');
+    const budgetParam = urlParams.get('budget');
+    const type = urlParams.get('type');
+    
+    if (leadId && name) {
+      setNewOpportunity({
+        lead_id: leadId,
+        name: name,
+        estimated_value: budgetParam ? Number(budgetParam) : 0,
+        project_type: type || '',
+        stage: 'qualification',
+        probability_percent: 75, // Higher probability from qualified lead
+        risk_level: 'medium',
+        bid_required: false
+      });
+      setShowNewOpportunityDialog(true);
+    }
+  }, [location.search]);
+
   const loadOpportunitiesData = async (): Promise<Opportunity[]> => {
     if (!userProfile?.company_id) {
       throw new Error('No company associated with user');
@@ -719,13 +742,42 @@ const CRMOpportunities = () => {
                           )}
 
                           {opportunity.risk_factors && opportunity.risk_factors.length > 0 && (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 mb-3">
                               <AlertTriangle className="h-4 w-4 text-orange-500" />
                               <p className="text-sm text-orange-600">
                                 Risk factors identified
                               </p>
                             </div>
                           )}
+
+                          {/* LEAN Navigation: Direct action buttons */}
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            <div className="flex space-x-2">
+                              {opportunity.stage === 'closed_won' && (
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => navigate(`/create-project?opportunity=${opportunity.id}&name=${encodeURIComponent(opportunity.name)}&budget=${opportunity.estimated_value}&type=${opportunity.project_type || ''}`)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <Building2 className="h-4 w-4 mr-2" />
+                                  Convert to Project
+                                </Button>
+                              )}
+                              {(opportunity.stage === 'proposal' || opportunity.stage === 'negotiation') && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => navigate(`/estimates?opportunity=${opportunity.id}`)}
+                                >
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Create Estimate
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Updated: {formatDate(opportunity.updated_at)}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
