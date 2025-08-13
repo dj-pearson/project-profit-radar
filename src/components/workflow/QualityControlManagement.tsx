@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Eye, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import InspectionConductDialog from './InspectionConductDialog';
 
 interface QualityInspection {
   id: string;
