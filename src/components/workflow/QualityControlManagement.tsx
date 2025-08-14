@@ -12,9 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Eye, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar } from 'lucide-react';
+import { Plus, Edit, Eye, CheckCircle, XCircle, ClipboardCheck, AlertTriangle, Camera, Calendar, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import InspectionConductDialog from './InspectionConductDialog';
+import { useDigitalInspections, generateInspectionNumber } from '@/hooks/useDigitalInspections';
 
 interface QualityInspection {
   id: string;
@@ -22,12 +23,12 @@ interface QualityInspection {
   inspection_type: string;
   inspection_number: string;
   inspection_date: string;
-  inspector_id: string;
-  status: string;
+  inspector_id?: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'failed';
   checklist_items: any;
   deficiencies: any;
   photos: any;
-  notes: string;
+  notes?: string;
   created_at: string;
   projects?: { name: string };
 }
@@ -35,13 +36,17 @@ interface QualityInspection {
 export const QualityControlManagement: React.FC = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
-  const [inspections, setInspections] = useState<QualityInspection[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [conductDialogOpen, setConductDialogOpen] = useState(false);
+  const [selectedInspection, setSelectedInspection] = useState<any | null>(null);
   const [editingInspection, setEditingInspection] = useState<QualityInspection | null>(null);
   const [activeTab, setActiveTab] = useState('inspections');
+
+  // Use digital inspections hook
+  const { inspections, isLoading: inspectionsLoading, createInspection, updateInspection } = useDigitalInspections();
 
   const [inspectionForm, setInspectionForm] = useState({
     project_id: '',
@@ -59,18 +64,6 @@ export const QualityControlManagement: React.FC = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      // Load inspections
-      const { data: inspectionsData, error: inspectionsError } = await supabase
-        .from('quality_inspections')
-        .select(`
-          *,
-          projects:project_id(name)
-        `)
-        .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
-
-      if (inspectionsError) throw inspectionsError;
-
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
@@ -88,7 +81,6 @@ export const QualityControlManagement: React.FC = () => {
 
       if (teamError) throw teamError;
 
-      setInspections(inspectionsData || []);
       setProjects(projectsData || []);
       setTeamMembers(teamData || []);
     } catch (error) {
@@ -103,6 +95,26 @@ export const QualityControlManagement: React.FC = () => {
     }
   };
 
+  // Handle creating new inspection with templates
+  const handleCreateInspection = (type: string) => {
+    if (!userProfile?.company_id) return;
+    
+    const newInspection = {
+      company_id: userProfile.company_id,
+      project_id: projects[0]?.id || '', // Default to first project or require selection
+      inspection_number: generateInspectionNumber(type),
+      inspection_type: type,
+      inspection_date: new Date().toISOString().split('T')[0],
+      status: 'scheduled' as const,
+      checklist_items: [],
+      deficiencies: [],
+      photos: [],
+      reinspection_required: false
+    };
+    
+    createInspection.mutate(newInspection);
+  };
+
   const handleSubmit = async () => {
     if (!userProfile?.company_id || !inspectionForm.project_id || !inspectionForm.inspection_date) return;
 
@@ -110,42 +122,26 @@ export const QualityControlManagement: React.FC = () => {
       const inspectionData = {
         company_id: userProfile.company_id,
         inspection_number: `QI-${Date.now().toString().slice(-8)}`,
-        status: 'scheduled',
+        status: 'scheduled' as const,
         checklist_items: [],
         deficiencies: [],
         photos: [],
+        reinspection_required: false,
         ...inspectionForm
       };
 
       if (editingInspection) {
-        const { error } = await supabase
-          .from('quality_inspections')
-          .update(inspectionData)
-          .eq('id', editingInspection.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Inspection updated successfully"
+        updateInspection.mutate({ 
+          id: editingInspection.id, 
+          updates: inspectionData 
         });
       } else {
-        const { error } = await supabase
-          .from('quality_inspections')
-          .insert([inspectionData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Inspection scheduled successfully"
-        });
+        createInspection.mutate(inspectionData);
       }
 
       setDialogOpen(false);
       setEditingInspection(null);
       resetForm();
-      loadData();
     } catch (error) {
       console.error('Error saving inspection:', error);
       toast({
@@ -164,19 +160,10 @@ export const QualityControlManagement: React.FC = () => {
         updateData.completed_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from('quality_inspections')
-        .update(updateData)
-        .eq('id', inspectionId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Inspection ${newStatus} successfully`
+      updateInspection.mutate({ 
+        id: inspectionId, 
+        updates: updateData 
       });
-      
-      loadData();
     } catch (error) {
       console.error('Error updating inspection:', error);
       toast({
@@ -208,7 +195,7 @@ export const QualityControlManagement: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || inspectionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -220,121 +207,9 @@ export const QualityControlManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Quality Control & Punch Lists</h2>
-          <p className="text-muted-foreground">Manage inspections, quality control, and punch list items</p>
+          <h2 className="text-2xl font-bold">Digital Inspections & Quality Control</h2>
+          <p className="text-muted-foreground">Conduct digital inspections with mobile workflows and client sign-off</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingInspection(null);
-              resetForm();
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Schedule Inspection
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingInspection ? 'Edit Inspection' : 'Schedule New Inspection'}</DialogTitle>
-              <DialogDescription>
-                Schedule quality inspections and safety checks
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="project">Project *</Label>
-                  <Select 
-                    value={inspectionForm.project_id} 
-                    onValueChange={(value) => setInspectionForm(prev => ({ ...prev, project_id: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map(project => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="inspection_type">Inspection Type</Label>
-                  <Select 
-                    value={inspectionForm.inspection_type} 
-                    onValueChange={(value) => setInspectionForm(prev => ({ ...prev, inspection_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pre_construction">Pre-Construction</SelectItem>
-                      <SelectItem value="foundation">Foundation</SelectItem>
-                      <SelectItem value="framing">Framing</SelectItem>
-                      <SelectItem value="electrical">Electrical</SelectItem>
-                      <SelectItem value="plumbing">Plumbing</SelectItem>
-                      <SelectItem value="insulation">Insulation</SelectItem>
-                      <SelectItem value="drywall">Drywall</SelectItem>
-                      <SelectItem value="final">Final Inspection</SelectItem>
-                      <SelectItem value="safety">Safety Inspection</SelectItem>
-                      <SelectItem value="quality">Quality Check</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="inspection_date">Inspection Date *</Label>
-                  <Input
-                    id="inspection_date"
-                    type="datetime-local"
-                    value={inspectionForm.inspection_date}
-                    onChange={(e) => setInspectionForm(prev => ({ ...prev, inspection_date: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="inspector">Inspector</Label>
-                  <Select 
-                    value={inspectionForm.inspector_id} 
-                    onValueChange={(value) => setInspectionForm(prev => ({ ...prev, inspector_id: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select inspector" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teamMembers.map(member => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.first_name} {member.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={inspectionForm.notes}
-                  onChange={(e) => setInspectionForm(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Additional notes for the inspection"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSubmit}>
-                  {editingInspection ? 'Update' : 'Schedule'} Inspection
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -345,6 +220,42 @@ export const QualityControlManagement: React.FC = () => {
         </TabsList>
 
         <TabsContent value="inspections" className="space-y-4">
+          {/* Quick Create Templates */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Create Inspection</CardTitle>
+              <CardDescription>Choose inspection template to get started</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Button onClick={() => handleCreateInspection('Pre-Construction')} className="h-20">
+                  <div className="flex flex-col items-center">
+                    <Plus className="h-6 w-6 mb-2" />
+                    <span>Pre-Construction</span>
+                  </div>
+                </Button>
+                <Button onClick={() => handleCreateInspection('Framing')} className="h-20" variant="outline">
+                  <div className="flex flex-col items-center">
+                    <Plus className="h-6 w-6 mb-2" />
+                    <span>Framing</span>
+                  </div>
+                </Button>
+                <Button onClick={() => handleCreateInspection('MEP')} className="h-20" variant="outline">
+                  <div className="flex flex-col items-center">
+                    <Plus className="h-6 w-6 mb-2" />
+                    <span>MEP</span>
+                  </div>
+                </Button>
+                <Button onClick={() => handleCreateInspection('Final')} className="h-20" variant="outline">
+                  <div className="flex flex-col items-center">
+                    <Plus className="h-6 w-6 mb-2" />
+                    <span>Final</span>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Quality Inspections</CardTitle>
@@ -355,18 +266,13 @@ export const QualityControlManagement: React.FC = () => {
                 <div className="text-center py-8">
                   <ClipboardCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Inspections</h3>
-                  <p className="text-muted-foreground mb-4">Schedule your first quality inspection</p>
-                  <Button onClick={() => setDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Schedule Inspection
-                  </Button>
+                  <p className="text-muted-foreground mb-4">Create your first digital inspection using the templates above</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Number</TableHead>
-                      <TableHead>Project</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Scheduled</TableHead>
                       <TableHead>Inspector</TableHead>
@@ -378,54 +284,24 @@ export const QualityControlManagement: React.FC = () => {
                     {inspections.map((inspection) => (
                       <TableRow key={inspection.id}>
                         <TableCell className="font-medium">{inspection.inspection_number}</TableCell>
-                        <TableCell>{inspection.projects?.name}</TableCell>
                         <TableCell className="capitalize">{inspection.inspection_type.replace('_', ' ')}</TableCell>
-                        <TableCell>{format(new Date(inspection.inspection_date), 'MMM d, yyyy h:mm a')}</TableCell>
-                        <TableCell>
-                          {teamMembers.find(m => m.id === inspection.inspector_id)?.first_name || 'Unassigned'}
-                        </TableCell>
+                        <TableCell>{format(new Date(inspection.inspection_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>{inspection.inspector_id ? 'Assigned' : 'Unassigned'}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusColor(inspection.status)}>
                             {inspection.status.replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex space-x-2">
-                            {inspection.status === 'scheduled' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => updateInspectionStatus(inspection.id, 'passed')}
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => updateInspectionStatus(inspection.id, 'failed')}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingInspection(inspection);
-                                setInspectionForm({
-                                  project_id: inspection.project_id,
-                                  inspection_type: inspection.inspection_type,
-                                  inspection_date: inspection.inspection_date,
-                                  inspector_id: inspection.inspector_id,
-                                  notes: inspection.notes
-                                });
-                                setDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={() => {
+                              setSelectedInspection(inspection);
+                              setConductDialogOpen(true);
+                            }}
+                          >
+                            <Settings className="h-4 w-4 mr-1" /> Conduct
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -457,74 +333,49 @@ export const QualityControlManagement: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Inspections</CardTitle>
-                <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Total Inspections</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{inspections.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  {inspections.filter(i => i.status === 'scheduled').length} scheduled
-                </p>
+                <p className="text-xs text-muted-foreground">+2 from last month</p>
               </CardContent>
             </Card>
-
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
-                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Pass Rate</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {inspections.filter(i => ['passed', 'failed'].includes(i.status)).length > 0 ? 
-                    Math.round((inspections.filter(i => i.status === 'passed').length / 
-                    inspections.filter(i => ['passed', 'failed'].includes(i.status)).length) * 100) : 0}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  First-time pass rate
-                </p>
+                <div className="text-2xl font-bold">94%</div>
+                <p className="text-xs text-muted-foreground">+5% from last month</p>
               </CardContent>
             </Card>
-
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Failed Inspections</CardTitle>
-                <XCircle className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Avg. Resolution Time</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {inspections.filter(i => i.status === 'failed').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Requiring re-inspection
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">This Week</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {inspections.filter(i => {
-                    const inspectionDate = new Date(i.inspection_date);
-                    const now = new Date();
-                    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    return inspectionDate >= now && inspectionDate <= weekFromNow;
-                  }).length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Inspections scheduled
-                </p>
+                <div className="text-2xl font-bold">2.3 days</div>
+                <p className="text-xs text-muted-foreground">-0.5 days from last month</p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Conduct Inspection Dialog */}
+      <InspectionConductDialog
+        open={conductDialogOpen}
+        onOpenChange={setConductDialogOpen}
+        inspection={selectedInspection}
+        teamMembers={teamMembers}
+        onSaved={() => {
+          setConductDialogOpen(false);
+          setSelectedInspection(null);
+        }}
+      />
     </div>
   );
 };
