@@ -141,7 +141,11 @@ const InspectionConductDialog: React.FC<InspectionConductDialogProps> = ({ open,
 
     const { error } = await supabase
       .from('quality_inspections')
-      .update({ checklist_items: items, deficiencies, photos: updatedPhotos })
+      .update({ 
+        checklist_items: items as any, 
+        deficiencies: deficiencies as any, 
+        photos: updatedPhotos as any 
+      })
       .eq('id', inspection.id);
 
     if (error) {

@@ -31,7 +31,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({ onChange, height = 
       onChange?.(data);
     };
 
-    padRef.current.onEnd = handleEnd;
+    padRef.current.addEventListener('endStroke', handleEnd);
 
     return () => {
       padRef.current?.off();
