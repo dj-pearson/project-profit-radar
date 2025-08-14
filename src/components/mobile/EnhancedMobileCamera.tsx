@@ -1,298 +1,312 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
+import { Camera, X, RotateCcw, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Camera, RotateCcw, Check, X, SwitchCamera } from 'lucide-react';
-import { useDeviceInfo } from '@/hooks/useDeviceInfo';
+import { Card, CardContent } from '@/components/ui/card';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
-interface MobileCameraProps {
-  onCapture: (file: File, metadata?: CameraMetadata) => void;
+interface EnhancedMobileCameraProps {
+  onCapture: (file: File, metadata?: any) => void;
   onCancel: () => void;
   maxPhotos?: number;
-  currentCount?: number;
-  enableGeolocation?: boolean;
-  quality?: number; // 0.1 to 1.0
+  showPreview?: boolean;
 }
 
-interface CameraMetadata {
-  timestamp: Date;
-  location?: {
-    latitude: number;
-    longitude: number;
-    accuracy?: number;
-  };
-  deviceInfo?: {
-    platform: string;
-    model: string;
-  };
-}
-
-export const EnhancedMobileCamera = ({
+const EnhancedMobileCamera: React.FC<EnhancedMobileCameraProps> = ({
   onCapture,
   onCancel,
-  maxPhotos = 10,
-  currentCount = 0,
-  enableGeolocation = true,
-  quality = 0.8
-}: MobileCameraProps) => {
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [error, setError] = useState<string | null>(null);
-  
+  maxPhotos = 5,
+  showPreview = true
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  
-  const { deviceInfo, capabilities, triggerHapticFeedback } = useDeviceInfo();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  // Helper function to get GPS coordinates
+  const getCurrentPosition = async (): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      if ((window as any).Capacitor) {
+        const { Geolocation } = await import('@capacitor/geolocation');
+        const position = await Geolocation.getCurrentPosition();
+        return {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+      } else {
+        return new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => resolve({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            }),
+            () => resolve(null),
+            { timeout: 5000 }
+          );
+        });
+      }
+    } catch (error) {
+      console.error('Failed to get location:', error);
+      return null;
+    }
+  };
 
   const startCamera = useCallback(async () => {
     try {
-      setError(null);
+      // Try native camera first (mobile)
+      if ((window as any).Capacitor) {
+        return; // Camera will be handled by native capture
+      }
       
-      if (!capabilities.hasCamera) {
-        setError('Camera not available on this device');
+      // Fallback to web camera
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        setStream(mediaStream);
+      }
+    } catch (error) {
+      console.error('Camera access failed:', error);
+      // Fallback to file input
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  }, [stream]);
+
+  const capturePhoto = useCallback(async () => {
+    try {
+      setIsCapturing(true);
+      
+      // Use native camera if available (mobile)
+      if ((window as any).Capacitor) {
+        const image = await CapacitorCamera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera
+        });
+
+        if (image.dataUrl) {
+          // Convert data URL to blob and create file
+          const response = await fetch(image.dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          
+          if (showPreview) {
+            setCapturedPhoto(image.dataUrl);
+          } else {
+            onCapture(file, { 
+              timestamp: new Date(), 
+              location: 'native_camera',
+              gps: await getCurrentPosition()
+            });
+            stopCamera();
+          }
+        }
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode,
-          width: { ideal: 1920, max: 1920 },
-          height: { ideal: 1080, max: 1080 }
+      // Fallback to web camera
+      if (!videoRef.current || !canvasRef.current) return;
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      if (!context) return;
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert to blob and create file
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          const photoUrl = URL.createObjectURL(blob);
+          
+          if (showPreview) {
+            setCapturedPhoto(photoUrl);
+          } else {
+            onCapture(file, { timestamp: new Date(), location: 'web_camera' });
+            stopCamera();
+          }
         }
-      });
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setIsStreaming(true);
-        
-        // Wait for video to load metadata
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-        };
+      }, 'image/jpeg', 0.9);
+    } catch (error) {
+      console.error('Failed to capture photo:', error);
+      // Fallback to file input
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
       }
-    } catch (err) {
-      console.error('Error accessing camera:', err);
-      setError('Failed to access camera. Please check permissions.');
+    } finally {
+      setIsCapturing(false);
     }
-  }, [facingMode, capabilities.hasCamera]);
+  }, [onCapture, showPreview, stopCamera]);
 
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onCapture(file, { 
+        timestamp: new Date(), 
+        location: 'gallery',
+        gps: await getCurrentPosition()
+      });
     }
-    setIsStreaming(false);
-  }, []);
+  }, [onCapture]);
 
-  const capturePhoto = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    triggerHapticFeedback('medium');
-    
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-
-    if (!context) return;
-
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Draw video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Convert to data URL
-    const dataURL = canvas.toDataURL('image/jpeg', quality);
-    setCapturedImage(dataURL);
-    stopCamera();
-  }, [triggerHapticFeedback, quality, stopCamera]);
+  const confirmPhoto = useCallback(async () => {
+    if (capturedPhoto && canvasRef.current) {
+      canvasRef.current.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          onCapture(file, { 
+            timestamp: new Date(), 
+            location: 'camera',
+            gps: await getCurrentPosition()
+          });
+          stopCamera();
+        }
+      }, 'image/jpeg', 0.9);
+    }
+  }, [capturedPhoto, onCapture, stopCamera]);
 
   const retakePhoto = useCallback(() => {
-    setCapturedImage(null);
-    startCamera();
-  }, [startCamera]);
-
-  const confirmCapture = useCallback(async () => {
-    if (!capturedImage || !canvasRef.current) return;
-
-    // Convert data URL to File
-    const response = await fetch(capturedImage);
-    const blob = await response.blob();
-    const timestamp = new Date();
-    const filename = `photo-${timestamp.getTime()}.jpg`;
-    const file = new File([blob], filename, { type: 'image/jpeg' });
-
-    // Gather metadata
-    const metadata: CameraMetadata = {
-      timestamp,
-      deviceInfo: {
-        platform: deviceInfo.platform,
-        model: deviceInfo.model
-      }
-    };
-
-    // Get location if enabled and available
-    if (enableGeolocation && capabilities.hasGeolocation) {
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 30000
-          });
-        });
-
-        metadata.location = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        };
-      } catch (error) {
-        console.warn('Could not get location for photo:', error);
-      }
+    setCapturedPhoto(null);
+    if (capturedPhoto) {
+      URL.revokeObjectURL(capturedPhoto);
     }
+  }, [capturedPhoto]);
 
-    onCapture(file, metadata);
-    triggerHapticFeedback('light');
-  }, [capturedImage, deviceInfo, capabilities, enableGeolocation, onCapture, triggerHapticFeedback]);
-
-  const switchCamera = useCallback(() => {
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-    if (isStreaming) {
-      stopCamera();
-      // Small delay to ensure camera is stopped
-      setTimeout(startCamera, 100);
+  const handleCancel = useCallback(() => {
+    stopCamera();
+    if (capturedPhoto) {
+      URL.revokeObjectURL(capturedPhoto);
     }
-  }, [isStreaming, stopCamera, startCamera]);
+    onCancel();
+  }, [stopCamera, capturedPhoto, onCancel]);
 
-  // Auto-start camera when component mounts
-  useEffect(() => {
-    startCamera();
+  React.useEffect(() => {
+    // Only start web camera if not on mobile
+    if (!(window as any).Capacitor) {
+      startCamera();
+    }
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
-  if (currentCount >= maxPhotos) {
+  if (capturedPhoto) {
     return (
-      <Card className="p-6 text-center">
-        <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold mb-2">Photo Limit Reached</h3>
-        <p className="text-muted-foreground mb-4">
-          You've reached the maximum of {maxPhotos} photos for this session.
-        </p>
-        <Button onClick={onCancel} variant="outline">
-          Close Camera
-        </Button>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="p-6 text-center">
-        <Camera className="w-16 h-16 mx-auto mb-4 text-destructive" />
-        <h3 className="text-lg font-semibold mb-2">Camera Error</h3>
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <div className="flex gap-2 justify-center">
-          <Button onClick={startCamera} variant="outline">
-            Try Again
-          </Button>
-          <Button onClick={onCancel}>
-            Cancel
-          </Button>
+      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+        <div className="flex-1 relative">
+          <img 
+            src={capturedPhoto} 
+            alt="Captured" 
+            className="w-full h-full object-contain"
+          />
         </div>
-      </Card>
+        <div className="p-4 bg-background">
+          <div className="flex justify-center gap-4">
+            <Button onClick={retakePhoto} variant="outline" size="lg">
+              <RotateCcw className="h-5 w-5 mr-2" />
+              Retake
+            </Button>
+            <Button onClick={confirmPhoto} size="lg">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              Use Photo
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
-      <div className="relative h-full flex flex-col">
-        {/* Camera View */}
-        <div className="flex-1 relative overflow-hidden">
-          {capturedImage ? (
-            <img
-              src={capturedImage}
-              alt="Captured"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              playsInline
-              muted
-            />
-          )}
-          
-          {/* Photo Counter */}
-          <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-            {currentCount + 1} / {maxPhotos}
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-background">
+        <Button onClick={handleCancel} variant="ghost" size="sm">
+          <X className="h-5 w-5" />
+        </Button>
+        <span className="text-sm font-medium">Take Photo</span>
+        <div className="w-10" /> {/* Spacer */}
+      </div>
+
+      <div className="flex-1 relative">
+        {/* Show video preview only on web */}
+        {!(window as any).Capacitor && (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
+        )}
+        
+        {/* Show placeholder on mobile */}
+        {(window as any).Capacitor && (
+          <div className="w-full h-full flex items-center justify-center bg-gray-800">
+            <div className="text-center text-white">
+              <Camera className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">Tap camera button to take photo</p>
+            </div>
           </div>
-        </div>
+        )}
+        
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
 
-        {/* Controls */}
-        <div className="p-4 bg-black">
-          {capturedImage ? (
-            /* Captured Image Controls */
-            <div className="flex items-center justify-center gap-4">
-              <Button
-                onClick={retakePhoto}
-                size="lg"
-                variant="outline"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <RotateCcw className="w-5 h-5 mr-2" />
-                Retake
-              </Button>
-              <Button
-                onClick={confirmCapture}
-                size="lg"
-                className="bg-primary text-primary-foreground"
-              >
-                <Check className="w-5 h-5 mr-2" />
-                Use Photo
-              </Button>
-            </div>
-          ) : (
-            /* Camera Controls */
-            <div className="flex items-center justify-between">
-              <Button
-                onClick={onCancel}
-                size="lg"
-                variant="ghost"
-                className="text-white hover:bg-white/10"
-              >
-                <X className="w-6 h-6" />
-              </Button>
+      <div className="p-6 bg-background">
+        <div className="flex justify-center gap-6 items-center">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            size="lg"
+            className="rounded-full"
+          >
+            Gallery
+          </Button>
 
-              <Button
-                onClick={capturePhoto}
-                disabled={!isStreaming}
-                size="lg"
-                className="w-16 h-16 rounded-full bg-white text-black hover:bg-gray-200"
-              >
-                <Camera className="w-8 h-8" />
-              </Button>
+          <Button
+            onClick={capturePhoto}
+            size="lg"
+            className="rounded-full h-16 w-16 p-0"
+            disabled={isCapturing}
+          >
+            <Camera className="h-8 w-8" />
+          </Button>
 
-              <Button
-                onClick={switchCamera}
-                disabled={!isStreaming}
-                size="lg"
-                variant="ghost"
-                className="text-white hover:bg-white/10"
-              >
-                <SwitchCamera className="w-6 h-6" />
-              </Button>
-            </div>
-          )}
+          <div className="w-16" /> {/* Spacer for symmetry */}
         </div>
       </div>
 
-      {/* Hidden canvas for image processing */}
-      <canvas ref={canvasRef} className="hidden" />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </div>
   );
 };
+
+export default EnhancedMobileCamera;

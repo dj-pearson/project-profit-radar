@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { EnhancedMobileCamera } from './EnhancedMobileCamera';
+import EnhancedMobileCamera from './EnhancedMobileCamera';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useDeviceInfo } from '@/hooks/useDeviceInfo';
 import { toast } from 'sonner';
@@ -288,8 +288,6 @@ export const MobileMaterialTracker: React.FC = () => {
         onCapture={handlePhotoCapture}
         onCancel={() => setShowCamera(false)}
         maxPhotos={10}
-        currentCount={capturedPhotos.length}
-        enableGeolocation={true}
       />
     );
   }

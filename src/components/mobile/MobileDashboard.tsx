@@ -25,7 +25,7 @@ import MobileSafetyIncidentManager from './MobileSafetyIncidentManager';
 import MobileDailyReportManager from './MobileDailyReportManager';
 import MobileEquipmentManager from './MobileEquipmentManager';
 import { MobileMaterialTracker } from './MobileMaterialTracker';
-import { EnhancedMobileCamera } from './EnhancedMobileCamera';
+import EnhancedMobileCamera from './EnhancedMobileCamera';
 import MobileTimeTracker from './MobileTimeTracker';
 import { mobileCardClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { toast } from 'sonner';
@@ -328,7 +328,6 @@ export const MobileDashboard: React.FC = () => {
               setActiveView('dashboard');
             }}
             onCancel={() => setActiveView('dashboard')}
-            enableGeolocation={true}
           />
         );
       case 'location':

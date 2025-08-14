@@ -31,7 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
-import { EnhancedMobileCamera } from './EnhancedMobileCamera';
+import EnhancedMobileCamera from './EnhancedMobileCamera';
 
 interface SafetyIncidentData {
   incident_type: string;
@@ -306,7 +306,6 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
       <EnhancedMobileCamera
         onCapture={handlePhotoCapture}
         onCancel={() => setShowCamera(false)}
-        enableGeolocation={true}
       />
     );
   }

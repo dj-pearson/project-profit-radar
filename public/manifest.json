@@ -1,11 +1,11 @@
 {
-  "name": "BuildDesk - Construction Management",
-  "short_name": "BuildDesk",
-  "description": "Construction management platform built for growing teams",
+  "name": "Project Profit Radar - Construction Management",
+  "short_name": "Profit Radar",
+  "description": "Digital construction management platform with mobile-first inspection workflows",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#ff6b00",
+  "theme_color": "#2563eb",
   "background_color": "#ffffff",
   "scope": "/",
   "lang": "en",
@@ -40,17 +40,24 @@
   ],
   "shortcuts": [
     {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "View project dashboard",
-      "url": "/dashboard",
+      "name": "Digital Inspections",
+      "short_name": "Inspections",
+      "description": "Conduct quality inspections",
+      "url": "/mobile?tab=inspections",
       "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
     },
     {
-      "name": "Projects",
-      "short_name": "Projects",
-      "description": "Manage projects",
-      "url": "/projects",
+      "name": "Safety Reports",
+      "short_name": "Safety",
+      "description": "Report safety incidents",
+      "url": "/mobile?tab=safety",
+      "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Camera",
+      "short_name": "Camera",
+      "description": "Capture project photos",
+      "url": "/mobile?tab=camera",
       "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
     }
   ],
