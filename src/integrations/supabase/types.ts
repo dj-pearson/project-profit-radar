@@ -1002,6 +1002,7 @@ export type Database = {
       automated_social_posts_config: {
         Row: {
           auto_schedule: boolean | null
+          blog_webhook_url: string | null
           company_id: string
           content_types: string[] | null
           created_at: string
@@ -1015,6 +1016,7 @@ export type Database = {
         }
         Insert: {
           auto_schedule?: boolean | null
+          blog_webhook_url?: string | null
           company_id: string
           content_types?: string[] | null
           created_at?: string
@@ -1028,6 +1030,7 @@ export type Database = {
         }
         Update: {
           auto_schedule?: boolean | null
+          blog_webhook_url?: string | null
           company_id?: string
           content_types?: string[] | null
           created_at?: string

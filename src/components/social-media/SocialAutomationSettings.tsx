@@ -264,11 +264,10 @@ const SocialAutomationSettings: React.FC = () => {
               <div>
                 <Label className="text-base flex items-center gap-2">
                   <Webhook className="h-4 w-4" />
-                  Webhook Configuration
+                  Blog-to-Social Webhook Configuration
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Configure external webhook for integration with Make.com,
-                  Buffer, or other automation tools
+                  Configure webhook for blog-to-social automation. This is separate from automated posts webhook.
                 </p>
               </div>
 
@@ -298,8 +297,8 @@ const SocialAutomationSettings: React.FC = () => {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    This URL will receive social media post data for external
-                    processing
+                    This URL will receive blog-to-social post data when a blog is published.
+                    Different from the automated social posts webhook.
                   </p>
                 </div>
 

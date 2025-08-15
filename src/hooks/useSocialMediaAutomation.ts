@@ -40,7 +40,7 @@ export const useSocialMediaAutomation = () => {
       // Load blog-auto social settings and also sync webhook from automated config if present
       const { data: autoConfig, error: autoError } = await supabase
         .from("automated_social_posts_config")
-        .select("webhook_url, platforms, enabled, auto_schedule, company_id")
+        .select("webhook_url, blog_webhook_url, platforms, enabled, auto_schedule, company_id")
         .eq("company_id", userProfile.company_id)
         .maybeSingle();
 
@@ -51,7 +51,7 @@ export const useSocialMediaAutomation = () => {
             company_id: autoConfig.company_id || userProfile.company_id,
             is_active: !!autoConfig.enabled,
             auto_post_on_publish: !!autoConfig.auto_schedule,
-            webhook_url: autoConfig.webhook_url || "",
+            webhook_url: autoConfig.blog_webhook_url || "",
             webhook_secret: "",
             ai_content_generation: true,
             platforms_enabled: Array.isArray(autoConfig.platforms)
@@ -114,7 +114,7 @@ export const useSocialMediaAutomation = () => {
         ...(newSettings.auto_post_on_publish !== undefined
           ? { auto_schedule: newSettings.auto_post_on_publish }
           : {}),
-        ...(typeof newSettings.webhook_url === "string" ? { webhook_url: newSettings.webhook_url } : {}),
+        ...(typeof newSettings.webhook_url === "string" ? { blog_webhook_url: newSettings.webhook_url } : {}),
         ...(Array.isArray(newSettings.platforms_enabled)
           ? { platforms: (newSettings.platforms_enabled as any) }
           : {}),
@@ -132,7 +132,7 @@ export const useSocialMediaAutomation = () => {
           company_id: userProfile.company_id,
           enabled: newSettings.is_active ?? false,
           auto_schedule: newSettings.auto_post_on_publish ?? true,
-          webhook_url: newSettings.webhook_url ?? "",
+          blog_webhook_url: newSettings.webhook_url ?? "",
           platforms: (newSettings.platforms_enabled || []) as any,
         };
 
@@ -150,7 +150,7 @@ export const useSocialMediaAutomation = () => {
           company_id: userProfile.company_id,
           is_active: !!result.data.enabled,
           auto_post_on_publish: !!result.data.auto_schedule,
-          webhook_url: result.data.webhook_url || "",
+          webhook_url: result.data.blog_webhook_url || "",
           webhook_secret: "",
           ai_content_generation: true,
           platforms_enabled: Array.isArray(result.data.platforms)
