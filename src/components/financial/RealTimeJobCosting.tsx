@@ -12,6 +12,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
+import { RealTimeCostEntry } from '@/components/financial/RealTimeCostEntry';
+import { LiveBudgetTracker } from '@/components/financial/LiveBudgetTracker';
+import { BudgetForecast } from '@/components/financial/BudgetForecast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus,
@@ -595,12 +598,28 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
             </Alert>
           )}
 
-          <Tabs defaultValue="costs" className="space-y-4">
+          <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="entry">Quick Entry</TabsTrigger>
               <TabsTrigger value="costs">Job Costs</TabsTrigger>
               <TabsTrigger value="add">Add Cost</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <LiveBudgetTracker projectId={selectedProject} />
+                <BudgetForecast projectId={selectedProject} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="entry" className="space-y-4">
+              <RealTimeCostEntry 
+                projectId={selectedProject} 
+                onCostAdded={() => loadJobCosts(selectedProject)} 
+              />
+            </TabsContent>
 
             <TabsContent value="costs" className="space-y-4">
               <div className="flex justify-between items-center">
