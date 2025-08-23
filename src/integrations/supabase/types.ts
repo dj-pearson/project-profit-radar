@@ -13068,6 +13068,76 @@ export type Database = {
           },
         ]
       }
+      project_milestones: {
+        Row: {
+          actual_date: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_critical: boolean | null
+          milestone_type: string | null
+          name: string
+          project_id: string
+          status: string | null
+          target_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          actual_date?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_critical?: boolean | null
+          milestone_type?: string | null
+          name: string
+          project_id: string
+          status?: string | null
+          target_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          actual_date?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_critical?: boolean | null
+          milestone_type?: string | null
+          name?: string
+          project_id?: string
+          status?: string | null
+          target_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_phases: {
         Row: {
           actual_cost: number | null
@@ -17716,6 +17786,57 @@ export type Database = {
           },
         ]
       }
+      task_dependencies: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          dependency_type: string
+          id: string
+          is_active: boolean | null
+          lag_days: number | null
+          predecessor_task_id: string
+          successor_task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          dependency_type?: string
+          id?: string
+          is_active?: boolean | null
+          lag_days?: number | null
+          predecessor_task_id: string
+          successor_task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          dependency_type?: string
+          id?: string
+          is_active?: boolean | null
+          lag_days?: number | null
+          predecessor_task_id?: string
+          successor_task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_predecessor_task_id_fkey"
+            columns: ["predecessor_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_successor_task_id_fkey"
+            columns: ["successor_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_notifications: {
         Row: {
           created_at: string | null
@@ -17744,6 +17865,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_resource_allocations: {
+        Row: {
+          allocation_percentage: number | null
+          company_id: string
+          cost_per_unit: number | null
+          created_at: string | null
+          end_date: string | null
+          id: string
+          resource_id: string | null
+          resource_name: string
+          resource_type: string
+          start_date: string | null
+          task_id: string
+          total_units: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allocation_percentage?: number | null
+          company_id: string
+          cost_per_unit?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_name: string
+          resource_type: string
+          start_date?: string | null
+          task_id: string
+          total_units?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allocation_percentage?: number | null
+          company_id?: string
+          cost_per_unit?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_name?: string
+          resource_type?: string
+          start_date?: string | null
+          task_id?: string
+          total_units?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_resource_allocations_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
@@ -17895,12 +18072,19 @@ export type Database = {
           dependencies: string[] | null
           description: string | null
           due_date: string | null
+          duration_days: number | null
+          end_date: string | null
           estimated_hours: number | null
           id: string
+          is_critical_path: boolean | null
+          is_milestone: boolean | null
+          milestone_type: string | null
           name: string
           phase_id: string | null
           priority: string | null
           project_id: string
+          resource_requirements: Json | null
+          start_date: string | null
           status: string | null
           tags: string[] | null
           updated_at: string
@@ -17916,12 +18100,19 @@ export type Database = {
           dependencies?: string[] | null
           description?: string | null
           due_date?: string | null
+          duration_days?: number | null
+          end_date?: string | null
           estimated_hours?: number | null
           id?: string
+          is_critical_path?: boolean | null
+          is_milestone?: boolean | null
+          milestone_type?: string | null
           name: string
           phase_id?: string | null
           priority?: string | null
           project_id: string
+          resource_requirements?: Json | null
+          start_date?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -17937,12 +18128,19 @@ export type Database = {
           dependencies?: string[] | null
           description?: string | null
           due_date?: string | null
+          duration_days?: number | null
+          end_date?: string | null
           estimated_hours?: number | null
           id?: string
+          is_critical_path?: boolean | null
+          is_milestone?: boolean | null
+          milestone_type?: string | null
           name?: string
           phase_id?: string | null
           priority?: string | null
           project_id?: string
+          resource_requirements?: Json | null
+          start_date?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -19395,6 +19593,10 @@ export type Database = {
             }
           | { p_email: string; p_funnel_id: string; p_source?: string }
         Returns: string
+      }
+      calculate_critical_path: {
+        Args: { p_project_id: string }
+        Returns: Json
       }
       calculate_enhanced_lead_score: {
         Args: { p_lead_id: string }

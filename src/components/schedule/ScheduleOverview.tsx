@@ -1,23 +1,20 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Calendar,
-  DollarSign,
-  Users,
-  TrendingUp,
-  Clock,
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Calendar, 
+  Clock, 
+  Users, 
+  DollarSign, 
   AlertTriangle,
-  Search,
-  Filter,
-  ArrowRight,
-} from "lucide-react";
-import { format, parseISO, differenceInDays } from "date-fns";
-import { useNavigate } from "react-router-dom";
+  CheckCircle,
+  TrendingUp,
+  Activity
+} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Project {
   id: string;
@@ -27,9 +24,9 @@ interface Project {
   status: string;
   budget: number;
   completion_percentage: number;
-  project_manager: string;
-  client_name: string;
-  priority: "low" | "medium" | "high" | "critical";
+  project_manager?: string;
+  client_name?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface ScheduleOverviewProps {
@@ -38,351 +35,347 @@ interface ScheduleOverviewProps {
   selectedYear: number;
 }
 
-export const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
+interface ProjectStats {
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  overdueProjects: number;
+  upcomingDeadlines: number;
+  averageCompletion: number;
+}
+
+const ScheduleOverview: React.FC<ScheduleOverviewProps> = ({
   projects,
   onProjectUpdate,
-  selectedYear,
+  selectedYear
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
-  const navigate = useNavigate();
-
-  // Filter projects
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.project_manager.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || project.status === statusFilter;
-    const matchesPriority =
-      priorityFilter === "all" || project.priority === priorityFilter;
-
-    return matchesSearch && matchesStatus && matchesPriority;
+  const { userProfile } = useAuth();
+  const [projectStats, setProjectStats] = useState<ProjectStats>({
+    totalProjects: 0,
+    activeProjects: 0,
+    completedProjects: 0,
+    overdueProjects: 0,
+    upcomingDeadlines: 0,
+    averageCompletion: 0,
   });
 
-  // Calculate metrics
-  const totalProjects = projects.length;
-  const activeProjects = projects.filter((p) => p.status === "active").length;
-  const completedProjects = projects.filter(
-    (p) => p.status === "completed"
-  ).length;
-  const overDueProjects = projects.filter((p) => {
-    const endDate = parseISO(p.end_date);
-    return endDate < new Date() && p.status !== "completed";
-  }).length;
+  const calculateStats = () => {
+    const now = new Date();
+    const weekFromNow = new Date();
+    weekFromNow.setDate(now.getDate() + 7);
 
-  const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-  const averageProgress =
-    projects.length > 0
-      ? projects.reduce((sum, p) => sum + p.completion_percentage, 0) /
-        projects.length
-      : 0;
+    const stats: ProjectStats = {
+      totalProjects: projects.length,
+      activeProjects: projects.filter(p => p.status === 'active' || p.status === 'in_progress').length,
+      completedProjects: projects.filter(p => p.status === 'completed').length,
+      overdueProjects: projects.filter(p => {
+        const endDate = new Date(p.end_date);
+        return endDate < now && p.status !== 'completed';
+      }).length,
+      upcomingDeadlines: projects.filter(p => {
+        const endDate = new Date(p.end_date);
+        return endDate >= now && endDate <= weekFromNow && p.status !== 'completed';
+      }).length,
+      averageCompletion: projects.length > 0 
+        ? Math.round(projects.reduce((sum, p) => sum + p.completion_percentage, 0) / projects.length)
+        : 0,
+    };
 
-  const upcomingDeadlines = projects
-    .filter((p) => p.status === "active")
-    .map((p) => ({
-      ...p,
-      daysUntilEnd: differenceInDays(parseISO(p.end_date), new Date()),
-    }))
-    .filter((p) => p.daysUntilEnd >= 0 && p.daysUntilEnd <= 30)
-    .sort((a, b) => a.daysUntilEnd - b.daysUntilEnd);
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "critical":
-        return "destructive";
-      case "high":
-        return "secondary";
-      case "medium":
-        return "outline";
-      case "low":
-        return "outline";
-      default:
-        return "outline";
-    }
+    setProjectStats(stats);
   };
+
+  useEffect(() => {
+    calculateStats();
+  }, [projects]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "default";
-      case "completed":
-        return "secondary";
-      case "on_hold":
-        return "outline";
-      case "cancelled":
-        return "destructive";
-      default:
-        return "outline";
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'active': 
+      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'on_hold': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'medium': return 'bg-yellow-500';
+      default: return 'bg-green-500';
+    }
+  };
+
+  const getDaysUntilDeadline = (endDate: string) => {
+    const now = new Date();
+    const deadline = new Date(endDate);
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Projects
-                </p>
-                <p className="text-3xl font-bold">{totalProjects}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {activeProjects} active, {completedProjects} completed
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold">{projectStats.totalProjects}</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Budget
-                </p>
-                <p className="text-3xl font-bold">
-                  ${(totalBudget / 1000000).toFixed(1)}M
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Across all projects
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-600" />
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Active</p>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold text-blue-600">{projectStats.activeProjects}</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Average Progress
-                </p>
-                <p className="text-3xl font-bold">
-                  {averageProgress.toFixed(0)}%
-                </p>
-                <Progress value={averageProgress} className="mt-2" />
-              </div>
-              <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold text-green-600">{projectStats.completedProjects}</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Overdue Projects
-                </p>
-                <p className="text-3xl font-bold text-red-600">
-                  {overDueProjects}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Require attention
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Overdue</p>
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold text-red-600">{projectStats.overdueProjects}</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters and Search */}
+      {/* Project List */}
       <Card>
         <CardHeader>
-          <CardTitle>Project Filters</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Project Schedule Overview</CardTitle>
+            <Button variant="outline" size="sm" onClick={onProjectUpdate}>
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search projects, clients, or managers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          {projects.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No projects found for {selectedYear}
             </div>
+          ) : (
+            <div className="space-y-4">
+              {projects.map((project) => {
+                const daysUntilDeadline = getDaysUntilDeadline(project.end_date);
+                const isOverdue = daysUntilDeadline < 0 && project.status !== 'completed';
+                const isUpcoming = daysUntilDeadline >= 0 && daysUntilDeadline <= 7 && project.status !== 'completed';
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-input rounded-md bg-background"
-            >
-              <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="on_hold">On Hold</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 border border-input rounded-md bg-background"
-            >
-              <option value="all">All Priorities</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Projects List */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Projects ({filteredProjects.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredProjects.map((project) => (
+                return (
                   <div
                     key={project.id}
-                    className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                    className={`p-4 rounded-lg border ${
+                      isOverdue ? 'border-red-200 bg-red-50' : 
+                      isUpcoming ? 'border-yellow-200 bg-yellow-50' : 
+                      'border-border bg-card'
+                    }`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold">{project.name}</h4>
-                          <Badge variant={getPriorityColor(project.priority)}>
-                            {project.priority}
-                          </Badge>
-                          <Badge variant={getStatusColor(project.status)}>
-                            {project.status}
+                          <h3 className="font-semibold">{project.name}</h3>
+                          <div className={`w-2 h-2 rounded-full ${getPriorityColor(project.priority)}`} />
+                          <Badge 
+                            variant="outline" 
+                            className={getStatusColor(project.status)}
+                          >
+                            {project.status.replace('_', ' ')}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Client: {project.client_name} • PM:{" "}
-                          {project.project_manager}
-                        </p>
+                        {project.client_name && (
+                          <p className="text-sm text-muted-foreground">
+                            Client: {project.client_name}
+                          </p>
+                        )}
                       </div>
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {formatCurrency(project.budget)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Budget
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Start Date
-                        </p>
-                        <p className="text-sm font-medium">
-                          {format(parseISO(project.start_date), "MMM dd, yyyy")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          End Date
-                        </p>
-                        <p className="text-sm font-medium">
-                          {format(parseISO(project.end_date), "MMM dd, yyyy")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Budget</p>
-                        <p className="text-sm font-medium">
-                          ${project.budget.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Progress
-                        </p>
-                        <p className="text-sm font-medium">
+                    {/* Progress Bar */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Progress</span>
+                        <span className="text-sm text-muted-foreground">
                           {project.completion_percentage}%
-                        </p>
+                        </span>
+                      </div>
+                      <Progress value={project.completion_percentage} className="h-2" />
+                    </div>
+
+                    {/* Timeline Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">Start Date</div>
+                          <div className="text-muted-foreground">
+                            {new Date(project.start_date).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">End Date</div>
+                          <div className={`${isOverdue ? 'text-red-600' : isUpcoming ? 'text-yellow-600' : 'text-muted-foreground'}`}>
+                            {new Date(project.end_date).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className={`h-4 w-4 ${isOverdue ? 'text-red-500' : isUpcoming ? 'text-yellow-500' : 'text-muted-foreground'}`} />
+                        <div>
+                          <div className="font-medium">Days to Deadline</div>
+                          <div className={`${isOverdue ? 'text-red-600' : isUpcoming ? 'text-yellow-600' : 'text-muted-foreground'}`}>
+                            {isOverdue ? `${Math.abs(daysUntilDeadline)} days overdue` : 
+                             daysUntilDeadline === 0 ? 'Due today' :
+                             `${daysUntilDeadline} days remaining`}
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    <Progress
-                      value={project.completion_percentage}
-                      className="h-2"
-                    />
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                {filteredProjects.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No projects found matching your criteria.
-                  </div>
-                )}
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Schedule Performance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Average Completion</span>
+              <span className="text-lg font-semibold">{projectStats.averageCompletion}%</span>
+            </div>
+            <Progress value={projectStats.averageCompletion} />
+            
+            <div className="pt-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">On Track</span>
+                <span className="font-medium text-green-600">
+                  {projectStats.activeProjects - projectStats.overdueProjects}
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">At Risk</span>
+                <span className="font-medium text-yellow-600">
+                  {projectStats.upcomingDeadlines}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Overdue</span>
+                <span className="font-medium text-red-600">
+                  {projectStats.overdueProjects}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Upcoming Deadlines */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Upcoming Deadlines
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Upcoming Deadlines</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {projectStats.upcomingDeadlines === 0 ? (
+              <p className="text-sm text-muted-foreground">No upcoming deadlines in the next 7 days</p>
+            ) : (
               <div className="space-y-3">
-                {upcomingDeadlines.slice(0, 5).map((project) => (
-                  <div
-                    key={project.id}
-                    className="border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate(`/projects/${project.id}`)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-medium text-sm truncate">
-                        {project.name}
-                      </h5>
-                      <Badge
-                        variant={
-                          project.daysUntilEnd <= 7 ? "destructive" : "outline"
-                        }
-                      >
-                        {project.daysUntilEnd}d
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Due: {format(parseISO(project.end_date), "MMM dd, yyyy")}
-                    </p>
-                    <Progress
-                      value={project.completion_percentage}
-                      className="h-1"
-                    />
-                  </div>
-                ))}
-
-                {upcomingDeadlines.length === 0 && (
-                  <div className="text-center py-4 text-muted-foreground text-sm">
-                    No upcoming deadlines in the next 30 days.
-                  </div>
-                )}
+                {projects
+                  .filter(p => {
+                    const daysUntil = getDaysUntilDeadline(p.end_date);
+                    return daysUntil >= 0 && daysUntil <= 7 && p.status !== 'completed';
+                  })
+                  .sort((a, b) => getDaysUntilDeadline(a.end_date) - getDaysUntilDeadline(b.end_date))
+                  .slice(0, 5)
+                  .map(project => {
+                    const daysUntil = getDaysUntilDeadline(project.end_date);
+                    return (
+                      <div key={project.id} className="flex items-center justify-between p-2 bg-yellow-50 rounded border border-yellow-200">
+                        <div>
+                          <div className="font-medium text-sm">{project.name}</div>
+                          <div className="text-xs text-muted-foreground">{project.client_name}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-yellow-700">
+                            {daysUntil === 0 ? 'Due Today' : `${daysUntil} days`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {project.completion_percentage}% complete
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
+
+export default ScheduleOverview;
