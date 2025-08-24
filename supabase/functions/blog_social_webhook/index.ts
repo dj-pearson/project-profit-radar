@@ -201,6 +201,10 @@ serve(async (req) => {
     // Create social media posts in database
     const socialPosts = [];
     for (const platformContent of platformContents) {
+      // Determine post status - auto-publish if settings allow, otherwise draft
+      const postStatus = socialSettings?.auto_post_on_publish ? "published" : "draft";
+      const publishedAt = socialSettings?.auto_post_on_publish ? new Date().toISOString() : null;
+      
       const { data: socialPost, error: postError } = await supabaseClient
         .from("social_media_posts")
         .insert({
@@ -210,7 +214,8 @@ serve(async (req) => {
           content_type: "text",
           media_urls: JSON.stringify(platformContent.media_urls || []),
           platforms: JSON.stringify([{ platform: platformContent.platform }]),
-          status: "draft",
+          status: postStatus,
+          published_at: publishedAt,
           blog_post_id: blog_post_id,
           created_by: blogPost.created_by, // Use the blog post's creator instead of company_id
         })
