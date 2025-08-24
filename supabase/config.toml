@@ -42,3 +42,6 @@ verify_jwt = false
 [functions.social-post-redeploy]
 verify_jwt = false
 
+[functions.blog-social-webhook]
+verify_jwt = false
+
