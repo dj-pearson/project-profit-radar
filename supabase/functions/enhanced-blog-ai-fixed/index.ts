@@ -143,11 +143,16 @@ serve(async (req) => {
       return await handleTestGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
     }
 
+    // For debugging - return success for any action to test the pipeline
+    logStep("DEBUG: Returning test success for action", { action });
+    
     return new Response(JSON.stringify({ 
-      error: "Invalid action",
-      availableActions: ['generate-auto-content', 'test-generation']
+      success: true,
+      action: action,
+      debug: "Function reached successfully",
+      timestamp: new Date().toISOString()
     }), {
-      status: 400,
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
