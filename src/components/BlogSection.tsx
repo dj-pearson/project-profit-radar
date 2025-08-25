@@ -24,14 +24,21 @@ const BlogSection = () => {
 
   const loadRecentPosts = async () => {
     try {
+      console.log('Loading recent blog posts...');
       const { data, error } = await supabase
         .from('blog_posts')
         .select('id, title, excerpt, featured_image_url, published_at, slug')
         .eq('status', 'published')
+        .not('published_at', 'is', null)
         .order('published_at', { ascending: false })
         .limit(3);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Loaded blog posts:', data);
       setPosts(data || []);
     } catch (error) {
       console.error('Error loading blog posts:', error);
