@@ -63,16 +63,16 @@ serve(async (req) => {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${claudeKey}`,
+            'x-api-key': claudeKey,
             'Content-Type': 'application/json',
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: 'claude-3-5-haiku-20241022',
-            max_tokens: 500,
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
             messages: [{
               role: 'user',
-              content: `Write a brief 200-word article about "${topic}" for construction professionals. Return as JSON with fields: title, body, excerpt.`
+              content: `Write a comprehensive 400-word article about "${topic}" for construction professionals. Return as JSON with fields: title, body, excerpt.`
             }],
           }),
         });

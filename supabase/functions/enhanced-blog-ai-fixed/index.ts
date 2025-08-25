@@ -176,21 +176,20 @@ async function handleTestGeneration(
   const testTopic = topic || "Construction Safety Best Practices";
   
   try {
-    // Simple Claude API test
+    // Claude Sonnet 4 API call with correct authentication
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${claudeKey}`,
+        'x-api-key': claudeKey,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022', // Use reliable fallback model
+        model: 'claude-sonnet-4-20250514', // Claude Sonnet 4
         max_tokens: 1000,
-        temperature: 0.7,
         messages: [{
           role: 'user',
-          content: `Write a brief 300-word blog article about "${testTopic}" for construction professionals. Include a title, body content, and brief excerpt. Focus on practical, actionable advice.`
+          content: `Write a comprehensive 500-word blog article about "${testTopic}" for construction professionals. Include a compelling title, detailed body content with actionable insights, and a brief excerpt. Focus on practical, actionable advice that construction teams can implement immediately.`
         }],
       }),
     });
@@ -222,7 +221,7 @@ async function handleTestGeneration(
       success: true,
       content: generatedContent,
       metadata: {
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-sonnet-4-20250514',
         topic: testTopic,
         timestamp: new Date().toISOString(),
         function: "enhanced-blog-ai-fixed"
