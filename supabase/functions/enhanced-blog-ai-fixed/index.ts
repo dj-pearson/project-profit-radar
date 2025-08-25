@@ -82,21 +82,49 @@ serve(async (req) => {
       }
     }
 
-    // Method 3: For testing, allow bypassing auth with service role (REMOVE IN PRODUCTION)
+    // Method 3: Service role bypass for CRON jobs and automated processes
     if (!userId) {
-      logStep("WARNING: Using bypass auth for testing");
-      // Get any root_admin user for testing
-      const { data: testUser, error: testUserError } = await supabaseClient
-        .from('user_profiles')
-        .select('id, role, company_id')
-        .eq('role', 'root_admin')
-        .limit(1)
-        .single();
+      logStep("Using service role bypass for automated process");
       
-      if (testUser) {
-        userId = testUser.id;
-        userProfile = testUser;
-        logStep("Using test root_admin user", { userId: testUser.id });
+      // For automated generation from queue, get company from customSettings
+      try {
+        const requestBody = await req.clone().json();
+        const queueCompanyId = requestBody?.customSettings?.company_id;
+        
+        if (queueCompanyId) {
+          // Get a root_admin user from the specific company for the queue item
+          const { data: adminUser, error: adminError } = await supabaseClient
+            .from('user_profiles')
+            .select('id, role, company_id')
+            .eq('company_id', queueCompanyId)
+            .eq('role', 'root_admin')
+            .limit(1)
+            .single();
+          
+          if (adminUser && !adminError) {
+            userId = adminUser.id;
+            userProfile = adminUser;
+            logStep("Service role user set from queue company", { userId, role: adminUser.role, companyId: adminUser.company_id });
+          }
+        }
+      } catch (bodyError) {
+        logStep("Could not parse request body for company_id", { error: bodyError });
+      }
+      
+      // Fallback: get any root_admin user if no specific company found
+      if (!userId) {
+        const { data: testUser, error: testUserError } = await supabaseClient
+          .from('user_profiles')
+          .select('id, role, company_id')
+          .eq('role', 'root_admin')
+          .limit(1)
+          .single();
+        
+        if (testUser && !testUserError) {
+          userId = testUser.id;
+          userProfile = testUser;
+          logStep("Using fallback root_admin user", { userId: testUser.id });
+        }
       }
     }
 
