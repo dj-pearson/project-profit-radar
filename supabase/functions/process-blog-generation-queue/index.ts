@@ -24,6 +24,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Skip authentication for CRON job triggers - service role has full access
+
     // Get pending queue items that are due for processing
     const { data: queueItems, error: queueError } = await supabaseClient
       .from('blog_generation_queue')
@@ -77,10 +79,14 @@ serve(async (req) => {
           .eq('id', item.id);
 
         // Call the enhanced blog AI function to generate content
-        const { data: generationResult, error: generationError } = await supabaseClient.functions.invoke('enhanced-blog-ai', {
+        const { data: generationResult, error: generationError } = await supabaseClient.functions.invoke('enhanced-blog-ai-fixed', {
           body: {
-            action: 'process-queue-item',
-            queueId: item.id
+            action: 'generate-auto-content',
+            topic: item.suggested_topic || 'Construction Project Management Best Practices',
+            customSettings: {
+              company_id: item.company_id,
+              queue_id: item.id
+            }
           }
         });
 
