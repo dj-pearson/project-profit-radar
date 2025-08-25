@@ -35,10 +35,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get authorization header
+    // Get authorization header (optional for service role calls)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
     logStep("Auth header received", { hasAuth: !!authHeader });
 
     // Parse request body
@@ -50,23 +48,25 @@ serve(async (req) => {
     let userId: string | null = null;
     let userProfile: any = null;
 
-    try {
-      // Method 1: Try to get user from JWT token
-      const token = authHeader.replace("Bearer ", "");
-      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-      
-      if (userData?.user?.id) {
-        userId = userData.user.id;
-        logStep("User authenticated via JWT", { userId });
-      } else {
-        logStep("JWT auth failed", { error: userError?.message });
+    if (authHeader) {
+      try {
+        // Method 1: Try to get user from JWT token
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+        
+        if (userData?.user?.id) {
+          userId = userData.user.id;
+          logStep("User authenticated via JWT", { userId });
+        } else {
+          logStep("JWT auth failed", { error: userError?.message });
+        }
+      } catch (authError) {
+        logStep("JWT auth exception", { error: authError });
       }
-    } catch (authError) {
-      logStep("JWT auth exception", { error: authError });
     }
 
     // Method 2: If JWT fails, try using service role to validate the token
-    if (!userId) {
+    if (!userId && authHeader) {
       try {
         // Create a client-side supabase instance to validate the session
         const clientSupabase = createClient(
