@@ -255,7 +255,8 @@ async function handleTestGeneration(
     });
 
   } catch (error) {
-    logStep("Generation error", { error: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("Generation error", { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
     
     // Return fallback content
     const fallbackContent: BlogContent = {
