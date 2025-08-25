@@ -41,6 +41,7 @@ const BlogSection = () => {
       console.log('Loaded blog posts:', data);
       console.log('Number of posts:', data?.length || 0);
       console.log('First post details:', data?.[0]);
+      console.log('All posts status check:', data?.map(p => ({ title: p.title, status: 'published', published_at: p.published_at })));
       setPosts(data || []);
     } catch (error) {
       console.error('Error loading blog posts:', error);
