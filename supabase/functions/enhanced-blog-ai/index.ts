@@ -513,7 +513,8 @@ Make the content authoritative, actionable, and valuable for construction profes
       throw new Error("No JSON found in Claude response");
     }
   } catch (error) {
-    logStep("Claude generation error", { error: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("Claude generation error", { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
     return await generateWithClaudeFallback(settings, topic, existingContext);
   }
 }
