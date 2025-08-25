@@ -86,32 +86,28 @@ serve(async (req) => {
     if (!userId) {
       logStep("Using service role bypass for automated process");
       
-      // For automated generation from queue, get company from customSettings
-      try {
-        const requestBody = await req.clone().json();
-        const queueCompanyId = requestBody?.customSettings?.company_id;
+      // Check if this is from queue with specific company
+      const queueCompanyId = customSettings?.company_id;
+      if (queueCompanyId) {
+        logStep("Queue company ID found", { companyId: queueCompanyId });
         
-        if (queueCompanyId) {
-          // Get a root_admin user from the specific company for the queue item
-          const { data: adminUser, error: adminError } = await supabaseClient
-            .from('user_profiles')
-            .select('id, role, company_id')
-            .eq('company_id', queueCompanyId)
-            .eq('role', 'root_admin')
-            .limit(1)
-            .single();
-          
-          if (adminUser && !adminError) {
-            userId = adminUser.id;
-            userProfile = adminUser;
-            logStep("Service role user set from queue company", { userId, role: adminUser.role, companyId: adminUser.company_id });
-          }
+        // Get a root_admin user from the specific company for the queue item
+        const { data: adminUser, error: adminError } = await supabaseClient
+          .from('user_profiles')
+          .select('id, role, company_id')
+          .eq('company_id', queueCompanyId)
+          .eq('role', 'root_admin')
+          .limit(1)
+          .single();
+        
+        if (adminUser && !adminError) {
+          userId = adminUser.id;
+          userProfile = adminUser;
+          logStep("Using company-specific admin user", { userId: adminUser.id, companyId: adminUser.company_id });
         }
-      } catch (bodyError) {
-        logStep("Could not parse request body for company_id", { error: bodyError });
       }
       
-      // Fallback: get any root_admin user if no specific company found
+      // Fallback: get any root_admin user for automated processes
       if (!userId) {
         const { data: testUser, error: testUserError } = await supabaseClient
           .from('user_profiles')
