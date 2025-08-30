@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { PostQueueActions } from "./PostQueueActions";
 import { useAutomatedSocialPosts } from "@/hooks/useAutomatedSocialPosts";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -475,24 +476,15 @@ export const AutomatedSocialPosts = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 justify-end">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleSendNowForItem(item)}
-                          disabled={loading}
-                        >
-                          Send Now
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRedeployForItem(item)}
-                          disabled={loading}
-                        >
-                          Redeploy
-                        </Button>
-                      </div>
+                        <PostQueueActions 
+                          queueItem={{
+                            id: item.id,
+                            webhook_sent: item.webhook_sent,
+                            status: item.status,
+                            company_id: userProfile?.company_id || ""
+                          }} 
+                          onUpdate={loadQueue}
+                        />
 
                       {item.error_message && (
                         <div className="bg-red-50 border border-red-200 rounded p-2">

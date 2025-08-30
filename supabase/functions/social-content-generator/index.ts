@@ -718,7 +718,11 @@ serve(async (req) => {
       template_category = "random",
       webhook_url,
       trigger_type = "scheduled",
+      queueId,
+      queue_id, // Support both naming conventions
     } = body;
+
+    const actualQueueId = queueId || queue_id;
 
     if (!company_id) {
       throw new Error("Company ID is required");
@@ -787,7 +791,7 @@ serve(async (req) => {
       webhook_url ||
       (
         await supabaseClient
-          .from("social_media_automation_settings")
+          .from("automated_social_posts_config")
           .select("webhook_url")
           .eq("company_id", company_id)
           .single()
@@ -826,7 +830,24 @@ serve(async (req) => {
       webhookResult = await sendToExternalWebhook(targetWebhook, webhookData);
     }
 
-    // Log the automation attempt
+    // Log the automation attempt and update queue if this was from a queue item
+    
+    if (actualQueueId) {
+      // Update the queue item with results
+      await supabaseClient
+        .from("automated_social_posts_queue")
+        .update({
+          status: webhookResult ? "completed" : "failed",
+          processed_at: new Date().toISOString(),
+          posts_created: socialPostsCreated.length,
+          platforms_processed: platformContents.map((p) => p.platform),
+          webhook_sent: !!webhookResult,
+          error_message: webhookResult ? null : "Webhook send failed"
+        })
+        .eq("id", actualQueueId);
+    }
+
+    // Also log to automation logs for analytics
     await supabaseClient.from("social_media_automation_logs").insert({
       company_id,
       trigger_type,
