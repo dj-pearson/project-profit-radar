@@ -165,7 +165,7 @@ const BlogAIDebugger = () => {
         }
 
         // Now try the full function
-        const { data: functionData, error: functionError } = await supabase.functions.invoke('enhanced-blog-ai', {
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
           body: {
             action: 'test-generation',
             topic: testTopic,

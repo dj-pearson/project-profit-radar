@@ -471,7 +471,7 @@ const BlogManager = () => {
 
       // Use the enhanced blog AI function with improved content generation
       const { data, error } = await supabase.functions.invoke(
-        "enhanced-blog-ai",
+        "enhanced-blog-ai-fixed",
         {
           body: {
             action: "generate-manual-content",

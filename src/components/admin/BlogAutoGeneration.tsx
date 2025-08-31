@@ -186,7 +186,7 @@ const BlogAutoGeneration = () => {
       }
 
       // Load diversity analysis
-      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai', {
+      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
         body: {
           action: 'analyze-content-diversity'
         }
@@ -258,7 +258,7 @@ const BlogAutoGeneration = () => {
     try {
       setTesting(true);
 
-      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai', {
+      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
         body: {
           action: 'test-generation',
           topic: testTopic,
