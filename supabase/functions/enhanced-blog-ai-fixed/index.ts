@@ -158,10 +158,20 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logStep("ERROR DETAILS", { 
+      message: errorMessage, 
+      stack: errorStack,
+      errorType: typeof error,
+      errorConstructor: error?.constructor?.name
+    });
+    
+    console.error("Full error object:", error);
     
     return new Response(JSON.stringify({ 
       error: errorMessage,
+      stack: errorStack,
       timestamp: new Date().toISOString(),
       function: "enhanced-blog-ai-fixed"
     }), {
@@ -361,7 +371,16 @@ By implementing these proven strategies, construction professionals can signific
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("Generation error", { error: errorMessage });
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logStep("Auto Generation Error Details", { 
+      error: errorMessage, 
+      stack: errorStack,
+      errorType: typeof error,
+      errorConstructor: error?.constructor?.name
+    });
+    
+    console.error("Auto generation full error:", error);
     throw error;
   }
 }
