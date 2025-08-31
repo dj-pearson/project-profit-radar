@@ -136,7 +136,7 @@ serve(async (req) => {
 
     // Handle different actions
     if (action === 'generate-auto-content') {
-      return await handleAutoGeneration(supabaseClient, userProfile.company_id, topic, customSettings);
+      return await handleAutoGeneration(supabaseClient, userProfile.company_id, topic, customSettings, userId);
     }
 
     if (action === 'test-generation') {
@@ -175,7 +175,8 @@ async function handleAutoGeneration(
   supabaseClient: any,
   companyId: string,
   topic?: string,
-  customSettings?: any
+  customSettings?: any,
+  userId?: string
 ): Promise<Response> {
   logStep("Starting auto content generation for blog post", { companyId, topic, queueId: customSettings?.queue_id });
 
@@ -318,7 +319,7 @@ By implementing these proven strategies, construction professionals can signific
         seo_description: parsed.seo_description,
         status: 'published',
         published_at: new Date().toISOString(),
-        created_by: companyId
+        created_by: userId || companyId
       }])
       .select()
       .single();
