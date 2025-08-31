@@ -289,13 +289,24 @@ const BlogAutoGeneration = () => {
   };
 
   const triggerImmediateGeneration = async () => {
+    console.log('[BlogAutoGen] Generate Now clicked!');
+    console.log('[BlogAutoGen] Settings:', settings);
+    console.log('[BlogAutoGen] User Profile:', userProfile);
+    
     try {
+      console.log('[BlogAutoGen] Calling enhanced-blog-ai function...');
+      
       const { data, error } = await supabase.functions.invoke('enhanced-blog-ai', {
         body: {
           action: 'generate-auto-content',
-          customSettings: settings
+          customSettings: {
+            company_id: userProfile?.company_id,
+            ...settings
+          }
         }
       });
+
+      console.log('[BlogAutoGen] Function response:', { data, error });
 
       if (error) throw error;
 
@@ -307,11 +318,11 @@ const BlogAutoGeneration = () => {
       loadData(); // Refresh data
 
     } catch (error: any) {
-      console.error('Error generating content:', error);
+      console.error('[BlogAutoGen] Error generating content:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate content"
+        description: `Failed to generate content: ${error.message || 'Unknown error'}`
       });
     }
   };
