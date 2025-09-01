@@ -323,8 +323,64 @@ By implementing these proven strategies, construction professionals can signific
       .maybeSingle();
     
     if (existingTitlePost) {
-      logStep("Blog post with same title already exists", { existingId: existingTitlePost.id });
-      throw new Error(`A blog post with the title "${parsed.title}" already exists. Please try generating with a different topic or modify the existing post.`);
+      logStep("Blog post with same title already exists, generating alternative", { existingId: existingTitlePost.id });
+      
+      // Generate an alternative topic with Claude
+      const altResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${claudeKey}`,
+          'Content-Type': 'application/json',
+          'x-api-key': claudeKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-0',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: `The construction blog topic "${finalTopic}" already exists. Generate a completely different but related construction topic that would be valuable for construction professionals. 
+
+Return your response in this exact JSON format:
+{
+  "title": "Compelling blog title (60 chars max)",
+  "body": "Full article in markdown format with proper headings, bullet points, and structure",
+  "excerpt": "Engaging 2-3 sentence summary (160 chars max)",
+  "seo_title": "SEO-optimized title (60 chars max)",
+  "seo_description": "SEO meta description (160 chars max)",
+  "keywords": ["primary keyword", "secondary keyword", "tertiary keyword"],
+  "estimated_read_time": 8
+}
+
+Make sure the new topic is completely different from the existing one but still relevant to construction management.`
+          }],
+        }),
+      });
+
+      if (altResponse.ok) {
+        const altData = await altResponse.json();
+        const altContent = altData.content[0].text;
+        
+        let altJsonMatch = altContent.match(/\{[\s\S]*\}/);
+        if (!altJsonMatch) {
+          altJsonMatch = altContent.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+          if (altJsonMatch) altJsonMatch[0] = altJsonMatch[1];
+        }
+        
+        if (altJsonMatch) {
+          try {
+            parsed = JSON.parse(altJsonMatch[0]);
+            logStep("Alternative topic generated successfully", { newTitle: parsed.title });
+          } catch (parseError) {
+            logStep("Failed to parse alternative topic, using fallback");
+          }
+        }
+      } else {
+        logStep("Failed to generate alternative topic, will create unique variant");
+        const timestamp = new Date().toISOString().slice(0, 10);
+        parsed.title = `${parsed.title} - ${timestamp}`;
+        parsed.seo_title = `${parsed.seo_title} - ${timestamp}`;
+      }
     }
     
     let slug = parsed.title.toLowerCase()
