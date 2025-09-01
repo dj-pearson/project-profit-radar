@@ -103,6 +103,7 @@ const BlogAutoGeneration = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [generating, setGenerating] = useState(false);
   
   const [settings, setSettings] = useState<AutoGenSettings>({
     company_id: userProfile?.company_id || '',
@@ -293,8 +294,15 @@ const BlogAutoGeneration = () => {
     console.log('[BlogAutoGen] Settings:', settings);
     console.log('[BlogAutoGen] User Profile:', userProfile);
     
+    setGenerating(true);
+    
     try {
       console.log('[BlogAutoGen] Calling enhanced-blog-ai function...');
+      
+      toast({
+        title: "Generating Content",
+        description: "Creating your blog article with AI... This may take a few moments."
+      });
       
       const { data, error } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
         body: {
@@ -312,7 +320,7 @@ const BlogAutoGeneration = () => {
 
       toast({
         title: "Success",
-        description: "Blog article generated successfully"
+        description: "Blog article generated successfully! Check your blog posts to see the new content."
       });
 
       loadData(); // Refresh data
@@ -324,6 +332,8 @@ const BlogAutoGeneration = () => {
         title: "Error",
         description: `Failed to generate content: ${error.message || 'Unknown error'}`
       });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -383,10 +393,19 @@ const BlogAutoGeneration = () => {
           <Button 
             variant="outline" 
             onClick={triggerImmediateGeneration}
-            disabled={!settings.is_enabled}
+            disabled={!settings.is_enabled || generating}
           >
-            <Zap className="h-4 w-4 mr-2" />
-            Generate Now
+            {generating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                Generating...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Generate Now
+              </>
+            )}
           </Button>
           <Button onClick={saveSettings} disabled={saving}>
             <Save className="h-4 w-4 mr-2" />
