@@ -202,12 +202,13 @@ async function handleAutoGeneration(
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': claudeKey,
+        'Authorization': `Bearer ${claudeKey}`,
         'Content-Type': 'application/json',
+        'x-api-key': claudeKey,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-0',
         max_tokens: 2000,
         messages: [{
           role: 'user',
