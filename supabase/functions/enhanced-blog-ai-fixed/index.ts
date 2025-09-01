@@ -315,6 +315,18 @@ By implementing these proven strategies, construction professionals can signific
     // Create the blog post
     logStep("Creating blog post", { title: parsed.title });
     
+    // First check if a post with the same title already exists to prevent true duplicates
+    const { data: existingTitlePost } = await supabaseClient
+      .from('blog_posts')
+      .select('id, title')
+      .eq('title', parsed.title)
+      .maybeSingle();
+    
+    if (existingTitlePost) {
+      logStep("Blog post with same title already exists", { existingId: existingTitlePost.id });
+      throw new Error(`A blog post with the title "${parsed.title}" already exists. Please try generating with a different topic or modify the existing post.`);
+    }
+    
     let slug = parsed.title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
@@ -329,7 +341,7 @@ By implementing these proven strategies, construction professionals can signific
         .from('blog_posts')
         .select('id')
         .eq('slug', uniqueSlug)
-        .single();
+        .maybeSingle();
       
       if (!existingPost) {
         slugExists = false;
