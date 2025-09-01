@@ -315,15 +315,35 @@ By implementing these proven strategies, construction professionals can signific
     // Create the blog post
     logStep("Creating blog post", { title: parsed.title });
     
-    const slug = parsed.title.toLowerCase()
+    let slug = parsed.title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
+
+    // Check if slug exists and make it unique
+    let uniqueSlug = slug;
+    let counter = 1;
+    let slugExists = true;
+    
+    while (slugExists) {
+      const { data: existingPost } = await supabaseClient
+        .from('blog_posts')
+        .select('id')
+        .eq('slug', uniqueSlug)
+        .single();
+      
+      if (!existingPost) {
+        slugExists = false;
+      } else {
+        uniqueSlug = `${slug}-${counter}`;
+        counter++;
+      }
+    }
 
     const { data: blogPost, error: postError } = await supabaseClient
       .from('blog_posts')
       .insert([{
         title: parsed.title,
-        slug: slug,
+        slug: uniqueSlug,
         body: parsed.body,
         excerpt: parsed.excerpt,
         seo_title: parsed.seo_title,
