@@ -105,6 +105,22 @@ import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
+// Marketing and landing pages
+import PricingPage from "./pages/Pricing";
+import FeaturesPage from "./pages/Features";
+import BlogPage from "./pages/Blog";
+import PlumbingContractorSoftware from "./pages/PlumbingContractorSoftware";
+import HVACContractorSoftware from "./pages/HVACContractorSoftware";
+import ElectricalContractorSoftware from "./pages/ElectricalContractorSoftware";
+import JobCostingSoftware from "./pages/JobCostingSoftware";
+import ConstructionManagementSoftwarePage from "./pages/ConstructionManagementSoftwarePage";
+import CommercialContractors from "./pages/CommercialContractors";
+import ResidentialContractors from "./pages/ResidentialContractors";
+import ProcoreAlternative from "./pages/ProcoreAlternative";
+import BuildertrendAlternative from "./pages/BuildertrendAlternative";
+import OSHAComplianceSoftware from "./pages/OSHAComplianceSoftware";
+import ConstructionFieldManagement from "./pages/ConstructionFieldManagement";
+
 import { GenericPage } from "@/components/pages/GenericPage";
 
 const App = () => {
@@ -141,6 +157,22 @@ const App = () => {
               <Route path="/tools" element={<Tools />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/resources/:slug" element={<BlogPost />} />
+
+              {/* Marketing and landing page routes */}
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/plumbing-contractor-software" element={<PlumbingContractorSoftware />} />
+              <Route path="/hvac-contractor-software" element={<HVACContractorSoftware />} />
+              <Route path="/electrical-contractor-software" element={<ElectricalContractorSoftware />} />
+              <Route path="/job-costing-software" element={<JobCostingSoftware />} />
+              <Route path="/construction-management-software" element={<ConstructionManagementSoftwarePage />} />
+              <Route path="/commercial-contractors" element={<CommercialContractors />} />
+              <Route path="/residential-contractors" element={<ResidentialContractors />} />
+              <Route path="/procore-alternative" element={<ProcoreAlternative />} />
+              <Route path="/buildertrend-alternative" element={<BuildertrendAlternative />} />
+              <Route path="/osha-compliance-software" element={<OSHAComplianceSoftware />} />
+              <Route path="/construction-field-management" element={<ConstructionFieldManagement />} />
 
               {/* Project area routes */}
               <Route path="/projects" element={<Projects />} />
