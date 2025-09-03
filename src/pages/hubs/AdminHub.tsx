@@ -8,6 +8,7 @@ import { ArrowRight } from 'lucide-react';
 import { dashboardAreas, NavigationItem } from '@/components/navigation/NavigationConfig';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
+import { CreateMissingContent } from '@/components/admin/CreateMissingContent';
 
 const AdminHub = () => {
   const navigate = useNavigate();
@@ -187,6 +188,16 @@ const AdminHub = () => {
             </Button>
           </div>
         </div>
+
+        {/* Content Management */}
+        {userProfile?.role === 'root_admin' && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Content Management</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <CreateMissingContent />
+            </div>
+          </div>
+        )}
 
         {/* Navigation Categories */}
         <div className="space-y-8">

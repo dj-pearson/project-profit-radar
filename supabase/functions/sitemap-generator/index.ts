@@ -36,8 +36,18 @@ serve(async (req) => {
 
     if (metaError) throw metaError
 
+    // Get published blog posts
+    const { data: blogPosts, error: blogError } = await supabaseClient
+      .from('blog_posts')
+      .select('slug, updated_at')
+      .eq('status', 'published')
+
+    if (blogError) {
+      console.error('Error fetching blog posts:', blogError)
+    }
+
     // Generate sitemap XML
-    const sitemap = generateSitemapXML(config.canonical_domain, metaTags || [])
+    const sitemap = generateSitemapXML(config.canonical_domain, metaTags || [], blogPosts || [])
 
     return new Response(sitemap, {
       headers: {
@@ -59,7 +69,7 @@ serve(async (req) => {
   }
 })
 
-function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
+function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts: any[]) {
   const staticPages = [
     // Core pages
     { path: '/', priority: '1.0', changefreq: 'daily' },
@@ -116,6 +126,12 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
       priority: '0.6',
       changefreq: 'weekly',
       lastmod: tag.updated_at
+    })),
+    ...blogPosts.map(post => ({
+      path: `/resources/${post.slug}`,
+      priority: '0.8',
+      changefreq: 'monthly',
+      lastmod: post.updated_at
     }))
   ]
 
