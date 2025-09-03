@@ -18,6 +18,7 @@ interface BlogPost {
   featured_image_url: string | null;
   published_at: string | null;
   created_at: string;
+  updated_at?: string;
   seo_title: string | null;
   seo_description: string | null;
 }
@@ -138,7 +139,7 @@ const BlogPost = () => {
       }
     },
     "datePublished": post.published_at || post.created_at,
-    "dateModified": post.updated_at || post.created_at,
+    "dateModified": post.updated_at || post.published_at || post.created_at,
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": `https://build-desk.com/resources/${post.slug}`

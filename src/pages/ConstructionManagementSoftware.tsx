@@ -147,4 +147,5 @@ const ConstructionManagementSoftware = () => {
   );
 };
 
-export default JobCostingSoftware;
+export default ConstructionManagementSoftware;
+export { ConstructionManagementSoftware as JobCostingSoftware };

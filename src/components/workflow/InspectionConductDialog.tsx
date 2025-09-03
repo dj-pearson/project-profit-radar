@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import EnhancedMobileCamera from '@/components/mobile/EnhancedMobileCamera';
+import { EnhancedMobileCamera } from '@/components/mobile/EnhancedMobileCamera';
 import SignatureCapture from '@/components/common/SignatureCapture';
 import VoiceNotes from '@/components/mobile/VoiceNotes';
 import { supabase } from '@/integrations/supabase/client';

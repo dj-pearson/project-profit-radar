@@ -147,4 +147,5 @@ const ConstructionFieldManagement = () => {
   );
 };
 
-export default OSHAComplianceSoftware;
+export default ConstructionFieldManagement;
+export { ConstructionFieldManagement as OSHAComplianceSoftware };

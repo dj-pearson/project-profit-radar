@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarIcon, GanttChartIcon, ListIcon, Settings } from 'lucide-react';
-import ProjectGanttChart from '@/components/schedule/ProjectGanttChart';
-import ScheduleCalendar from '@/components/schedule/ScheduleCalendar';
-import ProjectTimeline from '@/components/schedule/ProjectTimeline';
-import ScheduleOverview from '@/components/schedule/ScheduleOverview';
+import { ProjectGanttChart } from '@/components/schedule/ProjectGanttChart';
+import { ScheduleCalendar } from '@/components/schedule/ScheduleCalendar';
+import { ProjectTimeline } from '@/components/schedule/ProjectTimeline';
+import { ScheduleOverview } from '@/components/schedule/ScheduleOverview';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 

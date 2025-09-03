@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PostQueueActions } from "./PostQueueActions";
 import { useAutomatedSocialPosts } from "@/hooks/useAutomatedSocialPosts";
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Clock,
   Play,
@@ -35,6 +36,7 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 
 export const AutomatedSocialPosts = () => {
+  const { userProfile } = useAuth();
   const {
     config,
     queue,

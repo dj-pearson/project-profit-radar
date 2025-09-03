@@ -46,7 +46,7 @@ export const useSocialMediaAutomation = () => {
 
       if (autoError && autoError.code !== "PGRST116") throw autoError;
 
-      const merged: SocialAutomationSettings = autoConfig
+      const merged: SocialAutomationSettings = autoConfig && !autoError
         ? {
             company_id: autoConfig.company_id || userProfile.company_id,
             is_active: !!autoConfig.enabled,
