@@ -124,6 +124,7 @@ import BuildertrendAlternativeDetailed from "./pages/BuildertrendAlternativeDeta
 import OSHAComplianceSoftware from "./pages/OSHAComplianceSoftware";
 import ConstructionFieldManagement from "./pages/ConstructionFieldManagement";
 import ConstructionSchedulingSoftware from "./pages/ConstructionSchedulingSoftware";
+import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectManagementSoftware";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 
@@ -181,6 +182,7 @@ const App = () => {
               <Route path="/osha-compliance-software" element={<OSHAComplianceSoftware />} />
               <Route path="/construction-field-management" element={<ConstructionFieldManagement />} />
               <Route path="/construction-scheduling-software" element={<ConstructionSchedulingSoftware />} />
+              <Route path="/construction-project-management-software" element={<ConstructionProjectManagementSoftware />} />
 
               {/* Project area routes */}
               <Route path="/projects" element={<Projects />} />
