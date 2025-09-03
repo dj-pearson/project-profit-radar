@@ -6,6 +6,7 @@ interface PerformanceMetrics {
   fid: number | null; // First Input Delay
   cls: number | null; // Cumulative Layout Shift
   ttfb: number | null; // Time to First Byte
+  inp: number | null; // Interaction to Next Paint
 }
 
 export const usePerformanceMonitor = () => {
@@ -14,7 +15,8 @@ export const usePerformanceMonitor = () => {
     lcp: null,
     fid: null,
     cls: null,
-    ttfb: null
+    ttfb: null,
+    inp: null
   });
 
   useEffect(() => {
@@ -55,13 +57,25 @@ export const usePerformanceMonitor = () => {
               ttfb: navEntry.responseStart - navEntry.requestStart 
             }));
             break;
+            
+          case 'event':
+            // INP (Interaction to Next Paint) - experimental
+            if (entry.name === 'interaction') {
+              const eventEntry = entry as PerformanceEventTiming;
+              const duration = eventEntry.processingEnd - eventEntry.startTime;
+              setMetrics(prev => ({ 
+                ...prev, 
+                inp: Math.max(prev.inp || 0, duration)
+              }));
+            }
+            break;
         }
       }
     });
 
     // Observe different performance metrics
     try {
-      observer.observe({ entryTypes: ['paint', 'largest-contentful-paint', 'first-input', 'layout-shift', 'navigation'] });
+      observer.observe({ entryTypes: ['paint', 'largest-contentful-paint', 'first-input', 'layout-shift', 'navigation', 'event'] });
     } catch (e) {
       // Fallback for browsers that don't support all entry types
       console.warn('Some performance metrics not available');
@@ -100,13 +114,89 @@ export const usePerformanceMonitor = () => {
       else if (metrics.cls < 0.25) scores.push(75);
       else scores.push(25);
     }
+    
+    // INP scoring (good < 200ms, needs improvement < 500ms, poor >= 500ms)
+    if (metrics.inp !== null) {
+      if (metrics.inp < 200) scores.push(100);
+      else if (metrics.inp < 500) scores.push(75);
+      else scores.push(25);
+    }
 
     return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b) / scores.length) : null;
   };
 
+  const getMetrics = () => metrics;
+
   return {
     metrics,
+    getMetrics,
     performanceScore: getPerformanceScore(),
     isLoading: Object.values(metrics).every(val => val === null)
   };
+};
+
+interface RealUserMetrics {
+  pageLoadTime: number;
+  domContentLoaded: number;
+  connectionType: string;
+  deviceMemory: number;
+}
+
+export const useRealUserMetrics = (): RealUserMetrics => {
+  const [rumData, setRumData] = useState<RealUserMetrics>({
+    pageLoadTime: 0,
+    domContentLoaded: 0,
+    connectionType: 'unknown',
+    deviceMemory: 0
+  });
+
+  useEffect(() => {
+    // Only run in browser
+    if (typeof window === 'undefined') return;
+
+    const collectRealUserMetrics = () => {
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      
+      if (navigation) {
+        const pageLoadTime = navigation.loadEventEnd - navigation.navigationStart;
+        const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.navigationStart;
+        
+        setRumData(prev => ({
+          ...prev,
+          pageLoadTime,
+          domContentLoaded
+        }));
+      }
+
+      // Get connection info if available
+      if ('connection' in navigator) {
+        const connection = (navigator as any).connection;
+        setRumData(prev => ({
+          ...prev,
+          connectionType: connection?.effectiveType || 'unknown'
+        }));
+      }
+
+      // Get device memory if available
+      if ('deviceMemory' in navigator) {
+        setRumData(prev => ({
+          ...prev,
+          deviceMemory: (navigator as any).deviceMemory || 0
+        }));
+      }
+    };
+
+    // Collect metrics when page is loaded
+    if (document.readyState === 'complete') {
+      collectRealUserMetrics();
+    } else {
+      window.addEventListener('load', collectRealUserMetrics);
+    }
+
+    return () => {
+      window.removeEventListener('load', collectRealUserMetrics);
+    };
+  }, []);
+
+  return rumData;
 };
