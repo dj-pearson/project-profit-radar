@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Calendar, Clock, Users, Flag, AlertTriangle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
+import { Calendar, DollarSign, User } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -13,20 +12,11 @@ interface Project {
   start_date: string;
   end_date: string;
   status: string;
+  budget: number;
   completion_percentage: number;
+  project_manager: string;
+  client_name: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  client_name?: string;
-  budget?: number;
-}
-
-interface TimelineProject extends Project {
-  tasks: any[];
-  milestones: any[];
-  totalDuration: number;
-  position: {
-    x: number;
-    width: number;
-  };
 }
 
 interface ProjectTimelineProps {
@@ -35,88 +25,36 @@ interface ProjectTimelineProps {
   selectedYear: number;
 }
 
-const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
+export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
   projects,
   onDateRangeChange,
   selectedYear
 }) => {
-  const { userProfile } = useAuth();
-  const [timelineProjects, setTimelineProjects] = useState<TimelineProject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [timelineWidth, setTimelineWidth] = useState(1000);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  
+  const currentDate = new Date(selectedYear, selectedMonth, 1);
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Timeline calculation constants
-  const TIMELINE_START = new Date(selectedYear, 0, 1);
-  const TIMELINE_END = new Date(selectedYear, 11, 31);
-  const TOTAL_DAYS = Math.ceil((TIMELINE_END.getTime() - TIMELINE_START.getTime()) / (1000 * 60 * 60 * 24));
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: i,
+    label: format(new Date(selectedYear, i, 1), 'MMMM')
+  }));
 
-  const calculateProjectPosition = (project: Project) => {
-    const startDate = new Date(project.start_date);
-    const endDate = new Date(project.end_date);
-    
-    // Calculate days from timeline start
-    const startDays = Math.ceil((startDate.getTime() - TIMELINE_START.getTime()) / (1000 * 60 * 60 * 24));
-    const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    
-    // Calculate position and width as percentages
-    const x = Math.max(0, (startDays / TOTAL_DAYS) * 100);
-    const width = Math.min((duration / TOTAL_DAYS) * 100, 100 - x);
-    
-    return { x, width };
-  };
+  // Filter projects that overlap with the selected month
+  const monthProjects = projects.filter(project => {
+    const projectStart = new Date(project.start_date);
+    const projectEnd = new Date(project.end_date);
+    return projectStart <= monthEnd && projectEnd >= monthStart;
+  });
 
-  const fetchProjectDetails = async () => {
-    if (!userProfile?.company_id || projects.length === 0) return;
-
-    try {
-      setLoading(true);
-      const projectsWithDetails: TimelineProject[] = [];
-
-      for (const project of projects) {
-        // Fetch project tasks
-        const { data: tasks, error: tasksError } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('project_id', project.id)
-          .eq('company_id', userProfile.company_id);
-
-        // Fetch project milestones
-        const { data: milestones, error: milestonesError } = await supabase
-          .from('project_milestones')
-          .select('*')
-          .eq('project_id', project.id)
-          .eq('company_id', userProfile.company_id);
-
-        if (tasksError) console.error('Tasks error:', tasksError);
-        if (milestonesError) console.error('Milestones error:', milestonesError);
-
-        const startDate = new Date(project.start_date);
-        const endDate = new Date(project.end_date);
-        const totalDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        const position = calculateProjectPosition(project);
-
-        projectsWithDetails.push({
-          ...project,
-          tasks: tasks || [],
-          milestones: milestones || [],
-          totalDuration,
-          position,
-        });
-      }
-
-      // Sort projects by start date
-      projectsWithDetails.sort((a, b) => 
-        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
-      );
-
-      setTimelineProjects(projectsWithDetails);
-    } catch (error) {
-      console.error('Error fetching project details:', error);
-    } finally {
-      setLoading(false);
-    }
+  const getProjectsForDay = (day: Date) => {
+    return monthProjects.filter(project => {
+      const projectStart = new Date(project.start_date);
+      const projectEnd = new Date(project.end_date);
+      return day >= projectStart && day <= projectEnd;
+    });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -124,280 +62,175 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
       case 'critical': return 'bg-red-500';
       case 'high': return 'bg-orange-500';
       case 'medium': return 'bg-yellow-500';
-      default: return 'bg-green-500';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'active': 
-      case 'in_progress': return 'bg-blue-500';
-      case 'on_hold': return 'bg-yellow-500';
-      case 'cancelled': return 'bg-red-500';
+      case 'low': return 'bg-green-500';
       default: return 'bg-gray-500';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const generateMonthHeaders = () => {
-    const months = [];
-    for (let month = 0; month < 12; month++) {
-      const monthStart = new Date(selectedYear, month, 1);
-      const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
-      const widthPercent = (daysInMonth / TOTAL_DAYS) * 100;
-      
-      months.push({
-        name: monthStart.toLocaleDateString('en-US', { month: 'short' }),
-        width: widthPercent,
-        days: daysInMonth
-      });
+  const getStatusBorder = (status: string) => {
+    switch (status) {
+      case 'active': return 'border-blue-500';
+      case 'completed': return 'border-green-500';
+      case 'on_hold': return 'border-yellow-500';
+      case 'cancelled': return 'border-red-500';
+      default: return 'border-gray-300';
     }
-    return months;
   };
-
-  useEffect(() => {
-    fetchProjectDetails();
-  }, [projects, userProfile?.company_id]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  const monthHeaders = generateMonthHeaders();
 
   return (
     <div className="space-y-4">
-      {/* Timeline Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Project Timeline - {selectedYear}</h3>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-red-500"></div>
-            <span>Critical</span>
-            <div className="w-3 h-3 rounded bg-orange-500"></div>
-            <span>High</span>
-            <div className="w-3 h-3 rounded bg-yellow-500"></div>
-            <span>Medium</span>
-            <div className="w-3 h-3 rounded bg-green-500"></div>
-            <span>Low</span>
+      {/* Month Selector */}
+      <div className="flex items-center gap-4">
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+          className="px-3 py-2 border border-input rounded-md bg-background"
+        >
+          {months.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label} {selectedYear}
+            </option>
+          ))}
+        </select>
+        
+        <Badge variant="outline">
+          {monthProjects.length} Projects this month
+        </Badge>
+      </div>
+
+      {/* Timeline View */}
+      <div className="border rounded-lg overflow-hidden">
+        {/* Calendar Header */}
+        <div className="bg-muted/50 border-b">
+          <div className="grid grid-cols-7 gap-0">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="p-3 text-center text-sm font-medium border-r border-border/50 last:border-r-0">
+                {day}
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Calendar Body */}
+        <div className="grid grid-cols-7 gap-0">
+          {days.map((day, index) => {
+            const dayProjects = getProjectsForDay(day);
+            const isCurrentMonth = isSameMonth(day, currentDate);
+            const isCurrentDay = isToday(day);
+
+            return (
+              <div
+                key={day.toString()}
+                className={`min-h-24 border-r border-b border-border/50 p-1 ${
+                  !isCurrentMonth ? 'bg-muted/20' : ''
+                } ${isCurrentDay ? 'bg-blue-50 border-blue-200' : ''}`}
+              >
+                {/* Day Number */}
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-xs font-medium ${
+                    !isCurrentMonth ? 'text-muted-foreground' : ''
+                  } ${isCurrentDay ? 'text-blue-600' : ''}`}>
+                    {format(day, 'd')}
+                  </span>
+                  {dayProjects.length > 0 && (
+                    <Badge variant="outline" className="h-4 text-xs px-1">
+                      {dayProjects.length}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Projects for this day */}
+                <div className="space-y-1">
+                  {dayProjects.slice(0, 3).map((project) => (
+                    <TooltipProvider key={project.id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`text-xs p-1 rounded border-l-2 cursor-pointer hover:bg-muted/50 transition-colors
+                              ${getStatusBorder(project.status)}
+                            `}
+                          >
+                            <div className="flex items-center gap-1">
+                              <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(project.priority)}`} />
+                              <span className="truncate font-medium">
+                                {project.name}
+                              </span>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <div className="space-y-1 text-xs">
+                            <p><strong>{project.name}</strong></p>
+                            <p><strong>Client:</strong> {project.client_name}</p>
+                            <p><strong>PM:</strong> {project.project_manager}</p>
+                            <p><strong>Status:</strong> {project.status}</p>
+                            <p><strong>Priority:</strong> {project.priority}</p>
+                            <p><strong>Progress:</strong> {project.completion_percentage}%</p>
+                            <p><strong>Budget:</strong> ${project.budget.toLocaleString()}</p>
+                            <p><strong>Duration:</strong> {format(new Date(project.start_date), 'MMM dd')} - {format(new Date(project.end_date), 'MMM dd')}</p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                  
+                  {dayProjects.length > 3 && (
+                    <div className="text-xs text-muted-foreground text-center">
+                      +{dayProjects.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Timeline Container */}
-      <Card>
-        <CardContent className="p-6">
-          {timelineProjects.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No projects found for {selectedYear}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Month Headers */}
-              <div className="flex border-b pb-2">
-                {monthHeaders.map((month, index) => (
-                  <div
-                    key={index}
-                    className="text-center text-sm font-medium text-muted-foreground border-r last:border-r-0"
-                    style={{ width: `${month.width}%` }}
-                  >
-                    {month.name}
+      {/* Project Summary for Selected Month */}
+      <Card className="p-4">
+        <h3 className="font-semibold mb-3">
+          {format(currentDate, 'MMMM yyyy')} Summary
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold">
+              {monthProjects.filter(p => p.status === 'active').length}
+            </p>
+            <p className="text-sm text-muted-foreground">Active Projects</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold">
+              ${(monthProjects.reduce((sum, p) => sum + p.budget, 0) / 1000000).toFixed(1)}M
+            </p>
+            <p className="text-sm text-muted-foreground">Total Budget</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold">
+              {monthProjects.length > 0 
+                ? Math.round(monthProjects.reduce((sum, p) => sum + p.completion_percentage, 0) / monthProjects.length)
+                : 0}%
+            </p>
+            <p className="text-sm text-muted-foreground">Avg Progress</p>
+          </div>
+        </div>
+
+        {/* Critical Projects */}
+        {monthProjects.filter(p => p.priority === 'critical').length > 0 && (
+          <div>
+            <h4 className="font-medium text-sm mb-2 text-red-600">Critical Projects</h4>
+            <div className="space-y-1">
+              {monthProjects
+                .filter(p => p.priority === 'critical')
+                .map(project => (
+                  <div key={project.id} className="text-xs text-muted-foreground">
+                    • {project.name} ({project.completion_percentage}% complete)
                   </div>
                 ))}
-              </div>
-
-              {/* Timeline Grid */}
-              <div className="space-y-3">
-                {timelineProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className={`relative p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                      selectedProjectId === project.id ? 'border-primary bg-primary/5' : 'border-border'
-                    }`}
-                    onClick={() => setSelectedProjectId(selectedProjectId === project.id ? '' : project.id)}
-                  >
-                    {/* Project Info */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${getPriorityColor(project.priority)}`} />
-                        <div>
-                          <h4 className="font-semibold">{project.name}</h4>
-                          {project.client_name && (
-                            <p className="text-sm text-muted-foreground">{project.client_name}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`text-white ${getStatusColor(project.status)}`}>
-                          {project.status}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {project.completion_percentage}%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Timeline Bar */}
-                    <div className="relative h-8 bg-muted rounded mb-3">
-                      <div
-                        className={`absolute h-full rounded transition-all ${getStatusColor(project.status)}`}
-                        style={{
-                          left: `${project.position.x}%`,
-                          width: `${project.position.width}%`,
-                          opacity: 0.8,
-                        }}
-                      >
-                        {/* Progress overlay */}
-                        <div
-                          className="absolute top-0 left-0 h-full bg-white/30 rounded"
-                          style={{ width: `${project.completion_percentage}%` }}
-                        />
-                      </div>
-                      
-                      {/* Milestones */}
-                      {project.milestones.map((milestone) => {
-                        const milestonePosition = calculateProjectPosition({
-                          ...project,
-                          start_date: milestone.target_date,
-                          end_date: milestone.target_date,
-                        });
-                        
-                        return (
-                          <div
-                            key={milestone.id}
-                            className="absolute top-0 h-full w-1 bg-yellow-400 z-10"
-                            style={{ left: `${milestonePosition.x}%` }}
-                            title={milestone.name}
-                          >
-                            <Flag className="h-3 w-3 text-yellow-600 -mt-1 -ml-1" />
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Date Range */}
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {formatDate(project.start_date)} - {formatDate(project.end_date)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {project.totalDuration} days
-                      </span>
-                    </div>
-
-                    {/* Expanded Details */}
-                    {selectedProjectId === project.id && (
-                      <div className="mt-4 pt-4 border-t space-y-4">
-                        {/* Progress Bar */}
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">Overall Progress</span>
-                            <span className="text-sm">{project.completion_percentage}%</span>
-                          </div>
-                          <Progress value={project.completion_percentage} className="h-2" />
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <div className="font-medium">Tasks</div>
-                            <div className="text-muted-foreground">{project.tasks.length}</div>
-                          </div>
-                          <div>
-                            <div className="font-medium">Milestones</div>
-                            <div className="text-muted-foreground">{project.milestones.length}</div>
-                          </div>
-                          <div>
-                            <div className="font-medium">Duration</div>
-                            <div className="text-muted-foreground">{project.totalDuration} days</div>
-                          </div>
-                          <div>
-                            <div className="font-medium">Status</div>
-                            <div className="text-muted-foreground capitalize">
-                              {project.status.replace('_', ' ')}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Recent Tasks */}
-                        {project.tasks.length > 0 && (
-                          <div>
-                            <h5 className="font-medium mb-2">Recent Tasks</h5>
-                            <div className="space-y-2">
-                              {project.tasks.slice(0, 3).map((task) => (
-                                <div
-                                  key={task.id}
-                                  className="flex items-center justify-between p-2 bg-muted rounded text-sm"
-                                >
-                                  <span className="truncate">{task.name}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {task.status}
-                                  </Badge>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Upcoming Milestones */}
-                        {project.milestones.length > 0 && (
-                          <div>
-                            <h5 className="font-medium mb-2">Milestones</h5>
-                            <div className="space-y-2">
-                              {project.milestones
-                                .filter(m => m.status === 'pending')
-                                .slice(0, 3)
-                                .map((milestone) => (
-                                  <div
-                                    key={milestone.id}
-                                    className="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded text-sm"
-                                  >
-                                    <span className="truncate">{milestone.name}</span>
-                                    <span className="text-muted-foreground">
-                                      {formatDate(milestone.target_date)}
-                                    </span>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Timeline Legend */}
-              <div className="pt-4 border-t">
-                <div className="text-sm text-muted-foreground">
-                  <p className="mb-2">Timeline Tips:</p>
-                  <ul className="space-y-1 text-xs">
-                    <li>• Click on projects to expand details</li>
-                    <li>• Timeline bars show project duration and completion progress</li>
-                    <li>• Yellow flags indicate project milestones</li>
-                    <li>• Colors represent project priority levels</li>
-                  </ul>
-                </div>
-              </div>
             </div>
-          )}
-        </CardContent>
+          </div>
+        )}
       </Card>
     </div>
   );
 };
-
-export default ProjectTimeline;

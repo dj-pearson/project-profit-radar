@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TouchGestureDemo } from './TouchGestureDemo';
 import { MobileNavigationPattern } from './MobileNavigationPattern';
 import { DeviceCapabilitiesPanel } from './DeviceCapabilitiesPanel';
-import EnhancedMobileCamera from './EnhancedMobileCamera';
+import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { 
   Smartphone, 
   Camera, 
@@ -29,6 +29,7 @@ export const MobileTestingEnvironment = () => {
       <EnhancedMobileCamera
         onCapture={handleCameraCapture}
         onCancel={() => setShowCamera(false)}
+        enableGeolocation={true}
       />
     );
   }

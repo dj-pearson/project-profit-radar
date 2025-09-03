@@ -1,10 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  format,
+  isSameDay,
+  parseISO,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
+import {
+  CalendarDays,
+  Clock,
+  Users,
+  DollarSign,
+  ArrowRight,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Project {
   id: string;
@@ -12,421 +27,315 @@ interface Project {
   start_date: string;
   end_date: string;
   status: string;
+  budget: number;
   completion_percentage: number;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  client_name?: string;
-}
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  date: string;
-  type: 'project_start' | 'project_end' | 'milestone' | 'deadline';
-  project: Project;
+  project_manager: string;
+  client_name: string;
+  priority: "low" | "medium" | "high" | "critical";
 }
 
 interface ScheduleCalendarProps {
   projects: Project[];
-  onDateRangeChange: (startDate: Date, endDate: Date, projectId: string) => void;
+  onDateRangeChange: (
+    startDate: Date,
+    endDate: Date,
+    projectId: string
+  ) => void;
   selectedYear: number;
 }
 
-const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
+export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   projects,
   onDateRangeChange,
-  selectedYear
+  selectedYear,
 }) => {
-  const { userProfile } = useAuth();
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(selectedYear);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [milestones, setMilestones] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarMonth, setCalendarMonth] = useState<Date>(
+    new Date(selectedYear, new Date().getMonth())
+  );
+  const navigate = useNavigate();
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  // Generate calendar events from projects and milestones
-  const generateCalendarEvents = () => {
-    const events: CalendarEvent[] = [];
-
-    // Add project start and end dates
-    projects.forEach(project => {
-      // Project start
-      events.push({
-        id: `start-${project.id}`,
-        title: `${project.name} - Start`,
-        date: project.start_date,
-        type: 'project_start',
-        project,
-      });
-
-      // Project end
-      events.push({
-        id: `end-${project.id}`,
-        title: `${project.name} - End`,
-        date: project.end_date,
-        type: 'project_end',
-        project,
-      });
+  // Get projects for selected date
+  const getProjectsForDate = (date: Date) => {
+    return projects.filter((project) => {
+      const projectStart = parseISO(project.start_date);
+      const projectEnd = parseISO(project.end_date);
+      return date >= projectStart && date <= projectEnd;
     });
+  };
 
-    // Add milestones
-    milestones.forEach(milestone => {
-      const relatedProject = projects.find(p => p.id === milestone.project_id);
-      if (relatedProject) {
-        events.push({
-          id: `milestone-${milestone.id}`,
-          title: milestone.name,
-          date: milestone.target_date,
-          type: 'milestone',
-          project: relatedProject,
-        });
-      }
+  // Get project events for calendar highlighting
+  const getProjectDates = () => {
+    const dates: Date[] = [];
+    projects.forEach((project) => {
+      const start = parseISO(project.start_date);
+      const end = parseISO(project.end_date);
+
+      // Add start and end dates
+      dates.push(start);
+      dates.push(end);
     });
-
-    setCalendarEvents(events);
+    return dates;
   };
 
-  // Fetch milestones for the selected projects
-  const fetchMilestones = async () => {
-    if (!userProfile?.company_id || projects.length === 0) return;
+  const selectedDateProjects = getProjectsForDate(selectedDate);
+  const projectDates = getProjectDates();
 
-    try {
-      const projectIds = projects.map(p => p.id);
-      const { data, error } = await supabase
-        .from('project_milestones')
-        .select('*')
-        .eq('company_id', userProfile.company_id)
-        .in('project_id', projectIds)
-        .order('target_date');
+  // Get month stats
+  const monthStart = startOfMonth(calendarMonth);
+  const monthEnd = endOfMonth(calendarMonth);
 
-      if (error) throw error;
-      setMilestones(data || []);
-    } catch (error) {
-      console.error('Error fetching milestones:', error);
-    }
-  };
+  const monthProjects = projects.filter((project) => {
+    const projectStart = parseISO(project.start_date);
+    const projectEnd = parseISO(project.end_date);
+    return projectStart <= monthEnd && projectEnd >= monthStart;
+  });
 
-  // Get days in month
-  const getDaysInMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const startingProjects = projects.filter((project) => {
+    const start = parseISO(project.start_date);
+    return start >= monthStart && start <= monthEnd;
+  });
 
-  // Get first day of month (0 = Sunday, 1 = Monday, etc.)
-  const getFirstDayOfMonth = (month: number, year: number) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  // Get events for a specific date
-  const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return calendarEvents.filter(event => event.date === dateStr);
-  };
-
-  // Generate calendar grid
-  const generateCalendarGrid = () => {
-    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
-    const totalCells = Math.ceil((daysInMonth + firstDay) / 7) * 7;
-    
-    const grid = [];
-    
-    for (let i = 0; i < totalCells; i++) {
-      const dayNumber = i - firstDay + 1;
-      const isCurrentMonth = dayNumber > 0 && dayNumber <= daysInMonth;
-      const date = isCurrentMonth 
-        ? new Date(currentYear, currentMonth, dayNumber)
-        : new Date();
-      
-      const isToday = isCurrentMonth && 
-        date.toDateString() === new Date().toDateString();
-      
-      const dayEvents = isCurrentMonth ? getEventsForDate(date) : [];
-      
-      grid.push({
-        dayNumber: isCurrentMonth ? dayNumber : '',
-        date,
-        isCurrentMonth,
-        isToday,
-        events: dayEvents,
-      });
-    }
-    
-    return grid;
-  };
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    if (direction === 'prev') {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
-      } else {
-        setCurrentMonth(currentMonth - 1);
-      }
-    } else {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
-      } else {
-        setCurrentMonth(currentMonth + 1);
-      }
-    }
-  };
-
-  const getEventTypeColor = (type: string) => {
-    switch (type) {
-      case 'project_start': return 'bg-green-100 text-green-700 border-green-200';
-      case 'project_end': return 'bg-red-100 text-red-700 border-red-200';
-      case 'milestone': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'deadline': return 'bg-orange-100 text-orange-700 border-orange-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
+  const endingProjects = projects.filter((project) => {
+    const end = parseISO(project.end_date);
+    return end >= monthStart && end <= monthEnd;
+  });
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'border-l-red-500';
-      case 'high': return 'border-l-orange-500';
-      case 'medium': return 'border-l-yellow-500';
-      default: return 'border-l-green-500';
+      case "critical":
+        return "destructive";
+      case "high":
+        return "secondary";
+      case "medium":
+        return "outline";
+      case "low":
+        return "outline";
+      default:
+        return "outline";
     }
   };
 
-  useEffect(() => {
-    fetchMilestones();
-  }, [projects, userProfile?.company_id]);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "default";
+      case "completed":
+        return "secondary";
+      case "on_hold":
+        return "outline";
+      case "cancelled":
+        return "destructive";
+      default:
+        return "outline";
+    }
+  };
 
-  useEffect(() => {
-    generateCalendarEvents();
-  }, [projects, milestones]);
+  const modifiers = {
+    projectDate: projectDates,
+  };
 
-  useEffect(() => {
-    setCurrentYear(selectedYear);
-  }, [selectedYear]);
-
-  const calendarGrid = generateCalendarGrid();
+  const modifiersClassNames = {
+    projectDate: "bg-blue-100 text-blue-900 font-semibold",
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Calendar Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateMonth('prev')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h3 className="text-lg font-semibold">
-            {months[currentMonth]} {currentYear}
-          </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateMonth('next')}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setCurrentMonth(new Date().getMonth());
-              setCurrentYear(new Date().getFullYear());
-            }}
-          >
-            <CalendarIcon className="h-4 w-4 mr-2" />
-            Today
-          </Button>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-green-100 border border-green-200"></div>
-          <span>Project Start</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-          <span>Project End</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-200"></div>
-          <span>Milestone</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-1 rounded bg-red-500"></div>
-          <span>Critical Priority</span>
-        </div>
-      </div>
-
-      {/* Calendar Grid */}
-      <Card>
-        <CardContent className="p-4">
-          {/* Days of Week Header */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {daysOfWeek.map(day => (
-              <div 
-                key={day} 
-                className="p-2 text-center font-semibold text-sm text-muted-foreground"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar Days */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarGrid.map((cell, index) => (
-              <div
-                key={index}
-                className={`
-                  min-h-[100px] p-1 border border-border rounded-sm
-                  ${cell.isCurrentMonth ? 'bg-background' : 'bg-muted/30'}
-                  ${cell.isToday ? 'bg-primary/10 border-primary' : ''}
-                `}
-              >
-                {cell.dayNumber && (
-                  <>
-                    <div className={`text-sm font-medium mb-1 ${cell.isToday ? 'text-primary' : ''}`}>
-                      {cell.dayNumber}
-                    </div>
-                    <div className="space-y-1">
-                      {cell.events.slice(0, 3).map((event, eventIndex) => (
-                        <div
-                          key={event.id}
-                          className={`
-                            text-xs p-1 rounded border border-l-2
-                            ${getEventTypeColor(event.type)}
-                            ${getPriorityColor(event.project.priority)}
-                            truncate cursor-pointer
-                          `}
-                          title={`${event.title} - ${event.project.client_name || 'No client'}`}
-                        >
-                          {event.title}
-                        </div>
-                      ))}
-                      {cell.events.length > 3 && (
-                        <div className="text-xs text-muted-foreground text-center">
-                          +{cell.events.length - 3} more
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Monthly Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Calendar */}
+      <div className="lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">This Month's Events</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5" />
+              Project Calendar
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {calendarEvents
-                .filter(event => {
-                  const eventDate = new Date(event.date);
-                  return eventDate.getMonth() === currentMonth && 
-                         eventDate.getFullYear() === currentYear;
-                })
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                .slice(0, 5)
-                .map(event => (
-                  <div 
-                    key={event.id} 
-                    className="flex items-center justify-between p-2 bg-card border rounded"
-                  >
-                    <div>
-                      <div className="font-medium text-sm">{event.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {event.project.client_name}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className={getEventTypeColor(event.type)}>
-                        {event.type.replace('_', ' ')}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {new Date(event.date).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              {calendarEvents.filter(event => {
-                const eventDate = new Date(event.date);
-                return eventDate.getMonth() === currentMonth && 
-                       eventDate.getFullYear() === currentYear;
-              }).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No events scheduled for this month
-                </p>
-              )}
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              month={calendarMonth}
+              onMonthChange={setCalendarMonth}
+              modifiers={modifiers}
+              modifiersClassNames={modifiersClassNames}
+              className="rounded-md border"
+            />
+
+            <div className="mt-4 flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
+                <span>Project Activity</span>
+              </div>
+              <div className="text-muted-foreground">
+                {monthProjects.length} projects in{" "}
+                {format(calendarMonth, "MMMM yyyy")}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Month Summary */}
+        <Card className="mt-4">
           <CardHeader>
-            <CardTitle className="text-lg">Upcoming Milestones</CardTitle>
+            <CardTitle>{format(calendarMonth, "MMMM yyyy")} Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {milestones
-                .filter(milestone => {
-                  const milestoneDate = new Date(milestone.target_date);
-                  return milestoneDate >= new Date() && milestone.status === 'pending';
-                })
-                .sort((a, b) => new Date(a.target_date).getTime() - new Date(b.target_date).getTime())
-                .slice(0, 5)
-                .map(milestone => {
-                  const project = projects.find(p => p.id === milestone.project_id);
-                  return (
-                    <div 
-                      key={milestone.id} 
-                      className="flex items-center justify-between p-2 bg-card border rounded"
-                    >
-                      <div>
-                        <div className="font-medium text-sm">{milestone.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {project?.name}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="bg-yellow-100 text-yellow-700">
-                          {milestone.milestone_type}
-                        </Badge>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {new Date(milestone.target_date).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              {milestones.filter(m => new Date(m.target_date) >= new Date() && m.status === 'pending').length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No upcoming milestones
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold">{monthProjects.length}</p>
+                <p className="text-sm text-muted-foreground">Active Projects</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">{startingProjects.length}</p>
+                <p className="text-sm text-muted-foreground">Starting</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">{endingProjects.length}</p>
+                <p className="text-sm text-muted-foreground">Ending</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">
+                  $
+                  {(
+                    monthProjects.reduce((sum, p) => sum + p.budget, 0) /
+                    1000000
+                  ).toFixed(1)}
+                  M
                 </p>
-              )}
+                <p className="text-sm text-muted-foreground">Total Budget</p>
+              </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Selected Date Details */}
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              {format(selectedDate, "EEEE, MMMM dd, yyyy")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedDateProjects.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {selectedDateProjects.length} Project
+                    {selectedDateProjects.length !== 1 ? "s" : ""}
+                  </span>
+                  <Badge variant="outline">
+                    $
+                    {(
+                      selectedDateProjects.reduce(
+                        (sum, p) => sum + p.budget,
+                        0
+                      ) / 1000
+                    ).toFixed(0)}
+                    k
+                  </Badge>
+                </div>
+
+                <ScrollArea className="h-64">
+                  <div className="space-y-3">
+                    {selectedDateProjects.map((project) => (
+                      <div
+                        key={project.id}
+                        className="border rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate(`/projects/${project.id}`)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-sm">
+                            {project.name}
+                          </h4>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge
+                            variant={getPriorityColor(project.priority)}
+                            className="text-xs"
+                          >
+                            {project.priority}
+                          </Badge>
+                          <Badge
+                            variant={getStatusColor(project.status)}
+                            className="text-xs"
+                          >
+                            {project.status}
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-1 text-xs text-muted-foreground">
+                          <p>
+                            <strong>Client:</strong> {project.client_name}
+                          </p>
+                          <p>
+                            <strong>PM:</strong> {project.project_manager}
+                          </p>
+                          <p>
+                            <strong>Progress:</strong>{" "}
+                            {project.completion_percentage}%
+                          </p>
+                          <p>
+                            <strong>Duration:</strong>{" "}
+                            {format(parseISO(project.start_date), "MMM dd")} -{" "}
+                            {format(parseISO(project.end_date), "MMM dd")}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No projects scheduled for this date</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => navigate("/create-project")}
+            >
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Create New Project
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => navigate("/projects")}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              View All Projects
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => navigate("/crew-scheduling")}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Crew Scheduling
+            </Button>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 };
-
-export default ScheduleCalendar;

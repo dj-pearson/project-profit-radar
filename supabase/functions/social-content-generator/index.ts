@@ -712,7 +712,35 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const body = await req.json();
+    // Enhanced JSON parsing with better error handling
+    let body;
+    try {
+      const requestText = await req.text();
+      logStep("Request body text", { length: requestText.length, preview: requestText.substring(0, 200) });
+      
+      if (!requestText.trim()) {
+        throw new Error("Empty request body");
+      }
+      
+      body = JSON.parse(requestText);
+      logStep("JSON parsed successfully", { keys: Object.keys(body) });
+    } catch (parseError) {
+      logStep("JSON parsing failed", { 
+        error: parseError.message,
+        requestMethod: req.method,
+        contentType: req.headers.get("content-type")
+      });
+      
+      return new Response(JSON.stringify({
+        error: "Invalid JSON in request body",
+        details: parseError.message,
+        success: false,
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const {
       company_id,
       template_category = "random",

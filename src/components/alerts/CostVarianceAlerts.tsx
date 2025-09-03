@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,32 +22,15 @@ const CostVarianceAlerts = () => {
   const { userProfile } = useAuth();
   const [alerts, setAlerts] = useState<CostAlert[]>([]);
   const [loading, setLoading] = useState(true);
-  const prevAlertIdsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (userProfile?.company_id) {
       loadCostAlerts();
-
-      // Realtime updates on job costs and project budget changes
-      const channel = supabase
-        .channel('cost-variance-alerts')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_costs' }, () => {
-          checkCostVariances();
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects' }, () => {
-          checkCostVariances();
-        })
-        .subscribe();
-
-      // Fallback polling
-      const interval = setInterval(checkCostVariances, 60000);
-      return () => {
-        clearInterval(interval);
-        supabase.removeChannel(channel);
-      };
+      // Set up real-time monitoring
+      const interval = setInterval(checkCostVariances, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
     }
   }, [userProfile?.company_id]);
-
 
   const loadCostAlerts = async () => {
     try {
@@ -84,26 +67,12 @@ const CostVarianceAlerts = () => {
         }
       });
 
-      // Toast on newly detected alerts
-      const prevIds = prevAlertIdsRef.current;
-      const newAlerts = alertsData.filter(a => !prevIds.includes(a.id));
-      if (newAlerts.length > 0) {
-        newAlerts.forEach(a => {
-          toast({
-            title: a.alert_type === 'critical' ? 'Critical budget overrun' : 'Budget variance warning',
-            description: `${a.project_name}: ${Math.abs(a.variance_percentage).toFixed(1)}% over budget (Overage $${(a.actual_cost - a.budget).toLocaleString()})`
-          });
-        });
-      }
-
       setAlerts(alertsData);
-      prevAlertIdsRef.current = alertsData.map(a => a.id);
     } catch (error: any) {
       console.error('Error loading cost alerts:', error);
     } finally {
       setLoading(false);
     }
-
   };
 
   const checkCostVariances = async () => {

@@ -65,33 +65,33 @@ export const ProjectStatusWidget = () => {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-4">
       {projects.map((project) => (
-        <div key={project.id} className="p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/50 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div key={project.id} className="space-y-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+              <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm sm:text-base font-medium text-foreground truncate leading-tight">{project.name}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">{project.client_name}</p>
+                <p className="text-xs font-medium truncate">{project.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{project.client_name}</p>
               </div>
             </div>
-            <Badge variant={getStatusColor(project.status)} className="text-xs sm:text-sm self-start sm:self-center shrink-0">
+            <Badge variant={getStatusColor(project.status)} className="text-xs">
               {project.status.replace('_', ' ')}
             </Badge>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-muted-foreground font-medium">Progress</span>
-              <span className="text-xs sm:text-sm font-semibold text-foreground">{project.completion_percentage || 0}%</span>
+              <span className="text-xs text-muted-foreground">Progress</span>
+              <span className="text-xs font-medium">{project.completion_percentage || 0}%</span>
             </div>
-            <Progress value={project.completion_percentage || 0} className="h-2 sm:h-2.5" />
+            <Progress value={project.completion_percentage || 0} className="h-1" />
           </div>
           
-          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
-            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
-            <span className="font-medium">${(project.budget || 0).toLocaleString()}</span>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <DollarSign className="h-3 w-3" />
+            <span>${(project.budget || 0).toLocaleString()}</span>
           </div>
         </div>
       ))}

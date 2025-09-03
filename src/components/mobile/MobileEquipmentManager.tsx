@@ -33,7 +33,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
-import EnhancedMobileCamera from './EnhancedMobileCamera';
+import { EnhancedMobileCamera } from './EnhancedMobileCamera';
 import { format } from 'date-fns';
 
 interface Equipment {
@@ -345,6 +345,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
       <EnhancedMobileCamera
         onCapture={handlePhotoCapture}
         onCancel={() => setShowCamera(false)}
+        enableGeolocation={true}
       />
     );
   }
