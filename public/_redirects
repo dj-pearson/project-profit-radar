@@ -1,1 +1,9 @@
+# Force HTTPS redirect for HTTP requests
+http://build-desk.com/*  https://build-desk.com/:splat  301!
+
+# Handle auth recovery redirects properly
+/auth?error_recovery*  /auth  302
+/auth?refresh*  /auth  302
+
+# SPA fallback - serve index.html for all routes
 /*    /index.html   200

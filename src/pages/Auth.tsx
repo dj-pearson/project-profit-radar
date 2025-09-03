@@ -24,6 +24,7 @@ import {
   checkRateLimit,
 } from "@/utils/security";
 import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock } from "lucide-react";
+import { SEOMetaTags } from "@/components/SEOMetaTags";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -49,14 +50,23 @@ const Auth = () => {
   }, [csrfToken]);
 
   // Navigate to dashboard after successful authentication
-  // Password recovery redirects are handled in AuthContext
+  // Handle special auth parameters for SEO
   useEffect(() => {
+    // Check for special auth parameters that should show the auth page
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = urlParams.get('type') || hashParams.get('type');
+    const errorRecovery = urlParams.has('error_recovery');
+    const refresh = urlParams.has('refresh');
+    
+    // If we have error_recovery or refresh parameters, clean the URL for SEO
+    if (errorRecovery || refresh) {
+      // Replace URL without parameters to avoid redirect issues
+      window.history.replaceState({}, '', '/auth');
+      return;
+    }
+    
     if (user) {
-      // Check if this is a password recovery session
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = urlParams.get('type') || hashParams.get('type');
-      
       // Don't redirect to dashboard if this is a password recovery session
       if (type !== 'recovery') {
         console.log("User authenticated, navigating to dashboard...");
@@ -250,7 +260,14 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <>
+      <SEOMetaTags
+        title="Sign In - BuildDesk Construction Management"
+        description="Sign in to your BuildDesk account to access construction project management, job costing, and team collaboration tools."
+        keywords={['construction login', 'BuildDesk sign in', 'construction management login', 'contractor portal']}
+        canonicalUrl="/auth"
+      />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <Link to="/" className="inline-block">
@@ -630,7 +647,8 @@ const Auth = () => {
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -255,9 +255,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         setUser(session.user);
         setLoading(false);
         
-        // Don't fetch profile for password recovery - just redirect
+        // Don't fetch profile for password recovery - redirect using React Router for SEO
         if (window.location.pathname === '/auth') {
-          window.location.href = `/reset-password${window.location.search}${window.location.hash}`;
+          // Use setTimeout to avoid redirect during render cycle
+          setTimeout(() => {
+            window.location.href = `/reset-password${window.location.search}${window.location.hash}`;
+          }, 100);
         }
         return;
       }

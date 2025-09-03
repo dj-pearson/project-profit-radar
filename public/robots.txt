@@ -12,6 +12,14 @@ Disallow: /*&v=*
 Disallow: /*?refreshed=*
 Disallow: /*&refreshed=*
 
+# Disallow auth URLs with recovery parameters that redirect
+Disallow: /auth?error_recovery*
+Disallow: /auth?refresh*
+Disallow: /auth?type=recovery*
+
+# Disallow HTTP version (redirects to HTTPS)
+# Note: This should be handled at server level
+
 # Additional SEO directives
 Crawl-delay: 1
 

@@ -1,0 +1,43 @@
+# Apache configuration for BuildDesk SPA
+# This file handles redirects and SEO optimizations
+
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Handle auth parameter redirects
+RewriteCond %{QUERY_STRING} ^error_recovery$
+RewriteRule ^auth$ /auth? [R=302,L]
+
+RewriteCond %{QUERY_STRING} ^refresh$
+RewriteRule ^auth$ /auth? [R=302,L]
+
+# Remove trailing slashes (except for root)
+RewriteCond %{REQUEST_URI} !^/$
+RewriteRule ^(.*)/$ /$1 [R=301,L]
+
+# Handle SPA routing - serve index.html for all non-file requests
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive on
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
