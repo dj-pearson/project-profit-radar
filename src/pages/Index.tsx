@@ -9,7 +9,14 @@ import LazySection from "@/components/LazySection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
+import AISearchOptimization from "@/components/AISearchOptimization";
+import { OrganizationSchema, SoftwareSchema } from "@/components/EnhancedSchemaMarkup";
+import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 const Index = () => {
+  // Initialize performance optimizations
+  React.useEffect(() => {
+    initializePerformanceOptimizations();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,8 +73,17 @@ const Index = () => {
         <LazySection>
           <FAQ />
         </LazySection>
+        
+        {/* AI Search Optimization Section */}
+        <LazySection>
+          <div className="container mx-auto px-4 py-16">
+            <AISearchOptimization page="homepage" primaryKeyword="construction management software" />
+          </div>
+        </LazySection>
       </main>
       
+      <OrganizationSchema />
+      <SoftwareSchema />
       <Footer />
     </div>
   );

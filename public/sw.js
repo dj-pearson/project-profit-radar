@@ -1,155 +1,240 @@
-const CACHE_NAME = 'builddesk-v1';
-const STATIC_CACHE = 'builddesk-static-v1';
+// Service Worker for BuildDesk - Performance and SEO Optimization
+const CACHE_NAME = 'builddesk-v2025.1.12';
+const STATIC_CACHE = 'builddesk-static-v2025.1.12';
+const DYNAMIC_CACHE = 'builddesk-dynamic-v2025.1.12';
 
-// Assets to cache for offline functionality
+// Resources to cache immediately
 const STATIC_ASSETS = [
   '/',
-  '/auth',
-  '/dashboard',
+  '/index.html',
+  '/manifest.json',
   '/BuildDeskLogo.png',
-  '/manifest.json'
+  // Critical CSS and JS will be added dynamically
+];
+
+// Resources to cache on first request
+const DYNAMIC_ASSETS = [
+  '/features',
+  '/pricing',
+  '/procore-alternative',
+  '/buildertrend-alternative',
+  '/resources',
+  '/knowledge-base'
 ];
 
 // Install event - cache static assets
-self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker');
-  
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then(cache => {
-        console.log('[SW] Caching static assets');
+    Promise.all([
+      caches.open(STATIC_CACHE).then((cache) => {
         return cache.addAll(STATIC_ASSETS);
-      })
-      .catch(err => {
-        console.error('[SW] Failed to cache static assets:', err);
-      })
+      }),
+      self.skipWaiting()
+    ])
   );
-  
-  // Activate immediately
-  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker');
-  
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then(cacheNames => {
+    Promise.all([
+      caches.keys().then((cacheNames) => {
         return Promise.all(
-          cacheNames
-            .filter(cacheName => cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE)
-            .map(cacheName => {
-              console.log('[SW] Deleting old cache:', cacheName);
+          cacheNames.map((cacheName) => {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
               return caches.delete(cacheName);
-            })
-        );
-      })
-      .then(() => {
-        // Take control of all pages
-        return self.clients.claim();
-      })
-  );
-});
-
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', event => {
-  const { request } = event;
-  
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-  
-  // Skip chrome-extension and other protocols
-  if (!request.url.startsWith('http')) {
-    return;
-  }
-  
-  event.respondWith(
-    caches.match(request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        
-        return fetch(request)
-          .then(response => {
-            // Don't cache error responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
             }
-            
-            // Cache successful responses
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(request, responseToCache);
-              });
-            
-            return response;
           })
-          .catch(() => {
-            // Return offline page for navigation requests
-            if (request.mode === 'navigate') {
-              return caches.match('/offline.html');
-            }
-            return new Response('Offline', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
-          });
-      })
+        );
+      }),
+      self.clients.claim()
+    ])
   );
 });
 
-// Background sync for when connection is restored
-self.addEventListener('sync', event => {
-  console.log('[SW] Background sync triggered:', event.tag);
+// Fetch event - serve from cache with network fallback
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests and chrome-extension requests
+  if (request.method !== 'GET' || url.protocol === 'chrome-extension:') {
+    return;
+  }
+
+  // Handle API requests with network-first strategy
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Handle static assets with cache-first strategy
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Handle navigation requests with stale-while-revalidate
+  if (request.mode === 'navigate') {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // Default to network-first for other requests
+  event.respondWith(networkFirst(request));
+});
+
+// Cache-first strategy for static assets
+async function cacheFirst(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cached = await cache.match(request);
   
-  if (event.tag === 'background-sync') {
-    event.waitUntil(
-      // Handle any pending offline actions
-      console.log('[SW] Performing background sync')
-    );
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    // Return offline fallback if available
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+// Network-first strategy for API calls
+async function networkFirst(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    return cached || new Response('Offline', { status: 503 });
+  }
+}
+
+// Stale-while-revalidate for navigation
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+  const cached = await cache.match(request);
+  
+  const networkPromise = fetch(request).then((response) => {
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  }).catch(() => cached);
+
+  return cached || networkPromise;
+}
+
+// Check if URL is a static asset
+function isStaticAsset(pathname) {
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.webp', '.woff', '.woff2'];
+  return staticExtensions.some(ext => pathname.endsWith(ext)) || 
+         pathname.startsWith('/assets/') ||
+         pathname.startsWith('/images/') ||
+         pathname.startsWith('/fonts/');
+}
+
+// Background sync for analytics and form submissions
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'analytics-sync') {
+    event.waitUntil(syncAnalytics());
+  } else if (event.tag === 'form-sync') {
+    event.waitUntil(syncForms());
   }
 });
 
-// Push notifications (for future use)
-self.addEventListener('push', event => {
-  if (event.data) {
-    const data = event.data.json();
+// Sync offline analytics data
+async function syncAnalytics() {
+  try {
+    const cache = await caches.open('analytics-cache');
+    const requests = await cache.keys();
     
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'BuildDesk', {
-        body: data.body || 'You have a new notification',
-        icon: '/BuildDeskLogo.png',
-        badge: '/BuildDeskLogo.png',
-        tag: 'builddesk-notification',
-        requireInteraction: true,
-        actions: [
-          {
-            action: 'view',
-            title: 'View',
-            icon: '/BuildDeskLogo.png'
-          },
-          {
-            action: 'dismiss',
-            title: 'Dismiss'
-          }
-        ]
-      })
-    );
+    for (const request of requests) {
+      const response = await cache.match(request);
+      const data = await response.json();
+      
+      // Send to analytics
+      await fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      await cache.delete(request);
+    }
+  } catch (error) {
+    console.error('Analytics sync failed:', error);
   }
+}
+
+// Sync offline form submissions
+async function syncForms() {
+  try {
+    const cache = await caches.open('forms-cache');
+    const requests = await cache.keys();
+    
+    for (const request of requests) {
+      const response = await cache.match(request);
+      const formData = await response.formData();
+      
+      // Retry form submission
+      await fetch(request.url, {
+        method: 'POST',
+        body: formData
+      });
+      
+      await cache.delete(request);
+    }
+  } catch (error) {
+    console.error('Form sync failed:', error);
+  }
+}
+
+// Push notification handling
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const options = {
+    body: data.body,
+    icon: '/BuildDeskLogo.png',
+    badge: '/badge.png',
+    data: data.url,
+    actions: [
+      {
+        action: 'open',
+        title: 'Open BuildDesk'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss'
+      }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
 });
 
-// Handle notification clicks
-self.addEventListener('notificationclick', event => {
+// Notification click handling
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
-  if (event.action === 'view') {
+
+  if (event.action === 'open' || !event.action) {
     event.waitUntil(
-      clients.openWindow('/dashboard')
+      clients.openWindow(event.notification.data || '/')
     );
   }
 });
