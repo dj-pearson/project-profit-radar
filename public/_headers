@@ -19,10 +19,28 @@
 /images/*
   Cache-Control: public, max-age=31536000, immutable
 
-# API routes
+# API routes - strategic caching for blog/knowledge base
+/api/blog/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=600
+
+/api/knowledge-base/*  
+  Cache-Control: public, max-age=300, stale-while-revalidate=600
+
 /api/*
   Cache-Control: no-cache, no-store, must-revalidate
 
-# Service worker
+# Service worker - allow caching with validation
 /sw.js
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# Fonts - enable CORS and long-term caching
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+  
+# Performance optimization headers
+/
+  # Enable compression
+  Accept-Encoding: gzip, br
+  # Prefer modern image formats
+  Accept: text/html, image/webp, image/avif, */*

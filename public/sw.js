@@ -2,6 +2,8 @@
 const CACHE_NAME = 'builddesk-v2025.1.12';
 const STATIC_CACHE = 'builddesk-static-v2025.1.12';
 const DYNAMIC_CACHE = 'builddesk-dynamic-v2025.1.12';
+const API_CACHE = 'builddesk-api-v2025.1.12';
+const IMAGE_CACHE = 'builddesk-images-v2025.1.12';
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
@@ -9,7 +11,28 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/BuildDeskLogo.png',
-  // Critical CSS and JS will be added dynamically
+  '/robots.txt',
+  '/sitemap.xml'
+];
+
+// Static file patterns for aggressive caching
+const STATIC_PATTERNS = [
+  /.*\.(?:js|css|woff2?|ttf|eot)$/,
+  /\/assets\/.*/,
+  /\/fonts\/.*/
+];
+
+// Image patterns for optimized caching
+const IMAGE_PATTERNS = [
+  /.*\.(?:png|jpg|jpeg|webp|avif|svg|ico|gif)$/
+];
+
+// API patterns for strategic caching
+const API_PATTERNS = [
+  /\/api\/blog/,
+  /\/api\/knowledge-base/,
+  /supabase\.co.*\/rest\/v1\/blog_posts/,
+  /supabase\.co.*\/rest\/v1\/knowledge_base_articles/
 ];
 
 // Resources to cache on first request
@@ -36,17 +59,23 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('✅ Service Worker activated - BuildDesk v2025.1.12');
+  
   event.waitUntil(
     Promise.all([
+      // Clean up old caches
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+            const validCaches = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE, IMAGE_CACHE];
+            if (!validCaches.includes(cacheName)) {
+              console.log('🗑️ Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       }),
+      // Take control immediately
       self.clients.claim()
     ])
   );

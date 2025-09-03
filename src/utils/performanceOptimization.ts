@@ -155,45 +155,133 @@ export const addResourceHints = () => {
   });
 };
 
+// Advanced image optimization with WebP support
+export const optimizeImageDelivery = () => {
+  // Convert images to WebP format when supported
+  const images = document.querySelectorAll('img[src$=".jpg"], img[src$=".jpeg"], img[src$=".png"]');
+  
+  images.forEach(img => {
+    const image = img as HTMLImageElement;
+    const originalSrc = image.src;
+    
+    // Check WebP support
+    const canvas = document.createElement('canvas');
+    const webpSupported = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    
+    if (webpSupported && !originalSrc.includes('.webp')) {
+      // Try to load WebP version
+      const webpSrc = originalSrc.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+      
+      const webpImage = new Image();
+      webpImage.onload = () => {
+        image.src = webpSrc;
+        image.setAttribute('data-optimized', 'webp');
+      };
+      webpImage.onerror = () => {
+        // Keep original if WebP fails
+        console.log('WebP fallback for:', originalSrc);
+      };
+      webpImage.src = webpSrc;
+    }
+  });
+};
+
+// Implement resource prioritization
+export const prioritizeResources = () => {
+  // Critical resources (above-the-fold)
+  const criticalSelectors = [
+    'img[src*="hero"]',
+    'img[src*="logo"]',
+    '.hero img',
+    '.navigation img'
+  ];
+
+  criticalSelectors.forEach(selector => {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => {
+      if ('fetchPriority' in el) {
+        (el as any).fetchPriority = 'high';
+      }
+      if ('loading' in el) {
+        (el as any).loading = 'eager';
+      }
+    });
+  });
+
+  // Deprioritize below-the-fold images
+  const belowFoldImages = document.querySelectorAll('img:not(.hero img):not(.navigation img)');
+  belowFoldImages.forEach(img => {
+    if ('fetchPriority' in img) {
+      (img as any).fetchPriority = 'low';
+    }
+    if ('loading' in img && !(img as HTMLImageElement).src.includes('hero')) {
+      (img as any).loading = 'lazy';
+    }
+  });
+};
+
 // Initialize all performance optimizations
 export const initializePerformanceOptimizations = () => {
-  // Run immediately
+  // Run immediately for critical resources
   preloadCriticalResources();
   addResourceHints();
   inlineCriticalCSS();
+  prioritizeResources();
 
   // Run after DOM is loaded
   document.addEventListener('DOMContentLoaded', () => {
     optimizeImages();
+    optimizeImageDelivery();
     preventLayoutShift();
     optimizeInteractions();
+    monitorWebVitals();
   });
 
   // Run after page is fully loaded
   window.addEventListener('load', () => {
     registerServiceWorker();
+    
+    // Report initial performance metrics
+    setTimeout(() => {
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      const loadTime = navigation.loadEventEnd - navigation.fetchStart;
+      
+      console.log('📊 Page Load Complete:', Math.round(loadTime) + 'ms');
+      
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'page_load_complete', {
+          load_time: Math.round(loadTime),
+          event_category: 'performance'
+        });
+      }
+    }, 100);
   });
 };
 
-// Web Vitals monitoring
+// Enhanced Web Vitals monitoring with detailed reporting
 export const monitorWebVitals = () => {
+  const metrics = { lcp: 0, cls: 0, fid: 0, inp: 0, ttfb: 0 };
+
   // Monitor LCP (Largest Contentful Paint)
-  const observer = new PerformanceObserver((list) => {
+  const lcpObserver = new PerformanceObserver((list) => {
     const entries = list.getEntries();
     const lastEntry = entries[entries.length - 1];
-    console.log('LCP:', lastEntry.startTime);
+    metrics.lcp = lastEntry.startTime;
     
-    // Send to analytics if > 2.5s
-    if (lastEntry.startTime > 2500) {
-      // gtag('event', 'web_vitals', {
-      //   name: 'LCP',
-      //   value: Math.round(lastEntry.startTime),
-      //   event_category: 'performance'
-      // });
+    const status = lastEntry.startTime <= 2500 ? '✅' : lastEntry.startTime <= 4000 ? '⚠️' : '❌';
+    console.log(`${status} LCP: ${Math.round(lastEntry.startTime)}ms`);
+    
+    // Report to analytics
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'web_vitals', {
+        metric_name: 'LCP',
+        metric_value: Math.round(lastEntry.startTime),
+        metric_rating: lastEntry.startTime <= 2500 ? 'good' : lastEntry.startTime <= 4000 ? 'needs_improvement' : 'poor',
+        event_category: 'performance'
+      });
     }
   });
-  
-  observer.observe({ entryTypes: ['largest-contentful-paint'] });
+  lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 
   // Monitor CLS (Cumulative Layout Shift)
   let clsValue = 0;
@@ -203,13 +291,86 @@ export const monitorWebVitals = () => {
         clsValue += (entry as any).value;
       }
     }
+    metrics.cls = clsValue;
     
-    if (clsValue > 0.1) {
-      console.warn('CLS threshold exceeded:', clsValue);
+    const status = clsValue <= 0.1 ? '✅' : clsValue <= 0.25 ? '⚠️' : '❌';
+    console.log(`${status} CLS: ${clsValue.toFixed(3)}`);
+    
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'web_vitals', {
+        metric_name: 'CLS',
+        metric_value: Math.round(clsValue * 1000) / 1000,
+        metric_rating: clsValue <= 0.1 ? 'good' : clsValue <= 0.25 ? 'needs_improvement' : 'poor',
+        event_category: 'performance'
+      });
     }
   });
-  
   clsObserver.observe({ entryTypes: ['layout-shift'] });
+
+  // Monitor FID (First Input Delay) and INP (Interaction to Next Paint)
+  const interactionObserver = new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      if (entry.entryType === 'first-input') {
+        const fid = (entry as any).processingStart - entry.startTime;
+        metrics.fid = fid;
+        
+        const status = fid <= 100 ? '✅' : fid <= 300 ? '⚠️' : '❌';
+        console.log(`${status} FID: ${Math.round(fid)}ms`);
+        
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'web_vitals', {
+            metric_name: 'FID',
+            metric_value: Math.round(fid),
+            metric_rating: fid <= 100 ? 'good' : fid <= 300 ? 'needs_improvement' : 'poor',
+            event_category: 'performance'
+          });
+        }
+      }
+      
+      // Monitor INP (newer metric replacing FID)
+      if (entry.entryType === 'event' && (entry as any).interactionId) {
+        const duration = (entry as any).duration;
+        if (duration > 0) {
+          metrics.inp = Math.max(metrics.inp, duration);
+          
+          const status = duration <= 200 ? '✅' : duration <= 500 ? '⚠️' : '❌';
+          console.log(`${status} INP: ${Math.round(duration)}ms`);
+          
+          if (typeof gtag !== 'undefined') {
+            gtag('event', 'web_vitals', {
+              metric_name: 'INP',
+              metric_value: Math.round(duration),
+              metric_rating: duration <= 200 ? 'good' : duration <= 500 ? 'needs_improvement' : 'poor',
+              event_category: 'performance'
+            });
+          }
+        }
+      }
+    }
+  });
+  interactionObserver.observe({ entryTypes: ['first-input', 'event'] });
+
+  // Monitor TTFB (Time to First Byte)
+  const navigationEntries = performance.getEntriesByType('navigation');
+  if (navigationEntries.length > 0) {
+    const navEntry = navigationEntries[0] as PerformanceNavigationTiming;
+    const ttfb = navEntry.responseStart - navEntry.requestStart;
+    metrics.ttfb = ttfb;
+    
+    const status = ttfb <= 800 ? '✅' : ttfb <= 1800 ? '⚠️' : '❌';
+    console.log(`${status} TTFB: ${Math.round(ttfb)}ms`);
+    
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'web_vitals', {
+        metric_name: 'TTFB',
+        metric_value: Math.round(ttfb),
+        metric_rating: ttfb <= 800 ? 'good' : ttfb <= 1800 ? 'needs_improvement' : 'poor',
+        event_category: 'performance'
+      });
+    }
+  }
+
+  return metrics;
 };
 
 export default {

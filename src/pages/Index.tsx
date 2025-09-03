@@ -12,14 +12,30 @@ import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } fro
 import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/EnhancedSchemaMarkup";
 import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
+import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
+import { PerformanceDashboard } from "@/components/performance/PerformanceDashboard";
 const Index = () => {
+  const [showPerformanceDashboard, setShowPerformanceDashboard] = React.useState(false);
+  
+  // Initialize critical resources
+  useCriticalResources();
+  
   // Initialize performance optimizations
   React.useEffect(() => {
     initializePerformanceOptimizations();
+    
+    // Show performance dashboard in development
+    if (process.env.NODE_ENV === 'development') {
+      const timer = setTimeout(() => setShowPerformanceDashboard(true), 3000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Critical Resource Preloader */}
+      <PageResourcePreloader pageType="homepage" />
+      
       <SEOMetaTags
         title="BuildDesk - Construction Management Software for Small & Medium Contractors | Save 23% on Project Costs"
         description="Stop losing money on delays and overruns. BuildDesk delivers real-time job costing, mobile field management, and OSHA compliance without enterprise complexity. Join 500+ contractors saving $50K+ annually."
@@ -85,6 +101,9 @@ const Index = () => {
       <OrganizationSchema />
       <SoftwareSchema />
       <Footer />
+      
+      {/* Performance Dashboard for Development */}
+      <PerformanceDashboard isVisible={showPerformanceDashboard} />
     </div>
   );
 };
