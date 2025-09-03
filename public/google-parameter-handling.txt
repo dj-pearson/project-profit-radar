@@ -1,0 +1,21 @@
+# Google Search Console Parameter Handling Instructions
+# 
+# This file documents the URL parameters that should be ignored by Google
+# to prevent duplicate content issues.
+#
+# Add these parameters to Google Search Console > Settings > URL Parameters:
+#
+# Parameter: v
+# Purpose: Cache version control
+# Action: Ignore - Doesn't change page content
+#
+# Parameter: refreshed  
+# Purpose: Cache refresh indicator
+# Action: Ignore - Doesn't change page content
+#
+# Parameter: timestamp
+# Purpose: Cache busting
+# Action: Ignore - Doesn't change page content
+#
+# These parameters are used for cache management and don't affect page content.
+# They should be treated as the same page as the canonical URL without parameters.

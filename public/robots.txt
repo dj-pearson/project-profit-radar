@@ -6,6 +6,12 @@ Disallow: /auth/
 Disallow: /api/
 Disallow: /private/
 
+# Disallow URLs with version parameters to prevent duplicate indexing
+Disallow: /*?v=*
+Disallow: /*&v=*
+Disallow: /*?refreshed=*
+Disallow: /*&refreshed=*
+
 # Additional SEO directives
 Crawl-delay: 1
 

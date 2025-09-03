@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
+import { getCleanCanonicalUrl, initializeSEOUrlHandling } from '@/utils/seoUtils';
 
 interface SEOMetaTagsProps {
   title?: string;
@@ -37,7 +39,18 @@ export const SEOMetaTags: React.FC<SEOMetaTagsProps> = ({
   const fullTitle = title.includes('BuildDesk') ? title : `${title} | BuildDesk`;
   const finalOgTitle = ogTitle || fullTitle;
   const finalOgDescription = ogDescription || description;
-  const finalOgUrl = ogUrl || (canonicalUrl ? `${siteUrl}${canonicalUrl}` : siteUrl);
+  
+  // Clean canonical URL - strip all query parameters to prevent duplicate indexing
+  const cleanCanonicalUrl = canonicalUrl ? 
+    `${siteUrl}${canonicalUrl.split('?')[0]}` : 
+    getCleanCanonicalUrl() || siteUrl;
+  
+  const finalOgUrl = ogUrl || cleanCanonicalUrl;
+  
+  // Initialize SEO URL handling on component mount
+  useEffect(() => {
+    initializeSEOUrlHandling();
+  }, []);
   
   return (
     <Helmet>
@@ -48,11 +61,15 @@ export const SEOMetaTags: React.FC<SEOMetaTagsProps> = ({
       <meta name="author" content="BuildDesk" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       
-      {/* Canonical URL */}
-      {canonicalUrl && <link rel="canonical" href={`${siteUrl}${canonicalUrl}`} />}
+      {/* Canonical URL - always clean without parameters */}
+      <link rel="canonical" href={cleanCanonicalUrl} />
       
       {/* Robots Meta */}
       <meta name="robots" content={`${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`} />
+      
+      {/* Google-specific parameter handling */}
+      <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+      <meta name="google-site-verification" content="ignore-parameters:v,refreshed,timestamp" />
       
       {/* Open Graph Meta Tags */}
       <meta property="og:title" content={finalOgTitle} />
