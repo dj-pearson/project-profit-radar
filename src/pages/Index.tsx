@@ -14,11 +14,16 @@ import { OrganizationSchema, SoftwareSchema } from "@/components/EnhancedSchemaM
 import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import { PerformanceDashboard } from "@/components/performance/PerformanceDashboard";
+import { FontOptimization, useFontOptimization } from "@/components/performance/FontOptimization";
+import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
+import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 const Index = () => {
   const [showPerformanceDashboard, setShowPerformanceDashboard] = React.useState(false);
   
-  // Initialize critical resources
+  // Initialize all performance optimizations
   useCriticalResources();
+  useFontOptimization();
+  useCriticalCSS('homepage');
   
   // Initialize performance optimizations
   React.useEffect(() => {
@@ -32,9 +37,11 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Critical Resource Preloader */}
-      <PageResourcePreloader pageType="homepage" />
+    <MobilePerformanceProvider>
+      <div className="min-h-screen bg-background">
+        {/* Performance Optimizations */}
+        <FontOptimization />
+        <PageResourcePreloader pageType="homepage" />
       
       <SEOMetaTags
         title="BuildDesk - Construction Management Software for Small & Medium Contractors | Save 23% on Project Costs"
