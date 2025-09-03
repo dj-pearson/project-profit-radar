@@ -73,57 +73,6 @@ export default defineConfig(({ mode }) => ({
     target: "esnext",
     minify: "esbuild",
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Core React chunks
-          vendor: ["react", "react-dom"],
-
-          // UI Library chunks
-          ui: [
-            "@radix-ui/react-slot",
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-select",
-            "@radix-ui/react-popover",
-          ],
-          radix: [
-            "@radix-ui/react-accordion",
-            "@radix-ui/react-alert-dialog",
-            "@radix-ui/react-tabs",
-            "@radix-ui/react-toast",
-            "@radix-ui/react-tooltip",
-          ],
-
-          // Utility chunks
-          utils: ["clsx", "tailwind-merge", "class-variance-authority"],
-
-          // Feature-specific chunks
-          forms: ["react-hook-form", "@hookform/resolvers", "zod"],
-          router: ["react-router-dom"],
-          supabase: ["@supabase/supabase-js"],
-          charts: ["recharts"],
-          pdf: ["jspdf", "jspdf-autotable"],
-          excel: ["xlsx"],
-          query: ["@tanstack/react-query"],
-
-          // Mobile-specific chunks
-          pwa: [
-            "@/hooks/usePWA",
-            "@/components/PWAInstallPrompt",
-            "@/components/OfflineIndicator",
-          ],
-          performance: [
-            "@/components/performance/LazyComponents",
-            "@/hooks/usePerformanceMonitor",
-          ],
-        },
-        chunkFileNames: "assets/[name]-[hash].js",
-        entryFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash].[ext]",
-      },
-      // Do not externalize runtime deps; let Vite bundle everything to avoid unresolved module specifiers in the browser
-    },
     chunkSizeWarningLimit: 500, // Further reduced for optimal loading
     reportCompressedSize: true,
     emptyOutDir: true,
@@ -132,14 +81,9 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     assetsInlineLimit: 8192, // Inline assets up to 8KB
     
-    // Advanced minification options
-    minify: 'esbuild',
-    
     // Performance optimizations
     rollupOptions: {
-      ...rollupOptions,
       output: {
-        ...rollupOptions.output,
         // More granular chunking for better caching
         manualChunks: {
           // Core framework
