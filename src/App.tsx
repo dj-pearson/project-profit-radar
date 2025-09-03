@@ -113,6 +113,7 @@ import PlumbingContractorSoftware from "./pages/PlumbingContractorSoftware";
 import HVACContractorSoftware from "./pages/HVACContractorSoftware";
 import ElectricalContractorSoftware from "./pages/ElectricalContractorSoftware";
 import JobCostingSoftware from "./pages/JobCostingSoftware";
+import JobCostingSoftwareDetailed from "./pages/JobCostingSoftwareDetailed";
 import ConstructionManagementSoftwarePage from "./pages/ConstructionManagementSoftwarePage";
 import CommercialContractors from "./pages/CommercialContractors";
 import ResidentialContractors from "./pages/ResidentialContractors";
@@ -167,7 +168,8 @@ const App = () => {
               <Route path="/plumbing-contractor-software" element={<PlumbingContractorSoftware />} />
               <Route path="/hvac-contractor-software" element={<HVACContractorSoftware />} />
               <Route path="/electrical-contractor-software" element={<ElectricalContractorSoftware />} />
-              <Route path="/job-costing-software" element={<JobCostingSoftware />} />
+              <Route path="/job-costing-software" element={<JobCostingSoftwareDetailed />} />
+              <Route path="/job-costing-software-simple" element={<JobCostingSoftware />} />
               <Route path="/construction-management-software" element={<ConstructionManagementSoftwarePage />} />
               <Route path="/commercial-contractors" element={<CommercialContractors />} />
               <Route path="/residential-contractors" element={<ResidentialContractors />} />
