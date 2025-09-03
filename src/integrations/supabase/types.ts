@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1002,6 +1002,7 @@ export type Database = {
       automated_social_posts_config: {
         Row: {
           auto_schedule: boolean | null
+          blog_webhook_url: string | null
           company_id: string
           content_types: string[] | null
           created_at: string
@@ -1015,6 +1016,7 @@ export type Database = {
         }
         Insert: {
           auto_schedule?: boolean | null
+          blog_webhook_url?: string | null
           company_id: string
           content_types?: string[] | null
           created_at?: string
@@ -1028,6 +1030,7 @@ export type Database = {
         }
         Update: {
           auto_schedule?: boolean | null
+          blog_webhook_url?: string | null
           company_id?: string
           content_types?: string[] | null
           created_at?: string
@@ -13065,6 +13068,76 @@ export type Database = {
           },
         ]
       }
+      project_milestones: {
+        Row: {
+          actual_date: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_critical: boolean | null
+          milestone_type: string | null
+          name: string
+          project_id: string
+          status: string | null
+          target_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          actual_date?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_critical?: boolean | null
+          milestone_type?: string | null
+          name: string
+          project_id: string
+          status?: string | null
+          target_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          actual_date?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_critical?: boolean | null
+          milestone_type?: string | null
+          name?: string
+          project_id?: string
+          status?: string | null
+          target_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_phases: {
         Row: {
           actual_cost: number | null
@@ -14670,6 +14743,57 @@ export type Database = {
             columns: ["config_id"]
             isOneToOne: false
             referencedRelation: "resource_optimization_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfi_responses: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_final_response: boolean
+          responded_by: string
+          response_date: string
+          response_text: string
+          rfi_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_final_response?: boolean
+          responded_by: string
+          response_date?: string
+          response_text: string
+          rfi_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_final_response?: boolean
+          responded_by?: string
+          response_date?: string
+          response_text?: string
+          rfi_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfi_responses_responded_by_fkey"
+            columns: ["responded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfi_responses_rfi_id_fkey"
+            columns: ["rfi_id"]
+            isOneToOne: false
+            referencedRelation: "rfis"
             referencedColumns: ["id"]
           },
         ]
@@ -17118,6 +17242,54 @@ export type Database = {
           },
         ]
       }
+      submittal_reviews: {
+        Row: {
+          comments: string | null
+          company_id: string
+          created_at: string
+          id: string
+          review_status: string
+          reviewer_id: string
+          submittal_id: string
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          review_status: string
+          reviewer_id: string
+          submittal_id: string
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          review_status?: string
+          reviewer_id?: string
+          submittal_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submittal_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submittal_reviews_submittal_id_fkey"
+            columns: ["submittal_id"]
+            isOneToOne: false
+            referencedRelation: "submittals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submittals: {
         Row: {
           approved_date: string | null
@@ -17614,6 +17786,57 @@ export type Database = {
           },
         ]
       }
+      task_dependencies: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          dependency_type: string
+          id: string
+          is_active: boolean | null
+          lag_days: number | null
+          predecessor_task_id: string
+          successor_task_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          dependency_type?: string
+          id?: string
+          is_active?: boolean | null
+          lag_days?: number | null
+          predecessor_task_id: string
+          successor_task_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          dependency_type?: string
+          id?: string
+          is_active?: boolean | null
+          lag_days?: number | null
+          predecessor_task_id?: string
+          successor_task_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_predecessor_task_id_fkey"
+            columns: ["predecessor_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_successor_task_id_fkey"
+            columns: ["successor_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_notifications: {
         Row: {
           created_at: string | null
@@ -17642,6 +17865,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_resource_allocations: {
+        Row: {
+          allocation_percentage: number | null
+          company_id: string
+          cost_per_unit: number | null
+          created_at: string | null
+          end_date: string | null
+          id: string
+          resource_id: string | null
+          resource_name: string
+          resource_type: string
+          start_date: string | null
+          task_id: string
+          total_units: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allocation_percentage?: number | null
+          company_id: string
+          cost_per_unit?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_name: string
+          resource_type: string
+          start_date?: string | null
+          task_id: string
+          total_units?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allocation_percentage?: number | null
+          company_id?: string
+          cost_per_unit?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          resource_id?: string | null
+          resource_name?: string
+          resource_type?: string
+          start_date?: string | null
+          task_id?: string
+          total_units?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_resource_allocations_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
@@ -17793,12 +18072,19 @@ export type Database = {
           dependencies: string[] | null
           description: string | null
           due_date: string | null
+          duration_days: number | null
+          end_date: string | null
           estimated_hours: number | null
           id: string
+          is_critical_path: boolean | null
+          is_milestone: boolean | null
+          milestone_type: string | null
           name: string
           phase_id: string | null
           priority: string | null
           project_id: string
+          resource_requirements: Json | null
+          start_date: string | null
           status: string | null
           tags: string[] | null
           updated_at: string
@@ -17814,12 +18100,19 @@ export type Database = {
           dependencies?: string[] | null
           description?: string | null
           due_date?: string | null
+          duration_days?: number | null
+          end_date?: string | null
           estimated_hours?: number | null
           id?: string
+          is_critical_path?: boolean | null
+          is_milestone?: boolean | null
+          milestone_type?: string | null
           name: string
           phase_id?: string | null
           priority?: string | null
           project_id: string
+          resource_requirements?: Json | null
+          start_date?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -17835,12 +18128,19 @@ export type Database = {
           dependencies?: string[] | null
           description?: string | null
           due_date?: string | null
+          duration_days?: number | null
+          end_date?: string | null
           estimated_hours?: number | null
           id?: string
+          is_critical_path?: boolean | null
+          is_milestone?: boolean | null
+          milestone_type?: string | null
           name?: string
           phase_id?: string | null
           priority?: string | null
           project_id?: string
+          resource_requirements?: Json | null
+          start_date?: string | null
           status?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -19284,15 +19584,19 @@ export type Database = {
     Functions: {
       add_subscriber_to_funnel: {
         Args:
-          | { p_email: string; p_funnel_id: string; p_source?: string }
           | {
-              p_funnel_id: string
               p_email: string
               p_first_name?: string
+              p_funnel_id: string
               p_last_name?: string
               p_source?: string
             }
+          | { p_email: string; p_funnel_id: string; p_source?: string }
         Returns: string
+      }
+      calculate_critical_path: {
+        Args: { p_project_id: string }
+        Returns: Json
       }
       calculate_enhanced_lead_score: {
         Args: { p_lead_id: string }
@@ -19315,7 +19619,7 @@ export type Database = {
         Returns: number
       }
       calculate_project_risk_score: {
-        Args: { p_project_id: string; p_company_id: string }
+        Args: { p_company_id: string; p_project_id: string }
         Returns: Json
       }
       calculate_security_metrics: {
@@ -19324,30 +19628,30 @@ export type Database = {
       }
       check_equipment_availability: {
         Args:
-          | { p_equipment_id: string; p_start_date: string; p_end_date: string }
           | {
-              p_equipment_id: string
-              p_start_date: string
               p_end_date: string
-              p_requested_quantity?: number
+              p_equipment_id: string
               p_exclude_assignment_id?: string
+              p_requested_quantity?: number
+              p_start_date: string
             }
+          | { p_end_date: string; p_equipment_id: string; p_start_date: string }
         Returns: Json
       }
       check_project_requirements: {
-        Args: { p_project_id: string; p_contract_value: number }
+        Args: { p_contract_value: number; p_project_id: string }
         Returns: Json
       }
       check_rate_limit: {
         Args:
+          | { p_action: string; p_limit_per_hour?: number; p_user_id: string }
           | {
+              p_endpoint: string
               p_identifier: string
               p_identifier_type: string
-              p_endpoint: string
-              p_method: string
               p_ip_address?: unknown
+              p_method: string
             }
-          | { p_user_id: string; p_action: string; p_limit_per_hour?: number }
         Returns: boolean
       }
       check_type_exists: {
@@ -19361,10 +19665,10 @@ export type Database = {
       create_document_version: {
         Args:
           | {
+              p_checksum?: string
               p_document_id: string
               p_file_path: string
               p_file_size: number
-              p_checksum?: string
               p_version_notes?: string
             }
           | { p_document_id: string; p_version_data: Json }
@@ -19401,40 +19705,40 @@ export type Database = {
       get_active_promotions: {
         Args: Record<PropertyKey, never> | { p_display_location?: string }
         Returns: {
-          id: string
-          name: string
+          applies_to: string[]
           description: string
           discount_percentage: number
-          start_date: string
-          end_date: string
-          applies_to: string[]
           display_on: string[]
+          end_date: string
+          id: string
+          name: string
+          start_date: string
         }[]
       }
       get_equipment_schedule: {
         Args:
           | {
               p_company_id: string
+              p_end_date?: string
               p_equipment_id?: string
               p_start_date?: string
-              p_end_date?: string
             }
           | {
+              p_end_date?: string
               p_equipment_id: string
               p_start_date?: string
-              p_end_date?: string
             }
         Returns: {
-          equipment_id: string
-          equipment_name: string
-          assignment_id: string
-          project_id: string
-          project_name: string
           assigned_quantity: number
-          start_date: string
-          end_date: string
+          assignment_id: string
           assignment_status: string
           days_duration: number
+          end_date: string
+          equipment_id: string
+          equipment_name: string
+          project_id: string
+          project_name: string
+          start_date: string
         }[]
       }
       get_role_permissions: {
@@ -19461,17 +19765,17 @@ export type Database = {
       }
       handle_failed_login: {
         Args:
+          | { p_ip_address?: unknown; p_user_agent?: string; p_user_id: string }
           | { p_user_id: string }
-          | { p_user_id: string; p_ip_address?: unknown; p_user_agent?: string }
         Returns: undefined
       }
       increment_article_view_count: {
         Args:
           | {
               article_id_param: string
-              user_id_param?: string
               ip_address_param?: unknown
               user_agent_param?: string
+              user_id_param?: string
             }
           | { p_article_id: string }
         Returns: undefined
@@ -19484,94 +19788,94 @@ export type Database = {
         Args: {
           p_api_key_hash: string
           p_endpoint: string
-          p_method: string
           p_ip_address?: unknown
-          p_user_agent?: string
+          p_method: string
           p_processing_time_ms?: number
           p_response_status?: number
+          p_user_agent?: string
         }
         Returns: string
       }
       log_audit_event: {
         Args:
           | {
-              p_company_id: string
-              p_user_id: string
               p_action_type: string
-              p_resource_type: string
-              p_resource_id?: string
-              p_resource_name?: string
-              p_old_values?: Json
-              p_new_values?: Json
-              p_ip_address?: unknown
-              p_user_agent?: string
-              p_session_id?: string
-              p_risk_level?: string
+              p_company_id: string
               p_compliance_category?: string
               p_description?: string
+              p_ip_address?: unknown
               p_metadata?: Json
+              p_new_values?: Json
+              p_old_values?: Json
+              p_resource_id?: string
+              p_resource_name?: string
+              p_resource_type: string
+              p_risk_level?: string
+              p_session_id?: string
+              p_user_agent?: string
+              p_user_id: string
             }
           | {
-              p_table_name: string
+              p_new_values?: Json
+              p_old_values?: Json
               p_operation: string
               p_record_id: string
-              p_old_values?: Json
-              p_new_values?: Json
+              p_table_name: string
             }
         Returns: undefined
       }
       log_consent_withdrawal: {
-        Args: { p_user_id: string; p_consent_type: string }
+        Args: { p_consent_type: string; p_user_id: string }
         Returns: undefined
       }
       log_data_access: {
         Args:
           | {
-              p_company_id: string
-              p_user_id: string
-              p_data_type: string
-              p_data_classification: string
-              p_resource_id: string
-              p_resource_name?: string
               p_access_method?: string
               p_access_purpose?: string
+              p_company_id: string
+              p_data_classification: string
+              p_data_type: string
               p_ip_address?: unknown
-              p_user_agent?: string
-              p_session_id?: string
               p_lawful_basis?: string
+              p_resource_id: string
+              p_resource_name?: string
+              p_session_id?: string
+              p_user_agent?: string
+              p_user_id: string
             }
-          | { p_table_name: string; p_record_id: string; p_access_type: string }
+          | { p_access_type: string; p_record_id: string; p_table_name: string }
         Returns: undefined
       }
       log_security_event: {
         Args:
-          | { p_event_type: string; p_details?: Json }
           | {
-              p_user_id: string
-              p_event_type: string
-              p_ip_address?: unknown
-              p_user_agent?: string
-              p_details?: Json
-            }
-          | {
-              p_user_id: string
-              p_event_type: string
-              p_severity?: string
               p_description?: string
+              p_event_type: string
               p_ip_address?: unknown
-              p_user_agent?: string
               p_location?: string
               p_metadata?: Json
+              p_severity?: string
+              p_user_agent?: string
+              p_user_id: string
+            }
+          | { p_details?: Json; p_event_type: string }
+          | {
+              p_details?: Json
+              p_event_type: string
+              p_ip_address?: unknown
+              p_user_agent?: string
+              p_user_id: string
             }
         Returns: string
       }
       log_sensitive_data_access: {
         Args: {
-          p_company_id: string
-          p_user_id: string
-          p_resource_type: string
-          p_resource_id: string
           p_access_type?: string
+          p_company_id: string
+          p_resource_id: string
+          p_resource_type: string
+          p_user_id: string
         }
         Returns: undefined
       }
@@ -19585,29 +19889,29 @@ export type Database = {
       }
       reset_failed_attempts: {
         Args:
+          | { p_ip_address?: unknown; p_user_agent?: string; p_user_id: string }
           | { p_user_id: string }
-          | { p_user_id: string; p_ip_address?: unknown; p_user_agent?: string }
         Returns: undefined
       }
       trigger_security_alert: {
         Args:
-          | { p_alert_type: string; p_severity?: string; p_details?: Json }
           | {
-              p_company_id: string
+              p_affected_resources?: Json
               p_alert_type: string
-              p_severity: string
-              p_title: string
+              p_company_id: string
               p_description?: string
               p_event_data?: Json
-              p_affected_resources?: Json
+              p_severity: string
+              p_title: string
             }
+          | { p_alert_type: string; p_details?: Json; p_severity?: string }
         Returns: string
       }
       validate_api_permission: {
         Args: {
           p_api_key_hash: string
-          p_permission: string
           p_company_id?: string
+          p_permission: string
         }
         Returns: boolean
       }
@@ -19615,10 +19919,10 @@ export type Database = {
         Args:
           | {
               p_content: string
-              p_platform: Database["public"]["Enums"]["social_platform"]
               p_media_urls?: Json
+              p_platform: Database["public"]["Enums"]["social_platform"]
             }
-          | { p_post_content: string; p_platform: string }
+          | { p_platform: string; p_post_content: string }
         Returns: Json
       }
     }
