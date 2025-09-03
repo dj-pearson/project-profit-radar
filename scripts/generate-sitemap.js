@@ -47,12 +47,20 @@ function generateSitemap() {
     { path: '/resources/top-10-construction-platforms-august-2025', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/construction-management-software-comparison', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/small-business-construction-software-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-management-software-small-business-guide', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/construction-project-management-best-practices', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-roi-calculator-guide', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-scheduling-templates', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-cost-estimation-methods', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-compliance-checklist', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-crm-implementation-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/7-hidden-costs-of-poor-project-scheduling-and-how-to-avoid-them', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/construction-material-management-control-costs-reduce-waste-2025', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/7-hidden-costs-of-construction-project-delays-and-how-to-avoid-them', priority: '0.8', changefreq: 'monthly' },
+
+    // Knowledge base articles
+    { path: '/knowledge-base/article/getting-started-complete-setup-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/knowledge-base/article/mobile-app-field-guide', priority: '0.7', changefreq: 'monthly' },
   ];
 
   let sitemap = `<?xml version="1.0" encoding="UTF-8"?>

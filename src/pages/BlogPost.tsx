@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import InternalLinking from "@/components/InternalLinking";
 
 interface BlogPost {
   id: string;
@@ -117,6 +118,36 @@ const BlogPost = () => {
     );
   }
 
+  // Create structured data for the blog post
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": post.seo_description || post.excerpt || post.title,
+    "author": {
+      "@type": "Organization",
+      "name": "BuildDesk",
+      "url": "https://build-desk.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "BuildDesk",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://build-desk.com/BuildDeskLogo.png"
+      }
+    },
+    "datePublished": post.published_at || post.created_at,
+    "dateModified": post.updated_at || post.created_at,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://build-desk.com/resources/${post.slug}`
+    },
+    "image": post.featured_image_url || "https://build-desk.com/BuildDeskLogo.png",
+    "articleSection": "Construction Management",
+    "keywords": "construction management, construction software, project management, contractors"
+  };
+
   return (
     <>
       <SEOMetaTags
@@ -126,7 +157,8 @@ const BlogPost = () => {
         ogTitle={post.seo_title || post.title}
         ogDescription={post.seo_description || post.excerpt || undefined}
         ogImage={post.featured_image_url || undefined}
-        canonicalUrl={`https://builddesk.app/resources/${post.slug}`}
+        canonicalUrl={`/resources/${post.slug}`}
+        structuredData={structuredData}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
@@ -226,6 +258,12 @@ const BlogPost = () => {
                 </Link>
               </div>
             </div>
+
+            {/* Internal Linking for SEO */}
+            <InternalLinking 
+              currentPage={`/resources/${post.slug}`}
+              context="construction"
+            />
 
             {/* Related Articles Section */}
             <div className="mt-12 pt-8 border-t border-gray-200">
