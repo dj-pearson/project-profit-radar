@@ -119,6 +119,7 @@ import ResidentialContractors from "./pages/ResidentialContractors";
 import ProcoreAlternative from "./pages/ProcoreAlternative";
 import ProcoreAlternativeDetailed from "./pages/ProcoreAlternativeDetailed";
 import BuildertrendAlternative from "./pages/BuildertrendAlternative";
+import BuildertrendAlternativeDetailed from "./pages/BuildertrendAlternativeDetailed";
 import OSHAComplianceSoftware from "./pages/OSHAComplianceSoftware";
 import ConstructionFieldManagement from "./pages/ConstructionFieldManagement";
 
@@ -172,7 +173,8 @@ const App = () => {
               <Route path="/residential-contractors" element={<ResidentialContractors />} />
               <Route path="/procore-alternative" element={<ProcoreAlternativeDetailed />} />
             <Route path="/procore-alternative-simple" element={<ProcoreAlternative />} />
-              <Route path="/buildertrend-alternative" element={<BuildertrendAlternative />} />
+              <Route path="/buildertrend-alternative" element={<BuildertrendAlternativeDetailed />} />
+              <Route path="/buildertrend-alternative-simple" element={<BuildertrendAlternative />} />
               <Route path="/osha-compliance-software" element={<OSHAComplianceSoftware />} />
               <Route path="/construction-field-management" element={<ConstructionFieldManagement />} />
 
