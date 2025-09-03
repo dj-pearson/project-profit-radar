@@ -113,6 +113,7 @@ const Index = () => {
       {/* Performance Dashboard for Development */}
       <PerformanceDashboard isVisible={showPerformanceDashboard} />
     </div>
+    </MobilePerformanceProvider>
   );
 };
 
