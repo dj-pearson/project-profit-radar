@@ -14,7 +14,9 @@ export default function TradeHandoffPage() {
   return (
     <>
       <Helmet>
-        <title>Trade Handoff Coordination | Construction Management Platform</title>
+        <title>
+          Trade Handoff Coordination | Construction Management Platform
+        </title>
         <meta
           name="description"
           content="Manage trade transitions, quality checks, and coordination meetings for construction projects."
