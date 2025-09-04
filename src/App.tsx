@@ -81,6 +81,7 @@ import ServiceDispatch from "./pages/ServiceDispatch";
 import CalendarSync from "./pages/CalendarSync";
 import EquipmentManagement from "./pages/EquipmentManagement";
 import AutomatedWorkflows from "./pages/AutomatedWorkflows";
+import SmartClientUpdatesPage from "./pages/SmartClientUpdatesPage";
 import KnowledgeBase from "./pages/KnowledgeBase";
 
 // Admin area pages
@@ -167,22 +168,70 @@ const App = () => {
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/blog" element={<BlogPage />} />
-              <Route path="/plumbing-contractor-software" element={<PlumbingContractorSoftware />} />
-              <Route path="/hvac-contractor-software" element={<HVACContractorSoftware />} />
-              <Route path="/electrical-contractor-software" element={<ElectricalContractorSoftware />} />
-              <Route path="/job-costing-software" element={<JobCostingSoftwareDetailed />} />
-              <Route path="/job-costing-software-simple" element={<JobCostingSoftware />} />
-              <Route path="/construction-management-software" element={<ConstructionManagementSoftwarePage />} />
-              <Route path="/commercial-contractors" element={<CommercialContractors />} />
-              <Route path="/residential-contractors" element={<ResidentialContractors />} />
-              <Route path="/procore-alternative" element={<ProcoreAlternativeDetailed />} />
-            <Route path="/procore-alternative-simple" element={<ProcoreAlternative />} />
-              <Route path="/buildertrend-alternative" element={<BuildertrendAlternativeDetailed />} />
-              <Route path="/buildertrend-alternative-simple" element={<BuildertrendAlternative />} />
-              <Route path="/osha-compliance-software" element={<OSHAComplianceSoftware />} />
-              <Route path="/construction-field-management" element={<ConstructionFieldManagement />} />
-              <Route path="/construction-scheduling-software" element={<ConstructionSchedulingSoftware />} />
-              <Route path="/construction-project-management-software" element={<ConstructionProjectManagementSoftware />} />
+              <Route
+                path="/plumbing-contractor-software"
+                element={<PlumbingContractorSoftware />}
+              />
+              <Route
+                path="/hvac-contractor-software"
+                element={<HVACContractorSoftware />}
+              />
+              <Route
+                path="/electrical-contractor-software"
+                element={<ElectricalContractorSoftware />}
+              />
+              <Route
+                path="/job-costing-software"
+                element={<JobCostingSoftwareDetailed />}
+              />
+              <Route
+                path="/job-costing-software-simple"
+                element={<JobCostingSoftware />}
+              />
+              <Route
+                path="/construction-management-software"
+                element={<ConstructionManagementSoftwarePage />}
+              />
+              <Route
+                path="/commercial-contractors"
+                element={<CommercialContractors />}
+              />
+              <Route
+                path="/residential-contractors"
+                element={<ResidentialContractors />}
+              />
+              <Route
+                path="/procore-alternative"
+                element={<ProcoreAlternativeDetailed />}
+              />
+              <Route
+                path="/procore-alternative-simple"
+                element={<ProcoreAlternative />}
+              />
+              <Route
+                path="/buildertrend-alternative"
+                element={<BuildertrendAlternativeDetailed />}
+              />
+              <Route
+                path="/buildertrend-alternative-simple"
+                element={<BuildertrendAlternative />}
+              />
+              <Route
+                path="/osha-compliance-software"
+                element={<OSHAComplianceSoftware />}
+              />
+              <Route
+                path="/construction-field-management"
+                element={<ConstructionFieldManagement />}
+              />
+              <Route
+                path="/construction-scheduling-software"
+                element={<ConstructionSchedulingSoftware />}
+              />
+              <Route
+                path="/construction-project-management-software"
+                element={<ConstructionProjectManagementSoftware />}
+              />
 
               {/* Project area routes */}
               <Route path="/projects" element={<Projects />} />
@@ -261,6 +310,10 @@ const App = () => {
                 element={<EquipmentManagement />}
               />
               <Route path="/workflows" element={<AutomatedWorkflows />} />
+              <Route
+                path="/smart-client-updates"
+                element={<SmartClientUpdatesPage />}
+              />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
 
               {/* Admin area routes */}
