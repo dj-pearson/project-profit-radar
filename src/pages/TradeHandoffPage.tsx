@@ -1,6 +1,6 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { PageLayout } from "@/components/layout/PageLayout";
+import { PageLayout } from "@/components/layouts/PageLayout";
 import TradeHandoffManager from "@/components/workflow/TradeHandoffManager";
 import { useParams } from "react-router-dom";
 
