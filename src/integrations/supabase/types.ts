@@ -8023,6 +8023,57 @@ export type Database = {
         }
         Relationships: []
       }
+      inspection_schedules: {
+        Row: {
+          company_id: string
+          completion_date: string | null
+          created_at: string
+          id: string
+          inspection_type: string
+          inspector_contact: string | null
+          inspector_name: string | null
+          notes: string | null
+          project_id: string
+          required_documentation: Json | null
+          scheduled_date: string
+          status: string | null
+          task_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completion_date?: string | null
+          created_at?: string
+          id?: string
+          inspection_type: string
+          inspector_contact?: string | null
+          inspector_name?: string | null
+          notes?: string | null
+          project_id: string
+          required_documentation?: Json | null
+          scheduled_date: string
+          status?: string | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completion_date?: string | null
+          created_at?: string
+          id?: string
+          inspection_type?: string
+          inspector_contact?: string | null
+          inspector_name?: string | null
+          notes?: string | null
+          project_id?: string
+          required_documentation?: Json | null
+          scheduled_date?: string
+          status?: string | null
+          task_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       insurance_claims: {
         Row: {
           adjuster_company: string | null
@@ -8330,6 +8381,51 @@ export type Database = {
           last_sync_at?: string | null
           sync_enabled?: boolean
           sync_frequency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_optimizations: {
+        Row: {
+          applied_at: string | null
+          company_id: string
+          cost_savings_potential: number | null
+          created_at: string
+          current_stock_level: number | null
+          id: string
+          material_name: string
+          optimal_stock_level: number
+          optimization_recommendations: Json | null
+          project_id: string | null
+          reorder_point: number
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          company_id: string
+          cost_savings_potential?: number | null
+          created_at?: string
+          current_stock_level?: number | null
+          id?: string
+          material_name: string
+          optimal_stock_level: number
+          optimization_recommendations?: Json | null
+          project_id?: string | null
+          reorder_point: number
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          company_id?: string
+          cost_savings_potential?: number | null
+          created_at?: string
+          current_stock_level?: number | null
+          id?: string
+          material_name?: string
+          optimal_stock_level?: number
+          optimization_recommendations?: Json | null
+          project_id?: string | null
+          reorder_point?: number
           updated_at?: string
         }
         Relationships: []
@@ -10052,6 +10148,60 @@ export type Database = {
           },
         ]
       }
+      material_delivery_plans: {
+        Row: {
+          company_id: string
+          created_at: string
+          delivery_address: string | null
+          delivery_date: string
+          delivery_status: string | null
+          id: string
+          material_name: string
+          project_id: string | null
+          quantity: number
+          received_date: string | null
+          received_quantity: number | null
+          special_instructions: string | null
+          supplier_name: string
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          delivery_address?: string | null
+          delivery_date: string
+          delivery_status?: string | null
+          id?: string
+          material_name: string
+          project_id?: string | null
+          quantity: number
+          received_date?: string | null
+          received_quantity?: number | null
+          special_instructions?: string | null
+          supplier_name: string
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          delivery_address?: string | null
+          delivery_date?: string
+          delivery_status?: string | null
+          id?: string
+          material_name?: string
+          project_id?: string | null
+          quantity?: number
+          received_date?: string | null
+          received_quantity?: number | null
+          special_instructions?: string | null
+          supplier_name?: string
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       material_price_history: {
         Row: {
           change_percentage: number | null
@@ -10139,6 +10289,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      material_shortages: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_quantity: number | null
+          estimated_resolution_date: string | null
+          id: string
+          material_name: string
+          project_id: string | null
+          required_quantity: number
+          resolution_plan: string | null
+          severity: string | null
+          shortage_date: string
+          shortage_quantity: number
+          status: string | null
+          supplier_contact: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_quantity?: number | null
+          estimated_resolution_date?: string | null
+          id?: string
+          material_name: string
+          project_id?: string | null
+          required_quantity: number
+          resolution_plan?: string | null
+          severity?: string | null
+          shortage_date: string
+          shortage_quantity: number
+          status?: string | null
+          supplier_contact?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_quantity?: number | null
+          estimated_resolution_date?: string | null
+          id?: string
+          material_name?: string
+          project_id?: string | null
+          required_quantity?: number
+          resolution_plan?: string | null
+          severity?: string | null
+          shortage_date?: string
+          shortage_quantity?: number
+          status?: string | null
+          supplier_contact?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       material_suppliers: {
         Row: {
@@ -10247,6 +10451,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      material_usage_predictions: {
+        Row: {
+          accuracy_score: number | null
+          actual_usage: number | null
+          based_on_data: Json | null
+          company_id: string
+          confidence_level: number | null
+          created_at: string
+          id: string
+          material_name: string
+          predicted_usage: number
+          prediction_date: string
+          project_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy_score?: number | null
+          actual_usage?: number | null
+          based_on_data?: Json | null
+          company_id: string
+          confidence_level?: number | null
+          created_at?: string
+          id?: string
+          material_name: string
+          predicted_usage: number
+          prediction_date: string
+          project_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy_score?: number | null
+          actual_usage?: number | null
+          based_on_data?: Json | null
+          company_id?: string
+          confidence_level?: number | null
+          created_at?: string
+          id?: string
+          material_name?: string
+          predicted_usage?: number
+          prediction_date?: string
+          project_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       materials: {
         Row: {
@@ -15690,6 +15939,54 @@ export type Database = {
           },
         ]
       }
+      schedule_conflicts: {
+        Row: {
+          affected_tasks: Json | null
+          company_id: string
+          conflict_type: string
+          created_at: string
+          description: string
+          id: string
+          project_id: string
+          resolution_status: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          suggested_resolution: string | null
+          updated_at: string
+        }
+        Insert: {
+          affected_tasks?: Json | null
+          company_id: string
+          conflict_type: string
+          created_at?: string
+          description: string
+          id?: string
+          project_id: string
+          resolution_status?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          suggested_resolution?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affected_tasks?: Json | null
+          company_id?: string
+          conflict_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          project_id?: string
+          resolution_status?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          suggested_resolution?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -18503,6 +18800,198 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      timeline_optimizations: {
+        Row: {
+          applied_at: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          estimated_time_saved: number | null
+          id: string
+          optimization_type: string
+          optimizations_applied: Json | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          estimated_time_saved?: number | null
+          id?: string
+          optimization_type: string
+          optimizations_applied?: Json | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          estimated_time_saved?: number | null
+          id?: string
+          optimization_type?: string
+          optimizations_applied?: Json | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trade_conflicts: {
+        Row: {
+          affected_trades: Json | null
+          company_id: string
+          conflict_type: string
+          created_at: string
+          description: string
+          handoff_id: string | null
+          id: string
+          project_id: string
+          resolution_plan: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          affected_trades?: Json | null
+          company_id: string
+          conflict_type: string
+          created_at?: string
+          description: string
+          handoff_id?: string | null
+          id?: string
+          project_id: string
+          resolution_plan?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affected_trades?: Json | null
+          company_id?: string
+          conflict_type?: string
+          created_at?: string
+          description?: string
+          handoff_id?: string | null
+          id?: string
+          project_id?: string
+          resolution_plan?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trade_handoffs: {
+        Row: {
+          company_id: string
+          completion_percentage: number | null
+          created_at: string
+          from_trade: string
+          handoff_date: string
+          id: string
+          notes: string | null
+          project_id: string
+          quality_checklist: Json | null
+          quality_score: number | null
+          sign_off_from_trade: string | null
+          sign_off_to_trade: string | null
+          signed_off_at: string | null
+          status: string | null
+          to_trade: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completion_percentage?: number | null
+          created_at?: string
+          from_trade: string
+          handoff_date: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          quality_checklist?: Json | null
+          quality_score?: number | null
+          sign_off_from_trade?: string | null
+          sign_off_to_trade?: string | null
+          signed_off_at?: string | null
+          status?: string | null
+          to_trade: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completion_percentage?: number | null
+          created_at?: string
+          from_trade?: string
+          handoff_date?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          quality_checklist?: Json | null
+          quality_score?: number | null
+          sign_off_from_trade?: string | null
+          sign_off_to_trade?: string | null
+          signed_off_at?: string | null
+          status?: string | null
+          to_trade?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trade_performance_metrics: {
+        Row: {
+          company_id: string
+          created_at: string
+          handoff_efficiency_score: number | null
+          id: string
+          on_time_completion_rate: number | null
+          period_end: string
+          period_start: string
+          project_id: string
+          quality_average_score: number | null
+          total_handoffs_completed: number | null
+          trade_name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          handoff_efficiency_score?: number | null
+          id?: string
+          on_time_completion_rate?: number | null
+          period_end: string
+          period_start: string
+          project_id: string
+          quality_average_score?: number | null
+          total_handoffs_completed?: number | null
+          trade_name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          handoff_efficiency_score?: number | null
+          id?: string
+          on_time_completion_rate?: number | null
+          period_end?: string
+          period_start?: string
+          project_id?: string
+          quality_average_score?: number | null
+          total_handoffs_completed?: number | null
+          trade_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       training_certifications: {
         Row: {
