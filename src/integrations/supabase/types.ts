@@ -951,6 +951,86 @@ export type Database = {
           },
         ]
       }
+      automated_communications_log: {
+        Row: {
+          attachments: Json | null
+          automation_rule_id: string | null
+          company_id: string
+          delivery_method: string | null
+          delivery_status: string | null
+          error_message: string | null
+          id: string
+          message_content: string | null
+          metadata: Json | null
+          project_id: string | null
+          recipients: Json | null
+          sent_at: string | null
+          template_used: string | null
+          trigger_event: string
+        }
+        Insert: {
+          attachments?: Json | null
+          automation_rule_id?: string | null
+          company_id: string
+          delivery_method?: string | null
+          delivery_status?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          project_id?: string | null
+          recipients?: Json | null
+          sent_at?: string | null
+          template_used?: string | null
+          trigger_event: string
+        }
+        Update: {
+          attachments?: Json | null
+          automation_rule_id?: string | null
+          company_id?: string
+          delivery_method?: string | null
+          delivery_status?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          project_id?: string | null
+          recipients?: Json | null
+          sent_at?: string | null
+          template_used?: string | null
+          trigger_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automated_communications_log_automation_rule_id_fkey"
+            columns: ["automation_rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automated_communications_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automated_communications_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "automated_communications_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automated_social_content_library: {
         Row: {
           active: boolean | null
@@ -1101,6 +1181,90 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          last_triggered: string | null
+          project_id: string | null
+          recipient_rules: Json | null
+          template_id: string | null
+          trigger_conditions: Json | null
+          trigger_count: number | null
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered?: string | null
+          project_id?: string | null
+          recipient_rules?: Json | null
+          template_id?: string | null
+          trigger_conditions?: Json | null
+          trigger_count?: number | null
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered?: string | null
+          project_id?: string | null
+          recipient_rules?: Json | null
+          template_id?: string | null
+          trigger_conditions?: Json | null
+          trigger_count?: number | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "automation_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_automation_rules_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "communication_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -2607,11 +2771,14 @@ export type Database = {
       client_communications: {
         Row: {
           attachments: Json | null
+          auto_trigger_conditions: Json | null
+          automation_rules: Json | null
           client_contact_id: string | null
           communication_type: string | null
           company_id: string
           created_at: string
           id: string
+          is_automated: boolean | null
           message: string
           priority: string | null
           project_id: string | null
@@ -2626,11 +2793,14 @@ export type Database = {
         }
         Insert: {
           attachments?: Json | null
+          auto_trigger_conditions?: Json | null
+          automation_rules?: Json | null
           client_contact_id?: string | null
           communication_type?: string | null
           company_id: string
           created_at?: string
           id?: string
+          is_automated?: boolean | null
           message: string
           priority?: string | null
           project_id?: string | null
@@ -2645,11 +2815,14 @@ export type Database = {
         }
         Update: {
           attachments?: Json | null
+          auto_trigger_conditions?: Json | null
+          automation_rules?: Json | null
           client_contact_id?: string | null
           communication_type?: string | null
           company_id?: string
           created_at?: string
           id?: string
+          is_automated?: boolean | null
           message?: string
           priority?: string | null
           project_id?: string | null
