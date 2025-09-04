@@ -82,6 +82,8 @@ import CalendarSync from "./pages/CalendarSync";
 import EquipmentManagement from "./pages/EquipmentManagement";
 import AutomatedWorkflows from "./pages/AutomatedWorkflows";
 import SmartClientUpdatesPage from "./pages/SmartClientUpdatesPage";
+import MaterialOrchestrationPage from "./pages/MaterialOrchestrationPage";
+import TradeHandoffPage from "./pages/TradeHandoffPage";
 import KnowledgeBase from "./pages/KnowledgeBase";
 
 // Admin area pages
@@ -310,10 +312,18 @@ const App = () => {
                 element={<EquipmentManagement />}
               />
               <Route path="/workflows" element={<AutomatedWorkflows />} />
-              <Route
-                path="/smart-client-updates"
-                element={<SmartClientUpdatesPage />}
-              />
+                          <Route
+              path="/smart-client-updates"
+              element={<SmartClientUpdatesPage />}
+            />
+            <Route
+              path="/material-orchestration"
+              element={<MaterialOrchestrationPage />}
+            />
+            <Route
+              path="/trade-handoff"
+              element={<TradeHandoffPage />}
+            />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
 
               {/* Admin area routes */}

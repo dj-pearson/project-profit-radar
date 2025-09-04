@@ -364,6 +364,21 @@ const navigationCategories: NavigationCategory[] = [
         ],
       },
       {
+        title: "Material Orchestration",
+        url: "/material-orchestration",
+        icon: Package,
+        roles: [
+          "admin",
+          "superintendent",
+          "project_manager",
+          "foreman",
+          "field_supervisor",
+          "office_staff",
+          "root_admin",
+        ],
+        badge: "New",
+      },
+      {
         title: "Equipment Tracking",
         url: "/equipment",
         icon: Truck,
@@ -504,6 +519,13 @@ const navigationCategories: NavigationCategory[] = [
         url: "/workflows",
         icon: Settings,
         roles: ["admin", "project_manager", "root_admin"],
+      },
+      {
+        title: "Trade Handoff Coordination",
+        url: "/trade-handoff",
+        icon: Users,
+        roles: ["admin", "superintendent", "project_manager", "foreman", "root_admin"],
+        badge: "New",
       },
       {
         title: "Knowledge Base",
