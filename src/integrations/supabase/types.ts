@@ -470,6 +470,80 @@ export type Database = {
           },
         ]
       }
+      ai_defect_detection: {
+        Row: {
+          analysis_id: string
+          bounding_box: Json | null
+          company_id: string
+          confidence_score: number | null
+          cost_impact_estimate: number | null
+          created_at: string
+          defect_category: string
+          defect_type: string
+          description: string | null
+          id: string
+          location_details: Json | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity_level: string
+          status: string
+          suggested_action: string | null
+          timeline_impact_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_id: string
+          bounding_box?: Json | null
+          company_id: string
+          confidence_score?: number | null
+          cost_impact_estimate?: number | null
+          created_at?: string
+          defect_category: string
+          defect_type: string
+          description?: string | null
+          id?: string
+          location_details?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity_level?: string
+          status?: string
+          suggested_action?: string | null
+          timeline_impact_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_id?: string
+          bounding_box?: Json | null
+          company_id?: string
+          confidence_score?: number | null
+          cost_impact_estimate?: number | null
+          created_at?: string
+          defect_category?: string
+          defect_type?: string
+          description?: string | null
+          id?: string
+          location_details?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity_level?: string
+          status?: string
+          suggested_action?: string | null
+          timeline_impact_days?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_defect_detection_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "ai_quality_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_lead_scores: {
         Row: {
           behavioral_score: number | null
@@ -653,6 +727,261 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ai_progress_tracking: {
+        Row: {
+          analysis_id: string
+          company_id: string
+          completion_percentage: number | null
+          created_at: string
+          id: string
+          identified_activities: Json | null
+          milestone_status: Json | null
+          predicted_completion_date: string | null
+          previous_completion_percentage: number | null
+          productivity_metrics: Json | null
+          progress_change: number | null
+          project_id: string
+          quality_indicators: Json | null
+          risk_factors: Json | null
+          updated_at: string
+          variance_from_schedule: number | null
+          work_area: string
+        }
+        Insert: {
+          analysis_id: string
+          company_id: string
+          completion_percentage?: number | null
+          created_at?: string
+          id?: string
+          identified_activities?: Json | null
+          milestone_status?: Json | null
+          predicted_completion_date?: string | null
+          previous_completion_percentage?: number | null
+          productivity_metrics?: Json | null
+          progress_change?: number | null
+          project_id: string
+          quality_indicators?: Json | null
+          risk_factors?: Json | null
+          updated_at?: string
+          variance_from_schedule?: number | null
+          work_area: string
+        }
+        Update: {
+          analysis_id?: string
+          company_id?: string
+          completion_percentage?: number | null
+          created_at?: string
+          id?: string
+          identified_activities?: Json | null
+          milestone_status?: Json | null
+          predicted_completion_date?: string | null
+          previous_completion_percentage?: number | null
+          productivity_metrics?: Json | null
+          progress_change?: number | null
+          project_id?: string
+          quality_indicators?: Json | null
+          risk_factors?: Json | null
+          updated_at?: string
+          variance_from_schedule?: number | null
+          work_area?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_progress_tracking_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "ai_quality_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_quality_analysis: {
+        Row: {
+          ai_model_used: string
+          analysis_results: Json
+          analysis_type: string
+          company_id: string
+          confidence_score: number | null
+          created_at: string
+          detected_issues: Json
+          id: string
+          image_url: string
+          inspection_id: string | null
+          processing_time_ms: number | null
+          project_id: string
+          recommendations: Json
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_model_used?: string
+          analysis_results?: Json
+          analysis_type: string
+          company_id: string
+          confidence_score?: number | null
+          created_at?: string
+          detected_issues?: Json
+          id?: string
+          image_url: string
+          inspection_id?: string | null
+          processing_time_ms?: number | null
+          project_id: string
+          recommendations?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_model_used?: string
+          analysis_results?: Json
+          analysis_type?: string
+          company_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          detected_issues?: Json
+          id?: string
+          image_url?: string
+          inspection_id?: string | null
+          processing_time_ms?: number | null
+          project_id?: string
+          recommendations?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_quality_analysis_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "quality_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_quality_models: {
+        Row: {
+          accuracy_score: number | null
+          confidence_threshold: number | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          max_image_size_mb: number | null
+          model_name: string
+          model_parameters: Json | null
+          model_type: string
+          model_version: string
+          performance_metrics: Json | null
+          processing_time_avg_ms: number | null
+          supported_image_types: string[] | null
+          training_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          accuracy_score?: number | null
+          confidence_threshold?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          max_image_size_mb?: number | null
+          model_name: string
+          model_parameters?: Json | null
+          model_type: string
+          model_version: string
+          performance_metrics?: Json | null
+          processing_time_avg_ms?: number | null
+          supported_image_types?: string[] | null
+          training_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accuracy_score?: number | null
+          confidence_threshold?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          max_image_size_mb?: number | null
+          model_name?: string
+          model_parameters?: Json | null
+          model_type?: string
+          model_version?: string
+          performance_metrics?: Json | null
+          processing_time_avg_ms?: number | null
+          supported_image_types?: string[] | null
+          training_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_safety_analysis: {
+        Row: {
+          analysis_id: string
+          company_id: string
+          compliance_score: number | null
+          corrective_actions: Json | null
+          created_at: string
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          immediate_action_required: boolean | null
+          regulatory_standards: Json | null
+          risk_level: string
+          safety_category: string
+          safety_recommendations: Json | null
+          updated_at: string
+          violations_detected: Json | null
+        }
+        Insert: {
+          analysis_id: string
+          company_id: string
+          compliance_score?: number | null
+          corrective_actions?: Json | null
+          created_at?: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          immediate_action_required?: boolean | null
+          regulatory_standards?: Json | null
+          risk_level?: string
+          safety_category: string
+          safety_recommendations?: Json | null
+          updated_at?: string
+          violations_detected?: Json | null
+        }
+        Update: {
+          analysis_id?: string
+          company_id?: string
+          compliance_score?: number | null
+          corrective_actions?: Json | null
+          created_at?: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          immediate_action_required?: boolean | null
+          regulatory_standards?: Json | null
+          risk_level?: string
+          safety_category?: string
+          safety_recommendations?: Json | null
+          updated_at?: string
+          violations_detected?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_safety_analysis_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "ai_quality_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_settings: {
         Row: {
@@ -14358,6 +14687,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quality_metrics_summary: {
+        Row: {
+          analysis_date: string
+          average_quality_score: number | null
+          company_id: string
+          cost_impact_total: number | null
+          created_at: string
+          high_severity_defects: number | null
+          id: string
+          progress_variance: number | null
+          project_id: string
+          recommendations: Json | null
+          safety_compliance_score: number | null
+          time_impact_days: number | null
+          total_defects_detected: number | null
+          total_inspections: number | null
+          trends: Json | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_date?: string
+          average_quality_score?: number | null
+          company_id: string
+          cost_impact_total?: number | null
+          created_at?: string
+          high_severity_defects?: number | null
+          id?: string
+          progress_variance?: number | null
+          project_id: string
+          recommendations?: Json | null
+          safety_compliance_score?: number | null
+          time_impact_days?: number | null
+          total_defects_detected?: number | null
+          total_inspections?: number | null
+          trends?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_date?: string
+          average_quality_score?: number | null
+          company_id?: string
+          cost_impact_total?: number | null
+          created_at?: string
+          high_severity_defects?: number | null
+          id?: string
+          progress_variance?: number | null
+          project_id?: string
+          recommendations?: Json | null
+          safety_compliance_score?: number | null
+          time_impact_days?: number | null
+          total_defects_detected?: number | null
+          total_inspections?: number | null
+          trends?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       quickbooks_customers: {
         Row: {
