@@ -622,17 +622,17 @@ export const SmartClientUpdates: React.FC = () => {
               />
             </div>
 
-            <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-semibold mb-2">Available Variables</h4>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <code>{{`{{client_name}}`}}</code>
-                <code>{{`{{project_name}}`}}</code>
-                <code>{{`{{phase_name}}`}}</code>
-                <code>{{`{{completion_date}}`}}</code>
-                <code>{{`{{budget_status}}`}}</code>
-                <code>{{`{{timeline_status}}`}}</code>
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">Available Variables</h4>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <code>{'{{client_name}}'}</code>
+                  <code>{'{{project_name}}'}</code>
+                  <code>{'{{phase_name}}'}</code>
+                  <code>{'{{completion_date}}'}</code>
+                  <code>{'{{budget_status}}'}</code>
+                  <code>{'{{timeline_status}}'}</code>
+                </div>
               </div>
-            </div>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>

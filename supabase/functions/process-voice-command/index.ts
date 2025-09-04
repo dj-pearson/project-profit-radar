@@ -43,7 +43,7 @@ serve(async (req) => {
       throw new Error("No speech detected in audio");
     }
 
-    // Step 2: Extract intent and entities using OpenAI
+    // Step 2: Extract intent and entities using Claude
     const analysis = await analyzeCommand(transcript);
     console.log("Analysis:", analysis);
 
@@ -130,9 +130,9 @@ async function analyzeCommand(transcript: string): Promise<{
   entities: Record<string, any>;
   confidence: number;
 }> {
-  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!openaiApiKey) {
-    throw new Error("OpenAI API key not configured");
+  const claudeApiKey = Deno.env.get("CLAUDE_API_KEY");
+  if (!claudeApiKey) {
+    throw new Error("Claude API key not configured");
   }
 
   const systemPrompt = `You are a construction voice command analyzer. Analyze the given construction-related voice command and extract:
@@ -169,36 +169,36 @@ Examples:
 - "Report safety issue in area 3" → {"intent": "report_issue", "entities": {"issue_description": "safety issue", "location": "area 3", "severity": "medium"}, "confidence": 0.85}
 - "Order 50 sheets of drywall for tomorrow" → {"intent": "request_materials", "entities": {"material_name": "drywall", "quantity": 50, "delivery_date": "tomorrow"}, "confidence": 0.9}`;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${openaiApiKey}`,
+      "X-API-Key": claudeApiKey,
       "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01"
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 500,
+      system: systemPrompt,
       messages: [
-        { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Analyze this construction voice command: "${transcript}"`,
-        },
-      ],
-      temperature: 0.1,
-      max_tokens: 500,
+          content: `Analyze this construction voice command: "${transcript}"`
+        }
+      ]
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`OpenAI API error: ${error}`);
+    throw new Error(`Claude API error: ${error}`);
   }
 
   const result = await response.json();
-  const content = result.choices[0]?.message?.content;
+  const content = result.content[0]?.text;
 
   if (!content) {
-    throw new Error("No analysis result from OpenAI");
+    throw new Error("No analysis result from Claude");
   }
 
   try {
@@ -229,6 +229,7 @@ Examples:
   }
 }
 
-/* To deploy this function, you'll need to set the OPENAI_API_KEY secret:
+/* To deploy this function, you'll need to set the CLAUDE_API_KEY and OPENAI_API_KEY secrets:
+   supabase secrets set CLAUDE_API_KEY=your_claude_api_key_here
    supabase secrets set OPENAI_API_KEY=your_openai_api_key_here
 */

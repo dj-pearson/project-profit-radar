@@ -951,6 +951,86 @@ export type Database = {
           },
         ]
       }
+      automated_communications_log: {
+        Row: {
+          attachments: Json | null
+          automation_rule_id: string | null
+          company_id: string
+          delivery_method: string | null
+          delivery_status: string | null
+          error_message: string | null
+          id: string
+          message_content: string | null
+          metadata: Json | null
+          project_id: string | null
+          recipients: Json | null
+          sent_at: string | null
+          template_used: string | null
+          trigger_event: string
+        }
+        Insert: {
+          attachments?: Json | null
+          automation_rule_id?: string | null
+          company_id: string
+          delivery_method?: string | null
+          delivery_status?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          project_id?: string | null
+          recipients?: Json | null
+          sent_at?: string | null
+          template_used?: string | null
+          trigger_event: string
+        }
+        Update: {
+          attachments?: Json | null
+          automation_rule_id?: string | null
+          company_id?: string
+          delivery_method?: string | null
+          delivery_status?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          project_id?: string | null
+          recipients?: Json | null
+          sent_at?: string | null
+          template_used?: string | null
+          trigger_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automated_communications_log_automation_rule_id_fkey"
+            columns: ["automation_rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automated_communications_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automated_communications_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "automated_communications_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automated_social_content_library: {
         Row: {
           active: boolean | null
@@ -1101,6 +1181,90 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          last_triggered: string | null
+          project_id: string | null
+          recipient_rules: Json | null
+          template_id: string | null
+          trigger_conditions: Json | null
+          trigger_count: number | null
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered?: string | null
+          project_id?: string | null
+          recipient_rules?: Json | null
+          template_id?: string | null
+          trigger_conditions?: Json | null
+          trigger_count?: number | null
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered?: string | null
+          project_id?: string | null
+          recipient_rules?: Json | null
+          template_id?: string | null
+          trigger_conditions?: Json | null
+          trigger_count?: number | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "automation_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_automation_rules_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "communication_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -2607,11 +2771,14 @@ export type Database = {
       client_communications: {
         Row: {
           attachments: Json | null
+          auto_trigger_conditions: Json | null
+          automation_rules: Json | null
           client_contact_id: string | null
           communication_type: string | null
           company_id: string
           created_at: string
           id: string
+          is_automated: boolean | null
           message: string
           priority: string | null
           project_id: string | null
@@ -2626,11 +2793,14 @@ export type Database = {
         }
         Insert: {
           attachments?: Json | null
+          auto_trigger_conditions?: Json | null
+          automation_rules?: Json | null
           client_contact_id?: string | null
           communication_type?: string | null
           company_id: string
           created_at?: string
           id?: string
+          is_automated?: boolean | null
           message: string
           priority?: string | null
           project_id?: string | null
@@ -2645,11 +2815,14 @@ export type Database = {
         }
         Update: {
           attachments?: Json | null
+          auto_trigger_conditions?: Json | null
+          automation_rules?: Json | null
           client_contact_id?: string | null
           communication_type?: string | null
           company_id?: string
           created_at?: string
           id?: string
+          is_automated?: boolean | null
           message?: string
           priority?: string | null
           project_id?: string | null
@@ -18088,6 +18261,9 @@ export type Database = {
           status: string | null
           tags: string[] | null
           updated_at: string
+          weather_constraints: Json | null
+          weather_last_check: string | null
+          weather_sensitive: boolean | null
         }
         Insert: {
           actual_hours?: number | null
@@ -18116,6 +18292,9 @@ export type Database = {
           status?: string | null
           tags?: string[] | null
           updated_at?: string
+          weather_constraints?: Json | null
+          weather_last_check?: string | null
+          weather_sensitive?: boolean | null
         }
         Update: {
           actual_hours?: number | null
@@ -18144,6 +18323,9 @@ export type Database = {
           status?: string | null
           tags?: string[] | null
           updated_at?: string
+          weather_constraints?: Json | null
+          weather_last_check?: string | null
+          weather_sensitive?: boolean | null
         }
         Relationships: [
           {
@@ -19064,6 +19246,188 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weather_forecasts: {
+        Row: {
+          conditions: string | null
+          description: string | null
+          expires_at: string
+          fetched_at: string
+          forecast_data: Json | null
+          forecast_date: string
+          humidity: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          precipitation: number | null
+          project_id: string | null
+          temperature_max: number | null
+          temperature_min: number | null
+          wind_speed: number | null
+        }
+        Insert: {
+          conditions?: string | null
+          description?: string | null
+          expires_at?: string
+          fetched_at?: string
+          forecast_data?: Json | null
+          forecast_date: string
+          humidity?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          precipitation?: number | null
+          project_id?: string | null
+          temperature_max?: number | null
+          temperature_min?: number | null
+          wind_speed?: number | null
+        }
+        Update: {
+          conditions?: string | null
+          description?: string | null
+          expires_at?: string
+          fetched_at?: string
+          forecast_data?: Json | null
+          forecast_date?: string
+          humidity?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          precipitation?: number | null
+          project_id?: string | null
+          temperature_max?: number | null
+          temperature_min?: number | null
+          wind_speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_forecasts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "weather_forecasts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_schedule_adjustments: {
+        Row: {
+          adjusted_date: string
+          adjustment_impact_score: number | null
+          auto_adjusted: boolean | null
+          created_at: string
+          created_by: string | null
+          id: string
+          original_date: string
+          project_id: string
+          task_id: string | null
+          weather_data: Json | null
+          weather_reason: string
+        }
+        Insert: {
+          adjusted_date: string
+          adjustment_impact_score?: number | null
+          auto_adjusted?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          original_date: string
+          project_id: string
+          task_id?: string | null
+          weather_data?: Json | null
+          weather_reason: string
+        }
+        Update: {
+          adjusted_date?: string
+          adjustment_impact_score?: number | null
+          auto_adjusted?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          original_date?: string
+          project_id?: string
+          task_id?: string | null
+          weather_data?: Json | null
+          weather_reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_schedule_adjustments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_sensitive_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          humidity_threshold: number | null
+          id: string
+          is_active: boolean | null
+          max_temperature: number | null
+          max_wind_speed: number | null
+          min_temperature: number | null
+          precipitation_threshold: number | null
+          updated_at: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          humidity_threshold?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_temperature?: number | null
+          max_wind_speed?: number | null
+          min_temperature?: number | null
+          precipitation_threshold?: number | null
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          humidity_threshold?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_temperature?: number | null
+          max_wind_speed?: number | null
+          min_temperature?: number | null
+          precipitation_threshold?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       webhook_delivery_logs: {
         Row: {
