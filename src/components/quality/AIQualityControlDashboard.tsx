@@ -1,16 +1,35 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Camera,
   Upload,
@@ -31,14 +50,14 @@ import {
   Shield,
   Ruler,
   FileImage,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
-import { 
-  aiQualityControlService, 
-  QualityInspection, 
+import {
+  aiQualityControlService,
+  QualityInspection,
   QualityPhoto,
   QualityDefect,
-  QualityTrendAnalysis
+  QualityTrendAnalysis,
 } from "@/services/AIQualityControlService";
 import { toast } from "sonner";
 import { useDropzone } from "react-dropzone";
@@ -48,20 +67,24 @@ interface AIQualityControlDashboardProps {
   taskId?: string;
 }
 
-export default function AIQualityControlDashboard({ 
-  projectId, 
-  taskId 
+export default function AIQualityControlDashboard({
+  projectId,
+  taskId,
 }: AIQualityControlDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
-  
+
   // State for different data types
   const [inspections, setInspections] = useState<QualityInspection[]>([]);
-  const [selectedInspection, setSelectedInspection] = useState<QualityInspection | null>(null);
-  const [qualityTrends, setQualityTrends] = useState<QualityTrendAnalysis | null>(null);
+  const [selectedInspection, setSelectedInspection] =
+    useState<QualityInspection | null>(null);
+  const [qualityTrends, setQualityTrends] =
+    useState<QualityTrendAnalysis | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [inspectionType, setInspectionType] = useState<"routine" | "milestone" | "final" | "compliance">("routine");
-  
+  const [inspectionType, setInspectionType] = useState<
+    "routine" | "milestone" | "final" | "compliance"
+  >("routine");
+
   // Dialog states
   const [showInspectionDialog, setShowInspectionDialog] = useState(false);
   const [showPhotoViewer, setShowPhotoViewer] = useState(false);
@@ -78,13 +101,13 @@ export default function AIQualityControlDashboard({
     try {
       const [inspectionHistory, trendAnalysis] = await Promise.allSettled([
         aiQualityControlService.getInspectionHistory(projectId, 20),
-        aiQualityControlService.analyzeQualityTrends(projectId, 30)
+        aiQualityControlService.analyzeQualityTrends(projectId, 30),
       ]);
 
-      if (inspectionHistory.status === 'fulfilled') {
+      if (inspectionHistory.status === "fulfilled") {
         setInspections(inspectionHistory.value);
       }
-      if (trendAnalysis.status === 'fulfilled') {
+      if (trendAnalysis.status === "fulfilled") {
         setQualityTrends(trendAnalysis.value);
       }
     } catch (error) {
@@ -96,15 +119,15 @@ export default function AIQualityControlDashboard({
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    setUploadedFiles(prev => [...prev, ...acceptedFiles]);
+    setUploadedFiles((prev) => [...prev, ...acceptedFiles]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
+      "image/*": [".jpeg", ".jpg", ".png", ".webp"],
     },
-    multiple: true
+    multiple: true,
   });
 
   const handleStartInspection = async () => {
@@ -122,18 +145,26 @@ export default function AIQualityControlDashboard({
         inspectionType
       );
 
-      setInspections(prev => [inspection, ...prev]);
+      setInspections((prev) => [inspection, ...prev]);
       setUploadedFiles([]);
       setShowInspectionDialog(false);
-      
-      toast.success(`AI inspection completed with ${inspection.overall_score.toFixed(1)}% quality score`);
-      
+
+      toast.success(
+        `AI inspection completed with ${inspection.overall_score.toFixed(
+          1
+        )}% quality score`
+      );
+
       // Show critical defects warning if any
-      const criticalDefects = inspection.defects_detected.filter(d => d.severity === "critical");
+      const criticalDefects = inspection.defects_detected.filter(
+        (d) => d.severity === "critical"
+      );
       if (criticalDefects.length > 0) {
-        toast.error(`${criticalDefects.length} critical defect(s) detected - immediate attention required`);
+        toast.error(
+          `${criticalDefects.length} critical defect(s) detected - immediate attention required`
+        );
       }
-      
+
       await loadQualityData();
     } catch (error) {
       toast.error("Failed to perform quality inspection");
@@ -143,7 +174,7 @@ export default function AIQualityControlDashboard({
   };
 
   const removeUploadedFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const getScoreColor = (score: number) => {
@@ -163,28 +194,33 @@ export default function AIQualityControlDashboard({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "critical": return "destructive";
-      case "major": return "destructive";
-      case "moderate": return "secondary";
-      case "minor": return "outline";
-      default: return "outline";
+      case "critical":
+        return "destructive";
+      case "major":
+        return "destructive";
+      case "moderate":
+        return "secondary";
+      case "minor":
+        return "outline";
+      default:
+        return "outline";
     }
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     }).format(new Date(date));
   };
 
   const formatFileSize = (bytes: number) => {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    if (bytes === 0) return "0 Bytes";
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
   };
 
   return (
@@ -201,7 +237,10 @@ export default function AIQualityControlDashboard({
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={showInspectionDialog} onOpenChange={setShowInspectionDialog}>
+          <Dialog
+            open={showInspectionDialog}
+            onOpenChange={setShowInspectionDialog}
+          >
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Camera className="h-4 w-4" />
@@ -212,21 +251,31 @@ export default function AIQualityControlDashboard({
               <DialogHeader>
                 <DialogTitle>AI Quality Inspection</DialogTitle>
                 <DialogDescription>
-                  Upload photos for AI-powered quality analysis and defect detection
+                  Upload photos for AI-powered quality analysis and defect
+                  detection
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="inspection-type">Inspection Type</Label>
-                  <Select value={inspectionType} onValueChange={(value: any) => setInspectionType(value)}>
+                  <Select
+                    value={inspectionType}
+                    onValueChange={(value: any) => setInspectionType(value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="routine">Routine Inspection</SelectItem>
-                      <SelectItem value="milestone">Milestone Inspection</SelectItem>
+                      <SelectItem value="routine">
+                        Routine Inspection
+                      </SelectItem>
+                      <SelectItem value="milestone">
+                        Milestone Inspection
+                      </SelectItem>
                       <SelectItem value="final">Final Inspection</SelectItem>
-                      <SelectItem value="compliance">Compliance Check</SelectItem>
+                      <SelectItem value="compliance">
+                        Compliance Check
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -234,7 +283,9 @@ export default function AIQualityControlDashboard({
                 <div
                   {...getRootProps()}
                   className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                    isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+                    isDragActive
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/25"
                   }`}
                 >
                   <input {...getInputProps()} />
@@ -243,8 +294,12 @@ export default function AIQualityControlDashboard({
                     <p>Drop the photos here...</p>
                   ) : (
                     <div>
-                      <p className="text-lg font-medium">Drag & drop photos here</p>
-                      <p className="text-muted-foreground">or click to select files</p>
+                      <p className="text-lg font-medium">
+                        Drag & drop photos here
+                      </p>
+                      <p className="text-muted-foreground">
+                        or click to select files
+                      </p>
                       <p className="text-sm text-muted-foreground mt-2">
                         Supports JPEG, PNG, WebP formats
                       </p>
@@ -257,11 +312,16 @@ export default function AIQualityControlDashboard({
                     <Label>Uploaded Photos ({uploadedFiles.length})</Label>
                     <div className="max-h-40 overflow-y-auto space-y-2">
                       {uploadedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 border rounded">
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 border rounded"
+                        >
                           <div className="flex items-center gap-2">
                             <FileImage className="h-4 w-4" />
                             <div>
-                              <div className="text-sm font-medium">{file.name}</div>
+                              <div className="text-sm font-medium">
+                                {file.name}
+                              </div>
                               <div className="text-xs text-muted-foreground">
                                 {formatFileSize(file.size)}
                               </div>
@@ -281,13 +341,13 @@ export default function AIQualityControlDashboard({
                 )}
 
                 <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setShowInspectionDialog(false)}
                   >
                     Cancel
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleStartInspection}
                     disabled={loading || uploadedFiles.length === 0}
                     className="gap-2"
@@ -299,7 +359,11 @@ export default function AIQualityControlDashboard({
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" onClick={loadQualityData} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={loadQualityData}
+            disabled={loading}
+          >
             <BarChart3 className="h-4 w-4 mr-2" />
             Refresh Data
           </Button>
@@ -314,7 +378,11 @@ export default function AIQualityControlDashboard({
             <Target className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getScoreColor(qualityTrends?.average_score || 0)}`}>
+            <div
+              className={`text-2xl font-bold ${getScoreColor(
+                qualityTrends?.average_score || 0
+              )}`}
+            >
               {qualityTrends?.average_score.toFixed(1) || "0"}%
             </div>
             <p className="text-xs text-muted-foreground">
@@ -335,7 +403,9 @@ export default function AIQualityControlDashboard({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Inspections</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Inspections
+            </CardTitle>
             <Eye className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -348,18 +418,22 @@ export default function AIQualityControlDashboard({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Defects</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Defects
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {inspections.reduce((sum, inspection) => 
-                sum + inspection.defects_detected.filter(d => d.status === "open").length, 0
+              {inspections.reduce(
+                (sum, inspection) =>
+                  sum +
+                  inspection.defects_detected.filter((d) => d.status === "open")
+                    .length,
+                0
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Requiring attention
-            </p>
+            <p className="text-xs text-muted-foreground">Requiring attention</p>
           </CardContent>
         </Card>
 
@@ -370,10 +444,17 @@ export default function AIQualityControlDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {inspections.length > 0 
-                ? (inspections.reduce((sum, i) => sum + i.ai_analysis.overall_confidence, 0) / inspections.length * 100).toFixed(1)
-                : "0"
-              }%
+              {inspections.length > 0
+                ? (
+                    (inspections.reduce(
+                      (sum, i) => sum + i.ai_analysis.overall_confidence,
+                      0
+                    ) /
+                      inspections.length) *
+                    100
+                  ).toFixed(1)
+                : "0"}
+              %
             </div>
             <p className="text-xs text-muted-foreground">
               Average model confidence
@@ -402,21 +483,34 @@ export default function AIQualityControlDashboard({
                   <Eye className="h-5 w-5 text-blue-600" />
                   Recent AI Inspections
                 </CardTitle>
-                <CardDescription>Latest quality control analyses</CardDescription>
+                <CardDescription>
+                  Latest quality control analyses
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {inspections.slice(0, 5).map((inspection) => (
-                    <div key={inspection.inspection_id} className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50" onClick={() => setSelectedInspection(inspection)}>
+                    <div
+                      key={inspection.inspection_id}
+                      className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedInspection(inspection)}
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <Badge variant={getScoreBadgeVariant(inspection.overall_score)}>
+                          <Badge
+                            variant={getScoreBadgeVariant(
+                              inspection.overall_score
+                            )}
+                          >
                             {inspection.overall_score.toFixed(1)}%
                           </Badge>
-                          <span className="font-medium capitalize">{inspection.inspector_type} Inspection</span>
+                          <span className="font-medium capitalize">
+                            {inspection.inspector_type} Inspection
+                          </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {formatDate(inspection.inspection_date)} • {inspection.photos.length} photos
+                          {formatDate(inspection.inspection_date)} •{" "}
+                          {inspection.photos.length} photos
                         </div>
                       </div>
                       <div className="text-right">
@@ -445,37 +539,50 @@ export default function AIQualityControlDashboard({
                   <AlertTriangle className="h-5 w-5 text-destructive" />
                   Critical Quality Issues
                 </CardTitle>
-                <CardDescription>High-priority defects requiring immediate attention</CardDescription>
+                <CardDescription>
+                  High-priority defects requiring immediate attention
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {inspections
-                    .flatMap(i => i.defects_detected)
-                    .filter(d => d.severity === "critical" && d.status === "open")
+                    .flatMap((i) => i.defects_detected)
+                    .filter(
+                      (d) => d.severity === "critical" && d.status === "open"
+                    )
                     .slice(0, 5)
                     .map((defect) => (
-                    <div key={defect.defect_id} className="p-3 border rounded-lg border-l-4 border-l-destructive">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium text-destructive">{defect.defect_type}</div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {defect.description}
+                      <div
+                        key={defect.defect_id}
+                        className="p-3 border rounded-lg border-l-4 border-l-destructive"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium text-destructive">
+                              {defect.defect_type}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {defect.description}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Location: {defect.location}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Location: {defect.location}
-                          </div>
+                          <Badge variant="destructive">{defect.severity}</Badge>
                         </div>
-                        <Badge variant="destructive">
-                          {defect.severity}
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
-                  {inspections.flatMap(i => i.defects_detected).filter(d => d.severity === "critical" && d.status === "open").length === 0 && (
+                    ))}
+                  {inspections
+                    .flatMap((i) => i.defects_detected)
+                    .filter(
+                      (d) => d.severity === "critical" && d.status === "open"
+                    ).length === 0 && (
                     <div className="text-center py-4 text-green-600">
                       <CheckCircle2 className="h-12 w-12 mx-auto mb-2" />
                       <div className="font-medium">No Critical Issues</div>
-                      <div className="text-sm text-muted-foreground">Quality standards are being met</div>
+                      <div className="text-sm text-muted-foreground">
+                        Quality standards are being met
+                      </div>
                     </div>
                   )}
                 </div>
@@ -496,12 +603,28 @@ export default function AIQualityControlDashboard({
             <CardContent>
               <div className="space-y-4">
                 {inspections.map((inspection) => (
-                  <Card key={inspection.inspection_id} className="border-l-4" style={{borderLeftColor: inspection.overall_score >= 80 ? '#22c55e' : inspection.overall_score >= 60 ? '#f59e0b' : '#ef4444'}}>
+                  <Card
+                    key={inspection.inspection_id}
+                    className="border-l-4"
+                    style={{
+                      borderLeftColor:
+                        inspection.overall_score >= 80
+                          ? "#22c55e"
+                          : inspection.overall_score >= 60
+                          ? "#f59e0b"
+                          : "#ef4444",
+                    }}
+                  >
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant={getScoreBadgeVariant(inspection.overall_score)} className="text-lg px-3 py-1">
+                            <Badge
+                              variant={getScoreBadgeVariant(
+                                inspection.overall_score
+                              )}
+                              className="text-lg px-3 py-1"
+                            >
                               {inspection.overall_score.toFixed(1)}%
                             </Badge>
                             <Badge variant="outline" className="capitalize">
@@ -512,7 +635,8 @@ export default function AIQualityControlDashboard({
                             </Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {formatDate(inspection.inspection_date)} • AI Model: {inspection.ai_analysis.ai_model_version}
+                            {formatDate(inspection.inspection_date)} • AI Model:{" "}
+                            {inspection.ai_analysis.ai_model_version}
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -529,26 +653,44 @@ export default function AIQualityControlDashboard({
 
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                         <div>
-                          <div className="text-sm font-medium">AI Confidence</div>
+                          <div className="text-sm font-medium">
+                            AI Confidence
+                          </div>
                           <div className="text-lg font-bold">
-                            {(inspection.ai_analysis.overall_confidence * 100).toFixed(1)}%
+                            {(
+                              inspection.ai_analysis.overall_confidence * 100
+                            ).toFixed(1)}
+                            %
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm font-medium">Defects Found</div>
+                          <div className="text-sm font-medium">
+                            Defects Found
+                          </div>
                           <div className="text-lg font-bold">
                             {inspection.defects_detected.length}
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm font-medium">Processing Time</div>
+                          <div className="text-sm font-medium">
+                            Processing Time
+                          </div>
                           <div className="text-lg font-bold">
-                            {(inspection.ai_analysis.processing_time_ms / 1000).toFixed(1)}s
+                            {(
+                              inspection.ai_analysis.processing_time_ms / 1000
+                            ).toFixed(1)}
+                            s
                           </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium">Status</div>
-                          <Badge variant={inspection.status === "completed" ? "default" : "secondary"}>
+                          <Badge
+                            variant={
+                              inspection.status === "completed"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
                             {inspection.status}
                           </Badge>
                         </div>
@@ -556,30 +698,56 @@ export default function AIQualityControlDashboard({
 
                       {inspection.defects_detected.length > 0 && (
                         <div className="bg-muted p-3 rounded">
-                          <div className="text-sm font-medium mb-2">Defects Summary</div>
+                          <div className="text-sm font-medium mb-2">
+                            Defects Summary
+                          </div>
                           <div className="grid grid-cols-4 gap-2 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Critical:</span>{" "}
+                              <span className="text-muted-foreground">
+                                Critical:
+                              </span>{" "}
                               <span className="font-medium text-destructive">
-                                {inspection.defects_detected.filter(d => d.severity === "critical").length}
+                                {
+                                  inspection.defects_detected.filter(
+                                    (d) => d.severity === "critical"
+                                  ).length
+                                }
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Major:</span>{" "}
+                              <span className="text-muted-foreground">
+                                Major:
+                              </span>{" "}
                               <span className="font-medium text-orange-600">
-                                {inspection.defects_detected.filter(d => d.severity === "major").length}
+                                {
+                                  inspection.defects_detected.filter(
+                                    (d) => d.severity === "major"
+                                  ).length
+                                }
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Moderate:</span>{" "}
+                              <span className="text-muted-foreground">
+                                Moderate:
+                              </span>{" "}
                               <span className="font-medium text-yellow-600">
-                                {inspection.defects_detected.filter(d => d.severity === "moderate").length}
+                                {
+                                  inspection.defects_detected.filter(
+                                    (d) => d.severity === "moderate"
+                                  ).length
+                                }
                               </span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Minor:</span>{" "}
+                              <span className="text-muted-foreground">
+                                Minor:
+                              </span>{" "}
                               <span className="font-medium text-green-600">
-                                {inspection.defects_detected.filter(d => d.severity === "minor").length}
+                                {
+                                  inspection.defects_detected.filter(
+                                    (d) => d.severity === "minor"
+                                  ).length
+                                }
                               </span>
                             </div>
                           </div>
@@ -592,9 +760,13 @@ export default function AIQualityControlDashboard({
                           <AlertTitle>AI Recommendations</AlertTitle>
                           <AlertDescription>
                             <ul className="list-disc list-inside space-y-1">
-                              {inspection.recommendations.slice(0, 3).map((rec, index) => (
-                                <li key={index} className="text-sm">{rec}</li>
-                              ))}
+                              {inspection.recommendations
+                                .slice(0, 3)
+                                .map((rec, index) => (
+                                  <li key={index} className="text-sm">
+                                    {rec}
+                                  </li>
+                                ))}
                             </ul>
                           </AlertDescription>
                         </Alert>
@@ -606,7 +778,9 @@ export default function AIQualityControlDashboard({
                   <div className="text-center py-8">
                     <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium">No Inspections Yet</h3>
-                    <p className="text-muted-foreground mb-4">Start your first AI quality inspection</p>
+                    <p className="text-muted-foreground mb-4">
+                      Start your first AI quality inspection
+                    </p>
                     <Button onClick={() => setShowInspectionDialog(true)}>
                       <Camera className="h-4 w-4 mr-2" />
                       Start Inspection
@@ -629,68 +803,109 @@ export default function AIQualityControlDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {inspections.flatMap(inspection => 
-                  inspection.defects_detected.map(defect => ({
-                    ...defect,
-                    inspection_date: inspection.inspection_date,
-                    inspection_id: inspection.inspection_id
-                  }))
-                ).slice(0, 20).map((defect) => (
-                  <Card key={defect.defect_id}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant={getSeverityColor(defect.severity)}>
-                              {defect.severity}
-                            </Badge>
-                            <span className="font-semibold capitalize">{defect.defect_type}</span>
-                          </div>
-                          <p className="text-muted-foreground mb-2">{defect.description}</p>
-                          <div className="text-sm text-muted-foreground">
-                            Location: {defect.location} • Detected: {formatDate(defect.inspection_date)}
-                          </div>
-                        </div>
-                        <Badge variant={defect.status === "resolved" ? "default" : "secondary"}>
-                          {defect.status}
-                        </Badge>
-                      </div>
-
-                      {defect.remediation_plan && (
-                        <div className="bg-muted p-3 rounded mt-3">
-                          <div className="text-sm font-medium mb-2">Remediation Plan</div>
-                          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Estimated Cost:</span>{" "}
-                              <span className="font-medium">${defect.remediation_plan.estimated_cost}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Duration:</span>{" "}
-                              <span className="font-medium">{defect.remediation_plan.estimated_duration_hours}h</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Priority:</span>{" "}
-                              <Badge variant="outline" className="text-xs">
-                                {defect.remediation_plan.priority}
+                {inspections
+                  .flatMap((inspection) =>
+                    inspection.defects_detected.map((defect) => ({
+                      ...defect,
+                      inspection_date: inspection.inspection_date,
+                      inspection_id: inspection.inspection_id,
+                    }))
+                  )
+                  .slice(0, 20)
+                  .map((defect) => (
+                    <Card key={defect.defect_id}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge
+                                variant={getSeverityColor(defect.severity)}
+                              >
+                                {defect.severity}
                               </Badge>
+                              <span className="font-semibold capitalize">
+                                {defect.defect_type}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground mb-2">
+                              {defect.description}
+                            </p>
+                            <div className="text-sm text-muted-foreground">
+                              Location: {defect.location} • Detected:{" "}
+                              {formatDate(defect.inspection_date)}
                             </div>
                           </div>
-                          {defect.due_date && (
-                            <div className="text-sm mt-2">
-                              <span className="text-muted-foreground">Due Date:</span>{" "}
-                              <span className="font-medium">{new Date(defect.due_date).toLocaleDateString()}</span>
-                            </div>
-                          )}
+                          <Badge
+                            variant={
+                              defect.status === "resolved"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {defect.status}
+                          </Badge>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-                {inspections.flatMap(i => i.defects_detected).length === 0 && (
+
+                        {defect.remediation_plan && (
+                          <div className="bg-muted p-3 rounded mt-3">
+                            <div className="text-sm font-medium mb-2">
+                              Remediation Plan
+                            </div>
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Estimated Cost:
+                                </span>{" "}
+                                <span className="font-medium">
+                                  ${defect.remediation_plan.estimated_cost}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Duration:
+                                </span>{" "}
+                                <span className="font-medium">
+                                  {
+                                    defect.remediation_plan
+                                      .estimated_duration_hours
+                                  }
+                                  h
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Priority:
+                                </span>{" "}
+                                <Badge variant="outline" className="text-xs">
+                                  {defect.remediation_plan.priority}
+                                </Badge>
+                              </div>
+                            </div>
+                            {defect.due_date && (
+                              <div className="text-sm mt-2">
+                                <span className="text-muted-foreground">
+                                  Due Date:
+                                </span>{" "}
+                                <span className="font-medium">
+                                  {new Date(
+                                    defect.due_date
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                {inspections.flatMap((i) => i.defects_detected).length ===
+                  0 && (
                   <div className="text-center py-8">
                     <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
                     <h3 className="text-lg font-medium">No Defects Detected</h3>
-                    <p className="text-muted-foreground">Quality standards are being maintained</p>
+                    <p className="text-muted-foreground">
+                      Quality standards are being maintained
+                    </p>
                   </div>
                 )}
               </div>
@@ -711,21 +926,33 @@ export default function AIQualityControlDashboard({
               <CardContent>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                   <div className="text-center">
-                    <div className={`text-3xl font-bold ${getScoreColor(qualityTrends.average_score)}`}>
+                    <div
+                      className={`text-3xl font-bold ${getScoreColor(
+                        qualityTrends.average_score
+                      )}`}
+                    >
                       {qualityTrends.average_score.toFixed(1)}%
                     </div>
-                    <div className="text-sm text-muted-foreground">Average Quality Score</div>
+                    <div className="text-sm text-muted-foreground">
+                      Average Quality Score
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold">
                       {qualityTrends.total_inspections}
                     </div>
-                    <div className="text-sm text-muted-foreground">Total Inspections</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Inspections
+                    </div>
                   </div>
                   <div className="text-center">
-                    <div className={`text-3xl font-bold flex items-center justify-center gap-2 ${
-                      qualityTrends.quality_improvement ? "text-green-600" : "text-red-600"
-                    }`}>
+                    <div
+                      className={`text-3xl font-bold flex items-center justify-center gap-2 ${
+                        qualityTrends.quality_improvement
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
                       {qualityTrends.quality_improvement ? (
                         <TrendingUp className="h-8 w-8" />
                       ) : (
@@ -734,7 +961,9 @@ export default function AIQualityControlDashboard({
                       {Math.abs(qualityTrends.score_trend).toFixed(1)}%
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {qualityTrends.quality_improvement ? "Improving" : "Declining"}
+                      {qualityTrends.quality_improvement
+                        ? "Improving"
+                        : "Declining"}
                     </div>
                   </div>
                 </div>
@@ -748,28 +977,46 @@ export default function AIQualityControlDashboard({
                       <div className="text-2xl font-bold text-destructive">
                         {qualityTrends.defect_trend.critical_defects}
                       </div>
-                      <div className="text-sm text-muted-foreground">Critical Defects</div>
+                      <div className="text-sm text-muted-foreground">
+                        Critical Defects
+                      </div>
                     </div>
                     <div className="text-center p-4 border rounded">
                       <div className="text-2xl font-bold">
                         {qualityTrends.defect_trend.total_defects}
                       </div>
-                      <div className="text-sm text-muted-foreground">Total Defects</div>
+                      <div className="text-sm text-muted-foreground">
+                        Total Defects
+                      </div>
                     </div>
                     <div className="text-center p-4 border rounded">
                       <div className="text-2xl font-bold">
-                        {qualityTrends.defect_trend.average_defects_per_inspection.toFixed(1)}
+                        {qualityTrends.defect_trend.average_defects_per_inspection.toFixed(
+                          1
+                        )}
                       </div>
-                      <div className="text-sm text-muted-foreground">Avg per Inspection</div>
+                      <div className="text-sm text-muted-foreground">
+                        Avg per Inspection
+                      </div>
                     </div>
                     <div className="text-center p-4 border rounded">
-                      <div className={`text-2xl font-bold ${
-                        qualityTrends.defect_trend.defect_rate_trend <= 0 ? "text-green-600" : "text-red-600"
-                      }`}>
-                        {qualityTrends.defect_trend.defect_rate_trend > 0 ? "+" : ""}
-                        {qualityTrends.defect_trend.defect_rate_trend.toFixed(1)}
+                      <div
+                        className={`text-2xl font-bold ${
+                          qualityTrends.defect_trend.defect_rate_trend <= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {qualityTrends.defect_trend.defect_rate_trend > 0
+                          ? "+"
+                          : ""}
+                        {qualityTrends.defect_trend.defect_rate_trend.toFixed(
+                          1
+                        )}
                       </div>
-                      <div className="text-sm text-muted-foreground">Trend Rate</div>
+                      <div className="text-sm text-muted-foreground">
+                        Trend Rate
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -781,7 +1028,9 @@ export default function AIQualityControlDashboard({
                     <AlertDescription>
                       <ul className="list-disc list-inside space-y-1 mt-2">
                         {qualityTrends.recommendations.map((rec, index) => (
-                          <li key={index} className="text-sm">{rec}</li>
+                          <li key={index} className="text-sm">
+                            {rec}
+                          </li>
                         ))}
                       </ul>
                     </AlertDescription>
@@ -808,22 +1057,34 @@ export default function AIQualityControlDashboard({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
-                        <div className="font-medium">Defect Detection Model</div>
-                        <div className="text-sm text-muted-foreground">v2.1 - 92% accuracy</div>
+                        <div className="font-medium">
+                          Defect Detection Model
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          v2.1 - 92% accuracy
+                        </div>
                       </div>
                       <Badge variant="default">Active</Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
-                        <div className="font-medium">Quality Assessment Model</div>
-                        <div className="text-sm text-muted-foreground">v1.5 - 89% accuracy</div>
+                        <div className="font-medium">
+                          Quality Assessment Model
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          v1.5 - 89% accuracy
+                        </div>
                       </div>
                       <Badge variant="default">Active</Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 border rounded">
                       <div>
-                        <div className="font-medium">Measurement Extraction</div>
-                        <div className="text-sm text-muted-foreground">v3.0 - 94% accuracy</div>
+                        <div className="font-medium">
+                          Measurement Extraction
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          v3.0 - 94% accuracy
+                        </div>
                       </div>
                       <Badge variant="default">Active</Badge>
                     </div>
@@ -845,7 +1106,8 @@ export default function AIQualityControlDashboard({
                         <span className="text-sm">100%</span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Current: 80% - Only detections above this confidence will be reported
+                        Current: 80% - Only detections above this confidence
+                        will be reported
                       </p>
                     </div>
 
@@ -859,7 +1121,8 @@ export default function AIQualityControlDashboard({
                         <span className="text-sm">High</span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Current: High - More sensitive detection of critical issues
+                        Current: High - More sensitive detection of critical
+                        issues
                       </p>
                     </div>
                   </div>
@@ -872,22 +1135,32 @@ export default function AIQualityControlDashboard({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium">Critical Defect Alerts</div>
-                        <div className="text-sm text-muted-foreground">Immediate notifications for critical issues</div>
+                        <div className="font-medium">
+                          Critical Defect Alerts
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Immediate notifications for critical issues
+                        </div>
                       </div>
                       <Badge variant="default">Enabled</Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium">Low Confidence Warnings</div>
-                        <div className="text-sm text-muted-foreground">Alert when AI confidence is below threshold</div>
+                        <div className="font-medium">
+                          Low Confidence Warnings
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Alert when AI confidence is below threshold
+                        </div>
                       </div>
                       <Badge variant="secondary">Enabled</Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium">Daily Quality Reports</div>
-                        <div className="text-sm text-muted-foreground">Automated daily quality summaries</div>
+                        <div className="text-sm text-muted-foreground">
+                          Automated daily quality summaries
+                        </div>
                       </div>
                       <Badge variant="default">Enabled</Badge>
                     </div>
@@ -901,7 +1174,10 @@ export default function AIQualityControlDashboard({
 
       {/* Inspection Details Dialog */}
       {selectedInspection && (
-        <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
+        <Dialog
+          open={!!selectedInspection}
+          onOpenChange={() => setSelectedInspection(null)}
+        >
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Inspection Details</DialogTitle>
@@ -913,23 +1189,34 @@ export default function AIQualityControlDashboard({
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <div className="text-sm font-medium">Quality Score</div>
-                  <div className={`text-2xl font-bold ${getScoreColor(selectedInspection.overall_score)}`}>
+                  <div
+                    className={`text-2xl font-bold ${getScoreColor(
+                      selectedInspection.overall_score
+                    )}`}
+                  >
                     {selectedInspection.overall_score.toFixed(1)}%
                   </div>
                 </div>
                 <div>
                   <div className="text-sm font-medium">AI Confidence</div>
                   <div className="text-2xl font-bold">
-                    {(selectedInspection.ai_analysis.overall_confidence * 100).toFixed(1)}%
+                    {(
+                      selectedInspection.ai_analysis.overall_confidence * 100
+                    ).toFixed(1)}
+                    %
                   </div>
                 </div>
                 <div>
                   <div className="text-sm font-medium">Photos Analyzed</div>
-                  <div className="text-2xl font-bold">{selectedInspection.photos.length}</div>
+                  <div className="text-2xl font-bold">
+                    {selectedInspection.photos.length}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm font-medium">Defects Found</div>
-                  <div className="text-2xl font-bold">{selectedInspection.defects_detected.length}</div>
+                  <div className="text-2xl font-bold">
+                    {selectedInspection.defects_detected.length}
+                  </div>
                 </div>
               </div>
 
@@ -939,8 +1226,8 @@ export default function AIQualityControlDashboard({
                 <h4 className="font-semibold mb-3">Analysis Photos</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedInspection.photos.map((photo) => (
-                    <div 
-                      key={photo.photo_id} 
+                    <div
+                      key={photo.photo_id}
                       className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => {
                         setSelectedPhoto(photo);
@@ -952,10 +1239,15 @@ export default function AIQualityControlDashboard({
                       </div>
                       <div className="p-2">
                         <div className="text-sm font-medium">
-                          Confidence: {(photo.ai_analysis.confidence_score * 100).toFixed(1)}%
+                          Confidence:{" "}
+                          {(photo.ai_analysis.confidence_score * 100).toFixed(
+                            1
+                          )}
+                          %
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {photo.ai_analysis.defects_found.length} defects detected
+                          {photo.ai_analysis.defects_found.length} defects
+                          detected
                         </div>
                       </div>
                     </div>
@@ -970,10 +1262,17 @@ export default function AIQualityControlDashboard({
                     <h4 className="font-semibold mb-3">Detected Defects</h4>
                     <div className="space-y-2">
                       {selectedInspection.defects_detected.map((defect) => (
-                        <div key={defect.defect_id} className="flex items-center justify-between p-2 border rounded">
+                        <div
+                          key={defect.defect_id}
+                          className="flex items-center justify-between p-2 border rounded"
+                        >
                           <div>
-                            <span className="font-medium capitalize">{defect.defect_type}</span>
-                            <span className="text-sm text-muted-foreground ml-2">{defect.description}</span>
+                            <span className="font-medium capitalize">
+                              {defect.defect_type}
+                            </span>
+                            <span className="text-sm text-muted-foreground ml-2">
+                              {defect.description}
+                            </span>
                           </div>
                           <Badge variant={getSeverityColor(defect.severity)}>
                             {defect.severity}
@@ -992,7 +1291,9 @@ export default function AIQualityControlDashboard({
                     <h4 className="font-semibold mb-3">AI Recommendations</h4>
                     <ul className="list-disc list-inside space-y-1">
                       {selectedInspection.recommendations.map((rec, index) => (
-                        <li key={index} className="text-sm">{rec}</li>
+                        <li key={index} className="text-sm">
+                          {rec}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -1016,7 +1317,11 @@ export default function AIQualityControlDashboard({
                 <div className="ml-4">
                   <div className="font-medium">Photo Analysis</div>
                   <div className="text-sm text-muted-foreground">
-                    Confidence: {(selectedPhoto.ai_analysis.confidence_score * 100).toFixed(1)}%
+                    Confidence:{" "}
+                    {(selectedPhoto.ai_analysis.confidence_score * 100).toFixed(
+                      1
+                    )}
+                    %
                   </div>
                 </div>
               </div>
@@ -1025,17 +1330,26 @@ export default function AIQualityControlDashboard({
                 <div>
                   <h5 className="font-medium mb-2">Detected Objects</h5>
                   <div className="space-y-1">
-                    {selectedPhoto.ai_analysis.detected_objects.map((obj, index) => (
-                      <div key={index} className="text-sm">
-                        {obj.object_type} ({(obj.confidence * 100).toFixed(1)}%)
-                      </div>
-                    ))}
+                    {selectedPhoto.ai_analysis.detected_objects.map(
+                      (obj, index) => (
+                        <div key={index} className="text-sm">
+                          {obj.object_type} ({(obj.confidence * 100).toFixed(1)}
+                          %)
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
                 <div>
                   <h5 className="font-medium mb-2">Quality Assessment</h5>
                   <div className="text-sm">
-                    Overall: <Badge variant="outline">{selectedPhoto.ai_analysis.quality_assessment.overall_quality}</Badge>
+                    Overall:{" "}
+                    <Badge variant="outline">
+                      {
+                        selectedPhoto.ai_analysis.quality_assessment
+                          .overall_quality
+                      }
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -1044,19 +1358,23 @@ export default function AIQualityControlDashboard({
                 <div>
                   <h5 className="font-medium mb-2">Defects in Photo</h5>
                   <div className="space-y-2">
-                    {selectedPhoto.ai_analysis.defects_found.map((defect, index) => (
-                      <div key={index} className="p-2 border rounded">
-                        <div className="flex items-center justify-between">
-                          <span className="capitalize">{defect.defect_type}</span>
-                          <Badge variant={getSeverityColor(defect.severity)}>
-                            {defect.severity}
-                          </Badge>
+                    {selectedPhoto.ai_analysis.defects_found.map(
+                      (defect, index) => (
+                        <div key={index} className="p-2 border rounded">
+                          <div className="flex items-center justify-between">
+                            <span className="capitalize">
+                              {defect.defect_type}
+                            </span>
+                            <Badge variant={getSeverityColor(defect.severity)}>
+                              {defect.severity}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {defect.description}
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {defect.description}
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </div>
               )}
