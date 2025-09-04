@@ -967,7 +967,12 @@ interface QualityInspection {
   ai_analysis: AIAnalysisResult;
   human_verification?: HumanVerification;
   overall_score: number;
-  status: "pending" | "in_progress" | "completed" | "failed" | "requires_attention";
+  status:
+    | "pending"
+    | "in_progress"
+    | "completed"
+    | "failed"
+    | "requires_attention";
   defects_detected: QualityDefect[];
   recommendations: string[];
 }
@@ -983,7 +988,14 @@ interface PhotoAnalysis {
 
 interface DefectDetection {
   defect_id: string;
-  defect_type: "crack" | "discoloration" | "misalignment" | "incomplete_work" | "damage" | "contamination" | "dimensional_variance";
+  defect_type:
+    | "crack"
+    | "discoloration"
+    | "misalignment"
+    | "incomplete_work"
+    | "damage"
+    | "contamination"
+    | "dimensional_variance";
   severity: "minor" | "moderate" | "major" | "critical";
   confidence: number;
   location: BoundingBox;
@@ -1002,10 +1014,19 @@ class AIQualityControlService {
   ): Promise<QualityInspection>;
 
   async detectDefects(photo_url: string): Promise<DefectDetection[]>;
-  async assessQuality(photo_url: string, inspection_type: string): Promise<QualityAssessment>;
-  async checkCompliance(photo_url: string, inspection_type: string): Promise<ComplianceResult>;
+  async assessQuality(
+    photo_url: string,
+    inspection_type: string
+  ): Promise<QualityAssessment>;
+  async checkCompliance(
+    photo_url: string,
+    inspection_type: string
+  ): Promise<ComplianceResult>;
   async performAutoMeasurements(photo_url: string): Promise<AutoMeasurement[]>;
-  async analyzeQualityTrends(project_id: string, days: number): Promise<QualityTrendAnalysis>;
+  async analyzeQualityTrends(
+    project_id: string,
+    days: number
+  ): Promise<QualityTrendAnalysis>;
 }
 ```
 
@@ -1028,7 +1049,7 @@ interface DefectDetector {
   model_version: string;
   detection_types: [
     "structural_cracks",
-    "surface_defects", 
+    "surface_defects",
     "alignment_issues",
     "incomplete_work",
     "safety_violations",
@@ -1037,7 +1058,7 @@ interface DefectDetector {
   accuracy_metrics: {
     precision: 0.92;
     recall: 0.88;
-    f1_score: 0.90;
+    f1_score: 0.9;
   };
 }
 
@@ -1046,13 +1067,16 @@ interface QualityScorer {
   calculateOverallScore(analysis: PhotoAnalysis[]): number;
   assessCompliance(findings: DefectDetection[]): ComplianceResult;
   generateRecommendations(analysis: AIAnalysisResult): string[];
-  predictQualityTrends(historical_data: QualityInspection[]): QualityTrendAnalysis;
+  predictQualityTrends(
+    historical_data: QualityInspection[]
+  ): QualityTrendAnalysis;
 }
 ```
 
 ---
 
 **✅ IMPLEMENTATION STATUS (AI Quality Control):**
+
 - ✅ Created `AIQualityControlService.ts` with comprehensive AI quality inspection
 - ✅ Built database migration with full quality control schema and automation
 - ✅ Implemented computer vision-based defect detection with confidence scoring

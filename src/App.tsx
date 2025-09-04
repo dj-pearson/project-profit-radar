@@ -322,7 +322,10 @@ const App = () => {
                 element={<MaterialOrchestrationPage />}
               />
               <Route path="/trade-handoff" element={<TradeHandoffPage />} />
-              <Route path="/ai-quality-control" element={<AIQualityControlPage />} />
+              <Route
+                path="/ai-quality-control"
+                element={<AIQualityControlPage />}
+              />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
 
               {/* Admin area routes */}

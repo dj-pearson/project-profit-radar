@@ -436,7 +436,14 @@ const navigationCategories: NavigationCategory[] = [
         title: "AI Quality Control",
         url: "/ai-quality-control",
         icon: Brain,
-        roles: ["admin", "superintendent", "project_manager", "foreman", "quality_inspector", "root_admin"],
+        roles: [
+          "admin",
+          "superintendent",
+          "project_manager",
+          "foreman",
+          "quality_inspector",
+          "root_admin",
+        ],
         badge: "New",
       },
       {

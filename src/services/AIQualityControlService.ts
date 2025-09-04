@@ -10,7 +10,12 @@ export interface QualityInspection {
   ai_analysis: AIAnalysisResult;
   human_verification?: HumanVerification;
   overall_score: number;
-  status: "pending" | "in_progress" | "completed" | "failed" | "requires_attention";
+  status:
+    | "pending"
+    | "in_progress"
+    | "completed"
+    | "failed"
+    | "requires_attention";
   defects_detected: QualityDefect[];
   recommendations: string[];
 }
@@ -49,7 +54,12 @@ export interface DetectedObject {
   confidence: number;
   bounding_box: BoundingBox;
   classification: string;
-  condition_assessment: "excellent" | "good" | "acceptable" | "poor" | "critical";
+  condition_assessment:
+    | "excellent"
+    | "good"
+    | "acceptable"
+    | "poor"
+    | "critical";
 }
 
 export interface BoundingBox {
@@ -77,7 +87,14 @@ export interface QualityMetric {
 
 export interface DefectDetection {
   defect_id: string;
-  defect_type: "crack" | "discoloration" | "misalignment" | "incomplete_work" | "damage" | "contamination" | "dimensional_variance";
+  defect_type:
+    | "crack"
+    | "discoloration"
+    | "misalignment"
+    | "incomplete_work"
+    | "damage"
+    | "contamination"
+    | "dimensional_variance";
   severity: "minor" | "moderate" | "major" | "critical";
   confidence: number;
   location: BoundingBox;
@@ -92,7 +109,11 @@ export interface ComplianceResult {
   quality_standards_compliance: boolean;
   environmental_compliance: boolean;
   violations_detected: ComplianceViolation[];
-  certification_status: "compliant" | "minor_issues" | "major_issues" | "non_compliant";
+  certification_status:
+    | "compliant"
+    | "minor_issues"
+    | "major_issues"
+    | "non_compliant";
 }
 
 export interface ComplianceViolation {
@@ -125,7 +146,11 @@ export interface QualityAnnotation {
 
 export interface ComparisonPhoto {
   reference_photo_url: string;
-  comparison_type: "before_after" | "specification" | "similar_project" | "standard_reference";
+  comparison_type:
+    | "before_after"
+    | "specification"
+    | "similar_project"
+    | "standard_reference";
   similarity_score: number;
   differences_highlighted: DifferenceHighlight[];
 }
@@ -250,7 +275,8 @@ export interface CertificationRequirement {
 }
 
 class AIQualityControlService {
-  private readonly AI_API_ENDPOINT = process.env.VITE_AI_QUALITY_API_URL || "https://api.openai.com/v1";
+  private readonly AI_API_ENDPOINT =
+    process.env.VITE_AI_QUALITY_API_URL || "https://api.openai.com/v1";
   private readonly AI_MODEL = "gpt-4-vision-preview";
 
   /**
@@ -260,7 +286,11 @@ class AIQualityControlService {
     project_id: string,
     task_id: string,
     photos: File[],
-    inspection_type: "routine" | "milestone" | "final" | "compliance" = "routine"
+    inspection_type:
+      | "routine"
+      | "milestone"
+      | "final"
+      | "compliance" = "routine"
   ): Promise<QualityInspection> {
     try {
       const inspection_id = crypto.randomUUID();
@@ -268,9 +298,13 @@ class AIQualityControlService {
 
       // Upload and process photos
       const qualityPhotos: QualityPhoto[] = [];
-      
+
       for (const photo of photos) {
-        const processedPhoto = await this.processQualityPhoto(photo, project_id, inspection_type);
+        const processedPhoto = await this.processQualityPhoto(
+          photo,
+          project_id,
+          inspection_type
+        );
         qualityPhotos.push(processedPhoto);
       }
 
@@ -281,13 +315,22 @@ class AIQualityControlService {
       const defectsDetected = await this.aggregateDefects(qualityPhotos);
 
       // Generate recommendations
-      const recommendations = await this.generateRecommendations(aiAnalysis, defectsDetected);
+      const recommendations = await this.generateRecommendations(
+        aiAnalysis,
+        defectsDetected
+      );
 
       // Calculate overall score
-      const overallScore = this.calculateOverallQualityScore(aiAnalysis, defectsDetected);
+      const overallScore = this.calculateOverallQualityScore(
+        aiAnalysis,
+        defectsDetected
+      );
 
       // Determine if human verification is needed
-      const requiresHumanReview = this.requiresHumanVerification(aiAnalysis, defectsDetected);
+      const requiresHumanReview = this.requiresHumanVerification(
+        aiAnalysis,
+        defectsDetected
+      );
 
       const inspection: QualityInspection = {
         inspection_id,
@@ -300,14 +343,14 @@ class AIQualityControlService {
         overall_score: overallScore,
         status: requiresHumanReview ? "requires_attention" : "completed",
         defects_detected: defectsDetected,
-        recommendations
+        recommendations,
       };
 
       // Save inspection to database
       await this.saveInspectionResults(inspection);
 
       // Trigger notifications if critical issues found
-      if (defectsDetected.some(d => d.severity === "critical")) {
+      if (defectsDetected.some((d) => d.severity === "critical")) {
         await this.triggerCriticalDefectNotifications(inspection);
       }
 
@@ -328,21 +371,31 @@ class AIQualityControlService {
   ): Promise<QualityPhoto> {
     try {
       const photo_id = crypto.randomUUID();
-      
+
       // Upload photo to storage
-      const file_url = await this.uploadPhotoToStorage(photo, project_id, photo_id);
+      const file_url = await this.uploadPhotoToStorage(
+        photo,
+        project_id,
+        photo_id
+      );
 
       // Extract camera metadata
       const camera_metadata = await this.extractCameraMetadata(photo);
 
       // Perform AI analysis
-      const ai_analysis = await this.performAIPhotoAnalysis(file_url, inspection_type);
+      const ai_analysis = await this.performAIPhotoAnalysis(
+        file_url,
+        inspection_type
+      );
 
       // Generate annotations
       const annotations = await this.generateQualityAnnotations(ai_analysis);
 
       // Find comparison photos if available
-      const comparison_photos = await this.findComparisonPhotos(project_id, inspection_type);
+      const comparison_photos = await this.findComparisonPhotos(
+        project_id,
+        inspection_type
+      );
 
       return {
         photo_id,
@@ -351,7 +404,7 @@ class AIQualityControlService {
         camera_metadata,
         ai_analysis,
         annotations,
-        comparison_photos
+        comparison_photos,
       };
     } catch (error) {
       console.error("Error processing quality photo:", error);
@@ -369,15 +422,21 @@ class AIQualityControlService {
     try {
       // This would integrate with OpenAI Vision API or similar AI service
       const analysisPrompt = this.buildAnalysisPrompt(inspection_type);
-      
+
       // Simulate AI analysis (in production, this would call actual AI API)
       const mockAnalysis: PhotoAnalysis = {
         confidence_score: 0.92,
         detected_objects: await this.detectObjects(photo_url),
-        quality_assessment: await this.assessQuality(photo_url, inspection_type),
+        quality_assessment: await this.assessQuality(
+          photo_url,
+          inspection_type
+        ),
         defects_found: await this.detectDefects(photo_url),
-        compliance_check: await this.checkCompliance(photo_url, inspection_type),
-        measurements: await this.performAutoMeasurements(photo_url)
+        compliance_check: await this.checkCompliance(
+          photo_url,
+          inspection_type
+        ),
+        measurements: await this.performAutoMeasurements(photo_url),
       };
 
       return mockAnalysis;
@@ -398,22 +457,25 @@ class AIQualityControlService {
         confidence: 0.95,
         bounding_box: { x: 10, y: 20, width: 300, height: 200 },
         classification: "structural_element",
-        condition_assessment: "good"
+        condition_assessment: "good",
       },
       {
         object_type: "rebar",
         confidence: 0.88,
         bounding_box: { x: 50, y: 100, width: 150, height: 50 },
         classification: "reinforcement",
-        condition_assessment: "excellent"
-      }
+        condition_assessment: "excellent",
+      },
     ];
   }
 
   /**
    * Assess overall quality of construction work in photo
    */
-  private async assessQuality(photo_url: string, inspection_type: string): Promise<QualityAssessment> {
+  private async assessQuality(
+    photo_url: string,
+    inspection_type: string
+  ): Promise<QualityAssessment> {
     return {
       overall_quality: "good",
       specific_metrics: [
@@ -423,7 +485,7 @@ class AIQualityControlService {
           expected_value: 8.0,
           tolerance_range: { min: 7.0, max: 10.0 },
           passes_specification: true,
-          deviation_percentage: 6.25
+          deviation_percentage: 6.25,
         },
         {
           metric_name: "alignment_accuracy",
@@ -431,8 +493,8 @@ class AIQualityControlService {
           expected_value: 9.0,
           tolerance_range: { min: 8.5, max: 10.0 },
           passes_specification: true,
-          deviation_percentage: 2.22
-        }
+          deviation_percentage: 2.22,
+        },
       ],
       comparison_to_standards: {
         applicable_standards: [
@@ -440,17 +502,20 @@ class AIQualityControlService {
             standard_name: "ACI 301",
             standard_version: "2020",
             compliance_score: 0.92,
-            critical_requirements: ["surface_tolerance", "reinforcement_placement"]
-          }
+            critical_requirements: [
+              "surface_tolerance",
+              "reinforcement_placement",
+            ],
+          },
         ],
         compliance_level: 0.92,
         deviations: [],
-        certification_requirements: []
+        certification_requirements: [],
       },
       improvement_suggestions: [
         "Consider additional surface finishing for enhanced appearance",
-        "Monitor curing conditions for optimal strength development"
-      ]
+        "Monitor curing conditions for optimal strength development",
+      ],
     };
   }
 
@@ -468,45 +533,55 @@ class AIQualityControlService {
         location: { x: 150, y: 200, width: 50, height: 5 },
         description: "Hairline crack detected in concrete surface",
         remediation_required: false,
-        estimated_cost_impact: 250
-      }
+        estimated_cost_impact: 250,
+      },
     ];
   }
 
   /**
    * Check compliance with building codes and standards
    */
-  private async checkCompliance(photo_url: string, inspection_type: string): Promise<ComplianceResult> {
+  private async checkCompliance(
+    photo_url: string,
+    inspection_type: string
+  ): Promise<ComplianceResult> {
     return {
       building_codes_compliance: true,
       safety_standards_compliance: true,
       quality_standards_compliance: true,
       environmental_compliance: true,
       violations_detected: [],
-      certification_status: "compliant"
+      certification_status: "compliant",
     };
   }
 
   /**
    * Perform automatic measurements using computer vision
    */
-  private async performAutoMeasurements(photo_url: string): Promise<AutoMeasurement[]> {
+  private async performAutoMeasurements(
+    photo_url: string
+  ): Promise<AutoMeasurement[]> {
     return [
       {
         measurement_type: "length",
         measured_value: 12.5,
         unit: "feet",
         accuracy_confidence: 0.91,
-        reference_points: [{ x: 10, y: 100 }, { x: 310, y: 100 }],
-        tolerance_check: true
-      }
+        reference_points: [
+          { x: 10, y: 100 },
+          { x: 310, y: 100 },
+        ],
+        tolerance_check: true,
+      },
     ];
   }
 
   /**
    * Generate quality annotations for photo
    */
-  private async generateQualityAnnotations(analysis: PhotoAnalysis): Promise<QualityAnnotation[]> {
+  private async generateQualityAnnotations(
+    analysis: PhotoAnalysis
+  ): Promise<QualityAnnotation[]> {
     const annotations: QualityAnnotation[] = [];
 
     // Add annotations for defects
@@ -518,9 +593,14 @@ class AIQualityControlService {
         text: `${defect.defect_type}: ${defect.description}`,
         created_by: "ai",
         timestamp: new Date(),
-        severity: defect.severity === "critical" ? "critical" : 
-                 defect.severity === "major" ? "high" :
-                 defect.severity === "moderate" ? "medium" : "low"
+        severity:
+          defect.severity === "critical"
+            ? "critical"
+            : defect.severity === "major"
+            ? "high"
+            : defect.severity === "moderate"
+            ? "medium"
+            : "low",
       });
     }
 
@@ -529,10 +609,13 @@ class AIQualityControlService {
       annotations.push({
         annotation_id: crypto.randomUUID(),
         type: "measurement",
-        coordinates: { x: measurement.reference_points[0].x, y: measurement.reference_points[0].y },
+        coordinates: {
+          x: measurement.reference_points[0].x,
+          y: measurement.reference_points[0].y,
+        },
         text: `${measurement.measurement_type}: ${measurement.measured_value} ${measurement.unit}`,
         created_by: "ai",
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
 
@@ -542,7 +625,10 @@ class AIQualityControlService {
   /**
    * Find comparison photos from previous inspections or standards
    */
-  private async findComparisonPhotos(project_id: string, inspection_type: string): Promise<ComparisonPhoto[]> {
+  private async findComparisonPhotos(
+    project_id: string,
+    inspection_type: string
+  ): Promise<ComparisonPhoto[]> {
     try {
       const { data: previousPhotos } = await supabase
         .from("quality_photos")
@@ -550,11 +636,11 @@ class AIQualityControlService {
         .eq("project_id", project_id)
         .limit(3);
 
-      return (previousPhotos || []).map(photo => ({
+      return (previousPhotos || []).map((photo) => ({
         reference_photo_url: photo.file_url,
         comparison_type: "similar_project" as const,
         similarity_score: 0.85,
-        differences_highlighted: []
+        differences_highlighted: [],
       }));
     } catch (error) {
       console.error("Error finding comparison photos:", error);
@@ -565,19 +651,23 @@ class AIQualityControlService {
   /**
    * Upload photo to storage
    */
-  private async uploadPhotoToStorage(photo: File, project_id: string, photo_id: string): Promise<string> {
+  private async uploadPhotoToStorage(
+    photo: File,
+    project_id: string,
+    photo_id: string
+  ): Promise<string> {
     try {
       const fileName = `quality_inspections/${project_id}/${photo_id}_${Date.now()}.jpg`;
-      
+
       const { data, error } = await supabase.storage
         .from("project_photos")
         .upload(fileName, photo);
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("project_photos")
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("project_photos").getPublicUrl(fileName);
 
       return publicUrl;
     } catch (error) {
@@ -596,7 +686,7 @@ class AIQualityControlService {
       resolution: "4032x3024",
       focal_length: 24,
       exposure_settings: "1/120s f/1.8 ISO 100",
-      lighting_conditions: "good"
+      lighting_conditions: "good",
     };
   }
 
@@ -614,24 +704,41 @@ class AIQualityControlService {
 
     const typeSpecificPrompts = {
       routine: "Focus on general workmanship and progress quality.",
-      milestone: "Assess completion of major milestones and readiness for next phase.",
+      milestone:
+        "Assess completion of major milestones and readiness for next phase.",
       final: "Conduct thorough final inspection for project completion.",
-      compliance: "Verify compliance with building codes and safety regulations."
+      compliance:
+        "Verify compliance with building codes and safety regulations.",
     };
 
-    return `${basePrompt}\n\n${typeSpecificPrompts[inspection_type] || typeSpecificPrompts.routine}`;
+    return `${basePrompt}\n\n${
+      typeSpecificPrompts[inspection_type] || typeSpecificPrompts.routine
+    }`;
   }
 
   /**
    * Aggregate analysis results from multiple photos
    */
-  private async aggregateAnalysisResults(photos: QualityPhoto[]): Promise<AIAnalysisResult> {
-    const totalConfidence = photos.reduce((sum, photo) => sum + photo.ai_analysis.confidence_score, 0);
+  private async aggregateAnalysisResults(
+    photos: QualityPhoto[]
+  ): Promise<AIAnalysisResult> {
+    const totalConfidence = photos.reduce(
+      (sum, photo) => sum + photo.ai_analysis.confidence_score,
+      0
+    );
     const avgConfidence = totalConfidence / photos.length;
 
-    const totalDefects = photos.reduce((sum, photo) => sum + photo.ai_analysis.defects_found.length, 0);
-    const criticalDefects = photos.reduce((sum, photo) => 
-      sum + photo.ai_analysis.defects_found.filter(d => d.severity === "critical").length, 0);
+    const totalDefects = photos.reduce(
+      (sum, photo) => sum + photo.ai_analysis.defects_found.length,
+      0
+    );
+    const criticalDefects = photos.reduce(
+      (sum, photo) =>
+        sum +
+        photo.ai_analysis.defects_found.filter((d) => d.severity === "critical")
+          .length,
+      0
+    );
 
     return {
       processing_time_ms: 2500,
@@ -642,29 +749,51 @@ class AIQualityControlService {
       defects_summary: {
         total_defects: totalDefects,
         critical_defects: criticalDefects,
-        major_defects: photos.reduce((sum, photo) => 
-          sum + photo.ai_analysis.defects_found.filter(d => d.severity === "major").length, 0),
-        minor_defects: photos.reduce((sum, photo) => 
-          sum + photo.ai_analysis.defects_found.filter(d => d.severity === "minor").length, 0),
-        estimated_remediation_cost: photos.reduce((sum, photo) => 
-          sum + photo.ai_analysis.defects_found.reduce((defectSum, defect) => 
-            defectSum + defect.estimated_cost_impact, 0), 0),
-        estimated_remediation_time: Math.max(1, totalDefects * 2) // 2 hours per defect
+        major_defects: photos.reduce(
+          (sum, photo) =>
+            sum +
+            photo.ai_analysis.defects_found.filter(
+              (d) => d.severity === "major"
+            ).length,
+          0
+        ),
+        minor_defects: photos.reduce(
+          (sum, photo) =>
+            sum +
+            photo.ai_analysis.defects_found.filter(
+              (d) => d.severity === "minor"
+            ).length,
+          0
+        ),
+        estimated_remediation_cost: photos.reduce(
+          (sum, photo) =>
+            sum +
+            photo.ai_analysis.defects_found.reduce(
+              (defectSum, defect) => defectSum + defect.estimated_cost_impact,
+              0
+            ),
+          0
+        ),
+        estimated_remediation_time: Math.max(1, totalDefects * 2), // 2 hours per defect
       },
       compliance_summary: {
         overall_compliance_score: 0.94,
         code_violations: 0,
         safety_issues: 0,
         quality_issues: totalDefects,
-        environmental_issues: 0
+        environmental_issues: 0,
       },
       recommendations_summary: {
-        immediate_actions: criticalDefects > 0 ? ["Address critical defects immediately"] : [],
-        preventive_measures: ["Implement regular quality checks", "Improve work procedures"],
+        immediate_actions:
+          criticalDefects > 0 ? ["Address critical defects immediately"] : [],
+        preventive_measures: [
+          "Implement regular quality checks",
+          "Improve work procedures",
+        ],
         process_improvements: ["Enhanced training for quality standards"],
-        training_recommendations: ["Quality control best practices workshop"]
+        training_recommendations: ["Quality control best practices workshop"],
       },
-      requires_human_review: criticalDefects > 0 || avgConfidence < 0.8
+      requires_human_review: criticalDefects > 0 || avgConfidence < 0.8,
     };
   }
 
@@ -694,10 +823,18 @@ class AIQualityControlService {
     // Deduct points for defects
     for (const defect of analysis.defects_found) {
       switch (defect.severity) {
-        case "critical": score -= 25; break;
-        case "major": score -= 15; break;
-        case "moderate": score -= 10; break;
-        case "minor": score -= 5; break;
+        case "critical":
+          score -= 25;
+          break;
+        case "major":
+          score -= 15;
+          break;
+        case "moderate":
+          score -= 10;
+          break;
+        case "minor":
+          score -= 5;
+          break;
       }
     }
 
@@ -712,7 +849,9 @@ class AIQualityControlService {
   /**
    * Aggregate defects from all photos
    */
-  private async aggregateDefects(photos: QualityPhoto[]): Promise<QualityDefect[]> {
+  private async aggregateDefects(
+    photos: QualityPhoto[]
+  ): Promise<QualityDefect[]> {
     const defects: QualityDefect[] = [];
 
     for (const photo of photos) {
@@ -725,11 +864,11 @@ class AIQualityControlService {
           description: detection.description,
           photo_evidence: [photo.file_url],
           remediation_plan: await this.generateRemediationPlan(detection),
-          status: detection.remediation_required ? "open" : "resolved"
+          status: detection.remediation_required ? "open" : "resolved",
         };
 
         if (detection.remediation_required) {
-          defect.due_date = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)); // 7 days from now
+          defect.due_date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
         }
 
         defects.push(defect);
@@ -742,52 +881,105 @@ class AIQualityControlService {
   /**
    * Generate remediation plan for defect
    */
-  private async generateRemediationPlan(defect: DefectDetection): Promise<RemediationPlan> {
+  private async generateRemediationPlan(
+    defect: DefectDetection
+  ): Promise<RemediationPlan> {
     const remediationTemplates = {
       crack: {
         steps: [
-          { step_number: 1, description: "Clean crack area", estimated_duration: 0.5, required_resources: ["cleaning_tools"], verification_method: "visual_inspection" },
-          { step_number: 2, description: "Apply crack filler", estimated_duration: 1, required_resources: ["crack_filler", "tools"], verification_method: "quality_check" },
-          { step_number: 3, description: "Allow curing time", estimated_duration: 24, required_resources: [], verification_method: "time_based" }
+          {
+            step_number: 1,
+            description: "Clean crack area",
+            estimated_duration: 0.5,
+            required_resources: ["cleaning_tools"],
+            verification_method: "visual_inspection",
+          },
+          {
+            step_number: 2,
+            description: "Apply crack filler",
+            estimated_duration: 1,
+            required_resources: ["crack_filler", "tools"],
+            verification_method: "quality_check",
+          },
+          {
+            step_number: 3,
+            description: "Allow curing time",
+            estimated_duration: 24,
+            required_resources: [],
+            verification_method: "time_based",
+          },
         ],
         estimated_cost: 150,
         required_materials: ["crack_filler", "cleaning_supplies"],
-        required_skills: ["basic_repair"]
+        required_skills: ["basic_repair"],
       },
       misalignment: {
         steps: [
-          { step_number: 1, description: "Measure deviation", estimated_duration: 0.5, required_resources: ["measuring_tools"], verification_method: "measurement" },
-          { step_number: 2, description: "Realign element", estimated_duration: 2, required_resources: ["adjustment_tools"], verification_method: "measurement" },
-          { step_number: 3, description: "Secure in position", estimated_duration: 1, required_resources: ["fasteners"], verification_method: "stability_check" }
+          {
+            step_number: 1,
+            description: "Measure deviation",
+            estimated_duration: 0.5,
+            required_resources: ["measuring_tools"],
+            verification_method: "measurement",
+          },
+          {
+            step_number: 2,
+            description: "Realign element",
+            estimated_duration: 2,
+            required_resources: ["adjustment_tools"],
+            verification_method: "measurement",
+          },
+          {
+            step_number: 3,
+            description: "Secure in position",
+            estimated_duration: 1,
+            required_resources: ["fasteners"],
+            verification_method: "stability_check",
+          },
         ],
         estimated_cost: 300,
         required_materials: ["fasteners", "adjustment_hardware"],
-        required_skills: ["precision_work"]
-      }
+        required_skills: ["precision_work"],
+      },
     };
 
-    const template = remediationTemplates[defect.defect_type as keyof typeof remediationTemplates] || remediationTemplates.crack;
+    const template =
+      remediationTemplates[
+        defect.defect_type as keyof typeof remediationTemplates
+      ] || remediationTemplates.crack;
 
     return {
       plan_id: crypto.randomUUID(),
       steps: template.steps,
       estimated_cost: template.estimated_cost,
-      estimated_duration_hours: template.steps.reduce((sum, step) => sum + step.estimated_duration, 0),
+      estimated_duration_hours: template.steps.reduce(
+        (sum, step) => sum + step.estimated_duration,
+        0
+      ),
       required_materials: template.required_materials,
       required_skills: template.required_skills,
-      priority: defect.severity === "critical" ? "critical" : 
-               defect.severity === "major" ? "high" : "medium"
+      priority:
+        defect.severity === "critical"
+          ? "critical"
+          : defect.severity === "major"
+          ? "high"
+          : "medium",
     };
   }
 
   /**
    * Generate recommendations based on analysis
    */
-  private async generateRecommendations(analysis: AIAnalysisResult, defects: QualityDefect[]): Promise<string[]> {
+  private async generateRecommendations(
+    analysis: AIAnalysisResult,
+    defects: QualityDefect[]
+  ): Promise<string[]> {
     const recommendations: string[] = [];
 
     if (analysis.defects_summary.critical_defects > 0) {
-      recommendations.push("Immediately address critical defects before proceeding");
+      recommendations.push(
+        "Immediately address critical defects before proceeding"
+      );
       recommendations.push("Conduct additional safety inspection");
     }
 
@@ -796,16 +988,24 @@ class AIQualityControlService {
     }
 
     if (analysis.defects_summary.total_defects > 5) {
-      recommendations.push("Review work procedures and quality control processes");
-      recommendations.push("Consider additional training for construction crew");
+      recommendations.push(
+        "Review work procedures and quality control processes"
+      );
+      recommendations.push(
+        "Consider additional training for construction crew"
+      );
     }
 
     if (analysis.compliance_summary.overall_compliance_score < 0.9) {
-      recommendations.push("Review compliance requirements with project specifications");
+      recommendations.push(
+        "Review compliance requirements with project specifications"
+      );
     }
 
     // Add preventive recommendations
-    recommendations.push("Implement regular progress photos for continuous monitoring");
+    recommendations.push(
+      "Implement regular progress photos for continuous monitoring"
+    );
     recommendations.push("Schedule follow-up inspection in 48 hours");
 
     return recommendations;
@@ -814,7 +1014,10 @@ class AIQualityControlService {
   /**
    * Calculate overall quality score from analysis and defects
    */
-  private calculateOverallQualityScore(analysis: AIAnalysisResult, defects: QualityDefect[]): number {
+  private calculateOverallQualityScore(
+    analysis: AIAnalysisResult,
+    defects: QualityDefect[]
+  ): number {
     let baseScore = analysis.quality_score;
 
     // Adjust based on compliance
@@ -829,51 +1032,52 @@ class AIQualityControlService {
   /**
    * Determine if human verification is required
    */
-  private requiresHumanVerification(analysis: AIAnalysisResult, defects: QualityDefect[]): boolean {
+  private requiresHumanVerification(
+    analysis: AIAnalysisResult,
+    defects: QualityDefect[]
+  ): boolean {
     return (
       analysis.defects_summary.critical_defects > 0 ||
       analysis.overall_confidence < 0.8 ||
       analysis.compliance_summary.overall_compliance_score < 0.9 ||
-      defects.some(d => d.severity === "critical")
+      defects.some((d) => d.severity === "critical")
     );
   }
 
   /**
    * Save inspection results to database
    */
-  private async saveInspectionResults(inspection: QualityInspection): Promise<void> {
+  private async saveInspectionResults(
+    inspection: QualityInspection
+  ): Promise<void> {
     try {
-      const { error } = await supabase
-        .from("quality_inspections")
-        .insert({
-          id: inspection.inspection_id,
-          project_id: inspection.project_id,
-          task_id: inspection.task_id,
-          inspector_type: inspection.inspector_type,
-          inspection_date: inspection.inspection_date.toISOString(),
-          overall_score: inspection.overall_score,
-          status: inspection.status,
-          ai_analysis: inspection.ai_analysis,
-          defects_detected: inspection.defects_detected,
-          recommendations: inspection.recommendations
-        });
+      const { error } = await supabase.from("quality_inspections").insert({
+        id: inspection.inspection_id,
+        project_id: inspection.project_id,
+        task_id: inspection.task_id,
+        inspector_type: inspection.inspector_type,
+        inspection_date: inspection.inspection_date.toISOString(),
+        overall_score: inspection.overall_score,
+        status: inspection.status,
+        ai_analysis: inspection.ai_analysis,
+        defects_detected: inspection.defects_detected,
+        recommendations: inspection.recommendations,
+      });
 
       if (error) throw error;
 
       // Save individual photos
       for (const photo of inspection.photos) {
-        await supabase
-          .from("quality_photos")
-          .insert({
-            id: photo.photo_id,
-            inspection_id: inspection.inspection_id,
-            project_id: inspection.project_id,
-            file_url: photo.file_url,
-            capture_timestamp: photo.capture_timestamp.toISOString(),
-            camera_metadata: photo.camera_metadata,
-            ai_analysis: photo.ai_analysis,
-            annotations: photo.annotations
-          });
+        await supabase.from("quality_photos").insert({
+          id: photo.photo_id,
+          inspection_id: inspection.inspection_id,
+          project_id: inspection.project_id,
+          file_url: photo.file_url,
+          capture_timestamp: photo.capture_timestamp.toISOString(),
+          camera_metadata: photo.camera_metadata,
+          ai_analysis: photo.ai_analysis,
+          annotations: photo.annotations,
+        });
       }
     } catch (error) {
       console.error("Error saving inspection results:", error);
@@ -884,26 +1088,28 @@ class AIQualityControlService {
   /**
    * Trigger notifications for critical defects
    */
-  private async triggerCriticalDefectNotifications(inspection: QualityInspection): Promise<void> {
+  private async triggerCriticalDefectNotifications(
+    inspection: QualityInspection
+  ): Promise<void> {
     try {
-      const criticalDefects = inspection.defects_detected.filter(d => d.severity === "critical");
-      
+      const criticalDefects = inspection.defects_detected.filter(
+        (d) => d.severity === "critical"
+      );
+
       if (criticalDefects.length === 0) return;
 
       // Send notifications to project managers and supervisors
-      const { error } = await supabase
-        .from("notifications")
-        .insert({
-          type: "critical_quality_defect",
-          project_id: inspection.project_id,
-          title: `Critical Quality Defects Detected`,
-          message: `AI inspection found ${criticalDefects.length} critical defect(s) requiring immediate attention.`,
-          priority: "critical",
-          data: {
-            inspection_id: inspection.inspection_id,
-            defects: criticalDefects
-          }
-        });
+      const { error } = await supabase.from("notifications").insert({
+        type: "critical_quality_defect",
+        project_id: inspection.project_id,
+        title: `Critical Quality Defects Detected`,
+        message: `AI inspection found ${criticalDefects.length} critical defect(s) requiring immediate attention.`,
+        priority: "critical",
+        data: {
+          inspection_id: inspection.inspection_id,
+          defects: criticalDefects,
+        },
+      });
 
       if (error) throw error;
     } catch (error) {
@@ -914,21 +1120,26 @@ class AIQualityControlService {
   /**
    * Get inspection history for project
    */
-  async getInspectionHistory(project_id: string, limit: number = 10): Promise<QualityInspection[]> {
+  async getInspectionHistory(
+    project_id: string,
+    limit: number = 10
+  ): Promise<QualityInspection[]> {
     try {
       const { data, error } = await supabase
         .from("quality_inspections")
-        .select(`
+        .select(
+          `
           *,
           quality_photos(*)
-        `)
+        `
+        )
         .eq("project_id", project_id)
         .order("inspection_date", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
 
-      return (data || []).map(inspection => ({
+      return (data || []).map((inspection) => ({
         inspection_id: inspection.id,
         project_id: inspection.project_id,
         task_id: inspection.task_id,
@@ -940,7 +1151,7 @@ class AIQualityControlService {
         overall_score: inspection.overall_score,
         status: inspection.status,
         defects_detected: inspection.defects_detected || [],
-        recommendations: inspection.recommendations || []
+        recommendations: inspection.recommendations || [],
       }));
     } catch (error) {
       console.error("Error getting inspection history:", error);
@@ -951,7 +1162,10 @@ class AIQualityControlService {
   /**
    * Compare quality trends over time
    */
-  async analyzeQualityTrends(project_id: string, days: number = 30): Promise<QualityTrendAnalysis> {
+  async analyzeQualityTrends(
+    project_id: string,
+    days: number = 30
+  ): Promise<QualityTrendAnalysis> {
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
@@ -966,9 +1180,10 @@ class AIQualityControlService {
       if (error) throw error;
 
       // Analyze trends
-      const scores = (data || []).map(d => d.overall_score);
-      const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-      
+      const scores = (data || []).map((d) => d.overall_score);
+      const avgScore =
+        scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
       const trend = this.calculateTrend(scores);
       const defectTrend = this.calculateDefectTrend(data || []);
 
@@ -979,7 +1194,11 @@ class AIQualityControlService {
         defect_trend: defectTrend,
         total_inspections: data?.length || 0,
         quality_improvement: trend > 0,
-        recommendations: this.generateTrendRecommendations(avgScore, trend, defectTrend)
+        recommendations: this.generateTrendRecommendations(
+          avgScore,
+          trend,
+          defectTrend
+        ),
       };
     } catch (error) {
       console.error("Error analyzing quality trends:", error);
@@ -992,13 +1211,15 @@ class AIQualityControlService {
    */
   private calculateTrend(scores: number[]): number {
     if (scores.length < 2) return 0;
-    
+
     const firstHalf = scores.slice(0, Math.floor(scores.length / 2));
     const secondHalf = scores.slice(Math.floor(scores.length / 2));
-    
-    const firstAvg = firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length;
-    
+
+    const firstAvg =
+      firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length;
+    const secondAvg =
+      secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length;
+
     return secondAvg - firstAvg;
   }
 
@@ -1006,17 +1227,26 @@ class AIQualityControlService {
    * Calculate defect trend
    */
   private calculateDefectTrend(inspections: any[]): DefectTrendAnalysis {
-    const totalDefects = inspections.reduce((sum, inspection) => 
-      sum + (inspection.defects_detected?.length || 0), 0);
-    
-    const criticalDefects = inspections.reduce((sum, inspection) => 
-      sum + (inspection.defects_detected?.filter((d: any) => d.severity === "critical")?.length || 0), 0);
+    const totalDefects = inspections.reduce(
+      (sum, inspection) => sum + (inspection.defects_detected?.length || 0),
+      0
+    );
+
+    const criticalDefects = inspections.reduce(
+      (sum, inspection) =>
+        sum +
+        (inspection.defects_detected?.filter(
+          (d: any) => d.severity === "critical"
+        )?.length || 0),
+      0
+    );
 
     return {
       total_defects: totalDefects,
       critical_defects: criticalDefects,
-      average_defects_per_inspection: totalDefects / Math.max(1, inspections.length),
-      defect_rate_trend: this.calculateDefectRateTrend(inspections)
+      average_defects_per_inspection:
+        totalDefects / Math.max(1, inspections.length),
+      defect_rate_trend: this.calculateDefectRateTrend(inspections),
     };
   }
 
@@ -1025,39 +1255,59 @@ class AIQualityControlService {
    */
   private calculateDefectRateTrend(inspections: any[]): number {
     if (inspections.length < 2) return 0;
-    
+
     const midpoint = Math.floor(inspections.length / 2);
     const firstHalf = inspections.slice(0, midpoint);
     const secondHalf = inspections.slice(midpoint);
-    
-    const firstDefectRate = firstHalf.reduce((sum, i) => sum + (i.defects_detected?.length || 0), 0) / firstHalf.length;
-    const secondDefectRate = secondHalf.reduce((sum, i) => sum + (i.defects_detected?.length || 0), 0) / secondHalf.length;
-    
+
+    const firstDefectRate =
+      firstHalf.reduce((sum, i) => sum + (i.defects_detected?.length || 0), 0) /
+      firstHalf.length;
+    const secondDefectRate =
+      secondHalf.reduce(
+        (sum, i) => sum + (i.defects_detected?.length || 0),
+        0
+      ) / secondHalf.length;
+
     return secondDefectRate - firstDefectRate;
   }
 
   /**
    * Generate trend-based recommendations
    */
-  private generateTrendRecommendations(avgScore: number, trend: number, defectTrend: DefectTrendAnalysis): string[] {
+  private generateTrendRecommendations(
+    avgScore: number,
+    trend: number,
+    defectTrend: DefectTrendAnalysis
+  ): string[] {
     const recommendations: string[] = [];
 
     if (avgScore < 70) {
-      recommendations.push("Quality scores are below acceptable threshold - implement immediate quality improvement measures");
+      recommendations.push(
+        "Quality scores are below acceptable threshold - implement immediate quality improvement measures"
+      );
     }
 
     if (trend < -5) {
-      recommendations.push("Quality trend is declining - review and improve quality control processes");
+      recommendations.push(
+        "Quality trend is declining - review and improve quality control processes"
+      );
     } else if (trend > 5) {
-      recommendations.push("Quality trend is improving - maintain current quality practices");
+      recommendations.push(
+        "Quality trend is improving - maintain current quality practices"
+      );
     }
 
     if (defectTrend.defect_rate_trend > 0.5) {
-      recommendations.push("Defect rate is increasing - enhance preventive quality measures");
+      recommendations.push(
+        "Defect rate is increasing - enhance preventive quality measures"
+      );
     }
 
     if (defectTrend.critical_defects > 0) {
-      recommendations.push("Critical defects detected - implement stricter quality checkpoints");
+      recommendations.push(
+        "Critical defects detected - implement stricter quality checkpoints"
+      );
     }
 
     return recommendations;
