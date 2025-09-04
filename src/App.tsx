@@ -84,6 +84,7 @@ import AutomatedWorkflows from "./pages/AutomatedWorkflows";
 import SmartClientUpdatesPage from "./pages/SmartClientUpdatesPage";
 import MaterialOrchestrationPage from "./pages/MaterialOrchestrationPage";
 import TradeHandoffPage from "./pages/TradeHandoffPage";
+import AIQualityControlPage from "./pages/AIQualityControlPage";
 import KnowledgeBase from "./pages/KnowledgeBase";
 
 // Admin area pages
@@ -321,6 +322,7 @@ const App = () => {
                 element={<MaterialOrchestrationPage />}
               />
               <Route path="/trade-handoff" element={<TradeHandoffPage />} />
+              <Route path="/ai-quality-control" element={<AIQualityControlPage />} />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
 
               {/* Admin area routes */}

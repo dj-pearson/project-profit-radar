@@ -45,6 +45,7 @@ import {
   HelpCircle,
   CheckSquare,
   Calculator,
+  Brain,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -430,6 +431,13 @@ const navigationCategories: NavigationCategory[] = [
         url: "/safety",
         icon: Shield,
         roles: ["admin", "project_manager", "field_supervisor", "root_admin"],
+      },
+      {
+        title: "AI Quality Control",
+        url: "/ai-quality-control",
+        icon: Brain,
+        roles: ["admin", "superintendent", "project_manager", "foreman", "quality_inspector", "root_admin"],
+        badge: "New",
       },
       {
         title: "Permit Management",
