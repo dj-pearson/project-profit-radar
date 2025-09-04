@@ -116,19 +116,23 @@ class MaterialOrchestrationService {
   /**
    * Calculate optimal delivery timing for all project materials
    */
-  async calculateOptimalDeliveryTiming(project_id: string): Promise<MaterialDeliveryPlan[]> {
+  async calculateOptimalDeliveryTiming(
+    project_id: string
+  ): Promise<MaterialDeliveryPlan[]> {
     try {
       // Get project tasks with material requirements
       const { data: tasks, error: tasksError } = await supabase
         .from("tasks")
-        .select(`
+        .select(
+          `
           *,
           material_usage(
             material_id,
             quantity_needed,
             materials(*)
           )
-        `)
+        `
+        )
         .eq("project_id", project_id)
         .order("start_date");
 
@@ -146,14 +150,18 @@ class MaterialOrchestrationService {
           // Calculate optimal delivery date (just-in-time)
           const taskStartDate = new Date(task.start_date);
           const optimalDeliveryDate = new Date(taskStartDate);
-          
+
           // Account for material lead time
-          const leadTimeDays = await this.getMaterialLeadTime(usage.material_id);
-          optimalDeliveryDate.setDate(optimalDeliveryDate.getDate() - leadTimeDays);
+          const leadTimeDays = await this.getMaterialLeadTime(
+            usage.material_id
+          );
+          optimalDeliveryDate.setDate(
+            optimalDeliveryDate.getDate() - leadTimeDays
+          );
 
           // Account for storage constraints
           const storageLocation = await this.getOptimalStorageLocation(
-            project_id, 
+            project_id,
             usage.material_id,
             usage.quantity_needed
           );
@@ -166,7 +174,10 @@ class MaterialOrchestrationService {
           );
 
           // Get best supplier
-          const supplier = await this.getBestSupplier(usage.material_id, usage.quantity_needed);
+          const supplier = await this.getBestSupplier(
+            usage.material_id,
+            usage.quantity_needed
+          );
 
           deliveryPlans.push({
             material_id: usage.material_id,
@@ -177,11 +188,12 @@ class MaterialOrchestrationService {
               start_time: "08:00",
               end_time: "16:00",
               preferred_date: optimalDeliveryDate,
-              alternative_dates: this.generateAlternativeDates(optimalDeliveryDate)
+              alternative_dates:
+                this.generateAlternativeDates(optimalDeliveryDate),
             },
             supplier_id: supplier.supplier_id,
             cost_optimization: costOptimization,
-            delivery_priority: this.calculateDeliveryPriority(task, usage)
+            delivery_priority: this.calculateDeliveryPriority(task, usage),
           });
         }
       }
@@ -196,7 +208,10 @@ class MaterialOrchestrationService {
   /**
    * Detect material shortages ahead of time
    */
-  async detectMaterialShortages(project_id: string, days_ahead: number = 14): Promise<MaterialShortage[]> {
+  async detectMaterialShortages(
+    project_id: string,
+    days_ahead: number = 14
+  ): Promise<MaterialShortage[]> {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() + days_ahead);
@@ -204,14 +219,16 @@ class MaterialOrchestrationService {
       // Get upcoming material requirements
       const { data: upcomingRequirements, error } = await supabase
         .from("tasks")
-        .select(`
+        .select(
+          `
           *,
           material_usage(
             material_id,
             quantity_needed,
             materials(name, unit)
           )
-        `)
+        `
+        )
         .eq("project_id", project_id)
         .lte("start_date", cutoffDate.toISOString())
         .neq("status", "completed");
@@ -232,14 +249,14 @@ class MaterialOrchestrationService {
               material_name: usage.materials.name,
               total_required: 0,
               tasks: [],
-              earliest_needed: new Date(task.start_date)
+              earliest_needed: new Date(task.start_date),
             });
           }
 
           const existing = materialRequirements.get(materialId);
           existing.total_required += usage.quantity_needed;
           existing.tasks.push(task.id);
-          
+
           if (new Date(task.start_date) < existing.earliest_needed) {
             existing.earliest_needed = new Date(task.start_date);
           }
@@ -248,8 +265,11 @@ class MaterialOrchestrationService {
 
       // Check availability for each material
       for (const [materialId, requirement] of materialRequirements) {
-        const availableQuantity = await this.getAvailableQuantity(project_id, materialId);
-        
+        const availableQuantity = await this.getAvailableQuantity(
+          project_id,
+          materialId
+        );
+
         if (availableQuantity < requirement.total_required) {
           const shortageAmount = requirement.total_required - availableQuantity;
           const suppliers = await this.findSuppliersForMaterial(materialId);
@@ -263,7 +283,10 @@ class MaterialOrchestrationService {
             needed_by_date: requirement.earliest_needed,
             affected_tasks: requirement.tasks,
             suggested_suppliers: suppliers,
-            urgency_level: this.calculateUrgencyLevel(requirement.earliest_needed, shortageAmount)
+            urgency_level: this.calculateUrgencyLevel(
+              requirement.earliest_needed,
+              shortageAmount
+            ),
           });
         }
       }
@@ -278,12 +301,15 @@ class MaterialOrchestrationService {
   /**
    * Optimize inventory across multiple projects
    */
-  async optimizeCrossProjectInventory(company_id: string): Promise<InventoryOptimization> {
+  async optimizeCrossProjectInventory(
+    company_id: string
+  ): Promise<InventoryOptimization> {
     try {
       // Get all company projects with material inventory
       const { data: projects, error } = await supabase
         .from("projects")
-        .select(`
+        .select(
+          `
           id,
           name,
           status,
@@ -293,7 +319,8 @@ class MaterialOrchestrationService {
             quantity_used,
             materials(name, unit, unit_cost)
           )
-        `)
+        `
+        )
         .eq("company_id", company_id)
         .in("status", ["active", "on_hold"]);
 
@@ -305,32 +332,32 @@ class MaterialOrchestrationService {
 
       // Analyze each project's material situation
       const projectMaterials = new Map();
-      
+
       for (const project of projects || []) {
         const materialSummary = new Map();
-        
+
         for (const usage of project.material_usage || []) {
           const materialId = usage.material_id;
           const excess = (usage.quantity_used || 0) - usage.quantity_needed;
-          
+
           if (!materialSummary.has(materialId)) {
             materialSummary.set(materialId, {
               material: usage.materials,
               total_needed: 0,
               total_available: 0,
-              excess: 0
+              excess: 0,
             });
           }
-          
+
           const summary = materialSummary.get(materialId);
           summary.total_needed += usage.quantity_needed;
-          summary.total_available += (usage.quantity_used || 0);
+          summary.total_available += usage.quantity_used || 0;
           summary.excess = summary.total_available - summary.total_needed;
         }
-        
+
         projectMaterials.set(project.id, {
           project_name: project.name,
-          materials: materialSummary
+          materials: materialSummary,
         });
       }
 
@@ -342,13 +369,20 @@ class MaterialOrchestrationService {
           // Look for projects that need this material
           for (const [toProjectId, toProject] of projectMaterials) {
             if (fromProjectId === toProjectId) continue;
-            
+
             const toMaterial = toProject.materials.get(materialId);
             if (!toMaterial || toMaterial.excess >= 0) continue;
 
-            const transferQuantity = Math.min(fromMaterial.excess, Math.abs(toMaterial.excess));
-            const transferCost = this.calculateTransferCost(transferQuantity, fromMaterial.material);
-            const savings = (transferQuantity * fromMaterial.material.unit_cost) - transferCost;
+            const transferQuantity = Math.min(
+              fromMaterial.excess,
+              Math.abs(toMaterial.excess)
+            );
+            const transferCost = this.calculateTransferCost(
+              transferQuantity,
+              fromMaterial.material
+            );
+            const savings =
+              transferQuantity * fromMaterial.material.unit_cost - transferCost;
 
             if (savings > 0) {
               transfers.push({
@@ -358,7 +392,7 @@ class MaterialOrchestrationService {
                 quantity: transferQuantity,
                 transfer_cost: transferCost,
                 estimated_savings: savings,
-                transfer_date: new Date()
+                transfer_date: new Date(),
               });
             }
           }
@@ -370,8 +404,9 @@ class MaterialOrchestrationService {
               material_name: fromMaterial.material.name,
               project_id: fromProjectId,
               excess_quantity: fromMaterial.excess,
-              estimated_value: fromMaterial.excess * fromMaterial.material.unit_cost,
-              reallocation_options: ["sell", "store", "donate"]
+              estimated_value:
+                fromMaterial.excess * fromMaterial.material.unit_cost,
+              reallocation_options: ["sell", "store", "donate"],
             });
           }
         }
@@ -382,15 +417,15 @@ class MaterialOrchestrationService {
       for (const [projectId, project] of projectMaterials) {
         for (const [materialId, material] of project.materials) {
           if (material.total_needed <= 0) continue;
-          
+
           if (!materialDemand.has(materialId)) {
             materialDemand.set(materialId, {
               material: material.material,
               projects: [],
-              total_quantity: 0
+              total_quantity: 0,
             });
           }
-          
+
           const demand = materialDemand.get(materialId);
           demand.projects.push(projectId);
           demand.total_quantity += material.total_needed;
@@ -400,12 +435,14 @@ class MaterialOrchestrationService {
       for (const [materialId, demand] of materialDemand) {
         if (demand.projects.length < 2) continue;
 
-        const individualCost = demand.total_quantity * demand.material.unit_cost;
+        const individualCost =
+          demand.total_quantity * demand.material.unit_cost;
         const bulkDiscount = this.calculateBulkDiscount(demand.total_quantity);
         const consolidatedCost = individualCost * (1 - bulkDiscount);
         const savings = individualCost - consolidatedCost;
 
-        if (savings > 100) { // Minimum $100 savings threshold
+        if (savings > 100) {
+          // Minimum $100 savings threshold
           consolidationOpportunities.push({
             material_type: demand.material.name,
             projects_involved: demand.projects,
@@ -413,21 +450,27 @@ class MaterialOrchestrationService {
             individual_orders_cost: individualCost,
             consolidated_cost: consolidatedCost,
             savings_amount: savings,
-            optimal_delivery_date: new Date()
+            optimal_delivery_date: new Date(),
           });
         }
       }
 
-      const totalValueOptimized = 
+      const totalValueOptimized =
         transfers.reduce((sum, t) => sum + t.estimated_savings, 0) +
-        consolidationOpportunities.reduce((sum, c) => sum + c.savings_amount, 0);
+        consolidationOpportunities.reduce(
+          (sum, c) => sum + c.savings_amount,
+          0
+        );
 
       return {
         total_value_optimized: totalValueOptimized,
         cross_project_transfers: transfers,
         excess_materials: excessMaterials,
         consolidation_opportunities: consolidationOpportunities,
-        waste_reduction_potential: excessMaterials.reduce((sum, e) => sum + e.estimated_value, 0)
+        waste_reduction_potential: excessMaterials.reduce(
+          (sum, e) => sum + e.estimated_value,
+          0
+        ),
       };
     } catch (error) {
       console.error("Error optimizing cross-project inventory:", error);
@@ -438,10 +481,12 @@ class MaterialOrchestrationService {
   /**
    * Automatically generate purchase orders
    */
-  async autoGeneratePurchaseOrders(project_id?: string): Promise<PurchaseOrder[]> {
+  async autoGeneratePurchaseOrders(
+    project_id?: string
+  ): Promise<PurchaseOrder[]> {
     try {
       // Get material shortages
-      const shortages = project_id 
+      const shortages = project_id
         ? await this.detectMaterialShortages(project_id)
         : await this.getAllCompanyShortages();
 
@@ -457,27 +502,29 @@ class MaterialOrchestrationService {
           supplierOrders.set(bestSupplier.supplier_id, {
             supplier: bestSupplier,
             materials: [],
-            total_amount: 0
+            total_amount: 0,
           });
         }
 
         const order = supplierOrders.get(bestSupplier.supplier_id);
         const itemTotal = shortage.shortage_amount * bestSupplier.unit_price;
-        
+
         order.materials.push({
           material_id: shortage.material_id,
           quantity: shortage.shortage_amount,
           unit_price: bestSupplier.unit_price,
-          total_price: itemTotal
+          total_price: itemTotal,
         });
-        
+
         order.total_amount += itemTotal;
       }
 
       // Create purchase orders
       for (const [supplierId, orderData] of supplierOrders) {
         const deliveryDate = new Date();
-        deliveryDate.setDate(deliveryDate.getDate() + orderData.supplier.estimated_delivery_days);
+        deliveryDate.setDate(
+          deliveryDate.getDate() + orderData.supplier.estimated_delivery_days
+        );
 
         purchaseOrders.push({
           po_id: crypto.randomUUID(),
@@ -487,7 +534,7 @@ class MaterialOrchestrationService {
           total_amount: orderData.total_amount,
           delivery_date: deliveryDate,
           status: "draft",
-          auto_generated: true
+          auto_generated: true,
         });
       }
 
@@ -501,14 +548,20 @@ class MaterialOrchestrationService {
   /**
    * Predict material usage patterns
    */
-  async predictMaterialUsage(material_id: string, project_id?: string): Promise<MaterialUsagePrediction> {
+  async predictMaterialUsage(
+    material_id: string,
+    project_id?: string
+  ): Promise<MaterialUsagePrediction> {
     try {
       // Get historical usage data
       const { data: historicalUsage, error } = await supabase
         .from("material_usage")
         .select("quantity_needed, quantity_used, created_at")
         .eq("material_id", material_id)
-        .eq(project_id ? "project_id" : "material_id", project_id || material_id)
+        .eq(
+          project_id ? "project_id" : "material_id",
+          project_id || material_id
+        )
         .order("created_at");
 
       if (error) throw error;
@@ -521,14 +574,17 @@ class MaterialOrchestrationService {
           confidence_level: 0.1,
           usage_pattern: "steady",
           recommended_stock_level: 0,
-          reorder_point: 0
+          reorder_point: 0,
         };
       }
 
       // Simple trend analysis
-      const usageAmounts = historicalUsage.map(u => u.quantity_used || u.quantity_needed);
-      const avgUsage = usageAmounts.reduce((sum, amt) => sum + amt, 0) / usageAmounts.length;
-      
+      const usageAmounts = historicalUsage.map(
+        (u) => u.quantity_used || u.quantity_needed
+      );
+      const avgUsage =
+        usageAmounts.reduce((sum, amt) => sum + amt, 0) / usageAmounts.length;
+
       // Calculate trend
       let trend = 0;
       for (let i = 1; i < usageAmounts.length; i++) {
@@ -537,7 +593,8 @@ class MaterialOrchestrationService {
       trend = trend / (usageAmounts.length - 1);
 
       // Determine pattern
-      let pattern: "steady" | "increasing" | "decreasing" | "seasonal" = "steady";
+      let pattern: "steady" | "increasing" | "decreasing" | "seasonal" =
+        "steady";
       if (Math.abs(trend) > avgUsage * 0.1) {
         pattern = trend > 0 ? "increasing" : "decreasing";
       }
@@ -554,7 +611,7 @@ class MaterialOrchestrationService {
         confidence_level: confidenceLevel,
         usage_pattern: pattern,
         recommended_stock_level: recommendedStockLevel,
-        reorder_point: reorderPoint
+        reorder_point: reorderPoint,
       };
     } catch (error) {
       console.error("Error predicting material usage:", error);
@@ -578,8 +635,8 @@ class MaterialOrchestrationService {
   }
 
   private async getOptimalStorageLocation(
-    project_id: string, 
-    material_id: string, 
+    project_id: string,
+    material_id: string,
     quantity: number
   ): Promise<string> {
     // Simple storage logic - could be enhanced with actual storage capacity tracking
@@ -590,7 +647,7 @@ class MaterialOrchestrationService {
       .single();
 
     const storageReqs = material?.storage_requirements;
-    
+
     if (storageReqs?.includes("covered")) {
       return "covered_storage";
     } else if (storageReqs?.includes("dry")) {
@@ -609,7 +666,7 @@ class MaterialOrchestrationService {
     const bulkDiscount = this.calculateBulkDiscount(quantity);
     const earlyPaymentDiscount = 0.02; // 2% for early payment
     const combinedDeliveryDiscount = 0.01; // 1% for combined deliveries
-    
+
     const baseAmount = quantity * 100; // Placeholder base cost
     const bulkSavings = baseAmount * bulkDiscount;
     const earlyPaymentSavings = baseAmount * earlyPaymentDiscount;
@@ -619,27 +676,33 @@ class MaterialOrchestrationService {
       bulk_discount: bulkSavings,
       early_payment_discount: earlyPaymentSavings,
       combined_delivery_savings: combinedDeliverySavings,
-      total_savings: bulkSavings + earlyPaymentSavings + combinedDeliverySavings
+      total_savings:
+        bulkSavings + earlyPaymentSavings + combinedDeliverySavings,
     };
   }
 
   private calculateBulkDiscount(quantity: number): number {
-    if (quantity >= 1000) return 0.10; // 10% for large orders
-    if (quantity >= 500) return 0.05;  // 5% for medium orders
-    if (quantity >= 100) return 0.02;  // 2% for small bulk orders
+    if (quantity >= 1000) return 0.1; // 10% for large orders
+    if (quantity >= 500) return 0.05; // 5% for medium orders
+    if (quantity >= 100) return 0.02; // 2% for small bulk orders
     return 0;
   }
 
-  private async getBestSupplier(material_id: string, quantity: number): Promise<SupplierOption> {
+  private async getBestSupplier(
+    material_id: string,
+    quantity: number
+  ): Promise<SupplierOption> {
     const { data: suppliers } = await supabase
       .from("material_suppliers")
-      .select(`
+      .select(
+        `
         supplier_id,
         unit_price,
         lead_time_days,
         minimum_order_quantity,
         suppliers(name, reliability_score)
-      `)
+      `
+      )
       .eq("material_id", material_id)
       .gte("minimum_order_quantity", quantity)
       .order("unit_price");
@@ -652,7 +715,7 @@ class MaterialOrchestrationService {
         estimated_delivery_days: 7,
         unit_price: 100,
         minimum_order_quantity: 1,
-        reliability_score: 0.7
+        reliability_score: 0.7,
       };
     }
 
@@ -664,14 +727,19 @@ class MaterialOrchestrationService {
       estimated_delivery_days: best.lead_time_days,
       unit_price: best.unit_price,
       minimum_order_quantity: best.minimum_order_quantity,
-      reliability_score: best.suppliers.reliability_score
+      reliability_score: best.suppliers.reliability_score,
     };
   }
 
-  private calculateDeliveryPriority(task: any, usage: any): "low" | "medium" | "high" | "critical" {
+  private calculateDeliveryPriority(
+    task: any,
+    usage: any
+  ): "low" | "medium" | "high" | "critical" {
     const taskStartDate = new Date(task.start_date);
-    const daysUntilNeeded = Math.ceil((taskStartDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    
+    const daysUntilNeeded = Math.ceil(
+      (taskStartDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysUntilNeeded <= 3) return "critical";
     if (daysUntilNeeded <= 7) return "high";
     if (daysUntilNeeded <= 14) return "medium";
@@ -688,7 +756,10 @@ class MaterialOrchestrationService {
     return alternatives;
   }
 
-  private async getAvailableQuantity(project_id: string, material_id: string): Promise<number> {
+  private async getAvailableQuantity(
+    project_id: string,
+    material_id: string
+  ): Promise<number> {
     const { data } = await supabase
       .from("material_usage")
       .select("quantity_used")
@@ -698,34 +769,43 @@ class MaterialOrchestrationService {
     return data?.reduce((sum, item) => sum + (item.quantity_used || 0), 0) || 0;
   }
 
-  private async findSuppliersForMaterial(material_id: string): Promise<SupplierOption[]> {
+  private async findSuppliersForMaterial(
+    material_id: string
+  ): Promise<SupplierOption[]> {
     const { data: suppliers } = await supabase
       .from("material_suppliers")
-      .select(`
+      .select(
+        `
         supplier_id,
         unit_price,
         lead_time_days,
         minimum_order_quantity,
         suppliers(name, reliability_score)
-      `)
+      `
+      )
       .eq("material_id", material_id)
       .order("unit_price")
       .limit(5);
 
-    return (suppliers || []).map(s => ({
+    return (suppliers || []).map((s) => ({
       supplier_id: s.supplier_id,
       supplier_name: s.suppliers.name,
       availability: true,
       estimated_delivery_days: s.lead_time_days,
       unit_price: s.unit_price,
       minimum_order_quantity: s.minimum_order_quantity,
-      reliability_score: s.suppliers.reliability_score
+      reliability_score: s.suppliers.reliability_score,
     }));
   }
 
-  private calculateUrgencyLevel(neededByDate: Date, shortageAmount: number): "low" | "medium" | "high" | "critical" {
-    const daysUntilNeeded = Math.ceil((neededByDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    
+  private calculateUrgencyLevel(
+    neededByDate: Date,
+    shortageAmount: number
+  ): "low" | "medium" | "high" | "critical" {
+    const daysUntilNeeded = Math.ceil(
+      (neededByDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysUntilNeeded <= 2) return "critical";
     if (daysUntilNeeded <= 5) return "high";
     if (daysUntilNeeded <= 10) return "medium";
@@ -736,7 +816,7 @@ class MaterialOrchestrationService {
     // Simple transfer cost calculation
     const baseCost = 50; // Base transport cost
     const perUnitCost = material.unit_cost * 0.05; // 5% of unit cost for handling
-    return baseCost + (quantity * perUnitCost);
+    return baseCost + quantity * perUnitCost;
   }
 
   private async getAllCompanyShortages(): Promise<MaterialShortage[]> {

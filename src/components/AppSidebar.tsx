@@ -524,7 +524,13 @@ const navigationCategories: NavigationCategory[] = [
         title: "Trade Handoff Coordination",
         url: "/trade-handoff",
         icon: Users,
-        roles: ["admin", "superintendent", "project_manager", "foreman", "root_admin"],
+        roles: [
+          "admin",
+          "superintendent",
+          "project_manager",
+          "foreman",
+          "root_admin",
+        ],
         badge: "New",
       },
       {

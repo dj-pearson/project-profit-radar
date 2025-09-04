@@ -17,9 +17,7 @@ export default function MaterialOrchestrationPage() {
         />
       </Helmet>
       <PageLayout>
-        <MaterialOrchestrationDashboard 
-          companyId={userProfile?.company_id}
-        />
+        <MaterialOrchestrationDashboard companyId={userProfile?.company_id} />
       </PageLayout>
     </>
   );

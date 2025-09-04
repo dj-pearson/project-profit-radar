@@ -75,18 +75,26 @@ export const ConstructionTimelineManager: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
-  const [scheduleConflicts, setScheduleConflicts] = useState<ScheduleConflict[]>([]);
-  const [optimizedSchedule, setOptimizedSchedule] = useState<OptimizedSchedule | null>(null);
-  const [inspectionSchedules, setInspectionSchedules] = useState<InspectionSchedule[]>([]);
-  
+  const [validationResults, setValidationResults] = useState<
+    ValidationResult[]
+  >([]);
+  const [scheduleConflicts, setScheduleConflicts] = useState<
+    ScheduleConflict[]
+  >([]);
+  const [optimizedSchedule, setOptimizedSchedule] =
+    useState<OptimizedSchedule | null>(null);
+  const [inspectionSchedules, setInspectionSchedules] = useState<
+    InspectionSchedule[]
+  >([]);
+
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [selectedConflict, setSelectedConflict] = useState<ScheduleConflict | null>(null);
+  const [selectedConflict, setSelectedConflict] =
+    useState<ScheduleConflict | null>(null);
 
   useEffect(() => {
     loadData();
@@ -133,7 +141,9 @@ export const ConstructionTimelineManager: React.FC = () => {
     try {
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
-        .select("id, name, construction_phase, start_date, end_date, status, inspection_required")
+        .select(
+          "id, name, construction_phase, start_date, end_date, status, inspection_required"
+        )
         .eq("project_id", selectedProject)
         .order("start_date");
 
@@ -155,18 +165,24 @@ export const ConstructionTimelineManager: React.FC = () => {
     setAnalyzing(true);
     try {
       // Validate task sequence
-      const validation = await constructionFlowEngine.validateTaskSequence(tasks);
+      const validation = await constructionFlowEngine.validateTaskSequence(
+        tasks
+      );
       setValidationResults(validation);
 
       // Detect schedule conflicts
-      const conflicts = await constructionFlowEngine.detectScheduleConflicts(selectedProject);
+      const conflicts = await constructionFlowEngine.detectScheduleConflicts(
+        selectedProject
+      );
       setScheduleConflicts(conflicts);
 
       // Auto-schedule inspections
-      const inspections = await constructionFlowEngine.autoScheduleInspections(selectedProject);
+      const inspections = await constructionFlowEngine.autoScheduleInspections(
+        selectedProject
+      );
       setInspectionSchedules(inspections);
 
-      const validTasks = validation.filter(v => v.is_valid).length;
+      const validTasks = validation.filter((v) => v.is_valid).length;
       const totalTasks = validation.length;
 
       toast({
@@ -190,7 +206,9 @@ export const ConstructionTimelineManager: React.FC = () => {
 
     setOptimizing(true);
     try {
-      const optimization = await constructionFlowEngine.optimizeTradeSequencing(selectedProject);
+      const optimization = await constructionFlowEngine.optimizeTradeSequencing(
+        selectedProject
+      );
       setOptimizedSchedule(optimization);
 
       toast({
@@ -213,17 +231,17 @@ export const ConstructionTimelineManager: React.FC = () => {
     try {
       const { error } = await supabase
         .from("schedule_conflicts")
-        .update({ 
+        .update({
           resolution_status: "resolved",
           resolved_by: userProfile?.id,
-          resolved_at: new Date().toISOString()
+          resolved_at: new Date().toISOString(),
         })
         .eq("id", conflictId);
 
       if (error) throw error;
 
       // Refresh conflicts
-      const updatedConflicts = scheduleConflicts.map(conflict =>
+      const updatedConflicts = scheduleConflicts.map((conflict) =>
         conflict.conflict_id === conflictId
           ? { ...conflict, resolution_status: "resolved" as const }
           : conflict
@@ -246,21 +264,31 @@ export const ConstructionTimelineManager: React.FC = () => {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "critical": return "bg-red-100 text-red-800";
-      case "high": return "bg-orange-100 text-orange-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "critical":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case "critical": return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case "high": return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-      case "medium": return <Clock className="h-4 w-4 text-yellow-500" />;
-      case "low": return <CheckCircle className="h-4 w-4 text-blue-500" />;
-      default: return <CheckCircle className="h-4 w-4" />;
+      case "critical":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "high":
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case "medium":
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case "low":
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      default:
+        return <CheckCircle className="h-4 w-4" />;
     }
   };
 
@@ -269,7 +297,9 @@ export const ConstructionTimelineManager: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading construction timeline...</p>
+          <p className="text-muted-foreground">
+            Loading construction timeline...
+          </p>
         </div>
       </div>
     );
@@ -279,9 +309,12 @@ export const ConstructionTimelineManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Construction Timeline Intelligence</h2>
+          <h2 className="text-2xl font-bold">
+            Construction Timeline Intelligence
+          </h2>
           <p className="text-muted-foreground">
-            Optimize construction workflows with intelligent dependency management
+            Optimize construction workflows with intelligent dependency
+            management
           </p>
         </div>
         <div className="flex gap-2">
@@ -290,21 +323,28 @@ export const ConstructionTimelineManager: React.FC = () => {
             onClick={analyzeTimeline}
             disabled={!selectedProject || analyzing}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${analyzing ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${analyzing ? "animate-spin" : ""}`}
+            />
             {analyzing ? "Analyzing..." : "Analyze Timeline"}
           </Button>
           <Button
             onClick={optimizeSchedule}
             disabled={!selectedProject || optimizing}
           >
-            <TrendingUp className={`h-4 w-4 mr-2 ${optimizing ? "animate-spin" : ""}`} />
+            <TrendingUp
+              className={`h-4 w-4 mr-2 ${optimizing ? "animate-spin" : ""}`}
+            />
             {optimizing ? "Optimizing..." : "Optimize Schedule"}
           </Button>
         </div>
       </div>
 
       <div className="mb-4">
-        <label htmlFor="project-select" className="block text-sm font-medium mb-2">
+        <label
+          htmlFor="project-select"
+          className="block text-sm font-medium mb-2"
+        >
           Select Project
         </label>
         <select
@@ -335,50 +375,72 @@ export const ConstructionTimelineManager: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Tasks
+                </CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{tasks.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  {tasks.filter(t => t.status === "completed").length} completed
+                  {tasks.filter((t) => t.status === "completed").length}{" "}
+                  completed
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Validation Score</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Validation Score
+                </CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {validationResults.length > 0
-                    ? Math.round((validationResults.filter(v => v.is_valid).length / validationResults.length) * 100)
-                    : 0}%
+                    ? Math.round(
+                        (validationResults.filter((v) => v.is_valid).length /
+                          validationResults.length) *
+                          100
+                      )
+                    : 0}
+                  %
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {validationResults.filter(v => v.is_valid).length} of {validationResults.length} tasks valid
+                  {validationResults.filter((v) => v.is_valid).length} of{" "}
+                  {validationResults.length} tasks valid
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Conflicts</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Conflicts
+                </CardTitle>
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{scheduleConflicts.length}</div>
+                <div className="text-2xl font-bold">
+                  {scheduleConflicts.length}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  {scheduleConflicts.filter(c => c.severity === "critical" || c.severity === "high").length} high priority
+                  {
+                    scheduleConflicts.filter(
+                      (c) => c.severity === "critical" || c.severity === "high"
+                    ).length
+                  }{" "}
+                  high priority
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Time Savings</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Time Savings
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -405,29 +467,41 @@ export const ConstructionTimelineManager: React.FC = () => {
                   <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Tasks Found</h3>
                   <p className="text-muted-foreground">
-                    Select a project with tasks to analyze the construction timeline
+                    Select a project with tasks to analyze the construction
+                    timeline
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="grid gap-2">
                     {tasks.slice(0, 5).map((task) => (
-                      <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
-                            task.status === "completed" ? "bg-green-500" :
-                            task.status === "in_progress" ? "bg-blue-500" :
-                            "bg-gray-300"
-                          }`} />
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              task.status === "completed"
+                                ? "bg-green-500"
+                                : task.status === "in_progress"
+                                ? "bg-blue-500"
+                                : "bg-gray-300"
+                            }`}
+                          />
                           <div>
                             <p className="font-medium">{task.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {task.construction_phase && task.construction_phase.replace(/_/g, ' ')}
+                              {task.construction_phase &&
+                                task.construction_phase.replace(/_/g, " ")}
                             </p>
                           </div>
                         </div>
                         <div className="text-right text-sm">
-                          <p>{format(new Date(task.start_date), "MMM d")} - {format(new Date(task.end_date), "MMM d")}</p>
+                          <p>
+                            {format(new Date(task.start_date), "MMM d")} -{" "}
+                            {format(new Date(task.end_date), "MMM d")}
+                          </p>
                           <Badge variant="outline" className="text-xs">
                             {task.status}
                           </Badge>
@@ -458,9 +532,12 @@ export const ConstructionTimelineManager: React.FC = () => {
               {validationResults.length === 0 ? (
                 <div className="text-center py-8">
                   <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Validation Results</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No Validation Results
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Click "Analyze Timeline" to validate the construction sequence
+                    Click "Analyze Timeline" to validate the construction
+                    sequence
                   </p>
                   <Button onClick={analyzeTimeline} disabled={!selectedProject}>
                     <Play className="h-4 w-4 mr-2" />
@@ -480,16 +557,28 @@ export const ConstructionTimelineManager: React.FC = () => {
                   <TableBody>
                     {validationResults.map((result) => (
                       <TableRow key={result.task_id}>
-                        <TableCell className="font-medium">{result.task_name}</TableCell>
+                        <TableCell className="font-medium">
+                          {result.task_name}
+                        </TableCell>
                         <TableCell>
-                          <Badge className={result.is_valid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                          <Badge
+                            className={
+                              result.is_valid
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }
+                          >
                             {result.is_valid ? "Valid" : "Invalid"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             {result.issues.map((issue, idx) => (
-                              <Badge key={idx} className={getSeverityColor(issue.severity)} variant="outline">
+                              <Badge
+                                key={idx}
+                                className={getSeverityColor(issue.severity)}
+                                variant="outline"
+                              >
                                 {issue.description}
                               </Badge>
                             ))}
@@ -523,7 +612,9 @@ export const ConstructionTimelineManager: React.FC = () => {
               {scheduleConflicts.length === 0 ? (
                 <div className="text-center py-8">
                   <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Conflicts Detected</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No Conflicts Detected
+                  </h3>
                   <p className="text-muted-foreground">
                     Your construction timeline appears to be conflict-free
                   </p>
@@ -544,29 +635,39 @@ export const ConstructionTimelineManager: React.FC = () => {
                       <TableRow key={conflict.conflict_id}>
                         <TableCell>
                           <Badge variant="outline">
-                            {conflict.conflict_type.replace(/_/g, ' ')}
+                            {conflict.conflict_type.replace(/_/g, " ")}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getSeverityIcon(conflict.severity)}
-                            <Badge className={getSeverityColor(conflict.severity)}>
+                            <Badge
+                              className={getSeverityColor(conflict.severity)}
+                            >
                               {conflict.severity}
                             </Badge>
                           </div>
                         </TableCell>
                         <TableCell className="max-w-xs">
-                          <p className="text-sm">{conflict.suggested_resolution}</p>
+                          <p className="text-sm">
+                            {conflict.suggested_resolution}
+                          </p>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={conflict.auto_resolvable ? "default" : "secondary"}>
-                            {conflict.auto_resolvable ? "Auto-resolvable" : "Manual"}
+                          <Badge
+                            variant={
+                              conflict.auto_resolvable ? "default" : "secondary"
+                            }
+                          >
+                            {conflict.auto_resolvable
+                              ? "Auto-resolvable"
+                              : "Manual"}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => {
                                 setSelectedConflict(conflict);
@@ -575,10 +676,12 @@ export const ConstructionTimelineManager: React.FC = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
-                              onClick={() => resolveConflict(conflict.conflict_id)}
+                              onClick={() =>
+                                resolveConflict(conflict.conflict_id)
+                              }
                             >
                               Resolve
                             </Button>
@@ -605,11 +708,16 @@ export const ConstructionTimelineManager: React.FC = () => {
               {!optimizedSchedule ? (
                 <div className="text-center py-8">
                   <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Optimization Analysis</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No Optimization Analysis
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     Run schedule optimization to find efficiency improvements
                   </p>
-                  <Button onClick={optimizeSchedule} disabled={!selectedProject}>
+                  <Button
+                    onClick={optimizeSchedule}
+                    disabled={!selectedProject}
+                  >
                     <Zap className="h-4 w-4 mr-2" />
                     Optimize Schedule
                   </Button>
@@ -621,19 +729,25 @@ export const ConstructionTimelineManager: React.FC = () => {
                       <div className="text-2xl font-bold text-green-600">
                         {optimizedSchedule.estimated_time_saved}
                       </div>
-                      <p className="text-sm text-muted-foreground">Days Saved</p>
+                      <p className="text-sm text-muted-foreground">
+                        Days Saved
+                      </p>
                     </div>
                     <div className="p-4 border rounded-lg text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {optimizedSchedule.optimizations_applied.length}
                       </div>
-                      <p className="text-sm text-muted-foreground">Optimizations</p>
+                      <p className="text-sm text-muted-foreground">
+                        Optimizations
+                      </p>
                     </div>
                     <div className="p-4 border rounded-lg text-center">
                       <div className="text-2xl font-bold text-purple-600">
                         {format(optimizedSchedule.new_completion_date, "MMM d")}
                       </div>
-                      <p className="text-sm text-muted-foreground">New Completion</p>
+                      <p className="text-sm text-muted-foreground">
+                        New Completion
+                      </p>
                     </div>
                   </div>
 
@@ -643,13 +757,15 @@ export const ConstructionTimelineManager: React.FC = () => {
                       <div key={idx} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <Badge variant="outline">
-                            {opt.type.replace(/_/g, ' ')}
+                            {opt.type.replace(/_/g, " ")}
                           </Badge>
                           <span className="text-sm font-medium text-green-600">
                             +{opt.time_impact} days
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground">{opt.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {opt.description}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Affects {opt.tasks_affected.length} tasks
                         </p>
@@ -674,9 +790,12 @@ export const ConstructionTimelineManager: React.FC = () => {
               {inspectionSchedules.length === 0 ? (
                 <div className="text-center py-8">
                   <Settings className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Inspections Scheduled</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No Inspections Scheduled
+                  </h3>
                   <p className="text-muted-foreground">
-                    Inspections will be automatically scheduled when you analyze the timeline
+                    Inspections will be automatically scheduled when you analyze
+                    the timeline
                   </p>
                 </div>
               ) : (
@@ -694,22 +813,34 @@ export const ConstructionTimelineManager: React.FC = () => {
                     {inspectionSchedules.map((inspection) => (
                       <TableRow key={inspection.inspection_id}>
                         <TableCell className="font-medium">
-                          {inspection.inspection_type.replace(/_/g, ' ')}
+                          {inspection.inspection_type.replace(/_/g, " ")}
                         </TableCell>
                         <TableCell>
-                          {inspection.required_for_phase.replace(/_/g, ' ')}
+                          {inspection.required_for_phase.replace(/_/g, " ")}
                         </TableCell>
                         <TableCell>
                           {format(inspection.optimal_date, "MMM d, yyyy")}
                         </TableCell>
                         <TableCell>
-                          <Badge className={inspection.prerequisites_met ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
+                          <Badge
+                            className={
+                              inspection.prerequisites_met
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }
+                          >
                             {inspection.prerequisites_met ? "Met" : "Pending"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={inspection.auto_scheduled ? "default" : "outline"}>
-                            {inspection.auto_scheduled ? "Auto-scheduled" : "Manual"}
+                          <Badge
+                            variant={
+                              inspection.auto_scheduled ? "default" : "outline"
+                            }
+                          >
+                            {inspection.auto_scheduled
+                              ? "Auto-scheduled"
+                              : "Manual"}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -728,7 +859,8 @@ export const ConstructionTimelineManager: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Schedule Conflict Details</DialogTitle>
             <DialogDescription>
-              Detailed information about the schedule conflict and resolution options
+              Detailed information about the schedule conflict and resolution
+              options
             </DialogDescription>
           </DialogHeader>
           {selectedConflict && (
@@ -736,19 +868,25 @@ export const ConstructionTimelineManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium">Conflict Type</label>
-                  <p className="capitalize">{selectedConflict.conflict_type.replace(/_/g, ' ')}</p>
+                  <p className="capitalize">
+                    {selectedConflict.conflict_type.replace(/_/g, " ")}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Severity</label>
                   <div className="flex items-center gap-2">
                     {getSeverityIcon(selectedConflict.severity)}
-                    <span className="capitalize">{selectedConflict.severity}</span>
+                    <span className="capitalize">
+                      {selectedConflict.severity}
+                    </span>
                   </div>
                 </div>
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium">Suggested Resolution</label>
+                <label className="text-sm font-medium">
+                  Suggested Resolution
+                </label>
                 <p className="text-sm text-muted-foreground mt-1">
                   {selectedConflict.suggested_resolution}
                 </p>
@@ -762,13 +900,18 @@ export const ConstructionTimelineManager: React.FC = () => {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setDetailsDialogOpen(false)}
+                >
                   Close
                 </Button>
-                <Button onClick={() => {
-                  resolveConflict(selectedConflict.conflict_id);
-                  setDetailsDialogOpen(false);
-                }}>
+                <Button
+                  onClick={() => {
+                    resolveConflict(selectedConflict.conflict_id);
+                    setDetailsDialogOpen(false);
+                  }}
+                >
                   Mark as Resolved
                 </Button>
               </div>

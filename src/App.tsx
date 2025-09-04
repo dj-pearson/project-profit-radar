@@ -312,18 +312,15 @@ const App = () => {
                 element={<EquipmentManagement />}
               />
               <Route path="/workflows" element={<AutomatedWorkflows />} />
-                          <Route
-              path="/smart-client-updates"
-              element={<SmartClientUpdatesPage />}
-            />
-            <Route
-              path="/material-orchestration"
-              element={<MaterialOrchestrationPage />}
-            />
-            <Route
-              path="/trade-handoff"
-              element={<TradeHandoffPage />}
-            />
+              <Route
+                path="/smart-client-updates"
+                element={<SmartClientUpdatesPage />}
+              />
+              <Route
+                path="/material-orchestration"
+                element={<MaterialOrchestrationPage />}
+              />
+              <Route path="/trade-handoff" element={<TradeHandoffPage />} />
               <Route path="/knowledge-base" element={<KnowledgeBase />} />
 
               {/* Admin area routes */}
