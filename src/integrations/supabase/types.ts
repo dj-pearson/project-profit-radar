@@ -18261,6 +18261,9 @@ export type Database = {
           status: string | null
           tags: string[] | null
           updated_at: string
+          weather_constraints: Json | null
+          weather_last_check: string | null
+          weather_sensitive: boolean | null
         }
         Insert: {
           actual_hours?: number | null
@@ -18289,6 +18292,9 @@ export type Database = {
           status?: string | null
           tags?: string[] | null
           updated_at?: string
+          weather_constraints?: Json | null
+          weather_last_check?: string | null
+          weather_sensitive?: boolean | null
         }
         Update: {
           actual_hours?: number | null
@@ -18317,6 +18323,9 @@ export type Database = {
           status?: string | null
           tags?: string[] | null
           updated_at?: string
+          weather_constraints?: Json | null
+          weather_last_check?: string | null
+          weather_sensitive?: boolean | null
         }
         Relationships: [
           {
@@ -19237,6 +19246,188 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weather_forecasts: {
+        Row: {
+          conditions: string | null
+          description: string | null
+          expires_at: string
+          fetched_at: string
+          forecast_data: Json | null
+          forecast_date: string
+          humidity: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          precipitation: number | null
+          project_id: string | null
+          temperature_max: number | null
+          temperature_min: number | null
+          wind_speed: number | null
+        }
+        Insert: {
+          conditions?: string | null
+          description?: string | null
+          expires_at?: string
+          fetched_at?: string
+          forecast_data?: Json | null
+          forecast_date: string
+          humidity?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          precipitation?: number | null
+          project_id?: string | null
+          temperature_max?: number | null
+          temperature_min?: number | null
+          wind_speed?: number | null
+        }
+        Update: {
+          conditions?: string | null
+          description?: string | null
+          expires_at?: string
+          fetched_at?: string
+          forecast_data?: Json | null
+          forecast_date?: string
+          humidity?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          precipitation?: number | null
+          project_id?: string | null
+          temperature_max?: number | null
+          temperature_min?: number | null
+          wind_speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_forecasts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "weather_forecasts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_schedule_adjustments: {
+        Row: {
+          adjusted_date: string
+          adjustment_impact_score: number | null
+          auto_adjusted: boolean | null
+          created_at: string
+          created_by: string | null
+          id: string
+          original_date: string
+          project_id: string
+          task_id: string | null
+          weather_data: Json | null
+          weather_reason: string
+        }
+        Insert: {
+          adjusted_date: string
+          adjustment_impact_score?: number | null
+          auto_adjusted?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          original_date: string
+          project_id: string
+          task_id?: string | null
+          weather_data?: Json | null
+          weather_reason: string
+        }
+        Update: {
+          adjusted_date?: string
+          adjustment_impact_score?: number | null
+          auto_adjusted?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          original_date?: string
+          project_id?: string
+          task_id?: string | null
+          weather_data?: Json | null
+          weather_reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_schedule_adjustments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_sensitive_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          humidity_threshold: number | null
+          id: string
+          is_active: boolean | null
+          max_temperature: number | null
+          max_wind_speed: number | null
+          min_temperature: number | null
+          precipitation_threshold: number | null
+          updated_at: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          humidity_threshold?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_temperature?: number | null
+          max_wind_speed?: number | null
+          min_temperature?: number | null
+          precipitation_threshold?: number | null
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          humidity_threshold?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_temperature?: number | null
+          max_wind_speed?: number | null
+          min_temperature?: number | null
+          precipitation_threshold?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       webhook_delivery_logs: {
         Row: {
