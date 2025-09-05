@@ -87,8 +87,12 @@ export const useCriticalResources = () => {
       link.href = resource.href;
       link.as = resource.as;
       
-      if (resource.type) link.type = resource.type;
-      if (resource.crossOrigin) link.crossOrigin = resource.crossOrigin;
+      if ('type' in resource && resource.type) {
+        link.type = resource.type;
+      }
+      if ('crossOrigin' in resource && resource.crossOrigin) {
+        link.crossOrigin = resource.crossOrigin;
+      }
 
       document.head.appendChild(link);
     });
@@ -137,8 +141,12 @@ export const PageResourcePreloader = ({ pageType }: { pageType: string }) => {
       link.href = resource.href;
       link.as = resource.as;
       
-      if (resource.type) link.type = resource.type;
-      if (resource.crossOrigin) link.crossOrigin = resource.crossOrigin;
+      if ('type' in resource && resource.type) {
+        link.type = resource.type;
+      }
+      if ('crossOrigin' in resource && resource.crossOrigin) {
+        link.crossOrigin = resource.crossOrigin;
+      }
 
       document.head.appendChild(link);
     });

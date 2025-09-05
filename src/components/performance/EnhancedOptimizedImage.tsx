@@ -85,8 +85,8 @@ export const EnhancedOptimizedImage = ({
         // Measure load time for performance tracking
         const loadTime = performance.now();
         
-        if (typeof gtag !== 'undefined') {
-          gtag('event', 'image_load', {
+        if (typeof window !== 'undefined' && 'gtag' in window) {
+          (window as any).gtag('event', 'image_load', {
             image_src: targetSrc,
             load_time: Math.round(loadTime),
             format: targetSrc.includes('.webp') ? 'webp' : targetSrc.includes('.avif') ? 'avif' : 'original',

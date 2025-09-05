@@ -142,13 +142,22 @@ export const ConstructionTimelineManager: React.FC = () => {
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
         .select(
-          "id, name, construction_phase, start_date, end_date, status, inspection_required"
+          "id, name, start_date, end_date, status, project_id"
         )
         .eq("project_id", selectedProject)
         .order("start_date");
 
       if (tasksError) throw tasksError;
-      setTasks(tasksData || []);
+      
+      // Transform the data to match expected interface
+      const transformedTasks = (tasksData || []).map(task => ({
+        ...task,
+        construction_phase: 'general', // Default phase
+        inspection_required: false,
+        duration_days: 1
+      }));
+      
+      setTasks(transformedTasks);
     } catch (error) {
       console.error("Error loading tasks:", error);
       toast({

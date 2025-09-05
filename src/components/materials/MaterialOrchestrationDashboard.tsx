@@ -92,25 +92,25 @@ export default function MaterialOrchestrationDashboard({
       if (projectId) {
         if (results[resultIndex].status === "fulfilled") {
           setDeliveryPlans(
-            results[resultIndex].value as MaterialDeliveryPlan[]
+            (results[resultIndex] as PromiseFulfilledResult<any>).value as MaterialDeliveryPlan[]
           );
         }
         resultIndex++;
 
         if (results[resultIndex].status === "fulfilled") {
-          setShortages(results[resultIndex].value as MaterialShortage[]);
+          setShortages((results[resultIndex] as PromiseFulfilledResult<any>).value as MaterialShortage[]);
         }
         resultIndex++;
 
         if (results[resultIndex].status === "fulfilled") {
-          setPurchaseOrders(results[resultIndex].value as PurchaseOrder[]);
+          setPurchaseOrders((results[resultIndex] as PromiseFulfilledResult<any>).value as PurchaseOrder[]);
         }
         resultIndex++;
       }
 
       if (companyId && results[resultIndex]?.status === "fulfilled") {
         setInventoryOptimization(
-          results[resultIndex].value as InventoryOptimization
+          (results[resultIndex] as PromiseFulfilledResult<any>).value as InventoryOptimization
         );
       }
     } catch (error) {
