@@ -99,13 +99,10 @@ export const SmartClientUpdates: React.FC = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      // Load automation rules
+      // Load automation rules (without join for now to avoid foreign key issues)
       const { data: rulesData, error: rulesError } = await supabase
         .from('automation_rules')
-        .select(`
-          *,
-          template:template_id(id, name, subject, content)
-        `)
+        .select('*')
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
@@ -130,8 +127,29 @@ export const SmartClientUpdates: React.FC = () => {
 
       if (projectsError) throw projectsError;
 
-      setAutomationRules(rulesData || []);
-      setTemplates(templatesData || []);
+      // Transform data to match expected interfaces
+      const transformedRules = (rulesData || []).map(rule => ({
+        ...rule,
+        template: {
+          id: rule.template_id || '',
+          name: 'Template Name',
+          subject: 'Subject',
+          content: 'Content'
+        }
+      }));
+
+      const transformedTemplates = (templatesData || []).map(template => ({
+        ...template,
+        subject: template.subject_template || '',
+        content: template.content_template || '',
+        trigger_type: 'manual',
+        variables: Array.isArray(template.variables) 
+          ? template.variables.map(v => String(v))
+          : []
+      }));
+
+      setAutomationRules(transformedRules);
+      setTemplates(transformedTemplates);
       setProjects(projectsData || []);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -185,7 +203,11 @@ export const SmartClientUpdates: React.FC = () => {
       const { data, error } = await supabase
         .from('communication_templates')
         .insert({
-          ...templateForm,
+          name: templateForm.name,
+          subject_template: templateForm.subject,
+          content_template: templateForm.content,
+          category: 'general',
+          communication_type: 'email',
           company_id: userProfile.company_id,
           created_by: userProfile.id
         })

@@ -158,8 +158,8 @@ export const useRealUserMetrics = (): RealUserMetrics => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       
       if (navigation) {
-        const pageLoadTime = navigation.loadEventEnd - navigation.navigationStart;
-        const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.navigationStart;
+        const pageLoadTime = navigation.loadEventEnd - navigation.fetchStart;
+        const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.fetchStart;
         
         setRumData(prev => ({
           ...prev,
