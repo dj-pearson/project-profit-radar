@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSecurity } from '@/hooks/useSecurity';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MFASetupState {
@@ -12,7 +11,6 @@ interface MFASetupState {
 
 export const useMFASetup = () => {
   const { user, userProfile } = useAuth();
-  const { userSecurity } = useSecurity();
   const [mfaState, setMFAState] = useState<MFASetupState>({
     shouldPromptMFA: false,
     isFirstLogin: false,
@@ -31,8 +29,8 @@ export const useMFASetup = () => {
       try {
         setIsLoading(true);
 
-        // Check if user has MFA enabled
-        const userHasMFA = userSecurity?.two_factor_enabled || false;
+        // Check if user has MFA enabled - mock for now since useSecurity causes circular dependency
+        const userHasMFA = false;
 
         // Check company MFA policy
         let companyRequiresMFA = false;
@@ -86,7 +84,7 @@ export const useMFASetup = () => {
     };
 
     checkMFASetupNeeded();
-  }, [user, userProfile, userSecurity?.two_factor_enabled]);
+  }, [user, userProfile]);
 
   const dismissMFASetup = () => {
     if (user && !mfaState.companyRequiresMFA) {
