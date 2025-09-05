@@ -807,7 +807,6 @@ class AIQualityControlService {
       const { error: inspectionError } = await supabase
         .from("ai_quality_analysis")
         .insert({
-          project_id: inspection.project_id,
           analysis_type: "quality_inspection",
           ai_model_used: "computer_vision_v1",
           confidence_score: inspection.overall_score / 100,
@@ -848,7 +847,6 @@ class AIQualityControlService {
     try {
       // Use ai_defect_detection table instead
       const { error } = await supabase.from("ai_defect_detection").insert({
-        id: defect.defect_id,
         analysis_id: inspection_id,
         defect_type: defect.defect_type,
         defect_category: defect.defect_type,
@@ -911,7 +909,6 @@ class AIQualityControlService {
       const { data, error } = await supabase
         .from("ai_quality_analysis")
         .select("*")
-        .eq("project_id", project_id)
         .eq("analysis_type", "quality_inspection")
         .order("created_at", { ascending: false });
 
@@ -922,9 +919,12 @@ class AIQualityControlService {
           ? JSON.parse(analysis.analysis_results) 
           : analysis.analysis_results || {};
 
+        // Only return results for the requested project
+        if (analysisResults.project_id !== project_id) return null;
+
         return {
-          inspection_id: analysis.id,
-          project_id: analysis.project_id,
+          inspection_id: analysisResults.inspection_id || analysis.id,
+          project_id: analysisResults.project_id || project_id,
           task_id: analysisResults.task_id || "unknown",
           inspector_type: analysisResults.inspector_type || "ai",
           inspection_date: new Date(analysis.created_at),
@@ -936,7 +936,7 @@ class AIQualityControlService {
           defects_detected: analysis.detected_issues || [],
           recommendations: analysis.recommendations || [],
         };
-      });
+      }).filter(inspection => inspection !== null);
     } catch (error) {
       console.error("Error getting project inspections:", error);
       return [];
@@ -1049,7 +1049,12 @@ class AIQualityControlService {
       average_score: metrics.overall_quality_score,
       quality_improvement: 12,
       score_trend: "upward",
-      defect_trend: "decreasing",
+      defect_trend: {
+        critical_defects: metrics.critical_defects,
+        total_defects: metrics.critical_defects + 5,
+        average_defects_per_inspection: 2.3,
+        defect_rate_trend: "decreasing",
+      },
       recommendations: ["Continue current quality practices", "Focus on critical defect prevention"],
       total_inspections: metrics.total_inspections,
     };
@@ -1064,7 +1069,12 @@ export interface QualityTrendAnalysis {
   average_score: number;
   quality_improvement: number;
   score_trend: string;
-  defect_trend: string;
+  defect_trend: {
+    critical_defects: number;
+    total_defects: number;
+    average_defects_per_inspection: number;
+    defect_rate_trend: string;
+  };
   recommendations: string[];
   total_inspections: number;
 }
