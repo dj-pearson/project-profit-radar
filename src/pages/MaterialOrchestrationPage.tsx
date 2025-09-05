@@ -1,7 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { PageLayout } from "@/components/layouts/PageLayout";
-import MaterialOrchestrationDashboard from "@/components/materials/MaterialOrchestrationDashboard";
+import { MaterialOrchestrationDashboard } from "@/components/materials/MaterialOrchestrationDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function MaterialOrchestrationPage() {
@@ -17,7 +17,7 @@ export default function MaterialOrchestrationPage() {
         />
       </Helmet>
       <PageLayout>
-        <MaterialOrchestrationDashboard companyId={userProfile?.company_id} />
+        <MaterialOrchestrationDashboard projectId={userProfile?.company_id} />
       </PageLayout>
     </>
   );
