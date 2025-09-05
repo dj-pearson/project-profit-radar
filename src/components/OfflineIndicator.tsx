@@ -19,7 +19,7 @@ export const OfflineIndicator = () => {
     '/mobile-testing'
   ].some(route => location.pathname.startsWith(route));
 
-useEffect(() => {
+  useEffect(() => {
     const wasOffline = prevIsOffline.current;
     prevIsOffline.current = isOffline;
 
