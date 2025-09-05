@@ -1,7 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { PageLayout } from "@/components/layouts/PageLayout";
-import TradeHandoffManager from "@/components/workflow/TradeHandoffManager";
+// import TradeHandoffManager from "@/components/workflow/TradeHandoffManager";
 import { useParams } from "react-router-dom";
 
 export default function TradeHandoffPage() {
@@ -23,7 +23,7 @@ export default function TradeHandoffPage() {
         />
       </Helmet>
       <PageLayout>
-        <TradeHandoffManager projectId={currentProjectId} />
+        <div>Trade handoff features are being updated.</div>
       </PageLayout>
     </>
   );

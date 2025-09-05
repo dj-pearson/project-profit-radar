@@ -2,8 +2,13 @@
 
 export interface ValidationResult {
   isValid: boolean;
+  is_valid: boolean;
   errors: string[];
   warnings: string[];
+  task_id?: string;
+  task_name?: string;
+  issues?: string[];
+  recommendations?: string[];
 }
 
 export interface OptimizedSchedule {
@@ -11,13 +16,20 @@ export interface OptimizedSchedule {
   critical_path: string[];
   estimated_completion: Date;
   optimization_score: number;
+  estimated_time_saved?: number;
+  optimizations_applied?: string[];
+  new_completion_date?: Date;
 }
 
 export interface ScheduleConflict {
   type: string;
+  conflict_type: string;
   description: string;
   affected_tasks: string[];
   severity: 'low' | 'medium' | 'high';
+  conflict_id: string;
+  suggested_resolution?: string;
+  auto_resolvable?: boolean;
 }
 
 export interface InspectionSchedule {
@@ -25,7 +37,12 @@ export interface InspectionSchedule {
   task_id: string;
   scheduled_date: Date;
   inspector_type: string;
+  inspection_type: string;
   requirements: string[];
+  required_for_phase?: string;
+  optimal_date?: Date;
+  prerequisites_met?: boolean;
+  auto_scheduled?: boolean;
 }
 
 export class ConstructionFlowEngine {
@@ -49,6 +66,7 @@ export class ConstructionFlowEngine {
   async validateTaskSequence(projectId: string): Promise<ValidationResult> {
     return {
       isValid: true,
+      is_valid: true,
       errors: [],
       warnings: [],
     };
