@@ -118,8 +118,7 @@ export default defineConfig(({ mode }) => ({
           // Performance and monitoring
           'performance': [
             '@/components/performance/LazyComponents',
-            '@/hooks/usePerformanceMonitor',
-            '@/utils/performanceOptimization'
+            '@/hooks/usePerformanceMonitor'
           ],
           
           // SEO and analytics
