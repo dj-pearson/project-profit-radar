@@ -52,6 +52,7 @@ import {
   FilterX,
   SlidersHorizontal,
 } from "lucide-react";
+import { projectService, ProjectWithRelations } from "@/services/projectService";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,7 +102,7 @@ const Projects = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -125,26 +126,8 @@ const Projects = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
-
-      let query = supabase
-        .from("projects")
-        .select(
-          `
-          *,
-          tasks(id, name, description),
-          materials(id, name, description),
-          documents(id, name, description)
-        `
-        )
-        .order("created_at", { ascending: false });
-
-      if (userProfile?.role !== "root_admin" && userProfile?.company_id) {
-        query = query.eq("company_id", userProfile.company_id);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
+      const companyId = userProfile?.role !== "root_admin" ? userProfile?.company_id : undefined;
+      const data = await projectService.getProjects(companyId);
       setProjects(data || []);
     } catch (error: any) {
       toast({
@@ -159,16 +142,11 @@ const Projects = () => {
 
   const handleUpdateProject = async (
     projectId: string,
-    updates: Partial<Project>
+    updates: any
   ) => {
     try {
-      const { error } = await supabase
-        .from("projects")
-        .update(updates)
-        .eq("id", projectId);
-
-      if (error) throw error;
-
+      await projectService.updateProject(projectId, updates);
+      
       setProjects((prev) =>
         prev.map((project) =>
           project.id === projectId ? { ...project, ...updates } : project
@@ -190,13 +168,7 @@ const Projects = () => {
 
   const handleDeleteProject = async (projectId: string) => {
     try {
-      const { error } = await supabase
-        .from("projects")
-        .delete()
-        .eq("id", projectId);
-
-      if (error) throw error;
-
+      await projectService.deleteProject(projectId);
       setProjects((prev) => prev.filter((project) => project.id !== projectId));
 
       toast({
@@ -356,7 +328,7 @@ const Projects = () => {
   const onHoldProjects = getProjectsByStatus("on_hold");
   const planningProjects = getProjectsByStatus("planning");
 
-  const ProjectCard = ({ project }: { project: Project }) => (
+  const ProjectCard = ({ project }: { project: ProjectWithRelations }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3 px-3 sm:px-6">
         <div className="flex items-start justify-between gap-2">

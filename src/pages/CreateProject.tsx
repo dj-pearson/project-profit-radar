@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
   ArrowLeft, 
@@ -121,28 +122,22 @@ const CreateProject = () => {
     try {
       const projectData = {
         name: projectName,
-        description: description || null,
-        project_type: projectType || null,
+        description: description || undefined,
+        project_type: projectType || undefined,
         status,
-        client_name: clientName || null,
-        client_email: clientEmail || null,
-        site_address: siteAddress || null,
-        start_date: startDate || null,
-        end_date: endDate || null,
-        budget: budget ? parseFloat(budget) : null,
-        estimated_hours: estimatedHours ? parseInt(estimatedHours) : null,
-        permit_numbers: permitNumbers.length > 0 ? permitNumbers : null,
+        client_name: clientName || '',
+        client_email: clientEmail || undefined,
+        site_address: siteAddress || undefined,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+        budget: budget ? parseFloat(budget) : undefined,
+        estimated_hours: estimatedHours ? parseInt(estimatedHours) : undefined,
+        permit_numbers: permitNumbers.length > 0 ? permitNumbers : undefined,
         company_id: userProfile.company_id,
         created_by: user.id,
       };
 
-      const { data: project, error } = await supabase
-        .from('projects')
-        .insert([projectData])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const project = await projectService.createProject(projectData);
 
       toast({
         title: "Project Created!",

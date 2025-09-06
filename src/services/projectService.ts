@@ -1,0 +1,249 @@
+import { supabase } from '@/integrations/supabase/client';
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  client_name: string;
+  client_email?: string;
+  site_address?: string;
+  status: string;
+  project_type?: string;
+  budget?: number;
+  estimated_hours?: number;
+  actual_hours?: number;
+  start_date?: string;
+  end_date?: string;
+  completion_percentage: number;
+  company_id: string;
+  project_manager_id?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  permit_numbers?: string[];
+  profit_margin?: number;
+  site_latitude?: number;
+  site_longitude?: number;
+  geofence_radius_meters?: number;
+}
+
+export interface ProjectWithRelations extends Project {
+  tasks?: Array<{ id: string; name: string; description?: string; status?: string }>;
+  materials?: Array<{ id: string; name: string; description?: string }>;
+  documents?: Array<{ id: string; name: string; file_path?: string }>;
+  project_phases?: Array<{ id: string; name: string; status?: string; start_date?: string; end_date?: string }>;
+  job_costs?: Array<{ id: string; total_cost?: number }>;
+  change_orders?: Array<{ id: string; title: string; amount?: number; status?: string }>;
+}
+
+export interface CreateProjectData {
+  name: string;
+  description?: string;
+  client_name: string;
+  client_email?: string;
+  site_address?: string;
+  project_type?: string;
+  status: string;
+  budget?: number;
+  estimated_hours?: number;
+  start_date?: string;
+  end_date?: string;
+  company_id: string;
+  created_by: string;
+  project_manager_id?: string;
+  permit_numbers?: string[];
+}
+
+export interface ProjectStats {
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  onHoldProjects: number;
+  totalBudget: number;
+  avgCompletion: number;
+  overdueProjects: number;
+}
+
+class ProjectService {
+  async getProjects(companyId?: string): Promise<ProjectWithRelations[]> {
+    let query = supabase
+      .from('projects')
+      .select(`
+        *,
+        tasks(id, name, description, status),
+        materials(id, name, description),
+        documents(id, name, file_path),
+        project_phases(id, name, status, start_date, end_date),
+        job_costs(id, total_cost),
+        change_orders(id, title, amount, status)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getProject(projectId: string): Promise<ProjectWithRelations | null> {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        tasks(id, name, description, status),
+        materials(id, name, description),
+        documents(id, name, file_path),
+        project_phases(id, name, status, start_date, end_date, description),
+        job_costs(id, total_cost),
+        change_orders(id, title, description, amount, status)
+      `)
+      .eq('id', projectId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async createProject(projectData: CreateProjectData): Promise<Project> {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
+        ...projectData,
+        completion_percentage: 0,
+        geofence_radius_meters: 100
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', projectId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteProject(projectId: string): Promise<void> {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (error) throw error;
+  }
+
+  async getProjectStats(companyId?: string): Promise<ProjectStats> {
+    let query = supabase.from('projects').select('*');
+    
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { data: projects, error } = await query;
+    if (error) throw error;
+
+    const now = new Date();
+    const stats: ProjectStats = {
+      totalProjects: projects?.length || 0,
+      activeProjects: projects?.filter(p => p.status === 'active' || p.status === 'in_progress').length || 0,
+      completedProjects: projects?.filter(p => p.status === 'completed').length || 0,
+      onHoldProjects: projects?.filter(p => p.status === 'on_hold').length || 0,
+      totalBudget: projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
+      avgCompletion: projects?.length ? 
+        projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length : 0,
+      overdueProjects: projects?.filter(p => 
+        p.end_date && new Date(p.end_date) < now && p.status !== 'completed'
+      ).length || 0
+    };
+
+    return stats;
+  }
+
+  async updateProjectCompletion(projectId: string, percentage: number): Promise<void> {
+    const updates: Partial<Project> = { 
+      completion_percentage: percentage,
+      updated_at: new Date().toISOString()
+    };
+
+    // Auto-update status based on completion
+    if (percentage === 100) {
+      updates.status = 'completed';
+    } else if (percentage > 0 && updates.status === 'planning') {
+      updates.status = 'active';
+    }
+
+    const { error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', projectId);
+
+    if (error) throw error;
+  }
+
+  async searchProjects(searchTerm: string, companyId?: string): Promise<ProjectWithRelations[]> {
+    let query = supabase
+      .from('projects')
+      .select(`
+        *,
+        tasks(id, name, description, status),
+        materials(id, name, description),
+        documents(id, name)
+      `)
+      .or(`name.ilike.%${searchTerm}%, client_name.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%`)
+      .order('created_at', { ascending: false });
+
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getProjectsByStatus(status: string, companyId?: string): Promise<Project[]> {
+    let query = supabase
+      .from('projects')
+      .select('*')
+      .eq('status', status)
+      .order('created_at', { ascending: false });
+
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  async duplicateProject(projectId: string, newName: string): Promise<Project> {
+    const original = await this.getProject(projectId);
+    if (!original) throw new Error('Project not found');
+
+    const { tasks, materials, documents, project_phases, job_costs, change_orders, ...projectData } = original;
+    
+    const duplicateData: CreateProjectData = {
+      ...projectData,
+      name: newName,
+      status: 'planning',
+      created_by: projectData.created_by || '',
+      company_id: projectData.company_id
+    };
+
+    return this.createProject(duplicateData);
+  }
+}
+
+export const projectService = new ProjectService();
