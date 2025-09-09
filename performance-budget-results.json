@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-09T18:30:38.361Z",
+  "budgetPassed": true,
+  "thresholds": {
+    "maxBundleSize": 5324800,
+    "maxChunkSize": 3072000,
+    "maxAssetSize": 3072000,
+    "maxJSFiles": 25,
+    "maxCSSFiles": 8,
+    "maxImageFiles": 30
+  }
+}
