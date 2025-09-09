@@ -125,7 +125,7 @@ const KeywordManager = () => {
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
   const [selectedForBlog, setSelectedForBlog] = useState<Set<string>>(new Set());
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, append: boolean = false) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -142,14 +142,18 @@ const KeywordManager = () => {
       setUploading(true);
       
       const parsedData = await parseKeywordStatsCSV(file);
-      setKeywordStats(parsedData);
-
-      // Save to database
-      await saveKeywordData(parsedData.keywords);
+      
+      // Save to database with append option
+      await saveKeywordData(parsedData.keywords, append);
+      
+      // Reload all data to get the complete picture
+      await loadKeywordData();
 
       toast({
         title: "Success",
-        description: `Imported ${parsedData.totalKeywords} keywords successfully`
+        description: append 
+          ? `Added ${parsedData.totalKeywords} new keywords successfully`
+          : `Imported ${parsedData.totalKeywords} keywords successfully`
       });
 
     } catch (error: any) {
@@ -164,17 +168,19 @@ const KeywordManager = () => {
     }
   };
 
-  const saveKeywordData = async (keywords: KeywordData[]) => {
+  const saveKeywordData = async (keywords: KeywordData[], append: boolean = false) => {
     if (!userProfile?.company_id) return;
 
     try {
-      // Clear existing keyword data using direct table operations
-      const { error: deleteError } = await supabase
-        .from('keyword_research_data')
-        .delete()
-        .eq('company_id', userProfile.company_id);
+      // Only clear existing data if not appending
+      if (!append) {
+        const { error: deleteError } = await supabase
+          .from('keyword_research_data')
+          .delete()
+          .eq('company_id', userProfile.company_id);
 
-      if (deleteError) console.warn('Delete warning:', deleteError);
+        if (deleteError) console.warn('Delete warning:', deleteError);
+      }
 
       // Insert new keyword data in batches
       const batchSize = 100;
@@ -193,13 +199,28 @@ const KeywordManager = () => {
           target_rank: keyword.targetRank || null
         }));
 
-        const { error } = await supabase
-          .from('keyword_research_data')
-          .insert(records);
-        
-        if (error) {
-          console.error('Insert error for batch:', i, error);
-          throw error;
+        // If appending, use upsert to avoid duplicates
+        if (append) {
+          const { error } = await supabase
+            .from('keyword_research_data')
+            .upsert(records, { 
+              onConflict: 'company_id,keyword',
+              ignoreDuplicates: true 
+            });
+          
+          if (error) {
+            console.error('Upsert error for batch:', i, error);
+            throw error;
+          }
+        } else {
+          const { error } = await supabase
+            .from('keyword_research_data')
+            .insert(records);
+          
+          if (error) {
+            console.error('Insert error for batch:', i, error);
+            throw error;
+          }
         }
       }
 
@@ -572,7 +593,7 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                   id="csv-upload"
                   type="file"
                   accept=".csv"
-                  onChange={handleFileUpload}
+                  onChange={(e) => handleFileUpload(e)}
                   disabled={uploading}
                   className="hidden"
                 />
@@ -597,6 +618,53 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                 <strong>Expected CSV Format:</strong> keyword, search_volume, difficulty, cpc, intent, category, priority, current_rank, target_rank
               </AlertDescription>
             </Alert>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add More Keywords Section */}
+      {keywordStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Add More Keywords
+            </CardTitle>
+            <CardDescription>
+              Upload additional keyword CSV files to expand your keyword database
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => document.getElementById('csv-append')?.click()}
+                disabled={uploading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Add Keywords from CSV
+              </Button>
+              <Input
+                id="csv-append"
+                type="file"
+                accept=".csv"
+                onChange={(e) => handleFileUpload(e, true)}
+                disabled={uploading}
+                className="hidden"
+              />
+            </div>
+            
+            {uploading && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Adding keywords...</span>
+                  <Button variant="outline" size="sm" onClick={cancelUpload}>
+                    Cancel
+                  </Button>
+                </div>
+                <Progress value={45} className="h-2" />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -666,10 +734,44 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                       All imported keywords with filtering and selection options
                     </CardDescription>
                   </div>
-                  <Button onClick={selectOptimalKeywords}>
-                    <Target className="h-4 w-4 mr-2" />
-                    Auto-Select Optimal
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button onClick={selectOptimalKeywords}>
+                      <Target className="h-4 w-4 mr-2" />
+                      Auto-Select Optimal
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        if (!keywordStats) return;
+                        const allKeywords = new Set(keywordStats.keywords.map(k => k.keyword));
+                        setSelectedForBlog(allKeywords);
+                        setSelectedKeywords(keywordStats.keywords);
+                        const topics = generateKeywordBlogTopics(keywordStats.keywords);
+                        setGeneratedTopics(topics);
+                        toast({
+                          title: "All Keywords Selected",
+                          description: `Selected all ${keywordStats.keywords.length} keywords for blog generation`
+                        });
+                      }}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Select All
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedForBlog(new Set());
+                        setSelectedKeywords([]);
+                        setGeneratedTopics([]);
+                        toast({
+                          title: "Selection Cleared",
+                          description: "Cleared all keyword selections"
+                        });
+                      }}
+                    >
+                      Clear Selection
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
