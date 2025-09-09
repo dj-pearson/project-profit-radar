@@ -24,7 +24,9 @@ import {
   AlertTriangle,
   BarChart3,
   Lightbulb,
-  Trash2
+  Trash2,
+  Plus,
+  Minus
 } from 'lucide-react';
 
 interface KeywordData {
@@ -121,6 +123,7 @@ const KeywordManager = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('priority');
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
+  const [selectedForBlog, setSelectedForBlog] = useState<Set<string>>(new Set());
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -270,11 +273,43 @@ const KeywordManager = () => {
     setSelectedKeywords(optimal);
     const topics = generateKeywordBlogTopics(optimal);
     setGeneratedTopics(topics);
+    
+    // Also update the blog selection
+    const optimalKeywords = new Set(optimal.map(k => k.keyword));
+    setSelectedForBlog(optimalKeywords);
 
     toast({
       title: "Keywords Selected",
       description: `Selected ${optimal.length} optimal keywords for blog generation`
     });
+  };
+
+  const toggleKeywordForBlog = (keyword: string) => {
+    const newSelected = new Set(selectedForBlog);
+    if (newSelected.has(keyword)) {
+      newSelected.delete(keyword);
+    } else {
+      newSelected.add(keyword);
+    }
+    setSelectedForBlog(newSelected);
+    
+    // Update selectedKeywords based on selection
+    if (keywordStats) {
+      const keywords = keywordStats.keywords.filter(k => newSelected.has(k.keyword));
+      setSelectedKeywords(keywords);
+      const topics = generateKeywordBlogTopics(keywords);
+      setGeneratedTopics(topics);
+    }
+  };
+
+  const toggleKeywordForDeletion = (keyword: string) => {
+    const newSelected = new Set(selectedForDeletion);
+    if (newSelected.has(keyword)) {
+      newSelected.delete(keyword);
+    } else {
+      newSelected.add(keyword);
+    }
+    setSelectedForDeletion(newSelected);
   };
 
   const getFilteredKeywords = () => {
@@ -478,6 +513,12 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
               Clear All
             </Button>
           )}
+          {selectedForDeletion.size > 0 && (
+            <Button variant="destructive" onClick={deleteSelectedKeywords} disabled={loading}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected ({selectedForDeletion.size})
+            </Button>
+          )}
         </div>
       </div>
 
@@ -676,6 +717,25 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
                     >
                       <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedForDeletion.has(keyword.keyword)}
+                            onChange={() => toggleKeywordForDeletion(keyword.keyword)}
+                            className="rounded"
+                          />
+                          <Button
+                            size="sm"
+                            variant={selectedForBlog.has(keyword.keyword) ? "default" : "outline"}
+                            onClick={() => toggleKeywordForBlog(keyword.keyword)}
+                            className="h-6 w-6 p-0"
+                          >
+                            {selectedForBlog.has(keyword.keyword) ? 
+                              <Minus className="h-3 w-3" /> : 
+                              <Plus className="h-3 w-3" />
+                            }
+                          </Button>
+                        </div>
                         <div className={`w-2 h-2 rounded-full ${getPriorityColor(keyword.priority)}`}></div>
                         <div>
                           <div className="font-medium">{keyword.keyword}</div>
