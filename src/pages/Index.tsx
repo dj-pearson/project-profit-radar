@@ -14,28 +14,15 @@ import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/EnhancedSchemaMarkup";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
-import { PerformanceDashboard } from "@/components/performance/PerformanceDashboard";
+
 import { FontOptimization, useFontOptimization } from "@/components/performance/FontOptimization";
 import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
 // import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 const Index = () => {
-  const [showPerformanceDashboard, setShowPerformanceDashboard] = React.useState(false);
-  
   // Initialize all performance optimizations
   useCriticalResources();
   useFontOptimization();
   // useCriticalCSS('homepage');
-  
-  // Initialize performance optimizations
-  React.useEffect(() => {
-    // initializePerformanceOptimizations();
-    
-    // Show performance dashboard in development
-    if (process.env.NODE_ENV === 'development') {
-      const timer = setTimeout(() => setShowPerformanceDashboard(true), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   return (
     <MobilePerformanceProvider>
@@ -109,9 +96,6 @@ const Index = () => {
       <OrganizationSchema />
       <SoftwareSchema />
       <Footer />
-      
-      {/* Performance Dashboard for Development */}
-      <PerformanceDashboard isVisible={showPerformanceDashboard} />
     </div>
     </MobilePerformanceProvider>
   );
