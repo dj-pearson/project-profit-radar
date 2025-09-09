@@ -52,6 +52,7 @@ import {
 import { ImageUpload } from "@/components/ui/image-upload";
 import BlogAutoGeneration from "@/components/admin/BlogAutoGeneration";
 import BlogAIDebugger from "@/components/admin/BlogAIDebugger";
+import KeywordManager from "@/components/admin/KeywordManager";
 
 interface BlogPost {
   id: string;

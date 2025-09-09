@@ -2017,7 +2017,11 @@ export type Database = {
           id: string
           industry_focus: string[] | null
           is_enabled: boolean
+          keyword_selection_strategy: string | null
           last_generation_at: string | null
+          max_difficulty: number | null
+          max_keywords_per_post: number | null
+          min_search_volume: number | null
           minimum_topic_gap_days: number | null
           model_temperature: number | null
           next_generation_at: string | null
@@ -2035,6 +2039,7 @@ export type Database = {
           target_word_count: number | null
           topic_diversity_enabled: boolean | null
           updated_at: string
+          use_keyword_targeting: boolean | null
         }
         Insert: {
           ai_search_optimization?: boolean | null
@@ -2055,7 +2060,11 @@ export type Database = {
           id?: string
           industry_focus?: string[] | null
           is_enabled?: boolean
+          keyword_selection_strategy?: string | null
           last_generation_at?: string | null
+          max_difficulty?: number | null
+          max_keywords_per_post?: number | null
+          min_search_volume?: number | null
           minimum_topic_gap_days?: number | null
           model_temperature?: number | null
           next_generation_at?: string | null
@@ -2073,6 +2082,7 @@ export type Database = {
           target_word_count?: number | null
           topic_diversity_enabled?: boolean | null
           updated_at?: string
+          use_keyword_targeting?: boolean | null
         }
         Update: {
           ai_search_optimization?: boolean | null
@@ -2093,7 +2103,11 @@ export type Database = {
           id?: string
           industry_focus?: string[] | null
           is_enabled?: boolean
+          keyword_selection_strategy?: string | null
           last_generation_at?: string | null
+          max_difficulty?: number | null
+          max_keywords_per_post?: number | null
+          min_search_volume?: number | null
           minimum_topic_gap_days?: number | null
           model_temperature?: number | null
           next_generation_at?: string | null
@@ -2111,6 +2125,7 @@ export type Database = {
           target_word_count?: number | null
           topic_diversity_enabled?: boolean | null
           updated_at?: string
+          use_keyword_targeting?: boolean | null
         }
         Relationships: [
           {
@@ -9054,6 +9069,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      keyword_research_data: {
+        Row: {
+          category: string | null
+          company_id: string
+          cpc: number | null
+          created_at: string
+          current_rank: number | null
+          difficulty: number | null
+          id: string
+          keyword: string
+          priority: string | null
+          search_intent: string | null
+          search_volume: number | null
+          target_rank: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          company_id: string
+          cpc?: number | null
+          created_at?: string
+          current_rank?: number | null
+          difficulty?: number | null
+          id?: string
+          keyword: string
+          priority?: string | null
+          search_intent?: string | null
+          search_volume?: number | null
+          target_rank?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          company_id?: string
+          cpc?: number | null
+          created_at?: string
+          current_rank?: number | null
+          difficulty?: number | null
+          id?: string
+          keyword?: string
+          priority?: string | null
+          search_intent?: string | null
+          search_volume?: number | null
+          target_rank?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       knowledge_base_articles: {
         Row: {
