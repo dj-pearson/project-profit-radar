@@ -590,14 +590,21 @@ const BlogManager = () => {
   return (
     <DashboardLayout title="Blog Manager">
       <div className="space-y-6">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Create and manage blog articles with AI assistance
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
+        <Tabs defaultValue="posts" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="posts">Blog Posts</TabsTrigger>
+            <TabsTrigger value="keywords">Keywords & SEO</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="posts" className="space-y-6">
+            {/* Header Actions */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Create and manage blog articles with AI assistance
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
             <Dialog
               open={isDebugDialogOpen}
               onOpenChange={setIsDebugDialogOpen}
@@ -735,7 +742,7 @@ const BlogManager = () => {
             </div>
           )}
         </div>
-      </div>
+          </TabsContent>
 
       {/* Create Post Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -1206,6 +1213,12 @@ const BlogManager = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+          <TabsContent value="keywords" className="space-y-6">
+            <KeywordManager />
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 };
