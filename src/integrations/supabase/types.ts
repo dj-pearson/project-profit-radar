@@ -9072,6 +9072,7 @@ export type Database = {
       }
       keyword_research_data: {
         Row: {
+          blog_generation_count: number | null
           category: string | null
           company_id: string
           cpc: number | null
@@ -9080,13 +9081,17 @@ export type Database = {
           difficulty: number | null
           id: string
           keyword: string
+          last_used_for_blog: string | null
           priority: string | null
           search_intent: string | null
           search_volume: number | null
+          selected_for_blog_generation: boolean | null
           target_rank: number | null
           updated_at: string
+          used_for_blog_generation: boolean | null
         }
         Insert: {
+          blog_generation_count?: number | null
           category?: string | null
           company_id: string
           cpc?: number | null
@@ -9095,13 +9100,17 @@ export type Database = {
           difficulty?: number | null
           id?: string
           keyword: string
+          last_used_for_blog?: string | null
           priority?: string | null
           search_intent?: string | null
           search_volume?: number | null
+          selected_for_blog_generation?: boolean | null
           target_rank?: number | null
           updated_at?: string
+          used_for_blog_generation?: boolean | null
         }
         Update: {
+          blog_generation_count?: number | null
           category?: string | null
           company_id?: string
           cpc?: number | null
@@ -9110,11 +9119,14 @@ export type Database = {
           difficulty?: number | null
           id?: string
           keyword?: string
+          last_used_for_blog?: string | null
           priority?: string | null
           search_intent?: string | null
           search_volume?: number | null
+          selected_for_blog_generation?: boolean | null
           target_rank?: number | null
           updated_at?: string
+          used_for_blog_generation?: boolean | null
         }
         Relationships: []
       }
