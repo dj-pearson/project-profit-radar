@@ -1,5 +1,6 @@
 name: Performance Check
 
+# Performance budgets adjusted for complex construction management app
 on:
   pull_request:
     branches: [ main ]
