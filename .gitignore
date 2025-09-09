@@ -78,7 +78,6 @@ supabase-mcp-config.json
 
 # Any files containing access tokens or API keys
 **/*token*
-**/*key*
 **/*credential*
 !public-key*
 !*.public.key
