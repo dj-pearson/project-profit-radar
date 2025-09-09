@@ -17,6 +17,7 @@
     "build:prod": "npm run generate-sitemap && vite build --mode production",
     "build:cloudflare": "npm run generate-sitemap && vite build --mode production",
     "cloudflare:build": "node cloudflare-build.js",
+    "cloudflare:install": "npm install --force && npm run build",
     "build:analyze": "npm run generate-sitemap && vite build --mode production && npx vite-bundle-analyzer dist/stats.html",
     "performance:audit": "node scripts/performance-audit.js",
     "performance:budget": "node scripts/check-performance-budget.js",
