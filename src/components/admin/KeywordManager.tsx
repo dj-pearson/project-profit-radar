@@ -390,12 +390,39 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+            <div 
+              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-primary/50 transition-colors"
+              onDrop={(e) => {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                  const event = { target: { files } } as any;
+                  handleFileUpload(event);
+                }
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnter={(e) => e.preventDefault()}
+            >
               <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <div className="space-y-2">
-                <Label htmlFor="csv-upload" className="text-base font-medium cursor-pointer">
-                  Drop your CSV file here or click to browse
-                </Label>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="csv-upload" className="text-base font-medium cursor-pointer hover:text-primary">
+                    Drop your CSV file here or click to browse
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Supported format: CSV with columns for keyword, search_volume, difficulty, intent, etc.
+                  </p>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => document.getElementById('csv-upload')?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose File
+                  </Button>
+                </div>
                 <Input
                   id="csv-upload"
                   type="file"
@@ -404,9 +431,6 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                   disabled={uploading}
                   className="hidden"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Supported format: CSV with columns for keyword, search_volume, difficulty, intent, etc.
-                </p>
               </div>
             </div>
 
