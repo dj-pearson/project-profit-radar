@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   BarChart3,
-  Lightbulb
+  Lightbulb,
+  Trash2
 } from 'lucide-react';
 
 interface KeywordData {
@@ -119,6 +120,7 @@ const KeywordManager = () => {
   const [generatedTopics, setGeneratedTopics] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('priority');
+  const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -310,6 +312,102 @@ const KeywordManager = () => {
     return filtered;
   };
 
+  const clearAllKeywords = async () => {
+    if (!userProfile?.company_id) return;
+    
+    if (!confirm('Are you sure you want to delete ALL keywords? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('keyword_research_data')
+        .delete()
+        .eq('company_id', userProfile.company_id);
+
+      if (error) throw error;
+
+      setKeywordStats(null);
+      setSelectedKeywords([]);
+      setGeneratedTopics([]);
+      setSelectedForDeletion(new Set());
+
+      toast({
+        title: "Success",
+        description: "All keywords have been cleared"
+      });
+
+    } catch (error: any) {
+      console.error('Error clearing keywords:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to clear keywords"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteSelectedKeywords = async () => {
+    if (!userProfile?.company_id || selectedForDeletion.size === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedForDeletion.size} selected keywords?`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const keywordsToDelete = Array.from(selectedForDeletion);
+      
+      const { error } = await supabase
+        .from('keyword_research_data')
+        .delete()
+        .eq('company_id', userProfile.company_id)
+        .in('keyword', keywordsToDelete);
+
+      if (error) throw error;
+
+      // Refresh the data
+      await loadKeywordData();
+      setSelectedForDeletion(new Set());
+
+      toast({
+        title: "Success",
+        description: `Deleted ${keywordsToDelete.length} keywords`
+      });
+
+    } catch (error: any) {
+      console.error('Error deleting keywords:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete selected keywords"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelUpload = () => {
+    setUploading(false);
+    setKeywordStats(null);
+    
+    // Reset file input
+    const fileInput = document.getElementById('csv-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    
+    toast({
+      title: "Upload Cancelled",
+      description: "Keyword import has been cancelled"
+    });
+  };
+
   const downloadSampleCSV = () => {
     const sampleData = `keyword,search_volume,difficulty,cpc,intent,category,priority,current_rank,target_rank
 construction management software,2400,45,12.50,commercial,software,high,,3
@@ -374,6 +472,12 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+          {keywordStats && (
+            <Button variant="outline" onClick={clearAllKeywords} disabled={loading}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All
+            </Button>
+          )}
         </div>
       </div>
 
@@ -435,10 +539,12 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
             </div>
 
             {uploading && (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span>Processing CSV file...</span>
-                  <span>Please wait</span>
+                  <Button variant="outline" size="sm" onClick={cancelUpload}>
+                    Cancel
+                  </Button>
                 </div>
                 <Progress value={45} className="h-2" />
               </div>
