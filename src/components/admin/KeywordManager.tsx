@@ -267,6 +267,21 @@ const KeywordManager = () => {
           highPriorityKeywords,
           categories
         });
+
+        // Load the current selections for blog generation
+        const selectedKeywords = keywords.filter(k => {
+          const dbRow = data.find(d => d.keyword === k.keyword);
+          return dbRow?.selected_for_blog_generation === true;
+        });
+        
+        const selectedKeywordSet = new Set(selectedKeywords.map(k => k.keyword));
+        setSelectedForBlog(selectedKeywordSet);
+        setSelectedKeywords(selectedKeywords);
+        
+        if (selectedKeywords.length > 0) {
+          const topics = generateKeywordBlogTopics(selectedKeywords);
+          setGeneratedTopics(topics);
+        }
       }
 
     } catch (error) {
@@ -281,8 +296,8 @@ const KeywordManager = () => {
     }
   };
 
-  const selectOptimalKeywords = () => {
-    if (!keywordStats) return;
+  const selectOptimalKeywords = async () => {
+    if (!keywordStats || !userProfile?.company_id) return;
 
     const optimal = selectKeywordsForBlogGeneration(keywordStats.keywords, {
       maxKeywords: 5,
@@ -291,35 +306,118 @@ const KeywordManager = () => {
       minSearchVolume: 100
     });
 
-    setSelectedKeywords(optimal);
-    const topics = generateKeywordBlogTopics(optimal);
-    setGeneratedTopics(topics);
-    
-    // Also update the blog selection
-    const optimalKeywords = new Set(optimal.map(k => k.keyword));
-    setSelectedForBlog(optimalKeywords);
+    try {
+      // First, clear all existing selections
+      await supabase
+        .from('keyword_research_data')
+        .update({ 
+          selected_for_blog_generation: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('company_id', userProfile.company_id);
 
-    toast({
-      title: "Keywords Selected",
-      description: `Selected ${optimal.length} optimal keywords for blog generation`
-    });
+      // Then, select the optimal keywords
+      const optimalKeywords = optimal.map(k => k.keyword);
+      
+      if (optimalKeywords.length > 0) {
+        const { error } = await supabase
+          .from('keyword_research_data')
+          .update({ 
+            selected_for_blog_generation: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('company_id', userProfile.company_id)
+          .in('keyword', optimalKeywords);
+
+        if (error) {
+          console.error('Error selecting optimal keywords:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to select optimal keywords"
+          });
+          return;
+        }
+      }
+
+      setSelectedKeywords(optimal);
+      const topics = generateKeywordBlogTopics(optimal);
+      setGeneratedTopics(topics);
+      
+      // Also update the blog selection UI
+      const optimalKeywordSet = new Set(optimalKeywords);
+      setSelectedForBlog(optimalKeywordSet);
+
+      toast({
+        title: "Keywords Selected",
+        description: `Selected ${optimal.length} optimal keywords for blog generation`
+      });
+
+    } catch (error: any) {
+      console.error('Error selecting optimal keywords:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to select optimal keywords"
+      });
+    }
   };
 
-  const toggleKeywordForBlog = (keyword: string) => {
+  const toggleKeywordForBlog = async (keyword: string) => {
+    if (!userProfile?.company_id) return;
+    
     const newSelected = new Set(selectedForBlog);
-    if (newSelected.has(keyword)) {
+    const isCurrentlySelected = newSelected.has(keyword);
+    
+    if (isCurrentlySelected) {
       newSelected.delete(keyword);
     } else {
       newSelected.add(keyword);
     }
+    
     setSelectedForBlog(newSelected);
     
-    // Update selectedKeywords based on selection
-    if (keywordStats) {
-      const keywords = keywordStats.keywords.filter(k => newSelected.has(k.keyword));
-      setSelectedKeywords(keywords);
-      const topics = generateKeywordBlogTopics(keywords);
-      setGeneratedTopics(topics);
+    try {
+      // Update the database to mark keywords as selected for blog generation
+      const { error } = await supabase
+        .from('keyword_research_data')
+        .update({ 
+          selected_for_blog_generation: !isCurrentlySelected,
+          updated_at: new Date().toISOString()
+        })
+        .eq('company_id', userProfile.company_id)
+        .eq('keyword', keyword);
+
+      if (error) {
+        console.error('Error updating keyword selection:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update keyword selection"
+        });
+        return;
+      }
+      
+      // Update selectedKeywords based on selection
+      if (keywordStats) {
+        const keywords = keywordStats.keywords.filter(k => newSelected.has(k.keyword));
+        setSelectedKeywords(keywords);
+        const topics = generateKeywordBlogTopics(keywords);
+        setGeneratedTopics(topics);
+      }
+
+      toast({
+        title: isCurrentlySelected ? "Keyword Deselected" : "Keyword Selected",
+        description: `"${keyword}" ${isCurrentlySelected ? 'removed from' : 'added to'} blog generation queue`
+      });
+
+    } catch (error: any) {
+      console.error('Error updating keyword selection:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update keyword selection"
+      });
     }
   };
 
@@ -741,17 +839,47 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => {
-                        if (!keywordStats) return;
-                        const allKeywords = new Set(keywordStats.keywords.map(k => k.keyword));
-                        setSelectedForBlog(allKeywords);
-                        setSelectedKeywords(keywordStats.keywords);
-                        const topics = generateKeywordBlogTopics(keywordStats.keywords);
-                        setGeneratedTopics(topics);
-                        toast({
-                          title: "All Keywords Selected",
-                          description: `Selected all ${keywordStats.keywords.length} keywords for blog generation`
-                        });
+                      onClick={async () => {
+                        if (!keywordStats || !userProfile?.company_id) return;
+                        
+                        try {
+                          // Mark all keywords as selected for blog generation
+                          const { error } = await supabase
+                            .from('keyword_research_data')
+                            .update({ 
+                              selected_for_blog_generation: true,
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('company_id', userProfile.company_id);
+
+                          if (error) {
+                            console.error('Error selecting all keywords:', error);
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to select all keywords"
+                            });
+                            return;
+                          }
+
+                          const allKeywords = new Set(keywordStats.keywords.map(k => k.keyword));
+                          setSelectedForBlog(allKeywords);
+                          setSelectedKeywords(keywordStats.keywords);
+                          const topics = generateKeywordBlogTopics(keywordStats.keywords);
+                          setGeneratedTopics(topics);
+                          
+                          toast({
+                            title: "All Keywords Selected",
+                            description: `Selected all ${keywordStats.keywords.length} keywords for blog generation`
+                          });
+                        } catch (error: any) {
+                          console.error('Error selecting all keywords:', error);
+                          toast({
+                            variant: "destructive",
+                            title: "Error",  
+                            description: "Failed to select all keywords"
+                          });
+                        }
                       }}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -759,14 +887,45 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => {
-                        setSelectedForBlog(new Set());
-                        setSelectedKeywords([]);
-                        setGeneratedTopics([]);
-                        toast({
-                          title: "Selection Cleared",
-                          description: "Cleared all keyword selections"
-                        });
+                      onClick={async () => {
+                        if (!userProfile?.company_id) return;
+                        
+                        try {
+                          // Clear all selections in the database
+                          const { error } = await supabase
+                            .from('keyword_research_data')
+                            .update({ 
+                              selected_for_blog_generation: false,
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('company_id', userProfile.company_id);
+
+                          if (error) {
+                            console.error('Error clearing selections:', error);
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to clear selections"
+                            });
+                            return;
+                          }
+
+                          setSelectedForBlog(new Set());
+                          setSelectedKeywords([]);
+                          setGeneratedTopics([]);
+                          
+                          toast({
+                            title: "Selection Cleared",
+                            description: "Cleared all keyword selections"
+                          });
+                        } catch (error: any) {
+                          console.error('Error clearing selections:', error);
+                          toast({
+                            variant: "destructive",
+                            title: "Error",
+                            description: "Failed to clear selections"
+                          });
+                        }
                       }}
                     >
                       Clear Selection
@@ -856,8 +1015,18 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                           <div className="text-sm font-medium">{keyword.difficulty}%</div>
                           <div className="text-xs text-muted-foreground">difficulty</div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-2">
                           {getIntentIcon(keyword.intent)}
+                          {/* Show if keyword has been used for blog generation */}
+                          {keywordStats?.keywords.find(k => k.keyword === keyword.keyword) && (() => {
+                            const dbKeyword = keywordStats.keywords.find(k => k.keyword === keyword.keyword);
+                            const usedForBlog = selectedForBlog.has(keyword.keyword);
+                            return (
+                              <div className="text-xs text-muted-foreground">
+                                {usedForBlog ? "✓ Selected" : ""}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

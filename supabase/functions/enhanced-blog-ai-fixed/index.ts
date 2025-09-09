@@ -195,10 +195,75 @@ async function handleAutoGeneration(
     throw new Error("Claude API key not configured");
   }
 
-  const finalTopic = topic || "5 Proven Strategies for Reducing Equipment Downtime That Save Construction Projects Thousands in Lost Productivity";
+  let finalTopic = topic;
+  let selectedKeyword: any = null;
+
+  // First, try to get an unused keyword that's selected for blog generation
+  if (!finalTopic) {
+    logStep("No topic provided, checking for available keywords", { companyId });
+    
+    const { data: availableKeywords, error: keywordError } = await supabaseClient
+      .from('keyword_research_data')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('selected_for_blog_generation', true)
+      .eq('used_for_blog_generation', false)
+      .order('priority', { ascending: false }) // High priority first
+      .order('search_volume', { ascending: false }) // High volume second
+      .limit(1);
+
+    if (keywordError) {
+      logStep("Error fetching keywords", { error: keywordError });
+    } else if (availableKeywords && availableKeywords.length > 0) {
+      selectedKeyword = availableKeywords[0];
+      finalTopic = selectedKeyword.keyword;
+      logStep("Selected keyword for blog generation", { 
+        keyword: finalTopic, 
+        searchVolume: selectedKeyword.search_volume,
+        priority: selectedKeyword.priority 
+      });
+    } else {
+      logStep("No available keywords found, using fallback topic");
+    }
+  }
+
+  // Fall back to default topic if no keyword available
+  if (!finalTopic) {
+    finalTopic = "5 Proven Strategies for Reducing Equipment Downtime That Save Construction Projects Thousands in Lost Productivity";
+    logStep("Using fallback topic", { topic: finalTopic });
+  }
   
   try {
-    // Generate content with Claude
+    // Generate content with Claude, incorporating keyword context if available
+    let promptContent = `Write a comprehensive blog article about "${finalTopic}" for construction professionals.`;
+    
+    if (selectedKeyword) {
+      promptContent += `
+
+This article should be optimized for the keyword "${selectedKeyword.keyword}" with the following context:
+- Search Volume: ${selectedKeyword.search_volume}
+- Search Intent: ${selectedKeyword.search_intent}
+- Category: ${selectedKeyword.category}
+- Priority: ${selectedKeyword.priority}
+
+Make sure to naturally incorporate this keyword throughout the content while providing valuable, actionable insights.`;
+    }
+
+    promptContent += `
+
+Return your response in this exact JSON format:
+{
+  "title": "Compelling blog title (60 chars max)",
+  "body": "Full article in markdown format with proper headings, bullet points, and structure",
+  "excerpt": "Engaging 2-3 sentence summary (160 chars max)",
+  "seo_title": "SEO-optimized title (60 chars max)",
+  "seo_description": "SEO meta description (160 chars max)",
+  "keywords": ["primary keyword", "secondary keyword", "tertiary keyword"],
+  "estimated_read_time": 8
+}
+
+Make the content authoritative, actionable, and valuable for construction professionals. Include specific examples, best practices, and practical tips.`;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -212,20 +277,7 @@ async function handleAutoGeneration(
         max_tokens: 2000,
         messages: [{
           role: 'user',
-          content: `Write a comprehensive blog article about "${finalTopic}" for construction professionals. 
-
-Return your response in this exact JSON format:
-{
-  "title": "Compelling blog title (60 chars max)",
-  "body": "Full article in markdown format with proper headings, bullet points, and structure",
-  "excerpt": "Engaging 2-3 sentence summary (160 chars max)",
-  "seo_title": "SEO-optimized title (60 chars max)",
-  "seo_description": "SEO meta description (160 chars max)",
-  "keywords": ["primary keyword", "secondary keyword", "tertiary keyword"],
-  "estimated_read_time": 8
-}
-
-Make the content authoritative, actionable, and valuable for construction professionals. Include specific examples, best practices, and practical tips.`
+          content: promptContent
         }],
       }),
     });
@@ -307,10 +359,195 @@ By implementing these proven strategies, construction professionals can signific
         excerpt: `Discover proven strategies for ${finalTopic.toLowerCase()} that help construction teams improve efficiency and project outcomes.`,
         seo_title: finalTopic.length > 60 ? finalTopic.substring(0, 60) : finalTopic,
         seo_description: `Learn effective strategies for ${finalTopic.toLowerCase()}. Expert tips for construction professionals.`,
-        keywords: ["construction", "project management", "efficiency", "best practices"],
+        keywords: selectedKeyword ? [selectedKeyword.keyword, "construction", "project management"] : ["construction", "project management", "efficiency", "best practices"],
         estimated_read_time: 6
       };
     }
+
+    // Create the blog post
+    logStep("Creating blog post", { title: parsed.title });
+    
+    // First check if a post with the same title already exists to prevent true duplicates
+    const { data: existingTitlePost } = await supabaseClient
+      .from('blog_posts')
+      .select('id, title')
+      .eq('title', parsed.title)
+      .maybeSingle();
+    
+    if (existingTitlePost) {
+      logStep("Blog post with same title already exists, generating alternative", { existingId: existingTitlePost.id });
+      
+      // Generate an alternative topic with Claude
+      const altResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${claudeKey}`,
+          'Content-Type': 'application/json',
+          'x-api-key': claudeKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-0',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: `The construction blog topic "${finalTopic}" already exists. Generate a completely different but related construction topic that would be valuable for construction professionals. 
+
+Return your response in this exact JSON format:
+{
+  "title": "Compelling blog title (60 chars max)",
+  "body": "Full article in markdown format with proper headings, bullet points, and structure",
+  "excerpt": "Engaging 2-3 sentence summary (160 chars max)",
+  "seo_title": "SEO-optimized title (60 chars max)",
+  "seo_description": "SEO meta description (160 chars max)",
+  "keywords": ["primary keyword", "secondary keyword", "tertiary keyword"],
+  "estimated_read_time": 8
+}
+
+Make sure the new topic is completely different from the existing one but still relevant to construction management.`
+          }],
+        }),
+      });
+
+      if (altResponse.ok) {
+        const altData = await altResponse.json();
+        const altContent = altData.content[0].text;
+        
+        let altJsonMatch = altContent.match(/\{[\s\S]*\}/);
+        if (!altJsonMatch) {
+          altJsonMatch = altContent.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+          if (altJsonMatch) altJsonMatch[0] = altJsonMatch[1];
+        }
+        
+        if (altJsonMatch) {
+          try {
+            parsed = JSON.parse(altJsonMatch[0]);
+            logStep("Alternative topic generated successfully", { newTitle: parsed.title });
+          } catch (parseError) {
+            logStep("Failed to parse alternative topic, using fallback");
+          }
+        }
+      } else {
+        logStep("Failed to generate alternative topic, will create unique variant");
+        const timestamp = new Date().toISOString().slice(0, 10);
+        parsed.title = `${parsed.title} - ${timestamp}`;
+        parsed.seo_title = `${parsed.seo_title} - ${timestamp}`;
+      }
+    }
+    
+    let slug = parsed.title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    // Check if slug exists and make it unique
+    let uniqueSlug = slug;
+    let counter = 1;
+    let slugExists = true;
+    
+    while (slugExists) {
+      const { data: existingPost } = await supabaseClient
+        .from('blog_posts')
+        .select('id')
+        .eq('slug', uniqueSlug)
+        .maybeSingle();
+      
+      if (!existingPost) {
+        slugExists = false;
+      } else {
+        uniqueSlug = `${slug}-${counter}`;
+        counter++;
+      }
+    }
+
+    const { data: blogPost, error: postError } = await supabaseClient
+      .from('blog_posts')
+      .insert([{
+        title: parsed.title,
+        slug: uniqueSlug,
+        body: parsed.body,
+        excerpt: parsed.excerpt,
+        seo_title: parsed.seo_title,
+        seo_description: parsed.seo_description,
+        status: 'published',
+        published_at: new Date().toISOString(),
+        created_by: userId || companyId
+      }])
+      .select()
+      .single();
+
+    if (postError) {
+      logStep("Blog post creation failed", { error: postError });
+      throw postError;
+    }
+
+    logStep("Blog post created successfully", { blogPostId: blogPost.id, title: blogPost.title });
+
+    // Mark the keyword as used if we used one
+    if (selectedKeyword) {
+      const { error: keywordUpdateError } = await supabaseClient
+        .from('keyword_research_data')
+        .update({
+          used_for_blog_generation: true,
+          blog_generation_count: (selectedKeyword.blog_generation_count || 0) + 1,
+          last_used_for_blog: new Date().toISOString()
+        })
+        .eq('id', selectedKeyword.id);
+
+      if (keywordUpdateError) {
+        logStep("Failed to update keyword usage", { error: keywordUpdateError });
+      } else {
+        logStep("Keyword marked as used", { keyword: selectedKeyword.keyword });
+      }
+    }
+
+    // Update the queue item if this was from the queue
+    if (customSettings?.queue_id) {
+      await supabaseClient
+        .from('blog_generation_queue')
+        .update({ 
+          status: 'completed',
+          processing_completed_at: new Date().toISOString(),
+          generated_blog_id: blogPost.id
+        })
+        .eq('id', customSettings.queue_id);
+      
+      logStep("Queue item updated", { queueId: customSettings.queue_id });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      content: parsed,
+      blogPost: blogPost,
+      usedKeyword: selectedKeyword ? {
+        keyword: selectedKeyword.keyword,
+        searchVolume: selectedKeyword.search_volume,
+        priority: selectedKeyword.priority
+      } : null,
+      metadata: {
+        model: 'claude-sonnet-4-20250514',
+        topic: finalTopic,
+        timestamp: new Date().toISOString(),
+        function: "enhanced-blog-ai-fixed"
+      }
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logStep("Auto Generation Error Details", { 
+      error: errorMessage, 
+      stack: errorStack,
+      errorType: typeof error,
+      errorConstructor: error?.constructor?.name
+    });
+    
+    console.error("Auto generation full error:", error);
+    throw error;
+  }
+}
 
     // Create the blog post
     logStep("Creating blog post", { title: parsed.title });
