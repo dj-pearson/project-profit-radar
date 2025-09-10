@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 
 const ProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   
@@ -36,10 +36,10 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      loadProject(id);
+    if (projectId) {
+      loadProject(projectId);
     }
-  }, [id]);
+  }, [projectId]);
 
   const loadProject = async (projectId: string) => {
     try {
