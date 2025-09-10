@@ -39,6 +39,7 @@ interface KeywordData {
   priority: 'high' | 'medium' | 'low';
   currentRank?: number;
   targetRank?: number;
+  usedCount?: number;
 }
 
 interface ParsedKeywordStats {
@@ -255,7 +256,8 @@ const KeywordManager = () => {
           category: row.category,
           priority: row.priority as KeywordData['priority'],
           currentRank: row.current_rank,
-          targetRank: row.target_rank
+          targetRank: row.target_rank,
+          usedCount: row.used_count || 0
         }));
 
         const categories = [...new Set(keywords.map(k => k.category).filter(Boolean))];
@@ -970,12 +972,22 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                   </div>
                 </div>
 
-                {/* Keywords List */}
+                 {/* Keywords List */}
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {getFilteredKeywords().map((keyword, index) => (
+                  {getFilteredKeywords().map((keyword, index) => {
+                    const isUsed = (keyword.usedCount || 0) > 0;
+                    const isSelected = selectedForBlog.has(keyword.keyword);
+                    
+                    return (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+                      className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors ${
+                        isUsed 
+                          ? 'border-orange-300 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-700' 
+                          : isSelected 
+                            ? 'border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-700'
+                            : ''
+                      }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center space-x-2">
@@ -999,7 +1011,16 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                         </div>
                         <div className={`w-2 h-2 rounded-full ${getPriorityColor(keyword.priority)}`}></div>
                         <div>
-                          <div className="font-medium">{keyword.keyword}</div>
+                          <div className={`font-medium flex items-center gap-2 ${
+                            isUsed ? 'text-orange-700 dark:text-orange-300' : ''
+                          }`}>
+                            {keyword.keyword}
+                            {isUsed && (
+                              <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                                Used {keyword.usedCount}x
+                              </Badge>
+                            )}
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             {keyword.category} • {keyword.intent}
                           </div>
@@ -1017,20 +1038,20 @@ construction reporting,450,30,12.30,informational,reporting,low,,`;
                         </div>
                         <div className="flex items-center space-x-2">
                           {getIntentIcon(keyword.intent)}
-                          {/* Show if keyword has been used for blog generation */}
-                          {keywordStats?.keywords.find(k => k.keyword === keyword.keyword) && (() => {
-                            const dbKeyword = keywordStats.keywords.find(k => k.keyword === keyword.keyword);
-                            const usedForBlog = selectedForBlog.has(keyword.keyword);
-                            return (
-                              <div className="text-xs text-muted-foreground">
-                                {usedForBlog ? "✓ Selected" : ""}
-                              </div>
-                            );
-                          })()}
+                          <div className="text-xs">
+                            {isUsed ? (
+                              <span className="text-orange-600 dark:text-orange-400 font-medium">● Used</span>
+                            ) : isSelected ? (
+                              <span className="text-green-600 dark:text-green-400 font-medium">✓ Selected</span>
+                            ) : (
+                              <span className="text-muted-foreground">○ Available</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
