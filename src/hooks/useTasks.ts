@@ -29,6 +29,7 @@ export const useMyTasks = (status?: string[]) => {
     queryKey: ['my-tasks', status],
     queryFn: () => taskService.getMyTasks(status),
     staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: 'always',
   });
 };
 
@@ -37,6 +38,7 @@ export const useTasksCreatedByMe = (status?: string[]) => {
     queryKey: ['tasks-created-by-me', status],
     queryFn: () => taskService.getTasksCreatedByMe(status),
     staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: 'always',
   });
 };
 
