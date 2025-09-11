@@ -33,6 +33,7 @@ import SubscriptionSettings from "./pages/SubscriptionSettings";
 // Project area pages
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import ProjectTaskCreate from "./pages/ProjectTaskCreate";
 import CreateProject from "./pages/CreateProject";
 import ScheduleManagement from "./pages/ScheduleManagement";
 import JobCosting from "./pages/JobCosting";
@@ -252,6 +253,7 @@ const App = () => {
               {/* Project area routes */}
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/:projectId" element={<ProjectDetail />} />
+              <Route path="/projects/:projectId/tasks/new" element={<ProjectTaskCreate />} />
               <Route path="/create-project" element={<CreateProject />} />
               <Route
                 path="/schedule-management"
