@@ -69,8 +69,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     if (isOpen) {
       loadProjects();
       loadUsers();
+      // Auto-select project if projectId is provided
+      if (projectId && !formData.project_id) {
+        setFormData(prev => ({ ...prev, project_id: projectId }));
+      }
     }
-  }, [isOpen, userProfile]);
+  }, [isOpen, userProfile, projectId, formData.project_id]);
 
   const loadProjects = async () => {
     if (!userProfile?.company_id) return;
@@ -118,6 +122,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         priority: formData.priority,
         project_id: projectId || formData.project_id,
         assigned_to: formData.assigned_to || userProfile.id,
+        created_by: userProfile.id,
         due_date: formData.due_date || null,
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
         status: 'todo',
