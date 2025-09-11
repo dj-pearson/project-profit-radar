@@ -229,7 +229,7 @@ const MyTasks = () => {
         assigned_to: formData.assigned_to || userProfile?.id || '',
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : undefined,
         due_date: formData.due_date || undefined,
-        project_id: formData.project_id || ''
+        project_id: formData.project_id || undefined
       });
       setCreateDialogOpen(false);
       setFormData({
@@ -360,15 +360,15 @@ const MyTasks = () => {
           </div>
           
           <Select
-            value={statusFilter.join(',')}
-            onValueChange={(value) => setStatusFilter(value ? value.split(',') : [])}
+            value={statusFilter[0] ?? 'all'}
+            onValueChange={(value) => setStatusFilter(value === 'all' ? [] : [value])}
           >
             <SelectTrigger className="w-48">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="open">Open</SelectItem>
               <SelectItem value="in_progress">In Progress</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
