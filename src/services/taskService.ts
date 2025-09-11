@@ -76,12 +76,7 @@ class TaskService {
   }): Promise<TaskWithDetails[]> {
     let query = supabase
       .from('tasks')
-      .select(`
-        *,
-        projects!tasks_project_id_fkey(name),
-        assigned_profile:user_profiles!tasks_assigned_to_fkey(first_name, last_name, email),
-        created_profile:user_profiles!tasks_created_by_fkey(first_name, last_name, email)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -108,9 +103,6 @@ class TaskService {
 
     return (data || []).map(task => ({
       ...task,
-      project_name: task.projects?.name || null,
-      assigned_to_profile: Array.isArray(task.assigned_profile) ? task.assigned_profile[0] || null : task.assigned_profile,
-      created_by_profile: Array.isArray(task.created_profile) ? task.created_profile[0] || null : task.created_profile,
       tags: task.tags || [],
     }));
   }
@@ -118,12 +110,7 @@ class TaskService {
   async getTask(id: string): Promise<TaskWithDetails | null> {
     const { data, error } = await supabase
       .from('tasks')
-      .select(`
-        *,
-        projects!tasks_project_id_fkey(name),
-        assigned_profile:user_profiles!tasks_assigned_to_fkey(first_name, last_name, email),
-        created_profile:user_profiles!tasks_created_by_fkey(first_name, last_name, email)
-      `)
+      .select('*')
       .eq('id', id)
       .maybeSingle();
 
@@ -135,9 +122,6 @@ class TaskService {
 
     return {
       ...data,
-      project_name: data.projects?.name || null,
-      assigned_to_profile: Array.isArray(data.assigned_profile) ? data.assigned_profile[0] || null : data.assigned_profile,
-      created_by_profile: Array.isArray(data.created_profile) ? data.created_profile[0] || null : data.created_profile,
       tags: data.tags || []
     };
   }
@@ -257,12 +241,7 @@ class TaskService {
 
     let query = supabase
       .from('tasks')
-      .select(`
-        *,
-        projects!tasks_project_id_fkey(name),
-        assigned_profile:user_profiles!tasks_assigned_to_fkey(first_name, last_name, email),
-        created_profile:user_profiles!tasks_created_by_fkey(first_name, last_name, email)
-      `)
+      .select('*')
       .eq('created_by', user.id)
       .order('created_at', { ascending: false });
 
@@ -278,9 +257,6 @@ class TaskService {
 
     return (data || []).map(task => ({
       ...task,
-      project_name: task.projects?.name || null,
-      assigned_to_profile: Array.isArray(task.assigned_profile) ? task.assigned_profile[0] || null : task.assigned_profile,
-      created_by_profile: Array.isArray(task.created_profile) ? task.created_profile[0] || null : task.created_profile,
       tags: task.tags || []
     }));
   }
