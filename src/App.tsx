@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
@@ -133,9 +134,20 @@ import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectMa
 
 import { GenericPage } from "@/components/pages/GenericPage";
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+    },
+  },
+});
+
 const App = () => {
   return (
-    <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <ThemeProvider>
         <HelmetProvider>
           <BrowserRouter>
@@ -394,6 +406,7 @@ const App = () => {
         </HelmetProvider>
       </ThemeProvider>
     </AuthProvider>
+    </QueryClientProvider>
   );
 };
 
