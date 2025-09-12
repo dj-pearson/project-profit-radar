@@ -73,9 +73,13 @@ export const OSHACompliance = () => {
   }, [userProfile?.company_id]);
 
   const loadComplianceData = async () => {
-    // Mock data for demonstration
-    setInspections([
-      {
+    if (!userProfile?.company_id) return;
+    
+    try {
+      // Since safety tables don't exist yet, use mock data for demonstration
+      console.log('Safety compliance tables not yet implemented, using mock data');
+      
+      setInspections([{
         id: '1',
         project_id: 'proj-1',
         inspector_name: 'John Safety',
@@ -85,21 +89,24 @@ export const OSHACompliance = () => {
         findings: ['All safety equipment in place', 'Proper PPE usage observed'],
         corrective_actions: [],
         photos: []
-      }
-    ]);
+      }]);
 
-    setTrainings([
-      {
+      setTrainings([{
         id: '1',
         employee_name: 'Mike Johnson',
         training_type: 'OSHA 10-Hour Construction',
         completion_date: '2024-01-10',
         expiry_date: '2027-01-10',
         status: 'current'
-      }
-    ]);
+      }]);
 
-    setIncidents([]);
+      setIncidents([]);
+    } catch (error) {
+      console.error('Error loading compliance data:', error);
+      setInspections([]);
+      setTrainings([]);
+      setIncidents([]);
+    }
   };
 
   const ComplianceDashboard = () => {

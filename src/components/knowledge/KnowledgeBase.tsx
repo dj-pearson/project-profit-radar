@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Book, 
   Search, 
@@ -71,103 +72,133 @@ const KnowledgeBase = () => {
   const loadKnowledgeBase = async () => {
     setLoading(true);
     try {
-      // Mock data until we create the knowledge base tables
-      const mockArticles: Article[] = [
-        {
-          id: '1',
-          title: 'Getting Started with BuildDesk',
-          content: 'Welcome to BuildDesk! This guide will help you set up your first project and navigate the platform...',
-          category: 'getting-started',
-          tags: ['setup', 'basics', 'first-time'],
-          helpful_votes: 45,
-          not_helpful_votes: 2,
-          views: 1250,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          featured: true
-        },
-        {
-          id: '2',
-          title: 'Setting Up Project Budgets',
-          content: 'Learn how to create accurate project budgets and track expenses effectively...',
-          category: 'financial',
-          tags: ['budgets', 'costs', 'tracking'],
-          helpful_votes: 32,
-          not_helpful_votes: 1,
-          views: 890,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          featured: false
-        },
-        {
-          id: '3',
-          title: 'Managing Your Team',
-          content: 'Best practices for adding team members, setting permissions, and managing roles...',
-          category: 'team-management',
-          tags: ['team', 'permissions', 'roles'],
-          helpful_votes: 28,
-          not_helpful_votes: 3,
-          views: 654,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          featured: false
-        }
-      ];
+      // Try to load real data from knowledge_base_articles table
+      const { data: articlesData, error: articlesError } = await supabase
+        .from('knowledge_base_articles')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
 
-      const mockFAQs: FAQ[] = [
-        {
-          id: '1',
-          question: 'How do I invite team members to my project?',
-          answer: 'Go to Team Management, click "Invite Member", enter their email address, and select their role.',
-          category: 'team-management',
-          helpful_votes: 67
-        },
-        {
-          id: '2',
-          question: 'Can I export my project data?',
-          answer: 'Yes, you can export project data in CSV, Excel, or PDF formats from the Reports section.',
-          category: 'project-management',
-          helpful_votes: 45
-        },
-        {
-          id: '3',
-          question: 'How do I integrate with QuickBooks?',
-          answer: 'Navigate to Integrations > QuickBooks and follow the connection wizard to link your account.',
-          category: 'integrations',
-          helpful_votes: 89
-        }
-      ];
+      if (articlesError || !articlesData || articlesData.length === 0) {
+        console.log('Knowledge base articles not available, using mock data');
+        // Use mock data - knowledge base tables don't exist yet
+        const mockArticles: Article[] = [
+          {
+            id: '1',
+            title: 'Getting Started with BuildDesk',
+            content: 'Welcome to BuildDesk! This guide will help you set up your first project and navigate the platform...',
+            category: 'getting-started',
+            tags: ['setup', 'basics', 'first-time'],
+            helpful_votes: 45,
+            not_helpful_votes: 2,
+            views: 1250,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            featured: true
+          },
+          {
+            id: '2',
+            title: 'Setting Up Project Budgets',
+            content: 'Learn how to create accurate project budgets and track expenses effectively...',
+            category: 'financial',
+            tags: ['budgets', 'costs', 'tracking'],
+            helpful_votes: 32,
+            not_helpful_votes: 1,
+            views: 890,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            featured: false
+          },
+          {
+            id: '3',
+            title: 'Managing Your Team',
+            content: 'Best practices for adding team members, setting permissions, and managing roles...',
+            category: 'team-management',
+            tags: ['team', 'permissions', 'roles'],
+            helpful_votes: 28,
+            not_helpful_votes: 3,
+            views: 654,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            featured: false
+          }
+        ];
 
-      const mockVideos: VideoTutorial[] = [
-        {
-          id: '1',
-          title: 'BuildDesk Platform Overview',
-          description: 'A comprehensive walkthrough of all BuildDesk features',
-          video_url: 'https://example.com/video1',
-          duration: '15:30',
-          category: 'getting-started'
-        },
-        {
-          id: '2',
-          title: 'Creating Your First Project',
-          description: 'Step-by-step guide to setting up a new construction project',
-          video_url: 'https://example.com/video2',
-          duration: '8:45',
-          category: 'project-management'
-        },
-        {
-          id: '3',
-          title: 'Financial Tracking and Job Costing',
-          description: 'Learn how to track costs and maintain profitable projects',
-          video_url: 'https://example.com/video3',
-          duration: '12:20',
-          category: 'financial'
-        }
-      ];
+        const mockFAQs: FAQ[] = [
+          {
+            id: '1',
+            question: 'How do I invite team members to my project?',
+            answer: 'Go to Team Management, click "Invite Member", enter their email address, and select their role.',
+            category: 'team-management',
+            helpful_votes: 67
+          },
+          {
+            id: '2',
+            question: 'Can I export my project data?',
+            answer: 'Yes, you can export project data in CSV, Excel, or PDF formats from the Reports section.',
+            category: 'project-management',
+            helpful_votes: 45
+          },
+          {
+            id: '3',
+            question: 'How do I integrate with QuickBooks?',
+            answer: 'Navigate to Integrations > QuickBooks and follow the connection wizard to link your account.',
+            category: 'integrations',
+            helpful_votes: 89
+          }
+        ];
 
-      setArticles(mockArticles);
-      setFAQs(mockFAQs);
-      setVideos(mockVideos);
+        const mockVideos: VideoTutorial[] = [
+          {
+            id: '1',
+            title: 'BuildDesk Platform Overview',
+            description: 'A comprehensive walkthrough of all BuildDesk features',
+            video_url: 'https://example.com/video1',
+            duration: '15:30',
+            category: 'getting-started'
+          },
+          {
+            id: '2',
+            title: 'Creating Your First Project',
+            description: 'Step-by-step guide to setting up a new construction project',
+            video_url: 'https://example.com/video2',
+            duration: '8:45',
+            category: 'project-management'
+          },
+          {
+            id: '3',
+            title: 'Financial Tracking and Job Costing',
+            description: 'Learn how to track costs and maintain profitable projects',
+            video_url: 'https://example.com/video3',
+            duration: '12:20',
+            category: 'financial'
+          }
+        ];
+
+        setArticles(mockArticles);
+        setFAQs(mockFAQs);
+        setVideos(mockVideos);
+      } else {
+        // Knowledge base tables exist - use real data
+        const transformedArticles: Article[] = articlesData.map(article => ({
+          id: article.id,
+          title: article.title,
+          content: article.content,
+          category: article.category_id || 'general',
+          tags: article.tags || [],
+          helpful_votes: (article as any).helpful_votes || 0,
+          not_helpful_votes: (article as any).not_helpful_votes || 0,
+          views: article.view_count || 0,
+          created_at: article.created_at,
+          updated_at: article.updated_at,
+          featured: (article as any).featured || false
+        }));
+        setArticles(transformedArticles);
+
+        // Note: FAQ and video tables don't exist yet, so use empty arrays
+        setFAQs([]);
+        setVideos([]);
+      }
     } catch (error) {
       console.error('Error loading knowledge base:', error);
     } finally {

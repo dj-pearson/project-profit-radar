@@ -62,21 +62,64 @@ export const QuickBooksIntegration = () => {
     try {
       setLoading(true);
       
-      // Mock integration status for now (will work after database migration completes)
-      setStatus({
-        connected: false,
-        sync_status: 'never'
-      });
+      // Try to load real integration status
+      const { data: integrationData, error: integrationError } = await supabase
+        .from('quickbooks_integrations')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .single();
 
-      
-      // Mock sync stats for now
-      setSyncStats({
-        invoices_synced: 0,
-        customers_synced: 0,
-        items_synced: 0,
-        errors: 0,
-        last_sync_duration: 0
-      });
+      if (integrationError || !integrationData) {
+        console.log('QuickBooks integration not set up, using default status');
+        setStatus({
+          connected: false,
+          sync_status: 'never'
+        });
+        setSyncStats({
+          invoices_synced: 0,
+          customers_synced: 0,
+          items_synced: 0,
+          errors: 0,
+          last_sync_duration: 0
+        });
+      } else {
+        // Use real integration data
+        setStatus({
+          connected: integrationData.is_connected,
+          company_name: integrationData.qb_company_name,
+          last_sync: integrationData.last_sync_at,
+          sync_status: integrationData.last_sync_status as 'success' | 'error' | 'pending' | 'never',
+          error_message: integrationData.last_error_message
+        });
+
+        // Load sync statistics
+        const { data: syncData } = await supabase
+          .from('quickbooks_sync_logs')
+          .select('*')
+          .eq('company_id', userProfile.company_id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (syncData && syncData.length > 0) {
+          const lastSync = syncData[0];
+          const recordsProcessed = lastSync.records_processed as any || {};
+          setSyncStats({
+            invoices_synced: recordsProcessed.invoices || 0,
+            customers_synced: recordsProcessed.customers || 0,
+            items_synced: recordsProcessed.items || 0,
+            errors: lastSync.errors_count || 0,
+            last_sync_duration: lastSync.duration_seconds || 0
+          });
+        } else {
+          setSyncStats({
+            invoices_synced: 0,
+            customers_synced: 0,
+            items_synced: 0,
+            errors: 0,
+            last_sync_duration: 0
+          });
+        }
+      }
     } catch (error: any) {
       console.error('Error loading QuickBooks status:', error);
       toast({

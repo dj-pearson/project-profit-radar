@@ -84,7 +84,7 @@ export default function MaterialCostIntegration() {
         alert_threshold: Number(item.alert_threshold)
       }));
 
-      // If no data, show mock data for demonstration
+      // If no materials found, create some sample data
       if (transformedMaterials.length === 0) {
         const mockMaterials: MaterialItem[] = [
           {
@@ -161,7 +161,7 @@ export default function MaterialCostIntegration() {
         status: (item.status as 'active' | 'inactive' | 'error') || 'inactive'
       }));
 
-      // If no data, show mock data for demonstration
+      // If no suppliers found, create some sample data
       if (transformedSuppliers.length === 0) {
         const mockSuppliers: Supplier[] = [
           {
