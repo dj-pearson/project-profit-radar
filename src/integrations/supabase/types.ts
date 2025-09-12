@@ -10876,6 +10876,59 @@ export type Database = {
         }
         Relationships: []
       }
+      material_items: {
+        Row: {
+          category: string
+          company_id: string
+          created_at: string
+          current_cost: number
+          description: string | null
+          id: string
+          last_updated: string
+          name: string
+          sku: string | null
+          supplier_id: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          company_id: string
+          created_at?: string
+          current_cost?: number
+          description?: string | null
+          id?: string
+          last_updated?: string
+          name: string
+          sku?: string | null
+          supplier_id?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          company_id?: string
+          created_at?: string
+          current_cost?: number
+          description?: string | null
+          id?: string
+          last_updated?: string
+          name?: string
+          sku?: string | null
+          supplier_id?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_material_supplier"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       material_price_history: {
         Row: {
           change_percentage: number | null
@@ -15963,6 +16016,57 @@ export type Database = {
           },
         ]
       }
+      retention_items: {
+        Row: {
+          actual_release_date: string | null
+          company_id: string
+          created_at: string
+          current_amount: number
+          id: string
+          notes: string | null
+          original_amount: number
+          project_id: string
+          release_conditions: string | null
+          release_percentage: number | null
+          retention_type: string
+          scheduled_release_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actual_release_date?: string | null
+          company_id: string
+          created_at?: string
+          current_amount: number
+          id?: string
+          notes?: string | null
+          original_amount: number
+          project_id: string
+          release_conditions?: string | null
+          release_percentage?: number | null
+          retention_type: string
+          scheduled_release_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_release_date?: string | null
+          company_id?: string
+          created_at?: string
+          current_amount?: number
+          id?: string
+          notes?: string | null
+          original_amount?: number
+          project_id?: string
+          release_conditions?: string | null
+          release_percentage?: number | null
+          retention_type?: string
+          scheduled_release_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       retention_tracking: {
         Row: {
           amount_pending: number
@@ -18805,6 +18909,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          company_id: string
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_preferred: boolean | null
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_preferred?: boolean | null
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_preferred?: boolean | null
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       support_messages: {
         Row: {

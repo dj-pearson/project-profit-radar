@@ -11,6 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { Users, DollarSign, FileText, CheckCircle, Clock, AlertTriangle, Upload, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Subcontractor {
   id: string;
@@ -39,34 +41,24 @@ interface LienWaiver {
 
 interface SubcontractorPayment {
   id: string;
-  paymentNumber: string;
-  subcontractor: Subcontractor;
-  project: {
-    id: string;
-    name: string;
-  };
-  invoiceNumber: string;
-  invoiceDate: string;
-  workPeriod: {
-    start: string;
-    end: string;
-  };
+  projectId: string;
+  projectName: string;
+  subcontractorName: string;
   workDescription: string;
-  originalAmount: number;
-  retentionPercentage: number;
+  contractAmount: number;
+  amountCompleted: number;
+  previousPayments: number;
+  currentAmountDue: number;
   retentionAmount: number;
-  netAmount: number;
-  status: 'pending_approval' | 'approved' | 'waiver_required' | 'ready_to_pay' | 'paid' | 'rejected';
-  lienWaivers: LienWaiver[];
-  approvedBy?: string;
-  approvedAt?: string;
-  paidAt?: string;
+  netPayment: number;
+  paymentStatus: 'pending' | 'approved' | 'paid' | 'on_hold';
+  dueDate?: string;
+  paidDate?: string;
   paymentMethod?: string;
-  checkNumber?: string;
   notes?: string;
 }
 
-export const SubcontractorPaymentWorkflows: React.FC = () => {
+export default function SubcontractorPaymentWorkflows() {
   const [payments, setPayments] = useState<SubcontractorPayment[]>([]);
   const [subcontractors] = useState<Subcontractor[]>([
     {
@@ -116,96 +108,51 @@ export const SubcontractorPaymentWorkflows: React.FC = () => {
     loadPayments();
   }, []);
 
-  const loadPayments = () => {
-    // Mock payment data
-    const mockPayments: SubcontractorPayment[] = [
-      {
-        id: '1',
-        paymentNumber: 'SP-2024-001',
-        subcontractor: subcontractors[0],
-        project: { id: 'proj1', name: 'Downtown Office Complex' },
-        invoiceNumber: 'INV-001',
-        invoiceDate: '2024-01-15',
-        workPeriod: { start: '2024-01-01', end: '2024-01-15' },
-        workDescription: 'Electrical rough-in work for floors 1-3',
-        originalAmount: 85000,
-        retentionPercentage: 10,
-        retentionAmount: 8500,
-        netAmount: 76500,
-        status: 'waiver_required',
-        lienWaivers: [
-          {
-            id: '1',
-            type: 'partial',
-            amount: 85000,
-            periodStart: '2024-01-01',
-            periodEnd: '2024-01-15',
-            status: 'pending'
-          }
-        ]
-      },
-      {
-        id: '2',
-        paymentNumber: 'SP-2024-002',
-        subcontractor: subcontractors[1],
-        project: { id: 'proj2', name: 'Residential Development Phase 2' },
-        invoiceNumber: 'INV-502',
-        invoiceDate: '2024-01-20',
-        workPeriod: { start: '2024-01-15', end: '2024-01-31' },
-        workDescription: 'Plumbing installation - Units 10-15',
-        originalAmount: 42000,
-        retentionPercentage: 10,
-        retentionAmount: 4200,
-        netAmount: 37800,
-        status: 'ready_to_pay',
-        lienWaivers: [
-          {
-            id: '2',
-            type: 'partial',
-            amount: 42000,
-            periodStart: '2024-01-15',
-            periodEnd: '2024-01-31',
-            status: 'approved',
-            receivedAt: '2024-01-25T10:00:00Z'
-          }
-        ],
-        approvedBy: 'Project Manager',
-        approvedAt: '2024-01-25T14:00:00Z'
-      },
-      {
-        id: '3',
-        paymentNumber: 'SP-2024-003',
-        subcontractor: subcontractors[2],
-        project: { id: 'proj3', name: 'Manufacturing Facility Expansion' },
-        invoiceNumber: 'INV-789',
-        invoiceDate: '2024-01-18',
-        workPeriod: { start: '2024-01-10', end: '2024-01-25' },
-        workDescription: 'Foundation and slab work',
-        originalAmount: 125000,
-        retentionPercentage: 10,
-        retentionAmount: 12500,
-        netAmount: 112500,
-        status: 'paid',
-        lienWaivers: [
-          {
-            id: '3',
-            type: 'partial',
-            amount: 125000,
-            periodStart: '2024-01-10',
-            periodEnd: '2024-01-25',
-            status: 'approved',
-            receivedAt: '2024-01-26T09:00:00Z'
-          }
-        ],
-        approvedBy: 'Project Manager',
-        approvedAt: '2024-01-26T15:00:00Z',
-        paidAt: '2024-01-30T11:00:00Z',
-        paymentMethod: 'wire',
-        checkNumber: 'WIRE-001'
-      }
-    ];
+  const loadPayments = async () => {
+    try {
+      if (!userProfile?.company_id) return;
 
-    setPayments(mockPayments);
+      const { data, error } = await supabase
+        .from('subcontractor_payments')
+        .select(`
+          *,
+          projects (
+            id,
+            name
+          )
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedPayments: SubcontractorPayment[] = data.map(payment => ({
+          id: payment.id,
+          projectId: payment.project_id,
+          projectName: payment.projects?.name || 'Unknown Project',
+          subcontractorName: payment.subcontractor_name,
+          workDescription: payment.work_description,
+          contractAmount: Number(payment.contract_amount),
+          amountCompleted: Number(payment.amount_completed),
+          previousPayments: Number(payment.previous_payments),
+          currentAmountDue: Number(payment.current_amount_due || 0),
+          retentionAmount: Number(payment.retention_amount),
+          netPayment: Number(payment.net_payment || 0),
+          paymentStatus: payment.payment_status as SubcontractorPayment['paymentStatus'],
+          dueDate: payment.due_date,
+          paidDate: payment.paid_date,
+          paymentMethod: payment.payment_method || 'check',
+          notes: payment.notes
+        }));
+        setPayments(formattedPayments);
+      } else {
+        setPayments([]);
+      }
+    } catch (error) {
+      console.error('Error loading subcontractor payments:', error);
+      setPayments([]);
+    }
   };
 
   const approvePayment = async (paymentId: string) => {

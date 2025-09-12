@@ -58,80 +58,47 @@ export const RetentionTrackingScheduling: React.FC = () => {
     }
   }, [retentionItems]);
 
-  const loadRetentionData = () => {
-    // Mock retention data
-    const mockData: RetentionItem[] = [
-      {
-        id: '1',
-        project: {
-          id: 'proj1',
-          name: 'Downtown Office Complex',
-          contractAmount: 2500000,
-          completionDate: '2024-01-15'
-        },
-        retentionAmount: 250000,
-        retentionPercentage: 10,
-        releaseDate: '2024-03-15',
-        status: 'eligible',
-        workDescription: 'General construction and finishes',
-        warrantyPeriodMonths: 12,
-        conditions: ['Punch list completion', 'Final inspection approval', 'Warranty bond submission'],
-        remainingAmount: 250000
-      },
-      {
-        id: '2',
-        project: {
-          id: 'proj2',
-          name: 'Residential Development Phase 2',
-          contractAmount: 1800000,
-          completionDate: '2023-12-20'
-        },
-        retentionAmount: 180000,
-        retentionPercentage: 10,
-        releaseDate: '2024-02-20',
-        status: 'overdue',
-        workDescription: 'Site work and infrastructure',
-        warrantyPeriodMonths: 24,
-        conditions: ['Final survey completion', 'City acceptance', 'As-built drawings'],
-        remainingAmount: 180000
-      },
-      {
-        id: '3',
-        project: {
-          id: 'proj3',
-          name: 'Manufacturing Facility Expansion',
-          contractAmount: 3200000,
-          completionDate: '2024-02-01'
-        },
-        retentionAmount: 320000,
-        retentionPercentage: 10,
-        releaseDate: '2024-04-01',
-        status: 'held',
-        workDescription: 'Structural and mechanical systems',
-        warrantyPeriodMonths: 18,
-        conditions: ['Performance testing', 'Equipment commissioning', 'Operations manual delivery'],
-        remainingAmount: 320000
-      },
-      {
-        id: '4',
-        project: {
-          id: 'proj1',
-          name: 'Downtown Office Complex',
-          contractAmount: 2500000,
-          completionDate: '2024-01-15'
-        },
-        retentionAmount: 50000,
-        retentionPercentage: 2,
-        releaseDate: '2025-01-15',
-        status: 'held',
-        workDescription: 'Final warranty retention',
-        warrantyPeriodMonths: 12,
-        conditions: ['One year warranty period completion'],
-        remainingAmount: 50000
-      }
-    ];
+  const loadRetentionData = async () => {
+    try {
+      if (!userProfile?.company_id) return;
 
-    setRetentionItems(mockData);
+      const { data, error } = await supabase
+        .from('retention_items')
+        .select(`
+          *,
+          projects (
+            id,
+            name
+          )
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('scheduled_release_date');
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedItems: RetentionItem[] = data.map(item => ({
+          id: item.id,
+          projectId: item.project_id,
+          projectName: item.projects?.name || 'Unknown Project',
+          retentionType: item.retention_type,
+          originalAmount: Number(item.original_amount),
+          currentAmount: Number(item.current_amount),
+          releaseConditions: item.release_conditions,
+          scheduledReleaseDate: item.scheduled_release_date,
+          actualReleaseDate: item.actual_release_date,
+          status: item.status as RetentionItem['status'],
+          releasePercentage: item.release_percentage || 100,
+          notes: item.notes
+        }));
+        setRetentionItems(formattedItems);
+      } else {
+        setRetentionItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading retention items:', error);
+      setRetentionItems([]);
+    }
   };
 
   const calculateSchedule = () => {

@@ -10,6 +10,8 @@ import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, Mail, Phone, FileText, Clock, DollarSign, Users, Calendar, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays, addDays } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PaymentReminder {
   id: string;
@@ -23,44 +25,20 @@ interface PaymentReminder {
 
 interface CollectionItem {
   id: string;
+  projectId: string | null;
+  projectName?: string;
+  clientName: string;
   invoiceNumber: string;
-  client: {
-    id: string;
-    name: string;
-    contactPerson: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  project: {
-    id: string;
-    name: string;
-  };
   originalAmount: number;
-  paidAmount: number;
-  remainingBalance: number;
-  invoiceDate: string;
+  outstandingBalance: number;
   dueDate: string;
   daysOverdue: number;
-  status: 'current' | 'overdue_1_30' | 'overdue_31_60' | 'overdue_61_90' | 'overdue_90_plus' | 'collection' | 'legal' | 'written_off';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  reminders: PaymentReminder[];
-  collectionAgency?: {
-    name: string;
-    contactPerson: string;
-    assignedDate: string;
-    commissionRate: number;
-  };
-  notes: string[];
+  collectionStatus: 'pending' | 'contacted' | 'payment_plan' | 'legal' | 'collected' | 'written_off';
   lastContactDate?: string;
-  nextActionDate: string;
-  paymentPlan?: {
-    totalAmount: number;
-    installments: number;
-    monthlyAmount: number;
-    startDate: string;
-    paymentsReceived: number;
-  };
+  nextActionDate?: string;
+  notes?: string;
+  collectionAgency?: string;
+  paymentPlanAmount?: number;
 }
 
 interface CollectionSummary {
@@ -96,147 +74,48 @@ export const LatePaymentAlertsCollection: React.FC = () => {
     }
   }, [collectionItems]);
 
-  const loadCollectionData = () => {
-    // Mock collection data
-    const mockData: CollectionItem[] = [
-      {
-        id: '1',
-        invoiceNumber: 'INV-2023-045',
-        client: {
-          id: 'client1',
-          name: 'Metro Construction LLC',
-          contactPerson: 'David Wilson',
-          email: 'david@metroconstruction.com',
-          phone: '(555) 123-4567',
-          address: '123 Business Ave, City, ST 12345'
-        },
-        project: {
-          id: 'proj1',
-          name: 'Office Building Renovation'
-        },
-        originalAmount: 125000,
-        paidAmount: 0,
-        remainingBalance: 125000,
-        invoiceDate: '2023-11-15',
-        dueDate: '2023-12-15',
-        daysOverdue: 45,
-        status: 'overdue_31_60',
-        priority: 'high',
-        reminders: [
-          {
-            id: '1',
-            type: 'first_notice',
-            sentAt: '2023-12-20T10:00:00Z',
-            method: 'email',
-            content: 'First payment reminder sent'
-          },
-          {
-            id: '2',
-            type: 'second_notice',
-            sentAt: '2024-01-05T10:00:00Z',
-            method: 'certified_mail',
-            content: 'Second notice with certified mail'
-          }
-        ],
-        notes: ['Client mentioned cash flow issues', 'Promised payment by end of month'],
-        lastContactDate: '2024-01-10',
-        nextActionDate: '2024-02-05'
-      },
-      {
-        id: '2',
-        invoiceNumber: 'INV-2023-052',
-        client: {
-          id: 'client2',
-          name: 'Residential Builders Inc',
-          contactPerson: 'Sarah Johnson',
-          email: 'sarah@residentialbuilders.com',
-          phone: '(555) 234-5678',
-          address: '456 Contractor Rd, City, ST 12345'
-        },
-        project: {
-          id: 'proj2',
-          name: 'Luxury Home Project'
-        },
-        originalAmount: 85000,
-        paidAmount: 25000,
-        remainingBalance: 60000,
-        invoiceDate: '2023-09-30',
-        dueDate: '2023-10-30',
-        daysOverdue: 95,
-        status: 'collection',
-        priority: 'critical',
-        reminders: [
-          {
-            id: '3',
-            type: 'first_notice',
-            sentAt: '2023-11-05T10:00:00Z',
-            method: 'email',
-            content: 'Initial payment reminder'
-          },
-          {
-            id: '4',
-            type: 'final_notice',
-            sentAt: '2023-12-01T10:00:00Z',
-            method: 'certified_mail',
-            content: 'Final notice before collection'
-          }
-        ],
-        collectionAgency: {
-          name: 'ABC Collection Services',
-          contactPerson: 'Mike Davis',
-          assignedDate: '2024-01-15',
-          commissionRate: 25
-        },
-        notes: ['Account sent to collection agency', 'Client disputes invoice amount'],
-        lastContactDate: '2024-01-15',
-        nextActionDate: '2024-02-15'
-      },
-      {
-        id: '3',
-        invoiceNumber: 'INV-2024-003',
-        client: {
-          id: 'client3',
-          name: 'Commercial Properties Group',
-          contactPerson: 'Robert Brown',
-          email: 'robert@commercialproperties.com',
-          phone: '(555) 345-6789',
-          address: '789 Corporate Blvd, City, ST 12345'
-        },
-        project: {
-          id: 'proj3',
-          name: 'Warehouse Expansion'
-        },
-        originalAmount: 45000,
-        paidAmount: 0,
-        remainingBalance: 45000,
-        invoiceDate: '2024-01-05',
-        dueDate: '2024-01-20',
-        daysOverdue: 15,
-        status: 'overdue_1_30',
-        priority: 'medium',
-        reminders: [
-          {
-            id: '5',
-            type: 'first_notice',
-            sentAt: '2024-01-25T10:00:00Z',
-            method: 'email',
-            content: 'Friendly payment reminder'
-          }
-        ],
-        paymentPlan: {
-          totalAmount: 45000,
-          installments: 3,
-          monthlyAmount: 15000,
-          startDate: '2024-02-01',
-          paymentsReceived: 0
-        },
-        notes: ['Client requested payment plan', 'Agreed to 3 monthly installments'],
-        lastContactDate: '2024-01-25',
-        nextActionDate: '2024-02-01'
-      }
-    ];
+  const loadCollectionData = async () => {
+    try {
+      if (!userProfile?.company_id) return;
 
-    setCollectionItems(mockData);
+      const { data, error } = await supabase
+        .from('collection_items')
+        .select(`
+          *,
+          projects (
+            id,
+            name
+          )
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('days_overdue', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedItems: CollectionItem[] = data.map(item => ({
+          id: item.id,
+          projectId: item.project_id,
+          projectName: item.projects?.name || 'N/A',
+          clientName: item.client_name,
+          invoiceNumber: item.invoice_number,
+          originalAmount: Number(item.original_amount),
+          currentBalance: Number(item.current_balance),
+          daysOverdue: item.days_overdue || 0,
+          status: item.status,
+          priority: item.priority,
+          lastContactDate: item.last_contact_date,
+          nextActionDate: item.next_action_date,
+          notes: item.notes
+        }));
+        setCollectionItems(formattedItems);
+      } else {
+        setCollectionItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading collection items:', error);
+      setCollectionItems([]);
+    }
   };
 
   const calculateSummary = () => {

@@ -80,79 +80,54 @@ export const PaymentApplicationAutomation: React.FC = () => {
     loadPaymentApplications();
   }, []);
 
-  const loadPaymentApplications = () => {
-    // Mock data for payment applications
-    const mockApplications: PaymentApplication[] = [
-      {
-        id: '1',
-        applicationNumber: 'PA-2024-001',
-        project: {
-          id: '1',
-          name: 'Downtown Office Complex',
-          contractAmount: 2500000,
-          completionPercentage: 65
-        },
-        billingPeriod: {
-          start: '2024-01-01',
-          end: '2024-01-31'
-        },
-        workCompleted: {
-          scheduledValue: 1625000,
-          completedToDate: 1625000,
-          thisApplication: 150000
-        },
-        materialStored: {
-          onSite: 25000,
-          offSite: 0
-        },
-        retention: {
-          percentage: 10,
-          amount: 167500
-        },
-        changeOrders: {
-          approved: 50000,
-          pending: 25000
-        },
-        netAmount: 1507500,
-        status: 'submitted',
-        submittedAt: '2024-02-01T10:00:00Z'
-      },
-      {
-        id: '2',
-        applicationNumber: 'PA-2024-002',
-        project: {
-          id: '2',
-          name: 'Residential Development Phase 2',
-          contractAmount: 1800000,
-          completionPercentage: 42
-        },
-        billingPeriod: {
-          start: '2024-01-01',
-          end: '2024-01-31'
-        },
-        workCompleted: {
-          scheduledValue: 756000,
-          completedToDate: 756000,
-          thisApplication: 108000
-        },
-        materialStored: {
-          onSite: 15000,
-          offSite: 5000
-        },
-        retention: {
-          percentage: 10,
-          amount: 77600
-        },
-        changeOrders: {
-          approved: 30000,
-          pending: 0
-        },
-        netAmount: 701400,
-        status: 'draft'
+  const loadPaymentApplications = async () => {
+    try {
+      if (!userProfile?.company_id) return;
+
+      const { data, error } = await supabase
+        .from('payment_applications')
+        .select(`
+          *,
+          projects (
+            id,
+            name
+          )
+        `)
+        .eq('company_id', userProfile.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedApplications: PaymentApplication[] = data.map(app => ({
+          id: app.id,
+          projectId: app.project_id,
+          projectName: app.projects?.name || 'Unknown Project',
+          applicationNumber: app.application_number,
+          billingPeriodStart: app.billing_period_start,
+          billingPeriodEnd: app.billing_period_end,
+          workCompletedAmount: Number(app.work_completed_amount),
+          materialsStoredAmount: Number(app.materials_stored_amount),
+          totalCompletedAndStored: Number(app.total_completed_and_stored || 0),
+          lessPreviousCertificates: Number(app.less_previous_certificates),
+          currentPaymentDue: Number(app.current_payment_due || 0),
+          lessRetention: Number(app.less_retention),
+          netAmount: Number(app.net_amount || 0),
+          changeOrdersAmount: Number(app.change_orders_amount),
+          status: app.status as PaymentApplication['status'],
+          submittedDate: app.submitted_date,
+          approvedDate: app.approved_date,
+          paidDate: app.paid_date,
+          notes: app.notes
+        }));
+        setApplications(formattedApplications);
+      } else {
+        setApplications([]);
       }
-    ];
-    
-    setApplications(mockApplications);
+    } catch (error) {
+      console.error('Error loading payment applications:', error);
+      setApplications([]);
+    }
   };
 
   const generatePaymentApplication = async () => {
