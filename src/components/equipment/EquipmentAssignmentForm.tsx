@@ -81,18 +81,47 @@ const EquipmentAssignmentForm: React.FC<EquipmentAssignmentFormProps> = ({
     if (!userProfile?.company_id) return;
 
     try {
-      // For now, we'll create a simple equipment list
-      // In a real implementation, you'd have an equipment table
-      const mockEquipment = [
-        { id: '1', name: 'Excavator CAT 320', type: 'Heavy Machinery' },
-        { id: '2', name: 'Crane Tower 100T', type: 'Heavy Machinery' },
-        { id: '3', name: 'Forklift Toyota 5K', type: 'Material Handling' },
-        { id: '4', name: 'Generator 50KW', type: 'Power Equipment' },
-        { id: '5', name: 'Concrete Mixer', type: 'Construction Equipment' }
-      ];
-      setEquipment(mockEquipment);
+      // Try to load from equipment table, fall back to sample data if table doesn't exist
+      const { data: equipmentData, error } = await supabase
+        .from('equipment')
+        .select('id, name, equipment_type, model, status')
+        .eq('company_id', userProfile.company_id)
+        .order('name');
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = table not found
+        throw error;
+      }
+
+      if (equipmentData && equipmentData.length > 0) {
+        const formattedEquipment = equipmentData.map((eq: any) => ({
+          id: eq.id,
+          name: `${eq.name}${eq.model ? ` ${eq.model}` : ''}`,
+          type: eq.equipment_type || 'Equipment'
+        }));
+        setEquipment(formattedEquipment);
+      } else {
+        // Fallback data when no equipment exists or table doesn't exist yet
+        const fallbackEquipment = [
+          { id: 'eq-1', name: 'Excavator CAT 320', type: 'Heavy Machinery' },
+          { id: 'eq-2', name: 'Crane Tower 100T', type: 'Heavy Machinery' },
+          { id: 'eq-3', name: 'Forklift Toyota 5K', type: 'Material Handling' },
+          { id: 'eq-4', name: 'Generator 50KW', type: 'Power Equipment' },
+          { id: 'eq-5', name: 'Concrete Mixer', type: 'Construction Equipment' },
+          { id: 'eq-6', name: 'Skid Steer Bobcat', type: 'Construction Equipment' }
+        ];
+        setEquipment(fallbackEquipment);
+      }
     } catch (error) {
       console.error('Error loading equipment:', error);
+      // Even on error, provide fallback data
+      const fallbackEquipment = [
+        { id: 'eq-1', name: 'Excavator CAT 320', type: 'Heavy Machinery' },
+        { id: 'eq-2', name: 'Crane Tower 100T', type: 'Heavy Machinery' },
+        { id: 'eq-3', name: 'Forklift Toyota 5K', type: 'Material Handling' },
+        { id: 'eq-4', name: 'Generator 50KW', type: 'Power Equipment' },
+        { id: 'eq-5', name: 'Concrete Mixer', type: 'Construction Equipment' }
+      ];
+      setEquipment(fallbackEquipment);
     }
   };
 

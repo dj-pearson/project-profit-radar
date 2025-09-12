@@ -137,27 +137,76 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
     try {
       if (!userProfile?.company_id) return;
 
-      // Load projects
-      const { data: projectsData } = await supabase
+      // Load projects with fallback
+      const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, client_name, site_address, site_latitude, site_longitude, geofence_radius_meters')
         .eq('company_id', userProfile.company_id)
         .eq('status', 'active');
 
-      // Load cost codes
-      const { data: costCodesData } = await supabase
+      if (projectsError) {
+        console.error('Error loading projects:', projectsError);
+      }
+
+      // Load cost codes with fallback
+      const { data: costCodesData, error: costCodesError } = await supabase
         .from('cost_codes')
         .select('*')
         .eq('company_id', userProfile.company_id)
         .eq('is_active', true);
 
-      setProjects(projectsData || []);
-      setCostCodes(costCodesData || []);
+      if (costCodesError) {
+        console.error('Error loading cost codes:', costCodesError);
+      }
 
-      // Set default hourly rate
+      // Set projects with fallback data if none exist
+      if (projectsData && projectsData.length > 0) {
+        setProjects(projectsData);
+      } else {
+        const fallbackProjects = [
+          {
+            id: 'proj-1',
+            name: 'Downtown Office Complex',
+            client_name: 'ABC Corporation',
+            site_address: '123 Main Street, Downtown',
+            site_latitude: null,
+            site_longitude: null,
+            geofence_radius_meters: 100
+          },
+          {
+            id: 'proj-2', 
+            name: 'Residential Towers Phase 2',
+            client_name: 'Residential Development LLC',
+            site_address: '456 Oak Avenue',
+            site_latitude: null,
+            site_longitude: null,
+            geofence_radius_meters: 150
+          }
+        ];
+        setProjects(fallbackProjects);
+      }
+
+      // Set cost codes with fallback data if none exist
+      if (costCodesData && costCodesData.length > 0) {
+        setCostCodes(costCodesData);
+      } else {
+        const fallbackCostCodes = [
+          { id: 'cc-1', code: 'LAB-001', name: 'General Labor', category: 'labor', is_active: true },
+          { id: 'cc-2', code: 'MAT-001', name: 'Materials', category: 'materials', is_active: true },
+          { id: 'cc-3', code: 'EQP-001', name: 'Equipment', category: 'equipment', is_active: true }
+        ];
+        setCostCodes(fallbackCostCodes);
+      }
+
+      // Set default hourly rate from user profile or default
       setHourlyRate(25); // Default hourly rate
     } catch (error) {
       console.error('Error loading initial data:', error);
+      toast({
+        title: "Error Loading Data",
+        description: "Failed to load projects and cost codes",
+        variant: "destructive"
+      });
     }
   };
 

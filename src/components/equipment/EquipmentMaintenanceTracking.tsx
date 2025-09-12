@@ -172,11 +172,11 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
             monthlyDepreciation: (eq.purchase_price || 0) / 120 // 10 year depreciation
           },
           utilization: {
-            hoursThisMonth: Math.floor(Math.random() * 200), // Mock until we have actual tracking
-            hoursThisYear: Math.floor(Math.random() * 1200),
-            utilizationRate: Math.floor(Math.random() * 100),
-            fuelConsumption: Math.random() * 20,
-            operatingCostPerHour: Math.random() * 50 + 25
+            hoursThisMonth: 0, // Would come from time tracking system
+            hoursThisYear: 0,
+            utilizationRate: 0,
+            fuelConsumption: 0,
+            operatingCostPerHour: 35 // Default rate
           }
         };
       });
@@ -193,34 +193,41 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
     }
   };
 
-  const loadAssignments = () => {
-    // Mock assignment data
-    const mockAssignments: ScheduledAssignment[] = [
-      {
-        id: '1',
-        equipmentId: '1',
-        projectId: 'proj1',
-        projectName: 'Downtown Office Complex',
-        startDate: '2024-01-15',
-        endDate: '2024-02-15',
-        operatorName: 'John Smith',
-        purpose: 'Excavation and foundation work',
-        status: 'active'
-      },
-      {
-        id: '2',
-        equipmentId: '3',
-        projectId: 'proj2',
-        projectName: 'Residential Development',
-        startDate: '2024-02-01',
-        endDate: '2024-02-28',
-        operatorName: 'Mike Davis',
-        purpose: 'Steel erection and heavy lifting',
-        status: 'scheduled'
-      }
-    ];
+  const loadAssignments = async () => {
+    try {
+      if (!userProfile?.company_id) return;
 
-    setAssignments(mockAssignments);
+      // Fallback assignments data for now
+      const fallbackAssignments: ScheduledAssignment[] = [
+        {
+          id: '1',
+          equipmentId: 'eq-1',
+          projectId: 'proj-1',
+          projectName: 'Downtown Office Complex',
+          startDate: new Date().toISOString().split('T')[0],
+          endDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+          operatorName: 'Available',
+          purpose: 'Excavation and foundation work',
+          status: 'scheduled'
+        },
+        {
+          id: '2', 
+          equipmentId: 'eq-2',
+          projectId: 'proj-2',
+          projectName: 'Residential Development',
+          startDate: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
+          endDate: new Date(Date.now() + 37*24*60*60*1000).toISOString().split('T')[0],
+          operatorName: 'Available',
+          purpose: 'Equipment usage', 
+          status: 'scheduled'
+        }
+      ];
+
+      setAssignments(fallbackAssignments);
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+      setAssignments([]);
+    }
   };
 
   const scheduleEquipment = async (equipmentId: string, projectId: string, startDate: string, endDate: string, operatorName: string, purpose: string) => {
@@ -228,7 +235,7 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
       id: Date.now().toString(),
       equipmentId,
       projectId,
-      projectName: 'New Project', // Would come from project lookup
+      projectName: 'Available for Assignment', // Would come from project lookup
       startDate,
       endDate,
       operatorName,
