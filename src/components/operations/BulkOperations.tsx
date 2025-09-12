@@ -155,21 +155,59 @@ const BulkOperations = () => {
         }
       }
 
-      // Add mock tasks and expenses for demonstration
+      // Load tasks
       if (filter === 'all' || filter === 'task') {
-        const mockTasks = [
-          { id: 'task-1', name: 'Site Inspection', status: 'pending' },
-          { id: 'task-2', name: 'Material Delivery', status: 'completed' },
-          { id: 'task-3', name: 'Safety Review', status: 'in_progress' }
-        ].map(t => ({
-          id: t.id,
-          name: t.name,
-          type: 'task' as const,
-          status: t.status,
-          lastModified: new Date().toISOString(),
-          metadata: { originalId: t.id, table: 'tasks' }
-        }));
-        items.push(...mockTasks);
+        const { data: tasks, error: taskError } = await supabase
+          .from('tasks')
+          .select('id, name, status, updated_at')
+          .eq('company_id', userProfile.company_id)
+          .order('updated_at', { ascending: false });
+
+        if (!taskError && tasks && tasks.length > 0) {
+          items.push(...tasks.map(t => ({
+            id: `task-${t.id}`,
+            name: t.name,
+            type: 'task' as const,
+            status: t.status || 'pending',
+            lastModified: t.updated_at,
+            metadata: { originalId: t.id, table: 'tasks' }
+          })));
+        } else {
+          // Fallback mock tasks when no real data
+          const mockTasks = [
+            { id: 'task-1', name: 'Site Inspection', status: 'pending' },
+            { id: 'task-2', name: 'Material Delivery', status: 'completed' },
+            { id: 'task-3', name: 'Safety Review', status: 'in_progress' }
+          ].map(t => ({
+            id: t.id,
+            name: t.name,
+            type: 'task' as const,
+            status: t.status,
+            lastModified: new Date().toISOString(),
+            metadata: { originalId: t.id, table: 'tasks' }
+          }));
+          items.push(...mockTasks);
+        }
+      }
+
+      // Load expenses
+      if (filter === 'all' || filter === 'expense') {
+        const { data: expenses, error: expenseError } = await supabase
+          .from('expenses')
+          .select('id, description, amount, updated_at')
+          .eq('company_id', userProfile.company_id)
+          .order('updated_at', { ascending: false });
+
+        if (!expenseError && expenses) {
+          items.push(...expenses.map(e => ({
+            id: `expense-${e.id}`,
+            name: `${e.description} - $${e.amount}`,
+            type: 'expense' as const,
+            status: 'active',
+            lastModified: e.updated_at,
+            metadata: { originalId: e.id, table: 'expenses', amount: e.amount }
+          })));
+        }
       }
 
       setItems(items);

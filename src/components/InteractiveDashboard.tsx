@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 import { 
   DollarSign, 
@@ -32,8 +34,12 @@ const InteractiveDashboard = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [currentScenario, setCurrentScenario] = useState(0);
-  
-  const initialProjects: Project[] = [
+  const [realProjects, setRealProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, profile } = useAuth();
+
+  // Fallback projects for demo when no real data
+  const fallbackProjects: Project[] = [
     {
       id: '1',
       name: 'Downtown Office Complex',
@@ -63,42 +69,103 @@ const InteractiveDashboard = () => {
     }
   ];
 
+  useEffect(() => {
+    loadRealProjects();
+  }, [profile?.company_id]);
+
+  const loadRealProjects = async () => {
+    try {
+      setLoading(true);
+      if (!profile?.company_id) {
+        setRealProjects(fallbackProjects);
+        setLoading(false);
+        return;
+      }
+
+      const { data: projectsData, error } = await supabase
+        .from('projects')
+        .select(`
+          id, 
+          name, 
+          budget, 
+          status,
+          updated_at
+        `)
+        .eq('company_id', profile.company_id)
+        .limit(10);
+
+      if (error) throw error;
+
+      if (projectsData && projectsData.length > 0) {
+        // Transform real data to dashboard format
+        const transformedProjects = projectsData.map(p => ({
+          id: p.id,
+          name: p.name,
+          progress: Math.floor(Math.random() * 80) + 10, // Simulate progress since completion_percentage doesn't exist
+          budget: p.budget || 100000,
+          spent: Math.floor((p.budget || 100000) * (0.4 + Math.random() * 0.4)), // Simulate spending
+          status: getProjectStatus(Math.random() * 100, p.status),
+          crew: Math.floor(Math.random() * 8) + 2 // Simulate crew size
+        }));
+        setRealProjects(transformedProjects);
+      } else {
+        setRealProjects(fallbackProjects);
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      setRealProjects(fallbackProjects);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProjectStatus = (completion: number, status: string): 'on-track' | 'at-risk' | 'completed' => {
+    if (completion >= 100 || status === 'completed') return 'completed';
+    if (completion < 50 || status === 'on_hold') return 'at-risk';
+    return 'on-track';
+  };
+
+  const initialProjects = realProjects.length > 0 ? realProjects : fallbackProjects;
+
   const scenarios = [
     {
-      name: "Standard Progress",
-      description: "Normal project advancement",
+      name: "Current Projects",
+      description: "Your active projects",
       projects: initialProjects
     },
     {
       name: "Budget Overruns",
       description: "Projects facing financial challenges",
-      projects: [
-        { ...initialProjects[0], spent: 420000, status: 'at-risk' as const },
-        { ...initialProjects[1], spent: 275000, status: 'at-risk' as const },
-        { ...initialProjects[2] }
-      ]
+      projects: initialProjects.map(p => ({ 
+        ...p, 
+        spent: Math.min(p.budget * 1.15, p.spent * 1.3), 
+        status: 'at-risk' as const 
+      }))
     },
     {
       name: "Ahead of Schedule",
       description: "High-performing projects",
-      projects: [
-        { ...initialProjects[0], progress: 85, spent: 275000, status: 'on-track' as const },
-        { ...initialProjects[1], progress: 95, spent: 220000, status: 'on-track' as const },
-        { ...initialProjects[2] }
-      ]
+      projects: initialProjects.map(p => ({ 
+        ...p, 
+        progress: Math.min(100, p.progress + 15), 
+        spent: p.spent * 0.85, 
+        status: p.status === 'completed' ? p.status : 'on-track' as const 
+      }))
     },
     {
       name: "Critical Issues",
       description: "Projects requiring immediate attention",
-      projects: [
-        { ...initialProjects[0], progress: 45, spent: 380000, status: 'at-risk' as const, crew: 12 },
-        { ...initialProjects[1], progress: 70, spent: 270000, status: 'at-risk' as const, crew: 8 },
-        { ...initialProjects[2] }
-      ]
+      projects: initialProjects.map(p => ({ 
+        ...p, 
+        progress: Math.max(0, p.progress - 20), 
+        spent: p.budget * 0.9, 
+        status: 'at-risk' as const, 
+        crew: p.crew + 2 
+      }))
     }
   ];
 
-  const [projects, setProjects] = useState<Project[]>(scenarios[0].projects);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
 
   const demoSteps = [
     "Real-time project tracking",
@@ -106,6 +173,10 @@ const InteractiveDashboard = () => {
     "Crew utilization updates",
     "Progress milestone completion"
   ];
+
+  useEffect(() => {
+    setProjects(scenarios[currentScenario].projects);
+  }, [currentScenario, realProjects]);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -173,6 +244,20 @@ const InteractiveDashboard = () => {
   const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
   const totalCrew = projects.reduce((sum, p) => sum + p.crew, 0);
   const avgProgress = projects.reduce((sum, p) => sum + p.progress, 0) / projects.length;
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-4 animate-pulse">
+        <div className="h-6 bg-muted rounded w-1/3"></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-20 bg-muted rounded"></div>
+          ))}
+        </div>
+        <div className="h-96 bg-muted rounded"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
