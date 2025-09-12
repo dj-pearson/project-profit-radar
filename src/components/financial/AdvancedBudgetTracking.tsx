@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,151 +6,241 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Target, BarChart3, Filter } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
+
+interface BudgetSummary {
+  totalBudget: number;
+  actualSpent: number;
+  commitments: number;
+  forecast: number;
+  variance: number;
+  variancePercentage: number;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  budget: number;
+  actual: number;
+  forecast: number;
+  variance: number;
+  variancePercent: number;
+  completion: number;
+  status: 'on_track' | 'over_budget' | 'under_budget';
+}
+
+interface BudgetCategory {
+  category: string;
+  budget: number;
+  actual: number;
+  forecast: number;
+  variance: number;
+  variancePercent: number;
+  trend: 'improving' | 'worsening' | 'stable';
+}
+
+interface VarianceAlert {
+  id: string;
+  project: string;
+  category: string;
+  variance: number;
+  variancePercent: number;
+  severity: 'high' | 'medium' | 'low';
+  description: string;
+}
+
+interface BudgetRevision {
+  id: string;
+  project: string;
+  requestedBy: string;
+  requestDate: string;
+  originalBudget: number;
+  revisedBudget: number;
+  reason: string;
+  status: 'pending_approval' | 'approved' | 'rejected';
+  approver: string;
+}
 
 export const AdvancedBudgetTracking = () => {
+  const { user } = useAuth();
   const [selectedProject, setSelectedProject] = useState('all');
   const [selectedView, setSelectedView] = useState('summary');
   const [selectedPeriod, setSelectedPeriod] = useState('current');
+  const [loading, setLoading] = useState(true);
+  const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
+  const [varianceAlerts, setVarianceAlerts] = useState<VarianceAlert[]>([]);
+  const [budgetRevisions, setBudgetRevisions] = useState<BudgetRevision[]>([]);
 
-  // Mock data for budget tracking
-  const budgetSummary = {
-    totalBudget: 2450000,
-    actualSpent: 1890000,
-    commitments: 320000,
-    forecast: 2380000,
-    variance: -70000,
-    variancePercentage: -2.9
+  useEffect(() => {
+    if (user) {
+      loadBudgetData();
+    }
+  }, [user, selectedProject]);
+
+  const loadBudgetData = async () => {
+    if (!user) return;
+
+    try {
+      // Using fallback data until migration is approved
+      const fallbackSummary: BudgetSummary = {
+        totalBudget: 2450000,
+        actualSpent: 1890000,
+        commitments: 320000,
+        forecast: 2380000,
+        variance: -70000,
+        variancePercentage: -2.9
+      };
+
+      const fallbackProjects: Project[] = [
+        {
+          id: '1',
+          name: 'Downtown Office Complex',
+          budget: 1250000,
+          actual: 980000,
+          forecast: 1220000,
+          variance: -30000,
+          variancePercent: -2.4,
+          completion: 78,
+          status: 'on_track'
+        },
+        {
+          id: '2',
+          name: 'Residential Towers Phase 2',
+          budget: 890000,
+          actual: 720000,
+          forecast: 910000,
+          variance: 20000,
+          variancePercent: 2.2,
+          completion: 81,
+          status: 'over_budget'
+        },
+        {
+          id: '3',
+          name: 'Medical Center Renovation',
+          budget: 310000,
+          actual: 190000,
+          forecast: 250000,
+          variance: -60000,
+          variancePercent: -19.4,
+          status: 'under_budget',
+          completion: 61
+        }
+      ];
+
+      const fallbackCategories: BudgetCategory[] = [
+        {
+          category: 'Labor',
+          budget: 980000,
+          actual: 756000,
+          forecast: 945000,
+          variance: -35000,
+          variancePercent: -3.6,
+          trend: 'improving'
+        },
+        {
+          category: 'Materials',
+          budget: 720000,
+          actual: 612000,
+          forecast: 735000,
+          variance: 15000,
+          variancePercent: 2.1,
+          trend: 'worsening'
+        },
+        {
+          category: 'Equipment',
+          budget: 450000,
+          actual: 289000,
+          forecast: 420000,
+          variance: -30000,
+          variancePercent: -6.7,
+          trend: 'stable'
+        },
+        {
+          category: 'Subcontractors',
+          budget: 300000,
+          actual: 233000,
+          forecast: 280000,
+          variance: -20000,
+          variancePercent: -6.7,
+          trend: 'improving'
+        }
+      ];
+
+      const fallbackAlerts: VarianceAlert[] = [
+        {
+          id: '1',
+          project: 'Residential Towers Phase 2',
+          category: 'Materials',
+          variance: 25000,
+          variancePercent: 8.5,
+          severity: 'high',
+          description: 'Steel prices increased 15% above budget estimates'
+        },
+        {
+          id: '2',
+          project: 'Downtown Office Complex',
+          category: 'Labor',
+          variance: -18000,
+          variancePercent: -12.3,
+          severity: 'medium',
+          description: 'Overtime hours reduced due to productivity improvements'
+        },
+        {
+          id: '3',
+          project: 'Medical Center Renovation',
+          category: 'Equipment',
+          variance: -35000,
+          variancePercent: -22.1,
+          severity: 'low',
+          description: 'Equipment rental costs lower than anticipated'
+        }
+      ];
+
+      const fallbackRevisions: BudgetRevision[] = [
+        {
+          id: '1',
+          project: 'Downtown Office Complex',
+          requestedBy: 'John Smith',
+          requestDate: '2025-01-05',
+          originalBudget: 1250000,
+          revisedBudget: 1280000,
+          reason: 'Additional electrical work required due to code changes',
+          status: 'pending_approval',
+          approver: 'Sarah Johnson'
+        },
+        {
+          id: '2',
+          project: 'Residential Towers Phase 2',
+          requestedBy: 'Mike Davis',
+          requestDate: '2025-01-03',
+          originalBudget: 890000,
+          revisedBudget: 920000,
+          reason: 'Material cost escalation for steel and concrete',
+          status: 'approved',
+          approver: 'Sarah Johnson'
+        }
+      ];
+
+      setBudgetSummary(fallbackSummary);
+      setProjects(fallbackProjects);
+      setBudgetCategories(fallbackCategories);
+      setVarianceAlerts(fallbackAlerts);
+      setBudgetRevisions(fallbackRevisions);
+
+    } catch (error) {
+      console.error('Error loading budget data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load budget tracking data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const projects = [
-    {
-      id: '1',
-      name: 'Downtown Office Complex',
-      budget: 1250000,
-      actual: 980000,
-      forecast: 1220000,
-      variance: -30000,
-      variancePercent: -2.4,
-      completion: 78,
-      status: 'on_track'
-    },
-    {
-      id: '2',
-      name: 'Residential Towers Phase 2',
-      budget: 890000,
-      actual: 720000,
-      forecast: 910000,
-      variance: 20000,
-      variancePercent: 2.2,
-      completion: 81,
-      status: 'over_budget'
-    },
-    {
-      id: '3',
-      name: 'Medical Center Renovation',
-      budget: 310000,
-      actual: 190000,
-      forecast: 250000,
-      variance: -60000,
-      variancePercent: -19.4,
-      status: 'under_budget',
-      completion: 61
-    }
-  ];
-
-  const budgetCategories = [
-    {
-      category: 'Labor',
-      budget: 980000,
-      actual: 756000,
-      forecast: 945000,
-      variance: -35000,
-      variancePercent: -3.6,
-      trend: 'improving'
-    },
-    {
-      category: 'Materials',
-      budget: 720000,
-      actual: 612000,
-      forecast: 735000,
-      variance: 15000,
-      variancePercent: 2.1,
-      trend: 'worsening'
-    },
-    {
-      category: 'Equipment',
-      budget: 450000,
-      actual: 289000,
-      forecast: 420000,
-      variance: -30000,
-      variancePercent: -6.7,
-      trend: 'stable'
-    },
-    {
-      category: 'Subcontractors',
-      budget: 300000,
-      actual: 233000,
-      forecast: 280000,
-      variance: -20000,
-      variancePercent: -6.7,
-      trend: 'improving'
-    }
-  ];
-
-  const varianceAlerts = [
-    {
-      id: '1',
-      project: 'Residential Towers Phase 2',
-      category: 'Materials',
-      variance: 25000,
-      variancePercent: 8.5,
-      severity: 'high',
-      description: 'Steel prices increased 15% above budget estimates'
-    },
-    {
-      id: '2',
-      project: 'Downtown Office Complex',
-      category: 'Labor',
-      variance: -18000,
-      variancePercent: -12.3,
-      severity: 'medium',
-      description: 'Overtime hours reduced due to productivity improvements'
-    },
-    {
-      id: '3',
-      project: 'Medical Center Renovation',
-      category: 'Equipment',
-      variance: -35000,
-      variancePercent: -22.1,
-      severity: 'low',
-      description: 'Equipment rental costs lower than anticipated'
-    }
-  ];
-
-  const budgetRevisions = [
-    {
-      id: '1',
-      project: 'Downtown Office Complex',
-      requestedBy: 'John Smith',
-      requestDate: '2025-01-05',
-      originalBudget: 1250000,
-      revisedBudget: 1280000,
-      reason: 'Additional electrical work required due to code changes',
-      status: 'pending_approval',
-      approver: 'Sarah Johnson'
-    },
-    {
-      id: '2',
-      project: 'Residential Towers Phase 2',
-      requestedBy: 'Mike Davis',
-      requestDate: '2025-01-03',
-      originalBudget: 890000,
-      revisedBudget: 920000,
-      reason: 'Material cost escalation for steel and concrete',
-      status: 'approved',
-      approver: 'Sarah Johnson'
-    }
-  ];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -195,6 +285,39 @@ export const AdvancedBudgetTracking = () => {
       default: return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-64 mb-2"></div>
+          <div className="h-4 bg-muted rounded w-96"></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-muted rounded w-20"></div>
+                  <div className="h-8 bg-muted rounded w-24"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!budgetSummary) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No budget data available. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
