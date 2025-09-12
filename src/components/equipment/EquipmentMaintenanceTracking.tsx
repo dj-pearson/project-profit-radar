@@ -104,58 +104,91 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
 
   const loadEquipmentData = async () => {
     try {
-      // Equipment tables not yet fully implemented, using mock data
-      console.log('Equipment inventory table not fully set up, using mock data');
-      
-      const mockEquipment: Equipment[] = [
-        {
-          id: '1',
-          name: 'CAT 320 Excavator',
-          type: 'excavator',
-          make: 'Caterpillar',
-          model: '320',
-          year: 2022,
-          serialNumber: 'CAT320-001',
-          status: 'in_use',
-          location: 'Downtown Office Complex',
-          currentProject: {
-            id: 'proj1',
-            name: 'Downtown Office Complex',
-            assignedDate: '2024-01-15',
-            estimatedReturnDate: '2024-02-15'
-          },
-          specifications: {
-            capacity: '20 tons',
-            fuelType: 'Diesel',
-            powerRating: '122 kW',
-            weight: '20,500 kg'
-          },
+      if (!userProfile?.company_id) return;
+
+      // Fetch equipment inventory from database
+      const { data: equipmentData, error } = await supabase
+        .from('equipment_inventory')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('name');
+
+      if (error) throw error;
+
+      // Fetch maintenance records for each equipment
+      const { data: maintenanceData, error: maintenanceError } = await supabase
+        .from('maintenance_records')
+        .select('*')
+        .eq('company_id', userProfile.company_id);
+
+      if (maintenanceError) throw maintenanceError;
+
+      // Process equipment data and combine with maintenance records
+      const processedEquipment: Equipment[] = (equipmentData || []).map(eq => {
+        const equipmentMaintenance = (maintenanceData || []).filter(m => m.equipment_id === eq.id);
+        const totalMaintenanceCost = equipmentMaintenance.reduce((sum, m) => sum + (m.cost || 0), 0);
+        const totalHours = equipmentMaintenance.reduce((sum, m) => sum + (m.hours_spent || 0), 0);
+
+        // Find the most recent maintenance record
+        const lastMaintenance = equipmentMaintenance
+          .sort((a, b) => new Date(b.maintenance_date).getTime() - new Date(a.maintenance_date).getTime())[0];
+
+        return {
+          id: eq.id,
+          name: eq.name,
+          type: eq.equipment_type as Equipment['type'],
+          make: eq.make || '',
+          model: eq.model || '',
+          year: eq.year || new Date().getFullYear(),
+          serialNumber: eq.serial_number || '',
+          status: eq.status as Equipment['status'],
+          location: eq.location || 'Yard',
+          specifications: (eq.specifications && typeof eq.specifications === 'object' && !Array.isArray(eq.specifications)) 
+            ? eq.specifications as { capacity?: string; fuelType?: string; powerRating?: string; weight?: string } 
+            : {},
           maintenance: {
-            lastService: '2024-01-01',
-            nextService: '2024-02-01',
+            lastService: lastMaintenance?.maintenance_date || eq.created_at.split('T')[0],
+            nextService: lastMaintenance?.next_due_date || addDays(new Date(), 30).toISOString().split('T')[0],
             serviceInterval: 30,
-            totalHours: 1250,
-            maintenanceRecords: []
+            totalHours,
+            maintenanceRecords: equipmentMaintenance.map(m => ({
+              id: m.id,
+              type: m.maintenance_type as MaintenanceRecord['type'],
+              description: m.description || '',
+              performedBy: m.performed_by || 'Unknown',
+              date: m.maintenance_date,
+              cost: m.cost || 0,
+              partsUsed: Array.isArray(m.parts_used) ? m.parts_used.map(p => String(p)) : [],
+              hoursSpent: m.hours_spent || 0,
+              notes: m.notes || '',
+              nextDueDate: m.next_due_date
+            }))
           },
           financials: {
-            purchasePrice: 250000,
-            purchaseDate: '2022-03-15',
-            currentValue: 220000,
-            totalMaintenanceCost: 12500,
-            monthlyDepreciation: 1250
+            purchasePrice: eq.purchase_price || 0,
+            purchaseDate: eq.purchase_date || eq.created_at.split('T')[0],
+            currentValue: eq.current_value || eq.purchase_price || 0,
+            totalMaintenanceCost,
+            monthlyDepreciation: (eq.purchase_price || 0) / 120 // 10 year depreciation
           },
           utilization: {
-            hoursThisMonth: 180,
-            hoursThisYear: 720,
-            utilizationRate: 85,
-            fuelConsumption: 15.5,
-            operatingCostPerHour: 45
+            hoursThisMonth: Math.floor(Math.random() * 200), // Mock until we have actual tracking
+            hoursThisYear: Math.floor(Math.random() * 1200),
+            utilizationRate: Math.floor(Math.random() * 100),
+            fuelConsumption: Math.random() * 20,
+            operatingCostPerHour: Math.random() * 50 + 25
           }
-        }
-      ];
-      setEquipment(mockEquipment);
+        };
+      });
+
+      setEquipment(processedEquipment);
     } catch (error) {
       console.error('Error loading equipment data:', error);
+      toast({
+        title: "Error Loading Equipment",
+        description: "Failed to load equipment data.",
+        variant: "destructive"
+      });
       setEquipment([]);
     }
   };

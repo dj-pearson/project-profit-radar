@@ -2825,6 +2825,45 @@ export type Database = {
           },
         ]
       }
+      certifications: {
+        Row: {
+          certification_type: string
+          company_id: string
+          created_at: string
+          employee_name: string
+          expiry_date: string
+          file_url: string | null
+          id: string
+          issue_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          certification_type: string
+          company_id: string
+          created_at?: string
+          employee_name: string
+          expiry_date: string
+          file_url?: string | null
+          id?: string
+          issue_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          certification_type?: string
+          company_id?: string
+          created_at?: string
+          employee_name?: string
+          expiry_date?: string
+          file_url?: string | null
+          id?: string
+          issue_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       change_orders: {
         Row: {
           amount: number
@@ -6710,6 +6749,63 @@ export type Database = {
           },
         ]
       }
+      equipment_inventory: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_value: number | null
+          equipment_type: string
+          id: string
+          location: string | null
+          make: string | null
+          model: string | null
+          name: string
+          purchase_date: string | null
+          purchase_price: number | null
+          serial_number: string | null
+          specifications: Json | null
+          status: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_value?: number | null
+          equipment_type: string
+          id?: string
+          location?: string | null
+          make?: string | null
+          model?: string | null
+          name: string
+          purchase_date?: string | null
+          purchase_price?: number | null
+          serial_number?: string | null
+          specifications?: Json | null
+          status?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_value?: number | null
+          equipment_type?: string
+          id?: string
+          location?: string | null
+          make?: string | null
+          model?: string | null
+          name?: string
+          purchase_date?: string | null
+          purchase_price?: number | null
+          serial_number?: string | null
+          specifications?: Json | null
+          status?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       equipment_maintenance_records: {
         Row: {
           actual_completion_date: string | null
@@ -10551,6 +10647,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maintenance_records: {
+        Row: {
+          company_id: string
+          cost: number | null
+          created_at: string
+          description: string | null
+          equipment_id: string | null
+          hours_spent: number | null
+          id: string
+          maintenance_date: string
+          maintenance_type: string
+          next_due_date: string | null
+          notes: string | null
+          parts_used: Json | null
+          performed_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          equipment_id?: string | null
+          hours_spent?: number | null
+          id?: string
+          maintenance_date: string
+          maintenance_type: string
+          next_due_date?: string | null
+          notes?: string | null
+          parts_used?: Json | null
+          performed_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          equipment_id?: string | null
+          hours_spent?: number | null
+          id?: string
+          maintenance_date?: string
+          maintenance_type?: string
+          next_due_date?: string | null
+          notes?: string | null
+          parts_used?: Json | null
+          performed_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       material_costs: {
         Row: {

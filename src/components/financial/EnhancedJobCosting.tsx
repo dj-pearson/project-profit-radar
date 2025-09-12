@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -78,147 +79,112 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
   ]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Mock data for demonstration
+  // Load real data from database
   useEffect(() => {
-    if (selectedProject) {
-      setLoading(true);
-      
-      // Simulate API call with mock data
-      setTimeout(() => {
-        // Mock cost codes
-        const mockCostCodes: CostCode[] = [
-          {
-            id: '1',
-            code: 'LAB-001',
-            description: 'General Labor',
-            category: 'labor',
-            budget_amount: 125000,
-            actual_amount: 135000,
-            variance: 10000,
-            variance_percentage: 8.0
-          },
-          {
-            id: '2',
-            code: 'MAT-001',
-            description: 'Concrete Materials',
-            category: 'materials',
-            budget_amount: 75000,
-            actual_amount: 82500,
-            variance: 7500,
-            variance_percentage: 10.0
-          },
-          {
-            id: '3',
-            code: 'EQP-001',
-            description: 'Heavy Equipment',
-            category: 'equipment',
-            budget_amount: 45000,
-            actual_amount: 43200,
-            variance: -1800,
-            variance_percentage: -4.0
-          },
-          {
-            id: '4',
-            code: 'OVH-001',
-            description: 'Project Overhead',
-            category: 'overhead',
-            budget_amount: 25000,
-            actual_amount: 26800,
-            variance: 1800,
-            variance_percentage: 7.2
-          }
-        ];
-
-        // Mock labor rates
-        const mockLaborRates: LaborRate[] = [
-          {
-            id: '1',
-            trade: 'General Labor',
-            base_rate: 25.00,
-            overtime_rate: 37.50,
-            current_rate: 25.00,
-            efficiency_factor: 1.0
-          },
-          {
-            id: '2',
-            trade: 'Carpenter',
-            base_rate: 35.00,
-            overtime_rate: 52.50,
-            current_rate: 38.50,
-            efficiency_factor: 1.1
-          },
-          {
-            id: '3',
-            trade: 'Electrician',
-            base_rate: 45.00,
-            overtime_rate: 67.50,
-            current_rate: 47.25,
-            efficiency_factor: 1.2
-          }
-        ];
-
-        // Mock material pricing
-        const mockMaterialPricing: MaterialPricing[] = [
-          {
-            id: '1',
-            material_name: 'Lumber 2x4x8',
-            current_price: 8.50,
-            last_updated: new Date().toISOString(),
-            supplier: 'Home Depot',
-            price_trend: 'up',
-            price_change_percentage: 6.25
-          },
-          {
-            id: '2',
-            material_name: 'Concrete Mix',
-            current_price: 4.25,
-            last_updated: new Date().toISOString(),
-            supplier: 'ABC Supply',
-            price_trend: 'stable',
-            price_change_percentage: 0.5
-          },
-          {
-            id: '3',
-            material_name: 'Steel Rebar',
-            current_price: 0.85,
-            last_updated: new Date().toISOString(),
-            supplier: 'Steel Supply Co',
-            price_trend: 'down',
-            price_change_percentage: -2.1
-          }
-        ];
-
-        setCostCodes(mockCostCodes);
-        setLaborRates(mockLaborRates);
-        setMaterialPricing(mockMaterialPricing);
-
-        // Calculate project costs summary
-        const totalBudget = mockCostCodes.reduce((sum, c) => sum + c.budget_amount, 0);
-        const totalActual = mockCostCodes.reduce((sum, c) => sum + c.actual_amount, 0);
-        const laborCosts = mockCostCodes.filter(c => c.category === 'labor').reduce((sum, c) => sum + c.actual_amount, 0);
-        const materialCosts = mockCostCodes.filter(c => c.category === 'materials').reduce((sum, c) => sum + c.actual_amount, 0);
-        const equipmentCosts = mockCostCodes.filter(c => c.category === 'equipment').reduce((sum, c) => sum + c.actual_amount, 0);
-        const overheadCosts = mockCostCodes.filter(c => c.category === 'overhead').reduce((sum, c) => sum + c.actual_amount, 0);
-        const profitMargin = totalBudget - totalActual;
-        const profitMarginPercentage = totalBudget > 0 ? (profitMargin / totalBudget) * 100 : 0;
-
-        setProjectCosts({
-          project_id: selectedProject,
-          total_budget: totalBudget,
-          total_actual: totalActual,
-          labor_costs: laborCosts,
-          material_costs: materialCosts,
-          equipment_costs: equipmentCosts,
-          overhead_costs: overheadCosts,
-          profit_margin: profitMargin,
-          profit_margin_percentage: profitMarginPercentage,
-          completion_percentage: 75
-        });
-
-        setLoading(false);
-      }, 1000);
+    if (selectedProject && userProfile?.company_id) {
+      loadJobCostingData();
     }
-  }, [selectedProject]);
+  }, [selectedProject, userProfile?.company_id]);
+
+  const loadJobCostingData = async () => {
+    setLoading(true);
+    try {
+      if (!userProfile?.company_id) return;
+
+      // Fetch cost codes
+      const { data: costData, error: costError } = await supabase
+        .from('cost_codes')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .eq('project_id', selectedProject);
+
+      if (costError) throw costError;
+
+      // Fetch labor rates
+      const { data: laborData, error: laborError } = await supabase
+        .from('labor_rates')
+        .select('*')
+        .eq('company_id', userProfile.company_id);
+
+      if (laborError) throw laborError;
+
+      // Fetch material pricing
+      const { data: materialData, error: materialError } = await supabase
+        .from('material_pricing')
+        .select('*')
+        .eq('company_id', userProfile.company_id);
+
+      if (materialError) throw materialError;
+
+      // Process cost codes with variance calculations
+      const processedCostCodes: CostCode[] = (costData || []).map(code => {
+        const variance = (code.actual_amount || 0) - (code.budget_amount || 0);
+        const variance_percentage = (code.budget_amount || 0) > 0 ? (variance / (code.budget_amount || 0)) * 100 : 0;
+        
+        return {
+          id: code.id,
+          code: code.code,
+          description: code.description,
+          category: code.category as CostCode['category'],
+          budget_amount: code.budget_amount || 0,
+          actual_amount: code.actual_amount || 0,
+          variance,
+          variance_percentage
+        };
+      });
+
+      setCostCodes(processedCostCodes);
+      setLaborRates((laborData || []).map(l => ({
+        id: l.id,
+        trade: l.trade,
+        base_rate: l.base_rate,
+        overtime_rate: l.overtime_rate,
+        current_rate: l.current_rate,
+        efficiency_factor: l.efficiency_factor || 1.0
+      })));
+      setMaterialPricing((materialData || []).map(m => ({
+        id: m.id,
+        material_name: m.material_name,
+        current_price: m.current_price,
+        last_updated: m.last_updated,
+        supplier: m.supplier || '',
+        price_trend: (m.price_trend as 'up' | 'down' | 'stable') || 'stable',
+        price_change_percentage: m.price_change_percentage || 0
+      })));
+
+      // Calculate project costs summary
+      const totalBudget = processedCostCodes.reduce((sum, c) => sum + c.budget_amount, 0);
+      const totalActual = processedCostCodes.reduce((sum, c) => sum + c.actual_amount, 0);
+      const laborCosts = processedCostCodes.filter(c => c.category === 'labor').reduce((sum, c) => sum + c.actual_amount, 0);
+      const materialCosts = processedCostCodes.filter(c => c.category === 'materials').reduce((sum, c) => sum + c.actual_amount, 0);
+      const equipmentCosts = processedCostCodes.filter(c => c.category === 'equipment').reduce((sum, c) => sum + c.actual_amount, 0);
+      const overheadCosts = processedCostCodes.filter(c => c.category === 'overhead').reduce((sum, c) => sum + c.actual_amount, 0);
+      const profitMargin = totalBudget - totalActual;
+      const profitMarginPercentage = totalBudget > 0 ? (profitMargin / totalBudget) * 100 : 0;
+
+      setProjectCosts({
+        project_id: selectedProject,
+        total_budget: totalBudget,
+        total_actual: totalActual,
+        labor_costs: laborCosts,
+        material_costs: materialCosts,
+        equipment_costs: equipmentCosts,
+        overhead_costs: overheadCosts,
+        profit_margin: profitMargin,
+        profit_margin_percentage: profitMarginPercentage,
+        completion_percentage: 75 // This would come from project progress tracking
+      });
+    } catch (error) {
+      console.error('Error loading job costing data:', error);
+      toast({
+        title: "Error Loading Data",
+        description: "Failed to load job costing information.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Refresh material pricing
   const refreshMaterialPricing = async () => {

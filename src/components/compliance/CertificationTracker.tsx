@@ -41,65 +41,57 @@ const CertificationTracker = () => {
 
   const loadCertifications = async () => {
     try {
-      // Simulate loading certifications data
-      const mockCertifications: Certification[] = [
-        {
-          id: '1',
-          employee_name: 'John Smith',
-          certification_type: 'OSHA 30-Hour Construction',
-          issue_date: '2023-01-15',
-          expiry_date: '2025-01-15',
-          status: 'valid'
-        },
-        {
-          id: '2',
-          employee_name: 'Sarah Johnson',
-          certification_type: 'First Aid/CPR',
-          issue_date: '2023-06-01',
-          expiry_date: '2024-12-31',
-          status: 'expiring'
-        },
-        {
-          id: '3',
-          employee_name: 'Mike Wilson',
-          certification_type: 'Crane Operator License',
-          issue_date: '2022-03-10',
-          expiry_date: '2024-03-10',
-          status: 'expired'
-        },
-        {
-          id: '4',
-          employee_name: 'Lisa Brown',
-          certification_type: 'Hazmat Handling',
-          issue_date: '2023-09-15',
-          expiry_date: '2025-09-15',
-          status: 'valid'
-        },
-        {
-          id: '5',
-          employee_name: 'Tom Davis',
-          certification_type: 'Electrical Safety',
-          issue_date: '2023-11-01',
-          expiry_date: '2024-11-01',
-          status: 'expiring'
-        }
-      ];
+      if (!userProfile?.company_id) return;
 
-      setCertifications(mockCertifications);
-      
-      // Filter alerts (expiring within 30 days or expired)
+      // Fetch real certifications from database
+      const { data: certData, error } = await supabase
+        .from('certifications')
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('expiry_date', { ascending: true });
+
+      if (error) throw error;
+
+      // Calculate status based on expiry date
       const now = new Date();
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      
-      const alertCertifications = mockCertifications.filter(cert => {
+
+      const processedCertifications: Certification[] = (certData || []).map(cert => {
         const expiryDate = new Date(cert.expiry_date);
-        return cert.status === 'expired' || 
-               (cert.status === 'expiring' && expiryDate <= thirtyDaysFromNow);
+        let status: 'valid' | 'expiring' | 'expired' = 'valid';
+        
+        if (expiryDate < now) {
+          status = 'expired';
+        } else if (expiryDate <= thirtyDaysFromNow) {
+          status = 'expiring';
+        }
+
+        return {
+          id: cert.id,
+          employee_name: cert.employee_name,
+          certification_type: cert.certification_type,
+          issue_date: cert.issue_date,
+          expiry_date: cert.expiry_date,
+          status,
+          file_url: cert.file_url
+        };
       });
+
+      setCertifications(processedCertifications);
+      
+      // Filter alerts (expiring within 30 days or expired)
+      const alertCertifications = processedCertifications.filter(cert => 
+        cert.status === 'expired' || cert.status === 'expiring'
+      );
       
       setAlerts(alertCertifications);
     } catch (error: any) {
       console.error('Error loading certifications:', error);
+      toast({
+        title: "Error Loading Certifications",
+        description: "Failed to load certification data.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
