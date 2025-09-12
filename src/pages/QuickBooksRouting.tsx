@@ -139,37 +139,22 @@ const QuickBooksRouting = () => {
       throw new Error('No company associated with user');
     }
 
-    // For now, return mock data since we need to create the routing rules table
-    return [
-      {
-        id: '1',
-        name: 'Project Code in Memo',
-        description: 'Routes transactions with project codes like "PROJ-001" in memo field',
-        field_type: 'memo',
-        field_name: 'memo',
-        match_type: 'regex',
-        match_value: 'PROJ-\\d{3}',
-        project_id: 'auto-detect',
-        priority: 1,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        project: { id: 'auto', name: 'Auto-detect from code', status: 'active' }
-      },
-      {
-        id: '2',
-        name: 'Kitchen Renovation Keywords',
-        description: 'Routes expenses containing kitchen renovation keywords',
-        field_type: 'memo',
-        field_name: 'memo',
-        match_type: 'contains',
-        match_value: 'kitchen,renovation,cabinets',
-        project_id: 'proj-123',
-        priority: 2,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        project: { id: 'proj-123', name: 'Smith Kitchen Renovation', status: 'active' }
+    try {
+      const { data, error } = await supabase
+        .from('quickbooks_routing_rules' as any)
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('priority', { ascending: true });
+
+      if (error) {
+        console.warn('quickbooks_routing_rules not available yet');
+        return [];
       }
-    ];
+      return ((data as unknown) as RoutingRule[]) || [];
+    } catch (e) {
+      console.error('Error loading routing rules:', e);
+      return [];
+    }
   };
 
   const loadUnroutedTransactions = async (): Promise<UnroutedTransaction[]> => {
@@ -177,47 +162,23 @@ const QuickBooksRouting = () => {
       throw new Error('No company associated with user');
     }
 
-    // Mock data for unrouted transactions
-    return [
-      {
-        id: '1',
-        qb_transaction_id: 'TXN-001',
-        transaction_type: 'expense',
-        description: 'Home Depot - Kitchen supplies PROJ-123',
-        amount: 1250.00,
-        vendor_name: 'Home Depot',
-        memo: 'Kitchen supplies for Smith project PROJ-123',
-        reference_number: 'HD-001',
-        transaction_date: '2024-01-15',
-        suggested_project_id: 'proj-123',
-        confidence_score: 95,
-        created_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        qb_transaction_id: 'TXN-002',
-        transaction_type: 'invoice',
-        description: 'Johnson Commercial Build - Phase 1',
-        amount: 25000.00,
-        customer_name: 'Johnson Corp',
-        memo: 'Commercial build phase 1 completion',
-        transaction_date: '2024-01-14',
-        suggested_project_id: 'proj-456',
-        confidence_score: 85,
-        created_at: new Date().toISOString()
-      },
-      {
-        id: '3',
-        qb_transaction_id: 'TXN-003',
-        transaction_type: 'expense',
-        description: 'Material purchase - unassigned',
-        amount: 850.00,
-        vendor_name: 'Lumber Co',
-        memo: 'Wood materials',
-        transaction_date: '2024-01-13',
-        created_at: new Date().toISOString()
+    try {
+      const { data, error } = await supabase
+        .from('quickbooks_unrouted_transactions' as any)
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('transaction_date', { ascending: false });
+
+      if (error) {
+        console.warn('quickbooks_unrouted_transactions not available yet');
+        return [];
       }
-    ];
+
+      return ((data as unknown) as UnroutedTransaction[]) || [];
+    } catch (e) {
+      console.error('Error loading unrouted transactions:', e);
+      return [];
+    }
   };
 
   const loadProjectsList = async (): Promise<any[]> => {

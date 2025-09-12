@@ -85,41 +85,47 @@ const FeatureAnnouncementSystem = () => {
 
   const loadAnnouncements = async () => {
     try {
-      // Use mock data since feature_announcements table doesn't exist yet
-      console.log('Feature announcements table not created yet, using mock data');
-      const mockAnnouncements: Announcement[] = [
-        {
-          id: '1',
-          title: 'New Advanced Analytics Dashboard',
-          content: 'We are excited to introduce our new advanced analytics dashboard with real-time insights, custom reporting, and performance tracking. This powerful tool helps you make data-driven decisions for your construction projects.',
-          type: 'feature',
-          priority: 'high',
-          status: 'published',
-          target_audience: 'all',
-          show_as_popup: true,
-          show_in_dashboard: true,
-          created_at: new Date().toISOString(),
-          published_at: new Date().toISOString(),
-          action_label: 'Try It Now',
-          action_url: '/analytics',
-          views: 1234,
-          dismissals: 45
-        }
-      ];
-      setAnnouncements(mockAnnouncements);
-      
-      // Check for active popup announcements
-      const activePopup = mockAnnouncements.find(a => 
-        a.show_as_popup && 
-        a.status === 'published' && 
-        (!a.expires_at || new Date(a.expires_at) > new Date())
-      );
-      
-      if (activePopup) {
-        setActivePopupAnnouncement(activePopup);
+      const { data, error } = await supabase
+        .from('feature_announcements' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading announcements:', error);
+        setAnnouncements([]);
+      } else {
+        const items: Announcement[] = (data || []).map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          content: row.content,
+          type: row.type || 'info',
+          priority: row.priority || 'medium',
+          status: row.status || 'draft',
+          target_audience: row.target_audience || 'all',
+          show_as_popup: !!row.show_as_popup,
+          show_in_dashboard: row.show_in_dashboard ?? true,
+          expires_at: row.expires_at || undefined,
+          created_at: row.created_at,
+          published_at: row.published_at || undefined,
+          image_url: row.image_url || undefined,
+          action_label: row.action_label || undefined,
+          action_url: row.action_url || undefined,
+          views: row.views || 0,
+          dismissals: row.dismissals || 0,
+        }));
+
+        setAnnouncements(items);
+
+        const activePopup = items.find(a => 
+          a.show_as_popup && 
+          a.status === 'published' && 
+          (!a.expires_at || new Date(a.expires_at) > new Date())
+        );
+        if (activePopup) setActivePopupAnnouncement(activePopup);
       }
     } catch (error) {
       console.error('Error loading announcements:', error);
+      setAnnouncements([]);
     } finally {
       setLoading(false);
     }
@@ -129,13 +135,20 @@ const FeatureAnnouncementSystem = () => {
     if (!userProfile?.id) return;
 
     try {
-      // Load from localStorage for now
-      const saved = localStorage.getItem(`user_announcements_${userProfile.id}`);
-      if (saved) {
-        setUserAnnouncements(JSON.parse(saved));
+      const { data, error } = await supabase
+        .from('user_announcements' as any)
+        .select('*')
+        .eq('user_id', userProfile.id);
+
+      if (error) {
+        console.warn('user_announcements table not available, proceeding without per-user dismissals');
+        setUserAnnouncements([]);
+      } else {
+        setUserAnnouncements((data as any) || []);
       }
     } catch (error) {
       console.error('Error loading user announcements:', error);
+      setUserAnnouncements([]);
     }
   };
 
@@ -150,22 +163,48 @@ const FeatureAnnouncementSystem = () => {
     }
 
     try {
-      const newAnnouncement: Announcement = {
-        id: Date.now().toString(),
+      const payload: any = {
         title,
         content,
-        type: type as any,
-        priority: priority as any,
+        type,
+        priority,
         status: 'draft',
-        target_audience: targetAudience as any,
+        target_audience: targetAudience,
         show_as_popup: showAsPopup,
         show_in_dashboard: showInDashboard,
-        expires_at: expiresAt || undefined,
-        created_at: new Date().toISOString(),
-        action_label: actionLabel || undefined,
-        action_url: actionUrl || undefined,
-        views: 0,
-        dismissals: 0
+        expires_at: expiresAt || null,
+        action_label: actionLabel || null,
+        action_url: actionUrl || null,
+        company_id: userProfile?.company_id || null,
+        created_by: userProfile?.id || null,
+      };
+
+      const { data, error } = await supabase
+        .from('feature_announcements' as any)
+        .insert([payload])
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      const newAnnouncement: Announcement = {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        type: data.type,
+        priority: data.priority,
+        status: data.status,
+        target_audience: data.target_audience,
+        show_as_popup: !!data.show_as_popup,
+        show_in_dashboard: data.show_in_dashboard ?? true,
+        expires_at: data.expires_at || undefined,
+        created_at: data.created_at,
+        published_at: data.published_at || undefined,
+        image_url: data.image_url || undefined,
+        action_label: data.action_label || undefined,
+        action_url: data.action_url || undefined,
+        views: data.views || 0,
+        dismissals: data.dismissals || 0
       };
 
       setAnnouncements([newAnnouncement, ...announcements]);
@@ -199,6 +238,13 @@ const FeatureAnnouncementSystem = () => {
 
   const publishAnnouncement = async (id: string) => {
     try {
+      const { error } = await supabase
+        .from('feature_announcements' as any)
+        .update({ status: 'published', published_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+
       setAnnouncements(announcements.map(announcement => 
         announcement.id === id 
           ? { ...announcement, status: 'published' as const, published_at: new Date().toISOString() }
@@ -223,33 +269,27 @@ const FeatureAnnouncementSystem = () => {
     if (!userProfile?.id) return;
 
     try {
-      const newUserAnnouncement = {
-        id: Date.now().toString(),
+      const payload: any = {
         announcement_id: announcementId,
         user_id: userProfile.id,
         viewed: true,
         dismissed: true,
-        created_at: new Date().toISOString()
       };
 
-      const updatedUserAnnouncements = [...userAnnouncements, newUserAnnouncement];
-      setUserAnnouncements(updatedUserAnnouncements);
-      
-      localStorage.setItem(
-        `user_announcements_${userProfile.id}`, 
-        JSON.stringify(updatedUserAnnouncements)
-      );
+      const { data, error } = await supabase
+        .from('user_announcements' as any)
+        .insert([payload])
+        .select('*')
+        .single();
 
-      // Update dismissal count
-      setAnnouncements(announcements.map(announcement => 
-        announcement.id === announcementId 
-          ? { ...announcement, dismissals: announcement.dismissals + 1 }
-          : announcement
-      ));
+      if (!error && data) {
+        setUserAnnouncements(prev => [...prev, data as any]);
+      }
 
       setActivePopupAnnouncement(null);
     } catch (error) {
       console.error('Error dismissing announcement:', error);
+      setActivePopupAnnouncement(null);
     }
   };
 

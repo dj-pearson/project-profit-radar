@@ -50,42 +50,18 @@ const ActivityLogger = () => {
 
       if (error) {
         console.error('Error loading audit logs:', error);
-        // Use mock data if audit logs not available
-        setLogs(getMockLogs());
+        setLogs([]);
         return;
       }
 
       setLogs(data || []);
     } catch (error) {
-      console.error('Error loading audit logs:', error);
-      setLogs(getMockLogs());
+      setLogs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getMockLogs = (): AuditLog[] => [
-    {
-      id: '1',
-      action_type: 'create',
-      resource_type: 'project',
-      resource_name: 'New Office Building',
-      user_id: userProfile?.id,
-      description: 'Created new project',
-      created_at: new Date().toISOString(),
-      metadata: { budget: 150000 }
-    },
-    {
-      id: '2',
-      action_type: 'update',
-      resource_type: 'invoice',
-      resource_name: 'INV-2024-001',
-      user_id: userProfile?.id,
-      description: 'Updated invoice status to paid',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      metadata: { amount: 5000, status: 'paid' }
-    }
-  ];
 
   const getActionColor = (action: string) => {
     const colors = {

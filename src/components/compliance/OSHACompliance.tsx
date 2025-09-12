@@ -76,36 +76,36 @@ export const OSHACompliance = () => {
     if (!userProfile?.company_id) return;
     
     try {
-      // Since safety tables don't exist yet, use mock data for demonstration
-      console.log('Safety compliance tables not yet implemented, using mock data');
-      
-      setInspections([{
-        id: '1',
-        project_id: 'proj-1',
-        inspector_name: 'John Safety',
-        inspection_date: '2024-01-15',
-        inspection_type: 'Weekly Safety Inspection',
-        status: 'passed',
-        findings: ['All safety equipment in place', 'Proper PPE usage observed'],
-        corrective_actions: [],
-        photos: []
-      }]);
+      setLoading(true);
 
-      setTrainings([{
-        id: '1',
-        employee_name: 'Mike Johnson',
-        training_type: 'OSHA 10-Hour Construction',
-        completion_date: '2024-01-10',
-        expiry_date: '2027-01-10',
-        status: 'current'
-      }]);
+      const { data: inspectionsData } = await supabase
+        .from('safety_inspections' as any)
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('inspection_date', { ascending: false });
 
-      setIncidents([]);
+      const { data: trainingsData } = await supabase
+        .from('safety_trainings' as any)
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('completion_date', { ascending: false });
+
+      const { data: incidentsData } = await supabase
+        .from('incident_reports' as any)
+        .select('*')
+        .eq('company_id', userProfile.company_id)
+        .order('incident_date', { ascending: false });
+
+      setInspections(((inspectionsData as unknown) as SafetyInspection[]) || []);
+      setTrainings(((trainingsData as unknown) as SafetyTraining[]) || []);
+      setIncidents(((incidentsData as unknown) as IncidentReport[]) || []);
     } catch (error) {
       console.error('Error loading compliance data:', error);
       setInspections([]);
       setTrainings([]);
       setIncidents([]);
+    } finally {
+      setLoading(false);
     }
   };
 

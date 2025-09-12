@@ -105,100 +105,33 @@ export const CommunicationHub: React.FC = () => {
   const loadCommunicationData = async () => {
     setLoading(true);
     try {
-      // Using mock data for now since communication tables need to be created
-      // TODO: Create chat_channels, chat_messages, rfis, and project_events tables
-      setThreads([
-        {
-          id: '1',
-          title: 'Foundation Questions',
-          project_name: 'Residential Build - Smith House',
-          participants: ['John Smith (Client)', 'Mike Johnson (PM)', 'Sarah Wilson (Foreman)'],
-          last_message: 'Foundation inspection scheduled for tomorrow',
-          last_message_time: '2024-01-25T10:30:00Z',
-          unread_count: 2,
-          thread_type: 'project',
-          status: 'active'
-        },
-        {
-          id: '2',
-          title: 'RFI-001: Electrical Panel Location',
-          project_name: 'Commercial Office Build',
-          participants: ['David Brown (Architect)', 'Tom Wilson (Electrical)', 'Mike Johnson (PM)'],
-          last_message: 'Panel location approved, proceeding with installation',
-          last_message_time: '2024-01-24T15:45:00Z',
-          unread_count: 0,
-          thread_type: 'rfi',
-          status: 'resolved'
-        }
-      ]);
+      const { data: channels, error } = await supabase
+        .from('chat_channels' as any)
+        .select('id, name, project_id, last_activity_at, channel_type, description, created_at')
+        .order('last_activity_at', { ascending: false });
 
-      setRfis([
-        {
-          id: '1',
-          number: 'RFI-2024-001',
-          title: 'Electrical Panel Location Clarification',
-          description: 'Need clarification on electrical panel location due to conflict with architectural drawings.',
-          project_name: 'Commercial Office Build',
-          requested_by: 'Tom Wilson',
-          assigned_to: 'David Brown',
-          due_date: '2024-01-30',
-          status: 'answered',
-          priority: 'high',
-          created_at: '2024-01-22T09:00:00Z',
-          response: 'Panel should be located on north wall as shown in revised drawing A-101 Rev 2.',
-          attachments: ['electrical-plan-rev2.pdf', 'panel-location-photo.jpg']
-        },
-        {
-          id: '2',
-          number: 'RFI-2024-002',
-          title: 'HVAC Duct Routing Conflict',
-          description: 'HVAC ductwork conflicts with structural beam. Need alternative routing solution.',
-          project_name: 'Residential Build - Smith House',
-          requested_by: 'James Miller',
-          assigned_to: 'Alex Chen',
-          due_date: '2024-01-28',
-          status: 'open',
-          priority: 'medium',
-          created_at: '2024-01-25T14:20:00Z',
-          attachments: ['hvac-plan.pdf']
-        }
-      ]);
+      if (error) throw error;
 
-      setMeetings([
-        {
-          id: '1',
-          title: 'Weekly Progress Meeting',
-          description: 'Review project progress and upcoming milestones',
-          project_name: 'Commercial Office Build',
-          date: '2024-01-29',
-          time: '09:00',
-          duration: 60,
-          attendees: ['Mike Johnson', 'Sarah Wilson', 'Tom Wilson', 'John Smith'],
-          location: 'Project Trailer',
-          meeting_type: 'progress',
-          status: 'scheduled'
-        },
-        {
-          id: '2',
-          title: 'Safety Toolbox Talk',
-          description: 'Monthly safety meeting covering fall protection',
-          project_name: 'Residential Build - Smith House',
-          date: '2024-01-26',
-          time: '07:30',
-          duration: 30,
-          attendees: ['All Crew Members'],
-          location: 'Job Site',
-          meeting_type: 'safety',
-          status: 'completed',
-          notes: 'Reviewed fall protection procedures. All crew members acknowledged understanding.',
-          action_items: [
-            {item: 'Order additional safety harnesses', assigned_to: 'Sarah Wilson', due_date: '2024-01-30'},
-            {item: 'Schedule safety equipment inspection', assigned_to: 'Mike Johnson', due_date: '2024-02-01'}
-          ]
-        }
-      ]);
+      const mappedThreads: Thread[] = (channels || []).map((ch: any) => ({
+        id: ch.id,
+        title: ch.name || 'Channel',
+        project_name: ch.project_id || 'Unassigned',
+        participants: [],
+        last_message: '',
+        last_message_time: ch.last_activity_at || ch.created_at || new Date(0).toISOString(),
+        unread_count: 0,
+        thread_type: (ch.channel_type as any) || 'general',
+        status: 'active'
+      }));
 
+      setThreads(mappedThreads);
+      setRfis([]);
+      setMeetings([]);
     } catch (error) {
+      console.error('Failed to load communication data:', error);
+      setThreads([]);
+      setRfis([]);
+      setMeetings([]);
       toast({
         title: "Error",
         description: "Failed to load communication data",
@@ -210,50 +143,56 @@ export const CommunicationHub: React.FC = () => {
   };
 
   const loadMessages = async (threadId: string) => {
-    // Using mock data for now since chat_messages table needs to be created
-    // TODO: Create chat_messages table with proper relations
-    const sampleMessages: Message[] = [
-      {
-        id: '1',
-        sender_name: 'Mike Johnson',
-        sender_role: 'Project Manager',
-        content: 'Good morning everyone. Foundation work will begin tomorrow at 7 AM.',
-        timestamp: '2024-01-25T08:00:00Z',
+    try {
+      const { data, error } = await supabase
+        .from('chat_messages' as any)
+        .select('id, content, created_at, user_id')
+        .eq('channel_id', threadId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const msgs: Message[] = (data || []).map((m: any) => ({
+        id: m.id,
+        sender_name: m.user_id || 'User',
+        sender_role: 'user',
+        content: m.content,
+        timestamp: m.created_at,
         thread_id: threadId,
         message_type: 'text'
-      },
-      {
-        id: '2',
-        sender_name: 'System',
-        sender_role: 'System',
-        content: 'Foundation inspection has been scheduled for January 26, 2024 at 10:00 AM',
-        timestamp: '2024-01-25T08:30:00Z',
-        thread_id: threadId,
-        message_type: 'system'
-      },
-      {
-        id: '3',
-        sender_name: 'John Smith',
-        sender_role: 'Client',
-        content: 'Thank you for the update. Will the inspection affect access to the site?',
-        timestamp: '2024-01-25T09:15:00Z',
-        thread_id: threadId,
-        message_type: 'text'
-      }
-    ];
-    setMessages(sampleMessages);
+      }));
+
+      setMessages(msgs);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+      setMessages([]);
+    }
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedThread) return;
+    if (!newMessage.trim() || !selectedThread || !userProfile?.id) return;
 
     try {
+      const payload: any = {
+        channel_id: selectedThread.id,
+        content: newMessage.trim(),
+        user_id: userProfile.id
+      };
+
+      const { data, error } = await supabase
+        .from('chat_messages' as any)
+        .insert([payload])
+        .select('id, content, created_at, user_id')
+        .single();
+
+      if (error) throw error;
+
       const message: Message = {
-        id: Date.now().toString(),
-        sender_name: 'You',
-        sender_role: 'Project Manager',
-        content: newMessage,
-        timestamp: new Date().toISOString(),
+        id: data.id,
+        sender_name: data.user_id,
+        sender_role: 'user',
+        content: data.content,
+        timestamp: data.created_at,
         thread_id: selectedThread.id,
         message_type: 'text'
       };
@@ -275,66 +214,19 @@ export const CommunicationHub: React.FC = () => {
   };
 
   const createRFI = async (rfiData: Partial<RFI>) => {
-    try {
-      const newRFI: RFI = {
-        id: Date.now().toString(),
-        number: `RFI-${new Date().getFullYear()}-${String(rfis.length + 1).padStart(3, '0')}`,
-        title: rfiData.title || '',
-        description: rfiData.description || '',
-        project_name: rfiData.project_name || '',
-        requested_by: 'You',
-        assigned_to: rfiData.assigned_to || '',
-        due_date: rfiData.due_date || format(addDays(new Date(), 7), 'yyyy-MM-dd'),
-        status: 'open',
-        priority: rfiData.priority || 'medium',
-        created_at: new Date().toISOString(),
-        attachments: []
-      };
-
-      setRfis(prev => [newRFI, ...prev]);
-
-      toast({
-        title: "RFI Created",
-        description: `RFI ${newRFI.number} has been created successfully`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create RFI",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Not implemented",
+      description: "Connect RFI tables to enable this action.",
+      variant: "destructive",
+    });
   };
 
   const scheduleMeeting = async (meetingData: Partial<Meeting>) => {
-    try {
-      const newMeeting: Meeting = {
-        id: Date.now().toString(),
-        title: meetingData.title || '',
-        description: meetingData.description || '',
-        project_name: meetingData.project_name || '',
-        date: meetingData.date || format(new Date(), 'yyyy-MM-dd'),
-        time: meetingData.time || '09:00',
-        duration: meetingData.duration || 60,
-        attendees: meetingData.attendees || [],
-        location: meetingData.location || '',
-        meeting_type: meetingData.meeting_type || 'progress',
-        status: 'scheduled'
-      };
-
-      setMeetings(prev => [newMeeting, ...prev]);
-
-      toast({
-        title: "Meeting Scheduled",
-        description: `Meeting "${newMeeting.title}" has been scheduled successfully`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to schedule meeting",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Not implemented",
+      description: "Connect meeting tables to enable scheduling.",
+      variant: "destructive",
+    });
   };
 
   const getStatusColor = (status: string) => {

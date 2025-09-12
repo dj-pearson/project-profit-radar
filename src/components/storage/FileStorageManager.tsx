@@ -69,8 +69,7 @@ const FileStorageManager = () => {
 
       if (storageError) {
         console.error('Storage error:', storageError);
-        // Fallback to mock data if storage not set up
-        setFiles(getMockFiles());
+        setFiles([]);
         return;
       }
 
@@ -90,36 +89,12 @@ const FileStorageManager = () => {
       setFiles(files);
     } catch (error) {
       console.error('Error loading files:', error);
-      setFiles(getMockFiles());
+      setFiles([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getMockFiles = (): StorageFile[] => [
-    {
-      id: '1',
-      name: 'project-blueprint.pdf',
-      size: 2048576,
-      type: 'application/pdf',
-      url: '#',
-      uploadedAt: '2024-12-01T10:00:00Z',
-      uploadedBy: userProfile?.email || 'user@example.com',
-      bucket: selectedBucket,
-      path: 'project-blueprint.pdf'
-    },
-    {
-      id: '2',
-      name: 'safety-checklist.docx',
-      size: 524288,
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      url: '#',
-      uploadedAt: '2024-12-02T14:30:00Z',
-      uploadedBy: userProfile?.email || 'user@example.com',
-      bucket: selectedBucket,
-      path: 'safety-checklist.docx'
-    }
-  ];
 
   const loadStorageStats = async () => {
     // Calculate stats from files
