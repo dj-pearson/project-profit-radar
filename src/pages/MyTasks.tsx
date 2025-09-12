@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { TaskWithDetails } from '@/services/taskService';
+import { EditTaskDialog } from '@/components/tasks/EditTaskDialog';
 import {
   Plus,
   Search,
@@ -434,6 +435,24 @@ const MyTasks = () => {
         </Tabs>
 
         <CreateTaskDialog />
+        
+        {selectedTask && (
+          <EditTaskDialog
+            task={selectedTask}
+            isOpen={editDialogOpen}
+            onClose={() => {
+              setEditDialogOpen(false);
+              setSelectedTask(null);
+            }}
+            onTaskUpdated={(updatedTask) => {
+              // Refetch queries to get updated data
+              assignedTasksQuery.refetch();
+              createdTasksQuery.refetch();
+              setEditDialogOpen(false);
+              setSelectedTask(null);
+            }}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
