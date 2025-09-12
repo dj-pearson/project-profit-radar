@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Calendar, 
   AlertTriangle, 
@@ -9,63 +11,78 @@ import {
   DollarSign,
   CreditCard,
   FileText,
-  Users
+  Users,
+  Building
 } from 'lucide-react';
 
+interface UpcomingPayment {
+  id: string;
+  type: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  priority: string;
+  category: string;
+  icon: React.ComponentType<any>;
+}
+
 const UpcomingPayments = () => {
-  // Mock data - replace with real data from Supabase
-  const upcomingPayments = [
-    {
-      id: '1',
-      type: 'tax',
-      description: 'Quarterly Tax Payment',
-      amount: 4500,
-      dueDate: '2024-01-31',
-      priority: 'high',
-      category: 'tax',
-      icon: FileText
-    },
-    {
-      id: '2',
-      type: 'payroll',
-      description: 'Bi-weekly Payroll',
-      amount: 12300,
-      dueDate: '2024-02-01',
-      priority: 'high',
-      category: 'payroll',
-      icon: Users
-    },
-    {
-      id: '3',
-      type: 'license',
-      description: 'Contractor License Renewal',
-      amount: 350,
-      dueDate: '2024-02-15',
-      priority: 'medium',
-      category: 'license',
-      icon: FileText
-    },
-    {
-      id: '4',
-      type: 'supplier',
-      description: 'ABC Materials - Net 30',
-      amount: 2850,
-      dueDate: '2024-02-05',
-      priority: 'medium',
-      category: 'supplier',
-      icon: DollarSign
-    },
-    {
-      id: '5',
-      type: 'equipment',
-      description: 'Equipment Lease Payment',
-      amount: 1200,
-      dueDate: '2024-02-01',
-      priority: 'medium',
-      category: 'equipment',
-      icon: CreditCard
+  const { userProfile } = useAuth();
+  const [upcomingPayments, setUpcomingPayments] = useState<UpcomingPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadUpcomingPayments();
     }
-  ];
+  }, [userProfile?.company_id]);
+
+  const loadUpcomingPayments = async () => {
+    try {
+      setLoading(true);
+      
+      // Get upcoming contractor payments (money going out)
+      const { data: contractorPayments, error } = await supabase
+        .from('contractor_payments')
+        .select('*')
+        .eq('company_id', userProfile?.company_id)
+        .gte('payment_date', new Date().toISOString().split('T')[0])
+        .order('payment_date', { ascending: true })
+        .limit(10);
+
+      if (error) throw error;
+
+      const categoryMap: Record<string, { icon: React.ComponentType<any>; priority: string }> = {
+        'contractor': { icon: Users, priority: 'medium' },
+        'supplier': { icon: DollarSign, priority: 'medium' },
+        'equipment': { icon: CreditCard, priority: 'medium' },
+      };
+
+      const transformedPayments: UpcomingPayment[] = contractorPayments?.map(payment => {
+        const category = 'contractor';
+        const categoryInfo = categoryMap[category] || { icon: DollarSign, priority: 'medium' };
+        
+        return {
+          id: payment.id,
+          type: category,
+          description: payment.description || 'Contractor Payment',
+          amount: parseFloat(String(payment.amount)) || 0,
+          dueDate: payment.payment_date,
+          priority: categoryInfo.priority,
+          category,
+          icon: categoryInfo.icon
+        };
+      }) || [];
+
+      setUpcomingPayments(transformedPayments);
+    } catch (error) {
+      console.error('Error loading upcoming payments:', error);
+      // Set empty array on error to avoid showing mock data
+      setUpcomingPayments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getDaysUntilDue = (dueDate: string) => {
     const due = new Date(dueDate);
@@ -97,6 +114,22 @@ const UpcomingPayments = () => {
     const dateB = new Date(b.dueDate);
     return dateA.getTime() - dateB.getTime();
   });
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Upcoming Payments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading payment data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

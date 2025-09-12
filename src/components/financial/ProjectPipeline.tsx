@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Briefcase, 
   Play, 
@@ -10,36 +12,114 @@ import {
   DollarSign
 } from 'lucide-react';
 
+interface ProjectData {
+  active: {
+    count: number;
+    value: number;
+    projects: Array<{ name: string; value: number; progress: number }>;
+  };
+  upcoming: {
+    count: number;
+    value: number;
+    projects: Array<{ name: string; value: number; startDate: string }>;
+  };
+  completed: {
+    count: number;
+    value: number;
+    thisMonth: number;
+  };
+}
+
 const ProjectPipeline = () => {
-  // Mock data - replace with real data from Supabase
-  const pipelineData = {
-    active: {
-      count: 4,
-      value: 285000,
-      projects: [
-        { name: 'Kitchen Renovation', value: 25000, progress: 65 },
-        { name: 'Office Buildout', value: 75000, progress: 40 },
-        { name: 'Warehouse Extension', value: 125000, progress: 25 },
-        { name: 'Bathroom Remodel', value: 15000, progress: 80 }
-      ]
-    },
-    upcoming: {
-      count: 3,
-      value: 180000,
-      projects: [
-        { name: 'Retail Store Fit-out', value: 65000, startDate: '2024-02-15' },
-        { name: 'Residential Addition', value: 85000, startDate: '2024-03-01' },
-        { name: 'Commercial HVAC', value: 30000, startDate: '2024-02-20' }
-      ]
-    },
-    completed: {
-      count: 8,
-      value: 420000,
-      thisMonth: 2
+  const { userProfile } = useAuth();
+  const [pipelineData, setPipelineData] = useState<ProjectData>({
+    active: { count: 0, value: 0, projects: [] },
+    upcoming: { count: 0, value: 0, projects: [] },
+    completed: { count: 0, value: 0, thisMonth: 0 }
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadPipelineData();
+    }
+  }, [userProfile?.company_id]);
+
+  const loadPipelineData = async () => {
+    try {
+      setLoading(true);
+      
+      const { data: projects, error } = await supabase
+        .from('projects')
+        .select('id, name, budget, completion_percentage, status, start_date, created_at')
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Calculate this month's date range
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // Categorize projects
+      const activeProjects = projects?.filter(p => p.status === 'in_progress') || [];
+      const upcomingProjects = projects?.filter(p => p.status === 'planned') || [];
+      const completedProjects = projects?.filter(p => p.status === 'completed') || [];
+      const completedThisMonth = completedProjects.filter(p => 
+        new Date(p.created_at) >= thisMonthStart
+      );
+
+      const transformedData: ProjectData = {
+        active: {
+          count: activeProjects.length,
+          value: activeProjects.reduce((sum, p) => sum + (parseFloat(String(p.budget)) || 0), 0),
+          projects: activeProjects.slice(0, 4).map(p => ({
+            name: p.name,
+            value: parseFloat(String(p.budget)) || 0,
+            progress: p.completion_percentage || 0
+          }))
+        },
+        upcoming: {
+          count: upcomingProjects.length,
+          value: upcomingProjects.reduce((sum, p) => sum + (parseFloat(String(p.budget)) || 0), 0),
+          projects: upcomingProjects.slice(0, 3).map(p => ({
+            name: p.name,
+            value: parseFloat(String(p.budget)) || 0,
+            startDate: p.start_date || p.created_at
+          }))
+        },
+        completed: {
+          count: completedProjects.length,
+          value: completedProjects.reduce((sum, p) => sum + (parseFloat(String(p.budget)) || 0), 0),
+          thisMonth: completedThisMonth.length
+        }
+      };
+
+      setPipelineData(transformedData);
+    } catch (error) {
+      console.error('Error loading pipeline data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const totalPipelineValue = pipelineData.active.value + pipelineData.upcoming.value + pipelineData.completed.value;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            Project Pipeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading pipeline data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

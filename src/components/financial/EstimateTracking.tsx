@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   FileText, 
   Clock, 
@@ -12,67 +14,75 @@ import {
   Mail
 } from 'lucide-react';
 
+interface Estimate {
+  id: string;
+  client: string;
+  project: string;
+  value: number;
+  status: string;
+  sentDate: string;
+  followUpDate: string | null;
+  needsFollowUp: boolean;
+}
+
 const EstimateTracking = () => {
-  // Mock data - replace with real data from Supabase
-  const estimateData = {
-    totalValue: 425000,
-    conversionRate: 68,
-    averageValue: 35400,
-    followUpNeeded: 5
+  const { userProfile } = useAuth();
+  const [estimates, setEstimates] = useState<Estimate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadEstimateData();
+    }
+  }, [userProfile?.company_id]);
+
+  const loadEstimateData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load leads as estimates since we don't have a dedicated estimates table
+      const { data: leads, error } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform leads data to estimate format
+      const transformedEstimates: Estimate[] = leads?.map(lead => ({
+        id: lead.id,
+        client: lead.company_name || `${lead.first_name} ${lead.last_name}`.trim() || 'Unknown Client',
+        project: lead.project_description || lead.project_name || 'Project Description',
+        value: parseFloat(String(lead.estimated_budget)) || 0,
+        status: lead.status === 'converted' ? 'won' : lead.status === 'closed' ? 'lost' : 'pending',
+        sentDate: lead.created_at,
+        followUpDate: lead.next_follow_up_date,
+        needsFollowUp: lead.next_follow_up_date ? new Date(lead.next_follow_up_date) <= new Date() : false
+      })) || [];
+
+      setEstimates(transformedEstimates);
+    } catch (error) {
+      console.error('Error loading estimate data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const estimates = [
-    {
-      id: '1',
-      client: 'Johnson Residence',
-      project: 'Master Bath Renovation',
-      value: 28000,
-      status: 'pending',
-      sentDate: '2024-01-20',
-      followUpDate: '2024-01-27',
-      needsFollowUp: false
-    },
-    {
-      id: '2',
-      client: 'Metro Shopping Center',
-      project: 'Store Front Renovation',
-      value: 85000,
-      status: 'won',
-      sentDate: '2024-01-15',
-      followUpDate: null,
-      needsFollowUp: false
-    },
-    {
-      id: '3',
-      client: 'Green Valley Homes',
-      project: 'Multiple Unit Renovation',
-      value: 145000,
-      status: 'pending',
-      sentDate: '2024-01-10',
-      followUpDate: '2024-01-24',
-      needsFollowUp: true
-    },
-    {
-      id: '4',
-      client: 'City Hall',
-      project: 'Office Space Update',
-      value: 65000,
-      status: 'lost',
-      sentDate: '2024-01-08',
-      followUpDate: null,
-      needsFollowUp: false
-    },
-    {
-      id: '5',
-      client: 'ABC Manufacturing',
-      project: 'Warehouse Flooring',
-      value: 42000,
-      status: 'pending',
-      sentDate: '2024-01-18',
-      followUpDate: '2024-01-25',
-      needsFollowUp: true
-    }
-  ];
+  // Calculate estimate metrics from real data
+  const totalValue = estimates.reduce((sum, estimate) => sum + estimate.value, 0);
+  const wonEstimates = estimates.filter(est => est.status === 'won').length;
+  const totalEstimates = estimates.length;
+  const conversionRate = totalEstimates > 0 ? Math.round((wonEstimates / totalEstimates) * 100) : 0;
+  const averageValue = totalEstimates > 0 ? Math.round(totalValue / totalEstimates) : 0;
+  const followUpNeeded = estimates.filter(est => est.needsFollowUp).length;
+
+  const estimateData = {
+    totalValue,
+    conversionRate,
+    averageValue,
+    followUpNeeded
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -102,6 +112,22 @@ const EstimateTracking = () => {
 
   const pendingEstimates = estimates.filter(est => est.status === 'pending');
   const pendingValue = pendingEstimates.reduce((sum, est) => sum + est.value, 0);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Estimate Tracking
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading estimate data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

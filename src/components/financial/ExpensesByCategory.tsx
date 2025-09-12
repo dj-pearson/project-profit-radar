@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Hammer, 
   Truck, 
@@ -12,62 +14,123 @@ import {
   TrendingDown
 } from 'lucide-react';
 
+interface ExpenseCategory {
+  category: string;
+  amount: number;
+  lastMonth: number;
+  percentage: number;
+  icon: React.ComponentType<any>;
+  trend: 'up' | 'down';
+}
+
 const ExpensesByCategory = () => {
-  // Mock data - replace with real data from Supabase
-  const expenseData = [
-    {
-      category: 'Materials',
-      amount: 15750,
-      lastMonth: 12300,
-      percentage: 35,
-      icon: Hammer,
-      trend: 'up'
-    },
-    {
-      category: 'Labor',
-      amount: 18500,
-      lastMonth: 17200,
-      percentage: 42,
-      icon: Users,
-      trend: 'up'
-    },
-    {
-      category: 'Subcontractors',
-      amount: 6200,
-      lastMonth: 8100,
-      percentage: 14,
-      icon: Wrench,
-      trend: 'down'
-    },
-    {
-      category: 'Equipment',
-      amount: 2100,
-      lastMonth: 1950,
-      percentage: 5,
-      icon: Truck,
-      trend: 'up'
-    },
-    {
-      category: 'Fuel & Transport',
-      amount: 950,
-      lastMonth: 1200,
-      percentage: 2,
-      icon: Fuel,
-      trend: 'down'
-    },
-    {
-      category: 'Office & Admin',
-      amount: 850,
-      lastMonth: 800,
-      percentage: 2,
-      icon: Building,
-      trend: 'up'
+  const { userProfile } = useAuth();
+  const [expenseData, setExpenseData] = useState<ExpenseCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadExpenseData();
     }
-  ];
+  }, [userProfile?.company_id]);
+
+  const loadExpenseData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get current month start and end
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+      // Load expenses from the last two months with categories
+      const { data: expenses, error } = await supabase
+        .from('expenses')
+        .select(`
+          amount, 
+          expense_date,
+          expense_categories(name)
+        `)
+        .eq('company_id', userProfile?.company_id)
+        .gte('expense_date', lastMonthStart.toISOString().split('T')[0])
+        .lte('expense_date', currentMonthEnd.toISOString().split('T')[0]);
+
+      if (error) throw error;
+
+      const categoryMap: Record<string, { icon: React.ComponentType<any>; name: string }> = {
+        'Materials': { icon: Hammer, name: 'Materials' },
+        'Labor': { icon: Users, name: 'Labor' },
+        'Subcontractors': { icon: Wrench, name: 'Subcontractors' },
+        'Equipment': { icon: Truck, name: 'Equipment' },
+        'Fuel': { icon: Fuel, name: 'Fuel & Transport' },
+        'Office': { icon: Building, name: 'Office & Admin' },
+      };
+
+      // Calculate expenses by category
+      const categoryTotals: Record<string, { current: number; last: number }> = {};
+      
+      expenses?.forEach(expense => {
+        const expenseDate = new Date(expense.expense_date);
+        const amount = parseFloat(String(expense.amount)) || 0;
+        const categoryName = expense.expense_categories?.name || 'Office';
+        
+        if (!categoryTotals[categoryName]) {
+          categoryTotals[categoryName] = { current: 0, last: 0 };
+        }
+        
+        if (expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd) {
+          categoryTotals[categoryName].current += amount;
+        } else if (expenseDate >= lastMonthStart && expenseDate <= lastMonthEnd) {
+          categoryTotals[categoryName].last += amount;
+        }
+      });
+
+      const totalCurrent = Object.values(categoryTotals).reduce((sum, cat) => sum + cat.current, 0);
+      
+      const transformedData: ExpenseCategory[] = Object.entries(categoryTotals).map(([categoryName, amounts]) => {
+        const categoryInfo = categoryMap[categoryName] || { icon: Building, name: categoryName };
+        const percentage = totalCurrent > 0 ? (amounts.current / totalCurrent) * 100 : 0;
+        const trend: 'up' | 'down' = amounts.current > amounts.last ? 'up' : 'down';
+        
+        return {
+          category: categoryInfo.name,
+          amount: amounts.current,
+          lastMonth: amounts.last,
+          percentage,
+          icon: categoryInfo.icon,
+          trend
+        };
+      }).filter(item => item.amount > 0 || item.lastMonth > 0);
+
+      setExpenseData(transformedData);
+    } catch (error) {
+      console.error('Error loading expense data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const totalExpenses = expenseData.reduce((sum, expense) => sum + expense.amount, 0);
   const lastMonthTotal = expenseData.reduce((sum, expense) => sum + expense.lastMonth, 0);
   const monthlyChange = ((totalExpenses - lastMonthTotal) / lastMonthTotal) * 100;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Hammer className="h-5 w-5" />
+            Expenses by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading expense data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
