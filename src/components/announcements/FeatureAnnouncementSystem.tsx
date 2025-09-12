@@ -180,31 +180,38 @@ const FeatureAnnouncementSystem = () => {
       };
 
       const { data, error } = await supabase
-        .from('feature_announcements' as any)
+        .from('feature_announcements')
         .insert([payload])
         .select('*')
         .single();
 
       if (error) throw error;
+      
+      if (!data) {
+        throw new Error('No data returned from insert');
+      }
+
+      // Cast to any to handle type issues
+      const result = data as any;
 
       const newAnnouncement: Announcement = {
-        id: data.id,
-        title: data.title,
-        content: data.content,
-        type: data.type,
-        priority: data.priority,
-        status: data.status,
-        target_audience: data.target_audience,
-        show_as_popup: !!data.show_as_popup,
-        show_in_dashboard: data.show_in_dashboard ?? true,
-        expires_at: data.expires_at || undefined,
-        created_at: data.created_at,
-        published_at: data.published_at || undefined,
-        image_url: data.image_url || undefined,
-        action_label: data.action_label || undefined,
-        action_url: data.action_url || undefined,
-        views: data.views || 0,
-        dismissals: data.dismissals || 0
+        id: result.id || '',
+        title: result.title || '',
+        content: result.content || '',
+        type: result.type || 'info',
+        priority: result.priority || 'medium',
+        status: result.status || 'draft',
+        target_audience: result.target_audience || 'all',
+        show_as_popup: !!result.show_as_popup,
+        show_in_dashboard: result.show_in_dashboard ?? true,
+        expires_at: result.expires_at || undefined,
+        created_at: result.created_at || new Date().toISOString(),
+        published_at: result.published_at || undefined,
+        image_url: result.image_url || undefined,
+        action_label: result.action_label || undefined,
+        action_url: result.action_url || undefined,
+        views: result.views || 0,
+        dismissals: result.dismissals || 0
       };
 
       setAnnouncements([newAnnouncement, ...announcements]);

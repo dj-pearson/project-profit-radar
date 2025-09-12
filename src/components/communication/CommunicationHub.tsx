@@ -180,19 +180,26 @@ export const CommunicationHub: React.FC = () => {
       };
 
       const { data, error } = await supabase
-        .from('chat_messages' as any)
+        .from('chat_messages')
         .insert([payload])
         .select('id, content, created_at, user_id')
         .single();
 
       if (error) throw error;
+      
+      if (!data) {
+        throw new Error('No data returned from message insert');
+      }
+
+      // Cast to any to handle type issues
+      const result = data as any;
 
       const message: Message = {
-        id: data.id,
-        sender_name: data.user_id,
+        id: result.id || '',
+        sender_name: result.user_id || 'User',
         sender_role: 'user',
-        content: data.content,
-        timestamp: data.created_at,
+        content: result.content || '',
+        timestamp: result.created_at || new Date().toISOString(),
         thread_id: selectedThread.id,
         message_type: 'text'
       };

@@ -7712,6 +7712,75 @@ export type Database = {
           },
         ]
       }
+      feature_announcements: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          company_id: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          dismissals: number | null
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          priority: string
+          published_at: string | null
+          show_as_popup: boolean | null
+          show_in_dashboard: boolean | null
+          status: string
+          target_audience: string | null
+          title: string
+          type: string
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          company_id?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          dismissals?: number | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          priority?: string
+          published_at?: string | null
+          show_as_popup?: boolean | null
+          show_in_dashboard?: boolean | null
+          status?: string
+          target_audience?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          company_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          dismissals?: number | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          priority?: string
+          published_at?: string | null
+          show_as_popup?: boolean | null
+          show_in_dashboard?: boolean | null
+          status?: string
+          target_audience?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: []
+      }
       forms_1099: {
         Row: {
           box1_nonemployee_compensation: number
