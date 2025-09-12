@@ -1,90 +1,184 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, DollarSign, Clock, AlertTriangle, TrendingUp, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
+
+interface PaymentApplication {
+  id: string;
+  application_number: string;
+  total_earned: number;
+  current_payment_due: number;
+  retention_amount: number;
+  status: string;
+  period_ending: string;
+  work_completed_to_date: number;
+  project_name: string;
+}
+
+interface RetentionRelease {
+  id: string;
+  client_name: string;
+  retention_amount: number;
+  amount_pending: number;
+  release_date: string | null;
+  status: string;
+  project_name?: string;
+}
+
+interface SubcontractorPayment {
+  id: string;
+  subcontractor_name: string;
+  amount: number;
+  net_amount: number;
+  due_date: string;
+  status: string;
+  project_name?: string;
+}
+
+interface CashFlowSummary {
+  totalOutstanding: number;
+  retentionHeld: number;
+  retentionReady: number;
+  netForecast: number;
+  overdueCount: number;
+  overdueAmount: number;
+}
 
 export const CashFlowManagement = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30');
+  const [paymentApplications, setPaymentApplications] = useState<PaymentApplication[]>([]);
+  const [retentionReleases, setRetentionReleases] = useState<RetentionRelease[]>([]);
+  const [subcontractorPayments, setSubcontractorPayments] = useState<SubcontractorPayment[]>([]);
+  const [summary, setSummary] = useState<CashFlowSummary>({
+    totalOutstanding: 0,
+    retentionHeld: 0,
+    retentionReady: 0,
+    netForecast: 0,
+    overdueCount: 0,
+    overdueAmount: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Mock data for cash flow management
-  const paymentApplications = [
-    {
-      id: '1',
-      project: 'Downtown Office Complex',
-      applicationNumber: 'PA-2025-001',
-      amount: 125000,
-      status: 'pending_approval',
-      dueDate: '2025-01-15',
-      retentionAmount: 12500,
-      workCompleted: 85
-    },
-    {
-      id: '2',
-      project: 'Residential Towers Phase 2',
-      applicationNumber: 'PA-2025-002',
-      amount: 89000,
-      status: 'approved',
-      dueDate: '2025-01-20',
-      retentionAmount: 8900,
-      workCompleted: 92
+  const loadCashFlowData = async () => {
+    if (!user) return;
+
+    try {
+      // Using fallback data until migration is approved
+      const fallbackApplications: PaymentApplication[] = [
+        {
+          id: '1',
+          application_number: 'PA-2025-001',
+          total_earned: 125000,
+          current_payment_due: 112500,
+          retention_amount: 12500,
+          status: 'submitted',
+          period_ending: '2025-01-15',
+          work_completed_to_date: 85,
+          project_name: 'Downtown Office Complex'
+        },
+        {
+          id: '2',
+          application_number: 'PA-2025-002',
+          total_earned: 89000,
+          current_payment_due: 80100,
+          retention_amount: 8900,
+          status: 'approved',
+          period_ending: '2025-01-20',
+          work_completed_to_date: 92,
+          project_name: 'Residential Towers Phase 2'
+        }
+      ];
+
+      const fallbackRetention: RetentionRelease[] = [
+        {
+          id: '1',
+          client_name: 'Medical Center LLC',
+          retention_amount: 45000,
+          amount_pending: 45000,
+          release_date: '2025-02-01',
+          status: 'active',
+          project_name: 'Medical Center Renovation'
+        },
+        {
+          id: '2',
+          client_name: 'Shopping Mall Corp',
+          retention_amount: 32000,
+          amount_pending: 32000,
+          release_date: '2025-02-15',
+          status: 'pending',
+          project_name: 'Shopping Mall Upgrade'
+        }
+      ];
+
+      const fallbackPayments: SubcontractorPayment[] = [
+        {
+          id: '1',
+          subcontractor_name: 'Elite Electrical Services',
+          amount: 24500,
+          net_amount: 22050,
+          due_date: '2025-01-12',
+          status: 'approved',
+          project_name: 'Downtown Office Complex'
+        },
+        {
+          id: '2',
+          subcontractor_name: 'Premier Plumbing Co.',
+          amount: 18900,
+          net_amount: 17010,
+          due_date: '2025-01-18',
+          status: 'pending',
+          project_name: 'Residential Towers Phase 2'
+        }
+      ];
+
+      setPaymentApplications(fallbackApplications);
+      setRetentionReleases(fallbackRetention);
+      setSubcontractorPayments(fallbackPayments);
+
+      // Calculate summary
+      const totalOutstanding = fallbackApplications.reduce((sum, app) => sum + app.current_payment_due, 0);
+      const retentionHeld = fallbackRetention.reduce((sum, ret) => sum + ret.retention_amount, 0);
+      const retentionReady = fallbackRetention.filter(ret => ret.status === 'active').reduce((sum, ret) => sum + ret.amount_pending, 0);
+      
+      setSummary({
+        totalOutstanding,
+        retentionHeld,
+        retentionReady,
+        netForecast: totalOutstanding + retentionReady,
+        overdueCount: 2,
+        overdueAmount: 68000
+      });
+
+    } catch (error) {
+      console.error('Error loading cash flow data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load cash flow data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const retentionReleases = [
-    {
-      id: '1',
-      project: 'Medical Center Renovation',
-      amount: 45000,
-      releaseDate: '2025-02-01',
-      status: 'ready_for_release',
-      finalInspection: true
-    },
-    {
-      id: '2',
-      project: 'Shopping Mall Upgrade',
-      amount: 32000,
-      releaseDate: '2025-02-15',
-      status: 'pending_final_inspection',
-      finalInspection: false
-    }
-  ];
-
-  const subcontractorPayments = [
-    {
-      id: '1',
-      company: 'Elite Electrical Services',
-      amount: 24500,
-      dueDate: '2025-01-12',
-      status: 'scheduled',
-      project: 'Downtown Office Complex'
-    },
-    {
-      id: '2',
-      company: 'Premier Plumbing Co.',
-      amount: 18900,
-      dueDate: '2025-01-18',
-      status: 'pending_approval',
-      project: 'Residential Towers Phase 2'
-    }
-  ];
-
-  const cashFlowForecast = [
-    { period: 'Week 1', inflow: 125000, outflow: 89000, net: 36000 },
-    { period: 'Week 2', inflow: 89000, outflow: 112000, net: -23000 },
-    { period: 'Week 3', inflow: 156000, outflow: 78000, net: 78000 },
-    { period: 'Week 4', inflow: 95000, outflow: 143000, net: -48000 }
-  ];
+  useEffect(() => {
+    loadCashFlowData();
+  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return 'default';
-      case 'pending_approval': return 'outline';
-      case 'ready_for_release': return 'default';
-      case 'pending_final_inspection': return 'secondary';
-      case 'scheduled': return 'outline';
+      case 'submitted': return 'outline';
+      case 'draft': return 'secondary';
+      case 'active': return 'default';
+      case 'pending': return 'outline';
+      case 'paid': return 'default';
       default: return 'secondary';
     }
   };
@@ -95,6 +189,29 @@ export const CashFlowManagement = () => {
       currency: 'USD'
     }).format(amount);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-64 mb-2"></div>
+          <div className="h-4 bg-muted rounded w-96"></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-muted rounded w-20"></div>
+                  <div className="h-8 bg-muted rounded w-24"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -125,8 +242,8 @@ export const CashFlowManagement = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(389000)}</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
+            <div className="text-2xl font-bold">{formatCurrency(summary.totalOutstanding)}</div>
+            <p className="text-xs text-muted-foreground">Payment applications pending</p>
           </CardContent>
         </Card>
 
@@ -136,8 +253,8 @@ export const CashFlowManagement = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(77000)}</div>
-            <p className="text-xs text-muted-foreground">{formatCurrency(45000)} ready for release</p>
+            <div className="text-2xl font-bold">{formatCurrency(summary.retentionHeld)}</div>
+            <p className="text-xs text-muted-foreground">{formatCurrency(summary.retentionReady)} ready for release</p>
           </CardContent>
         </Card>
 
@@ -147,8 +264,10 @@ export const CashFlowManagement = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(43000)}</div>
-            <p className="text-xs text-success">Positive cash flow projected</p>
+            <div className="text-2xl font-bold">{formatCurrency(summary.netForecast)}</div>
+            <p className={`text-xs ${summary.netForecast >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {summary.netForecast >= 0 ? 'Positive' : 'Negative'} cash flow projected
+            </p>
           </CardContent>
         </Card>
 
@@ -158,8 +277,8 @@ export const CashFlowManagement = () => {
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">2</div>
-            <p className="text-xs text-muted-foreground">{formatCurrency(68000)} total</p>
+            <div className="text-2xl font-bold text-destructive">{summary.overdueCount}</div>
+            <p className="text-xs text-muted-foreground">{formatCurrency(summary.overdueAmount)} total</p>
           </CardContent>
         </Card>
       </div>
@@ -169,7 +288,6 @@ export const CashFlowManagement = () => {
           <TabsTrigger value="applications">Payment Applications</TabsTrigger>
           <TabsTrigger value="retention">Retention Releases</TabsTrigger>
           <TabsTrigger value="subcontractors">Subcontractor Payments</TabsTrigger>
-          <TabsTrigger value="forecast">Cash Flow Forecast</TabsTrigger>
         </TabsList>
 
         <TabsContent value="applications">
@@ -182,34 +300,40 @@ export const CashFlowManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {paymentApplications.map((app) => (
-                  <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{app.project}</h4>
-                        <Badge variant={getStatusColor(app.status)}>
-                          {app.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
+                {paymentApplications.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No payment applications found. Create a new application to get started.
+                  </p>
+                ) : (
+                  paymentApplications.map((app) => (
+                    <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{app.project_name}</h4>
+                          <Badge variant={getStatusColor(app.status)}>
+                            {app.status.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Application {app.application_number} • Period ending {new Date(app.period_ending).toLocaleDateString()}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span>Work Completed: {app.work_completed_to_date}%</span>
+                          <Progress value={app.work_completed_to_date} className="w-20" />
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Application {app.applicationNumber} • Due {app.dueDate}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span>Work Completed: {app.workCompleted}%</span>
-                        <Progress value={app.workCompleted} className="w-20" />
+                      <div className="text-right">
+                        <div className="font-medium">{formatCurrency(app.current_payment_due)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Retention: {formatCurrency(app.retention_amount)}
+                        </div>
+                        <Button size="sm" className="mt-2">
+                          Review Application
+                        </Button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(app.amount)}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Retention: {formatCurrency(app.retentionAmount)}
-                      </div>
-                      <Button size="sm" className="mt-2">
-                        Review Application
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -225,39 +349,33 @@ export const CashFlowManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {retentionReleases.map((retention) => (
-                  <div key={retention.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{retention.project}</h4>
-                        <Badge variant={getStatusColor(retention.status)}>
-                          {retention.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
+                {retentionReleases.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No retention releases found.
+                  </p>
+                ) : (
+                  retentionReleases.map((retention) => (
+                    <div key={retention.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{retention.project_name || retention.client_name}</h4>
+                          <Badge variant={getStatusColor(retention.status)}>
+                            {retention.status.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Release Date: {retention.release_date ? new Date(retention.release_date).toLocaleDateString() : 'Not scheduled'}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Release Date: {retention.releaseDate}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span>Final Inspection:</span>
-                        {retention.finalInspection ? (
-                          <Badge variant="default">Complete</Badge>
-                        ) : (
-                          <Badge variant="outline">Pending</Badge>
-                        )}
+                      <div className="text-right">
+                        <div className="font-medium">{formatCurrency(retention.amount_pending)}</div>
+                        <Button size="sm" className="mt-2">
+                          Process Release
+                        </Button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(retention.amount)}</div>
-                      <Button 
-                        size="sm" 
-                        className="mt-2"
-                        disabled={!retention.finalInspection}
-                      >
-                        {retention.finalInspection ? 'Process Release' : 'Schedule Inspection'}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -273,64 +391,33 @@ export const CashFlowManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {subcontractorPayments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{payment.company}</h4>
-                        <Badge variant={getStatusColor(payment.status)}>
-                          {payment.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
+                {subcontractorPayments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No subcontractor payments found.
+                  </p>
+                ) : (
+                  subcontractorPayments.map((payment) => (
+                    <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{payment.subcontractor_name}</h4>
+                          <Badge variant={getStatusColor(payment.status)}>
+                            {payment.status.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {payment.project_name || 'No project linked'} • Due {new Date(payment.due_date).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {payment.project} • Due {payment.dueDate}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(payment.amount)}</div>
-                      <Button size="sm" className="mt-2">
-                        Process Payment
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="forecast">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cash Flow Forecast</CardTitle>
-              <CardDescription>
-                Project cash flow based on payment schedules and project milestones
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {cashFlowForecast.map((period, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-4 p-4 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{period.period}</div>
-                      <div className="text-sm text-muted-foreground">Forecast Period</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-success">{formatCurrency(period.inflow)}</div>
-                      <div className="text-sm text-muted-foreground">Expected Inflow</div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-destructive">{formatCurrency(period.outflow)}</div>
-                      <div className="text-sm text-muted-foreground">Planned Outflow</div>
-                    </div>
-                    <div>
-                      <div className={`font-medium ${period.net >= 0 ? 'text-success' : 'text-destructive'}`}>
-                        {formatCurrency(period.net)}
+                      <div className="text-right">
+                        <div className="font-medium">{formatCurrency(payment.net_amount)}</div>
+                        <Button size="sm" className="mt-2">
+                          Process Payment
+                        </Button>
                       </div>
-                      <div className="text-sm text-muted-foreground">Net Cash Flow</div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
