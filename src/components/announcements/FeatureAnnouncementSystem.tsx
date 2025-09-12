@@ -85,7 +85,8 @@ const FeatureAnnouncementSystem = () => {
 
   const loadAnnouncements = async () => {
     try {
-      // Mock data until we create the announcements table
+      // Use mock data since feature_announcements table doesn't exist yet
+      console.log('Feature announcements table not created yet, using mock data');
       const mockAnnouncements: Announcement[] = [
         {
           id: '1',
@@ -103,39 +104,8 @@ const FeatureAnnouncementSystem = () => {
           action_url: '/analytics',
           views: 1234,
           dismissals: 45
-        },
-        {
-          id: '2',
-          title: 'Mobile App Update 2.1',
-          content: 'Our mobile app has been updated with improved offline functionality, faster sync, and better photo compression for daily reports.',
-          type: 'update',
-          priority: 'medium',
-          status: 'published',
-          target_audience: 'all',
-          show_as_popup: false,
-          show_in_dashboard: true,
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          published_at: new Date(Date.now() - 86400000).toISOString(),
-          views: 890,
-          dismissals: 23
-        },
-        {
-          id: '3',
-          title: 'Scheduled Maintenance',
-          content: 'We will be performing scheduled maintenance on Sunday, December 10th from 2:00 AM to 4:00 AM EST. During this time, the platform may be temporarily unavailable.',
-          type: 'maintenance',
-          priority: 'urgent',
-          status: 'scheduled',
-          target_audience: 'all',
-          show_as_popup: true,
-          show_in_dashboard: true,
-          expires_at: new Date(Date.now() + 604800000).toISOString(),
-          created_at: new Date().toISOString(),
-          views: 0,
-          dismissals: 0
         }
       ];
-
       setAnnouncements(mockAnnouncements);
       
       // Check for active popup announcements

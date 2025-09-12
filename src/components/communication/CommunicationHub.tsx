@@ -26,6 +26,7 @@ import {
   Settings
 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays } from "date-fns";
 
@@ -85,6 +86,7 @@ interface Meeting {
 }
 
 export const CommunicationHub: React.FC = () => {
+  const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('messages');
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
@@ -103,7 +105,8 @@ export const CommunicationHub: React.FC = () => {
   const loadCommunicationData = async () => {
     setLoading(true);
     try {
-      // Load sample data
+      // Using mock data for now since communication tables need to be created
+      // TODO: Create chat_channels, chat_messages, rfis, and project_events tables
       setThreads([
         {
           id: '1',
@@ -207,7 +210,8 @@ export const CommunicationHub: React.FC = () => {
   };
 
   const loadMessages = async (threadId: string) => {
-    // Simulate loading messages for selected thread
+    // Using mock data for now since chat_messages table needs to be created
+    // TODO: Create chat_messages table with proper relations
     const sampleMessages: Message[] = [
       {
         id: '1',

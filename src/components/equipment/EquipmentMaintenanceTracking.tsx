@@ -10,6 +10,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 import { Truck, Wrench, Calendar as CalendarIcon, AlertTriangle, CheckCircle, Clock, DollarSign, TrendingUp, Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format, addDays, differenceInDays, isBefore, isAfter } from 'date-fns';
 
@@ -84,6 +86,7 @@ interface ScheduledAssignment {
 }
 
 export const EquipmentMaintenanceTracking: React.FC = () => {
+  const { userProfile } = useAuth();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [assignments, setAssignments] = useState<ScheduledAssignment[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
@@ -99,171 +102,62 @@ export const EquipmentMaintenanceTracking: React.FC = () => {
     loadAssignments();
   }, []);
 
-  const loadEquipmentData = () => {
-    // Mock equipment data
-    const mockEquipment: Equipment[] = [
-      {
-        id: '1',
-        name: 'CAT 320 Excavator',
-        type: 'excavator',
-        make: 'Caterpillar',
-        model: '320',
-        year: 2022,
-        serialNumber: 'CAT320-001',
-        status: 'in_use',
-        location: 'Downtown Office Complex',
-        currentProject: {
-          id: 'proj1',
-          name: 'Downtown Office Complex',
-          assignedDate: '2024-01-15',
-          estimatedReturnDate: '2024-02-15'
-        },
-        specifications: {
-          capacity: '20 tons',
-          fuelType: 'Diesel',
-          powerRating: '122 kW',
-          weight: '20,500 kg'
-        },
-        maintenance: {
-          lastService: '2024-01-01',
-          nextService: '2024-02-01',
-          serviceInterval: 30,
-          totalHours: 1250,
-          maintenanceRecords: [
-            {
-              id: '1',
-              type: 'preventive',
-              description: 'Oil change and filter replacement',
-              performedBy: 'Mike Johnson',
-              date: '2024-01-01',
-              cost: 450,
-              partsUsed: ['Oil filter', 'Hydraulic oil'],
-              hoursSpent: 3,
-              notes: 'All systems functioning normally',
-              nextDueDate: '2024-02-01'
-            }
-          ]
-        },
-        financials: {
-          purchasePrice: 250000,
-          purchaseDate: '2022-03-15',
-          currentValue: 220000,
-          totalMaintenanceCost: 12500,
-          monthlyDepreciation: 1250
-        },
-        utilization: {
-          hoursThisMonth: 180,
-          hoursThisYear: 720,
-          utilizationRate: 85,
-          fuelConsumption: 15.5,
-          operatingCostPerHour: 45
+  const loadEquipmentData = async () => {
+    try {
+      // Equipment tables not yet fully implemented, using mock data
+      console.log('Equipment inventory table not fully set up, using mock data');
+      
+      const mockEquipment: Equipment[] = [
+        {
+          id: '1',
+          name: 'CAT 320 Excavator',
+          type: 'excavator',
+          make: 'Caterpillar',
+          model: '320',
+          year: 2022,
+          serialNumber: 'CAT320-001',
+          status: 'in_use',
+          location: 'Downtown Office Complex',
+          currentProject: {
+            id: 'proj1',
+            name: 'Downtown Office Complex',
+            assignedDate: '2024-01-15',
+            estimatedReturnDate: '2024-02-15'
+          },
+          specifications: {
+            capacity: '20 tons',
+            fuelType: 'Diesel',
+            powerRating: '122 kW',
+            weight: '20,500 kg'
+          },
+          maintenance: {
+            lastService: '2024-01-01',
+            nextService: '2024-02-01',
+            serviceInterval: 30,
+            totalHours: 1250,
+            maintenanceRecords: []
+          },
+          financials: {
+            purchasePrice: 250000,
+            purchaseDate: '2022-03-15',
+            currentValue: 220000,
+            totalMaintenanceCost: 12500,
+            monthlyDepreciation: 1250
+          },
+          utilization: {
+            hoursThisMonth: 180,
+            hoursThisYear: 720,
+            utilizationRate: 85,
+            fuelConsumption: 15.5,
+            operatingCostPerHour: 45
+          }
         }
-      },
-      {
-        id: '2',
-        name: 'JD 850K Bulldozer',
-        type: 'bulldozer',
-        make: 'John Deere',
-        model: '850K',
-        year: 2021,
-        serialNumber: 'JD850K-002',
-        status: 'maintenance',
-        location: 'Main Yard',
-        specifications: {
-          capacity: '850 HP',
-          fuelType: 'Diesel',
-          powerRating: '634 kW',
-          weight: '31,800 kg'
-        },
-        maintenance: {
-          lastService: '2024-01-20',
-          nextService: '2024-02-20',
-          serviceInterval: 30,
-          totalHours: 2100,
-          maintenanceRecords: [
-            {
-              id: '2',
-              type: 'corrective',
-              description: 'Hydraulic system repair',
-              performedBy: 'Sarah Wilson',
-              date: '2024-01-20',
-              cost: 2800,
-              partsUsed: ['Hydraulic pump', 'Seals', 'Hydraulic fluid'],
-              hoursSpent: 8,
-              notes: 'Major hydraulic leak repaired, system tested',
-              nextDueDate: '2024-02-20'
-            }
-          ]
-        },
-        financials: {
-          purchasePrice: 380000,
-          purchaseDate: '2021-06-10',
-          currentValue: 320000,
-          totalMaintenanceCost: 18500,
-          monthlyDepreciation: 1800
-        },
-        utilization: {
-          hoursThisMonth: 0, // In maintenance
-          hoursThisYear: 520,
-          utilizationRate: 65,
-          fuelConsumption: 22.5,
-          operatingCostPerHour: 65
-        }
-      },
-      {
-        id: '3',
-        name: 'Grove RT540E Crane',
-        type: 'crane',
-        make: 'Grove',
-        model: 'RT540E',
-        year: 2023,
-        serialNumber: 'GRV540-003',
-        status: 'available',
-        location: 'Main Yard',
-        specifications: {
-          capacity: '40 tons',
-          fuelType: 'Diesel',
-          powerRating: '174 kW',
-          weight: '36,000 kg'
-        },
-        maintenance: {
-          lastService: '2023-12-15',
-          nextService: '2024-01-15',
-          serviceInterval: 30,
-          totalHours: 850,
-          maintenanceRecords: [
-            {
-              id: '3',
-              type: 'inspection',
-              description: 'Annual safety inspection',
-              performedBy: 'Certified Inspector',
-              date: '2023-12-15',
-              cost: 1200,
-              partsUsed: [],
-              hoursSpent: 4,
-              notes: 'All safety systems passed inspection',
-              nextDueDate: '2024-12-15'
-            }
-          ]
-        },
-        financials: {
-          purchasePrice: 450000,
-          purchaseDate: '2023-02-01',
-          currentValue: 425000,
-          totalMaintenanceCost: 3500,
-          monthlyDepreciation: 2000
-        },
-        utilization: {
-          hoursThisMonth: 120,
-          hoursThisYear: 850,
-          utilizationRate: 70,
-          fuelConsumption: 18.0,
-          operatingCostPerHour: 55
-        }
-      }
-    ];
-
-    setEquipment(mockEquipment);
+      ];
+      setEquipment(mockEquipment);
+    } catch (error) {
+      console.error('Error loading equipment data:', error);
+      setEquipment([]);
+    }
   };
 
   const loadAssignments = () => {
