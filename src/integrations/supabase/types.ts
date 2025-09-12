@@ -3395,6 +3395,60 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_items: {
+        Row: {
+          client_name: string
+          company_id: string
+          created_at: string
+          current_balance: number
+          days_overdue: number
+          id: string
+          invoice_number: string
+          last_contact_date: string | null
+          next_action_date: string | null
+          notes: string | null
+          original_amount: number
+          priority: string
+          project_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          company_id: string
+          created_at?: string
+          current_balance: number
+          days_overdue: number
+          id?: string
+          invoice_number: string
+          last_contact_date?: string | null
+          next_action_date?: string | null
+          notes?: string | null
+          original_amount: number
+          priority?: string
+          project_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          company_id?: string
+          created_at?: string
+          current_balance?: number
+          days_overdue?: number
+          id?: string
+          invoice_number?: string
+          last_contact_date?: string | null
+          next_action_date?: string | null
+          notes?: string | null
+          original_amount?: number
+          priority?: string
+          project_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       communication_log: {
         Row: {
           attachments: Json | null
@@ -11809,6 +11863,69 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_applications: {
+        Row: {
+          application_number: string
+          approved_date: string | null
+          company_id: string
+          created_at: string
+          current_payment_due: number
+          id: string
+          less_previous_payments: number
+          materials_stored: number
+          paid_date: string | null
+          period_ending: string
+          project_id: string | null
+          retention_amount: number
+          retention_percentage: number | null
+          status: string
+          submitted_date: string | null
+          total_earned: number
+          updated_at: string
+          work_completed_to_date: number
+        }
+        Insert: {
+          application_number: string
+          approved_date?: string | null
+          company_id: string
+          created_at?: string
+          current_payment_due?: number
+          id?: string
+          less_previous_payments?: number
+          materials_stored?: number
+          paid_date?: string | null
+          period_ending: string
+          project_id?: string | null
+          retention_amount?: number
+          retention_percentage?: number | null
+          status?: string
+          submitted_date?: string | null
+          total_earned?: number
+          updated_at?: string
+          work_completed_to_date?: number
+        }
+        Update: {
+          application_number?: string
+          approved_date?: string | null
+          company_id?: string
+          created_at?: string
+          current_payment_due?: number
+          id?: string
+          less_previous_payments?: number
+          materials_stored?: number
+          paid_date?: string | null
+          period_ending?: string
+          project_id?: string | null
+          retention_amount?: number
+          retention_percentage?: number | null
+          status?: string
+          submitted_date?: string | null
+          total_earned?: number
+          updated_at?: string
+          work_completed_to_date?: number
+        }
+        Relationships: []
+      }
       payment_failures: {
         Row: {
           attempt_count: number | null
@@ -15846,6 +15963,57 @@ export type Database = {
           },
         ]
       }
+      retention_tracking: {
+        Row: {
+          amount_pending: number
+          amount_released: number | null
+          client_name: string
+          company_id: string
+          contract_amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          project_id: string | null
+          release_date: string | null
+          retention_amount: number
+          retention_percentage: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_pending: number
+          amount_released?: number | null
+          client_name: string
+          company_id: string
+          contract_amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_id?: string | null
+          release_date?: string | null
+          retention_amount: number
+          retention_percentage?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_pending?: number
+          amount_released?: number | null
+          client_name?: string
+          company_id?: string
+          contract_amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          project_id?: string | null
+          release_date?: string | null
+          retention_amount?: number
+          retention_percentage?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rfi_responses: {
         Row: {
           company_id: string
@@ -18388,6 +18556,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subcontractor_payments: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          due_date: string
+          id: string
+          invoice_date: string
+          invoice_number: string
+          net_amount: number
+          paid_date: string | null
+          payment_method: string | null
+          project_id: string | null
+          retention_amount: number | null
+          status: string
+          subcontractor_name: string
+          trade: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          net_amount: number
+          paid_date?: string | null
+          payment_method?: string | null
+          project_id?: string | null
+          retention_amount?: number | null
+          status?: string
+          subcontractor_name: string
+          trade: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          net_amount?: number
+          paid_date?: string | null
+          payment_method?: string | null
+          project_id?: string | null
+          retention_amount?: number | null
+          status?: string
+          subcontractor_name?: string
+          trade?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       submittal_reviews: {
         Row: {
