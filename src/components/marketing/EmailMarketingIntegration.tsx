@@ -88,7 +88,8 @@ const EmailMarketingIntegration = () => {
   const loadEmailData = async () => {
     setLoading(true);
     try {
-      // Mock data until we create the email marketing tables
+      // TODO: Connect to real email marketing tables once types are regenerated
+      // For now, using mock data but prepared structure for real data connection
       const mockCampaigns: EmailCampaign[] = [
         {
           id: '1',

@@ -89,7 +89,8 @@ const AutomatedWorkflows = () => {
   const loadWorkflowData = async () => {
     setLoading(true);
     try {
-      // Mock data until we create the workflow tables
+      // TODO: Connect to real automated workflow tables once types are regenerated  
+      // For now, using mock data but prepared structure for real data connection
       const mockWorkflows: AutomatedWorkflow[] = [
         {
           id: '1',
