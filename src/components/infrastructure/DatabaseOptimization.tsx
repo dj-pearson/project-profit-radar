@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +44,7 @@ interface OptimizationRecommendation {
 }
 
 const DatabaseOptimization = () => {
+  const { userProfile } = useAuth();
   const [indexes, setIndexes] = useState<DatabaseIndex[]>([]);
   const [queries, setQueries] = useState<QueryPerformance[]>([]);
   const [recommendations, setRecommendations] = useState<OptimizationRecommendation[]>([]);
@@ -157,10 +160,23 @@ const DatabaseOptimization = () => {
   ];
 
   useEffect(() => {
-    setIndexes(mockIndexes);
-    setQueries(mockQueries);
-    setRecommendations(mockRecommendations);
+    loadDatabaseMetrics();
   }, []);
+
+  const loadDatabaseMetrics = async () => {
+    try {
+      // For now, use mock data until types are regenerated
+      // The real implementation will connect to database_optimization_metrics table
+      setIndexes(mockIndexes);
+      setQueries(mockQueries);
+      setRecommendations(mockRecommendations);
+    } catch (error) {
+      console.error('Error loading database metrics:', error);
+      setIndexes(mockIndexes);
+      setQueries(mockQueries);
+      setRecommendations(mockRecommendations);
+    }
+  };
 
   const analyzeDatabase = async () => {
     setAnalyzing(true);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,7 +67,9 @@ const IndustryComplianceVerification = () => {
 
   const loadComplianceRequirements = async () => {
     try {
-      // Mock compliance requirements data
+      // TODO: Connect to real compliance_requirements table once types are regenerated
+
+      // Fallback to mock data if no real data exists
       const mockRequirements: ComplianceRequirement[] = [
         {
           id: '1',
@@ -184,7 +187,9 @@ const IndustryComplianceVerification = () => {
 
   const loadComplianceAudits = async () => {
     try {
-      // Mock audit data
+      // TODO: Connect to real compliance_audits table once types are regenerated
+
+      // Fallback to mock data if no real data exists
       const mockAudits: ComplianceAudit[] = [
         {
           id: '1',
@@ -225,15 +230,29 @@ const IndustryComplianceVerification = () => {
   };
 
   const updateComplianceStatus = async (requirementId: string, status: string) => {
-    setRequirements(prev => prev.map(req => 
-      req.id === requirementId 
-        ? { 
-            ...req, 
-            compliance_status: status as any,
-            last_verified: new Date().toISOString()
-          }
-        : req
-    ));
+    try {
+      // For now, just update locally until types are regenerated
+      setRequirements(prev => prev.map(req => 
+        req.id === requirementId 
+          ? { 
+              ...req, 
+              compliance_status: status as any,
+              last_verified: new Date().toISOString()
+            }
+          : req
+      ));
+      
+      // TODO: Uncomment once types are regenerated
+      // const { error } = await supabase
+      //   .from('compliance_requirements')
+      //   .update({
+      //     compliance_status: status,
+      //     last_verified: new Date().toISOString().split('T')[0]
+      //   })
+      //   .eq('id', requirementId);
+    } catch (error) {
+      console.error('Error updating compliance status:', error);
+    }
   };
 
   const getStatusIcon = (status: string) => {
