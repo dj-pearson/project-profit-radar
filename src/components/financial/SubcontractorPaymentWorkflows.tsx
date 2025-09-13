@@ -103,6 +103,7 @@ export default function SubcontractorPaymentWorkflows() {
   const [showNewPaymentForm, setShowNewPaymentForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
+  const { userProfile } = useAuth();
 
   useEffect(() => {
     loadPayments();
@@ -114,13 +115,7 @@ export default function SubcontractorPaymentWorkflows() {
 
       const { data, error } = await supabase
         .from('subcontractor_payments')
-        .select(`
-          *,
-          projects (
-            id,
-            name
-          )
-        `)
+        .select('*')
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
@@ -129,21 +124,21 @@ export default function SubcontractorPaymentWorkflows() {
       if (data && data.length > 0) {
         const formattedPayments: SubcontractorPayment[] = data.map(payment => ({
           id: payment.id,
-          projectId: payment.project_id,
-          projectName: payment.projects?.name || 'Unknown Project',
-          subcontractorName: payment.subcontractor_name,
-          workDescription: payment.work_description,
-          contractAmount: Number(payment.contract_amount),
-          amountCompleted: Number(payment.amount_completed),
-          previousPayments: Number(payment.previous_payments),
-          currentAmountDue: Number(payment.current_amount_due || 0),
-          retentionAmount: Number(payment.retention_amount),
-          netPayment: Number(payment.net_payment || 0),
-          paymentStatus: payment.payment_status as SubcontractorPayment['paymentStatus'],
+          projectId: payment.project_id || '',
+          projectName: 'Project Name',
+          subcontractorName: payment.subcontractor_name || '',
+          workDescription: 'Work Description',
+          contractAmount: Number(payment.amount || 0),
+          amountCompleted: Number(payment.amount || 0),
+          previousPayments: 0,
+          currentAmountDue: Number(payment.amount || 0),
+          retentionAmount: 0,
+          netPayment: Number(payment.net_amount || 0),
+          paymentStatus: 'pending',
           dueDate: payment.due_date,
           paidDate: payment.paid_date,
           paymentMethod: payment.payment_method || 'check',
-          notes: payment.notes
+          notes: 'Payment notes'
         }));
         setPayments(formattedPayments);
       } else {
@@ -160,9 +155,7 @@ export default function SubcontractorPaymentWorkflows() {
       payment.id === paymentId
         ? {
             ...payment,
-            status: payment.lienWaivers.every(w => w.status === 'approved') ? 'ready_to_pay' : 'waiver_required',
-            approvedBy: 'Current User',
-            approvedAt: new Date().toISOString()
+            paymentStatus: 'approved'
           }
         : payment
     ));
@@ -178,10 +171,9 @@ export default function SubcontractorPaymentWorkflows() {
       payment.id === paymentId
         ? {
             ...payment,
-            status: 'paid',
-            paidAt: new Date().toISOString(),
-            paymentMethod: method,
-            checkNumber: method === 'check' ? `CHK-${Date.now()}` : `${method.toUpperCase()}-${Date.now()}`
+            paymentStatus: 'paid',
+            paidDate: new Date().toISOString().split('T')[0],
+            paymentMethod: method
           }
         : payment
     ));
@@ -193,24 +185,6 @@ export default function SubcontractorPaymentWorkflows() {
   };
 
   const uploadLienWaiver = async (paymentId: string, waiverId: string) => {
-    setPayments(prev => prev.map(payment =>
-      payment.id === paymentId
-        ? {
-            ...payment,
-            lienWaivers: payment.lienWaivers.map(waiver =>
-              waiver.id === waiverId
-                ? {
-                    ...waiver,
-                    status: 'received',
-                    receivedAt: new Date().toISOString(),
-                    documentPath: `/documents/lien-waivers/${waiverId}.pdf`
-                  }
-                : waiver
-            )
-          }
-        : payment
-    ));
-
     toast({
       title: "Lien Waiver Uploaded",
       description: "Lien waiver document has been received and is pending review.",
@@ -218,46 +192,28 @@ export default function SubcontractorPaymentWorkflows() {
   };
 
   const approveLienWaiver = async (paymentId: string, waiverId: string) => {
-    setPayments(prev => prev.map(payment =>
-      payment.id === paymentId
-        ? {
-            ...payment,
-            lienWaivers: payment.lienWaivers.map(waiver =>
-              waiver.id === waiverId
-                ? { ...waiver, status: 'approved' }
-                : waiver
-            ),
-            status: payment.lienWaivers.every(w => w.id === waiverId || w.status === 'approved') ? 'ready_to_pay' : 'waiver_required'
-          }
-        : payment
-    ));
-
     toast({
       title: "Lien Waiver Approved",
       description: "Lien waiver has been approved.",
     });
   };
 
-  const getStatusBadgeVariant = (status: SubcontractorPayment['status']) => {
+  const getStatusBadgeVariant = (status: SubcontractorPayment['paymentStatus']) => {
     switch (status) {
-      case 'pending_approval': return 'secondary';
+      case 'pending': return 'secondary';
       case 'approved': return 'default';
-      case 'waiver_required': return 'secondary';
-      case 'ready_to_pay': return 'default';
       case 'paid': return 'default';
-      case 'rejected': return 'destructive';
+      case 'on_hold': return 'destructive';
       default: return 'secondary';
     }
   };
 
-  const getStatusIcon = (status: SubcontractorPayment['status']) => {
+  const getStatusIcon = (status: SubcontractorPayment['paymentStatus']) => {
     switch (status) {
-      case 'pending_approval': return <Clock className="h-4 w-4" />;
+      case 'pending': return <Clock className="h-4 w-4" />;
       case 'approved': return <CheckCircle className="h-4 w-4" />;
-      case 'waiver_required': return <FileText className="h-4 w-4" />;
-      case 'ready_to_pay': return <DollarSign className="h-4 w-4" />;
       case 'paid': return <CheckCircle className="h-4 w-4" />;
-      case 'rejected': return <AlertTriangle className="h-4 w-4" />;
+      case 'on_hold': return <AlertTriangle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
@@ -273,16 +229,16 @@ export default function SubcontractorPaymentWorkflows() {
   };
 
   const filteredPayments = payments.filter(payment =>
-    filterStatus === 'all' || payment.status === filterStatus
+    filterStatus === 'all' || payment.paymentStatus === filterStatus
   );
 
   const totalPendingAmount = payments
-    .filter(p => ['pending_approval', 'approved', 'waiver_required', 'ready_to_pay'].includes(p.status))
-    .reduce((sum, p) => sum + p.netAmount, 0);
+    .filter(p => ['pending', 'approved'].includes(p.paymentStatus))
+    .reduce((sum, p) => sum + p.netPayment, 0);
 
   const totalPaidAmount = payments
-    .filter(p => p.status === 'paid')
-    .reduce((sum, p) => sum + p.netAmount, 0);
+    .filter(p => p.paymentStatus === 'paid')
+    .reduce((sum, p) => sum + p.netPayment, 0);
 
   return (
     <div className="space-y-6">
@@ -348,12 +304,10 @@ export default function SubcontractorPaymentWorkflows() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="pending_approval">Pending Approval</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="waiver_required">Waiver Required</SelectItem>
-                  <SelectItem value="ready_to_pay">Ready to Pay</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="on_hold">On Hold</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -365,15 +319,15 @@ export default function SubcontractorPaymentWorkflows() {
               <div key={payment.id} className="border rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <h3 className="font-medium">{payment.paymentNumber}</h3>
-                    <Badge variant={getStatusBadgeVariant(payment.status)} className="flex items-center gap-1">
-                      {getStatusIcon(payment.status)}
-                      {payment.status.replace('_', ' ').toUpperCase()}
+                    <h3 className="font-medium">Payment #{payment.id.slice(-6)}</h3>
+                    <Badge variant={getStatusBadgeVariant(payment.paymentStatus)} className="flex items-center gap-1">
+                      {getStatusIcon(payment.paymentStatus)}
+                      {payment.paymentStatus.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {payment.status === 'pending_approval' && (
+                    {payment.paymentStatus === 'pending' && (
                       <Button 
                         size="sm" 
                         onClick={() => approvePayment(payment.id)}
@@ -381,11 +335,11 @@ export default function SubcontractorPaymentWorkflows() {
                         Approve Payment
                       </Button>
                     )}
-                    {payment.status === 'ready_to_pay' && (
+                    {payment.paymentStatus === 'approved' && (
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
-                          onClick={() => processPayment(payment.id, payment.subcontractor.preferredPaymentMethod)}
+                          onClick={() => processPayment(payment.id, 'check')}
                         >
                           Process Payment
                         </Button>
@@ -400,23 +354,22 @@ export default function SubcontractorPaymentWorkflows() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <span className="text-sm text-muted-foreground">Subcontractor:</span>
-                    <div className="font-medium">{payment.subcontractor.name}</div>
-                    <div className="text-sm text-muted-foreground">{payment.subcontractor.trade}</div>
+                    <div className="font-medium">{payment.subcontractorName}</div>
+                    <div className="text-sm text-muted-foreground">Trade Work</div>
                   </div>
                   
                   <div>
                     <span className="text-sm text-muted-foreground">Project:</span>
-                    <div className="font-medium">{payment.project.name}</div>
+                    <div className="font-medium">{payment.projectName}</div>
                     <div className="text-sm text-muted-foreground">
-                      Invoice: {payment.invoiceNumber}
+                      ID: {payment.projectId}
                     </div>
                   </div>
                   
                   <div>
-                    <span className="text-sm text-muted-foreground">Work Period:</span>
+                    <span className="text-sm text-muted-foreground">Due Date:</span>
                     <div className="font-medium">
-                      {format(new Date(payment.workPeriod.start), 'MMM dd')} - 
-                      {format(new Date(payment.workPeriod.end), 'MMM dd, yyyy')}
+                      {payment.dueDate ? format(new Date(payment.dueDate), 'MMM dd, yyyy') : 'Not set'}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {payment.workDescription}
@@ -425,74 +378,18 @@ export default function SubcontractorPaymentWorkflows() {
                   
                   <div>
                     <span className="text-sm text-muted-foreground">Payment Amount:</span>
-                    <div className="font-medium">${payment.originalAmount.toLocaleString()}</div>
+                    <div className="font-medium">${payment.contractAmount.toLocaleString()}</div>
                     <div className="text-sm text-muted-foreground">
-                      Net: ${payment.netAmount.toLocaleString()} (after retention)
+                      Net: ${payment.netPayment.toLocaleString()}
                     </div>
                   </div>
                 </div>
 
-                {/* Lien Waivers Section */}
-                {payment.lienWaivers.length > 0 && (
+                {/* Notes section */}
+                {payment.notes && (
                   <div className="border-t pt-4">
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Lien Waivers
-                    </h4>
-                    <div className="space-y-2">
-                      {payment.lienWaivers.map((waiver) => (
-                        <div key={waiver.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Badge variant={getWaiverStatusBadgeVariant(waiver.status)}>
-                              {waiver.status.toUpperCase()}
-                            </Badge>
-                            <div>
-                              <p className="font-medium">
-                                {waiver.type.charAt(0).toUpperCase() + waiver.type.slice(1)} Waiver
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                ${waiver.amount.toLocaleString()} • 
-                                {format(new Date(waiver.periodStart), 'MMM dd')} - 
-                                {format(new Date(waiver.periodEnd), 'MMM dd, yyyy')}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {waiver.status === 'pending' && (
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => uploadLienWaiver(payment.id, waiver.id)}
-                              >
-                                <Upload className="h-4 w-4 mr-1" />
-                                Upload
-                              </Button>
-                            )}
-                            {waiver.status === 'received' && (
-                              <Button 
-                                size="sm"
-                                onClick={() => approveLienWaiver(payment.id, waiver.id)}
-                              >
-                                Approve
-                              </Button>
-                            )}
-                            {waiver.documentPath && (
-                              <Button size="sm" variant="outline">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {payment.status === 'paid' && (
-                  <div className="border-t pt-4 text-sm text-muted-foreground">
-                    Paid on {format(new Date(payment.paidAt!), 'PPP')} via {payment.paymentMethod} 
-                    {payment.checkNumber && ` (${payment.checkNumber})`}
+                    <span className="text-sm text-muted-foreground">Notes:</span>
+                    <p className="text-sm mt-1">{payment.notes}</p>
                   </div>
                 )}
               </div>

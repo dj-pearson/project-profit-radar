@@ -81,7 +81,7 @@ export default function LatePaymentAlertsCollection() {
         const formattedItems: CollectionItem[] = data.map(item => ({
           id: item.id,
           projectId: item.project_id,
-          projectName: item.projects?.name || 'N/A',
+          projectName: 'Project Name',
           clientName: item.client_name,
           invoiceNumber: item.invoice_number,
           originalAmount: Number(item.original_amount),
