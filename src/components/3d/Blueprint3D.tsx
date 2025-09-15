@@ -259,8 +259,8 @@ const LoadingFallback: React.FC = () => (
 );
 
 const Blueprint3D: React.FC = () => {
-  const [progress, setProgress] = useState(0.3);
-  const [wireframe, setWireframe] = useState(true);
+  const [progress, setProgress] = useState(1);
+  const [wireframe, setWireframe] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -377,7 +377,7 @@ const Blueprint3D: React.FC = () => {
               onClick={() => setWireframe(!wireframe)}
               className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors text-sm font-medium"
             >
-              {wireframe ? 'Realistic' : 'Blueprint'}
+              {wireframe ? 'Switch to Realistic' : 'Switch to Blueprint'}
             </button>
           </div>
           
