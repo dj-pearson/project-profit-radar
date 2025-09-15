@@ -17,32 +17,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       // Refetch on reconnect
       refetchOnReconnect: true,
-      // Error handling
-      onError: (error: any) => {
-        console.error('Query error:', error);
-        if (error?.message && !error.message.includes('aborted')) {
-          toast({
-            title: "Data Loading Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      },
     },
     mutations: {
       // Retry mutations once
       retry: 1,
-      // Error handling for mutations
-      onError: (error: any) => {
-        console.error('Mutation error:', error);
-        if (error?.message) {
-          toast({
-            title: "Operation Failed",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      },
     },
   },
 });
