@@ -31,6 +31,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { RootAdminOnly } from '@/components/PermissionGate';
 
 interface AuditStats {
   totalEvents: number;
@@ -302,16 +303,30 @@ const ComplianceAudit = () => {
   }
 
   return (
-    <DashboardLayout title="SOC 2 Compliance Audit">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-center sm:text-left">
-            <h1 className="text-xl sm:text-2xl font-bold">SOC 2 Compliance Audit</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Comprehensive audit trail for compliance monitoring and reporting
-            </p>
-          </div>
+    <RootAdminOnly fallback={
+      <DashboardLayout title="Access Denied">
+        <div className="text-center py-8">
+          <Shield className="mx-auto h-12 w-12 mb-4 text-muted-foreground" />
+          <h2 className="text-xl font-semibold mb-2">System Compliance Audit</h2>
+          <p className="text-muted-foreground mb-4">
+            This system-wide compliance audit interface is restricted to root administrators only.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Contact your system administrator if you need access to compliance reporting features.
+          </p>
+        </div>
+      </DashboardLayout>
+    }>
+      <DashboardLayout title="SOC 2 Compliance Audit">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold">System-Wide SOC 2 Compliance Audit</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                System-wide audit trail for compliance monitoring and reporting (Root Admin Only)
+              </p>
+            </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
               <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -693,17 +708,18 @@ const ComplianceAudit = () => {
                      setEditingEvent(null);
                    }}
                    className="w-full sm:w-auto"
-                 >
-                   Cancel
-                 </Button>
-               </div>
-             </div>
-           )}
-         </DialogContent>
-       </Dialog>
-       </div>
-     </DashboardLayout>
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+        </div>
+      </DashboardLayout>
+    </RootAdminOnly>
    );
- };
+  };
 
- export default ComplianceAudit;
+  export default ComplianceAudit;

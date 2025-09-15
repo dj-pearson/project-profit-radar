@@ -245,7 +245,7 @@ export const dashboardAreas: DashboardArea[] = [
         label: "Safety & Compliance",
         items: [
           { title: "Safety Management", url: "/safety", icon: Shield, roles: ["admin", "project_manager", "field_supervisor", "root_admin"] },
-          { title: "Compliance Audit", url: "/compliance-audit", icon: FileText, roles: ["admin", "root_admin"] },
+          { title: "Compliance Audit", url: "/compliance-audit", icon: FileText, roles: ["root_admin"] },
           { title: "GDPR Compliance", url: "/gdpr-compliance", icon: Lock, roles: ["admin", "root_admin"] }
         ]
       },

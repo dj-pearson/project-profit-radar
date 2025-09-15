@@ -53,7 +53,7 @@ export const PERMISSIONS: Permission[] = [
   { resource: 'blog_manager', action: 'manage', roles: ['root_admin'] },
   { resource: 'rate_limiting', action: 'manage', roles: ['root_admin'] },
   { resource: 'security_monitoring', action: 'read', roles: ['root_admin'] },
-  { resource: 'compliance_audit', action: 'read', roles: ['root_admin', 'admin'] },
+  { resource: 'compliance_audit', action: 'read', roles: ['root_admin'] },
   { resource: 'gdpr_compliance', action: 'manage', roles: ['root_admin', 'admin'] },
 ];
 
@@ -97,7 +97,7 @@ export const usePermissions = () => {
       '/materials': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
       '/equipment': ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff'],
       '/safety': ['root_admin', 'admin', 'project_manager', 'field_supervisor'],
-      '/compliance-audit': ['root_admin', 'admin'],
+      '/compliance-audit': ['root_admin'],
       '/gdpr-compliance': ['root_admin', 'admin'],
       '/security-monitoring': ['root_admin'],
       '/rate-limiting': ['root_admin'],

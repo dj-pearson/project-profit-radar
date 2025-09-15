@@ -468,7 +468,7 @@ export const hierarchicalNavigation: NavigationArea[] = [
             title: "Compliance Audit",
             url: "/compliance-audit",
             icon: FileText,
-            roles: ["admin", "root_admin"],
+            roles: ["root_admin"],
           },
           {
             title: "GDPR Compliance",
