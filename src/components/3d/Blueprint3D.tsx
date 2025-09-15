@@ -127,18 +127,18 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
       {foundationHeight > 0 && (
         <>
           {/* Step 1 */}
-          <mesh position={[0, -0.3, -2.2]}>
-            <boxGeometry args={[2, 0.2, 0.3]} />
+          <mesh position={[2.2, -0.3, 0]}>
+            <boxGeometry args={[0.3, 0.2, 2]} />
             <meshStandardMaterial {...foundationMaterial} />
           </mesh>
           {/* Step 2 */}
-          <mesh position={[0, -0.1, -1.9]}>
-            <boxGeometry args={[2, 0.2, 0.3]} />
+          <mesh position={[1.9, -0.1, 0]}>
+            <boxGeometry args={[0.3, 0.2, 2]} />
             <meshStandardMaterial {...foundationMaterial} />
           </mesh>
           {/* Step 3 */}
-          <mesh position={[0, 0.1, -1.6]}>
-            <boxGeometry args={[2, 0.2, 0.3]} />
+          <mesh position={[1.6, 0.1, 0]}>
+            <boxGeometry args={[0.3, 0.2, 2]} />
             <meshStandardMaterial {...foundationMaterial} />
           </mesh>
         </>
