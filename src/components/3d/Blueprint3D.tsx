@@ -123,6 +123,27 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
         </mesh>
       )}
 
+      {/* Stairs */}
+      {foundationHeight > 0 && (
+        <>
+          {/* Step 1 */}
+          <mesh position={[0, -0.3, -2.2]}>
+            <boxGeometry args={[2, 0.2, 0.3]} />
+            <meshStandardMaterial {...foundationMaterial} />
+          </mesh>
+          {/* Step 2 */}
+          <mesh position={[0, -0.1, -1.9]}>
+            <boxGeometry args={[2, 0.2, 0.3]} />
+            <meshStandardMaterial {...foundationMaterial} />
+          </mesh>
+          {/* Step 3 */}
+          <mesh position={[0, 0.1, -1.6]}>
+            <boxGeometry args={[2, 0.2, 0.3]} />
+            <meshStandardMaterial {...foundationMaterial} />
+          </mesh>
+        </>
+      )}
+
       {/* Blueprint Grid - Always show for technical look */}
       <GridLines />
     </group>
