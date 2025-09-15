@@ -113,13 +113,28 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
   const [showAddItem, setShowAddItem] = useState(false);
   const [editingItem, setEditingItem] = useState<PunchListItem | null>(null);
 
-  const [formData, setFormData] = useState({
+  type FormState = {
+    item_number: string;
+    title: string;
+    description: string;
+    location: string;
+    category: PunchListItem['category'];
+    priority: PunchListItem['priority'];
+    trade: string;
+    assigned_to: string;
+    assigned_company: string;
+    target_completion_date: string;
+    estimated_cost: string;
+    notes: string;
+  };
+
+  const [formData, setFormData] = useState<FormState>({
     item_number: '',
     title: '',
     description: '',
     location: '',
-    category: 'deficiency' as const,
-    priority: 'medium' as const,
+    category: 'deficiency',
+    priority: 'medium',
     trade: '',
     assigned_to: '',
     assigned_company: '',

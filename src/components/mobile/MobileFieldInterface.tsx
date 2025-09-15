@@ -15,6 +15,7 @@ import {
 
 interface MobileFieldInterfaceProps {
   className?: string;
+  projectId?: string;
 }
 
 export const MobileFieldInterface: React.FC<MobileFieldInterfaceProps> = ({ className }) => {

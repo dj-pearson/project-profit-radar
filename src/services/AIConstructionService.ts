@@ -113,13 +113,13 @@ class AIConstructionService {
       };
 
       // Store assessment for historical tracking
-      await supabase
+      await (supabase as any)
         .from('ai_quality_analysis')
         .insert([{
           project_id: projectId,
           analysis_type: 'risk_assessment',
-          analysis_data: assessment,
-          confidence_score: assessment.confidenceLevel
+          analysis_results: assessment as any,
+          confidence_score: assessment.confidenceLevel,
         }]);
 
       return assessment;

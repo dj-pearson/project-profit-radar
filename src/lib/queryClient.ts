@@ -10,7 +10,7 @@ export const queryClient = new QueryClient({
       // Cache data for 5 minutes by default
       staleTime: 5 * 60 * 1000,
       // Keep data in cache for 10 minutes
-      cacheTime: 10 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       // Retry failed requests 2 times
       retry: 2,
       // Don't refetch on window focus for better mobile experience
@@ -204,12 +204,12 @@ export const cacheUtils = {
     const queryCache = queryClient.getQueryCache();
     const queries = queryCache.getAll();
     
-    return {
-      totalQueries: queries.length,
-      staleQueries: queries.filter(q => q.isStale()).length,
-      fetchingQueries: queries.filter(q => q.isFetching()).length,
-      cacheSize: JSON.stringify(queryCache).length,
-    };
+      return {
+        totalQueries: queries.length,
+        staleQueries: queries.filter(q => (q as any).isStale?.()).length,
+        fetchingQueries: queries.filter(q => (q as any).state?.fetchStatus === 'fetching').length,
+        cacheSize: JSON.stringify(queryCache).length,
+      };
   },
 };
 
@@ -224,10 +224,10 @@ export const devTools = {
       console.table(
         queries.map(query => ({
           queryKey: JSON.stringify(query.queryKey),
-          state: query.state.status,
-          dataUpdatedAt: new Date(query.state.dataUpdatedAt).toLocaleTimeString(),
-          isStale: query.isStale(),
-          isFetching: query.isFetching(),
+          state: (query as any).state?.status,
+          dataUpdatedAt: new Date(((query as any).state?.dataUpdatedAt ?? 0)).toLocaleTimeString(),
+          isStale: (query as any).isStale?.(),
+          isFetching: (query as any).state?.fetchStatus === 'fetching',
         }))
       );
     }

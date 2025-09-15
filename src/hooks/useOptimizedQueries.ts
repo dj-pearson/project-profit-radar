@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -188,12 +189,12 @@ export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
             : 0,
         },
         financial: {
-          totalInvoiced: invoices.reduce((sum, i) => sum + i.amount, 0),
-          paidInvoices: invoices.filter(i => i.status === 'paid').length,
-          overdueInvoices: invoices.filter(i => 
-            i.status !== 'paid' && new Date(i.due_date) < new Date()
+          totalInvoiced: invoices.reduce((sum, i: any) => sum + ((i?.amount as number) || 0), 0),
+          paidInvoices: invoices.filter((i: any) => i?.status === 'paid').length,
+          overdueInvoices: invoices.filter((i: any) => 
+            i?.status !== 'paid' && i?.due_date && new Date(i.due_date) < new Date()
           ).length,
-          monthlyExpenses: expenses.reduce((sum, e) => sum + e.amount, 0),
+          monthlyExpenses: expenses.reduce((sum, e: any) => sum + ((e?.amount as number) || 0), 0),
         },
         tasks: {
           total: tasks.length,
@@ -392,8 +393,8 @@ export const useBackgroundSync = () => {
         },
         (payload) => {
           // Invalidate specific project if we know which one
-          if (payload.new?.project_id) {
-            invalidateQueries.project(payload.new.project_id);
+          if ((payload as any).new?.project_id) {
+            invalidateQueries.project((payload as any).new.project_id);
           }
           invalidateQueries.dashboard();
         }
@@ -419,17 +420,17 @@ export const useQueryPerformance = () => {
       const queryCache = queryClient.getQueryCache();
       const queries = queryCache.getAll();
       
-      return {
-        totalQueries: queries.length,
-        staleQueries: queries.filter(q => q.isStale()).length,
-        fetchingQueries: queries.filter(q => q.isFetching()).length,
-        errorQueries: queries.filter(q => q.isError()).length,
-      };
+        return {
+          totalQueries: queries.length,
+          staleQueries: queries.filter(q => (q as any).isStale?.()).length,
+          fetchingQueries: queries.filter(q => (q as any).state?.fetchStatus === 'fetching').length,
+          errorQueries: queries.filter(q => (q as any).state?.status === 'error').length,
+        };
     },
     
     clearStaleQueries: () => {
       const queryCache = queryClient.getQueryCache();
-      const staleQueries = queryCache.getAll().filter(q => q.isStale());
+        const staleQueries = queryCache.getAll().filter(q => (q as any).isStale?.());
       
       staleQueries.forEach(query => {
         queryClient.removeQueries({ queryKey: query.queryKey });
