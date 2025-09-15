@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Box } from '@react-three/drei';
-import { Group, Vector3, BufferGeometry, Float32BufferAttribute } from 'three';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Group, Vector3, BufferGeometry, BoxGeometry, MeshStandardMaterial } from 'three';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 
 interface ConstructionPhase {
@@ -34,57 +34,64 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
   return (
     <group ref={groupRef}>
       {/* Foundation */}
-      <Box
-        position={[0, foundationHeight / 2 - 0.5, 0]}
-        args={[4, foundationHeight, 3]}
-        visible={foundationHeight > 0}
-      >
-        <meshStandardMaterial 
-          color="#8B5CF6" 
-          wireframe={wireframe}
-          transparent
-          opacity={wireframe ? 0.8 : 0.9}
-        />
-      </Box>
+      {foundationHeight > 0 && (
+        <mesh position={[0, foundationHeight / 2 - 0.5, 0]}>
+          <boxGeometry args={[4, foundationHeight, 3]} />
+          <meshStandardMaterial 
+            color="#8B5CF6" 
+            wireframe={wireframe}
+            transparent
+            opacity={wireframe ? 0.8 : 0.9}
+          />
+        </mesh>
+      )}
 
       {/* Structure Pillars */}
       {structureHeight > 0 && (
         <>
-          <Box position={[-1.5, structureHeight / 2 + 0.5, -1]} args={[0.3, structureHeight, 0.3]}>
+          <mesh position={[-1.5, structureHeight / 2 + 0.5, -1]}>
+            <boxGeometry args={[0.3, structureHeight, 0.3]} />
             <meshStandardMaterial color="#06B6D4" wireframe={wireframe} transparent opacity={0.9} />
-          </Box>
-          <Box position={[1.5, structureHeight / 2 + 0.5, -1]} args={[0.3, structureHeight, 0.3]}>
+          </mesh>
+          <mesh position={[1.5, structureHeight / 2 + 0.5, -1]}>
+            <boxGeometry args={[0.3, structureHeight, 0.3]} />
             <meshStandardMaterial color="#06B6D4" wireframe={wireframe} transparent opacity={0.9} />
-          </Box>
-          <Box position={[-1.5, structureHeight / 2 + 0.5, 1]} args={[0.3, structureHeight, 0.3]}>
+          </mesh>
+          <mesh position={[-1.5, structureHeight / 2 + 0.5, 1]}>
+            <boxGeometry args={[0.3, structureHeight, 0.3]} />
             <meshStandardMaterial color="#06B6D4" wireframe={wireframe} transparent opacity={0.9} />
-          </Box>
-          <Box position={[1.5, structureHeight / 2 + 0.5, 1]} args={[0.3, structureHeight, 0.3]}>
+          </mesh>
+          <mesh position={[1.5, structureHeight / 2 + 0.5, 1]}>
+            <boxGeometry args={[0.3, structureHeight, 0.3]} />
             <meshStandardMaterial color="#06B6D4" wireframe={wireframe} transparent opacity={0.9} />
-          </Box>
+          </mesh>
         </>
       )}
 
       {/* Walls */}
       {wallsHeight > 0 && (
         <>
-          <Box position={[0, wallsHeight / 2 + 0.5, -1.4]} args={[3.7, wallsHeight, 0.2]}>
+          <mesh position={[0, wallsHeight / 2 + 0.5, -1.4]}>
+            <boxGeometry args={[3.7, wallsHeight, 0.2]} />
             <meshStandardMaterial color="#10B981" wireframe={wireframe} transparent opacity={0.8} />
-          </Box>
-          <Box position={[0, wallsHeight / 2 + 0.5, 1.4]} args={[3.7, wallsHeight, 0.2]}>
+          </mesh>
+          <mesh position={[0, wallsHeight / 2 + 0.5, 1.4]}>
+            <boxGeometry args={[3.7, wallsHeight, 0.2]} />
             <meshStandardMaterial color="#10B981" wireframe={wireframe} transparent opacity={0.8} />
-          </Box>
-          <Box position={[-1.9, wallsHeight / 2 + 0.5, 0]} args={[0.2, wallsHeight, 2.6]}>
+          </mesh>
+          <mesh position={[-1.9, wallsHeight / 2 + 0.5, 0]}>
+            <boxGeometry args={[0.2, wallsHeight, 2.6]} />
             <meshStandardMaterial color="#10B981" wireframe={wireframe} transparent opacity={0.8} />
-          </Box>
+          </mesh>
         </>
       )}
 
       {/* Roof */}
       {roofHeight > 0 && (
-        <Box position={[0, 2.5 + roofHeight / 2, 0]} args={[4.2, roofHeight, 3.2]}>
+        <mesh position={[0, 2.5 + roofHeight / 2, 0]}>
+          <boxGeometry args={[4.2, roofHeight, 3.2]} />
           <meshStandardMaterial color="#F59E0B" wireframe={wireframe} transparent opacity={0.9} />
-        </Box>
+        </mesh>
       )}
 
       {/* Blueprint Grid */}
