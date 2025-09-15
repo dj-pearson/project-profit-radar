@@ -150,7 +150,7 @@ const availableShortcuts = [
   'Documents', 'Safety Forms', 'Equipment', 'Contacts', 'Financial Dashboard'
 ];
 
-export const UserSettings = () => {
+const UserSettings = () => {
   const { userProfile } = useAuth();
   const { toast } = useToast();
   const { accessibility, updateAccessibility } = useTheme();
@@ -716,3 +716,5 @@ export const UserSettings = () => {
     </DashboardLayout>
   );
 };
+
+export default UserSettings;
