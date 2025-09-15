@@ -31,22 +31,34 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
   const wallsHeight = Math.max(0, Math.min((progress - 0.5) * 5, 2));
   const roofHeight = Math.max(0, Math.min((progress - 0.7) * 5, 0.5));
 
-  // Material configurations
-  const foundationMaterial = wireframe 
-    ? { color: "#8B5CF6", wireframe: true, transparent: true, opacity: 0.8 }
-    : { color: "#6B7280", roughness: 0.9, metalness: 0.1 }; // Concrete gray
+  // Enhanced wireframe materials with better colors and glow effects
+  const foundationMaterial = {
+    color: wireframe ? "#8B5CF6" : "#6B7280",
+    wireframe: wireframe,
+    transparent: true,
+    opacity: wireframe ? 0.9 : 0.8,
+  };
 
-  const structureMaterial = wireframe
-    ? { color: "#06B6D4", wireframe: true, transparent: true, opacity: 0.9 }
-    : { color: "#92400E", roughness: 0.8, metalness: 0.2 }; // Steel/wood brown
+  const structureMaterial = {
+    color: wireframe ? "#06B6D4" : "#92400E",
+    wireframe: wireframe,
+    transparent: true,
+    opacity: wireframe ? 0.9 : 0.8,
+  };
 
-  const wallMaterial = wireframe
-    ? { color: "#10B981", wireframe: true, transparent: true, opacity: 0.8 }
-    : { color: "#DC2626", roughness: 0.7, metalness: 0.1 }; // Brick red
+  const wallMaterial = {
+    color: wireframe ? "#10B981" : "#DC2626",
+    wireframe: wireframe,
+    transparent: true,
+    opacity: wireframe ? 0.9 : 0.8,
+  };
 
-  const roofMaterial = wireframe
-    ? { color: "#F59E0B", wireframe: true, transparent: true, opacity: 0.9 }
-    : { color: "#374151", roughness: 0.6, metalness: 0.3 }; // Dark gray shingles
+  const roofMaterial = {
+    color: wireframe ? "#F59E0B" : "#374151",
+    wireframe: wireframe,
+    transparent: true,
+    opacity: wireframe ? 0.9 : 0.8,
+  };
 
   return (
     <group ref={groupRef}>
@@ -80,20 +92,12 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
         </>
       )}
 
-      {/* Walls */}
+      {/* Walls - Enhanced wireframe structure */}
       {wallsHeight > 0 && (
         <>
-          {/* Front wall with door opening */}
-          <mesh position={[-0.8, wallsHeight / 2 + 0.5, -1.4]}>
-            <boxGeometry args={[1.5, wallsHeight, 0.2]} />
-            <meshStandardMaterial {...wallMaterial} />
-          </mesh>
-          <mesh position={[0.8, wallsHeight / 2 + 0.5, -1.4]}>
-            <boxGeometry args={[1.5, wallsHeight, 0.2]} />
-            <meshStandardMaterial {...wallMaterial} />
-          </mesh>
-          <mesh position={[0, wallsHeight * 0.8 + 0.5, -1.4]}>
-            <boxGeometry args={[0.8, wallsHeight * 0.4, 0.2]} />
+          {/* Front wall */}
+          <mesh position={[0, wallsHeight / 2 + 0.5, -1.4]}>
+            <boxGeometry args={[3.7, wallsHeight, 0.2]} />
             <meshStandardMaterial {...wallMaterial} />
           </mesh>
           
@@ -103,84 +107,24 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
             <meshStandardMaterial {...wallMaterial} />
           </mesh>
           
-          {/* Side wall with window opening */}
+          {/* Side wall */}
           <mesh position={[-1.9, wallsHeight / 2 + 0.5, 0]}>
             <boxGeometry args={[0.2, wallsHeight, 2.6]} />
             <meshStandardMaterial {...wallMaterial} />
           </mesh>
-          
-          {/* Right side wall - open for visibility */}
         </>
       )}
 
-      {/* Windows (only in realistic mode) */}
-      {wallsHeight > 0 && !wireframe && (
-        <>
-          {/* Front door */}
-          <mesh position={[0, 0.9, -1.3]}>
-            <boxGeometry args={[0.8, 1.8, 0.1]} />
-            <meshStandardMaterial color="#8B4513" roughness={0.8} />
-          </mesh>
-          
-          {/* Side window */}
-          <mesh position={[-1.8, 1.2, 0]}>
-            <boxGeometry args={[0.1, 0.8, 1.0]} />
-            <meshStandardMaterial color="#87CEEB" transparent opacity={0.7} />
-          </mesh>
-        </>
-      )}
-
-      {/* Enhanced Roof with proper slope */}
+      {/* Roof */}
       {roofHeight > 0 && (
-        <>
-          {/* Main roof */}
-          <mesh position={[0, 2.7, 0]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[4.4, 0.3, 3.4]} />
-            <meshStandardMaterial {...roofMaterial} />
-          </mesh>
-          
-          {/* Roof details (only in realistic mode) */}
-          {!wireframe && (
-            <>
-              {/* Chimney */}
-              <mesh position={[1.2, 3.2, 0.8]}>
-                <boxGeometry args={[0.4, 0.8, 0.4]} />
-                <meshStandardMaterial color="#8B4513" roughness={0.9} />
-              </mesh>
-              
-              {/* Roof ridge */}
-              <mesh position={[0, 2.85, 0]}>
-                <boxGeometry args={[4.5, 0.1, 0.2]} />
-                <meshStandardMaterial color="#2D3748" />
-              </mesh>
-            </>
-          )}
-        </>
+        <mesh position={[0, 2.5 + roofHeight / 2, 0]}>
+          <boxGeometry args={[4.2, roofHeight, 3.2]} />
+          <meshStandardMaterial {...roofMaterial} />
+        </mesh>
       )}
 
-      {/* Ground/landscaping (only in realistic mode and when complete) */}
-      {!wireframe && progress > 0.8 && (
-        <>
-          {/* Driveway */}
-          <mesh position={[0, -0.45, -3]}>
-            <boxGeometry args={[1.5, 0.1, 2]} />
-            <meshStandardMaterial color="#4A5568" roughness={0.8} />
-          </mesh>
-          
-          {/* Grass areas */}
-          <mesh position={[-3, -0.45, 0]}>
-            <boxGeometry args={[2, 0.05, 6]} />
-            <meshStandardMaterial color="#22543D" roughness={1.0} />
-          </mesh>
-          <mesh position={[3, -0.45, 0]}>
-            <boxGeometry args={[2, 0.05, 6]} />
-            <meshStandardMaterial color="#22543D" roughness={1.0} />
-          </mesh>
-        </>
-      )}
-
-      {/* Blueprint Grid */}
-      {wireframe && <GridLines />}
+      {/* Blueprint Grid - Always show for technical look */}
+      <GridLines />
     </group>
   );
 };
@@ -259,8 +203,8 @@ const LoadingFallback: React.FC = () => (
 );
 
 const Blueprint3D: React.FC = () => {
-  const [progress, setProgress] = useState(1);
-  const [wireframe, setWireframe] = useState(false);
+  const [progress, setProgress] = useState(0.8);
+  const [wireframe, setWireframe] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -377,7 +321,7 @@ const Blueprint3D: React.FC = () => {
               onClick={() => setWireframe(!wireframe)}
               className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors text-sm font-medium"
             >
-              {wireframe ? 'Switch to Realistic' : 'Switch to Blueprint'}
+              {wireframe ? 'Hide Blueprint' : 'Show Blueprint'}
             </button>
           </div>
           
