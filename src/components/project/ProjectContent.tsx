@@ -6,6 +6,11 @@ import { Progress } from '@/components/ui/progress';
 import { ProjectWithRelations } from '@/services/projectService';
 import ProjectEquipmentView from '@/components/equipment/ProjectEquipmentView';
 import { ConstructionTimelineManager } from '@/components/construction/ConstructionTimelineManager';
+import { ProjectDailyReports } from '@/components/project/tabs/ProjectDailyReports';
+import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
+import { ProjectRFIs } from '@/components/project/tabs/ProjectRFIs';
+import { ProjectSubmittals } from '@/components/project/tabs/ProjectSubmittals';
+import { ProjectChangeOrders } from '@/components/project/tabs/ProjectChangeOrders';
 import {
   Building2,
   Calendar,
@@ -250,29 +255,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderDailyReports = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            Daily Reports
-          </span>
-          <Button onClick={() => onNavigate('/daily-reports')}>
-            Manage Daily Reports
-          </Button>
-        </CardTitle>
-        <CardDescription>View and manage daily progress reports</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">View all daily reports for this project</p>
-          <Button onClick={() => onNavigate('/daily-reports')} variant="outline">
-            Go to Daily Reports
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectDailyReports projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderMaterials = () => (
@@ -314,29 +297,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderEstimates = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <Calculator className="h-5 w-5 mr-2" />
-            Project Estimates
-          </span>
-          <Button onClick={() => onNavigate('/estimates')}>
-            Manage Estimates
-          </Button>
-        </CardTitle>
-        <CardDescription>Manage project cost estimates and proposals</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <Calculator className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">Create and manage estimates for this project</p>
-          <Button onClick={() => onNavigate('/estimates')} variant="outline">
-            Go to Estimates
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectEstimates projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderJobCosting = () => (
@@ -394,32 +355,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderChangeOrders = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <FileX className="h-5 w-5 mr-2" />
-          Change Orders
-        </CardTitle>
-        <CardDescription>Track project modifications and approvals</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {project.change_orders && project.change_orders.length > 0 ? (
-          <div className="space-y-2">
-            {project.change_orders.map((order: any) => (
-              <div key={order.id} className="flex items-center justify-between p-2 border rounded">
-                <div>
-                  <p className="font-medium">{order.title}</p>
-                  <p className="text-sm text-muted-foreground">{order.status}</p>
-                </div>
-                <p className="font-medium">{formatCurrency(order.amount)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-4">No change orders</p>
-        )}
-      </CardContent>
-    </Card>
+    <ProjectChangeOrders projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderCommunication = () => (
@@ -449,55 +385,11 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderRFIs = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <HelpCircle className="h-5 w-5 mr-2" />
-            RFI's (Requests for Information)
-          </span>
-          <Button onClick={() => onNavigate('/rfis')}>
-            Manage RFIs
-          </Button>
-        </CardTitle>
-        <CardDescription>Manage project questions and clarifications</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <HelpCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">Create and track RFIs for this project</p>
-          <Button onClick={() => onNavigate('/rfis')} variant="outline">
-            Go to RFIs
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectRFIs projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderSubmittals = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <Send className="h-5 w-5 mr-2" />
-            Submittals
-          </span>
-          <Button onClick={() => onNavigate('/submittals')}>
-            Manage Submittals
-          </Button>
-        </CardTitle>
-        <CardDescription>Track submittal documents and approvals</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <Send className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">Track submittal documents and approvals</p>
-          <Button onClick={() => onNavigate('/submittals')} variant="outline">
-            Go to Submittals
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectSubmittals projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderContacts = () => (
