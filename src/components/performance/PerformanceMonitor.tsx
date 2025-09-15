@@ -37,7 +37,8 @@ export const PerformanceMonitor: React.FC = () => {
   const updateMetrics = () => {
     const cacheStats = getCacheStats();
     const performanceEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-    const loadTime = performanceEntries[0]?.loadEventEnd - performanceEntries[0]?.navigationStart || 0;
+    // Use startTime instead of deprecated navigationStart
+    const loadTime = performanceEntries[0]?.loadEventEnd - performanceEntries[0]?.startTime || 0;
     
     // Estimate memory usage (simplified)
     const memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
@@ -227,7 +228,8 @@ export const PerformanceWarning: React.FC = () => {
       
       // Check load time
       const performanceEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-      const loadTime = performanceEntries[0]?.loadEventEnd - performanceEntries[0]?.navigationStart || 0;
+      // Use startTime instead of deprecated navigationStart
+      const loadTime = performanceEntries[0]?.loadEventEnd - performanceEntries[0]?.startTime || 0;
       
       if (loadTime > 5000) {
         issues.push('Slow page load time detected');
