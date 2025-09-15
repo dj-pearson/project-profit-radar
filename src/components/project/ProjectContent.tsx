@@ -170,14 +170,44 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderProgress = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <TrendingUp className="h-5 w-5 mr-2" />
-          Project Progress
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2" />
+            Project Progress
+          </span>
+          <Button onClick={() => onNavigate('/progress-tracking')}>
+            Manage Progress
+          </Button>
         </CardTitle>
         <CardDescription>Track project milestones and completion status</CardDescription>
       </CardHeader>
       <CardContent>
-        <ConstructionTimelineManager projectId={project.id} />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Overall Progress</span>
+            <span className="text-sm text-muted-foreground">{project.completion_percentage}%</span>
+          </div>
+          <Progress value={project.completion_percentage} className="w-full" />
+          
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="text-center p-3 border rounded-lg">
+              <p className="text-lg font-bold">{project.tasks?.length || 0}</p>
+              <p className="text-xs text-muted-foreground">Total Tasks</p>
+            </div>
+            <div className="text-center p-3 border rounded-lg">
+              <p className="text-lg font-bold">
+                {project.tasks?.filter((task: any) => task.status === 'completed')?.length || 0}
+              </p>
+              <p className="text-xs text-muted-foreground">Completed</p>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <Button onClick={() => onNavigate('/progress-tracking')} variant="outline" className="w-full">
+              View Detailed Progress
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
