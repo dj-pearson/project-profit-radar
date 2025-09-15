@@ -11,6 +11,11 @@ import { ProjectEstimates } from '@/components/project/tabs/ProjectEstimates';
 import { ProjectRFIs } from '@/components/project/tabs/ProjectRFIs';
 import { ProjectSubmittals } from '@/components/project/tabs/ProjectSubmittals';
 import { ProjectChangeOrders } from '@/components/project/tabs/ProjectChangeOrders';
+import { ProjectMaterials } from '@/components/project/tabs/ProjectMaterials';
+import { ProjectJobCosting } from '@/components/project/tabs/ProjectJobCosting';
+import { ProjectContacts } from '@/components/project/tabs/ProjectContacts';
+import { ProjectPermits } from '@/components/project/tabs/ProjectPermits';
+import { ProjectPunchList } from '@/components/project/tabs/ProjectPunchList';
 import {
   Building2,
   Calendar,
@@ -259,37 +264,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderMaterials = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <Package className="h-5 w-5 mr-2" />
-            Materials & Inventory
-          </span>
-          <Button size="sm" onClick={() => onNavigate(`/projects/${project.id}/materials/new`)}>
-            Add Material
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {project.materials && project.materials.length > 0 ? (
-          <div className="space-y-2">
-            {project.materials.map((material: any) => (
-              <div key={material.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{material.name}</p>
-                  {material.description && (
-                    <p className="text-sm text-muted-foreground">{material.description}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-8">No materials added yet</p>
-        )}
-      </CardContent>
-    </Card>
+    <ProjectMaterials projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderEquipment = () => (
@@ -301,31 +276,11 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderJobCosting = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <DollarSign className="h-5 w-5 mr-2" />
-          Job Costing
-        </CardTitle>
-        <CardDescription>Track actual costs vs. estimates</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {project.job_costs && project.job_costs.length > 0 ? (
-          <div className="space-y-2">
-            {project.job_costs.map((cost: any) => (
-              <div key={cost.id} className="flex items-center justify-between p-2 border rounded">
-                <span>Job Cost</span>
-                <div className="text-right">
-                  <p className="text-sm">Total: {formatCurrency(cost.total_cost)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-4">No cost data available</p>
-        )}
-      </CardContent>
-    </Card>
+    <ProjectJobCosting 
+      projectId={project.id} 
+      projectBudget={project.budget}
+      onNavigate={onNavigate} 
+    />
   );
 
   const renderInvoicing = () => (
@@ -393,55 +348,11 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderContacts = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <Users className="h-5 w-5 mr-2" />
-            Project Contacts
-          </span>
-          <Button onClick={() => onNavigate('/crm/contacts')}>
-            Manage Contacts
-          </Button>
-        </CardTitle>
-        <CardDescription>Manage project team and stakeholder contacts</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">Manage project team and stakeholder contacts</p>
-          <Button onClick={() => onNavigate('/crm/contacts')} variant="outline">
-            Go to Contacts
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectContacts projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderPermits = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <Shield className="h-5 w-5 mr-2" />
-            Permits
-          </span>
-          <Button onClick={() => onNavigate('/permit-management')}>
-            Manage Permits
-          </Button>
-        </CardTitle>
-        <CardDescription>Track required permits and approvals</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">Track required permits and approvals</p>
-          <Button onClick={() => onNavigate('/permit-management')} variant="outline">
-            Go to Permits
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectPermits projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderWarranties = () => (
@@ -471,29 +382,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderPunchList = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <CheckSquare className="h-5 w-5 mr-2" />
-            Punch List
-          </span>
-          <Button onClick={() => onNavigate('/punch-list')}>
-            Manage Punch List
-          </Button>
-        </CardTitle>
-        <CardDescription>Track final items and project completion tasks</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-8">
-          <CheckSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground mb-4">Track final items and project completion tasks</p>
-          <Button onClick={() => onNavigate('/punch-list')} variant="outline">
-            Go to Punch List
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ProjectPunchList projectId={project.id} onNavigate={onNavigate} />
   );
 
   const renderDocuments = () => (
