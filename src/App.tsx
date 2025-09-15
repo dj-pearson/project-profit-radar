@@ -59,6 +59,7 @@ import {
   LazyPurchaseOrders,
   LazyVendors,
   LazyQuickBooksRouting,
+} from "@/utils/lazyRoutes";
 
 // People area pages
 import TeamManagement from "./pages/TeamManagement";
@@ -410,14 +411,13 @@ const App = () => {
             <NotificationPermission />
             <PerformanceMonitor />
             <Toaster />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </HelmetProvider>
-        </ThemeProvider>
-      </PlatformProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+          </Suspense>
+        </BrowserRouter>
+      </HelmetProvider>
+    </ThemeProvider>
+  </PlatformProvider>
+  </AuthProvider>
+</QueryClientProvider>
   );
 };
 

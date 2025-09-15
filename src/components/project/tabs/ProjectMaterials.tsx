@@ -162,14 +162,22 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
         .from('material_usage')
         .select(`
           *,
-          material:materials(*),
-          user_profile:user_profiles!used_by(first_name, last_name)
+          materials(*),
+          user_profiles(first_name, last_name)
         `)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMaterialUsage(data || []);
+      
+      // Transform data to match expected interface
+      const transformedData = data?.map(item => ({
+        ...item,
+        material: item.materials,
+        user_profile: item.user_profiles
+      })) || [];
+      
+      setMaterialUsage(transformedData);
     } catch (error: any) {
       console.error('Error loading material usage:', error);
       toast({
@@ -252,14 +260,21 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
         .insert([usageData])
         .select(`
           *,
-          material:materials(*),
-          user_profile:user_profiles!used_by(first_name, last_name)
+          materials(*),
+          user_profiles(first_name, last_name)
         `)
         .single();
 
       if (error) throw error;
 
-      setMaterialUsage([data, ...materialUsage]);
+      // Transform data to match expected interface  
+      const transformedData = {
+        ...data,
+        material: data.materials,
+        user_profile: data.user_profiles
+      };
+
+      setMaterialUsage([transformedData, ...materialUsage]);
       setNewUsage({
         material_id: '',
         quantity_used: '',
