@@ -159,33 +159,33 @@ const App = () => {
             <BrowserRouter>
               <Suspense fallback={<RouteLoadingFallback />}>
                 <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/marketplace" element={<APIMarketplace />} />
-              <Route path="/collaboration" element={<Collaboration />} />
-              <Route path="/mobile-testing" element={<MobileTesting />} />
-              <Route path="/mobile-dashboard" element={<MobileDashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/my-tasks" element={<MyTasks />} />
-              <Route path="/projects-hub" element={<ProjectsHub />} />
-              <Route path="/financial-hub" element={<FinancialHub />} />
-              <Route path="/people-hub" element={<PeopleHub />} />
-              <Route path="/operations-hub" element={<OperationsHub />} />
-              <Route path="/admin-hub" element={<AdminHub />} />
-              <Route path="/field-management" element={<FieldManagement />} />
-              <Route path="/user-settings" element={<UserSettings />} />
+              <Route path="/" element={<LazyIndex />} />
+              <Route path="/marketplace" element={<LazyAPIMarketplace />} />
+              <Route path="/collaboration" element={<LazyCollaboration />} />
+              <Route path="/mobile-testing" element={<LazyMobileTesting />} />
+              <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
+              <Route path="/dashboard" element={<LazyDashboard />} />
+              <Route path="/my-tasks" element={<LazyMyTasks />} />
+              <Route path="/projects-hub" element={<LazyProjectsHub />} />
+              <Route path="/financial-hub" element={<LazyFinancialHub />} />
+              <Route path="/people-hub" element={<LazyPeopleHub />} />
+              <Route path="/operations-hub" element={<LazyOperationsHub />} />
+              <Route path="/admin-hub" element={<LazyAdminHub />} />
+              <Route path="/field-management" element={<LazyFieldManagement />} />
+              <Route path="/user-settings" element={<LazyUserSettings />} />
               <Route
                 path="/subscription-settings"
-                element={<SubscriptionSettings />}
+                element={<LazySubscriptionSettings />}
               />
               <Route
                 path="/workflow-management"
-                element={<WorkflowManagement />}
+                element={<LazyWorkflowManagement />}
               />
-              <Route path="/workflow-testing" element={<WorkflowTesting />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/tools" element={<Tools />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/resources/:slug" element={<BlogPost />} />
+              <Route path="/workflow-testing" element={<LazyWorkflowTesting />} />
+              <Route path="/auth" element={<LazyAuth />} />
+              <Route path="/tools" element={<LazyTools />} />
+              <Route path="/resources" element={<LazyResources />} />
+              <Route path="/resources/:slug" element={<LazyBlogPost />} />
 
               {/* Marketing and landing page routes */}
               <Route path="/pricing" element={<PricingPage />} />
@@ -257,34 +257,34 @@ const App = () => {
               />
 
               {/* Project area routes */}
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/:projectId" element={<ProjectDetail />} />
-              <Route path="/projects/:projectId/tasks/new" element={<ProjectTaskCreate />} />
-              <Route path="/create-project" element={<CreateProject />} />
+              <Route path="/projects" element={<LazyProjects />} />
+              <Route path="/projects/:projectId" element={<LazyProjectDetail />} />
+              <Route path="/projects/:projectId/tasks/new" element={<LazyProjectTaskCreate />} />
+              <Route path="/create-project" element={<LazyCreateProject />} />
               <Route
                 path="/schedule-management"
-                element={<ScheduleManagement />}
+                element={<LazyScheduleManagement />}
               />
-              <Route path="/job-costing" element={<JobCosting />} />
-              <Route path="/daily-reports" element={<DailyReports />} />
-              <Route path="/rfis" element={<RFIs />} />
-              <Route path="/submittals" element={<Submittals />} />
-              <Route path="/change-orders" element={<ChangeOrders />} />
-              <Route path="/punch-list" element={<PunchList />} />
-              <Route path="/documents" element={<DocumentManagement />} />
-              <Route path="/materials" element={<Materials />} />
-              <Route path="/material-tracking" element={<MaterialTracking />} />
-              <Route path="/equipment" element={<Equipment />} />
+              <Route path="/job-costing" element={<LazyJobCosting />} />
+              <Route path="/daily-reports" element={<LazyDailyReports />} />
+              <Route path="/rfis" element={<LazyRFIs />} />
+              <Route path="/submittals" element={<LazySubmittals />} />
+              <Route path="/change-orders" element={<LazyChangeOrders />} />
+              <Route path="/punch-list" element={<LazyPunchList />} />
+              <Route path="/documents" element={<LazyDocumentManagement />} />
+              <Route path="/materials" element={<LazyMaterials />} />
+              <Route path="/material-tracking" element={<LazyMaterialTracking />} />
+              <Route path="/equipment" element={<LazyEquipment />} />
 
               {/* Financial area routes */}
-              <Route path="/financial" element={<FinancialDashboard />} />
-              <Route path="/estimates" element={<EstimatesHub />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/purchase-orders" element={<PurchaseOrders />} />
-              <Route path="/vendors" element={<Vendors />} />
+              <Route path="/financial" element={<LazyFinancialDashboard />} />
+              <Route path="/estimates" element={<LazyEstimatesHub />} />
+              <Route path="/reports" element={<LazyReports />} />
+              <Route path="/purchase-orders" element={<LazyPurchaseOrders />} />
+              <Route path="/vendors" element={<LazyVendors />} />
               <Route
                 path="/quickbooks-routing"
-                element={<QuickBooksRouting />}
+                element={<LazyQuickBooksRouting />}
               />
 
               {/* People area routes */}

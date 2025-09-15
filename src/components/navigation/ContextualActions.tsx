@@ -16,7 +16,8 @@ import {
   Zap,
   ExternalLink,
   Plus,
-  Link
+  Link,
+  Calculator
 } from 'lucide-react';
 import {
   DropdownMenu,
