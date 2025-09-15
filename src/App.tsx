@@ -4,6 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PlatformProvider } from "@/contexts/PlatformContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
@@ -149,10 +150,11 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-      <ThemeProvider>
-        <HelmetProvider>
-          <BrowserRouter>
-            <Routes>
+      <PlatformProvider>
+        <ThemeProvider>
+          <HelmetProvider>
+            <BrowserRouter>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/marketplace" element={<APIMarketplace />} />
               <Route path="/collaboration" element={<Collaboration />} />
@@ -404,10 +406,11 @@ const App = () => {
             <OfflineIndicator />
             <NotificationPermission />
             <Toaster />
-          </BrowserRouter>
-        </HelmetProvider>
-      </ThemeProvider>
-    </AuthProvider>
+            </BrowserRouter>
+          </HelmetProvider>
+        </ThemeProvider>
+      </PlatformProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

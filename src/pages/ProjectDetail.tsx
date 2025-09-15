@@ -7,6 +7,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { toast } from '@/hooks/use-toast';
 import { projectService, ProjectWithRelations } from '@/services/projectService';
+import { ContextualActions } from '@/components/navigation/ContextualActions';
+import { usePlatform } from '@/contexts/PlatformContext';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
 import {
@@ -19,6 +21,7 @@ const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { userProfile } = useAuth();
   const navigate = useNavigate();
+  const { setNavigationContext } = usePlatform();
   
   const [project, setProject] = useState<ProjectWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,10 +111,23 @@ const ProjectDetail = () => {
                   </Badge>
                 </div>
               </div>
-              <Button onClick={() => navigate(`/projects/${project.id}/edit`)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Project
-              </Button>
+              <div className="flex gap-4">
+                <div className="w-64">
+                  <ContextualActions
+                    context={{
+                      module: 'projects',
+                      entityType: 'project',
+                      entityId: project.id,
+                      entityData: project
+                    }}
+                    className="mb-4"
+                  />
+                </div>
+                <Button onClick={() => navigate(`/projects/${project.id}/edit`)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Project
+                </Button>
+              </div>
             </div>
 
             {/* Dynamic Content */}

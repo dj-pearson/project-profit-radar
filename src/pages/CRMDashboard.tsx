@@ -18,6 +18,8 @@ import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
+import { ContextualActions } from '@/components/navigation/ContextualActions';
+import { usePlatform } from '@/contexts/PlatformContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
   Users, 
@@ -436,6 +438,7 @@ const CRMDashboard = () => {
   const { user, userProfile, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setNavigationContext } = usePlatform();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -1131,32 +1134,47 @@ const CRMDashboard = () => {
                     ) : (
                       <div className="space-y-4">
                         {crmData.opportunities.map((opportunity) => (
-                          <OpportunityEditDialog key={opportunity.id} opportunity={opportunity} onUpdate={updateOpportunity}>
-                            <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center space-x-2">
-                                    <p className="font-medium truncate">{opportunity.name}</p>
-                                    <Badge variant="outline" className={`text-${getStageColor(opportunity.stage)}-600`}>
-                                      {opportunity.stage}
-                                    </Badge>
+                          <div key={opportunity.id} className="flex gap-4">
+                            <div className="flex-1">
+                              <OpportunityEditDialog opportunity={opportunity} onUpdate={updateOpportunity}>
+                                <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center space-x-2">
+                                        <p className="font-medium truncate">{opportunity.name}</p>
+                                        <Badge variant="outline" className={`text-${getStageColor(opportunity.stage)}-600`}>
+                                          {opportunity.stage}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        {opportunity.project_type || 'General Construction'}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-medium text-lg">{formatCurrency(opportunity.estimated_value)}</p>
+                                      <p className="text-sm text-muted-foreground">{opportunity.probability_percent}% probability</p>
+                                      {opportunity.expected_close_date && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Expected close: {formatDate(opportunity.expected_close_date)}
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {opportunity.project_type || 'General Construction'}
-                                  </p>
                                 </div>
-                                <div className="text-right">
-                                  <p className="font-medium text-lg">{formatCurrency(opportunity.estimated_value)}</p>
-                                  <p className="text-sm text-muted-foreground">{opportunity.probability_percent}% probability</p>
-                                  {opportunity.expected_close_date && (
-                                    <p className="text-xs text-muted-foreground">
-                                      Expected close: {formatDate(opportunity.expected_close_date)}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
+                              </OpportunityEditDialog>
                             </div>
-                          </OpportunityEditDialog>
+                            <div className="w-64">
+                              <ContextualActions
+                                context={{
+                                  module: 'crm',
+                                  entityType: 'opportunity',
+                                  entityId: opportunity.id,
+                                  entityData: opportunity
+                                }}
+                                className="h-fit"
+                              />
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
