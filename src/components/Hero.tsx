@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import InteractiveDashboard from "@/components/InteractiveDashboard";
-import SimpleMobileDashboard from "@/components/SimpleMobileDashboard";
+import Blueprint3D from "@/components/3d/Blueprint3D";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 
 const Hero = () => {
@@ -45,15 +44,9 @@ const Hero = () => {
             </p>
           </div>
           
-          {/* Dashboard - Mobile optimized */}
+          {/* Interactive 3D Blueprint */}
           <div className="relative order-1 lg:order-2">
-            {/* Show simple dashboard on mobile, full dashboard on desktop */}
-            <div className="block lg:hidden">
-              <SimpleMobileDashboard />
-            </div>
-            <div className="hidden lg:block">
-              <InteractiveDashboard />
-            </div>
+            <Blueprint3D />
           </div>
         </ResponsiveGrid>
       </ResponsiveContainer>
