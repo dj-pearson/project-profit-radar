@@ -12,12 +12,31 @@ import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { EstimatesTable } from "@/components/estimates/EstimatesTable";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { estimateService, EstimateStats } from "@/services/estimateService";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function EstimatesHub() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [stats, setStats] = useState<EstimateStats>({
+    totalEstimates: 0,
+    pendingValue: 0,
+    pendingCount: 0,
+    conversionRate: 0,
+    avgResponseTime: 0,
+    statusCounts: {
+      draft: 0,
+      sent: 0,
+      viewed: 0,
+      accepted: 0,
+      rejected: 0,
+      expired: 0
+    }
+  });
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { userProfile } = useAuth();
   const location = useLocation();
 
   const handleCreateEstimate = () => {
@@ -26,11 +45,35 @@ export default function EstimatesHub() {
 
   const handleEstimateCreated = () => {
     setIsCreateDialogOpen(false);
+    loadStats(); // Refresh stats after creating estimate
     toast({
       title: "Estimate Created",
       description: "New estimate has been created successfully.",
     });
   };
+
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      const estimateStats = await estimateService.getEstimateStats(userProfile?.company_id);
+      setStats(estimateStats);
+    } catch (error) {
+      console.error("Error loading estimate stats:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load estimate statistics",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadStats();
+    }
+  }, [userProfile?.company_id]);
 
   // LEAN Navigation: Auto-open estimate form from opportunity
   useEffect(() => {
@@ -79,9 +122,13 @@ export default function EstimatesHub() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
+              {loading ? (
+                <div className="text-2xl font-bold">-</div>
+              ) : (
+                <div className="text-2xl font-bold">{stats.totalEstimates}</div>
+              )}
               <p className="text-xs text-muted-foreground">
-                +3 from last month
+                All time
               </p>
             </CardContent>
           </Card>
@@ -92,9 +139,13 @@ export default function EstimatesHub() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$285,400</div>
+              {loading ? (
+                <div className="text-2xl font-bold">-</div>
+              ) : (
+                <div className="text-2xl font-bold">${stats.pendingValue.toLocaleString()}</div>
+              )}
               <p className="text-xs text-muted-foreground">
-                Across 8 estimates
+                Across {stats.pendingCount} estimates
               </p>
             </CardContent>
           </Card>
@@ -105,9 +156,13 @@ export default function EstimatesHub() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">72%</div>
+              {loading ? (
+                <div className="text-2xl font-bold">-</div>
+              ) : (
+                <div className="text-2xl font-bold">{stats.conversionRate}%</div>
+              )}
               <p className="text-xs text-muted-foreground">
-                Last 90 days
+                Accepted vs sent
               </p>
             </CardContent>
           </Card>
@@ -118,9 +173,15 @@ export default function EstimatesHub() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">5.2 days</div>
+              {loading ? (
+                <div className="text-2xl font-bold">-</div>
+              ) : (
+                <div className="text-2xl font-bold">
+                  {stats.avgResponseTime > 0 ? `${stats.avgResponseTime} days` : 'N/A'}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
-                Improvement from 7.1 days
+                From sent to decision
               </p>
             </CardContent>
           </Card>
@@ -165,19 +226,27 @@ export default function EstimatesHub() {
             <TabsTrigger value="all">All Estimates</TabsTrigger>
             <TabsTrigger value="draft">
               Draft
-              <Badge variant="secondary" className="ml-2">3</Badge>
+              {!loading && stats.statusCounts.draft > 0 && (
+                <Badge variant="secondary" className="ml-2">{stats.statusCounts.draft}</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="sent">
               Sent
-              <Badge variant="outline" className="ml-2">8</Badge>
+              {!loading && stats.statusCounts.sent > 0 && (
+                <Badge variant="outline" className="ml-2">{stats.statusCounts.sent}</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="pending">
               Pending
-              <Badge variant="outline" className="ml-2">5</Badge>
+              {!loading && stats.statusCounts.viewed > 0 && (
+                <Badge variant="outline" className="ml-2">{stats.statusCounts.viewed}</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="accepted">
               Accepted
-              <Badge variant="default" className="ml-2">8</Badge>
+              {!loading && stats.statusCounts.accepted > 0 && (
+                <Badge variant="default" className="ml-2">{stats.statusCounts.accepted}</Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -185,6 +254,7 @@ export default function EstimatesHub() {
             <EstimatesTable 
               searchTerm={searchTerm}
               statusFilter={statusFilter}
+              onEstimateChange={loadStats}
             />
           </TabsContent>
 
@@ -192,6 +262,7 @@ export default function EstimatesHub() {
             <EstimatesTable 
               searchTerm={searchTerm}
               statusFilter="draft"
+              onEstimateChange={loadStats}
             />
           </TabsContent>
 
@@ -199,6 +270,7 @@ export default function EstimatesHub() {
             <EstimatesTable 
               searchTerm={searchTerm}
               statusFilter="sent"
+              onEstimateChange={loadStats}
             />
           </TabsContent>
 
@@ -206,6 +278,7 @@ export default function EstimatesHub() {
             <EstimatesTable 
               searchTerm={searchTerm}
               statusFilter="viewed"
+              onEstimateChange={loadStats}
             />
           </TabsContent>
 
@@ -213,6 +286,7 @@ export default function EstimatesHub() {
             <EstimatesTable 
               searchTerm={searchTerm}
               statusFilter="accepted"
+              onEstimateChange={loadStats}
             />
           </TabsContent>
         </Tabs>

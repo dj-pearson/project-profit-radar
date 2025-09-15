@@ -53,9 +53,10 @@ interface Estimate {
 interface EstimatesTableProps {
   searchTerm: string;
   statusFilter: string;
+  onEstimateChange?: () => void;
 }
 
-export function EstimatesTable({ searchTerm, statusFilter }: EstimatesTableProps) {
+export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: EstimatesTableProps) {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
@@ -159,6 +160,7 @@ export function EstimatesTable({ searchTerm, statusFilter }: EstimatesTableProps
       });
 
       fetchEstimates();
+      onEstimateChange?.();
     } catch (error) {
       console.error("Error duplicating estimate:", error);
       toast({
@@ -186,6 +188,7 @@ export function EstimatesTable({ searchTerm, statusFilter }: EstimatesTableProps
       });
 
       fetchEstimates();
+      onEstimateChange?.();
     } catch (error) {
       console.error("Error deleting estimate:", error);
       toast({
@@ -214,6 +217,7 @@ export function EstimatesTable({ searchTerm, statusFilter }: EstimatesTableProps
       });
 
       fetchEstimates();
+      onEstimateChange?.();
     } catch (error) {
       console.error("Error sending estimate:", error);
       toast({
@@ -365,10 +369,11 @@ export function EstimatesTable({ searchTerm, statusFilter }: EstimatesTableProps
           {editingEstimate && (
             <EstimateForm
               estimateId={editingEstimate}
-              onSuccess={() => {
-                setEditingEstimate(null);
-                fetchEstimates();
-              }}
+                onSuccess={() => {
+                  setEditingEstimate(null);
+                  fetchEstimates();
+                  onEstimateChange?.();
+                }}
               onCancel={() => setEditingEstimate(null)}
             />
           )}
