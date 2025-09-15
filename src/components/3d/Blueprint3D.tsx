@@ -124,7 +124,7 @@ const BuildingModel: React.FC<{ progress: number; wireframe: boolean }> = ({ pro
       )}
 
       {/* Stairs */}
-      {foundationHeight > 0 && (
+      {structureHeight > 0 && (
         <>
           {/* Step 1 */}
           <mesh position={[2.8, -0.3, 0]}>
