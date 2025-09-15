@@ -21636,16 +21636,11 @@ export type Database = {
               p_start_date?: string
             }
         Returns: {
-          assigned_quantity: number
-          assignment_id: string
-          assignment_status: string
-          days_duration: number
           end_date: string
-          equipment_id: string
-          equipment_name: string
-          project_id: string
           project_name: string
+          schedule_id: string
           start_date: string
+          status: string
         }[]
       }
       get_role_permissions: {
@@ -21674,7 +21669,7 @@ export type Database = {
         Args:
           | { p_ip_address?: unknown; p_user_agent?: string; p_user_id: string }
           | { p_user_id: string }
-        Returns: undefined
+        Returns: boolean
       }
       increment_article_view_count: {
         Args:
