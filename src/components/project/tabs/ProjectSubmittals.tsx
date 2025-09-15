@@ -40,7 +40,10 @@ export const ProjectSubmittals: React.FC<ProjectSubmittalsProps> = ({
       setLoading(true);
       const { data, error } = await supabase
         .from('submittals')
-        .select('*')
+        .select(`
+          *,
+          creator:user_profiles!created_by(first_name, last_name)
+        `)
         .eq('project_id', projectId)
         .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
@@ -156,7 +159,12 @@ export const ProjectSubmittals: React.FC<ProjectSubmittalsProps> = ({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Created by:</span>
-                    <p className="font-medium">{submittal.created_by || 'N/A'}</p>
+                    <p className="font-medium">
+                      {submittal.creator ? 
+                        `${submittal.creator.first_name} ${submittal.creator.last_name}`.trim() : 
+                        'N/A'
+                      }
+                    </p>
                   </div>
                 </div>
 
