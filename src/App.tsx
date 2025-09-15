@@ -10,6 +10,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
 import { Toaster } from "@/components/ui/toaster";
+import { PerformanceMonitor } from "@/components/performance/PerformanceMonitor";
 import { RouteLoadingFallback, preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 
 // Import only the lazy route components
@@ -407,6 +408,7 @@ const App = () => {
             <PWAInstallPrompt />
             <OfflineIndicator />
             <NotificationPermission />
+            <PerformanceMonitor />
             <Toaster />
                 </Routes>
               </Suspense>

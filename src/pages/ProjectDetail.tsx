@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { projectService, ProjectWithRelations } from '@/services/projectService';
 import { ContextualActions } from '@/components/navigation/ContextualActions';
 import { usePlatform } from '@/contexts/PlatformContext';
+import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
 import {
@@ -129,6 +130,13 @@ const ProjectDetail = () => {
                 </Button>
               </div>
             </div>
+
+            {/* AI Insights - Show on overview tab */}
+            {activeTab === 'overview' && (
+              <div className="mb-6">
+                <AIProjectInsights projectId={project.id} />
+              </div>
+            )}
 
             {/* Dynamic Content */}
             <ProjectContent 
