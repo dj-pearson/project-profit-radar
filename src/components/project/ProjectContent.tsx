@@ -222,16 +222,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderDailyReports = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <FileText className="h-5 w-5 mr-2" />
-          Daily Reports
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            Daily Reports
+          </span>
+          <Button onClick={() => onNavigate('/daily-reports')}>
+            Manage Daily Reports
+          </Button>
         </CardTitle>
         <CardDescription>View and manage daily progress reports</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Daily reports feature coming soon</p>
+          <p className="text-muted-foreground mb-4">View all daily reports for this project</p>
+          <Button onClick={() => onNavigate('/daily-reports')} variant="outline">
+            Go to Daily Reports
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -278,16 +286,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderEstimates = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Calculator className="h-5 w-5 mr-2" />
-          Project Estimates
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <Calculator className="h-5 w-5 mr-2" />
+            Project Estimates
+          </span>
+          <Button onClick={() => onNavigate('/estimates')}>
+            Manage Estimates
+          </Button>
         </CardTitle>
         <CardDescription>Manage project cost estimates and proposals</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <Calculator className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Estimates feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Create and manage estimates for this project</p>
+          <Button onClick={() => onNavigate('/estimates')} variant="outline">
+            Go to Estimates
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -324,16 +340,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderInvoicing = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Receipt className="h-5 w-5 mr-2" />
-          Invoicing
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <Receipt className="h-5 w-5 mr-2" />
+            Invoicing
+          </span>
+          <Button onClick={() => onNavigate('/invoicing')}>
+            Manage Invoices
+          </Button>
         </CardTitle>
         <CardDescription>Manage project invoices and billing</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Invoicing feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Create and manage invoices for this project</p>
+          <Button onClick={() => onNavigate('/invoicing')} variant="outline">
+            Go to Invoicing
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -371,16 +395,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderCommunication = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <MessageSquare className="h-5 w-5 mr-2" />
-          Messages
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <MessageSquare className="h-5 w-5 mr-2" />
+            Messages
+          </span>
+          <Button onClick={() => onNavigate('/messages')}>
+            View Messages
+          </Button>
         </CardTitle>
         <CardDescription>Project communications and messaging</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Messaging feature coming soon</p>
+          <p className="text-muted-foreground mb-4">View and send messages for this project</p>
+          <Button onClick={() => onNavigate('/messages')} variant="outline">
+            Go to Messages
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -389,16 +421,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderRFIs = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <HelpCircle className="h-5 w-5 mr-2" />
-          RFI's (Requests for Information)
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <HelpCircle className="h-5 w-5 mr-2" />
+            RFI's (Requests for Information)
+          </span>
+          <Button onClick={() => onNavigate('/rfis')}>
+            Manage RFIs
+          </Button>
         </CardTitle>
         <CardDescription>Manage project questions and clarifications</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <HelpCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">RFI management feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Create and track RFIs for this project</p>
+          <Button onClick={() => onNavigate('/rfis')} variant="outline">
+            Go to RFIs
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -407,16 +447,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderSubmittals = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Send className="h-5 w-5 mr-2" />
-          Submittals
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <Send className="h-5 w-5 mr-2" />
+            Submittals
+          </span>
+          <Button onClick={() => onNavigate('/submittals')}>
+            Manage Submittals
+          </Button>
         </CardTitle>
         <CardDescription>Track submittal documents and approvals</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <Send className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Submittals feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Track submittal documents and approvals</p>
+          <Button onClick={() => onNavigate('/submittals')} variant="outline">
+            Go to Submittals
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -425,16 +473,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderContacts = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Users className="h-5 w-5 mr-2" />
-          Project Contacts
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <Users className="h-5 w-5 mr-2" />
+            Project Contacts
+          </span>
+          <Button onClick={() => onNavigate('/crm/contacts')}>
+            Manage Contacts
+          </Button>
         </CardTitle>
         <CardDescription>Manage project team and stakeholder contacts</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Contacts management feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Manage project team and stakeholder contacts</p>
+          <Button onClick={() => onNavigate('/crm/contacts')} variant="outline">
+            Go to Contacts
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -443,16 +499,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderPermits = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Shield className="h-5 w-5 mr-2" />
-          Permits
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <Shield className="h-5 w-5 mr-2" />
+            Permits
+          </span>
+          <Button onClick={() => onNavigate('/permit-management')}>
+            Manage Permits
+          </Button>
         </CardTitle>
         <CardDescription>Track required permits and approvals</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Permits management feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Track required permits and approvals</p>
+          <Button onClick={() => onNavigate('/permit-management')} variant="outline">
+            Go to Permits
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -461,16 +525,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderWarranties = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Clock className="h-5 w-5 mr-2" />
-          Warranties
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <Clock className="h-5 w-5 mr-2" />
+            Warranties
+          </span>
+          <Button onClick={() => onNavigate('/warranty-management')}>
+            Manage Warranties
+          </Button>
         </CardTitle>
         <CardDescription>Manage product and service warranties</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Warranties management feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Manage product and service warranties</p>
+          <Button onClick={() => onNavigate('/warranty-management')} variant="outline">
+            Go to Warranties
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -479,16 +551,24 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   const renderPunchList = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <CheckSquare className="h-5 w-5 mr-2" />
-          Punch List
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center">
+            <CheckSquare className="h-5 w-5 mr-2" />
+            Punch List
+          </span>
+          <Button onClick={() => onNavigate('/punch-list')}>
+            Manage Punch List
+          </Button>
         </CardTitle>
         <CardDescription>Track final items and project completion tasks</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8">
           <CheckSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Punch list feature coming soon</p>
+          <p className="text-muted-foreground mb-4">Track final items and project completion tasks</p>
+          <Button onClick={() => onNavigate('/punch-list')} variant="outline">
+            Go to Punch List
+          </Button>
         </div>
       </CardContent>
     </Card>
