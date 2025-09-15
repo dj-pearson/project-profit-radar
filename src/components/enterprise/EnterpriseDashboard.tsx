@@ -122,15 +122,9 @@ export const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'destructive';
-      case 'medium': return 'warning';
-      case 'low': return 'default';
-      default: return 'default';
-    }
+  const getSeverityColor = (severity: string): 'default' | 'destructive' => {
+    return severity === 'high' ? 'destructive' : 'default';
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'on_track': return 'success';

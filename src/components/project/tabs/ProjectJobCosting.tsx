@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ProjectJobCostingProps {
   projectId: string;
+  projectBudget?: number;
+  onNavigate?: (path: string) => void;
 }
-
 export const ProjectJobCosting: React.FC<ProjectJobCostingProps> = ({ projectId }) => {
   return (
     <Card>

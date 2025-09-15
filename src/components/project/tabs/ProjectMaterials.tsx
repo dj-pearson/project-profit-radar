@@ -170,12 +170,12 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
 
       if (error) throw error;
       
-      // Transform data to match expected interface
-      const transformedData = data?.map(item => ({
+      // Transform data to match expected interface and coerce types
+      const transformedData: MaterialUsage[] = (data?.map((item: any) => ({
         ...item,
-        material: item.materials,
-        user_profile: item.user_profiles
-      })) || [];
+        material: item.materials as Material,
+        user_profile: item.user_profiles ? { first_name: item.user_profiles.first_name, last_name: item.user_profiles.last_name } : undefined,
+      })) || []) as unknown as MaterialUsage[];
       
       setMaterialUsage(transformedData);
     } catch (error: any) {
@@ -268,10 +268,10 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
       if (error) throw error;
 
       // Transform data to match expected interface  
-      const transformedData = {
-        ...data,
-        material: data.materials,
-        user_profile: data.user_profiles
+      const transformedData: MaterialUsage = {
+        ...(data as any),
+        material: (data as any).materials as Material,
+        user_profile: (data as any).user_profiles ? { first_name: (data as any).user_profiles.first_name, last_name: (data as any).user_profiles.last_name } : undefined,
       };
 
       setMaterialUsage([transformedData, ...materialUsage]);

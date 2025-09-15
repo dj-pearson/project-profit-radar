@@ -95,16 +95,35 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
   const [showAddPermit, setShowAddPermit] = useState(false);
   const [editingPermit, setEditingPermit] = useState<EnvironmentalPermit | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    permit_number: string;
+    permit_name: string;
+    permit_type: EnvironmentalPermit['permit_type'];
+    issuing_agency: EnvironmentalPermit['issuing_agency'];
+    agency_contact_name: string;
+    agency_contact_email: string;
+    agency_contact_phone: string;
+    description: string;
+    status: EnvironmentalPermit['status'];
+    application_date: string;
+    review_start_date: string;
+    target_decision_date: string;
+    decision_date: string;
+    effective_date: string;
+    expiration_date: string;
+    application_fee: string;
+    annual_fee: string;
+    compliance_bond_amount: string;
+  }>({
     permit_number: '',
     permit_name: '',
-    permit_type: 'air_quality' as const,
-    issuing_agency: 'epa' as const,
+    permit_type: 'air_quality',
+    issuing_agency: 'epa',
     agency_contact_name: '',
     agency_contact_email: '',
     agency_contact_phone: '',
     description: '',
-    status: 'pending' as const,
+    status: 'pending',
     application_date: '',
     review_start_date: '',
     target_decision_date: '',
@@ -115,7 +134,6 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
     annual_fee: '',
     compliance_bond_amount: ''
   });
-
   useEffect(() => {
     if (projectId && userProfile?.company_id) {
       loadPermits();
@@ -136,7 +154,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPermits(data || []);
+      setPermits((data as unknown as EnvironmentalPermit[]) || []);
     } catch (error: any) {
       console.error('Error loading permits:', error);
       toast({
@@ -217,7 +235,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
 
       if (error) throw error;
 
-      setPermits([data, ...permits]);
+      setPermits([data as unknown as EnvironmentalPermit, ...permits]);
       resetForm();
       setShowAddPermit(false);
 
@@ -261,7 +279,7 @@ export const ProjectPermits: React.FC<ProjectPermitsProps> = ({
 
       if (error) throw error;
 
-      setPermits(permits.map(p => p.id === editingPermit.id ? data : p));
+      setPermits(permits.map(p => p.id === editingPermit.id ? (data as unknown as EnvironmentalPermit) : p));
       resetForm();
       setEditingPermit(null);
 

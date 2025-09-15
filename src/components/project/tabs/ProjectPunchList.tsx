@@ -152,7 +152,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setItems(data || []);
+      setItems((data as unknown as PunchListItem[]) || []);
     } catch (error: any) {
       console.error('Error loading punch list items:', error);
       toast({
@@ -243,7 +243,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
 
       if (error) throw error;
 
-      setItems([data, ...items]);
+      setItems([data as unknown as PunchListItem, ...items]);
       resetForm();
       setShowAddItem(false);
 
@@ -285,7 +285,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
 
       if (error) throw error;
 
-      setItems(items.map(i => i.id === editingItem.id ? data : i));
+      setItems(items.map(i => i.id === editingItem.id ? (data as unknown as PunchListItem) : i));
       resetForm();
       setEditingItem(null);
 
@@ -328,7 +328,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
 
       if (error) throw error;
 
-      setItems(items.map(i => i.id === itemId ? data : i));
+      setItems(items.map(i => i.id === itemId ? (data as unknown as PunchListItem) : i));
       toast({
         title: "Success",
         description: `Item marked as ${newStatus}`
