@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Text, Box, Line } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Box } from '@react-three/drei';
 import { Group, Vector3, BufferGeometry, Float32BufferAttribute } from 'three';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 
@@ -106,13 +106,12 @@ const GridLines: React.FC = () => {
     points.push(new Vector3(i, 0, -5), new Vector3(i, 0, 5));
   }
 
+  const geometry = new BufferGeometry().setFromPoints(points);
+
   return (
-    <Line
-      points={points}
-      color="#64748B"
-      transparent
-      opacity={0.3}
-    />
+    <lineSegments geometry={geometry}>
+      <lineBasicMaterial color="#64748B" transparent opacity={0.3} />
+    </lineSegments>
   );
 };
 
