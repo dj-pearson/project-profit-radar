@@ -162,8 +162,7 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
         .from('material_usage')
         .select(`
           *,
-          materials(*),
-          user_profiles(first_name, last_name)
+          materials(*)
         `)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
@@ -174,7 +173,6 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
       const transformedData: MaterialUsage[] = (data?.map((item: any) => ({
         ...item,
         material: item.materials as Material,
-        user_profile: item.user_profiles ? { first_name: item.user_profiles.first_name, last_name: item.user_profiles.last_name } : undefined,
       })) || []) as unknown as MaterialUsage[];
       
       setMaterialUsage(transformedData);
@@ -260,8 +258,7 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
         .insert([usageData])
         .select(`
           *,
-          materials(*),
-          user_profiles(first_name, last_name)
+          materials(*)
         `)
         .single();
 
@@ -271,7 +268,6 @@ export const ProjectMaterials: React.FC<ProjectMaterialsProps> = ({
       const transformedData: MaterialUsage = {
         ...(data as any),
         material: (data as any).materials as Material,
-        user_profile: (data as any).user_profiles ? { first_name: (data as any).user_profiles.first_name, last_name: (data as any).user_profiles.last_name } : undefined,
       };
 
       setMaterialUsage([transformedData, ...materialUsage]);
