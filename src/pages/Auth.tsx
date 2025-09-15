@@ -15,16 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import {
-  validateEmail,
-  validatePassword,
-  sanitizeInput,
-  generateCSRFToken,
-  setCSRFToken,
-  checkRateLimit,
-} from "@/utils/security";
 import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock } from "lucide-react";
-import { SEOMetaTags } from "@/components/SEOMetaTags";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -41,13 +32,8 @@ const Auth = () => {
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSentType, setEmailSentType] = useState<'signup' | 'reset' | null>(null);
-  const [csrfToken] = useState(() => generateCSRFToken());
   const { signIn, signInWithGoogle, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setCSRFToken(csrfToken);
-  }, [csrfToken]);
 
   // Navigate to dashboard after successful authentication
   // Handle special auth parameters for SEO
@@ -76,8 +62,15 @@ const Auth = () => {
   }, [user, navigate]);
 
   const validatePasswordInput = (pwd: string) => {
-    const validation = validatePassword(pwd);
-    setPasswordValidation(validation);
+    const errors: string[] = [];
+    
+    if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
+    if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
+    if (!/[a-z]/.test(pwd)) errors.push('Password must contain at least one lowercase letter');
+    if (!/\d/.test(pwd)) errors.push('Password must contain at least one number');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) errors.push('Password must contain at least one special character');
+    
+    setPasswordValidation({ isValid: errors.length === 0, errors });
     setShowPasswordRequirements(pwd.length > 0);
   };
 
@@ -101,19 +94,9 @@ const Auth = () => {
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Rate limiting check
-    if (!checkRateLimit("signin-attempts", 5, 300000)) {
-      // 5 attempts per 5 minutes
-      toast({
-        variant: "destructive",
-        title: "Too Many Attempts",
-        description: "Please wait before trying again.",
-      });
-      return;
-    }
-
-    // Input validation
-    if (!validateEmail(email)) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       toast({
         variant: "destructive",
         title: "Invalid Email",
@@ -124,15 +107,13 @@ const Auth = () => {
 
     setLoading(true);
 
-    const sanitizedEmail = sanitizeInput(email);
-    const { error } = await signIn(sanitizedEmail, password);
+    const { error } = await signIn(email, password);
 
     if (!error) {
       toast({
         title: "Welcome back!",
         description: "You've been successfully signed in.",
       });
-      // Navigation will be handled by route protection
     }
 
     setLoading(false);
@@ -141,19 +122,9 @@ const Auth = () => {
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Rate limiting check
-    if (!checkRateLimit("signup-attempts", 3, 3600000)) {
-      // 3 attempts per hour
-      toast({
-        variant: "destructive",
-        title: "Too Many Attempts",
-        description: "Please wait before trying to create another account.",
-      });
-      return;
-    }
-
-    // Input validation
-    if (!validateEmail(email)) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       toast({
         variant: "destructive",
         title: "Invalid Email",
@@ -162,29 +133,24 @@ const Auth = () => {
       return;
     }
 
-    const passwordValid = validatePassword(password);
-    if (!passwordValid.isValid) {
+    if (!passwordValidation.isValid) {
       toast({
         variant: "destructive",
         title: "Password Requirements Not Met",
-        description: passwordValid.errors[0],
+        description: passwordValidation.errors[0],
       });
       return;
     }
 
     setLoading(true);
 
-    const sanitizedData = {
-      first_name: sanitizeInput(firstName),
-      last_name: sanitizeInput(lastName),
+    const userData = {
+      first_name: firstName,
+      last_name: lastName,
       role: "admin",
     };
 
-    const { error } = await signUp(
-      sanitizeInput(email),
-      password,
-      sanitizedData
-    );
+    const { error } = await signUp(email, password, userData);
 
     if (!error) {
       setEmailSent(true);
@@ -201,18 +167,8 @@ const Auth = () => {
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Rate limiting check
-    if (!checkRateLimit("reset-attempts", 3, 3600000)) {
-      // 3 attempts per hour
-      toast({
-        variant: "destructive",
-        title: "Too Many Attempts",
-        description: "Please wait before requesting another password reset.",
-      });
-      return;
-    }
-
-    if (!validateEmail(resetEmail)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
       toast({
         variant: "destructive",
         title: "Invalid Email",
@@ -223,7 +179,7 @@ const Auth = () => {
 
     setLoading(true);
 
-    const { error } = await resetPassword(sanitizeInput(resetEmail));
+    const { error } = await resetPassword(resetEmail);
     
     if (error) {
       toast({
@@ -260,14 +216,7 @@ const Auth = () => {
   };
 
   return (
-    <>
-      <SEOMetaTags
-        title="Sign In - BuildDesk Construction Management"
-        description="Sign in to your BuildDesk account to access construction project management, job costing, and team collaboration tools."
-        keywords={['construction login', 'BuildDesk sign in', 'construction management login', 'contractor portal']}
-        canonicalUrl="/auth"
-      />
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <Link to="/" className="inline-block">
@@ -647,8 +596,7 @@ const Auth = () => {
           </Link>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 };
 
