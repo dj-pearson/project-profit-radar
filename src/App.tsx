@@ -1,7 +1,8 @@
-import React from "react";
+import React, { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PlatformProvider } from "@/contexts/PlatformContext";
@@ -9,52 +10,54 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
 import { Toaster } from "@/components/ui/toaster";
-import Index from "./pages/Index";
-import APIMarketplace from "./pages/APIMarketplace";
-import Collaboration from "./pages/Collaboration";
-import MobileTesting from "./pages/MobileTesting";
-import MobileDashboard from "./pages/MobileDashboard";
-import Dashboard from "./pages/Dashboard";
-import FieldManagement from "./pages/FieldManagement";
-import WorkflowManagement from "./pages/WorkflowManagement";
-import WorkflowTesting from "./pages/WorkflowTesting";
-import Auth from "./pages/Auth";
-import Resources from "./pages/Resources";
-import Tools from "./pages/Tools";
-import BlogPost from "./pages/BlogPost";
-import ProjectsHub from "./pages/hubs/ProjectsHub";
-import FinancialHub from "./pages/hubs/FinancialHub";
-import PeopleHub from "./pages/hubs/PeopleHub";
-import OperationsHub from "./pages/hubs/OperationsHub";
-import AdminHub from "./pages/hubs/AdminHub";
-import MyTasks from "./pages/MyTasks";
-import { UserSettings } from "./pages/UserSettings";
-import SubscriptionSettings from "./pages/SubscriptionSettings";
+import { RouteLoadingFallback, preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 
-// Project area pages
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import ProjectTaskCreate from "./pages/ProjectTaskCreate";
-import CreateProject from "./pages/CreateProject";
-import ScheduleManagement from "./pages/ScheduleManagement";
-import JobCosting from "./pages/JobCosting";
-import DailyReports from "./pages/DailyReports";
-import RFIs from "./pages/RFIs";
-import Submittals from "./pages/Submittals";
-import ChangeOrders from "./pages/ChangeOrders";
-import PunchList from "./pages/PunchList";
-import DocumentManagement from "./pages/DocumentManagement";
-import Materials from "./pages/Materials";
-import MaterialTracking from "./pages/MaterialTracking";
-import Equipment from "./pages/Equipment";
+// Import only the lazy route components
+import {
+  LazyIndex,
+  LazyAuth,
+  LazyDashboard,
+  LazyProjectsHub,
+  LazyFinancialHub,
+  LazyPeopleHub,
+  LazyOperationsHub,
+  LazyAdminHub,
+  LazyMyTasks,
+  LazyUserSettings,
+  LazySubscriptionSettings,
+  LazyAPIMarketplace,
+  LazyCollaboration,
+  LazyMobileTesting,
+  LazyMobileDashboard,
+  LazyFieldManagement,
+  LazyWorkflowManagement,
+  LazyWorkflowTesting,
+  LazyResources,
+  LazyTools,
+  LazyBlogPost,
 
-// Financial area pages
-import FinancialDashboard from "./pages/FinancialDashboard";
-import EstimatesHub from "./pages/EstimatesHub";
-import Reports from "./pages/Reports";
-import PurchaseOrders from "./pages/PurchaseOrders";
-import Vendors from "./pages/Vendors";
-import QuickBooksRouting from "./pages/QuickBooksRouting";
+  LazyProjects,
+  LazyProjectDetail,
+  LazyProjectTaskCreate,
+  LazyCreateProject,
+  LazyScheduleManagement,
+  LazyJobCosting,
+  LazyDailyReports,
+  LazyRFIs,
+  LazySubmittals,
+  LazyChangeOrders,
+  LazyPunchList,
+  LazyDocumentManagement,
+  LazyMaterials,
+  LazyMaterialTracking,
+  LazyEquipment,
+
+  LazyFinancialDashboard,
+  LazyEstimatesHub,
+  LazyReports,
+  LazyPurchaseOrders,
+  LazyVendors,
+  LazyQuickBooksRouting,
 
 // People area pages
 import TeamManagement from "./pages/TeamManagement";
@@ -137,16 +140,14 @@ import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectMa
 import { GenericPage } from "@/components/pages/GenericPage";
 
 // Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes
-    },
-  },
-});
+// Query client is now imported from lib/queryClient.ts
 
 const App = () => {
+  // Preload high-priority routes on app initialization
+  useEffect(() => {
+    preloadHighPriorityRoutes();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -154,7 +155,8 @@ const App = () => {
         <ThemeProvider>
           <HelmetProvider>
             <BrowserRouter>
-              <Routes>
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/marketplace" element={<APIMarketplace />} />
               <Route path="/collaboration" element={<Collaboration />} />
@@ -406,6 +408,8 @@ const App = () => {
             <OfflineIndicator />
             <NotificationPermission />
             <Toaster />
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </HelmetProvider>
         </ThemeProvider>
