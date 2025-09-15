@@ -348,7 +348,7 @@ export const ProjectContent: React.FC<ProjectContentProps> = ({
   );
 
   const renderContacts = () => (
-    <ProjectContacts projectId={project.id} onNavigate={onNavigate} />
+    <ProjectContacts projectId={project.id} />
   );
 
   const renderPermits = () => (
