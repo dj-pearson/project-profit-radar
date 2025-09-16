@@ -54,7 +54,7 @@ export const ProjectContacts: React.FC<ProjectContactsProps> = ({ projectId }) =
         .from('project_contacts')
         .select(`
           *,
-          contacts (
+          contacts!project_contacts_contact_id_fkey (
             id,
             first_name,
             last_name,
