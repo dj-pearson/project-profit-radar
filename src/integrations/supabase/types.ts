@@ -3872,6 +3872,7 @@ export type Database = {
           enable_safety_management: boolean
           enable_time_tracking: boolean
           fiscal_year_start: string
+          gps_settings: Json | null
           id: string
           primary_color: string
           project_update_notifications: boolean
@@ -3899,6 +3900,7 @@ export type Database = {
           enable_safety_management?: boolean
           enable_time_tracking?: boolean
           fiscal_year_start?: string
+          gps_settings?: Json | null
           id?: string
           primary_color?: string
           project_update_notifications?: boolean
@@ -3926,6 +3928,7 @@ export type Database = {
           enable_safety_management?: boolean
           enable_time_tracking?: boolean
           fiscal_year_start?: string
+          gps_settings?: Json | null
           id?: string
           primary_color?: string
           project_update_notifications?: boolean
@@ -8324,6 +8327,73 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "email_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_locations: {
+        Row: {
+          accuracy: number | null
+          altitude: number | null
+          company_id: string
+          created_at: string | null
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          project_id: string | null
+          speed: number | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          altitude?: number | null
+          company_id: string
+          created_at?: string | null
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          project_id?: string | null
+          speed?: number | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          altitude?: number | null
+          company_id?: string
+          created_at?: string | null
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          project_id?: string | null
+          speed?: number | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_locations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_locations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "gps_locations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -14473,6 +14543,51 @@ export type Database = {
           },
           {
             foreignKeyName: "project_phases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_photos: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          project_id: string
+          updated_at: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          project_id: string
+          updated_at?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          project_id?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_photos_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"

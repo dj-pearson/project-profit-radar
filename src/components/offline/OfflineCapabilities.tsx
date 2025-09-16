@@ -255,7 +255,7 @@ export const OfflineCapabilities: React.FC = () => {
             
             if (uploadError) return false;
 
-            const { error: recordError } = await (supabase.from as any)('project_photos')
+            const { error: recordError } = await supabase.from('project_photos')
               .insert({
                 project_id: item.data.project_id,
                 url: uploadData.path,

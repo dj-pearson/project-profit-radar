@@ -78,7 +78,8 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      let query = (supabase.from as any)('gps_locations')
+      let query = supabase
+        .from('gps_locations')
         .select('*')
         .order('timestamp', { ascending: false })
         .limit(50);
@@ -111,13 +112,14 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      const { data, error } = await (supabase.from as any)('company_settings')
-        .select('*')
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('gps_settings')
         .eq('company_id', companyId)
         .maybeSingle();
 
-      if (!error && data && (data as any).gps_settings) {
-        setSettings(((data as any).gps_settings) as GPSSettings);
+      if (!error && data?.gps_settings) {
+        setSettings(data.gps_settings as unknown as GPSSettings);
       }
     } catch (error) {
       console.error('Error loading GPS settings:', error);
@@ -129,10 +131,11 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      const { error } = await (supabase.from as any)('company_settings')
+      const { error } = await supabase
+        .from('company_settings')
         .upsert({
           company_id: companyId,
-          gps_settings: newSettings
+          gps_settings: newSettings as unknown as any
         });
 
       if (error) throw error;
@@ -257,7 +260,7 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
         return;
       }
 
-      const { error } = await (supabase.from as any)('gps_locations')
+      const { error } = await supabase.from('gps_locations')
         .insert({
           user_id: userProfile.user.id,
           company_id: companyId,
