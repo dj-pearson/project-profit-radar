@@ -4547,6 +4547,66 @@ export type Database = {
           },
         ]
       }
+      cross_module_relationships: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          relationship_type: string
+          source_id: string
+          source_module: string
+          target_id: string
+          target_module: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          relationship_type: string
+          source_id: string
+          source_module: string
+          target_id: string
+          target_module: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          relationship_type?: string
+          source_id?: string
+          source_module?: string
+          target_id?: string
+          target_module?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cross_module_relationships_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cross_module_relationships_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       csp_violations: {
         Row: {
           blocked_uri: string | null
@@ -13754,6 +13814,7 @@ export type Database = {
           contact_id: string
           created_at: string
           created_by: string | null
+          crm_contact_id: string | null
           id: string
           is_primary: boolean | null
           project_id: string
@@ -13764,6 +13825,7 @@ export type Database = {
           contact_id: string
           created_at?: string
           created_by?: string | null
+          crm_contact_id?: string | null
           id?: string
           is_primary?: boolean | null
           project_id: string
@@ -13774,6 +13836,7 @@ export type Database = {
           contact_id?: string
           created_at?: string
           created_by?: string | null
+          crm_contact_id?: string | null
           id?: string
           is_primary?: boolean | null
           project_id?: string
@@ -13793,6 +13856,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_contacts_crm_contact_id_fkey"
+            columns: ["crm_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
           {
@@ -14677,12 +14747,14 @@ export type Database = {
           completion_percentage: number | null
           created_at: string
           created_by: string | null
+          created_from: string | null
           description: string | null
           end_date: string | null
           estimated_hours: number | null
           geofence_radius_meters: number | null
           id: string
           name: string
+          opportunity_id: string | null
           permit_numbers: string[] | null
           profit_margin: number | null
           project_manager_id: string | null
@@ -14703,12 +14775,14 @@ export type Database = {
           completion_percentage?: number | null
           created_at?: string
           created_by?: string | null
+          created_from?: string | null
           description?: string | null
           end_date?: string | null
           estimated_hours?: number | null
           geofence_radius_meters?: number | null
           id?: string
           name: string
+          opportunity_id?: string | null
           permit_numbers?: string[] | null
           profit_margin?: number | null
           project_manager_id?: string | null
@@ -14729,12 +14803,14 @@ export type Database = {
           completion_percentage?: number | null
           created_at?: string
           created_by?: string | null
+          created_from?: string | null
           description?: string | null
           end_date?: string | null
           estimated_hours?: number | null
           geofence_radius_meters?: number | null
           id?: string
           name?: string
+          opportunity_id?: string | null
           permit_numbers?: string[] | null
           profit_margin?: number | null
           project_manager_id?: string | null
@@ -14752,6 +14828,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
         ]
