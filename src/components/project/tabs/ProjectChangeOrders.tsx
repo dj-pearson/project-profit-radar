@@ -41,11 +41,7 @@ export const ProjectChangeOrders: React.FC<ProjectChangeOrdersProps> = ({
       setLoading(true);
       const { data, error } = await supabase
         .from('change_orders')
-        .select(`
-          *,
-          creator:user_profiles!created_by(first_name, last_name),
-          approver:user_profiles!internal_approved_by(first_name, last_name)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
 
@@ -161,18 +157,15 @@ export const ProjectChangeOrders: React.FC<ProjectChangeOrdersProps> = ({
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Created by:</span>
                     <span>
-                      {changeOrder.creator ? 
-                        `${changeOrder.creator.first_name} ${changeOrder.creator.last_name}`.trim() : 
-                        'N/A'
-                      }
+                      {changeOrder.created_by || 'N/A'}
                     </span>
                   </div>
-                  {changeOrder.approver && (
+                  {changeOrder.internal_approved_by && (
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Approved by:</span>
                       <span>
-                        {`${changeOrder.approver.first_name} ${changeOrder.approver.last_name}`.trim()}
+                        {changeOrder.internal_approved_by}
                       </span>
                     </div>
                   )}
