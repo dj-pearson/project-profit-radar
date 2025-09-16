@@ -32,24 +32,27 @@ serve(async (req) => {
 
     let fileContent = ''
     let fileName = ''
-    let contentType = 'application/octet-stream'  // Use octet-stream for better compatibility
+    const uploadType = 'application/octet-stream' // Storage upload type for compatibility
+    let responseType = 'text/plain' // Browser content-type for robots/llms
 
     if (fileType === 'robots') {
       fileName = 'robots.txt'
       fileContent = generateRobotsTxt(canonicalDomain, siteName)
+      responseType = 'text/plain'
     } else if (fileType === 'llms') {
       fileName = 'llms.txt'
       fileContent = generateLLMsTxt(canonicalDomain, siteName, siteDescription)
+      responseType = 'text/plain'
     } else {
       throw new Error('Invalid file type. Use "robots" or "llms"')
     }
 
     // Save file to storage using Blob for better compatibility
-    const blob = new Blob([fileContent], { type: contentType })
+    const blob = new Blob([fileContent], { type: uploadType })
     const { error: uploadError } = await supabaseClient.storage
       .from('site-assets')
       .upload(fileName, blob, {
-        contentType,
+        contentType: uploadType,
         upsert: true
       })
 
@@ -60,7 +63,7 @@ serve(async (req) => {
     return new Response(fileContent, {
       headers: {
         ...corsHeaders,
-        'Content-Type': contentType,
+        'Content-Type': responseType,
         'Content-Disposition': `attachment; filename="${fileName}"`,
         'Cache-Control': 'public, max-age=3600'
       }
