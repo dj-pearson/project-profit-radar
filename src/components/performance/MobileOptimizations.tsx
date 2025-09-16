@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { assessDeviceCapabilities } from '@/utils/performanceConfig';
 
 interface DeviceCapabilities {
@@ -96,7 +96,7 @@ export const AdaptiveContentLoader = ({ children, fallback, lowEndFallback }: {
     } else {
       setShouldLoadContent(true);
     }
-  }, [capabilities]);
+  }, [capabilities.isLowEndDevice, capabilities.isSaveDataEnabled]); // Only depend on specific values
 
   if (!shouldLoadContent) {
     if (capabilities.isLowEndDevice && lowEndFallback) {
@@ -159,7 +159,7 @@ export const useConnectionAwareLoading = () => {
 export const usePerformanceAwareImageLoading = () => {
   const connection = useConnectionAwareLoading();
   
-  const getImageLoadingStrategy = () => {
+  return useMemo(() => {
     if (!connection.isOnline) {
       return { format: 'placeholder', quality: 0 };
     }
@@ -173,9 +173,7 @@ export const usePerformanceAwareImageLoading = () => {
     }
     
     return { format: 'avif', quality: 85 };
-  };
-
-  return getImageLoadingStrategy();
+  }, [connection.isOnline, connection.saveData, connection.effectiveType]);
 };
 
 // Mobile-specific performance optimizations
@@ -201,7 +199,7 @@ export const MobilePerformanceProvider = ({ children }: { children: React.ReactN
       root.classList.add('low-memory');
       console.log('🧠 Low memory optimizations applied');
     }
-  }, [capabilities]);
+  }, [capabilities.isLowEndDevice, capabilities.deviceMemory]); // Only depend on specific values
 
   return <>{children}</>;
 };
