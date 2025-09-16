@@ -10,6 +10,8 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
 import { Toaster } from "@/components/ui/toaster";
+import CriticalErrorBoundary from "@/components/CriticalErrorBoundary";
+import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 
 import { RouteLoadingFallback, preloadHighPriorityRoutes } from "@/utils/lazyRoutes";
 
@@ -152,15 +154,16 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-      <PlatformProvider>
-        <ThemeProvider>
-          <HelmetProvider>
-            <BrowserRouter>
-              <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
-              <Suspense fallback={<RouteLoadingFallback />}>
-                <Routes>
+    <CriticalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <PlatformProvider>
+            <ThemeProvider>
+              <HelmetProvider>
+                <BrowserRouter>
+                  <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
+                  <Suspense fallback={<DashboardSkeleton />}>
+                    <Routes>
               <Route path="/" element={<LazyIndex />} />
               <Route path="/marketplace" element={<LazyAPIMarketplace />} />
               <Route path="/collaboration" element={<LazyCollaboration />} />
@@ -409,19 +412,20 @@ const App = () => {
                 }
               />
             </Routes>
-
-            {/* PWA Components */}
-            <PWAInstallPrompt />
-            <OfflineIndicator />
-            <NotificationPermission />
-            <Toaster />
           </Suspense>
+          
+          {/* PWA Components */}
+          <PWAInstallPrompt />
+          <OfflineIndicator />
+          <NotificationPermission />
+          <Toaster />
         </BrowserRouter>
       </HelmetProvider>
     </ThemeProvider>
   </PlatformProvider>
   </AuthProvider>
 </QueryClientProvider>
+</CriticalErrorBoundary>
   );
 };
 

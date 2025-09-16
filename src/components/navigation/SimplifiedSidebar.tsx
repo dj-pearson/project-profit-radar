@@ -26,8 +26,10 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { getNavigationForRole } from './NavigationConfig';
 import { hierarchicalNavigation, NavigationSection, findSectionByUrl } from './HierarchicalNavigationConfig';
 
+// Fix mobile navigation issues in SimplifiedSidebar
+// Improved responsive behavior and touch handling
 export const SimplifiedSidebar = () => {
-  const { state } = useSidebar();
+  const { state, isMobile } = useSidebar();
   const location = useLocation();
   const { userProfile } = useAuth();
   const { canAccessRoute } = usePermissions();
@@ -42,10 +44,7 @@ export const SimplifiedSidebar = () => {
   // Get main areas with their sections - filter out sensitive admin functions
   const getAreaSections = (areaId: string): NavigationSection[] => {
     const area = hierarchicalNavigation.find(a => a.id === areaId);
-    if (!area) {
-      console.log(`No area found for areaId: ${areaId}`);
-      return [];
-    }
+    if (!area) return [];
     
     const currentUserRole = userProfile?.role || 'admin';
     
@@ -56,7 +55,6 @@ export const SimplifiedSidebar = () => {
         if (item.roles.length === 1 && item.roles[0] === 'root_admin') {
           return currentUserRole === 'root_admin';
         }
-        // For other items, show them (may be locked later)
         return true;
       }).map(item => ({
         ...item,
@@ -64,14 +62,12 @@ export const SimplifiedSidebar = () => {
                    item.roles.includes(currentUserRole) ||
                    canAccessRoute(item.url)
       }))
-    })).filter(section => section.items.length > 0); // Remove empty sections
+    })).filter(section => section.items.length > 0);
     
-    console.log(`Area ${areaId} has ${filteredSections.length} sections for role ${currentUserRole}:`, filteredSections);
     return filteredSections;
   };
 
   const toggleSection = (sectionId: string) => {
-    console.log(`Toggling section: ${sectionId}`);
     setExpandedSections(prev => 
       prev.includes(sectionId) 
         ? prev.filter(id => id !== sectionId)
@@ -94,13 +90,18 @@ export const SimplifiedSidebar = () => {
   
   // Check if admin section is expanded to use wider sidebar
   const isAdminExpanded = expandedSections.includes('admin');
-  const sidebarWidth = collapsed ? "w-14" : isAdminExpanded ? "w-72" : "w-60";
+  // Mobile-responsive width handling
+  const getSidebarWidth = () => {
+    if (collapsed) return "w-14";
+    if (isMobile) return "w-64"; // Consistent width on mobile
+    return isAdminExpanded ? "w-72" : "w-60";
+  };
 
   return (
-    <Sidebar className={sidebarWidth} collapsible="icon">
+    <Sidebar className={getSidebarWidth()} collapsible="icon">
       <SidebarHeader className="p-2">
         <div className="flex items-center justify-between">
-          <SidebarTrigger className="h-8 w-8 p-1" />
+          <SidebarTrigger className="h-8 w-8 p-1 touch-target-44" />
           {!collapsed && (
             <div className="flex items-center space-x-2">
               <ThemeToggle />
@@ -134,65 +135,73 @@ export const SimplifiedSidebar = () => {
                 }
                 
                 const sections = getAreaSections(areaId);
-                
-                // Dashboard should not have dropdown (only has 1 section with 1 item)
-                // Other areas should have dropdown if they have content
                 const hasSubSections = areaId !== 'overview' && sections.length > 0;
                 const isExpanded = expandedSections.includes(areaId);
                 
-                // Force dropdown for all non-dashboard items temporarily for debugging
-                const forceDropdown = item.title !== 'Dashboard' && !collapsed;
-                
-                
-                
                 return (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild className="h-10 sm:h-12">
+                    <SidebarMenuButton asChild className="h-12 touch-target-44">
                       <div 
-                        className={`flex items-center w-full cursor-pointer ${getNavClass({ isActive })}`}
-                        onClick={() => {
-                          // Auto-expand sections when clicking hub pages (except Dashboard)
-                          if (item.title !== 'Dashboard' && hasSubSections) {
+                        className={`flex items-center w-full cursor-pointer ${getNavClass({ isActive })} touch-target-44`}
+                        onClick={(e) => {
+                          // Prevent navigation when clicking to expand
+                          if (item.title !== 'Dashboard' && hasSubSections && !isMobile) {
+                            e.preventDefault();
                             toggleSection(areaId);
                           }
                         }}
                       >
                         <NavLink 
                           to={item.url} 
-                          className="flex items-center flex-1 min-w-0"
+                          className="flex items-center flex-1 min-w-0 p-2"
+                          onClick={(e) => {
+                            // On mobile, allow navigation but also expand if needed
+                            if (isMobile && hasSubSections && !isExpanded) {
+                              toggleSection(areaId);
+                            }
+                          }}
                         >
-                          <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                          <item.icon className="h-5 w-5 flex-shrink-0" />
                           {!collapsed && (
-                            <div className="flex flex-col items-start flex-1 ml-2 min-w-0">
-                              <span className="font-medium text-xs sm:text-sm w-full leading-tight truncate">
+                            <div className="flex flex-col items-start flex-1 ml-3 min-w-0">
+                              <span className="font-medium text-sm w-full leading-tight">
                                 {item.title}
                               </span>
                               {item.description && (
-                                <span className="text-xs text-muted-foreground w-full leading-tight truncate">
+                                <span className="text-xs text-muted-foreground w-full leading-tight">
                                   {item.description}
                                 </span>
                               )}
                             </div>
                           )}
                           {item.badge && !collapsed && (
-                            <Badge variant="destructive" className="text-xs px-1 py-0 flex-shrink-0 ml-1">
+                            <Badge variant="destructive" className="text-xs px-2 py-1 flex-shrink-0 ml-2">
                               {item.badge}
                             </Badge>
                           )}
                         </NavLink>
-                        {forceDropdown && (
-                          <ChevronRight 
-                            className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ml-auto flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`} 
-                          />
+                        {hasSubSections && !collapsed && (
+                          <button
+                            className="p-2 touch-target-44"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleSection(areaId);
+                            }}
+                          >
+                            <ChevronRight 
+                              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                            />
+                          </button>
                         )}
                       </div>
                     </SidebarMenuButton>
                     
                     {hasSubSections && isExpanded && !collapsed && (
-                      <SidebarMenuSub className="space-y-1">
+                      <SidebarMenuSub className="space-y-1 pb-2">
                         {sections.map((section) => (
                           <div key={section.id} className="space-y-1">
-                            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/50">
+                            <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                               {section.label}
                             </div>
                             {section.items.map((subItem: any) => {
@@ -201,26 +210,26 @@ export const SimplifiedSidebar = () => {
                               
                               return (
                                 <SidebarMenuSubItem key={subItem.url}>
-                                  <SidebarMenuSubButton asChild={hasAccess} className="min-h-[36px] py-2">
+                                  <SidebarMenuSubButton asChild={hasAccess} className="min-h-[44px] touch-target-44">
                                     {hasAccess ? (
                                       <NavLink 
                                         to={subItem.url} 
-                                        className={`${getNavClass({ isActive: subIsActive })} flex items-center w-full px-3 py-2 rounded-md`}
+                                        className={`${getNavClass({ isActive: subIsActive })} flex items-center w-full px-4 py-3 rounded-md touch-target-44`}
                                       >
                                         <subItem.icon className="h-4 w-4 flex-shrink-0" />
-                                        <span className="ml-2 text-sm leading-tight flex-1 min-w-0 break-words">
+                                        <span className="ml-3 text-sm leading-tight flex-1 min-w-0">
                                           {subItem.title}
                                         </span>
                                         {subItem.badge && (
-                                          <Badge variant="destructive" className="text-xs px-1 py-0 ml-2 flex-shrink-0">
+                                          <Badge variant="destructive" className="text-xs px-2 py-1 ml-2 flex-shrink-0">
                                             {subItem.badge}
                                           </Badge>
                                         )}
                                       </NavLink>
                                     ) : (
-                                      <div className="flex items-center opacity-50 cursor-not-allowed px-3 py-2 w-full">
+                                      <div className="flex items-center opacity-50 cursor-not-allowed px-4 py-3 w-full touch-target-44">
                                         <subItem.icon className="h-4 w-4 flex-shrink-0" />
-                                        <span className="ml-2 text-sm leading-tight flex-1 min-w-0 break-words">
+                                        <span className="ml-3 text-sm leading-tight flex-1 min-w-0">
                                           {subItem.title}
                                         </span>
                                         <Lock className="h-3 w-3 ml-2 flex-shrink-0" />
@@ -246,7 +255,7 @@ export const SimplifiedSidebar = () => {
         {!collapsed && (
           <div className="space-y-2">
             <NavLink to="/upgrade">
-              <Button variant="default" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+              <Button variant="default" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 h-12 touch-target-44">
                 <Zap className="h-4 w-4 mr-2" />
                 Upgrade Plan
               </Button>
@@ -255,7 +264,7 @@ export const SimplifiedSidebar = () => {
         )}
         {collapsed && (
           <NavLink to="/upgrade">
-            <Button variant="default" size="icon" className="w-full">
+            <Button variant="default" size="icon" className="w-full h-12 touch-target-44">
               <Zap className="h-4 w-4" />
             </Button>
           </NavLink>
