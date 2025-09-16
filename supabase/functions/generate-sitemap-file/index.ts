@@ -29,11 +29,12 @@ serve(async (req) => {
     // Generate comprehensive sitemap
     const sitemap = generateComprehensiveSitemap(canonicalDomain)
 
-    // Save sitemap to storage
+    // Save sitemap to storage using Blob for better compatibility
+    const blob = new Blob([sitemap], { type: 'application/octet-stream' })
     const { error: uploadError } = await supabaseClient.storage
       .from('site-assets')
-      .upload('sitemap.xml', sitemap, {
-        contentType: 'application/xml',
+      .upload('sitemap.xml', blob, {
+        contentType: 'application/octet-stream',
         upsert: true
       })
 

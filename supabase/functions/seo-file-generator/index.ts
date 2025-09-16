@@ -32,7 +32,7 @@ serve(async (req) => {
 
     let fileContent = ''
     let fileName = ''
-    let contentType = 'text/plain'
+    let contentType = 'application/octet-stream'  // Use octet-stream for better compatibility
 
     if (fileType === 'robots') {
       fileName = 'robots.txt'
@@ -44,10 +44,11 @@ serve(async (req) => {
       throw new Error('Invalid file type. Use "robots" or "llms"')
     }
 
-    // Save file to storage
+    // Save file to storage using Blob for better compatibility
+    const blob = new Blob([fileContent], { type: contentType })
     const { error: uploadError } = await supabaseClient.storage
       .from('site-assets')
-      .upload(fileName, fileContent, {
+      .upload(fileName, blob, {
         contentType,
         upsert: true
       })
