@@ -117,6 +117,7 @@ import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
+import SEOManagement from "./pages/SEOManagement";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
@@ -140,6 +141,7 @@ import ConstructionSchedulingSoftware from "./pages/ConstructionSchedulingSoftwa
 import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectManagementSoftware";
 
 import { GenericPage } from "@/components/pages/GenericPage";
+import { DynamicSEOOptimizer } from "@/components/seo/DynamicSEOOptimizer";
 
 // Create a client
 // Query client is now imported from lib/queryClient.ts
@@ -157,6 +159,7 @@ const App = () => {
         <ThemeProvider>
           <HelmetProvider>
             <BrowserRouter>
+              <DynamicSEOOptimizer />
               <Suspense fallback={<RouteLoadingFallback />}>
                 <Routes>
               <Route path="/" element={<LazyIndex />} />
@@ -389,6 +392,7 @@ const App = () => {
                 path="/admin/seo-analytics"
                 element={<SEOAnalyticsDashboard />}
               />
+              <Route path="/seo-management" element={<SEOManagement />} />
               <Route path="/upgrade" element={<Upgrade />} />
               <Route path="/schedule-builder" element={<ScheduleBuilder />} />
 
