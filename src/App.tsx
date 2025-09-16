@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -116,7 +116,7 @@ import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import UnifiedSEODashboard from "./pages/UnifiedSEODashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
-import SEOManager from "./pages/admin/SEOManager";
+
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
@@ -377,7 +377,7 @@ const App = () => {
                 path="/knowledge-base-admin"
                 element={<KnowledgeBaseAdmin />}
               />
-              <Route path="/admin/seo" element={<SEOManager />} />
+              <Route path="/admin/seo" element={<Navigate to="/admin/seo-management" replace />} />
               <Route path="/admin/funnels" element={<FunnelManager />} />
               <Route
                 path="/admin/support-tickets"
@@ -391,6 +391,9 @@ const App = () => {
                 path="/admin/seo-management"
                 element={<UnifiedSEODashboard />}
               />
+              <Route path="/admin/seo-analytics" element={<Navigate to="/admin/seo-management" replace />} />
+              <Route path="/admin/seo-analytics-legacy" element={<Navigate to="/admin/seo-management" replace />} />
+              <Route path="/seo-management" element={<Navigate to="/admin/seo-management" replace />} />
               <Route path="/upgrade" element={<Upgrade />} />
               <Route path="/schedule-builder" element={<ScheduleBuilder />} />
 
