@@ -321,7 +321,7 @@ export const dashboardAreas: DashboardArea[] = [
         items: [
           { title: "Blog Manager", url: "/blog-manager", icon: MessageSquare, roles: ["root_admin"], badge: "Root Admin" },
           { title: "Knowledge Base Admin", url: "/knowledge-base-admin", icon: FileText, roles: ["root_admin"], badge: "Root Admin" },
-          { title: "SEO Manager", url: "/admin/seo", icon: Globe, roles: ["root_admin"], badge: "Root Admin" },
+          { title: "SEO Management", url: "/admin/seo-management", icon: Globe, roles: ["root_admin"], badge: "Unified" },
           { title: "Funnels", url: "/admin/funnels", icon: Zap, roles: ["root_admin"], badge: "Root Admin" }
         ]
       },

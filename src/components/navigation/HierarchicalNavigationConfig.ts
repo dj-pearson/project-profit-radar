@@ -662,25 +662,11 @@ export const hierarchicalNavigation: NavigationArea[] = [
             badge: "Admin",
           },
           {
-            title: "SEO Analytics (MCP)",
-            url: "/admin/seo-analytics",
-            icon: BarChart4,
-            roles: ["root_admin"],
-            badge: "New",
-          },
-          {
-            title: "SEO Analytics (Legacy)",
-            url: "/admin/seo-analytics-legacy",
-            icon: BarChart3,
-            roles: ["root_admin"],
-            badge: "Legacy",
-          },
-          {
-            title: "SEO Manager",
-            url: "/admin/seo",
+            title: "SEO Management",
+            url: "/admin/seo-management",
             icon: Globe,
             roles: ["root_admin"],
-            badge: "Admin",
+            badge: "Unified",
           },
           {
             title: "Analytics",

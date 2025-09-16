@@ -636,11 +636,11 @@ const navigationCategories: NavigationCategory[] = [
         badge: "Admin",
       },
       {
-        title: "SEO Manager",
-        url: "/admin/seo",
+        title: "SEO Management",
+        url: "/admin/seo-management",
         icon: Globe,
         roles: ["root_admin"],
-        badge: "Admin",
+        badge: "Unified",
       },
       {
         title: "Security Monitoring",

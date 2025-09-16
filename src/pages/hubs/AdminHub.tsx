@@ -172,8 +172,8 @@ const AdminHub = () => {
                 <Button variant="outline" onClick={() => navigate('/admin/analytics')}>
                   View Analytics
                 </Button>
-                <Button variant="outline" onClick={() => navigate('/admin/seo-analytics')}>
-                  SEO Analytics (MCP) ✨
+                <Button variant="outline" onClick={() => navigate('/admin/seo-management')}>
+                  SEO Management ✨
                 </Button>
                 <Button variant="outline" onClick={() => navigate('/admin/social-media')}>
                   Social Media

@@ -106,7 +106,7 @@ export const usePermissions = () => {
       '/admin/billing': ['root_admin'],
       '/admin/analytics': ['root_admin'],
       '/admin/settings': ['root_admin'],
-      '/admin/seo': ['root_admin'],
+      '/admin/seo-management': ['root_admin'],
       '/blog-manager': ['root_admin'],
       '/admin/social-media': ['root_admin'],
       '/company-admin-settings': ['admin', 'root_admin'],

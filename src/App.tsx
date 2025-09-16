@@ -389,10 +389,9 @@ const App = () => {
                 element={<SocialMediaManager />}
               />
               <Route
-                path="/admin/seo-analytics"
-                element={<SEOAnalyticsDashboard />}
+                path="/admin/seo-management"
+                element={<UnifiedSEODashboard />}
               />
-              <Route path="/seo-management" element={<SEOManagement />} />
               <Route path="/upgrade" element={<Upgrade />} />
               <Route path="/schedule-builder" element={<ScheduleBuilder />} />
 
