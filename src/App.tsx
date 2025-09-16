@@ -141,7 +141,7 @@ import ConstructionSchedulingSoftware from "./pages/ConstructionSchedulingSoftwa
 import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectManagementSoftware";
 
 import { GenericPage } from "@/components/pages/GenericPage";
-import { DynamicSEOOptimizer } from "@/components/seo/DynamicSEOOptimizer";
+import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
 
 // Create a client
 // Query client is now imported from lib/queryClient.ts
@@ -159,7 +159,7 @@ const App = () => {
         <ThemeProvider>
           <HelmetProvider>
             <BrowserRouter>
-              <DynamicSEOOptimizer />
+              <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
               <Suspense fallback={<RouteLoadingFallback />}>
                 <Routes>
               <Route path="/" element={<LazyIndex />} />
