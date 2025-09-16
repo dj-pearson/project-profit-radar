@@ -24,6 +24,32 @@ interface JobData {
   completion_percentage: number;
 }
 
+interface ProjectData {
+  id: string;
+  name: string;
+  budget: number | null;
+  completion_percentage: number | null;
+  status: string | null;
+}
+
+interface JobCostData {
+  project_id: string;
+  labor_cost: number | null;
+  material_cost: number | null;
+  equipment_cost: number | null;
+  other_cost: number | null;
+}
+
+interface ExpenseData {
+  project_id: string;
+  amount: number | null;
+}
+
+interface InvoiceData {
+  project_id: string;
+  amount_paid: number | null;
+}
+
 const JobProfitabilityOverview = () => {
   const { userProfile } = useAuth();
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
@@ -49,13 +75,59 @@ const JobProfitabilityOverview = () => {
 
       if (projectsError) throw projectsError;
 
-      // Transform projects data to job profitability format
-      const transformedJobs: JobData[] = projects?.map(project => {
-        const budget = parseFloat(String(project.budget)) || 0;
+      // Get actual job costs for all projects
+      const { data: jobCosts, error: jobCostsError } = await supabase
+        .from('job_costs')
+        .select('project_id, labor_cost, material_cost, equipment_cost, other_cost')
+        .eq('company_id', userProfile?.company_id);
+
+      if (jobCostsError) throw jobCostsError;
+
+      // Get actual expenses for all projects  
+      const { data: expenses, error: expensesError } = await supabase
+        .from('expenses')
+        .select('project_id, amount')
+        .eq('company_id', userProfile?.company_id)
+        .eq('payment_status', 'approved');
+
+      if (expensesError) throw expensesError;
+
+      // Get actual revenue from paid invoices
+      const { data: invoices, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('project_id, amount_paid')
+        .eq('company_id', userProfile?.company_id)
+        .in('status', ['paid', 'partially_paid']);
+
+      if (invoicesError) throw invoicesError;
+
+      // Transform projects data with actual financial data
+      const transformedJobs: JobData[] = (projects || []).map(project => {
+        const budget = Number(project.budget) || 0;
         const completion = project.completion_percentage || 0;
-        const revenue = budget * (completion / 100);
-        const estimatedCosts = budget * 0.75; // Estimate 75% cost ratio
-        const actualCosts = estimatedCosts * (completion / 100);
+        
+        // Calculate actual costs from job_costs table
+        const projectJobCosts = (jobCosts || []).filter(jc => jc.project_id === project.id);
+        const jobCostTotal = projectJobCosts.reduce((sum, cost) => 
+          sum + (Number(cost.labor_cost) || 0) + (Number(cost.material_cost) || 0) + 
+          (Number(cost.equipment_cost) || 0) + (Number(cost.other_cost) || 0), 0
+        );
+        
+        // Add expenses from expenses table
+        const projectExpenses = (expenses || []).filter(exp => exp.project_id === project.id);
+        const expenseTotal = projectExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+        
+        // Total actual costs
+        const actualCosts = jobCostTotal + expenseTotal;
+        
+        // Calculate actual revenue from invoices
+        const projectInvoices = (invoices || []).filter(inv => inv.project_id === project.id);
+        const actualRevenue = projectInvoices.reduce((sum, inv) => sum + (Number(inv.amount_paid) || 0), 0);
+        
+        // Use actual revenue if available, otherwise estimate based on completion and budget
+        const revenue = actualRevenue > 0 ? actualRevenue : budget * (completion / 100);
+        
+        // Calculate profit and margin from real data
         const grossProfit = revenue - actualCosts;
         const profitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
 
@@ -63,14 +135,14 @@ const JobProfitabilityOverview = () => {
           id: project.id,
           name: project.name,
           revenue,
-          estimatedCosts,
+          estimatedCosts: budget * 0.75, // Keep for comparison, but use actualCosts for calculations
           actualCosts,
           grossProfit,
           profitMargin,
           status: project.status === 'completed' ? 'Completed' : 'In Progress',
           completion_percentage: completion
         };
-      }) || [];
+      });
 
       setJobData(transformedJobs);
     } catch (error) {
@@ -105,7 +177,7 @@ const JobProfitabilityOverview = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
-          Job Profitability Overview
+          Job Profitability Overview - Real Data
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -113,15 +185,15 @@ const JobProfitabilityOverview = () => {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Revenue</div>
+              <div className="text-sm text-muted-foreground">Actual Revenue</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-green-600">${totalProfit.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Profit</div>
+              <div className="text-sm text-muted-foreground">Actual Profit</div>
             </div>
             <div>
               <div className="text-2xl font-bold">{overallMargin.toFixed(1)}%</div>
-              <div className="text-sm text-muted-foreground">Avg Margin</div>
+              <div className="text-sm text-muted-foreground">Actual Margin</div>
             </div>
           </div>
         </div>
@@ -145,7 +217,7 @@ const JobProfitabilityOverview = () => {
                     <div className="font-medium">${job.revenue.toLocaleString()}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Costs:</span>
+                    <span className="text-muted-foreground">Actual Costs:</span>
                     <div className="font-medium">${job.actualCosts.toLocaleString()}</div>
                   </div>
                   <div>
@@ -157,7 +229,7 @@ const JobProfitabilityOverview = () => {
                   <div>
                     <span className="text-muted-foreground">Margin:</span>
                     <div className={`font-medium ${job.profitMargin > 15 ? 'text-green-600' : job.profitMargin > 5 ? 'text-orange-600' : 'text-red-600'}`}>
-                      {job.profitMargin}%
+                      {job.profitMargin.toFixed(1)}%
                     </div>
                   </div>
                   <div className="flex items-center">
@@ -174,6 +246,12 @@ const JobProfitabilityOverview = () => {
             );
           })}
         </div>
+
+        {jobData.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            No project data available. Add projects with budgets to see profitability analysis.
+          </div>
+        )}
       </CardContent>
     </Card>
   );
