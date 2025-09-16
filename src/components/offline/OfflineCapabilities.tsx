@@ -133,10 +133,10 @@ export const OfflineCapabilities: React.FC = () => {
     }
   };
 
-  const addOfflineData = (type: OfflineData['type'], data: any) => {
+  const addOfflineData = (type: string, data: any) => {
     const newItem: OfflineData = {
       id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type,
+      type: type as OfflineData['type'],
       data,
       timestamp: new Date().toISOString(),
       synced: false,
@@ -523,12 +523,12 @@ export const useOfflineCapabilities = () => {
     };
   }, []);
 
-  const saveOfflineData = (type: OfflineData['type'], data: any) => {
+  const saveOfflineData = (type: string, data: any) => {
     try {
       const stored = localStorage.getItem('offline_data') || '[]';
       const offlineData = JSON.parse(stored);
       
-      const newItem: OfflineData = {
+      const newItem = {
         id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type,
         data,

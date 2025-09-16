@@ -49,11 +49,13 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-class ErrorBoundaryComponent extends React.Component<
-  React.PropsWithChildren<{ fallback?: React.ComponentType<{ error?: Error; retry: () => void }> }>,
-  ErrorBoundaryState
-> {
-  constructor(props: any) {
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error?: Error; retry: () => void }>;
+}
+
+class ErrorBoundaryComponent extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
@@ -134,11 +136,11 @@ export const useAsyncOperation = () => {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | null>(null);
 
-  const execute = async <T,>(
-    asyncFn: () => Promise<T>,
-    onSuccess?: (result: T) => void,
+  const execute = async (
+    asyncFn: () => Promise<any>,
+    onSuccess?: (result: any) => void,
     onError?: (error: Error) => void
-  ): Promise<T | null> => {
+  ): Promise<any> => {
     try {
       setLoading(true);
       setError(null);
@@ -164,11 +166,11 @@ export const useAsyncOperation = () => {
 };
 
 // Data fetching hook with built-in loading and error states
-export const useAsyncData = <T,>(
-  fetchFn: () => Promise<T>,
+export const useAsyncData = (
+  fetchFn: () => Promise<any>,
   deps: React.DependencyList = []
 ) => {
-  const [data, setData] = React.useState<T | null>(null);
+  const [data, setData] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
 
