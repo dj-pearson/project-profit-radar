@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { MobileTestingEnvironment } from '@/components/mobile/MobileTestingEnvironment';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +21,7 @@ import {
 
 export const ConstructionDashboard = () => {
   const { user, userProfile, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export const ConstructionDashboard = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      navigate('/auth');
     } catch (error) {
       console.error('Error signing out:', error);
     }

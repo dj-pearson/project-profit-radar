@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SimplifiedSidebar } from '@/components/navigation/SimplifiedSidebar';
@@ -20,6 +21,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   showTrialBanner = true 
 }) => {
   const { user, userProfile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
     <SidebarProvider>
@@ -41,10 +48,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   Welcome, {userProfile?.first_name || user?.email}
                 </span>
                 <ThemeToggle />
-                <Button variant="outline" size="sm" className="hidden sm:flex text-xs lg:text-sm px-2 lg:px-3" onClick={signOut}>
+                <Button variant="outline" size="sm" className="hidden sm:flex text-xs lg:text-sm px-2 lg:px-3" onClick={handleSignOut}>
                   Sign Out
                 </Button>
-                <Button variant="outline" size="sm" className="sm:hidden text-xs px-2" onClick={signOut}>
+                <Button variant="outline" size="sm" className="sm:hidden text-xs px-2" onClick={handleSignOut}>
                   Exit
                 </Button>
               </div>
