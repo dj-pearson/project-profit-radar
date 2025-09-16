@@ -109,10 +109,6 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     return manualValue || dbValue || enterpriseValue || defaultValue;
   };
 
-  if (isLoading) {
-    return null; // Don't render anything while loading
-  }
-
   // Determine final values using priority system
   const siteUrl = 'https://builddesk.com';
   const finalTitle = getFinalValue(
@@ -216,6 +212,10 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       }
     }
   }, [enableAnalytics, isLoading, location.pathname]);
+
+  if (isLoading) {
+    return null; // Don't render anything while loading
+  }
 
   return (
     <Helmet>
