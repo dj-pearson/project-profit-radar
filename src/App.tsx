@@ -110,14 +110,13 @@ import SecurityMonitoring from "./pages/SecurityMonitoring";
 import RateLimitingDashboard from "./pages/RateLimitingDashboard";
 import BlogManager from "./pages/BlogManager";
 import KnowledgeBaseAdmin from "./pages/KnowledgeBaseAdmin";
-import SEOManager from "./pages/admin/SEOManager";
 import FunnelManager from "./pages/admin/FunnelManager";
 import SupportTickets from "./pages/admin/SupportTickets";
 import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
-import SEOAnalyticsDashboard from "./pages/SEOAnalyticsDashboard";
+import UnifiedSEODashboard from "./pages/UnifiedSEODashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
-import SEOManagement from "./pages/SEOManagement";
+import SEOManager from "./pages/admin/SEOManager";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
