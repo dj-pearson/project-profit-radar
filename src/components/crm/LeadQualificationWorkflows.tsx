@@ -134,7 +134,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
         .insert({
           workflow_name: newWorkflow.workflow_name,
           description: newWorkflow.description,
-          company_id: profile?.company_id || '',
+          company_id: userProfile?.company_id || '',
           qualification_criteria: JSON.stringify(qualificationCriteria),
           workflow_steps: JSON.stringify(workflowSteps),
           trigger_events: JSON.stringify(['lead_created', 'lead_updated', 'score_calculated']),

@@ -65,10 +65,10 @@ export const ProjectStatusUpdates = () => {
   });
 
   useEffect(() => {
-    if (profile?.company_id) {
+    if (userProfile?.company_id) {
       loadStatusUpdates();
     }
-  }, [profile?.company_id]);
+  }, [userProfile?.company_id]);
 
   const loadStatusUpdates = async () => {
     try {
@@ -81,7 +81,7 @@ export const ProjectStatusUpdates = () => {
           *,
           projects:project_id (name)
         `)
-        .eq('company_id', profile?.company_id)
+        .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
 
       if (updatesError) throw updatesError;
@@ -90,7 +90,7 @@ export const ProjectStatusUpdates = () => {
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, client_name, status')
-        .eq('company_id', profile?.company_id)
+        .eq('company_id', userProfile?.company_id)
         .order('name', { ascending: true });
 
       if (projectsError) throw projectsError;
@@ -124,7 +124,7 @@ export const ProjectStatusUpdates = () => {
       const { error } = await supabase
         .from('project_status_updates')
         .insert({
-          company_id: profile?.company_id,
+          company_id: userProfile?.company_id,
           project_id: newUpdate.project_id,
           title: newUpdate.title,
           description: newUpdate.description,
@@ -132,7 +132,7 @@ export const ProjectStatusUpdates = () => {
           visibility: newUpdate.visibility,
           is_published: newUpdate.is_published,
           published_at: newUpdate.is_published ? new Date().toISOString() : null,
-          created_by: profile?.id
+          created_by: userProfile?.id
         });
 
       if (error) throw error;

@@ -113,12 +113,12 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
 
   const loadEquipment = async () => {
     try {
-      if (!profile?.company_id) return;
+      if (!userProfile?.company_id) return;
 
       const { data, error } = await supabase
         .from('equipment')
         .select('*')
-        .eq('company_id', profile.company_id)
+        .eq('company_id', userProfile.company_id)
         .order('name');
 
       if (error) throw error;
@@ -135,12 +135,12 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
 
   const loadProjects = async () => {
     try {
-      if (!profile?.company_id) return;
+      if (!userProfile?.company_id) return;
 
       const { data, error } = await supabase
         .from('projects')
         .select('id, name, client_name')
-        .eq('company_id', profile.company_id)
+        .eq('company_id', userProfile.company_id)
         .eq('status', 'active');
 
       if (error) throw error;
@@ -212,7 +212,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
         gps_latitude: position?.coords?.latitude || null,
         gps_longitude: position?.coords?.longitude || null,
         timestamp: new Date().toISOString(),
-        company_id: profile?.company_id
+        company_id: userProfile?.company_id
       };
 
       // Update equipment status based on action

@@ -76,10 +76,10 @@ export const CustomerCommunicationHub = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
   useEffect(() => {
-    if (profile?.company_id) {
+    if (userProfile?.company_id) {
       loadCommunicationData();
     }
-  }, [profile?.company_id]);
+  }, [userProfile?.company_id]);
 
   const loadCommunicationData = async () => {
     try {
@@ -93,7 +93,7 @@ export const CustomerCommunicationHub = () => {
           projects:project_id (name),
           leads:lead_id (first_name, last_name, company_name)
         `)
-        .eq('company_id', profile?.company_id)
+        .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -103,7 +103,7 @@ export const CustomerCommunicationHub = () => {
       const { data: templatesData, error: templatesError } = await supabase
         .from('communication_templates')
         .select('*')
-        .eq('company_id', profile?.company_id)
+        .eq('company_id', userProfile?.company_id)
         .eq('is_active', true)
         .order('category', { ascending: true });
 
@@ -113,7 +113,7 @@ export const CustomerCommunicationHub = () => {
       const { data: rulesData, error: rulesError } = await supabase
         .from('notification_rules')
         .select('*')
-        .eq('company_id', profile?.company_id)
+        .eq('company_id', userProfile?.company_id)
         .order('name', { ascending: true });
 
       if (rulesError) throw rulesError;
@@ -148,14 +148,14 @@ export const CustomerCommunicationHub = () => {
       const { error } = await supabase
         .from('communication_log')
         .insert({
-          company_id: profile?.company_id,
+          company_id: userProfile?.company_id,
           project_id: projectId || null,
           lead_id: leadId || null,
           communication_type: type,
           direction: 'outbound',
           content: newMessageContent,
           status: 'pending',
-          created_by: profile?.id
+          created_by: userProfile?.id
         });
 
       if (error) throw error;
@@ -189,8 +189,8 @@ export const CustomerCommunicationHub = () => {
           subject_template: templateData.subject_template || '',
           content_template: templateData.content_template || '',
           variables: JSON.stringify(templateData.variables || []),
-          company_id: profile?.company_id,
-          created_by: profile?.id
+          company_id: userProfile?.company_id,
+          created_by: userProfile?.id
         });
 
       if (error) throw error;
@@ -223,8 +223,8 @@ export const CustomerCommunicationHub = () => {
           recipients: JSON.stringify(ruleData.recipients || []),
           delay_minutes: ruleData.delay_minutes || 0,
           is_active: ruleData.is_active ?? true,
-          company_id: profile?.company_id,
-          created_by: profile?.id
+          company_id: userProfile?.company_id,
+          created_by: userProfile?.id
         });
 
       if (error) throw error;

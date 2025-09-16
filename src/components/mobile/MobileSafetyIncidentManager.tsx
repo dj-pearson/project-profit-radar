@@ -104,12 +104,12 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
 
   const loadProjects = async () => {
     try {
-      if (!profile?.company_id) return;
+      if (!userProfile?.company_id) return;
 
       const { data, error } = await supabase
         .from('projects')
         .select('id, name, client_name')
-        .eq('company_id', profile.company_id)
+        .eq('company_id', userProfile.company_id)
         .eq('status', 'active');
 
       if (error) throw error;
@@ -193,7 +193,7 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
         incident_date: new Date().toISOString().split('T')[0],
         incident_time: new Date().toTimeString().split(' ')[0],
         reported_by: user?.id,
-        company_id: profile?.company_id,
+        company_id: userProfile?.company_id,
         injured_person_name: incidentData.injured_person_name || null,
         injured_person_job_title: incidentData.injured_person_job_title || null,
         body_part_affected: incidentData.body_part_affected || null,

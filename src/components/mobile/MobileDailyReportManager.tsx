@@ -157,12 +157,12 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
 
   const loadProjects = async () => {
     try {
-      if (!profile?.company_id) return;
+      if (!userProfile?.company_id) return;
 
       const { data, error } = await supabase
         .from('projects')
         .select('id, name, client_name, status')
-        .eq('company_id', profile.company_id)
+        .eq('company_id', userProfile.company_id)
         .in('status', ['active', 'in_progress'])
         .order('name');
 
@@ -346,7 +346,7 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
 
       const reportPayload = {
         ...reportData,
-        company_id: profile?.company_id,
+        company_id: userProfile?.company_id,
         submitted_by: user?.id,
         gps_latitude: position?.coords?.latitude || null,
         gps_longitude: position?.coords?.longitude || null,
