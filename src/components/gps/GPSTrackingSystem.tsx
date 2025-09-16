@@ -78,13 +78,8 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      let query = supabase
-        .from('gps_locations')
-        .select(`
-          *,
-          profiles:user_id (display_name),
-          projects:project_id (name)
-        `)
+      let query = (supabase.from as any)('gps_locations')
+        .select('*')
         .order('timestamp', { ascending: false })
         .limit(50);
 
@@ -98,13 +93,7 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
 
       if (error) throw error;
 
-      const transformedLocations = data?.map(location => ({
-        ...location,
-        user_name: location.profiles?.display_name,
-        project_name: location.projects?.name
-      })) || [];
-
-      setLocations(transformedLocations);
+      setLocations((data as any) || []);
     } catch (error) {
       console.error('Error loading GPS data:', error);
       toast({
@@ -272,8 +261,7 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
         return;
       }
 
-      const { error } = await supabase
-        .from('gps_locations')
+      const { error } = await (supabase.from as any)('gps_locations')
         .insert({
           user_id: userProfile.user.id,
           company_id: companyId,

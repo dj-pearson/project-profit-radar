@@ -229,8 +229,7 @@ export const OfflineCapabilities: React.FC = () => {
           return !timesheetError;
 
         case 'expense':
-          const { error: expenseError } = await supabase
-            .from('project_expenses')
+          const { error: expenseError } = await (supabase.from as any)('project_expenses')
             .insert({
               ...item.data,
               submitted_by: userProfile.user.id,

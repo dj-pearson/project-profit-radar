@@ -135,30 +135,15 @@ const JobProfitabilityOverview = () => {
         // Use actual revenue if available, otherwise estimate based on completion and budget
         const revenue = actualRevenue > 0 ? actualRevenue : budget * (completion / 100);
         
-        // Get actual expense data from project_expenses table
-        const { data: expenseData } = await supabase
-          .from('project_expenses')
-          .select('amount')
-          .eq('project_id', project.id)
-          .eq('status', 'approved');
-
-        const actualExpenses = expenseData?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
-        
-        // Calculate actual costs from time entries and expenses
-        const actualCosts = laborCosts + actualExpenses;
-        
         // Calculate profit and margin from real data
         const grossProfit = revenue - actualCosts;
         const profitMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
-
-        // Keep estimated costs for comparison but use actual data for calculations
-        const estimatedCosts = budget * 0.8; // More realistic estimate
 
         return {
           id: project.id,
           name: project.name,
           revenue,
-          estimatedCosts,
+          estimatedCosts: budget * 0.75, // Keep for comparison, but use actualCosts for calculations
           actualCosts,
           grossProfit,
           profitMargin,

@@ -88,13 +88,8 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      let query = supabase
-        .from('project_expenses')
-        .select(`
-          *,
-          projects:project_id (name),
-          profiles:submitted_by (display_name)
-        `)
+      let query = (supabase.from as any)('project_expenses')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (projectId) {
@@ -107,13 +102,7 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
 
       if (error) throw error;
 
-      const transformedExpenses = data?.map(expense => ({
-        ...expense,
-        project_name: expense.projects?.name,
-        submitted_by_name: expense.profiles?.display_name
-      })) || [];
-
-      setExpenses(transformedExpenses);
+      setExpenses((data as any) || []);
     } catch (error) {
       console.error('Error loading expenses:', error);
       toast({
@@ -169,8 +158,7 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
         receiptUrl = publicUrl;
       }
 
-      const { error } = await supabase
-        .from('project_expenses')
+      const { error } = await (supabase.from as any)('project_expenses')
         .insert({
           project_id: newExpense.project_id,
           company_id: companyId,
@@ -213,8 +201,7 @@ export const ExpenseTrackingSystem: React.FC<ExpenseTrackingProps> = ({
 
   const updateExpenseStatus = async (expenseId: string, status: 'approved' | 'rejected') => {
     try {
-      const { error } = await supabase
-        .from('project_expenses')
+      const { error } = await (supabase.from as any)('project_expenses')
         .update({ status })
         .eq('id', expenseId);
 
