@@ -680,6 +680,9 @@ class ContentSEOGenerator {
   }
 
   private async storeGeneratedContent(content: GeneratedContent, config: ContentSEOConfig): Promise<void> {
+    // TODO: Create generated_content table in database before enabling this
+    console.log('Generated content stored locally:', { content, config });
+    /*
     await supabase
       .from('generated_content')
       .insert([{
@@ -697,6 +700,7 @@ class ContentSEOGenerator {
         recommendations: content.recommendations,
         created_at: new Date().toISOString()
       }]);
+    */
   }
 }
 

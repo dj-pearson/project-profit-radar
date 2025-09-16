@@ -516,6 +516,9 @@ class EnterpriseSeOService {
   }
 
   private async storePageConfig(config: SEOPageConfig): Promise<void> {
+    // TODO: Create seo_page_configs table in database before enabling this
+    console.log('SEO page config stored locally:', config);
+    /*
     await supabase
       .from('seo_page_configs')
       .upsert([{
@@ -537,6 +540,7 @@ class EnterpriseSeOService {
         performance_score: config.performanceScore,
         conversion_rate: config.conversionRate
       }]);
+    */
   }
 
   // Mock implementations for external data (would integrate with real SEO tools)
