@@ -695,8 +695,7 @@ Make sure the new topic is completely different from the existing one but still 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   
-  }
-  catch (error) {
+  } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
     
