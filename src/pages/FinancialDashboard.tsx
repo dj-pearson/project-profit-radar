@@ -15,7 +15,7 @@ import { CashFlowForecasting } from '@/components/financial/CashFlowForecasting'
 import { ExpenseTracker } from '@/components/financial/ExpenseTracker';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import Form1099Manager from '@/components/financial/Form1099Manager';
-import StripePaymentProcessor from '@/components/financial/StripePaymentProcessor';
+import { StripePaymentProcessor } from '@/components/financial/StripePaymentProcessor';
 import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -96,7 +96,10 @@ const FinancialDashboard = () => {
           </TabsContent>
 
           <TabsContent value="payments" className="space-y-6">
-            <StripePaymentProcessor />
+            <StripePaymentProcessor 
+              amount={0}
+              description="General Payment Processing"
+            />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
