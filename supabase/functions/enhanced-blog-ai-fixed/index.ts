@@ -188,15 +188,16 @@ async function handleAutoGeneration(
   customSettings?: any,
   userId?: string
 ): Promise<Response> {
-  logStep("Starting auto content generation for blog post", { companyId, topic, queueId: customSettings?.queue_id });
+  try {
+    logStep("Starting auto content generation for blog post", { companyId, topic, queueId: customSettings?.queue_id });
 
-  const claudeKey = Deno.env.get('CLAUDE_API_KEY');
-  if (!claudeKey) {
-    throw new Error("Claude API key not configured");
-  }
+    const claudeKey = Deno.env.get('CLAUDE_API_KEY');
+    if (!claudeKey) {
+      throw new Error("Claude API key not configured");
+    }
 
-  let finalTopic = topic;
-  let selectedKeyword: any = null;
+    let finalTopic = topic;
+    let selectedKeyword: any = null;
 
   // First, try to get an unused keyword that's selected for blog generation
   if (!finalTopic) {
@@ -233,8 +234,7 @@ async function handleAutoGeneration(
     logStep("Using fallback topic", { topic: finalTopic });
   }
   
-  try {
-    // Generate content with Claude, incorporating keyword context if available
+  // Generate content with Claude, incorporating keyword context if available
     let promptContent = `Write a comprehensive blog article about "${finalTopic}" for construction professionals.`;
     
     if (selectedKeyword) {
