@@ -1,66 +1,15 @@
 {
-  "name": "Project Profit Radar - Construction Management",
-  "short_name": "Profit Radar",
-  "description": "Digital construction management platform with mobile-first inspection workflows",
+  "name": "BuildDesk",
+  "short_name": "BuildDesk",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "theme_color": "#2563eb",
   "background_color": "#ffffff",
-  "scope": "/",
-  "lang": "en",
-  "categories": ["business", "productivity", "utilities"],
+  "theme_color": "#ff6b00",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/BuildDeskLogo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48 64x64",
+      "type": "image/x-icon"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "/BuildDeskLogo.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Digital Inspections",
-      "short_name": "Inspections",
-      "description": "Conduct quality inspections",
-      "url": "/mobile?tab=inspections",
-      "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Safety Reports",
-      "short_name": "Safety",
-      "description": "Report safety incidents",
-      "url": "/mobile?tab=safety",
-      "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Camera",
-      "short_name": "Camera",
-      "description": "Capture project photos",
-      "url": "/mobile?tab=camera",
-      "icons": [{ "src": "/BuildDeskLogo.png", "sizes": "192x192" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false
+  ]
 }
