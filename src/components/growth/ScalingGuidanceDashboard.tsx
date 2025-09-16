@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   TrendingUp, 
@@ -70,7 +70,7 @@ interface ScalingMilestone {
 }
 
 export const ScalingGuidanceDashboard: React.FC = () => {
-  const { profile } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
   const [assessments, setAssessments] = useState<ScalingAssessment[]>([]);
   const [milestones, setMilestones] = useState<ScalingMilestone[]>([]);

@@ -328,7 +328,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile]);
+  }, []); // Removed fetchUserProfile from deps to prevent infinite loop
 
   // Ensure loading remains true while profile is being fetched
   // But don't get stuck if profile fetch failed and we're not actively fetching

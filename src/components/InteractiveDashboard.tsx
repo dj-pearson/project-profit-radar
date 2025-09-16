@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 import { 
@@ -36,7 +36,7 @@ const InteractiveDashboard = () => {
   const [currentScenario, setCurrentScenario] = useState(0);
   const [realProjects, setRealProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, profile } = useAuth();
+  const { user, userProfile } = useAuth();
 
   // Fallback projects for demo when no real data
   const fallbackProjects: Project[] = [
@@ -71,12 +71,12 @@ const InteractiveDashboard = () => {
 
   useEffect(() => {
     loadRealProjects();
-  }, [profile?.company_id]);
+  }, [userProfile?.company_id]);
 
   const loadRealProjects = async () => {
     try {
       setLoading(true);
-      if (!profile?.company_id) {
+      if (!userProfile?.company_id) {
         setRealProjects(fallbackProjects);
         setLoading(false);
         return;
@@ -91,7 +91,7 @@ const InteractiveDashboard = () => {
           status,
           updated_at
         `)
-        .eq('company_id', profile.company_id)
+        .eq('company_id', userProfile.company_id)
         .limit(10);
 
       if (error) throw error;

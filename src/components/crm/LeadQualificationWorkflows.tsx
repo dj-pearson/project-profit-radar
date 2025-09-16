@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Filter, 
   Plus, 
@@ -63,7 +63,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
   const [selectedWorkflow, setSelectedWorkflow] = useState<QualificationWorkflow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const { profile } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
 
   const [newWorkflow, setNewWorkflow] = useState({

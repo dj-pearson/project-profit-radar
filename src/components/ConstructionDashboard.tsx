@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { MobileTestingEnvironment } from '@/components/mobile/MobileTestingEnvironment';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,16 +19,16 @@ import {
 } from 'lucide-react';
 
 export const ConstructionDashboard = () => {
-  const { user, profile, loading, isAuthenticated, signOut } = useAuth();
+  const { user, userProfile, loading, signOut } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!loading && !user) {
       setShowAuth(true);
     } else {
       setShowAuth(false);
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, user]);
 
   const handleAuthSuccess = () => {
     setShowAuth(false);
@@ -57,7 +57,7 @@ export const ConstructionDashboard = () => {
     return <AuthModal onSuccess={handleAuthSuccess} />;
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -99,10 +99,10 @@ export const ConstructionDashboard = () => {
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium">
-                  {profile?.first_name} {profile?.last_name}
+                  {userProfile?.first_name} {userProfile?.last_name}
                 </p>
                 <p className="text-xs text-muted-foreground capitalize">
-                  {profile?.role || 'crew_member'}
+                  {userProfile?.role || 'crew_member'}
                 </p>
               </div>
               
@@ -122,14 +122,14 @@ export const ConstructionDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl">
-                  Welcome back, {profile?.first_name || 'User'}!
+                  Welcome back, {userProfile?.first_name || 'User'}!
                 </CardTitle>
                 <CardDescription>
                   Ready to manage your construction projects on mobile
                 </CardDescription>
               </div>
               <Badge variant="secondary" className="capitalize">
-                {profile?.role || 'crew_member'}
+                {userProfile?.role || 'crew_member'}
               </Badge>
             </div>
           </CardHeader>

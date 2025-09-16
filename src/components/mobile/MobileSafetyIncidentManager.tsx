@@ -27,7 +27,7 @@ import {
   Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,7 +92,7 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
   const [showCamera, setShowCamera] = useState(false);
 
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, userProfile } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
   const [isRecording, setIsRecording] = useState(false);
