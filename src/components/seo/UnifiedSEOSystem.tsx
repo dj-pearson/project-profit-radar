@@ -70,11 +70,15 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
         setIsLoading(true);
         
         // 1. First, try to get existing SEO config from database
-        const { data: existingConfig } = await supabase
+        const { data: existingConfig, error: metaError } = await supabase
           .from('seo_meta_tags')
           .select('*')
           .eq('page_path', location.pathname)
-          .single();
+          .maybeSingle();
+
+        if (metaError && metaError.code !== 'PGRST116') {
+          console.warn('SEO meta fetch warning:', metaError.message);
+        }
 
         if (existingConfig) {
           setDbConfig(existingConfig);
