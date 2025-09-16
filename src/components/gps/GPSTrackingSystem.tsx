@@ -111,16 +111,13 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      const { data, error } = await supabase
-        .from('company_settings')
-        .select('gps_settings')
+      const { data, error } = await (supabase.from as any)('company_settings')
+        .select('*')
         .eq('company_id', companyId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-
-      if (data?.gps_settings) {
-        setSettings(data.gps_settings);
+      if (!error && data && (data as any).gps_settings) {
+        setSettings(((data as any).gps_settings) as GPSSettings);
       }
     } catch (error) {
       console.error('Error loading GPS settings:', error);
@@ -132,8 +129,7 @@ export const GPSTrackingSystem: React.FC<GPSTrackingProps> = ({
       const { data: userProfile } = await supabase.auth.getUser();
       if (!userProfile.user) return;
 
-      const { error } = await supabase
-        .from('company_settings')
+      const { error } = await (supabase.from as any)('company_settings')
         .upsert({
           company_id: companyId,
           gps_settings: newSettings

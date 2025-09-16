@@ -10,7 +10,6 @@ import {
   WifiOff, 
   Download, 
   Upload, 
-  Sync, 
   Database,
   Clock,
   CheckCircle,
@@ -256,8 +255,7 @@ export const OfflineCapabilities: React.FC = () => {
             
             if (uploadError) return false;
 
-            const { error: recordError } = await supabase
-              .from('project_photos')
+            const { error: recordError } = await (supabase.from as any)('project_photos')
               .insert({
                 project_id: item.data.project_id,
                 url: uploadData.path,
@@ -410,7 +408,7 @@ export const OfflineCapabilities: React.FC = () => {
           disabled={!isOnline || syncProgress.inProgress || unsyncedCount === 0}
           variant="default"
         >
-          <Sync className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 mr-2" />
           Sync Now
         </Button>
         <Button 
