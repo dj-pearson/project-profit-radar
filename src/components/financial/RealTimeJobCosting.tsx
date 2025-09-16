@@ -42,7 +42,7 @@ interface JobCost {
   total_cost: number;
   description: string;
   created_at: string;
-  cost_codes: {
+  cost_codes?: {
     code: string;
     name: string;
     category: string;
@@ -208,10 +208,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     try {
       const { data: costsData, error: costsError } = await supabase
         .from('job_costs')
-        .select(`
-          *,
-          cost_codes(code, name, category)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .order('date', { ascending: false });
 
@@ -233,13 +230,10 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     
     switch (eventType) {
       case 'INSERT':
-        // Fetch the complete record with cost code details
+        // Fetch the complete record
         supabase
           .from('job_costs')
-          .select(`
-            *,
-            cost_codes(code, name, category)
-          `)
+          .select('*')
           .eq('id', newRecord.id)
           .single()
           .then(({ data, error }) => {
@@ -247,7 +241,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
               setJobCosts(prev => [data, ...prev]);
               toast({
                 title: "New Cost Added",
-                description: `${data.cost_codes?.name}: $${data.total_cost?.toLocaleString()}`
+                description: `Cost entry: $${data.total_cost?.toLocaleString()}`
               });
             }
           });
@@ -779,9 +773,9 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-2">
                                 <Badge variant="outline">
-                                  {cost.cost_codes?.code}
+                                  {cost.cost_code_id}
                                 </Badge>
-                                <span className="font-medium">{cost.cost_codes?.name}</span>
+                                <span className="font-medium">Cost Entry</span>
                                 <span className="text-sm text-muted-foreground">
                                   {new Date(cost.date).toLocaleDateString()}
                                 </span>
