@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npx @modelcontextprotocol/server-puppeteer:*)",
+      "Bash(start http://localhost:8080)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
