@@ -75,31 +75,39 @@ const JobProfitabilityOverview = () => {
 
       if (projectsError) throw projectsError;
 
-      // Get actual job costs for all projects
-      const { data: jobCosts, error: jobCostsError } = await supabase
+      // Get actual job costs for all projects (bypass type inference)
+      const jobCostsResult = await (supabase as any)
         .from('job_costs')
         .select('project_id, labor_cost, material_cost, equipment_cost, other_cost')
         .eq('company_id', userProfile?.company_id);
+      const { data: jobCostsData, error: jobCostsError } = jobCostsResult;
 
       if (jobCostsError) throw jobCostsError;
 
       // Get actual expenses for all projects  
-      const { data: expenses, error: expensesError } = await supabase
+      const expensesResult = await (supabase as any)
         .from('expenses')
         .select('project_id, amount')
         .eq('company_id', userProfile?.company_id)
         .eq('payment_status', 'approved');
+      const { data: expensesData, error: expensesError } = expensesResult;
 
       if (expensesError) throw expensesError;
 
       // Get actual revenue from paid invoices
-      const { data: invoices, error: invoicesError } = await supabase
+      const invoicesResult = await (supabase as any)
         .from('invoices')
         .select('project_id, amount_paid')
         .eq('company_id', userProfile?.company_id)
         .in('status', ['paid', 'partially_paid']);
+      const { data: invoicesData, error: invoicesError } = invoicesResult;
 
       if (invoicesError) throw invoicesError;
+
+      // Cast data to proper types
+      const jobCosts: JobCostData[] = jobCostsData || [];
+      const expenses: ExpenseData[] = expensesData || [];
+      const invoices: InvoiceData[] = invoicesData || [];
 
       // Transform projects data with actual financial data
       const transformedJobs: JobData[] = (projects || []).map(project => {
@@ -107,21 +115,21 @@ const JobProfitabilityOverview = () => {
         const completion = project.completion_percentage || 0;
         
         // Calculate actual costs from job_costs table
-        const projectJobCosts = (jobCosts || []).filter(jc => jc.project_id === project.id);
+        const projectJobCosts = jobCosts.filter(jc => jc.project_id === project.id);
         const jobCostTotal = projectJobCosts.reduce((sum, cost) => 
           sum + (Number(cost.labor_cost) || 0) + (Number(cost.material_cost) || 0) + 
           (Number(cost.equipment_cost) || 0) + (Number(cost.other_cost) || 0), 0
         );
         
         // Add expenses from expenses table
-        const projectExpenses = (expenses || []).filter(exp => exp.project_id === project.id);
+        const projectExpenses = expenses.filter(exp => exp.project_id === project.id);
         const expenseTotal = projectExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
         
         // Total actual costs
         const actualCosts = jobCostTotal + expenseTotal;
         
         // Calculate actual revenue from invoices
-        const projectInvoices = (invoices || []).filter(inv => inv.project_id === project.id);
+        const projectInvoices = invoices.filter(inv => inv.project_id === project.id);
         const actualRevenue = projectInvoices.reduce((sum, inv) => sum + (Number(inv.amount_paid) || 0), 0);
         
         // Use actual revenue if available, otherwise estimate based on completion and budget
