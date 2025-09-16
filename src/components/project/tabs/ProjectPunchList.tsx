@@ -52,15 +52,8 @@ interface PunchListItem {
   actual_cost?: number;
   notes?: string;
   completion_notes?: string;
+  created_by?: string;
   created_at: string;
-  assigned_user?: {
-    first_name: string;
-    last_name: string;
-  };
-  created_by_user?: {
-    first_name: string;
-    last_name: string;
-  };
 }
 
 interface ProjectPunchListProps {
@@ -158,11 +151,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       setLoading(true);
       const { data, error } = await supabase
         .from('punch_list_items')
-        .select(`
-          *,
-          assigned_user:user_profiles!assigned_to(first_name, last_name),
-          created_by_user:user_profiles!created_by(first_name, last_name)
-        `)
+        .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
 
@@ -249,11 +238,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
       const { data, error } = await supabase
         .from('punch_list_items')
         .insert([itemData])
-        .select(`
-          *,
-          assigned_user:user_profiles!assigned_to(first_name, last_name),
-          created_by_user:user_profiles!created_by(first_name, last_name)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -291,11 +276,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
         .from('punch_list_items')
         .update(itemData)
         .eq('id', editingItem.id)
-        .select(`
-          *,
-          assigned_user:user_profiles!assigned_to(first_name, last_name),
-          created_by_user:user_profiles!created_by(first_name, last_name)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -334,11 +315,7 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
         .from('punch_list_items')
         .update(updates)
         .eq('id', itemId)
-        .select(`
-          *,
-          assigned_user:user_profiles!assigned_to(first_name, last_name),
-          created_by_user:user_profiles!created_by(first_name, last_name)
-        `)
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -838,20 +815,20 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                       )}
                     </div>
 
-                    {(item.assigned_company || item.assigned_user || item.target_completion_date) && (
+                    {(item.assigned_company || item.assigned_to || item.target_completion_date) && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         {item.assigned_company && (
                           <div className="flex items-center space-x-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Assigned:</span>
+                            <span className="text-muted-foreground">Company:</span>
                             <span>{item.assigned_company}</span>
                           </div>
                         )}
-                        {item.assigned_user && (
+                        {item.assigned_to && (
                           <div className="flex items-center space-x-2">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">Assigned:</span>
-                            <span>{`${item.assigned_user.first_name} ${item.assigned_user.last_name}`}</span>
+                            <span>{item.assigned_to}</span>
                           </div>
                         )}
                         {item.target_completion_date && (
@@ -882,8 +859,8 @@ export const ProjectPunchList: React.FC<ProjectPunchListProps> = ({
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <div>
                         Created {new Date(item.created_at).toLocaleDateString()}
-                        {item.created_by_user && (
-                          <span> by {`${item.created_by_user.first_name} ${item.created_by_user.last_name}`}</span>
+                        {item.created_by && (
+                          <span> by {item.created_by}</span>
                         )}
                       </div>
                       {item.date_completed && (
