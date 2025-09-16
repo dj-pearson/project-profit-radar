@@ -200,15 +200,22 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
 
   // Track analytics if enabled
   useEffect(() => {
-    if (enableAnalytics && !isLoading) {
-      trackSEOPerformance({
-        path: location.pathname,
-        title: finalTitle,
-        keywords: finalKeywords,
-        source: dbConfig ? 'database' : enterpriseConfig ? 'enterprise' : 'manual'
-      });
+    if (enableAnalytics && !isLoading && finalTitle && finalKeywords) {
+      // Only call trackSEOPerformance if it exists and all dependencies are stable
+      try {
+        if (typeof trackSEOPerformance === 'function') {
+          trackSEOPerformance({
+            path: location.pathname,
+            title: finalTitle,
+            keywords: finalKeywords,
+            source: dbConfig ? 'database' : enterpriseConfig ? 'enterprise' : 'manual'
+          });
+        }
+      } catch (error) {
+        console.log('SEO tracking unavailable:', error);
+      }
     }
-  }, [enableAnalytics, isLoading, location.pathname, finalTitle]);
+  }, [enableAnalytics, isLoading, location.pathname]);
 
   return (
     <Helmet>

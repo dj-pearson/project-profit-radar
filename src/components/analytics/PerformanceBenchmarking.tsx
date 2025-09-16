@@ -86,18 +86,18 @@ export default function PerformanceBenchmarking() {
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkMetrics | null>(null);
 
   useEffect(() => {
-    if (profile?.company_id) {
+    if (userProfile?.company_id) {
       loadBenchmarkData();
     }
-  }, [profile]);
+  }, [userProfile]);
 
   const loadBenchmarkData = async () => {
-    if (!profile?.company_id) return;
+    if (!userProfile?.company_id) return;
     
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-performance-benchmarks', {
-        body: { company_id: profile.company_id }
+        body: { company_id: userProfile.company_id }
       });
 
       if (error) throw error;

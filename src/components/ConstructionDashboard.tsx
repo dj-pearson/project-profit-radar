@@ -225,13 +225,13 @@ export const ConstructionDashboard = () => {
               
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Role</label>
-                <p className="text-sm capitalize">{profile?.role || 'crew_member'}</p>
+                <p className="text-sm capitalize">{userProfile?.role || 'crew_member'}</p>
               </div>
               
-              {profile?.company_id && (
+              {userProfile?.company_id && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Company</label>
-                  <p className="text-sm">{profile.company_id}</p>
+                  <p className="text-sm">{userProfile.company_id}</p>
                 </div>
               )}
               
