@@ -38,12 +38,9 @@ export const ProjectRFIs: React.FC<ProjectRFIsProps> = ({
       setLoading(true);
       const { data, error } = await supabase
         .from('rfis')
-        .select(`
-          *,
-          creator:user_profiles!created_by(first_name, last_name)
-        `)
+        .select('*')
         .eq('project_id', projectId)
-        .eq('company_id', userProfile?.company_id)
+        .eq('company_id', userProfile?.company_id as string)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -160,10 +157,7 @@ export const ProjectRFIs: React.FC<ProjectRFIsProps> = ({
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">From:</span>
                     <span>
-                      {rfi.creator ? 
-                        `${rfi.creator.first_name} ${rfi.creator.last_name}`.trim() : 
-                        'N/A'
-                      }
+                      {rfi.created_by || 'N/A'}
                     </span>
                   </div>
                 </div>
