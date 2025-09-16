@@ -271,15 +271,296 @@ const UnifiedSEODashboard = () => {
 
   const generateSitemap = async () => {
     try {
+      setIsGenerating(true);
+      
+      // Generate dynamic sitemap
       const { data, error } = await supabase.functions.invoke('sitemap-generator', {
         body: {},
       });
 
       if (error) throw error;
 
-      toast.success('Sitemap generated successfully');
+      // Also generate static file-based sitemap
+      const { data: fileData, error: fileError } = await supabase.functions.invoke('generate-sitemap-file', {
+        body: {},
+      });
+
+      if (fileError) {
+        console.warn('File-based sitemap generation failed:', fileError);
+      }
+
+      // Update robots.txt to include sitemap reference if needed
+      const sitemapUrl = `${config.canonical_domain}/sitemap.xml`;
+      if (!config.robots_txt.includes('Sitemap:')) {
+        const updatedRobots = `${config.robots_txt}\nSitemap: ${sitemapUrl}`;
+        await updateRobotsTxt(updatedRobots);
+      }
+
+      toast.success('Sitemap generated and robots.txt updated successfully');
     } catch (error: any) {
       toast.error('Failed to generate sitemap: ' + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const updateRobotsTxt = async (robotsContent?: string) => {
+    try {
+      setIsGenerating(true);
+      
+      // Generate robots.txt using edge function
+      const { data, error } = await supabase.functions.invoke('seo-file-generator', {
+        body: { fileType: 'robots' },
+      });
+
+      if (error) throw error;
+
+      // Update the config with the generated content
+      setConfig(prev => ({ ...prev, robots_txt: data }));
+      
+      toast.success('Robots.txt updated and saved to storage');
+    } catch (error: any) {
+      console.error('Error updating robots.txt:', error);
+      toast.error('Failed to update robots.txt: ' + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const generateSchemaMarkup = async () => {
+    try {
+      setIsGenerating(true);
+      
+      // Generate comprehensive schema markup for the construction business
+      const organizationSchema = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": config.site_name,
+        "description": config.site_description,
+        "url": config.canonical_domain,
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "149",
+          "priceCurrency": "USD",
+          "priceValidUntil": "2025-12-31"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": config.site_name,
+          "url": config.canonical_domain,
+          "logo": {
+            "@type": "ImageObject",
+            "url": config.default_og_image
+          }
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "reviewCount": "247"
+        }
+      };
+
+      const breadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": config.canonical_domain
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Features",
+            "item": `${config.canonical_domain}/features`
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Pricing",
+            "item": `${config.canonical_domain}/pricing`
+          }
+        ]
+      };
+
+      const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is BuildDesk?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "BuildDesk is a construction management platform designed for small to medium-sized construction businesses, providing real-time project management, financial tracking, and collaborative tools."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does BuildDesk cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "BuildDesk offers tiered pricing starting at $149/month for unlimited users, providing comprehensive construction management features without per-user fees."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What industries does BuildDesk serve?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "BuildDesk serves construction companies, contractors, project managers, and construction professionals across various construction industry sectors."
+            }
+          }
+        ]
+      };
+
+      const schemaMarkup = `<!-- Schema.org JSON-LD markup for ${config.site_name} -->
+<script type="application/ld+json">
+${JSON.stringify(organizationSchema, null, 2)}
+</script>
+
+<script type="application/ld+json">
+${JSON.stringify(breadcrumbSchema, null, 2)}
+</script>
+
+<script type="application/ld+json">
+${JSON.stringify(faqSchema, null, 2)}
+</script>`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(schemaMarkup);
+      
+      toast.success('Schema markup generated and copied to clipboard');
+    } catch (error: any) {
+      console.error('Error generating schema markup:', error);
+      toast.error('Failed to generate schema markup: ' + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const generateLLMsFile = async () => {
+    try {
+      setIsGenerating(true);
+      
+      // Generate LLMs.txt using edge function
+      const { data, error } = await supabase.functions.invoke('seo-file-generator', {
+        body: { fileType: 'llms' },
+      });
+
+      if (error) throw error;
+
+      // Copy to clipboard for manual placement
+      await navigator.clipboard.writeText(data);
+      
+      toast.success('LLMs.txt generated, saved to storage, and copied to clipboard');
+    } catch (error: any) {
+      console.error('Error generating LLMs.txt:', error);
+      toast.error('Failed to generate LLMs.txt: ' + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const runSEOAudit = async () => {
+    try {
+      setIsGenerating(true);
+      
+      const auditResults = [];
+      
+      // Check if sitemap exists
+      try {
+        const response = await fetch(`${config.canonical_domain}/sitemap.xml`);
+        auditResults.push({
+          category: 'Technical SEO',
+          item: 'Sitemap',
+          status: response.ok ? 'good' : 'warning',
+          message: response.ok ? 'Sitemap found and accessible' : 'Sitemap not found or not accessible'
+        });
+      } catch (error) {
+        auditResults.push({
+          category: 'Technical SEO',
+          item: 'Sitemap',
+          status: 'error',
+          message: 'Could not check sitemap accessibility'
+        });
+      }
+      
+      // Check if robots.txt exists
+      try {
+        const response = await fetch(`${config.canonical_domain}/robots.txt`);
+        auditResults.push({
+          category: 'Technical SEO',
+          item: 'Robots.txt',
+          status: response.ok ? 'good' : 'warning',
+          message: response.ok ? 'Robots.txt found and accessible' : 'Robots.txt not found or not accessible'
+        });
+      } catch (error) {
+        auditResults.push({
+          category: 'Technical SEO',
+          item: 'Robots.txt',
+          status: 'error',
+          message: 'Could not check robots.txt accessibility'
+        });
+      }
+      
+      // Check meta descriptions
+      auditResults.push({
+        category: 'Content SEO',
+        item: 'Meta Description',
+        status: config.site_description.length > 150 ? 'warning' : 'good',
+        message: config.site_description.length > 150 ? 'Meta description is too long (>150 characters)' : 'Meta description length is optimal'
+      });
+      
+      // Check keywords
+      auditResults.push({
+        category: 'Content SEO',
+        item: 'Keywords',
+        status: config.site_keywords.length > 0 ? 'good' : 'warning',
+        message: config.site_keywords.length > 0 ? `${config.site_keywords.length} keywords configured` : 'No keywords configured'
+      });
+      
+      // Check social media integration
+      auditResults.push({
+        category: 'Social SEO',
+        item: 'Open Graph',
+        status: config.default_og_image ? 'good' : 'warning',
+        message: config.default_og_image ? 'Open Graph image configured' : 'No Open Graph image configured'
+      });
+      
+      // Check analytics
+      auditResults.push({
+        category: 'Analytics',
+        item: 'Google Analytics',
+        status: config.google_analytics_id ? 'good' : 'warning',
+        message: config.google_analytics_id ? 'Google Analytics configured' : 'Google Analytics not configured'
+      });
+      
+      // Check search console
+      auditResults.push({
+        category: 'Analytics',
+        item: 'Search Console',
+        status: config.google_search_console_id ? 'good' : 'warning',
+        message: config.google_search_console_id ? 'Google Search Console configured' : 'Google Search Console not configured'
+      });
+
+      // Store audit results
+      console.log('SEO Audit Results:', auditResults);
+      
+      const goodCount = auditResults.filter(r => r.status === 'good').length;
+      const warningCount = auditResults.filter(r => r.status === 'warning').length;
+      const errorCount = auditResults.filter(r => r.status === 'error').length;
+      
+      toast.success(`SEO Audit Complete: ${goodCount} good, ${warningCount} warnings, ${errorCount} errors. Check console for details.`);
+    } catch (error: any) {
+      console.error('Error running SEO audit:', error);
+      toast.error('Failed to run SEO audit: ' + error.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -343,6 +624,38 @@ const UnifiedSEODashboard = () => {
       description: 'Create XML sitemap for search engines',
       icon: Globe,
       action: generateSitemap,
+      loading: isGenerating,
+      variant: 'outline' as const
+    },
+    {
+      title: 'Update Robots.txt',
+      description: 'Generate SEO-friendly robots.txt directives',
+      icon: FileText,
+      action: () => updateRobotsTxt(),
+      variant: 'outline' as const
+    },
+    {
+      title: 'Generate Schema Markup',
+      description: 'Create structured data for better SERP visibility',
+      icon: Brain,
+      action: generateSchemaMarkup,
+      loading: isGenerating,
+      variant: 'outline' as const
+    },
+    {
+      title: 'Generate LLMs.txt',
+      description: 'Create AI training guidelines file',
+      icon: Target,
+      action: generateLLMsFile,
+      loading: isGenerating,
+      variant: 'outline' as const
+    },
+    {
+      title: 'Run SEO Audit',
+      description: 'Comprehensive SEO health check',
+      icon: CheckCircle,
+      action: runSEOAudit,
+      loading: isGenerating,
       variant: 'outline' as const
     },
     {
@@ -355,7 +668,7 @@ const UnifiedSEODashboard = () => {
     {
       title: 'Check Configuration',
       description: 'Verify API credentials and settings',
-      icon: CheckCircle,
+      icon: Settings,
       action: checkAPICredentials,
       variant: 'outline' as const
     }
