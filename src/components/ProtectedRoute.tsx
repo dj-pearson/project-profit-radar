@@ -63,7 +63,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     }
 
     lastRenderTime.current = now;
-  });
+  }, []); // Added empty dependency array to prevent infinite loop
 
   // Emergency circuit breaker - only count actual redirects
   const incrementRedirectCount = () => {
@@ -98,7 +98,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
       // Reset wait time when user changes or profile loads
       setProfileWaitTime(0);
     }
-  }, [user, userProfile, loading, profileWaitTime]);
+  }, [user, userProfile, loading]); // Removed profileWaitTime from deps to prevent infinite loop
 
   // Circuit breaker is open - force loading state
   if (isCircuitOpen || emergencyMode || forceLoading) {
