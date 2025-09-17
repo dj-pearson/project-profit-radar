@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { KPICard } from "./KPICard";
 import { ProjectHealthIndicator } from "./ProjectHealthIndicator";
 import { QuickActions } from "./QuickActions";
@@ -19,169 +20,24 @@ import {
   Settings,
   Bell,
   ChevronRight,
-  Activity
+  Activity,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface DashboardData {
-  kpis: {
-    totalRevenue: number;
-    activeProjects: number;
-    teamMembers: number;
-    completionRate: number;
-    profitMargin: number;
-    safetyScore: number;
-  };
-  projects: Array<{
-    id: string;
-    name: string;
-    overallHealth: 'excellent' | 'good' | 'warning' | 'critical';
-    budget: {
-      spent: number;
-      total: number;
-      variance: number;
-    };
-    schedule: {
-      completion: number;
-      daysRemaining: number;
-      onTrack: boolean;
-    };
-    safety: {
-      incidents: number;
-      score: number;
-      lastIncident?: string;
-    };
-  }>;
-  alerts: Array<{
-    id: string;
-    type: 'budget' | 'schedule' | 'safety' | 'quality';
-    message: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    project?: string;
-    timestamp: string;
-  }>;
-  recentActivity: Array<{
-    id: string;
-    action: string;
-    user: string;
-    project?: string;
-    timestamp: string;
-  }>;
-}
-
 export const RoleDashboard = () => {
   const { userProfile } = useAuth();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: dashboardData, loading, error, refetch } = useDashboardData();
   const [activeTab, setActiveTab] = useState("overview");
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [userProfile]);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      // Simulate API call - replace with actual Supabase calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data based on role
-      const mockData: DashboardData = {
-        kpis: {
-          totalRevenue: userProfile?.role === 'root_admin' ? 2500000 : 450000,
-          activeProjects: userProfile?.role === 'field_supervisor' ? 3 : 12,
-          teamMembers: userProfile?.role === 'field_supervisor' ? 8 : 45,
-          completionRate: 87,
-          profitMargin: 23.5,
-          safetyScore: 94
-        },
-        projects: [
-          {
-            id: '1',
-            name: 'Downtown Office Complex',
-            overallHealth: 'good',
-            budget: { spent: 750000, total: 1200000, variance: -2.3 },
-            schedule: { completion: 65, daysRemaining: 45, onTrack: true },
-            safety: { incidents: 0, score: 98 }
-          },
-          {
-            id: '2',
-            name: 'Residential Tower Phase 2',
-            overallHealth: 'warning',
-            budget: { spent: 890000, total: 950000, variance: 8.2 },
-            schedule: { completion: 78, daysRemaining: 32, onTrack: false },
-            safety: { incidents: 1, score: 85, lastIncident: '2 days ago' }
-          },
-          {
-            id: '3',
-            name: 'School Renovation',
-            overallHealth: 'excellent',
-            budget: { spent: 340000, total: 400000, variance: -5.1 },
-            schedule: { completion: 92, daysRemaining: 15, onTrack: true },
-            safety: { incidents: 0, score: 100 }
-          }
-        ],
-        alerts: [
-          {
-            id: '1',
-            type: 'budget',
-            message: 'Residential Tower Phase 2 is 8% over budget',
-            severity: 'high',
-            project: 'Residential Tower Phase 2',
-            timestamp: '2 hours ago'
-          },
-          {
-            id: '2',
-            type: 'schedule',
-            message: 'Material delivery delayed for Downtown Office',
-            severity: 'medium',
-            project: 'Downtown Office Complex',
-            timestamp: '5 hours ago'
-          },
-          {
-            id: '3',
-            type: 'safety',
-            message: 'Safety training due for 3 team members',
-            severity: 'low',
-            timestamp: '1 day ago'
-          }
-        ],
-        recentActivity: [
-          {
-            id: '1',
-            action: 'Updated project timeline',
-            user: 'John Smith',
-            project: 'Downtown Office Complex',
-            timestamp: '15 minutes ago'
-          },
-          {
-            id: '2',
-            action: 'Submitted daily report',
-            user: 'Maria Garcia',
-            project: 'School Renovation',
-            timestamp: '2 hours ago'
-          },
-          {
-            id: '3',
-            action: 'Approved change order',
-            user: 'David Johnson',
-            project: 'Residential Tower Phase 2',
-            timestamp: '4 hours ago'
-          }
-        ]
-      };
-      
-      setDashboardData(mockData);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleQuickAction = (action: string) => {
     console.log('Quick action:', action);
     // Navigate to appropriate page based on action
+    // TODO: Add navigation logic based on action type
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   const getWelcomeMessage = () => {
@@ -364,6 +220,40 @@ export const RoleDashboard = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Dashboard Error</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={handleRefresh} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No Data Available</h2>
+          <p className="text-muted-foreground mb-4">
+            No dashboard data found. Please check your account setup or try refreshing.
+          </p>
+          <Button onClick={handleRefresh}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Enhanced Header */}
@@ -383,6 +273,10 @@ export const RoleDashboard = () => {
               <Badge variant="secondary" className="capitalize">
                 {userProfile?.role?.replace('_', ' ')}
               </Badge>
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+                Refresh
+              </Button>
               <Button variant="outline" size="sm">
                 <Bell className="h-4 w-4 mr-2" />
                 Notifications
