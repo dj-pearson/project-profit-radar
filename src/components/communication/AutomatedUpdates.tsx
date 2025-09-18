@@ -101,7 +101,19 @@ export const AutomatedUpdates: React.FC<AutomatedUpdatesProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAutomationRules(data || []);
+      setAutomationRules((data || []).map((item: any) => ({
+        id: item.id,
+        name: item.trigger_type || 'Automation Rule',
+        description: item.description || '',
+        trigger_type: item.trigger_type,
+        trigger_conditions: item.trigger_conditions,
+        recipient_rules: item.recipient_rules,
+        template_id: item.template_id || '',
+        is_active: item.is_active,
+        last_triggered: item.last_triggered,
+        trigger_count: item.trigger_count,
+        created_at: item.created_at
+      })));
     } catch (error) {
       console.error('Error loading automation rules:', error);
     } finally {
@@ -158,7 +170,19 @@ export const AutomatedUpdates: React.FC<AutomatedUpdatesProps> = ({
 
       if (error) throw error;
 
-      setAutomationRules(prev => [data, ...prev]);
+      setAutomationRules(prev => [{
+        id: data.id,
+        name: data.trigger_type || 'Automation Rule',
+        description: data.trigger_type || '',
+        trigger_type: data.trigger_type,
+        trigger_conditions: data.trigger_conditions,
+        recipient_rules: data.recipient_rules,
+        template_id: data.template_id || '',
+        is_active: data.is_active,
+        last_triggered: data.last_triggered,
+        trigger_count: data.trigger_count,
+        created_at: data.created_at
+      }, ...prev]);
       setShowCreateForm(false);
       setNewRule({
         name: '',

@@ -72,7 +72,31 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Safely map the messages with proper type handling
+      const mappedMessages: Message[] = (data || []).map((m: any) => ({
+        id: m.id,
+        content: m.content,
+        created_at: m.created_at,
+        user_id: m.user_id,
+        channel_id: m.channel_id,
+        message_type: m.message_type || 'text',
+        attachments: [],
+        mentions: [],
+        reply_to_message_id: m.reply_to,
+        user_profiles: m.user_profiles ? {
+          first_name: m.user_profiles.first_name || 'Unknown',
+          last_name: m.user_profiles.last_name || 'User',
+          avatar_url: m.user_profiles.avatar_url || null
+        } : {
+          first_name: 'Unknown',
+          last_name: 'User',
+          avatar_url: null
+        },
+        replies: []
+      }));
+
+      setMessages(mappedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
     }
@@ -100,25 +124,37 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
       const { data, error } = await supabase
         .from('chat_messages')
         .insert(messageData)
-        .select(`
-          *,
-          user_profiles (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select()
         .single();
 
       if (error) throw error;
 
-      setMessages(prev => [...prev, data]);
+      const newMsg: Message = {
+        id: data.id,
+        content: data.content,
+        created_at: data.created_at,
+        user_id: data.user_id,
+        channel_id: data.channel_id,
+        message_type: data.message_type || 'text',
+        attachments: [],
+        mentions: extractMentions(newMessage),
+        reply_to_message_id: data.reply_to,
+        user_profiles: {
+          first_name: userProfile.first_name || 'Unknown',
+          last_name: userProfile.last_name || 'User',
+          avatar_url: userProfile.avatar_url || null
+        },
+        replies: []
+      };
+
+      setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
       setReplyingTo(null);
       
       // Send notifications for mentions
-      if (messageData.mentions && messageData.mentions.length > 0) {
-        await sendMentionNotifications(messageData.mentions, newMessage);
+      const mentions = extractMentions(newMessage);
+      if (mentions && mentions.length > 0) {
+        await sendMentionNotifications(mentions, newMessage);
       }
 
     } catch (error) {
@@ -187,18 +223,30 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
           message_type: 'file',
           metadata: { attachments }
         })
-        .select(`
-          *,
-          user_profiles (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select()
         .single();
 
       if (error) throw error;
-      setMessages(prev => [...prev, data]);
+
+      const newMsg: Message = {
+        id: data.id,
+        content: data.content,
+        created_at: data.created_at,
+        user_id: data.user_id,
+        channel_id: data.channel_id,
+        message_type: data.message_type || 'file',
+        attachments: attachments,
+        mentions: [],
+        reply_to_message_id: data.reply_to,
+        user_profiles: {
+          first_name: userProfile.first_name || 'Unknown',
+          last_name: userProfile.last_name || 'User',
+          avatar_url: userProfile.avatar_url || null
+        },
+        replies: []
+      };
+
+      setMessages(prev => [...prev, newMsg]);
       
     } catch (error) {
       console.error('Error uploading files:', error);
@@ -250,7 +298,7 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
               ? 'bg-primary text-primary-foreground' 
               : 'bg-muted'
           }`}>
-            {message.message_type === 'file' && message.attachments && (
+            {message.message_type === 'file' && message.attachments && message.attachments.length > 0 && (
               <div className="space-y-2 mb-2">
                 {message.attachments.map((file: any, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-background/50 rounded">

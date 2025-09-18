@@ -106,7 +106,7 @@ export const CommunicationHub: React.FC = () => {
     setLoading(true);
     try {
       const { data: channels, error } = await supabase
-        .from('chat_channels' as any)
+        .from('chat_channels')
         .select('id, name, project_id, last_activity_at, channel_type, description, created_at')
         .order('last_activity_at', { ascending: false });
 
@@ -145,7 +145,7 @@ export const CommunicationHub: React.FC = () => {
   const loadMessages = async (threadId: string) => {
     try {
       const { data, error } = await supabase
-        .from('chat_messages' as any)
+        .from('chat_messages')
         .select('id, content, created_at, user_id')
         .eq('channel_id', threadId)
         .order('created_at', { ascending: true });
