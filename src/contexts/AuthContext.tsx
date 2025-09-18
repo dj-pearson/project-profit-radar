@@ -7,7 +7,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
@@ -69,6 +69,167 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { toast } = useToast();
 
   const successfulProfiles = useRef<Map<string, UserProfile>>(new Map());
+  const sessionTimeoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+  const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Session monitoring constants
+  const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+  // Clear all session-related state and redirect to auth
+  const handleSessionExpired = useCallback(async (reason: string = 'Session expired') => {
+    console.log(`Auth session expired: ${reason}`);
+    
+    // Clear timeouts
+    if (sessionTimeoutRef.current) {
+      clearTimeout(sessionTimeoutRef.current);
+      sessionTimeoutRef.current = null;
+    }
+    if (inactivityTimeoutRef.current) {
+      clearTimeout(inactivityTimeoutRef.current);
+      inactivityTimeoutRef.current = null;
+    }
+
+    // Clear all state
+    setUser(null);
+    setSession(null);
+    setUserProfile(null);
+    successfulProfiles.current.clear();
+    
+    // Clear local storage
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('bd.userProfile.') || key.startsWith('sb-ilhzuvemiuyfuxfegtlv-auth-token')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+
+    // Sign out from Supabase
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+
+    // Show toast notification
+    toast({
+      title: "Session Expired",
+      description: "Your session has expired. Please sign in again.",
+      variant: "destructive",
+      duration: 5000,
+    });
+
+    // Redirect to auth page
+    window.location.href = '/auth';
+  }, [toast]);
+
+  // Monitor session validity
+  const checkSessionValidity = useCallback(async () => {
+    if (!session) return;
+
+    try {
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      
+      if (error || !currentSession) {
+        console.log('Session check failed:', error?.message || 'No session');
+        await handleSessionExpired('Session validation failed');
+        return;
+      }
+
+      // Check if token is expired
+      const now = Math.floor(Date.now() / 1000);
+      if (currentSession.expires_at && currentSession.expires_at <= now) {
+        console.log('Token expired');
+        await handleSessionExpired('Token expired');
+        return;
+      }
+
+      // Check if refresh token is valid by trying to refresh
+      if (currentSession.refresh_token) {
+        try {
+          const { error: refreshError } = await supabase.auth.refreshSession({
+            refresh_token: currentSession.refresh_token
+          });
+          
+          if (refreshError) {
+            console.log('Refresh token invalid:', refreshError.message);
+            await handleSessionExpired('Refresh token invalid');
+            return;
+          }
+        } catch (refreshError) {
+          console.log('Refresh failed:', refreshError);
+          await handleSessionExpired('Token refresh failed');
+          return;
+        }
+      }
+
+    } catch (error) {
+      console.error('Session validity check error:', error);
+      await handleSessionExpired('Session check error');
+    }
+  }, [session, handleSessionExpired]);
+
+  // Setup session monitoring
+  const setupSessionMonitoring = useCallback(() => {
+    if (!session) return;
+
+    // Clear existing timeouts
+    if (sessionTimeoutRef.current) {
+      clearTimeout(sessionTimeoutRef.current);
+    }
+    if (inactivityTimeoutRef.current) {
+      clearTimeout(inactivityTimeoutRef.current);
+    }
+
+    // Start periodic session validation
+    sessionTimeoutRef.current = setInterval(() => {
+      checkSessionValidity();
+    }, SESSION_CHECK_INTERVAL);
+
+    // Setup inactivity timeout
+    const resetInactivityTimer = () => {
+      lastActivityRef.current = Date.now();
+      
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+      
+      inactivityTimeoutRef.current = setTimeout(() => {
+        handleSessionExpired('User inactivity');
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Track user activity
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    const handleActivity = () => resetInactivityTimer();
+
+    activityEvents.forEach(event => {
+      document.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // Initial reset
+    resetInactivityTimer();
+
+    // Cleanup function
+    return () => {
+      if (sessionTimeoutRef.current) {
+        clearInterval(sessionTimeoutRef.current);
+        sessionTimeoutRef.current = null;
+      }
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+      activityEvents.forEach(event => {
+        document.removeEventListener(event, handleActivity);
+      });
+    };
+  }, [session, checkSessionValidity, handleSessionExpired]);
 
   // Fetch user profile with retry logic
   const fetchUserProfile = useCallback(
@@ -243,6 +404,26 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event, session?.user?.id || "none");
 
+      // Handle session expiration or token errors
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.log('Token refresh failed, session expired');
+        await handleSessionExpired('Token refresh failed');
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+        // Clear monitoring when signed out
+        if (sessionTimeoutRef.current) {
+          clearInterval(sessionTimeoutRef.current);
+          sessionTimeoutRef.current = null;
+        }
+        if (inactivityTimeoutRef.current) {
+          clearTimeout(inactivityTimeoutRef.current);
+          inactivityTimeoutRef.current = null;
+        }
+      }
+
       // Check if this is a password recovery session
       const urlParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -327,8 +508,26 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     return () => {
       subscription.unsubscribe();
+      // Cleanup session monitoring
+      if (sessionTimeoutRef.current) {
+        clearInterval(sessionTimeoutRef.current);
+      }
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
     };
   }, []); // Removed fetchUserProfile from deps to prevent infinite loop
+
+  // Setup session monitoring when session changes
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    
+    if (session && user) {
+      cleanup = setupSessionMonitoring();
+    }
+
+    return cleanup;
+  }, [session, user, setupSessionMonitoring]);
 
   // Ensure loading remains true while profile is being fetched
   // But don't get stuck if profile fetch failed and we're not actively fetching
