@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Canvas as FabricCanvas, Circle, Rect, FabricText } from 'fabric';
+// Using HTML5 Canvas instead of Fabric.js for better Vite compatibility
 import { MapPin, AlertTriangle, CheckCircle, Clock, Plus, Download, Upload, Eye, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,7 +31,7 @@ interface InteractiveFloorPlanProps {
 
 export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ projectId }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  const [canvas, setCanvas] = useState<CanvasRenderingContext2D | null>(null);
   const [floorPlanImage, setFloorPlanImage] = useState<string>('/placeholder.svg');
   const [issues, setIssues] = useState<FloorPlanIssue[]>([
     {
@@ -83,42 +83,50 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
-      backgroundColor: '#ffffff',
-    });
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
 
-    setFabricCanvas(canvas);
+    // Set canvas size
+    canvasRef.current.width = 800;
+    canvasRef.current.height = 600;
+    
+    setCanvas(ctx);
     toast.success("Floor plan ready! Click to add issues.");
-
-    return () => {
-      canvas.dispose();
-    };
   }, []);
 
   useEffect(() => {
-    if (!fabricCanvas) return;
+    if (!canvas || !canvasRef.current) return;
 
-    // Load floor plan image - simplified for now
-    fabricCanvas.renderAll();
-
-    // Clear existing pins
-    fabricCanvas.getObjects().forEach(obj => {
-      if (obj.get('name')?.startsWith('issue-pin')) {
-        fabricCanvas.remove(obj);
-      }
-    });
+    // Clear canvas
+    canvas.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    // Draw background
+    canvas.fillStyle = '#f8f9fa';
+    canvas.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    
+    // Draw grid
+    canvas.strokeStyle = '#e9ecef';
+    canvas.lineWidth = 1;
+    for (let i = 0; i < canvasRef.current.width; i += 40) {
+      canvas.beginPath();
+      canvas.moveTo(i, 0);
+      canvas.lineTo(i, canvasRef.current.height);
+      canvas.stroke();
+    }
+    for (let i = 0; i < canvasRef.current.height; i += 40) {
+      canvas.beginPath();
+      canvas.moveTo(0, i);
+      canvas.lineTo(canvasRef.current.width, i);
+      canvas.stroke();
+    }
 
     // Add issue pins
     issues.forEach(issue => {
       if (shouldShowIssue(issue)) {
-        addIssuePin(issue);
+        drawIssuePin(issue);
       }
     });
-
-    fabricCanvas.renderAll();
-  }, [fabricCanvas, issues, filterType, filterStatus, floorPlanImage]);
+  }, [canvas, issues, filterType, filterStatus, floorPlanImage]);
 
   const shouldShowIssue = (issue: FloorPlanIssue): boolean => {
     const typeMatch = filterType === 'all' || issue.type === filterType;
@@ -126,8 +134,8 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
     return typeMatch && statusMatch;
   };
 
-  const addIssuePin = (issue: FloorPlanIssue) => {
-    if (!fabricCanvas) return;
+  const drawIssuePin = (issue: FloorPlanIssue) => {
+    if (!canvas) return;
 
     const getIssueColor = (type: string, status: string) => {
       if (status === 'resolved') return '#22c55e'; // green
@@ -141,62 +149,63 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
       }
     };
 
-    // Create pin circle
-    const pin = new Circle({
-      left: issue.x,
-      top: issue.y,
-      radius: 12,
-      fill: getIssueColor(issue.type, issue.status),
-      stroke: '#ffffff',
-      strokeWidth: 2,
-      selectable: false,
-      hoverCursor: 'pointer',
-      name: `issue-pin-${issue.id}` as any
-    });
+    // Draw pin circle
+    canvas.beginPath();
+    canvas.arc(issue.x, issue.y, 12, 0, 2 * Math.PI);
+    canvas.fillStyle = getIssueColor(issue.type, issue.status);
+    canvas.fill();
+    canvas.strokeStyle = '#ffffff';
+    canvas.lineWidth = 2;
+    canvas.stroke();
 
-    // Add click handler
-    pin.on('mousedown', () => {
-      setSelectedIssue(issue);
-    });
-
-    // Create priority indicator
+    // Draw priority indicator
     if (issue.priority === 'critical' || issue.priority === 'high') {
-      const indicator = new Circle({
-        left: issue.x + 8,
-        top: issue.y - 8,
-        radius: 4,
-        fill: issue.priority === 'critical' ? '#dc2626' : '#ea580c',
-        selectable: false,
-        hoverCursor: 'pointer',
-        name: `issue-indicator-${issue.id}` as any
-      });
-      
-      indicator.on('mousedown', () => {
-        setSelectedIssue(issue);
-      });
-      
-      fabricCanvas.add(indicator);
+      canvas.beginPath();
+      canvas.arc(issue.x + 8, issue.y - 8, 4, 0, 2 * Math.PI);
+      canvas.fillStyle = issue.priority === 'critical' ? '#dc2626' : '#ea580c';
+      canvas.fill();
     }
 
-    fabricCanvas.add(pin);
+    // Draw issue type icon (simplified)
+    canvas.fillStyle = '#ffffff';
+    canvas.font = '12px Arial';
+    canvas.textAlign = 'center';
+    canvas.textBaseline = 'middle';
+    const iconText = issue.type === 'safety' ? '!' : issue.type === 'quality' ? '?' : issue.type === 'progress' ? '→' : 'i';
+    canvas.fillText(iconText, issue.x, issue.y);
   };
 
-  const handleCanvasClick = (event: any) => {
-    if (!isAddingIssue || !fabricCanvas) return;
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isAddingIssue || !canvasRef.current) return;
 
-    const pointer = fabricCanvas.getPointer(event.e);
-    setNewIssuePosition({ x: pointer.x, y: pointer.y });
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    setNewIssuePosition({ x, y });
   };
 
-  useEffect(() => {
-    if (!fabricCanvas) return;
-
-    fabricCanvas.on('mouse:down', handleCanvasClick);
-
-    return () => {
-      fabricCanvas.off('mouse:down', handleCanvasClick);
-    };
-  }, [fabricCanvas, isAddingIssue]);
+  const handleCanvasMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isAddingIssue) {
+      handleCanvasClick(event);
+    } else {
+      // Check if clicking on an issue pin
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Find clicked issue (simple distance check)
+      const clickedIssue = issues.find(issue => {
+        const distance = Math.sqrt((x - issue.x) ** 2 + (y - issue.y) ** 2);
+        return distance <= 12 && shouldShowIssue(issue);
+      });
+      
+      if (clickedIssue) {
+        setSelectedIssue(clickedIssue);
+      }
+    }
+  };
 
   const handleAddIssue = (issueData: Partial<FloorPlanIssue>) => {
     if (!newIssuePosition) return;
@@ -356,7 +365,11 @@ export const InteractiveFloorPlan: React.FC<InteractiveFloorPlanProps> = ({ proj
       <Card>
         <CardContent className="p-6">
           <div className="relative border rounded-lg overflow-hidden">
-            <canvas ref={canvasRef} className="max-w-full" />
+            <canvas 
+              ref={canvasRef} 
+              className="max-w-full cursor-pointer" 
+              onMouseDown={handleCanvasMouseDown}
+            />
             {isAddingIssue && (
               <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-3 py-1 rounded text-sm">
                 Click on the floor plan to add an issue
