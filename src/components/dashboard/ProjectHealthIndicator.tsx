@@ -125,7 +125,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
                     "text-xs font-medium",
                     project.budget.variance > 0 ? "text-red-600" : "text-green-600"
                   )}>
-                    {project.budget.variance > 0 ? '+' : ''}{project.budget.variance}% variance
+                    {project.budget.variance > 0 ? '+' : ''}{project.budget.variance.toFixed(2)}% variance
                   </p>
                 </div>
               </div>
