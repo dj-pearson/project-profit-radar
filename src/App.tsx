@@ -63,6 +63,8 @@ import {
   LazyQuickBooksRouting,
 } from "@/utils/lazyRoutes";
 
+import { VisualProjectManagementPage } from './pages/VisualProjectManagementPage';
+
 // People area pages
 import TeamManagement from "./pages/TeamManagement";
 import CrewScheduling from "./pages/CrewScheduling";
@@ -171,6 +173,7 @@ const App = () => {
               <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
               <Route path="/dashboard" element={<LazyDashboard />} />
               <Route path="/communication" element={<div className="p-6"><h1 className="text-2xl font-bold">Communication Hub</h1><p>Feature completed - real-time messaging, client portal, notifications, and automated updates ready.</p></div>} />
+              <Route path="/visual-project" element={<VisualProjectManagementPage />} />
               <Route path="/my-tasks" element={<LazyMyTasks />} />
               <Route path="/projects-hub" element={<LazyProjectsHub />} />
               <Route path="/financial-hub" element={<LazyFinancialHub />} />
