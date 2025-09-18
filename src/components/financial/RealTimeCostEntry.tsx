@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Camera, Upload, DollarSign, MapPin, Clock, Save } from 'lucide-react';
+import { SmartFormInput } from '@/components/forms/SmartFormInput';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -222,25 +223,21 @@ export const RealTimeCostEntry: React.FC<RealTimeCostEntryProps> = ({
               />
             </div>
 
-            <div>
-              <Label htmlFor="cost_code">Cost Code</Label>
-              <Input
-                id="cost_code"
-                placeholder="e.g., 03300"
-                value={formData.cost_code}
-                onChange={(e) => setFormData(prev => ({ ...prev, cost_code: e.target.value }))}
-              />
-            </div>
+            <SmartFormInput
+              label="Cost Code"
+              value={formData.cost_code}
+              onChange={(value) => setFormData(prev => ({ ...prev, cost_code: value }))}
+              placeholder="e.g., 03300"
+              storageKey="cost-code"
+            />
 
-            <div>
-              <Label htmlFor="vendor_name">Vendor</Label>
-              <Input
-                id="vendor_name"
-                placeholder="Vendor name"
-                value={formData.vendor_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
-              />
-            </div>
+            <SmartFormInput
+              label="Vendor"
+              value={formData.vendor_name}
+              onChange={(value) => setFormData(prev => ({ ...prev, vendor_name: value }))}
+              placeholder="Vendor name"
+              storageKey="vendor-name"
+            />
           </div>
 
           <div>
