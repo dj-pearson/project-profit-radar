@@ -1,6 +1,7 @@
 import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
@@ -29,14 +30,20 @@ const Dashboard = () => {
   // Show empty dashboard for new users or companies without data
   if (!hasData && userProfile) {
     return (
-      <EmptyDashboard 
-        userRole={userProfile.role} 
-        onAction={handleEmptyAction}
-      />
+      <DashboardLayout title="Dashboard">
+        <EmptyDashboard 
+          userRole={userProfile.role} 
+          onAction={handleEmptyAction}
+        />
+      </DashboardLayout>
     );
   }
 
-  return <RoleDashboard />;
+  return (
+    <DashboardLayout title="Dashboard">
+      <RoleDashboard />
+    </DashboardLayout>
+  );
 };
 
 export default Dashboard;
