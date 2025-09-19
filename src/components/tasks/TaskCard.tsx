@@ -81,18 +81,26 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   const handleStatusChange = async (newStatus: string) => {
+    // Optimistically update the UI
+    const previousStatus = task.status;
+    onUpdate({ ...task, status: newStatus });
+
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .update({ status: newStatus })
         .eq('id', task.id)
         .select()
         .single();
 
-      if (data) {
-        onUpdate({ ...task, status: newStatus });
+      if (error) {
+        // Rollback on error
+        onUpdate({ ...task, status: previousStatus });
+        console.error('Error updating task status:', error);
       }
     } catch (error) {
+      // Rollback on error
+      onUpdate({ ...task, status: previousStatus });
       console.error('Error updating task status:', error);
     }
   };

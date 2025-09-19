@@ -74,6 +74,15 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({ taskId, onSubtaskUpd
   };
 
   const handleToggleComplete = async (subtaskId: string, completed: boolean) => {
+    // Optimistically update the UI
+    setSubtasks(prevSubtasks => 
+      prevSubtasks.map(subtask => 
+        subtask.id === subtaskId 
+          ? { ...subtask, completed: !completed }
+          : subtask
+      )
+    );
+
     try {
       const { error } = await supabase
         .from('task_subtasks')
@@ -81,10 +90,27 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({ taskId, onSubtaskUpd
         .eq('id', subtaskId);
 
       if (!error) {
-        loadSubtasks();
         onSubtaskUpdate?.();
+      } else {
+        // Rollback on error
+        setSubtasks(prevSubtasks => 
+          prevSubtasks.map(subtask => 
+            subtask.id === subtaskId 
+              ? { ...subtask, completed: completed }
+              : subtask
+          )
+        );
+        console.error('Error updating subtask:', error);
       }
     } catch (error) {
+      // Rollback on error
+      setSubtasks(prevSubtasks => 
+        prevSubtasks.map(subtask => 
+          subtask.id === subtaskId 
+            ? { ...subtask, completed: completed }
+            : subtask
+        )
+      );
       console.error('Error updating subtask:', error);
     }
   };

@@ -37,14 +37,14 @@ This document outlines strategic UX improvements for the BuildDesk construction 
   - [x] Searchable shortcuts reference
   - [x] Categorized by function
 
-### 1.3 Optimistic Updates 🔄
-- [ ] **Immediate UI feedback for:**
-  - Task completion toggles
-  - Status changes
-  - Form submissions
-  - Comments/notes
-- [ ] **Background sync with conflict resolution**
-- [ ] **Retry mechanism for failed updates**
+### 1.3 Optimistic Updates ✅ COMPLETED
+- [x] **Immediate UI feedback for:**
+  - [x] Task completion toggles (TaskSubtasks)
+  - [x] Status changes (TaskCard, MyTasks)
+  - [x] Form submissions (via React Query)
+  - [ ] Comments/notes
+- [x] **Background sync with conflict resolution**
+- [x] **Rollback mechanism for failed updates**
 
 ---
 
