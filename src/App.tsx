@@ -147,6 +147,8 @@ import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectMa
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
+import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import AccessibilityPage from "./pages/AccessibilityPage";
 
 // Create a client
 // Query client is now imported from lib/queryClient.ts
@@ -161,14 +163,15 @@ const App = () => {
     <CriticalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ContextMenuProvider>
-            <PlatformProvider>
-              <ThemeProvider>
-                <HelmetProvider>
-                  <BrowserRouter>
-                  <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
-                  <Suspense fallback={<DashboardSkeleton />}>
-                    <Routes>
+          <AccessibilityProvider>
+            <ContextMenuProvider>
+              <PlatformProvider>
+                <ThemeProvider>
+                  <HelmetProvider>
+                    <BrowserRouter>
+                    <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
+                    <Suspense fallback={<DashboardSkeleton />}>
+                      <Routes>
               <Route path="/" element={<LazyIndex />} />
               <Route path="/marketplace" element={<LazyAPIMarketplace />} />
               <Route path="/collaboration" element={<LazyCollaboration />} />
@@ -406,6 +409,7 @@ const App = () => {
               <Route path="/seo-management" element={<Navigate to="/admin/seo-management" replace />} />
               <Route path="/upgrade" element={<Upgrade />} />
               <Route path="/schedule-builder" element={<ScheduleBuilder />} />
+              <Route path="/accessibility" element={<AccessibilityPage />} />
 
               <Route
                 path="*"
@@ -432,6 +436,7 @@ const App = () => {
     </ThemeProvider>
   </PlatformProvider>
           </ContextMenuProvider>
+          </AccessibilityProvider>
   </AuthProvider>
 </QueryClientProvider>
 </CriticalErrorBoundary>
