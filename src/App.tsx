@@ -11,6 +11,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
 import { Toaster } from "@/components/ui/toaster";
 import { ShortcutsHelp } from '@/components/ui/shortcuts-help';
+import { ContextMenuProvider } from '@/components/ui/context-menu-provider';
 import CriticalErrorBoundary from "@/components/CriticalErrorBoundary";
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 
@@ -160,10 +161,11 @@ const App = () => {
     <CriticalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <PlatformProvider>
-            <ThemeProvider>
-              <HelmetProvider>
-                <BrowserRouter>
+          <ContextMenuProvider>
+            <PlatformProvider>
+              <ThemeProvider>
+                <HelmetProvider>
+                  <BrowserRouter>
                   <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
                   <Suspense fallback={<DashboardSkeleton />}>
                     <Routes>
@@ -429,6 +431,7 @@ const App = () => {
       </HelmetProvider>
     </ThemeProvider>
   </PlatformProvider>
+          </ContextMenuProvider>
   </AuthProvider>
 </QueryClientProvider>
 </CriticalErrorBoundary>
