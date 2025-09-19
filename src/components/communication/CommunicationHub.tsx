@@ -29,6 +29,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays } from "date-fns";
+import { ThreadManager } from "./ThreadManager";
+import { AdvancedChatInterface } from "./AdvancedChatInterface";
+import { useAdvancedChat } from "@/hooks/useAdvancedChat";
 
 interface Message {
   id: string;
@@ -88,136 +91,31 @@ interface Meeting {
 export const CommunicationHub: React.FC = () => {
   const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('messages');
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [selectedThread, setSelectedThread] = useState<any>(null);
   const [rfis, setRfis] = useState<RFI[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { channels, activeChannel, selectChannel } = useAdvancedChat();
 
   useEffect(() => {
-    loadCommunicationData();
+    // Load initial data if needed
   }, []);
 
+  // Legacy function - now handled by useAdvancedChat hook
   const loadCommunicationData = async () => {
-    setLoading(true);
-    try {
-      const { data: channels, error } = await supabase
-        .from('chat_channels')
-        .select('id, name, project_id, last_activity_at, channel_type, description, created_at')
-        .order('last_activity_at', { ascending: false });
-
-      if (error) throw error;
-
-      const mappedThreads: Thread[] = (channels || []).map((ch: any) => ({
-        id: ch.id,
-        title: ch.name || 'Channel',
-        project_name: ch.project_id || 'Unassigned',
-        participants: [],
-        last_message: '',
-        last_message_time: ch.last_activity_at || ch.created_at || new Date(0).toISOString(),
-        unread_count: 0,
-        thread_type: (ch.channel_type as any) || 'general',
-        status: 'active'
-      }));
-
-      setThreads(mappedThreads);
-      setRfis([]);
-      setMeetings([]);
-    } catch (error) {
-      console.error('Failed to load communication data:', error);
-      setThreads([]);
-      setRfis([]);
-      setMeetings([]);
-      toast({
-        title: "Error",
-        description: "Failed to load communication data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    // This function is no longer needed as data loading is handled by the hook
   };
 
+  // Legacy function - now handled by AdvancedChatInterface
   const loadMessages = async (threadId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('id, content, created_at, user_id')
-        .eq('channel_id', threadId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      const msgs: Message[] = (data || []).map((m: any) => ({
-        id: m.id,
-        sender_name: m.user_id || 'User',
-        sender_role: 'user',
-        content: m.content,
-        timestamp: m.created_at,
-        thread_id: threadId,
-        message_type: 'text'
-      }));
-
-      setMessages(msgs);
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-      setMessages([]);
-    }
+    // This function is no longer needed
   };
 
+  // Legacy function - now handled by AdvancedChatInterface
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedThread || !userProfile?.id) return;
-
-    try {
-      const payload: any = {
-        channel_id: selectedThread.id,
-        content: newMessage.trim(),
-        user_id: userProfile.id
-      };
-
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .insert([payload])
-        .select('id, content, created_at, user_id')
-        .single();
-
-      if (error) throw error;
-      
-      if (!data) {
-        throw new Error('No data returned from message insert');
-      }
-
-      // Cast to any to handle type issues
-      const result = data as any;
-
-      const message: Message = {
-        id: result.id || '',
-        sender_name: result.user_id || 'User',
-        sender_role: 'user',
-        content: result.content || '',
-        timestamp: result.created_at || new Date().toISOString(),
-        thread_id: selectedThread.id,
-        message_type: 'text'
-      };
-
-      setMessages(prev => [...prev, message]);
-      setNewMessage('');
-
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-    }
+    // This function is no longer needed
   };
 
   const createRFI = async (rfiData: Partial<RFI>) => {
@@ -284,126 +182,37 @@ export const CommunicationHub: React.FC = () => {
           </TabsList>
 
           <TabsContent value="messages" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Thread List */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Conversations
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="space-y-1">
-                    {threads.map((thread) => (
-                      <div
-                        key={thread.id}
-                        className={`p-4 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
-                          selectedThread?.id === thread.id ? 'bg-muted' : ''
-                        }`}
-                        onClick={() => {
-                          setSelectedThread(thread);
-                          loadMessages(thread.id);
-                        }}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-sm">{thread.title}</h3>
-                          {thread.unread_count > 0 && (
-                            <Badge variant="destructive" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                              {thread.unread_count}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-1">{thread.project_name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{thread.last_message}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge variant="outline" className="text-xs">{thread.thread_type}</Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(thread.last_message_time), 'MMM d, HH:mm')}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+              {/* Enhanced Thread Manager */}
+              <div className="lg:col-span-1">
+                <ThreadManager 
+                  onThreadSelect={(thread) => {
+                    setSelectedThread(thread);
+                    selectChannel(thread as any);
+                  }}
+                  selectedThreadId={selectedThread?.id}
+                />
+              </div>
 
-              {/* Message View */}
-              <Card className="lg:col-span-2">
+              {/* Enhanced Chat Interface */}
+              <div className="lg:col-span-2">
                 {selectedThread ? (
-                  <>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        {selectedThread.title}
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Video className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardTitle>
-                      <CardDescription>
-                        {selectedThread.project_name} • {selectedThread.participants.join(', ')}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4 max-h-96 overflow-y-auto mb-4">
-                        {messages.map((message) => (
-                          <div key={message.id} className="flex items-start gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback>
-                                {message.sender_name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-sm">{message.sender_name}</span>
-                                <Badge variant="outline" className="text-xs">{message.sender_role}</Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(new Date(message.timestamp), 'MMM d, HH:mm')}
-                                </span>
-                              </div>
-                              <p className={`text-sm ${
-                                message.message_type === 'system' ? 'italic text-muted-foreground' : ''
-                              }`}>
-                                {message.content}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          <Paperclip className="h-4 w-4" />
-                        </Button>
-                        <Input
-                          placeholder="Type a message..."
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                          className="flex-1"
-                        />
-                        <Button onClick={sendMessage} disabled={!newMessage.trim()}>
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </>
+                  <AdvancedChatInterface 
+                    thread={selectedThread}
+                    onBack={() => setSelectedThread(null)}
+                  />
                 ) : (
-                  <CardContent className="flex items-center justify-center h-96">
+                  <Card className="h-full flex items-center justify-center">
                     <div className="text-center">
                       <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">Select a conversation to start messaging</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Advanced features: File sharing, voice messages, search & more
+                      </p>
                     </div>
-                  </CardContent>
+                  </Card>
                 )}
-              </Card>
+              </div>
             </div>
           </TabsContent>
 
