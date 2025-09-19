@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface KeyboardShortcut {
   key: string;
   ctrlKey?: boolean;
   altKey?: boolean;
   shiftKey?: boolean;
-  metaKey?: boolean;
-  action: () => void;
   description: string;
+  action: () => void;
+  category?: string;
 }
 
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
@@ -17,8 +19,7 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
         s.key.toLowerCase() === event.key.toLowerCase() &&
         !!s.ctrlKey === event.ctrlKey &&
         !!s.altKey === event.altKey &&
-        !!s.shiftKey === event.shiftKey &&
-        !!s.metaKey === event.metaKey
+        !!s.shiftKey === event.shiftKey
       );
 
       if (shortcut) {
@@ -27,51 +28,176 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [shortcuts]);
 };
 
-// Global shortcuts for the app
+// Construction-specific shortcuts for the app
 export const useGlobalShortcuts = () => {
+  const navigate = useNavigate();
+
   const shortcuts: KeyboardShortcut[] = [
+    // Navigation shortcuts
     {
-      key: 'k',
+      key: 'h',
       ctrlKey: true,
-      action: () => {
-        // Open command palette or search
-        console.log('Open search/command palette');
-      },
-      description: 'Open command palette'
+      description: 'Go to Dashboard',
+      action: () => navigate('/'),
+      category: 'Navigation'
     },
+    {
+      key: 'p',
+      ctrlKey: true,
+      description: 'Go to Projects',
+      action: () => navigate('/projects'),
+      category: 'Navigation'
+    },
+    {
+      key: 't',
+      ctrlKey: true,
+      description: 'Go to Team Management',
+      action: () => navigate('/team'),
+      category: 'Navigation'
+    },
+    {
+      key: 'c',
+      ctrlKey: true,
+      description: 'Go to Communication Hub',
+      action: () => navigate('/communication'),
+      category: 'Navigation'
+    },
+    {
+      key: 's',
+      ctrlKey: true,
+      description: 'Go to Settings',
+      action: () => navigate('/settings'),
+      category: 'Navigation'
+    },
+
+    // Construction-specific actions
     {
       key: 'n',
       ctrlKey: true,
+      description: 'Create New Project',
       action: () => {
-        // Create new project
-        window.location.href = '/create-project';
+        navigate('/projects/new');
+        toast({
+          title: "Quick Action",
+          description: "Creating new project...",
+        });
       },
-      description: 'Create new project'
+      category: 'Project Management'
     },
     {
-      key: 'd',
+      key: 't',
       ctrlKey: true,
+      shiftKey: true,
+      description: 'Quick Time Entry',
       action: () => {
-        // Go to dashboard
-        window.location.href = '/dashboard';
+        navigate('/time-tracking');
+        toast({
+          title: "Time Entry",
+          description: "Opening time tracking...",
+        });
       },
-      description: 'Go to dashboard'
+      category: 'Time Management'
     },
+    {
+      key: 'r',
+      ctrlKey: true,
+      description: 'Daily Report',
+      action: () => {
+        navigate('/reports/daily');
+        toast({
+          title: "Daily Report",
+          description: "Opening daily report form...",
+        });
+      },
+      category: 'Reporting'
+    },
+    {
+      key: 'm',
+      ctrlKey: true,
+      description: 'Materials Request',
+      action: () => {
+        navigate('/materials');
+        toast({
+          title: "Materials",
+          description: "Opening materials management...",
+        });
+      },
+      category: 'Materials'
+    },
+    {
+      key: 'i',
+      ctrlKey: true,
+      description: 'Create Invoice',
+      action: () => {
+        navigate('/invoices/new');
+        toast({
+          title: "Invoice",
+          description: "Creating new invoice...",
+        });
+      },
+      category: 'Financial'
+    },
+
+    // Dashboard sections (Alt + number)
+    {
+      key: '1',
+      altKey: true,
+      description: 'Focus on Projects Section',
+      action: () => {
+        navigate('/');
+        setTimeout(() => {
+          const element = document.getElementById('projects-section');
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      },
+      category: 'Dashboard Navigation'
+    },
+    {
+      key: '2',
+      altKey: true,
+      description: 'Focus on Financial Overview',
+      action: () => {
+        navigate('/');
+        setTimeout(() => {
+          const element = document.getElementById('financial-section');
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      },
+      category: 'Dashboard Navigation'
+    },
+
+    // Utility shortcuts
     {
       key: '/',
+      ctrlKey: true,
+      description: 'Show Keyboard Shortcuts Help',
       action: () => {
-        // Focus search if available
-        const searchInput = document.querySelector('[data-search]') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
+        const event = new CustomEvent('showShortcutsHelp');
+        window.dispatchEvent(event);
+      },
+      category: 'Help'
+    },
+    {
+      key: 'k',
+      ctrlKey: true,
+      description: 'Global Search',
+      action: () => {
+        const searchElement = document.getElementById('global-search');
+        if (searchElement) {
+          searchElement.focus();
+        } else {
+          toast({
+            title: "Search",
+            description: "Navigate to a page with search functionality",
+          });
         }
       },
-      description: 'Focus search'
+      category: 'Search'
     }
   ];
 

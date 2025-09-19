@@ -10,6 +10,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { NotificationPermission } from "@/components/NotificationPermission";
 import { Toaster } from "@/components/ui/toaster";
+import { ShortcutsHelp } from '@/components/ui/shortcuts-help';
 import CriticalErrorBoundary from "@/components/CriticalErrorBoundary";
 import { DashboardSkeleton } from "@/components/ui/loading-skeleton";
 
@@ -423,6 +424,7 @@ const App = () => {
           <OfflineIndicator />
           <NotificationPermission />
           <Toaster />
+          <ShortcutsHelp />
         </BrowserRouter>
       </HelmetProvider>
     </ThemeProvider>
