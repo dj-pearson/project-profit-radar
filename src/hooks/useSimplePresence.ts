@@ -36,7 +36,7 @@ export const useSimplePresence = (projectId?: string) => {
         user_profile: {
           first_name: userProfile.first_name || 'You',
           last_name: userProfile.last_name || '',
-          avatar_url: userProfile.avatar_url
+        avatar_url: undefined
         }
       },
       {
@@ -97,7 +97,7 @@ export const useSimplePresence = (projectId?: string) => {
       user_profile: {
         first_name: userProfile.first_name || 'You',
         last_name: userProfile.last_name || '',
-        avatar_url: userProfile.avatar_url
+        avatar_url: undefined
       }
     };
 

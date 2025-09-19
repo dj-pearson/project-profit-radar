@@ -139,7 +139,7 @@ export const useSimpleNotifications = () => {
       sender_profile: {
         first_name: userProfile.first_name || 'Unknown',
         last_name: userProfile.last_name || 'User',
-        avatar_url: userProfile.avatar_url
+        avatar_url: undefined
       }
     };
 

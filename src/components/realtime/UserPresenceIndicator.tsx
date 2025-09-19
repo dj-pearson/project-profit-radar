@@ -103,16 +103,8 @@ export const UserPresenceIndicator: React.FC<UserPresenceIndicatorProps> = ({
   };
 
   const getDeviceInfo = () => {
-    if (!presence.device_info) return null;
-    
-    const { userAgent, platform } = presence.device_info;
-    const isMobile = /Mobile|Android|iPhone|iPad/.test(userAgent || '');
-    
-    return {
-      type: isMobile ? 'mobile' : 'desktop',
-      platform: platform || 'Unknown',
-      icon: isMobile ? Smartphone : Monitor
-    };
+    // Device info not available in simple implementation
+    return null;
   };
 
   const formatLastSeen = (lastSeen: string) => {
