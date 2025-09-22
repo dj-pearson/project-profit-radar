@@ -126,6 +126,7 @@ import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
+import PaymentCenter from "./pages/PaymentCenter";
 import FeaturesPage from "./pages/Features";
 import BlogPage from "./pages/Blog";
 import PlumbingContractorSoftware from "./pages/PlumbingContractorSoftware";
@@ -203,6 +204,7 @@ const App = () => {
               <Route path="/resources/:slug" element={<LazyBlogPost />} />
 
               {/* Marketing and landing page routes */}
+              <Route path="/payment-center" element={<PaymentCenter />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/blog" element={<BlogPage />} />
