@@ -204,7 +204,8 @@ const App = () => {
               <Route path="/resources/:slug" element={<LazyBlogPost />} />
 
               {/* Marketing and landing page routes */}
-              <Route path="/payment-center" element={<PaymentCenter />} />
+        <Route path="/payment-center" element={<PaymentCenter />} />
+        <Route path="/time-tracking" element={<TimeTracking />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/blog" element={<BlogPage />} />
