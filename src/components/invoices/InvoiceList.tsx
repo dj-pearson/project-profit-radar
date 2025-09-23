@@ -42,13 +42,13 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      draft: { variant: 'secondary' as const, label: 'Draft' },
-      sent: { variant: 'outline' as const, label: 'Sent' },
-      viewed: { variant: 'default' as const, label: 'Viewed' },
-      partial: { variant: 'default' as const, label: 'Partial' },
+      draft: { variant: 'secondary' as const, label: 'Draft', className: '' },
+      sent: { variant: 'outline' as const, label: 'Sent', className: '' },
+      viewed: { variant: 'default' as const, label: 'Viewed', className: '' },
+      partial: { variant: 'default' as const, label: 'Partial', className: '' },
       paid: { variant: 'default' as const, label: 'Paid', className: 'bg-green-100 text-green-800' },
-      overdue: { variant: 'destructive' as const, label: 'Overdue' },
-      cancelled: { variant: 'secondary' as const, label: 'Cancelled' }
+      overdue: { variant: 'destructive' as const, label: 'Overdue', className: '' },
+      cancelled: { variant: 'secondary' as const, label: 'Cancelled', className: '' }
     };
     
     const config = variants[status as keyof typeof variants] || variants.draft;
@@ -56,7 +56,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
     return (
       <Badge 
         variant={config.variant} 
-        className={config.className}
+        className={config.className || undefined}
       >
         {config.label}
       </Badge>
@@ -141,7 +141,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
                   <div className="flex items-center gap-3">
                     <h3 className="font-semibold text-lg">{invoice.invoice_number}</h3>
                     {getStatusBadge(invoice.status)}
-                    {getInvoiceTypeBadge(invoice.invoice_type)}
+                    {invoice.invoice_type && getInvoiceTypeBadge(invoice.invoice_type)}
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-muted-foreground">

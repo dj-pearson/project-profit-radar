@@ -9130,10 +9130,12 @@ export type Database = {
           description: string
           id: string
           invoice_id: string
+          line_total: number | null
           project_phase_id: string | null
           quantity: number
           total_price: number | null
           unit_price: number
+          work_completed_percentage: number | null
         }
         Insert: {
           cost_code_id?: string | null
@@ -9141,10 +9143,12 @@ export type Database = {
           description: string
           id?: string
           invoice_id: string
+          line_total?: number | null
           project_phase_id?: string | null
           quantity?: number
           total_price?: number | null
           unit_price: number
+          work_completed_percentage?: number | null
         }
         Update: {
           cost_code_id?: string | null
@@ -9152,10 +9156,12 @@ export type Database = {
           description?: string
           id?: string
           invoice_id?: string
+          line_total?: number | null
           project_phase_id?: string | null
           quantity?: number
           total_price?: number | null
           unit_price?: number
+          work_completed_percentage?: number | null
         }
         Relationships: [
           {
@@ -9185,22 +9191,34 @@ export type Database = {
         Row: {
           amount_due: number | null
           amount_paid: number | null
+          client_address: string | null
           client_email: string | null
           client_name: string | null
           company_id: string
           created_at: string
           created_by: string | null
+          current_amount_due: number | null
           discount_amount: number | null
           due_date: string
           id: string
+          invoice_date: string | null
           invoice_number: string
+          invoice_type: string | null
           issue_date: string
           last_synced_to_qb: string | null
           notes: string | null
           paid_at: string | null
+          payment_method: string | null
+          po_number: string | null
+          previous_amount_billed: number | null
+          progress_percentage: number | null
           project_id: string | null
           qb_invoice_id: string | null
           qb_sync_token: string | null
+          reference_number: string | null
+          retention_amount: number | null
+          retention_due_date: string | null
+          retention_percentage: number | null
           sent_at: string | null
           status: string
           stripe_invoice_id: string | null
@@ -9211,26 +9229,39 @@ export type Database = {
           terms: string | null
           total_amount: number
           updated_at: string
+          viewed_at: string | null
         }
         Insert: {
           amount_due?: number | null
           amount_paid?: number | null
+          client_address?: string | null
           client_email?: string | null
           client_name?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
+          current_amount_due?: number | null
           discount_amount?: number | null
           due_date: string
           id?: string
+          invoice_date?: string | null
           invoice_number: string
+          invoice_type?: string | null
           issue_date?: string
           last_synced_to_qb?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string | null
+          po_number?: string | null
+          previous_amount_billed?: number | null
+          progress_percentage?: number | null
           project_id?: string | null
           qb_invoice_id?: string | null
           qb_sync_token?: string | null
+          reference_number?: string | null
+          retention_amount?: number | null
+          retention_due_date?: string | null
+          retention_percentage?: number | null
           sent_at?: string | null
           status?: string
           stripe_invoice_id?: string | null
@@ -9241,26 +9272,39 @@ export type Database = {
           terms?: string | null
           total_amount: number
           updated_at?: string
+          viewed_at?: string | null
         }
         Update: {
           amount_due?: number | null
           amount_paid?: number | null
+          client_address?: string | null
           client_email?: string | null
           client_name?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
+          current_amount_due?: number | null
           discount_amount?: number | null
           due_date?: string
           id?: string
+          invoice_date?: string | null
           invoice_number?: string
+          invoice_type?: string | null
           issue_date?: string
           last_synced_to_qb?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string | null
+          po_number?: string | null
+          previous_amount_billed?: number | null
+          progress_percentage?: number | null
           project_id?: string | null
           qb_invoice_id?: string | null
           qb_sync_token?: string | null
+          reference_number?: string | null
+          retention_amount?: number | null
+          retention_due_date?: string | null
+          retention_percentage?: number | null
           sent_at?: string | null
           status?: string
           stripe_invoice_id?: string | null
@@ -9271,6 +9315,7 @@ export type Database = {
           terms?: string | null
           total_amount?: number
           updated_at?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
@@ -14879,6 +14924,7 @@ export type Database = {
           site_longitude: number | null
           start_date: string | null
           status: string | null
+          total_budget: number | null
           updated_at: string
         }
         Insert: {
@@ -14907,6 +14953,7 @@ export type Database = {
           site_longitude?: number | null
           start_date?: string | null
           status?: string | null
+          total_budget?: number | null
           updated_at?: string
         }
         Update: {
@@ -14935,6 +14982,7 @@ export type Database = {
           site_longitude?: number | null
           start_date?: string | null
           status?: string | null
+          total_budget?: number | null
           updated_at?: string
         }
         Relationships: [
