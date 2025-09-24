@@ -11,7 +11,7 @@ import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
 import AISearchOptimization from "@/components/AISearchOptimization";
-import { OrganizationSchema, SoftwareSchema } from "@/components/EnhancedSchemaMarkup";
+import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";

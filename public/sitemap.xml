@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
   <!-- Homepage - Highest Priority -->
   <url>
-    <loc>https://build-desk.com/</loc>
+    <loc>https://builddesk.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <lastmod>2025-01-24</lastmod>
@@ -10,29 +14,45 @@
   
   <!-- Core Feature Pages -->
   <url>
-    <loc>https://build-desk.com/features</loc>
+    <loc>https://builddesk.com/features</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/pricing</loc>
+    <loc>https://builddesk.com/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <lastmod>2025-01-24</lastmod>
+  </url>
+
+  <!-- Solutions Hub -->
+  <url>
+    <loc>https://builddesk.com/solutions</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2025-01-24</lastmod>
+  </url>
+
+  <!-- Resources Hub -->
+  <url>
+    <loc>https://builddesk.com/resources</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <!-- Primary Landing Pages - Construction Management Software -->
   <url>
-    <loc>https://build-desk.com/construction-management-software</loc>
+    <loc>https://builddesk.com/construction-management-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/construction-project-management-software</loc>
+    <loc>https://builddesk.com/construction-project-management-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <lastmod>2025-01-24</lastmod>
@@ -40,14 +60,14 @@
   
   <!-- Procore Alternative Pages -->
   <url>
-    <loc>https://build-desk.com/procore-alternative</loc>
+    <loc>https://builddesk.com/procore-alternative</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/procore-alternative-detailed</loc>
+    <loc>https://builddesk.com/procore-alternative-detailed</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
@@ -55,14 +75,14 @@
   
   <!-- Buildertrend Alternative Pages -->
   <url>
-    <loc>https://build-desk.com/buildertrend-alternative</loc>
+    <loc>https://builddesk.com/buildertrend-alternative</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/buildertrend-alternative-detailed</loc>
+    <loc>https://builddesk.com/buildertrend-alternative-detailed</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
@@ -70,14 +90,7 @@
   
   <!-- Job Costing Software Pages -->
   <url>
-    <loc>https://build-desk.com/job-costing-software</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>2025-01-24</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://build-desk.com/job-costing-software-detailed</loc>
+    <loc>https://builddesk.com/job-costing-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
@@ -85,7 +98,7 @@
   
   <!-- Construction Field Management -->
   <url>
-    <loc>https://build-desk.com/construction-field-management</loc>
+    <loc>https://builddesk.com/construction-field-management</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
@@ -93,7 +106,7 @@
   
   <!-- OSHA Compliance Software -->
   <url>
-    <loc>https://build-desk.com/osha-compliance-software</loc>
+    <loc>https://builddesk.com/osha-compliance-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
@@ -101,7 +114,7 @@
   
   <!-- Construction Scheduling -->
   <url>
-    <loc>https://build-desk.com/construction-scheduling-software</loc>
+    <loc>https://builddesk.com/construction-scheduling-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2025-01-24</lastmod>
@@ -109,14 +122,14 @@
   
   <!-- Industry-Specific Pages -->
   <url>
-    <loc>https://build-desk.com/residential-contractors</loc>
+    <loc>https://builddesk.com/residential-contractors</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/commercial-contractors</loc>
+    <loc>https://builddesk.com/commercial-contractors</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
@@ -124,51 +137,58 @@
   
   <!-- Trade-Specific Software Pages -->
   <url>
-    <loc>https://build-desk.com/plumbing-contractor-software</loc>
+    <loc>https://builddesk.com/plumbing-contractor-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/hvac-contractor-software</loc>
+    <loc>https://builddesk.com/hvac-contractor-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/electrical-contractor-software</loc>
+    <loc>https://builddesk.com/electrical-contractor-software</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
-  
-  <!-- Resource Pages -->
+
+  <!-- Blog/Resources Content -->
   <url>
-    <loc>https://build-desk.com/resources</loc>
-    <changefreq>daily</changefreq>
+    <loc>https://builddesk.com/resources/best-construction-management-software-small-business-2025</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
-  
+
   <url>
-    <loc>https://build-desk.com/blog</loc>
-    <changefreq>daily</changefreq>
+    <loc>https://builddesk.com/resources/job-costing-construction-setup-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2025-01-24</lastmod>
+  </url>
+
+  <url>
+    <loc>https://builddesk.com/resources/procore-vs-builddesk-small-contractors</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2025-01-24</lastmod>
+  </url>
+
+  <url>
+    <loc>https://builddesk.com/resources/osha-safety-logs-digital-playbook</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <!-- Tools -->
   <url>
-    <loc>https://build-desk.com/roi-calculator</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-    <lastmod>2025-01-24</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://build-desk.com/tools</loc>
+    <loc>https://builddesk.com/tools</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <lastmod>2025-01-24</lastmod>
@@ -176,14 +196,14 @@
   
   <!-- Legal Pages -->
   <url>
-    <loc>https://build-desk.com/privacy-policy</loc>
+    <loc>https://builddesk.com/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
     <lastmod>2025-01-24</lastmod>
   </url>
   
   <url>
-    <loc>https://build-desk.com/terms-of-service</loc>
+    <loc>https://builddesk.com/terms-of-service</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
     <lastmod>2025-01-24</lastmod>

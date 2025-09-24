@@ -145,6 +145,8 @@ import OSHAComplianceSoftware from "./pages/OSHAComplianceSoftware";
 import ConstructionFieldManagement from "./pages/ConstructionFieldManagement";
 import ConstructionSchedulingSoftware from "./pages/ConstructionSchedulingSoftware";
 import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectManagementSoftware";
+import Resources from "./pages/Resources";
+import Solutions from "./pages/Solutions";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
@@ -273,6 +275,9 @@ const App = () => {
                 path="/construction-project-management-software"
                 element={<ConstructionProjectManagementSoftware />}
               />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/solutions" element={<Solutions />} />
+              <Route path="/procore-alternative-detailed" element={<ProcoreAlternativeDetailed />} />
 
               {/* Project area routes */}
               <Route path="/projects" element={<LazyProjects />} />
