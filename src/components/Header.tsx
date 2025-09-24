@@ -14,9 +14,9 @@ const Header = () => {
   const navItems = [
     { name: "Features", href: "/#features", isSection: true },
     { name: "Pricing", href: "/#pricing", isSection: true },
-    { name: "Industries", href: "/#industries", isSection: true },
-    { name: "Tools", href: "/tools", isSection: false },
+    { name: "Solutions", href: "/solutions", isSection: false },
     { name: "Resources", href: "/resources", isSection: false },
+    { name: "FAQ", href: "/faq", isSection: false },
   ];
 
 

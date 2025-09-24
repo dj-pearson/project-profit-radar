@@ -31,6 +31,14 @@ const Resources = () => {
           category: "Financial Management"
         },
         {
+          title: "OSHA Safety Logs: Digital Playbook for Construction Teams",
+          description: "Complete guide to OSHA compliance. Templates, workflows, and digital tools to keep your team safe and compliant.",
+          readTime: "15 min read",
+          author: "BuildDesk Team", 
+          slug: "osha-safety-logs-digital-playbook",
+          category: "Safety"
+        },
+        {
           title: "Construction Scheduling Software: Stop Project Delays",
           description: "Simple scheduling rules that prevent delays. Learn how small contractors can improve project timelines.",
           readTime: "10 min read",
@@ -79,6 +87,14 @@ const Resources = () => {
           author: "BuildDesk Team",
           slug: "construction-daily-logs-best-practices",
           category: "Field Management"
+        },
+        {
+          title: "Construction Scheduling Software: Stop Project Delays",
+          description: "Simple scheduling rules that prevent delays. Learn how small contractors can improve project timelines.",
+          readTime: "10 min read",
+          author: "BuildDesk Team",
+          slug: "construction-scheduling-software-prevent-delays",
+          category: "Project Management"
         }
       ]
     }
