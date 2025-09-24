@@ -92,6 +92,15 @@ Disallow: /private/
 Disallow: /dashboard/
 Disallow: /projects/
 Disallow: /documents/
+
+# Allow SEO-optimized content
+Allow: /resources/
+Allow: /topics/
+Allow: /faq
+Allow: /builddesk-vs-*
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
 Disallow: /financial/
 Disallow: /team/
 Disallow: /time-tracking/
@@ -168,6 +177,11 @@ ${siteDescription}
 
 ### ✅ ALLOWED - Public Educational Content
 - Public blog posts about construction best practices
+- Construction management guides and resources (/resources/*)
+- Topic hub pages for construction education (/topics/*)
+- Software comparison content for informed decision-making
+- FAQ content and help documentation
+- Construction industry best practices and methodologies
 - General industry guides and tutorials  
 - Public knowledge base articles
 - Publicly available resource guides

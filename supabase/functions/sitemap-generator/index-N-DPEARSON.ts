@@ -65,7 +65,23 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[]) {
     { path: '/features', priority: '0.8', changefreq: 'weekly' },
     { path: '/pricing', priority: '0.8', changefreq: 'weekly' },
     { path: '/resources', priority: '0.6', changefreq: 'weekly' },
-    { path: '/roi-calculator', priority: '0.7', changefreq: 'monthly' },
+    { path: '/faq', priority: '0.5', changefreq: 'monthly' },
+    { path: '/topics/construction-management-basics', priority: '0.6', changefreq: 'monthly' },
+    { path: '/topics/safety-and-osha-compliance', priority: '0.6', changefreq: 'monthly' },
+    
+    // Resource Guides
+    { path: '/resources/best-construction-management-software-small-business-2025', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/job-costing-construction-setup-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/osha-safety-logs-digital-playbook', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-scheduling-software-prevent-delays', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-daily-logs-best-practices', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/quickbooks-integration-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-mobile-app-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/procore-vs-builddesk-small-contractors', priority: '0.8', changefreq: 'monthly' },
+    
+    // Comparison Pages
+    { path: '/builddesk-vs-buildertrend-comparison', priority: '0.8', changefreq: 'monthly' },
+    { path: '/builddesk-vs-coconstruct', priority: '0.8', changefreq: 'monthly' },
   ]
 
   const allPages = [

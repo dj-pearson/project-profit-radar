@@ -16,6 +16,7 @@ import CoreWebVitalsOptimizer from "@/components/performance/CoreWebVitalsOptimi
 import { AdvancedSEOAnalytics } from "@/components/analytics/AdvancedSEOAnalytics";
 import { AdvancedCoreWebVitals } from "@/components/performance/AdvancedCoreWebVitals";
 import { SiteSearchSchema } from "@/components/seo/SiteSearchSchema";
+import { initializeSEOBackendIntegration } from "@/utils/seoBackendSync";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -28,6 +29,17 @@ const Index = () => {
   useCriticalResources();
   useFontOptimization();
   // useCriticalCSS('homepage');
+
+  // Initialize SEO backend integration on app start
+  React.useEffect(() => {
+    initializeSEOBackendIntegration().then(result => {
+      if (result.success) {
+        console.log('✅ SEO backend integration successful');
+      } else {
+        console.warn('⚠️ SEO backend integration warning:', result.message);
+      }
+    });
+  }, []);
 
   return (
     <MobilePerformanceProvider>
