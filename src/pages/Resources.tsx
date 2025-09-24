@@ -45,6 +45,14 @@ const Resources = () => {
           author: "BuildDesk Team",
           slug: "construction-scheduling-software-prevent-delays",
           category: "Project Management"
+        },
+        {
+          title: "Construction Daily Logs: What to Track and Why It Pays",
+          description: "Essential guide to daily logs that reduce rework and improve project outcomes. Templates and best practices included.",
+          readTime: "9 min read",
+          author: "BuildDesk Team",
+          slug: "construction-daily-logs-best-practices",
+          category: "Field Management"
         }
       ]
     },

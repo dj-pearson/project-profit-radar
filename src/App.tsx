@@ -148,9 +148,12 @@ import ConstructionProjectManagementSoftware from "./pages/ConstructionProjectMa
 import Resources from "./pages/Resources";
 import Solutions from "./pages/Solutions";
 import FAQ from "./pages/FAQ";
+import BuildDeskVsBuildertrend from "./pages/BuildDeskVsBuildertrend";
 import BestConstructionManagementSoftware2025 from "./pages/resources/BestConstructionManagementSoftware2025";
 import JobCostingConstructionGuide from "./pages/resources/JobCostingConstructionGuide";
 import OSHASafetyLogsPlaybook from "./pages/resources/OSHASafetyLogsPlaybook";
+import ConstructionSchedulingSoftwareGuide from "./pages/resources/ConstructionSchedulingSoftwareGuide";
+import ConstructionDailyLogsGuide from "./pages/resources/ConstructionDailyLogsGuide";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
@@ -283,9 +286,12 @@ const App = () => {
               <Route path="/resources/best-construction-management-software-small-business-2025" element={<BestConstructionManagementSoftware2025 />} />
               <Route path="/resources/job-costing-construction-setup-guide" element={<JobCostingConstructionGuide />} />
               <Route path="/resources/osha-safety-logs-digital-playbook" element={<OSHASafetyLogsPlaybook />} />
+              <Route path="/resources/construction-scheduling-software-prevent-delays" element={<ConstructionSchedulingSoftwareGuide />} />
+              <Route path="/resources/construction-daily-logs-best-practices" element={<ConstructionDailyLogsGuide />} />
               <Route path="/resources/:slug" element={<LazyBlogPost />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/builddesk-vs-buildertrend-comparison" element={<BuildDeskVsBuildertrend />} />
               <Route path="/procore-alternative-detailed" element={<ProcoreAlternativeDetailed />} />
 
               {/* Project area routes */}

@@ -35,11 +35,28 @@ export const BreadcrumbsNavigation: React.FC<BreadcrumbsNavigationProps> = ({
       const path = '/' + pathSegments.slice(0, index + 1).join('/');
       const isLast = index === pathSegments.length - 1;
       
+      // Special cases for better labels
+      const specialLabels: { [key: string]: string } = {
+        'resources': 'Resources',
+        'solutions': 'Solutions',
+        'faq': 'FAQ',
+        'procore-alternative-detailed': 'Procore Alternative Detailed',
+        'best-construction-management-software-small-business-2025': 'Best Construction Management Software 2025',
+        'job-costing-construction-setup-guide': 'Job Costing Guide',
+        'osha-safety-logs-digital-playbook': 'OSHA Safety Logs Playbook',
+        'construction-scheduling-software-prevent-delays': 'Construction Scheduling Guide',
+        'construction-daily-logs-best-practices': 'Daily Logs Best Practices',
+        'features': 'Features',
+        'pricing': 'Pricing'
+      };
+      
       // Convert segment to readable label
-      const label = segment
+      const defaultLabel = segment
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+      
+      const label = specialLabels[segment] || defaultLabel;
       
       breadcrumbs.push({
         label,
@@ -105,7 +122,7 @@ export const generateBreadcrumbStructuredData = (items: BreadcrumbItem[]) => {
       "@type": "ListItem",
       "position": index + 1,
       "name": item.label,
-      "item": item.href ? `https://build-desk.com${item.href}` : undefined
+      "item": item.href ? `https://builddesk.com${item.href}` : undefined
     }))
   };
 };
