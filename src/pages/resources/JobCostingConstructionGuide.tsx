@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { ArticleSchema, FAQSchema } from "@/components/seo/EnhancedSchemaMarkup";
+import HowToSchema from "@/components/seo/HowToSchema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,33 @@ const JobCostingConstructionGuide = () => {
         author="BuildDesk Team"
         datePublished="2025-01-24"
         image="https://builddesk.com/images/job-costing-guide.jpg"
+        url="https://builddesk.com/resources/job-costing-construction-setup-guide"
+      />
+      
+      <HowToSchema
+        name="Set Up Construction Job Costing"
+        description="Step-by-step guide to implement job costing for construction projects to improve profit margins"
+        totalTime="P14D"
+        estimatedCost={{
+          currency: "USD",
+          value: "299"
+        }}
+        supply={["Construction management software", "Cost code templates", "Project budget templates"]}
+        tool={["BuildDesk platform", "QuickBooks integration", "Mobile apps"]}
+        steps={[
+          {
+            name: "Organize Your Cost Codes",
+            text: "Set up consistent, industry-standard cost codes for direct costs (labor, materials, equipment, subcontractors) and indirect costs (overhead, insurance, equipment depreciation, administrative time)."
+          },
+          {
+            name: "Set Up Real-Time Tracking", 
+            text: "Implement construction software that integrates with time tracking, QuickBooks, equipment management, material purchasing, and subcontractor invoicing for automated cost capture."
+          },
+          {
+            name: "Create Budget Templates",
+            text: "Build reusable budget templates for common project types like residential renovation, commercial tenant improvement, and site work with per-square-foot or per-unit pricing."
+          }
+        ]}
         url="https://builddesk.com/resources/job-costing-construction-setup-guide"
       />
       

@@ -149,11 +149,14 @@ import Resources from "./pages/Resources";
 import Solutions from "./pages/Solutions";
 import FAQ from "./pages/FAQ";
 import BuildDeskVsBuildertrend from "./pages/BuildDeskVsBuildertrend";
+import ConstructionManagementBasics from "./pages/topics/ConstructionManagementBasics";
+import SafetyAndOSHACompliance from "./pages/topics/SafetyAndOSHACompliance";
 import BestConstructionManagementSoftware2025 from "./pages/resources/BestConstructionManagementSoftware2025";
 import JobCostingConstructionGuide from "./pages/resources/JobCostingConstructionGuide";
 import OSHASafetyLogsPlaybook from "./pages/resources/OSHASafetyLogsPlaybook";
 import ConstructionSchedulingSoftwareGuide from "./pages/resources/ConstructionSchedulingSoftwareGuide";
 import ConstructionDailyLogsGuide from "./pages/resources/ConstructionDailyLogsGuide";
+import ProcoreVsBuildDeskComparison from "./pages/resources/ProcoreVsBuildDeskComparison";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
@@ -288,10 +291,13 @@ const App = () => {
               <Route path="/resources/osha-safety-logs-digital-playbook" element={<OSHASafetyLogsPlaybook />} />
               <Route path="/resources/construction-scheduling-software-prevent-delays" element={<ConstructionSchedulingSoftwareGuide />} />
               <Route path="/resources/construction-daily-logs-best-practices" element={<ConstructionDailyLogsGuide />} />
+              <Route path="/resources/procore-vs-builddesk-small-contractors" element={<ProcoreVsBuildDeskComparison />} />
               <Route path="/resources/:slug" element={<LazyBlogPost />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/builddesk-vs-buildertrend-comparison" element={<BuildDeskVsBuildertrend />} />
+              <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
+              <Route path="/topics/safety-and-osha-compliance" element={<SafetyAndOSHACompliance />} />
               <Route path="/procore-alternative-detailed" element={<ProcoreAlternativeDetailed />} />
 
               {/* Project area routes */}

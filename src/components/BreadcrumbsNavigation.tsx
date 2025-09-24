@@ -46,6 +46,9 @@ export const BreadcrumbsNavigation: React.FC<BreadcrumbsNavigationProps> = ({
         'osha-safety-logs-digital-playbook': 'OSHA Safety Logs Playbook',
         'construction-scheduling-software-prevent-delays': 'Construction Scheduling Guide',
         'construction-daily-logs-best-practices': 'Daily Logs Best Practices',
+        'topics': 'Topics',
+        'construction-management-basics': 'Construction Management Basics',
+        'safety-and-osha-compliance': 'Safety & OSHA Compliance',
         'features': 'Features',
         'pricing': 'Pricing'
       };

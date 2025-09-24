@@ -142,6 +142,60 @@ const Resources = () => {
           </p>
         </div>
 
+        {/* Topic Hubs Section */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-semibold mb-8">Topic Hubs</h2>
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <Card className="border-primary">
+              <CardHeader>
+                <Badge className="w-fit mb-2">Hub</Badge>
+                <CardTitle className="text-lg">
+                  <Link 
+                    to="/topics/construction-management-basics"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Construction Management Basics
+                  </Link>
+                </CardTitle>
+                <CardDescription>
+                  Master the fundamentals: project planning, cost control, team management, and execution
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/topics/construction-management-basics">
+                    Explore Hub <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-orange-200">
+              <CardHeader>
+                <Badge className="w-fit mb-2">Hub</Badge>
+                <CardTitle className="text-lg">
+                  <Link 
+                    to="/topics/safety-and-osha-compliance"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Safety & OSHA Compliance
+                  </Link>
+                </CardTitle>
+                <CardDescription>
+                  Keep your team safe and avoid OSHA violations with digital tools and best practices
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/topics/safety-and-osha-compliance">
+                    Explore Hub <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Resource Categories */}
         {resourceCategories.map((category, categoryIndex) => (
           <section key={categoryIndex} className="mb-16">
