@@ -14,6 +14,8 @@ import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import CoreWebVitalsOptimizer from "@/components/performance/CoreWebVitalsOptimizer";
 import { AdvancedSEOAnalytics } from "@/components/analytics/AdvancedSEOAnalytics";
+import { AdvancedCoreWebVitals } from "@/components/performance/AdvancedCoreWebVitals";
+import { SiteSearchSchema } from "@/components/seo/SiteSearchSchema";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -32,9 +34,11 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         {/* Performance Optimizations */}
         <CoreWebVitalsOptimizer pageType="homepage" />
+        <AdvancedCoreWebVitals enableReporting={true} enableOptimization={true} />
         <AdvancedSEOAnalytics />
         <FontOptimization />
         <PageResourcePreloader pageType="homepage" />
+        <SiteSearchSchema />
       
       <SEOMetaTags
         title="Construction Management Software for Small & Mid GC Teams | BuildDesk"
