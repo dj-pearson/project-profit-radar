@@ -114,11 +114,7 @@ export const useAccessibility = () => {
       return newSettings;
     });
 
-    // Show feedback
-    toast({
-      title: "Accessibility Updated",
-      description: `${key.replace(/([A-Z])/g, ' $1').toLowerCase()} has been changed`,
-    });
+    // Accessibility settings updated silently
   }, [toast]);
 
   const resetSettings = useCallback(() => {

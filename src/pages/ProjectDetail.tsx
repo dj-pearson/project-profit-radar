@@ -12,10 +12,14 @@ import { usePlatform } from '@/contexts/PlatformContext';
 import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobilePageWrapper } from '@/utils/mobileHelpers';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   ArrowLeft,
   User,
-  Edit
+  Edit,
+  Menu
 } from 'lucide-react';
 
 const ProjectDetail = () => {
@@ -23,10 +27,12 @@ const ProjectDetail = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   const { setNavigationContext } = usePlatform();
+  const isMobile = useIsMobile();
   
   const [project, setProject] = useState<ProjectWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -79,6 +85,81 @@ const ProjectDetail = () => {
             Back to Projects
           </Button>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <DashboardLayout title={project.name}>
+        <MobilePageWrapper title={project.name} className="p-4 space-y-4">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/projects')}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 p-0">
+                  <ProjectSubSidebar 
+                    activeTab={activeTab} 
+                    onTabChange={(tab) => {
+                      setActiveTab(tab);
+                      setSidebarOpen(false);
+                    }} 
+                  />
+                </SheetContent>
+              </Sheet>
+            </div>
+            <Button size="sm" onClick={() => navigate(`/projects/${project.id}/edit`)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Project Info */}
+          <div className="space-y-2">
+            <h1 className="text-lg font-bold truncate">{project.name}</h1>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span className="truncate">{project.client_name}</span>
+              <Badge variant={getStatusColor(project.status)} className="text-xs">
+                {project.status.replace('_', ' ')}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Contextual Actions - Mobile */}
+          <div className="w-full">
+            <ContextualActions
+              context={{
+                module: 'projects',
+                entityType: 'project',
+                entityId: project.id,
+                entityData: project
+              }}
+              className="mb-4"
+            />
+          </div>
+
+          {/* AI Insights - Mobile */}
+          {activeTab === 'overview' && (
+            <div className="mb-4">
+              <AIProjectInsights projectId={project.id} />
+            </div>
+          )}
+
+          {/* Dynamic Content - Mobile */}
+          <ProjectContent 
+            project={project}
+            activeTab={activeTab}
+            onNavigate={navigate}
+          />
+        </MobilePageWrapper>
       </DashboardLayout>
     );
   }
