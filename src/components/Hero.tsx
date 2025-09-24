@@ -13,13 +13,13 @@ const Hero = () => {
           <div className="space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1">
             <div className="space-y-4">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-construction-dark leading-tight">
-                Construction Management Software 
-                <span className="block text-construction-orange">for Small & Medium Contractors</span>
+                Construction Management Built 
+                <span className="block text-construction-orange">for Growing Teams</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                Stop losing money on delays and budget overruns. Get real-time job costing, 
-                mobile field management, and OSHA compliance without enterprise complexity. 
-                <span className="block mt-2 font-semibold text-construction-orange">Join contractors who are transforming their operations.</span>
+                Stop losing money on delays, change orders, and administrative overhead. Get real-time project visibility 
+                without enterprise complexity. Job costing, scheduling, daily logs, OSHA reporting, and time tracking in one simple tool for U.S. contractors.
+                <span className="block mt-2 font-semibold text-construction-orange">Join 500+ contractors saving $50K+ annually.</span>
               </p>
             </div>
             

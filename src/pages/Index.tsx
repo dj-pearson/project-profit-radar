@@ -14,6 +14,7 @@ import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/EnhancedSchemaMarkup";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
+import StickyDemoCTA from "@/components/StickyDemoCTA";
 
 import { FontOptimization, useFontOptimization } from "@/components/performance/FontOptimization";
 import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
@@ -32,21 +33,20 @@ const Index = () => {
         <PageResourcePreloader pageType="homepage" />
       
       <SEOMetaTags
-        title="BuildDesk - Construction Management Software for Small & Medium Contractors | Save 23% on Project Costs"
-        description="Stop losing money on delays and overruns. BuildDesk delivers real-time job costing, mobile field management, and OSHA compliance without enterprise complexity. Join 500+ contractors saving $50K+ annually."
+        title="Construction Management Software for Small & Mid GC Teams | BuildDesk"
+        description="Job costing, scheduling, daily logs, OSHA reporting, and time tracking in one simple tool for U.S. contractors. Simple setup, fast onboarding, clear dashboards for jobs, crews, and costs."
         keywords={[
           'construction management software', 
           'construction project management software',
           'construction software for small business',
           'job costing software construction',
           'construction field management software',
-          'construction safety management software',
-          'procore alternative',
+          'procore alternative small contractors',
           'buildertrend alternative',
-          'contractor software',
+          'construction time tracking app',
+          'OSHA safety reporting software',
           'construction scheduling software',
           'construction budget tracking',
-          'OSHA compliance software',
           'quickbooks construction integration'
         ]}
         canonicalUrl="/"
@@ -96,6 +96,9 @@ const Index = () => {
       <OrganizationSchema />
       <SoftwareSchema />
       <Footer />
+      
+      {/* Sticky Demo CTA */}
+      <StickyDemoCTA />
     </div>
     </MobilePerformanceProvider>
   );
