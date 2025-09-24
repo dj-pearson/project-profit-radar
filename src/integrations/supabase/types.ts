@@ -2612,6 +2612,57 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_line_items: {
+        Row: {
+          actual_quantity: number | null
+          actual_total: number | null
+          budgeted_quantity: number
+          budgeted_total: number
+          budgeted_unit_cost: number
+          category: string
+          cost_code_id: string | null
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+          variance: number | null
+        }
+        Insert: {
+          actual_quantity?: number | null
+          actual_total?: number | null
+          budgeted_quantity?: number
+          budgeted_total: number
+          budgeted_unit_cost: number
+          category: string
+          cost_code_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+          variance?: number | null
+        }
+        Update: {
+          actual_quantity?: number | null
+          actual_total?: number | null
+          budgeted_quantity?: number
+          budgeted_total?: number
+          budgeted_unit_cost?: number
+          category?: string
+          cost_code_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+          variance?: number | null
+        }
+        Relationships: []
+      }
       budget_tracking: {
         Row: {
           actual_amount: number
@@ -9391,6 +9442,69 @@ export type Database = {
           },
         ]
       }
+      job_costing_summary: {
+        Row: {
+          equipment_actual: number | null
+          equipment_budgeted: number | null
+          id: string
+          labor_actual: number | null
+          labor_budgeted: number | null
+          last_updated: string
+          materials_actual: number | null
+          materials_budgeted: number | null
+          overhead_actual: number | null
+          overhead_budgeted: number | null
+          profit_margin_percentage: number | null
+          project_id: string
+          subcontractors_actual: number | null
+          subcontractors_budgeted: number | null
+          total_actual: number | null
+          total_budgeted: number | null
+          total_variance: number | null
+          variance_percentage: number | null
+        }
+        Insert: {
+          equipment_actual?: number | null
+          equipment_budgeted?: number | null
+          id?: string
+          labor_actual?: number | null
+          labor_budgeted?: number | null
+          last_updated?: string
+          materials_actual?: number | null
+          materials_budgeted?: number | null
+          overhead_actual?: number | null
+          overhead_budgeted?: number | null
+          profit_margin_percentage?: number | null
+          project_id: string
+          subcontractors_actual?: number | null
+          subcontractors_budgeted?: number | null
+          total_actual?: number | null
+          total_budgeted?: number | null
+          total_variance?: number | null
+          variance_percentage?: number | null
+        }
+        Update: {
+          equipment_actual?: number | null
+          equipment_budgeted?: number | null
+          id?: string
+          labor_actual?: number | null
+          labor_budgeted?: number | null
+          last_updated?: string
+          materials_actual?: number | null
+          materials_budgeted?: number | null
+          overhead_actual?: number | null
+          overhead_budgeted?: number | null
+          profit_margin_percentage?: number | null
+          project_id?: string
+          subcontractors_actual?: number | null
+          subcontractors_budgeted?: number | null
+          total_actual?: number | null
+          total_budgeted?: number | null
+          total_variance?: number | null
+          variance_percentage?: number | null
+        }
+        Relationships: []
+      }
       job_costs: {
         Row: {
           cost_code_id: string
@@ -9829,6 +9943,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      labor_costs: {
+        Row: {
+          burden_rate: number | null
+          cost_code_id: string | null
+          created_at: string
+          description: string | null
+          employee_id: string | null
+          employee_name: string | null
+          hourly_rate: number
+          hours_worked: number
+          id: string
+          overtime_hours: number | null
+          overtime_rate: number | null
+          project_id: string
+          total_cost_with_burden: number
+          total_labor_cost: number
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          burden_rate?: number | null
+          cost_code_id?: string | null
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
+          hourly_rate: number
+          hours_worked: number
+          id?: string
+          overtime_hours?: number | null
+          overtime_rate?: number | null
+          project_id: string
+          total_cost_with_burden: number
+          total_labor_cost: number
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          burden_rate?: number | null
+          cost_code_id?: string | null
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          employee_name?: string | null
+          hourly_rate?: number
+          hours_worked?: number
+          id?: string
+          overtime_hours?: number | null
+          overtime_rate?: number | null
+          project_id?: string
+          total_cost_with_burden?: number
+          total_labor_cost?: number
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: []
       }
       labor_rates: {
         Row: {
