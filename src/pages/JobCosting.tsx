@@ -19,7 +19,7 @@ interface Project {
   company_id: string;
 }
 
-export const JobCosting: React.FC = () => {
+const JobCosting: React.FC = () => {
   const { projectId } = useParams();
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -158,3 +158,5 @@ export const JobCosting: React.FC = () => {
     </DashboardLayout>
   );
 };
+
+export default JobCosting;
