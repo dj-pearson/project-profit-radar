@@ -13,6 +13,7 @@ import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } fro
 import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import CoreWebVitalsOptimizer from "@/components/performance/CoreWebVitalsOptimizer";
+import { AdvancedSEOAnalytics } from "@/components/analytics/AdvancedSEOAnalytics";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -31,6 +32,7 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         {/* Performance Optimizations */}
         <CoreWebVitalsOptimizer pageType="homepage" />
+        <AdvancedSEOAnalytics />
         <FontOptimization />
         <PageResourcePreloader pageType="homepage" />
       

@@ -157,6 +157,9 @@ import OSHASafetyLogsPlaybook from "./pages/resources/OSHASafetyLogsPlaybook";
 import ConstructionSchedulingSoftwareGuide from "./pages/resources/ConstructionSchedulingSoftwareGuide";
 import ConstructionDailyLogsGuide from "./pages/resources/ConstructionDailyLogsGuide";
 import ProcoreVsBuildDeskComparison from "./pages/resources/ProcoreVsBuildDeskComparison";
+import QuickBooksIntegrationGuide from "./pages/resources/QuickBooksIntegrationGuide";
+import ConstructionMobileAppGuide from "./pages/resources/ConstructionMobileAppGuide";
+import BuildDeskVsCoConstruct from "./pages/BuildDeskVsCoConstruct";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
@@ -292,6 +295,9 @@ const App = () => {
               <Route path="/resources/construction-scheduling-software-prevent-delays" element={<ConstructionSchedulingSoftwareGuide />} />
               <Route path="/resources/construction-daily-logs-best-practices" element={<ConstructionDailyLogsGuide />} />
               <Route path="/resources/procore-vs-builddesk-small-contractors" element={<ProcoreVsBuildDeskComparison />} />
+              <Route path="/resources/quickbooks-integration-guide" element={<QuickBooksIntegrationGuide />} />
+              <Route path="/resources/construction-mobile-app-guide" element={<ConstructionMobileAppGuide />} />
+              <Route path="/builddesk-vs-coconstruct" element={<BuildDeskVsCoConstruct />} />
               <Route path="/resources/:slug" element={<LazyBlogPost />} />
               <Route path="/solutions" element={<Solutions />} />
               <Route path="/faq" element={<FAQ />} />

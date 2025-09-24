@@ -68,6 +68,22 @@ const Resources = () => {
           category: "Comparisons"
         },
         {
+          title: "QuickBooks Integration Guide",
+          description: "Step-by-step guide to integrate QuickBooks with construction management software for automated accounting.",
+          readTime: "8 min read",
+          author: "BuildDesk Team",
+          slug: "quickbooks-integration-guide",
+          category: "Integration"
+        },
+        {
+          title: "Construction Mobile App Guide",
+          description: "Best construction mobile apps for field teams. Compare features and find the perfect field management solution.",
+          readTime: "10 min read",
+          author: "BuildDesk Team",
+          slug: "construction-mobile-app-guide",
+          category: "Mobile"
+        },
+        {
           title: "BuildDesk vs Buildertrend: Feature & Pricing Comparison",
           description: "Side-by-side comparison of BuildDesk and Buildertrend for residential and commercial contractors.",
           readTime: "7 min read",
