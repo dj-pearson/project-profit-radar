@@ -655,19 +655,29 @@ export type Database = {
       }
       ai_model_configurations: {
         Row: {
+          api_endpoint: string | null
+          auth_method: string | null
+          auto_update_alias: boolean | null
           context_window: number | null
           cost_rating: number | null
           created_at: string
+          deprecated_date: string | null
+          deprecation_reason: string | null
           description: string | null
           good_for_long_form: boolean | null
           good_for_seo: boolean | null
           id: string
           is_active: boolean | null
+          is_alias: boolean | null
           is_default: boolean | null
+          last_updated: string | null
           max_tokens: number | null
+          model_alias: string | null
           model_display_name: string
           model_family: string | null
           model_name: string
+          points_to_model: string | null
+          priority_order: number | null
           provider: string
           quality_rating: number | null
           recommended_for_blog: boolean | null
@@ -679,19 +689,29 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          api_endpoint?: string | null
+          auth_method?: string | null
+          auto_update_alias?: boolean | null
           context_window?: number | null
           cost_rating?: number | null
           created_at?: string
+          deprecated_date?: string | null
+          deprecation_reason?: string | null
           description?: string | null
           good_for_long_form?: boolean | null
           good_for_seo?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_alias?: boolean | null
           is_default?: boolean | null
+          last_updated?: string | null
           max_tokens?: number | null
+          model_alias?: string | null
           model_display_name: string
           model_family?: string | null
           model_name: string
+          points_to_model?: string | null
+          priority_order?: number | null
           provider: string
           quality_rating?: number | null
           recommended_for_blog?: boolean | null
@@ -703,19 +723,29 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          api_endpoint?: string | null
+          auth_method?: string | null
+          auto_update_alias?: boolean | null
           context_window?: number | null
           cost_rating?: number | null
           created_at?: string
+          deprecated_date?: string | null
+          deprecation_reason?: string | null
           description?: string | null
           good_for_long_form?: boolean | null
           good_for_seo?: boolean | null
           id?: string
           is_active?: boolean | null
+          is_alias?: boolean | null
           is_default?: boolean | null
+          last_updated?: string | null
           max_tokens?: number | null
+          model_alias?: string | null
           model_display_name?: string
           model_family?: string | null
           model_name?: string
+          points_to_model?: string | null
+          priority_order?: number | null
           provider?: string
           quality_rating?: number | null
           recommended_for_blog?: boolean | null

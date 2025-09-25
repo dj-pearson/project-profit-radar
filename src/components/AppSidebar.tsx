@@ -46,6 +46,7 @@ import {
   CheckSquare,
   Calculator,
   Brain,
+  Bot,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -618,6 +619,13 @@ const navigationCategories: NavigationCategory[] = [
         title: "Blog Manager",
         url: "/blog-manager",
         icon: MessageSquare,
+        roles: ["root_admin"],
+        badge: "Admin",
+      },
+      {
+        title: "AI Model Management",
+        url: "/admin/ai-models",
+        icon: Bot,
         roles: ["root_admin"],
         badge: "Admin",
       },

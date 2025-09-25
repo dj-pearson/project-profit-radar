@@ -113,6 +113,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/admin/Settings";
 import SystemAdminSettings from "./pages/SystemAdminSettings";
 import SecurityMonitoring from "./pages/SecurityMonitoring";
+import AIModelManagerPage from "./pages/admin/AIModelManager";
 import RateLimitingDashboard from "./pages/RateLimitingDashboard";
 import BlogManager from "./pages/BlogManager";
 import KnowledgeBaseAdmin from "./pages/KnowledgeBaseAdmin";
@@ -408,6 +409,7 @@ const App = () => {
               <Route path="/admin/promotions" element={<Promotions />} />
               <Route path="/admin/analytics" element={<Analytics />} />
               <Route path="/admin/settings" element={<Settings />} />
+              <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
                 element={<SystemAdminSettings />}
