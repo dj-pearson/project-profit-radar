@@ -21942,6 +21942,10 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      calculate_project_profit: {
+        Args: { project_id: string }
+        Returns: number
+      }
       calculate_project_risk_score: {
         Args: { p_company_id: string; p_project_id: string }
         Returns: Json
