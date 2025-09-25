@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2.45.0'
+import { createClient } from 'https://deno.land/x/supabase@1.0.0/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
