@@ -108,6 +108,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, Helvetica, Arial, sans-serif;
   }
   
   .scrollbar-hide {
@@ -121,6 +122,19 @@ All colors MUST be HSL.
   
   /* Animation utilities */
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Font Loading Optimization */
+  .fonts-loading * {
+    font-display: swap;
+  }
+  
+  .fonts-loaded {
+    font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, Helvetica, Arial, sans-serif;
+  }
+  
+  .fonts-fallback * {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Avenir, Helvetica, Arial, sans-serif !important;
+  }
   
   /* Accessibility variables */
   --focus-ring: 2px solid hsl(var(--ring));

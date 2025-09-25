@@ -17,6 +17,7 @@ import { AdvancedSEOAnalytics } from "@/components/analytics/AdvancedSEOAnalytic
 import { AdvancedCoreWebVitals } from "@/components/performance/AdvancedCoreWebVitals";
 import { SiteSearchSchema } from "@/components/seo/SiteSearchSchema";
 import { initializeSEOBackendIntegration } from "@/utils/seoBackendSync";
+import { initializeFontOptimization, monitorFontPerformance, optimizeCriticalFonts } from "@/utils/fontOptimization";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -32,6 +33,12 @@ const Index = () => {
 
   // Initialize SEO backend integration on app start
   React.useEffect(() => {
+    // Initialize font optimization first for better performance
+    optimizeCriticalFonts();
+    initializeFontOptimization();
+    monitorFontPerformance();
+    
+    // Then initialize SEO backend integration
     initializeSEOBackendIntegration().then(result => {
       if (result.success) {
         console.log('✅ SEO backend integration successful');
