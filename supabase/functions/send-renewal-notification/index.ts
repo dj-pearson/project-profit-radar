@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
 import React from 'npm:react@18.3.1';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
+import { render } from 'npm:@react-email/render@0.0.12';
 import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
 import { RenewalReminderEmail } from './_templates/renewal-reminder.tsx';
 
@@ -125,7 +125,7 @@ serve(async (req) => {
         : subscriber.email.split('@')[0];
 
       // Generate the email HTML
-      const html = await renderAsync(
+      const html = render(
         React.createElement(RenewalReminderEmail, {
           customerName,
           subscriptionTier: subscriber.subscription_tier || 'Professional',
