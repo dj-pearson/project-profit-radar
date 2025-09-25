@@ -191,10 +191,7 @@ async function handleAutoGeneration(
   try {
     logStep("Starting auto content generation for blog post", { companyId, topic, queueId: customSettings?.queue_id });
 
-    const claudeKey = Deno.env.get('CLAUDE_API_KEY');
-    if (!claudeKey) {
-      throw new Error("Claude API key not configured");
-    }
+    // AI service will handle key validation
 
     let finalTopic = topic;
     let selectedKeyword: any = null;
