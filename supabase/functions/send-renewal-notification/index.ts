@@ -1,9 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@4.0.0";
-import React from 'npm:react@18.3.1';
-import { render } from 'npm:@react-email/render@0.0.12';
+import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
-import { RenewalReminderEmail } from './_templates/renewal-reminder.tsx';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -125,19 +122,61 @@ serve(async (req) => {
         : subscriber.email.split('@')[0];
 
       // Generate the email HTML
-      const html = render(
-        React.createElement(RenewalReminderEmail, {
-          customerName,
-          subscriptionTier: subscriber.subscription_tier || 'Professional',
-          daysUntilRenewal,
-          renewalDate: renewalDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-          manageUrl: `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '')}.vercel.app/subscription`
-        })
-      );
+      const renewalDateFormatted = renewalDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const manageUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '')}.vercel.app/subscription`;
+      
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">BuildDesk</h1>
+            <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Construction Management Platform</p>
+          </div>
+          
+          <div style="background: #f8fafc; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+            <h2 style="color: #1e293b; margin: 0 0 20px 0; font-size: 24px;">Hello ${customerName},</h2>
+            
+            <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+              Your <strong>${subscriber.subscription_tier || 'Professional'}</strong> subscription will renew in <strong>${daysUntilRenewal} days</strong> on ${renewalDateFormatted}.
+            </p>
+            
+            <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+              No action is required - your subscription will automatically renew to ensure uninterrupted access to all BuildDesk features.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${manageUrl}" style="background: #1e40af; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                Manage Subscription
+              </a>
+            </div>
+          </div>
+          
+          <div style="background: #f1f5f9; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="color: #1e293b; margin: 0 0 15px 0; font-size: 18px;">What's Included:</h3>
+            <ul style="color: #475569; margin: 0; padding-left: 20px;">
+              <li>Unlimited projects and team members</li>
+              <li>Real-time job costing and financial tracking</li>
+              <li>Mobile field management</li>
+              <li>QuickBooks integration</li>
+              <li>24/7 customer support</li>
+            </ul>
+          </div>
+          
+          <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-top: 30px;">
+            Questions? Contact our support team at support@builddesk.com or visit our help center.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          
+          <p style="color: #94a3b8; font-size: 12px; text-align: center;">
+            This is an automated notification from BuildDesk Construction Management Platform.<br>
+            You're receiving this because your subscription is set to auto-renew.
+          </p>
+        </div>
+      `;
 
       // Send the email
       const { error: emailError } = await resend.emails.send({

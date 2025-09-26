@@ -1,4 +1,4 @@
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3"
 
 interface AIModelConfig {
   id: string
