@@ -106,14 +106,14 @@ serve(async (req) => {
   } catch (error) {
     console.error('Bing Search API Error:', error)
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : 'Unknown'
     })
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -165,7 +165,7 @@ async function getBingSearchAnalytics(apiKey: string, siteUrl: string, request: 
 
   } catch (error) {
     console.error('Bing search analytics error:', error)
-    throw new Error(`Bing search analytics error: ${error.message}`)
+    throw new Error(`Bing search analytics error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -209,7 +209,7 @@ async function getBingSiteInfo(apiKey: string, siteUrl: string, request: BingSea
 
   } catch (error) {
     console.error('Bing site info error:', error)
-    throw new Error(`Bing site info error: ${error.message}`)
+    throw new Error(`Bing site info error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -252,6 +252,6 @@ async function getBingSearchTrends(apiKey: string, siteUrl: string, request: Bin
 
   } catch (error) {
     console.error('Bing search trends error:', error)
-    throw new Error(`Bing search trends error: ${error.message}`)
+    throw new Error(`Bing search trends error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
-} 
+}

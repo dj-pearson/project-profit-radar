@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -126,7 +126,7 @@ serve(async (req) => {
           type: "blog_webhook",
           success: false,
           url: config.blog_webhook_url,
-          error: webhookError.message
+          error: webhookError instanceof Error ? webhookError.message : 'Unknown error'
         });
       }
     }
@@ -163,7 +163,7 @@ serve(async (req) => {
         results.push({
           type: "social_scheduler",
           success: false,
-          error: schedulerError.message
+          error: schedulerError instanceof Error ? schedulerError.message : 'Unknown error'
         });
       }
     }

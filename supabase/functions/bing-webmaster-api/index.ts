@@ -125,14 +125,14 @@ serve(async (req) => {
   } catch (error) {
     console.error('Bing Webmaster API Error:', error)
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : 'Unknown'
     })
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error' 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -182,7 +182,7 @@ async function getBingPerformanceData(apiKey: string, siteUrl: string, request: 
 
   } catch (error) {
     console.error('Bing performance data error:', error)
-    throw new Error(`Bing performance API error: ${error.message}`)
+    throw new Error(`Bing performance API error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -226,7 +226,7 @@ async function getBingPages(apiKey: string, siteUrl: string, request: BingWebmas
 
   } catch (error) {
     console.error('Bing pages data error:', error)
-    throw new Error(`Bing pages API error: ${error.message}`)
+    throw new Error(`Bing pages API error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -270,7 +270,7 @@ async function getBingKeywords(apiKey: string, siteUrl: string, request: BingWeb
 
   } catch (error) {
     console.error('Bing keywords data error:', error)
-    throw new Error(`Bing keywords API error: ${error.message}`)
+    throw new Error(`Bing keywords API error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -313,7 +313,7 @@ async function getBingCrawlErrors(apiKey: string, siteUrl: string, request: Bing
 
   } catch (error) {
     console.error('Bing crawl errors data error:', error)
-    throw new Error(`Bing crawl errors API error: ${error.message}`)
+    throw new Error(`Bing crawl errors API error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -356,6 +356,6 @@ async function getBingBacklinks(apiKey: string, siteUrl: string, request: BingWe
 
   } catch (error) {
     console.error('Bing backlinks data error:', error)
-    throw new Error(`Bing backlinks API error: ${error.message}`)
+    throw new Error(`Bing backlinks API error: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 } 

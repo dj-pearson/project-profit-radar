@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { createHash } from "https://deno.land/std@0.168.0/crypto/mod.ts";
+// Using built-in crypto API instead
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -304,11 +304,11 @@ async function triggerWebhook(req: Request, supabase: any): Promise<Response> {
         event_type,
         payload: { event: event_type, data: payload },
         delivery_status: 'failed',
-        error_message: error.message
+        error_message: error instanceof Error ? error.message : 'Unknown error'
       });
 
     return new Response(
-      JSON.stringify({ error: 'Webhook delivery failed', details: error.message }),
+      JSON.stringify({ error: 'Webhook delivery failed', details: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

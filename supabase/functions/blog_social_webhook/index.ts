@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 interface SocialPlatformContent {
   platform: string;
@@ -63,7 +63,7 @@ async function getInstagramMediaFromStorage(
     }
 
     // Filter for image files (jpg, jpeg, png, gif, webp)
-    const imageFiles = files.filter((file) => {
+    const imageFiles = files.filter((file: any) => {
       const ext = file.name.toLowerCase().split(".").pop();
       return ["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "");
     });
@@ -74,7 +74,7 @@ async function getInstagramMediaFromStorage(
     }
 
     // Transform to public URLs
-    const publicUrls = imageFiles.map((file) => {
+    const publicUrls = imageFiles.map((file: any) => {
       const {
         data: { publicUrl },
       } = supabaseClient.storage.from("site-assets").getPublicUrl(file.name);
@@ -109,7 +109,7 @@ async function selectRandomInstagramMedia(
   // Select 1-2 random media items
   const numberOfMedia =
     Math.random() > 0.7 ? Math.min(2, availableMedia.length) : 1;
-  const selectedMedia = [];
+  const selectedMedia: string[] = [];
 
   for (let i = 0; i < numberOfMedia; i++) {
     const randomIndex = Math.floor(Math.random() * availableMedia.length);
