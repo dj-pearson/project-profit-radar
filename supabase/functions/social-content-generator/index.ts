@@ -154,7 +154,7 @@ async function getInstagramMediaFromStorage(
       return [];
     }
 
-    const imageFiles = files.filter((file) => {
+    const imageFiles = files.filter((file: any) => {
       const ext = file.name.toLowerCase().split(".").pop();
       return ["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "");
     });
@@ -164,7 +164,7 @@ async function getInstagramMediaFromStorage(
       return [];
     }
 
-    const publicUrls = imageFiles.map((file) => {
+    const publicUrls = imageFiles.map((file: any) => {
       const {
         data: { publicUrl },
       } = supabaseClient.storage.from("site-assets").getPublicUrl(file.name);
@@ -196,7 +196,7 @@ async function selectRandomInstagramMedia(
 
   const numberOfMedia =
     Math.random() > 0.7 ? Math.min(2, availableMedia.length) : 1;
-  const selectedMedia = [];
+  const selectedMedia: string[] = [];
 
   for (let i = 0; i < numberOfMedia; i++) {
     const randomIndex = Math.floor(Math.random() * availableMedia.length);
@@ -229,6 +229,10 @@ async function generateAIContent({
   requirements: string[];
 }) {
   const claudeKey = Deno.env.get("CLAUDE_API_KEY");
+
+  if (!claudeKey) {
+    throw new Error("CLAUDE_API_KEY environment variable is required");
+  }
 
   const prompt = `You are a senior social media director for a successful B2B SaaS company. Create a compelling ${platform} post about "${
     template.topic
@@ -346,17 +350,17 @@ HASHTAGS: [strategic hashtags separated by spaces]`;
       hashtags = hashtagsMatch1[1]
         .trim()
         .split(/\s+/)
-        .filter((tag) => tag.startsWith("#"));
+        .filter((tag: string) => tag.startsWith("#"));
     } else if (hashtagsMatch2) {
       hashtags = hashtagsMatch2[1]
         .trim()
         .split(/\s+/)
-        .filter((tag) => tag.startsWith("#"));
+        .filter((tag: string) => tag.startsWith("#"));
     } else if (hashtagsMatch3) {
       hashtags = hashtagsMatch3
         .join(" ")
         .split(/\s+/)
-        .filter((tag) => tag.startsWith("#"));
+        .filter((tag: string) => tag.startsWith("#"));
     }
 
     // Remove hashtags from content if they appear at the end
@@ -371,9 +375,10 @@ HASHTAGS: [strategic hashtags separated by spaces]`;
 
     return { content, hashtags };
   } catch (error) {
+    const errorObj = error as Error;
     logStep(`${platform} AI generation failed`, {
-      error_message: error.message,
-      error_type: error.constructor.name,
+      error_message: errorObj.message,
+      error_type: errorObj.constructor.name,
       has_claude_key: !!claudeKey,
     });
     throw error;
@@ -725,15 +730,16 @@ serve(async (req) => {
       body = JSON.parse(requestText);
       logStep("JSON parsed successfully", { keys: Object.keys(body) });
     } catch (parseError) {
+      const errorObj = parseError as Error;
       logStep("JSON parsing failed", { 
-        error: parseError.message,
+        error: errorObj.message,
         requestMethod: req.method,
         contentType: req.headers.get("content-type")
       });
       
       return new Response(JSON.stringify({
         error: "Invalid JSON in request body",
-        details: parseError.message,
+        details: errorObj.message,
         success: false,
       }), {
         status: 400,

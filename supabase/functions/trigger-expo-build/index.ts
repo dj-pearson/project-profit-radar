@@ -92,11 +92,12 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    const errorObj = error as Error;
     console.error('Expo build trigger error:', error)
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: errorObj.message 
       }),
       { 
         status: 500,

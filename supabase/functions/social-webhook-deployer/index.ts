@@ -192,15 +192,16 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const errorObj = error as Error;
     logStep("Social webhook deployer error", {
-      error_message: error.message,
-      error_stack: error.stack
+      error_message: errorObj.message,
+      error_stack: errorObj.stack
     });
 
     return new Response(
       JSON.stringify({ 
         error: "Internal server error",
-        details: error.message 
+        details: errorObj.message 
       }),
       { 
         status: 500, 

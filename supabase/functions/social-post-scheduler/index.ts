@@ -257,7 +257,7 @@ serve(async (req) => {
         results.push({
           company_id: config.company_id,
           success: false,
-          error: error.message,
+          error: (error as Error).message,
         });
       }
     }

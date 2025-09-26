@@ -100,11 +100,12 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    const errorObj = error as Error;
     console.error('Voice-to-text error:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorObj.message,
         success: false 
       }),
       {

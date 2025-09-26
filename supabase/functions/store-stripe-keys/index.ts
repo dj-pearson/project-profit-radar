@@ -50,7 +50,8 @@ const encryptKey = async (key: string): Promise<string> => {
     
     return btoa(String.fromCharCode(...combined));
   } catch (error) {
-    logStep("ERROR encrypting key", { error: error.message });
+    const errorObj = error as Error;
+    logStep("ERROR encrypting key", { error: errorObj.message });
     throw new Error("Failed to encrypt key securely");
   }
 };

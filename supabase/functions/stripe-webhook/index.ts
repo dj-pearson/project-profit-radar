@@ -46,8 +46,9 @@ serve(async (req) => {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
-      logStep("Webhook signature verification failed", { error: err.message });
-      return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+      const errorObj = err as Error;
+      logStep("Webhook signature verification failed", { error: errorObj.message });
+      return new Response(`Webhook Error: ${errorObj.message}`, { status: 400 });
     }
 
     logStep("Processing event", { type: event.type, id: event.id });
@@ -82,14 +83,15 @@ serve(async (req) => {
       });
 
     } catch (error) {
-      logStep("Error processing event", { type: event.type, error: error.message });
+      const errorObj = error as Error;
+      logStep("Error processing event", { type: event.type, error: errorObj.message });
       
       // Update processing attempt
       await supabaseClient
         .from("webhook_events")
         .update({
           processing_attempts: 1,
-          last_processing_error: error.message
+          last_processing_error: errorObj.message
         })
         .eq("stripe_event_id", event.id);
 
@@ -97,8 +99,9 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    logStep("Webhook error", { error: error.message });
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorObj = error as Error;
+    logStep("Webhook error", { error: errorObj.message });
+    return new Response(JSON.stringify({ error: errorObj.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

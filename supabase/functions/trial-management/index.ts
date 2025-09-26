@@ -121,9 +121,10 @@ serve(async (req) => {
         }
 
       } catch (error) {
+        const errorObj = error as Error;
         logStep("Error processing company", { 
           companyId: company.id, 
-          error: error.message 
+          error: errorObj.message 
         });
       }
     }

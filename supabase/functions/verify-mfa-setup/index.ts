@@ -128,9 +128,10 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    const errorObj = error as Error;
     console.error("MFA verification error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorObj.message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
