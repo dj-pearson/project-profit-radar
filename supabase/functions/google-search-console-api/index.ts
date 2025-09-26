@@ -229,7 +229,7 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
   const algorithm = {
     name: 'RSASSA-PKCS1-v1_5',
     hash: 'SHA-256'
-  }
+  };
   
   try {
     // TODO: Fix crypto buffer type compatibility issue
@@ -241,23 +241,27 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
       algorithm,
       false,
       ['sign']
-    )
+    );
   
-  // Sign the data
-  const encoder = new TextEncoder()
-  const signature = await crypto.subtle.sign(
-    algorithm,
-    privateKey,
-    encoder.encode(data)
-  )
-  
-  // Convert to base64url
-  const signatureBytes = new Uint8Array(signature)
-  let binary = ''
-  for (let i = 0; i < signatureBytes.length; i++) {
-    binary += String.fromCharCode(signatureBytes[i])
+    // Sign the data
+    const encoder = new TextEncoder();
+    const signature = await crypto.subtle.sign(
+      algorithm,
+      privateKey,
+      encoder.encode(data)
+    );
+    
+    // Convert to base64url
+    const signatureBytes = new Uint8Array(signature);
+    let binary = '';
+    for (let i = 0; i < signatureBytes.length; i++) {
+      binary += String.fromCharCode(signatureBytes[i]);
+    }
+    return base64urlEscape(btoa(binary));
+  } catch (error) {
+    console.error('Crypto signing error:', error);
+    throw error;
   }
-  return base64urlEscape(btoa(binary))
 }
 
 async function getPerformanceData(accessToken: string, siteUrl: string, request: SearchConsoleRequest) {
