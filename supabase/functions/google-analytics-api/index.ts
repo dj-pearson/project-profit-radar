@@ -679,7 +679,7 @@ async function getConversionData(accessToken: string, propertyId: string, reques
   })).filter((event: any) => event.conversions > 0)
 
   const totalConversions = conversionEvents.reduce((sum: any, event: any) => sum + event.conversions, 0)
-  const totalRevenue = conversionEvents.reduce((sum, event) => sum + event.revenue, 0)
+  const totalRevenue = conversionEvents.reduce((sum: number, event: any) => sum + (event.revenue || 0), 0)
 
   console.log('Conversion data processed successfully')
   return new Response(
