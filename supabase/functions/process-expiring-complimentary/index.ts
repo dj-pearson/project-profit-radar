@@ -108,11 +108,12 @@ serve(async (req) => {
         logStep(`Processed expiring subscription for ${subscription.email}`);
 
       } catch (error) {
-        logStep(`Error processing subscription for ${subscription.email}`, { error: error.message });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logStep(`Error processing subscription for ${subscription.email}`, { error: errorMessage });
         results.push({
           email: subscription.email,
           status: 'error',
-          error: error.message
+          error: errorMessage
         });
       }
     }

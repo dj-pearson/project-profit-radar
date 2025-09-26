@@ -120,6 +120,10 @@ serve(async (req) => {
         .eq('user_id', targetUser.id)
         .single();
 
+      if (!subscriber) {
+        throw new Error('Subscriber record not found after grant operation');
+      }
+
       await supabaseClient
         .from('complimentary_subscription_history')
         .insert({
@@ -197,6 +201,12 @@ serve(async (req) => {
         status: 200,
       });
     }
+
+    // Default: invalid action
+    return new Response(JSON.stringify({ success: false, error: 'Invalid action' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

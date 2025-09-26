@@ -48,24 +48,23 @@ serve(async (req) => {
       .eq('id', config_id || 'default')
       .maybeSingle();
 
-    if (configError && !config) {
-      // Use default config if none found
-      const defaultConfig = {
-        optimization_strategy: 'balanced',
-        max_crew_utilization: 85.0,
-        max_equipment_utilization: 90.0,
-        prefer_dedicated_crews: true,
-        allow_overtime: true,
-        max_overtime_hours: 10,
-        travel_time_factor: 1.5,
-        skill_matching_weight: 0.7,
-        availability_weight: 0.8,
-        cost_weight: 0.6,
-        priority_weight: 0.9,
-        weather_consideration: true
-      };
-      config = defaultConfig;
-    }
+    // Use default config if none found
+    const defaultConfig = {
+      optimization_strategy: 'balanced',
+      max_crew_utilization: 85.0,
+      max_equipment_utilization: 90.0,
+      prefer_dedicated_crews: true,
+      allow_overtime: true,
+      max_overtime_hours: 10,
+      travel_time_factor: 1.5,
+      skill_matching_weight: 0.7,
+      availability_weight: 0.8,
+      cost_weight: 0.6,
+      priority_weight: 0.9,
+      weather_consideration: true
+    } as const;
+
+    const effectiveConfig = config ?? defaultConfig;
 
     // Create optimization run record
     const { data: optimizationRun, error: runError } = await supabaseClient
@@ -147,11 +146,11 @@ Company Data:
 - Conflicts Detected: ${conflicts.length}
 
 Optimization Configuration:
-- Strategy: ${config.optimization_strategy}
-- Max Crew Utilization: ${config.max_crew_utilization}%
-- Max Equipment Utilization: ${config.max_equipment_utilization}%
-- Allow Overtime: ${config.allow_overtime}
-- Travel Time Factor: ${config.travel_time_factor}
+- Strategy: ${effectiveConfig.optimization_strategy}
+- Max Crew Utilization: ${effectiveConfig.max_crew_utilization}%
+- Max Equipment Utilization: ${effectiveConfig.max_equipment_utilization}%
+- Allow Overtime: ${effectiveConfig.allow_overtime}
+- Travel Time Factor: ${effectiveConfig.travel_time_factor}
 
 Current Conflicts:
 ${conflicts.slice(0, 5).map(c => `- ${c.conflict_type} on ${c.resource_type} from ${c.conflict_start_datetime} to ${c.conflict_end_datetime}`).join('\n')}
@@ -213,7 +212,7 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
     });
 
     // Store optimization results
-    const assignmentPromises = optimizationData.optimizations?.map(opt => 
+    const assignmentPromises = optimizationData.optimizations?.map((opt: any) => 
       supabaseClient.from('optimized_resource_assignments').insert({
         optimization_run_id: optimizationRun.id,
         company_id,
@@ -255,7 +254,7 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
       efficiency_improvement: optimizationData.summary?.estimated_efficiency_gain || 0,
       cost_savings: optimizationData.summary?.estimated_cost_savings || 0,
       conflicts_resolved: optimizationData.summary?.conflicts_resolved || 0,
-      projects_impacted: new Set(optimizationData.optimizations?.map(o => o.projectId) || []).size
+      projects_impacted: new Set(optimizationData.optimizations?.map((o: any) => o.projectId) || []).size
     });
 
     logStep("Optimization completed successfully");

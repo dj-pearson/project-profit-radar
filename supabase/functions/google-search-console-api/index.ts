@@ -226,31 +226,34 @@ function parsePrivateKey(privateKey: string): Uint8Array {
 
 async function signData(data: string, privateKeyBytes: Uint8Array): Promise<string> {
   // Import the private key for signing
-  const algorithm = {
+  const algorithm: RsaHashedImportParams = {
     name: 'RSASSA-PKCS1-v1_5',
-    hash: 'SHA-256'
+    hash: 'SHA-256',
   };
-  
+
   try {
-    // TODO: Fix crypto buffer type compatibility issue
-    throw new Error('Crypto operation temporarily disabled due to buffer type compatibility');
-    
+    // Ensure we pass an ArrayBuffer slice exactly matching the key bytes
+    const keyBuffer = privateKeyBytes.buffer.slice(
+      privateKeyBytes.byteOffset,
+      privateKeyBytes.byteOffset + privateKeyBytes.byteLength,
+    ) as ArrayBuffer;
+
     const privateKey = await crypto.subtle.importKey(
       'pkcs8',
-      privateKeyBytes,
+      keyBuffer,
       algorithm,
       false,
-      ['sign']
+      ['sign'],
     );
-  
+
     // Sign the data
     const encoder = new TextEncoder();
     const signature = await crypto.subtle.sign(
       algorithm,
       privateKey,
-      encoder.encode(data)
+      encoder.encode(data),
     );
-    
+
     // Convert to base64url
     const signatureBytes = new Uint8Array(signature);
     let binary = '';

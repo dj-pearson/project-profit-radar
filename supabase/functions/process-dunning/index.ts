@@ -124,13 +124,15 @@ serve(async (req) => {
               });
             }
 
+            const paymentMsg = paymentError instanceof Error ? paymentError.message : String(paymentError);
+
             await supabaseClient
               .from("payment_failures")
               .update({
                 attempt_count: newAttemptCount,
                 next_retry_at: nextRetryAt,
                 dunning_status: dunningStatus,
-                failure_reason: `Retry ${newAttemptCount} failed: ${paymentError.message}`
+                failure_reason: `Retry ${newAttemptCount} failed: ${paymentMsg}`
               })
               .eq("id", failure.id);
 
@@ -157,16 +159,17 @@ serve(async (req) => {
         results.processed++;
 
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         logStep("Error processing payment failure", { 
           failureId: failure.id, 
-          error: error.message 
+          error: errorMessage 
         });
         
         // Mark processing attempt
         await supabaseClient
           .from("payment_failures")
           .update({
-            failure_reason: `Processing error: ${error.message}`
+            failure_reason: `Processing error: ${errorMessage}`
           })
           .eq("id", failure.id);
       }
