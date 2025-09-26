@@ -250,15 +250,14 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
   console.log('Signing data with RSA...')
   
   try {
+    // TODO: Fix crypto buffer type compatibility issue
+    throw new Error('Crypto operation temporarily disabled due to buffer type compatibility');
+    
     // Import the private key for signing
     const algorithm = {
       name: 'RSASSA-PKCS1-v1_5',
       hash: 'SHA-256'
     }
-    
-  try {
-    // TODO: Fix crypto buffer type compatibility issue
-    throw new Error('Crypto operation temporarily disabled due to buffer type compatibility');
     
     const keyBuffer = new Uint8Array(privateKeyBytes);
     const privateKey = await crypto.subtle.importKey(
@@ -683,7 +682,7 @@ async function getConversionData(accessToken: string, propertyId: string, reques
     eventCount: parseInt(row.metricValues[2].value || '0')
   })).filter((event: any) => event.conversions > 0)
 
-  const totalConversions = conversionEvents.reduce((sum: any, event: any) => sum + event.conversions, 0)
+  const totalConversions = conversionEvents.reduce((sum: number, event: any) => sum + event.conversions, 0)
   const totalRevenue = conversionEvents.reduce((sum: number, event: any) => sum + (event.revenue || 0), 0)
 
   console.log('Conversion data processed successfully')
