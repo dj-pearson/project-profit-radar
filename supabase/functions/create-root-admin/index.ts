@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,13 +15,7 @@ serve(async (req) => {
     // Use service role key to create admin user
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     console.log("Creating root admin user...");
@@ -35,14 +29,15 @@ serve(async (req) => {
     }
 
     // Create the root admin user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authData, error: authError } = await supabaseAdmin.auth.signUp({
       email: adminEmail,
       password: adminPassword,
-      email_confirm: true,
-      user_metadata: {
-        first_name: 'Dan',
-        last_name: 'Pearson',
-        role: 'root_admin'
+      options: {
+        data: {
+          first_name: 'Dan',
+          last_name: 'Pearson',
+          role: 'root_admin'
+        }
       }
     });
 
@@ -89,7 +84,7 @@ serve(async (req) => {
     console.error("Error creating root admin:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         success: false
       }),
       {

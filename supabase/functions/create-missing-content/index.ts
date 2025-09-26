@@ -1,4 +1,4 @@
-import { createClient } from 'https://deno.land/x/supabase@1.0.0/mod.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -380,7 +380,7 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

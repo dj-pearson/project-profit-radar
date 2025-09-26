@@ -1,4 +1,4 @@
-import { createClient } from 'https://deno.land/x/supabase@1.0.0/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
         
         case 'in_range':
           // Expect condition_value to be like "min,max"
-          const [min, max] = rule.condition_value.split(',').map(v => parseFloat(v.trim()));
+          const [min, max] = rule.condition_value.split(',').map((v: string) => parseFloat(v.trim()));
           const rangeValue = parseFloat(fieldValue);
           ruleApplies = !isNaN(rangeValue) && !isNaN(min) && !isNaN(max) && 
                        rangeValue >= min && rangeValue <= max;

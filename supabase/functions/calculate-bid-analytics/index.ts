@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,12 +14,7 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const { company_id, period = 'monthly', start_date, end_date } = await req.json();
@@ -70,7 +65,7 @@ serve(async (req) => {
       }, {});
 
     const topLossReasons = Object.entries(lossReasons)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
       .slice(0, 5)
       .map(([reason, count]) => ({ reason, count }));
 
@@ -84,7 +79,7 @@ serve(async (req) => {
       }, {});
 
     const topCompetitors = Object.entries(competitors)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
       .slice(0, 5)
       .map(([competitor, wins]) => ({ competitor, wins }));
 

@@ -502,7 +502,7 @@ Main content
     headers: {
       Authorization: `Bearer ${claudeKey}`,
       "Content-Type": "application/json",
-      "x-api-key": claudeKey,
+      "x-api-key": claudeKey!,
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
