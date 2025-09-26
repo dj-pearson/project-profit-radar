@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,28 +63,25 @@ serve(async (req) => {
       try {
         logStep(`Processing config for company ${config.company_id}`);
 
-        // Call the social-post-scheduler function for this company
-        const { data: schedulerResult, error: schedulerError } =
-          await supabaseClient.functions.invoke("social-post-scheduler", {
-            body: {
-              company_id: config.company_id,
-              manual_trigger: false, // This is a scheduled trigger
-            },
-          });
-
-        if (schedulerError) {
-          logStep(
-            `Error calling scheduler for company ${config.company_id}`,
-            schedulerError
-          );
-
-          results.push({
+        // Use fetch to call the function directly since functions.invoke may not be available
+        const functionUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/social-post-scheduler`;
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             company_id: config.company_id,
-            success: false,
-            error: schedulerError.message,
-          });
-          continue;
+            manual_trigger: false, // This is a scheduled trigger
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const schedulerResult = await response.json();
 
         // Update config with next post time
         const nextPostTime = new Date();
@@ -118,7 +115,7 @@ serve(async (req) => {
         results.push({
           company_id: config.company_id,
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
