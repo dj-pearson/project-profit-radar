@@ -15,6 +15,7 @@ import { ProjectContent } from '@/components/project/ProjectContent';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePageWrapper } from '@/utils/mobileHelpers';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MobileNavigationFAB } from '@/components/mobile/MobileNavigationFAB';
 import {
   ArrowLeft,
   User,
@@ -93,29 +94,9 @@ const ProjectDetail = () => {
     return (
       <DashboardLayout title={project.name}>
         <MobilePageWrapper title={project.name} className="p-4 space-y-4">
-          {/* Mobile Header */}
+          {/* Mobile Header - Simplified */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/projects')}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Menu className="h-4 w-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <ProjectSubSidebar 
-                    activeTab={activeTab} 
-                    onTabChange={(tab) => {
-                      setActiveTab(tab);
-                      setSidebarOpen(false);
-                    }} 
-                  />
-                </SheetContent>
-              </Sheet>
-            </div>
+            <h1 className="text-lg font-bold truncate">{project.name}</h1>
             <Button size="sm" onClick={() => navigate(`/projects/${project.id}/edit`)}>
               <Edit className="h-4 w-4" />
             </Button>
@@ -123,7 +104,6 @@ const ProjectDetail = () => {
 
           {/* Project Info */}
           <div className="space-y-2">
-            <h1 className="text-lg font-bold truncate">{project.name}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
               <span className="truncate">{project.client_name}</span>
@@ -159,6 +139,17 @@ const ProjectDetail = () => {
             activeTab={activeTab}
             onNavigate={navigate}
           />
+
+          {/* Persistent Mobile Navigation FAB */}
+          <MobileNavigationFAB
+            onBack={() => navigate('/projects')}
+            showBackButton={true}
+          >
+            <ProjectSubSidebar 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab}
+            />
+          </MobileNavigationFAB>
         </MobilePageWrapper>
       </DashboardLayout>
     );
