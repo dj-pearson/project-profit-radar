@@ -86,7 +86,8 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error('Error syncing customers:', error)
-        errors.push(`Customer sync: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`Customer sync: ${errorMessage}`)
         errorsCount++
       }
 
@@ -99,7 +100,8 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error('Error syncing items:', error)
-        errors.push(`Item sync: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`Item sync: ${errorMessage}`)
         errorsCount++
       }
 
@@ -112,7 +114,8 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error('Error syncing invoices:', error)
-        errors.push(`Invoice sync: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`Invoice sync: ${errorMessage}`)
         errorsCount++
       }
 
@@ -158,11 +161,12 @@ serve(async (req) => {
       console.error('Sync error:', syncError)
       
       // Update integration with error
+      const syncErrorMessage = syncError instanceof Error ? syncError.message : String(syncError);
       await supabaseClient
         .from('quickbooks_integrations')
         .update({
           last_sync_status: 'error',
-          last_error_message: syncError.message
+          last_error_message: syncErrorMessage
         })
         .eq('id', integration.id)
 
@@ -171,8 +175,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in quickbooks-sync:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

@@ -120,11 +120,11 @@ Respond in this exact JSON format:
     // Store field mapping suggestions
     for (const mapping of analysis.fieldMappings) {
       const sampleData = sampleRows
-        .map(row => {
+        .map((row: any) => {
           const headerIndex = headers.indexOf(mapping.sourceField);
           return headerIndex >= 0 ? row[headerIndex] : null;
         })
-        .filter(val => val !== null)
+        .filter((val: any) => val !== null)
         .slice(0, 5);
 
       await supabase
@@ -147,8 +147,9 @@ Respond in this exact JSON format:
 
   } catch (error) {
     console.error('Error in smart-data-analyzer:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
     return new Response(JSON.stringify({
-      error: error.message || 'Analysis failed'
+      error: errorMessage
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

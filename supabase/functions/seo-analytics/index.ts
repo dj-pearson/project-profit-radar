@@ -119,7 +119,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error) 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -234,7 +234,7 @@ async function getDashboardData(supabaseClient: any, request: SEOAnalyticsReques
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Failed to fetch dashboard data'
+        error: error instanceof Error ? error.message : 'Failed to fetch dashboard data'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

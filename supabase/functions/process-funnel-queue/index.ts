@@ -76,9 +76,12 @@ const handler = async (req: Request): Promise<Response> => {
           .update({ status: "sending" })
           .eq("id", item.id);
 
-        const subscriber = item.funnel_subscribers?.email_subscribers;
-        const template = item.email_templates;
-        const step = item.funnel_steps;
+        // Extract data from Supabase relations (TypeScript treats them as arrays)
+        const funnelSubscriber = Array.isArray(item.funnel_subscribers) ? item.funnel_subscribers[0] : item.funnel_subscribers;
+        const subscriber = Array.isArray(funnelSubscriber?.email_subscribers) ? funnelSubscriber.email_subscribers[0] : funnelSubscriber?.email_subscribers;
+        const template = Array.isArray(item.email_templates) ? item.email_templates[0] : item.email_templates;
+        const step = Array.isArray(item.funnel_steps) ? item.funnel_steps[0] : item.funnel_steps;
+        const leadFunnel = Array.isArray(funnelSubscriber?.lead_funnels) ? funnelSubscriber.lead_funnels[0] : funnelSubscriber?.lead_funnels;
 
         if (!subscriber || !template || !step) {
           console.log(`Skipping item ${item.id} - missing data`);
@@ -95,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
           last_name: subscriber.last_name || "",
           email: subscriber.email,
           step_name: step.name,
-          funnel_name: item.funnel_subscribers?.lead_funnels?.name || "",
+          funnel_name: leadFunnel?.name || "",
         };
 
         Object.entries(variables).forEach(([key, value]) => {
@@ -117,7 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
                 ${emailContent}
                 <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
                 <p style="color: #666; font-size: 12px;">
-                  This email was sent as part of your ${item.funnel_subscribers?.lead_funnels?.name || 'Lead'} sequence.
+                  This email was sent as part of your ${leadFunnel?.name || 'Lead'} sequence.
                   <br>
                   <a href="#" style="color: #666;">Unsubscribe</a>
                 </p>
@@ -140,7 +143,7 @@ const handler = async (req: Request): Promise<Response> => {
           .from("funnel_subscribers")
           .update({
             last_email_sent_at: new Date().toISOString(),
-            current_step: item.funnel_subscribers?.current_step + 1,
+            current_step: (funnelSubscriber?.current_step || 0) + 1,
           })
           .eq("id", item.funnel_subscriber_id);
 
@@ -148,9 +151,9 @@ const handler = async (req: Request): Promise<Response> => {
         await supabase
           .from("funnel_analytics")
           .insert({
-            funnel_id: item.funnel_subscribers?.funnel_id,
+            funnel_id: funnelSubscriber?.funnel_id,
             step_id: item.step_id,
-            subscriber_id: item.funnel_subscribers?.subscriber_id,
+            subscriber_id: funnelSubscriber?.subscriber_id,
             event_type: "email_sent",
             event_data: {
               email_template_id: item.email_template_id,
@@ -162,8 +165,8 @@ const handler = async (req: Request): Promise<Response> => {
         const { data: nextStep } = await supabase
           .from("funnel_steps")
           .select("*")
-          .eq("funnel_id", item.funnel_subscribers?.funnel_id)
-          .eq("step_order", step.step_order + 1)
+          .eq("funnel_id", funnelSubscriber?.funnel_id)
+          .eq("step_order", (step.step_order || 0) + 1)
           .eq("is_active", true)
           .single();
 
@@ -209,8 +212,8 @@ const handler = async (req: Request): Promise<Response> => {
           await supabase
             .from("funnel_analytics")
             .insert({
-              funnel_id: item.funnel_subscribers?.funnel_id,
-              subscriber_id: item.funnel_subscribers?.subscriber_id,
+              funnel_id: funnelSubscriber?.funnel_id,
+              subscriber_id: funnelSubscriber?.subscriber_id,
               event_type: "completed",
             });
         }
@@ -221,12 +224,14 @@ const handler = async (req: Request): Promise<Response> => {
         console.error(`Error processing email ${item.id}:`, emailError);
         
         // Mark as failed and increment retry count
+        const errorMessage = emailError instanceof Error ? emailError.message : String(emailError);
+        const currentRetryCount = (item as any).retry_count || 0;
         await supabase
           .from("funnel_email_queue")
           .update({ 
             status: "failed",
-            error_message: emailError.message,
-            retry_count: (item.retry_count || 0) + 1,
+            error_message: errorMessage,
+            retry_count: currentRetryCount + 1,
           })
           .eq("id", item.id);
       }

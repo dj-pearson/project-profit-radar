@@ -63,10 +63,12 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error processing voice command:", error);
+    
+    const errorMessage = error instanceof Error ? error.message : "Failed to process voice command";
 
     return new Response(
       JSON.stringify({
-        error: error.message || "Failed to process voice command",
+        error: errorMessage,
         transcript: "",
         intent: "unknown",
         entities: {},

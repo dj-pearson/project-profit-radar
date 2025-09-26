@@ -73,9 +73,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error in QuickBooks routing:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         success: false
       }),
       {
