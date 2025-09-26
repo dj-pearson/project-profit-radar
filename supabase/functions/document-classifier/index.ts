@@ -61,7 +61,7 @@ serve(async (req) => {
     console.error('Classification error:', error);
     return new Response(JSON.stringify({ 
       error: 'Classification failed', 
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -213,10 +213,10 @@ function performRuleBasedClassification(text: string, projects: Project[]): AICl
 
   return {
     document_type,
-    vendor_name,
-    amount,
+    vendor_name: vendor_name || undefined,
+    amount: amount || undefined,
     project_references,
-    suggested_project_id,
+    suggested_project_id: suggested_project_id || undefined,
     suggested_cost_center,
     confidence,
     reasoning: `Rule-based classification: detected ${document_type} document${suggested_project_id ? ' with project match' : ' without project match'}`

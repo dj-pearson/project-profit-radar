@@ -1,4 +1,4 @@
-import { createClient } from 'https://deno.land/x/supabase@1.0.0/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -203,7 +203,7 @@ Ensure all numbers are realistic for the construction industry and consistent wi
         market_position_percentile: enhancedBenchmarks.competitiveAnalysis.marketPosition,
         areas_for_improvement: enhancedBenchmarks.improvementOpportunities,
         competitive_advantages: enhancedBenchmarks.competitiveAnalysis.strengths,
-        company_size_category: projects?.length > 20 ? 'large' : projects?.length > 5 ? 'medium' : 'small',
+        company_size_category: (projects?.length || 0) > 20 ? 'large' : (projects?.length || 0) > 5 ? 'medium' : 'small',
         geographic_region: 'North America'
       })
       .select()
@@ -226,7 +226,7 @@ Ensure all numbers are realistic for the construction industry and consistent wi
   } catch (error) {
     console.error('Error generating performance benchmarks:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 500, 
         headers: { 

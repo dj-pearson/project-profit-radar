@@ -1,4 +1,4 @@
-import { createClient } from 'https://deno.land/x/supabase@1.0.0/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in execute-workflow:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -142,7 +142,7 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
         .update({
           status: result.success ? 'completed' : 'failed',
           output_data: result.output,
-          error_message: result.error,
+          error_message: result.success ? null : (result as any).error,
           completed_at: new Date().toISOString()
         })
         .eq('id', stepExecution.id)
@@ -153,13 +153,13 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
           .from('workflow_executions')
           .update({
             status: 'failed',
-            error_message: result.error,
+            error_message: result.success ? null : (result as any).error,
             completed_at: new Date().toISOString(),
             execution_log: [
               ...execution.execution_log,
               {
                 timestamp: new Date().toISOString(),
-                message: `Step ${i + 1} failed: ${result.error}`,
+                message: `Step ${i + 1} failed: ${result.success ? 'Unknown error' : (result as any).error}`,
                 step: step.name,
                 level: 'error'
               }
@@ -167,7 +167,7 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
           })
           .eq('id', execution.id)
         
-        throw new Error(result.error)
+        throw new Error(result.success ? 'Unknown error' : ((result as { error?: string }).error || 'Unknown error'));
       }
 
       // Update execution progress
@@ -199,14 +199,14 @@ async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[]
     } catch (error) {
       console.error(`Error executing step ${i}:`, error)
       
-      await supabase
-        .from('workflow_executions')
-        .update({
-          status: 'failed',
-          error_message: error.message,
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', execution.id)
+        await supabase
+          .from('workflow_executions')
+          .update({
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', execution.id)
       
       throw error
     }
@@ -262,7 +262,7 @@ async function executeStep(supabase: any, step: WorkflowStep, execution: any, st
   } catch (error) {
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       output: null
     }
   }

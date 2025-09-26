@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { aiService } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
@@ -99,7 +99,7 @@ serve(async (req) => {
       });
       logStep("Social media automation triggered successfully");
     } catch (socialError) {
-      logStep("Social media automation failed", { error: socialError.message });
+      logStep("Social media automation failed", { error: socialError instanceof Error ? socialError.message : 'Unknown error' });
       // Don't fail the entire process if social automation fails
     }
     
@@ -116,11 +116,11 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    logStep("Fatal error", { error: error.message, stack: error.stack });
+    logStep("Fatal error", { error: error instanceof Error ? error.message : 'Unknown error', stack: error instanceof Error ? error.stack : undefined });
     
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       message: "Blog generation failed"
     }), {
       status: 500,

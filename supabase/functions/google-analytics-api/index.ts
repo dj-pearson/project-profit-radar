@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://deno.land/x/supabase@1.0.0/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -136,8 +136,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message,
-        stack: error.stack
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -209,7 +209,7 @@ async function createJWT(header: any, payload: any, privateKey: string): Promise
     return `${signingInput}.${signature}`
   } catch (jwtError) {
     console.error('JWT creation failed:', jwtError)
-    throw new Error(`JWT creation failed: ${jwtError.message}`)
+    throw new Error(`JWT creation failed: ${jwtError instanceof Error ? jwtError.message : 'Unknown JWT error'}`)
   }
 }
 
@@ -242,7 +242,7 @@ function parsePrivateKey(privateKey: string): Uint8Array {
     return bytes
   } catch (parseError) {
     console.error('Private key parsing failed:', parseError)
-    throw new Error(`Private key parsing failed: ${parseError.message}`)
+    throw new Error(`Private key parsing failed: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`)
   }
 }
 
@@ -258,7 +258,7 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
     
     const privateKey = await crypto.subtle.importKey(
       'pkcs8',
-      privateKeyBytes,
+      new Uint8Array(privateKeyBytes.buffer.slice(privateKeyBytes.byteOffset, privateKeyBytes.byteOffset + privateKeyBytes.byteLength)),
       algorithm,
       false,
       ['sign']
@@ -285,7 +285,7 @@ async function signData(data: string, privateKeyBytes: Uint8Array): Promise<stri
     return base64urlEscape(btoa(binary))
   } catch (signError) {
     console.error('Data signing failed:', signError)
-    throw new Error(`Data signing failed: ${signError.message}`)
+    throw new Error(`Data signing failed: ${signError instanceof Error ? signError.message : 'Unknown signing error'}`)
   }
 }
 
@@ -676,9 +676,9 @@ async function getConversionData(accessToken: string, propertyId: string, reques
     conversions: parseInt(row.metricValues[0].value || '0'),
     revenue: parseFloat(row.metricValues[1].value || '0'),
     eventCount: parseInt(row.metricValues[2].value || '0')
-  })).filter(event => event.conversions > 0)
+  })).filter((event: any) => event.conversions > 0)
 
-  const totalConversions = conversionEvents.reduce((sum, event) => sum + event.conversions, 0)
+  const totalConversions = conversionEvents.reduce((sum: any, event: any) => sum + event.conversions, 0)
   const totalRevenue = conversionEvents.reduce((sum, event) => sum + event.revenue, 0)
 
   console.log('Conversion data processed successfully')

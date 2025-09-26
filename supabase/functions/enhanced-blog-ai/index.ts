@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://deno.land/x/supabase@1.0.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -170,7 +170,7 @@ async function handleAutoGeneration(
   if (postError) throw postError;
 
   // Record topic history for diversity tracking
-  await recordTopicHistory(supabaseClient, companyId, blogPost.id, selectedTopic, generatedContent, finalSettings);
+  await recordTopicHistory(supabaseClient, companyId, blogPost.id, selectedTopic || '', generatedContent, finalSettings);
 
   // Analyze content
   await analyzeGeneratedContent(supabaseClient, blogPost.id, generatedContent, finalSettings);
@@ -280,7 +280,7 @@ async function generateDiverseTopic(
   const apiKey = Deno.env.get('CLAUDE_API_KEY');
   if (!apiKey) throw new Error("Claude API key not configured");
 
-  const diversityContext = recentTopics?.map(t => 
+  const diversityContext = recentTopics?.map((t: any) => 
     `- ${t.primary_topic} (${new Date(t.created_at).toLocaleDateString()})`
   ).join('\n') || "No recent topics found";
 
@@ -377,7 +377,7 @@ async function generateContentWithAI(
     .select('title, excerpt, body')
     .limit(settings.content_analysis_depth === 'full' ? 10 : 5);
 
-  const existingContext = existingPosts?.map(p => 
+  const existingContext = existingPosts?.map((p: any) => 
     settings.content_analysis_depth === 'title' ? p.title :
     settings.content_analysis_depth === 'excerpt' ? `${p.title}: ${p.excerpt}` :
     `${p.title}: ${p.excerpt}\n${p.body.substring(0, 500)}...`
@@ -500,7 +500,7 @@ Make the content authoritative, actionable, and valuable for construction profes
       } catch (parseError) {
         logStep("JSON parse error", { 
           jsonText: jsonMatch[0],
-          error: parseError.message,
+          error: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
           jsonLength: jsonMatch[0].length
         });
         throw new Error("Failed to parse JSON response from Claude");
@@ -563,7 +563,7 @@ async function generateWithClaudeFallback(
       return createFallbackContent(topic, settings);
     }
   } catch (error) {
-    logStep("Fallback model also failed", { error: error.message });
+    logStep("Fallback model also failed", { error: error instanceof Error ? error.message : 'Unknown error' });
     return createFallbackContent(topic, settings);
   }
 }
@@ -872,7 +872,7 @@ async function processQueueItem(supabaseClient: any, queueId: string) {
       .update({ 
         status: 'failed',
         processing_completed_at: new Date().toISOString(),
-        error_message: error.message,
+        error_message: error instanceof Error ? error.message : 'Unknown error',
         retry_count: queueItem.retry_count + 1
       })
       .eq('id', queueId);
