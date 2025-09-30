@@ -7,6 +7,8 @@ import Implementation from "@/components/Implementation";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import LazySection from "@/components/LazySection";
+import { TestimonialsSection, ClientLogosSection } from "@/components/TestimonialsSection";
+import { CaseStudiesSection } from "@/components/CaseStudiesSection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
@@ -103,6 +105,17 @@ const Index = () => {
         <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
           <LazyPricing />
         </PerformanceLazyWrapper>
+        
+        {/* Trust Signals */}
+        <LazySection>
+          <TestimonialsSection />
+        </LazySection>
+        
+        <LazySection>
+          <CaseStudiesSection />
+        </LazySection>
+        
+        <ClientLogosSection />
         
         <LazySection>
           <Implementation />
