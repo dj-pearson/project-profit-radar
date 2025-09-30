@@ -129,6 +129,9 @@ const Pricing = () => {
             <button
               onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
               className="relative w-12 h-6 bg-gray-200 rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-construction-orange focus:ring-offset-2"
+              aria-label={`Switch to ${billingPeriod === 'monthly' ? 'annual' : 'monthly'} billing`}
+              role="switch"
+              aria-checked={billingPeriod === 'annual'}
             >
               <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${billingPeriod === 'annual' ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
