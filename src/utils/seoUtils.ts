@@ -12,7 +12,7 @@ export const getCleanCanonicalUrl = (): string => {
   const baseUrl = 'https://builddesk.com';
   const pathname = window.location.pathname;
   
-  // Always return clean URL without any parameters
+  // Return full absolute URL with pathname
   return `${baseUrl}${pathname}`;
 };
 

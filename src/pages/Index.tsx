@@ -78,7 +78,7 @@ const Index = () => {
           'construction budget tracking',
           'quickbooks construction integration'
         ]}
-        canonicalUrl="/"
+        canonicalUrl="https://builddesk.com"
         structuredData={[constructionSoftwareStructuredData, organizationStructuredData]}
       />
       <SkipLink href="#main-content">Skip to main content</SkipLink>
