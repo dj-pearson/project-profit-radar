@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { ArticleSchema, FAQSchema } from "@/components/seo/EnhancedSchemaMarkup";
+import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSnippet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -126,15 +127,12 @@ const ProcoreVsBuildDeskComparison = () => {
             Procore vs BuildDesk: Which is Better for Small GC Teams?
           </h1>
           
-          {/* TL;DR Section */}
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-3">TL;DR - Quick Answer</h2>
-            <p className="text-lg leading-relaxed">
-              <strong>BuildDesk wins for small contractors</strong> due to 60% lower cost, 10x faster setup, 
-              better mobile experience, and features designed specifically for teams under 100. 
-              Procore is built for enterprise complexity most small contractors don't need.
-            </p>
-          </div>
+          <LastUpdated date="September 2025" />
+          
+          <QuickAnswerSnippet
+            question="Which construction software is better for small contractors - Procore or BuildDesk?"
+            answer="BuildDesk wins for small contractors due to 60% lower cost ($299 vs $800+ monthly), 10x faster setup (2 weeks vs 2-4 months), and features designed specifically for teams under 100 employees. Procore is built for enterprise complexity most small contractors don't need."
+          />
 
           <div className="text-lg text-muted-foreground mb-8">
             <p>This honest comparison covers the real differences between Procore and BuildDesk 
