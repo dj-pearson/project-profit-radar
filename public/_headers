@@ -1,5 +1,6 @@
 # Headers for build-desk.com
 
+# Default security headers for all pages
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
@@ -7,15 +8,11 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
-# SEO and parameter handling headers
-/*
-  # Canonical URL headers to help with parameter variations
-  Link: <https://build-desk.com$1>; rel="canonical"
-
-# Cache control for static assets
+# Cache control for hashed assets (aggressive caching)
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Specific file type caching
 /*.js
   Cache-Control: public, max-age=31536000, immutable
 
@@ -28,17 +25,37 @@
 /*.jpg
   Cache-Control: public, max-age=31536000, immutable
 
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+
 /*.webp
   Cache-Control: public, max-age=31536000, immutable
 
 /*.svg
   Cache-Control: public, max-age=31536000, immutable
 
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/*.ttf
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# Root level images
+/BuildDeskLogo.png
+  Cache-Control: public, max-age=31536000, immutable
+
 /images/*
   Cache-Control: public, max-age=31536000, immutable
 
-/BuildDeskLogo.png
+/fonts/*
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
 
 # API routes - strategic caching for blog/knowledge base
 /api/blog/*
@@ -54,14 +71,9 @@
 /sw.js
   Cache-Control: public, max-age=86400, must-revalidate
 
-# Fonts - enable CORS and long-term caching
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-  Access-Control-Allow-Origin: *
-  
-# Performance optimization headers
+# HTML pages - no cache to ensure fresh content
 /
-  # Enable compression
-  Accept-Encoding: gzip, br
-  # Prefer modern image formats
-  Accept: text/html, image/webp, image/avif, */*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
