@@ -113,12 +113,19 @@
       gtag('config', 'G-LNDT7H4SJR');
     </script>
 
-    <!-- Cache Management & Loop Protection O -->
+    <!-- Cache Management & Loop Protection -->
     <script>
       (function () {
         const CURRENT_VERSION = "2025.08.08.006";
         const lastCacheClear = localStorage.getItem("last_cache_clear");
         const now = Date.now();
+
+        // Clean up URL parameters immediately to avoid redirect detection
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("refreshed") || params.has("v")) {
+          const cleanURL = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, '', cleanURL);
+        }
 
         // Periodic cache refresh (once per hour)
         const shouldRefreshCache =
@@ -128,8 +135,8 @@
 
         if (shouldRefreshCache) {
           try {
-            localStorage.clear();
-            sessionStorage.clear();
+            localStorage.setItem("last_cache_clear", now.toString());
+            localStorage.setItem("app_version", CURRENT_VERSION);
 
             if ("serviceWorker" in navigator) {
               navigator.serviceWorker.getRegistrations().then((regs) => {
@@ -143,22 +150,11 @@
               });
             }
 
+            // Clear storage without URL redirect
+            localStorage.clear();
+            sessionStorage.clear();
             localStorage.setItem("last_cache_clear", now.toString());
             localStorage.setItem("app_version", CURRENT_VERSION);
-
-            const params = new URLSearchParams(window.location.search);
-            if (!params.has("refreshed")) {
-              params.set("v", CURRENT_VERSION);
-              params.set("refreshed", "true");
-              const newURL =
-                window.location.origin +
-                window.location.pathname +
-                "?" +
-                params.toString();
-              // Use replaceState to avoid creating new history entries and SEO issues
-              window.history.replaceState({}, '', newURL);
-              return;
-            }
           } catch (e) {
             console.error("Cache refresh error:", e);
           }
