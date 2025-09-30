@@ -17,26 +17,26 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    --primary: 24 100% 50%;
+    --primary: 24 100% 38%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 17% 95%;
     --secondary-foreground: 215 25% 27%;
 
     --muted: 210 17% 95%;
-    --muted-foreground: 215 13% 45%;
+    --muted-foreground: 215 13% 40%;
 
-    --accent: 24 100% 50%;
+    --accent: 24 100% 38%;
     --accent-foreground: 0 0% 100%;
 
     /* Construction-themed colors */
-    --construction-orange: 24 100% 50%;
+    --construction-orange: 24 100% 38%;
     --construction-blue: 210 100% 20%;
     --construction-steel: 210 11% 71%;
     --construction-dark: 215 25% 27%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--construction-orange)), hsl(24 100% 45%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--construction-orange)), hsl(24 100% 32%));
     --gradient-feature: linear-gradient(135deg, hsl(var(--construction-blue)), hsl(210 100% 25%));
     
     /* Shadows */
@@ -54,12 +54,12 @@ All colors MUST be HSL.
 
     --sidebar-background: 210 100% 20%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary: 24 100% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 100% 25%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 100% 15%;
-    --sidebar-ring: 24 100% 50%;
+    --sidebar-ring: 24 100% 38%;
   }
 
   .dark {
@@ -72,7 +72,7 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 24 100% 50%;
+    --primary: 24 100% 45%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -81,7 +81,7 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 24 100% 50%;
+    --accent: 24 100% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
