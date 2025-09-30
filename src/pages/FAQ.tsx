@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
 import { FAQSchema } from "@/components/seo/EnhancedSchemaMarkup";
+import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSnippet";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -124,11 +125,17 @@ const FAQ = () => {
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             Frequently Asked Questions
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <LastUpdated date="September 2025" />
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
             Get quick answers to common questions about BuildDesk construction management software.
             Can't find what you're looking for? Our support team is here to help.
           </p>
         </div>
+        
+        <QuickAnswerSnippet
+          question="What are the most common questions about construction management software?"
+          answer="Most contractors ask about setup time (1-2 weeks for BuildDesk), user limits (unlimited on all plans), offline functionality (full mobile offline capability), QuickBooks integration (two-way sync), and cost compared to competitors (60-70% less than Procore)."
+        />
 
         {/* FAQ Categories */}
         {faqCategories.map((category, categoryIndex) => (

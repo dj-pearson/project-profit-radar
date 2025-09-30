@@ -2,6 +2,7 @@ import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSnippet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -152,11 +153,17 @@ const Resources = () => {
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             Construction Management Resources
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <LastUpdated date="September 2025" />
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
             Free guides, comparisons, and best practices to help small contractors 
             improve project outcomes, reduce costs, and stay compliant.
           </p>
         </div>
+        
+        <QuickAnswerSnippet
+          question="Where can I find construction management guides and resources?"
+          answer="BuildDesk offers free construction management guides covering job costing, OSHA compliance, scheduling, software comparisons (Procore vs BuildDesk, Buildertrend alternatives), and best practices specifically for small contractors."
+        />
 
         {/* Topic Hubs Section */}
         <section className="mb-16">

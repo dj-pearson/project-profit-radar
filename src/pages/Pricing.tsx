@@ -2,6 +2,7 @@ import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSnippet";
 import Pricing from "@/components/Pricing";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -26,10 +27,16 @@ const PricingPage = () => {
               <h1 className="text-4xl md:text-5xl font-bold text-construction-dark mb-4">
                 Simple, Transparent Pricing
               </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <LastUpdated date="September 2025" />
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
                 Choose the plan that fits your construction business. All plans include a 14-day free trial.
               </p>
             </div>
+            
+            <QuickAnswerSnippet
+              question="How much does construction management software cost?"
+              answer="BuildDesk starts at $149/month with unlimited users, job costing, scheduling, and OSHA compliance. No setup fees or per-user charges. 50-60% less expensive than competitors like Procore ($800+) or Buildertrend ($400+)."
+            />
             <Pricing />
           </div>
         </main>

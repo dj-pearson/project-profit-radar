@@ -2,6 +2,7 @@ import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSnippet";
 import Features from "@/components/Features";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -26,10 +27,16 @@ const FeaturesPage = () => {
               <h1 className="text-4xl md:text-5xl font-bold text-construction-dark mb-4">
                 Complete Construction Management Suite
               </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <LastUpdated date="September 2025" />
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
                 Everything you need to run your construction business efficiently, from project planning to final invoicing.
               </p>
             </div>
+            
+            <QuickAnswerSnippet
+              question="What features should construction management software have?"
+              answer="Essential features include real-time job costing, mobile crew tracking, daily logs, OSHA compliance tools, QuickBooks integration, photo documentation, scheduling, and change order management. BuildDesk includes all these in one platform designed for small contractors."
+            />
             <Features />
           </div>
         </main>

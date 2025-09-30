@@ -2,6 +2,7 @@ import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSnippet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -95,11 +96,17 @@ const Solutions = () => {
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             Construction Management Solutions by Industry
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <LastUpdated date="September 2025" />
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
             Specialized tools and workflows designed for different types of contractors. 
             Find the solution that fits your specific business needs.
           </p>
         </div>
+        
+        <QuickAnswerSnippet
+          question="What construction management solution is best for my contractor type?"
+          answer="BuildDesk offers specialized workflows for residential contractors (homeowner portals, change orders), commercial contractors (multi-phase tracking, compliance), specialty trades (service calls, material tracking), and small GCs (subcontractor management, financial reporting)."
+        />
 
         {/* Solutions Grid */}
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
