@@ -59,7 +59,7 @@ const SimpleMobileDashboard = () => {
       {/* Mobile-optimized Project List */}
       <Card className="border border-border/50">
         <CardContent className="p-2 sm:p-3 space-y-2 sm:space-y-3">
-          <h4 className="text-xs sm:text-sm font-medium text-construction-dark">Active Projects</h4>
+          <p className="text-xs sm:text-sm font-medium text-construction-dark">Active Projects</p>
           
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
