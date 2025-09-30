@@ -24,6 +24,20 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				// Override default grays for better contrast
+				gray: {
+					50: '#f9fafb',
+					100: '#f3f4f6',
+					200: '#e5e7eb',
+					300: '#d1d5db',
+					400: '#9ca3af',
+					500: '#6b7280',
+					600: '#525965', // Darker for WCAG AA (4.5:1 on white)
+					700: '#374151',
+					800: '#1f2937',
+					900: '#111827',
+					950: '#030712',
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
