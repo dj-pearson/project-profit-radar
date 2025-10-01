@@ -32,7 +32,7 @@ export default {
 					300: '#d1d5db',
 					400: '#9ca3af',
 					500: '#6b7280',
-					600: '#525965', // Darker for WCAG AA (4.5:1 on white)
+					600: '#4b5563', // Darker for WCAG AA (4.5:1 on white)
 					700: '#374151',
 					800: '#1f2937',
 					900: '#111827',
