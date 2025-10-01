@@ -318,6 +318,7 @@ const Blueprint3D: React.FC = () => {
                 onClick={() => handleTimelineClick(phase.progress)}
                 className="absolute top-0 w-4 h-2 -translate-x-2 hover:scale-125 transition-transform"
                 style={{ left: `${phase.progress * 100}%` }}
+                aria-label={`Jump to ${phase.name} phase`}
               >
                 <div 
                   className="w-full h-full rounded-full border-2 border-background"
