@@ -33,7 +33,7 @@ const Header = () => {
           />
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+          <nav id="navigation" className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navItems.map((item) =>
               item.isSection ? (
                 <a
