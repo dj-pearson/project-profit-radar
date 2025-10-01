@@ -19,6 +19,7 @@ import { AdvancedSEOAnalytics } from "@/components/analytics/AdvancedSEOAnalytic
 import { AdvancedCoreWebVitals } from "@/components/performance/AdvancedCoreWebVitals";
 import { SiteSearchSchema } from "@/components/seo/SiteSearchSchema";
 import { initializeSEOBackendIntegration } from "@/utils/seoBackendSync";
+import { supabase } from "@/integrations/supabase/client";
 import { initializeFontOptimization, monitorFontPerformance, optimizeCriticalFonts } from "@/utils/fontOptimization";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
@@ -40,14 +41,19 @@ const Index = () => {
     initializeFontOptimization();
     monitorFontPerformance();
     
-    // Then initialize SEO backend integration
-    initializeSEOBackendIntegration().then(result => {
-      if (result.success) {
-        console.log('✅ SEO backend integration successful');
-      } else {
-        console.warn('⚠️ SEO backend integration warning:', result.message);
+    // Then initialize SEO backend integration only when authenticated
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        initializeSEOBackendIntegration().then(result => {
+          if (result.success) {
+            console.log('✅ SEO backend integration successful');
+          } else {
+            console.warn('⚠️ SEO backend integration warning:', result.message);
+          }
+        });
       }
-    });
+    })();
   }, []);
 
   return (

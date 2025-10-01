@@ -259,9 +259,8 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
       <meta name="msapplication-TileColor" content="#ff6b00" />
       <meta name="msapplication-config" content="/browserconfig.xml" />
       
-      {/* Performance and Security Headers */}
+      {/* Performance and Security Headers (only those valid via meta) */}
       <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-      <meta httpEquiv="X-Frame-Options" content="DENY" />
       <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       
       {/* DNS Prefetch for Performance */}

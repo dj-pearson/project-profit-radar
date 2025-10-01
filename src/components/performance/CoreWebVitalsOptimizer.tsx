@@ -20,7 +20,7 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
       if (pageType === 'homepage') {
         const heroImageLink = document.createElement('link');
         heroImageLink.rel = 'preload';
-        heroImageLink.href = '/images/hero-construction-management.webp';
+        heroImageLink.href = '/placeholder.svg';
         heroImageLink.as = 'image';
         document.head.appendChild(heroImageLink);
       }

@@ -69,7 +69,7 @@ export const useCriticalResources = () => {
     // Critical images for hero section
     const criticalImages = [
       {
-        href: '/images/hero-construction.webp',
+        href: '/placeholder.svg',
         as: 'image' as const
       },
       {
@@ -121,8 +121,8 @@ export const PageResourcePreloader = ({ pageType }: { pageType: string }) => {
   useEffect(() => {
     const pageResources: Record<string, CriticalResource[]> = {
       'homepage': [
-        { href: '/images/hero-construction.webp', as: 'image' },
-        { href: '/images/features-preview.webp', as: 'image' }
+        { href: '/placeholder.svg', as: 'image' },
+        { href: '/placeholder.svg', as: 'image' }
       ],
       'pricing': [
         { href: '/images/pricing-comparison.webp', as: 'image' }

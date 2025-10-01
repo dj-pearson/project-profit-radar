@@ -202,9 +202,8 @@ export const DynamicSEOOptimizer: React.FC<DynamicSEOOptimizerProps> = ({
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta name="format-detection" content="telephone=no" />
       
-      {/* Security Headers */}
+      {/* Security Headers (only those valid via meta) */}
       <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-      <meta httpEquiv="X-Frame-Options" content="DENY" />
       <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
       
       {/* Favicon and Icons */}

@@ -111,7 +111,6 @@ export const addSecurityHeaders = (): void => {
   const securityMetas = [
     { name: 'referrer', content: 'strict-origin-when-cross-origin' },
     { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-    { httpEquiv: 'X-Frame-Options', content: 'DENY' },
     { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' }
   ];
 
