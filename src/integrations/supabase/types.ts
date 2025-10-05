@@ -21994,7 +21994,7 @@ export type Database = {
               p_start_date: string
             }
           | { p_end_date: string; p_equipment_id: string; p_start_date: string }
-        Returns: Json
+        Returns: boolean
       }
       check_project_requirements: {
         Args: { p_contract_value: number; p_project_id: string }
@@ -22063,14 +22063,10 @@ export type Database = {
       get_active_promotions: {
         Args: Record<PropertyKey, never> | { p_display_location?: string }
         Returns: {
-          applies_to: string[]
           description: string
           discount_percentage: number
-          display_on: string[]
-          end_date: string
           id: string
           name: string
-          start_date: string
         }[]
       }
       get_equipment_schedule: {
@@ -22220,7 +22216,7 @@ export type Database = {
               p_user_agent?: string
               p_user_id: string
             }
-        Returns: string
+        Returns: undefined
       }
       log_sensitive_data_access: {
         Args: {
@@ -22258,7 +22254,7 @@ export type Database = {
               p_title: string
             }
           | { p_alert_type: string; p_details?: Json; p_severity?: string }
-        Returns: string
+        Returns: undefined
       }
       validate_api_permission: {
         Args: {
