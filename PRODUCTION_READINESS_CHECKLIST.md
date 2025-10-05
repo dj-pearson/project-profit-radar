@@ -95,7 +95,8 @@
 - [x] Comprehensive security scan completed (15 findings: 5 critical, 7 warnings)
 - [x] ✅ Fixed 5 critical RLS policy issues (user_profiles, contractors, contacts, leads, forms_1099)
 - [x] ✅ Fixed 7 medium-priority RLS policy issues (payment settings, invoices, insurance, bonds, payments, portal access, subscribers)
-- [ ] Re-run security scan to verify all fixes
+- [x] Re-run security scan completed (18 findings detected - expanded scope)
+- [ ] Address additional RLS policy issues identified in second scan
 - [ ] Server-side validation in remaining edge functions (when created)
 - [ ] SQL injection prevention verified
 - [ ] XSS protection confirmed
@@ -104,38 +105,40 @@
 
 **Security Scan Results & Priority Actions:**
 
-**✅ ALL SECURITY ISSUES FIXED (2025-10-05):**
+**PROGRESS UPDATE (2025-10-05):**
 
-**Critical Issues (5) - RESOLVED:**
-1. ✅ **user_profiles** - Users see only own profile, admins see company profiles
-2. ✅ **contractors** - Tax IDs locked to accounting + admins only
-3. ✅ **contacts** - Customer data limited to sales/PM/admin roles
-4. ✅ **leads** - Sales pipeline restricted to sales/management only
-5. ✅ **forms_1099** - Tax forms locked to accounting + admins only
+**Successfully Fixed (12 tables):**
+- ✅ user_profiles, contractors, contacts, leads, forms_1099
+- ✅ company_payment_settings, invoices, insurance_policies, bonds
+- ✅ subcontractor_payments, client_portal_access, email_subscribers
 
-**Medium-Priority Issues (7) - RESOLVED:**
-6. ✅ **company_payment_settings** - Payment keys restricted to root_admin only
-7. ✅ **invoices** - Financial data limited to accounting/PM/executives
-8. ✅ **insurance_policies** - Restricted to management + accounting
-9. ✅ **bonds** - Limited to executives + accounting
-10. ✅ **subcontractor_payments** - Restricted to accounting + PM
-11. ✅ **client_portal_access** - Access tokens locked to admins only
-12. ✅ **email_subscribers** - Restricted to marketing staff + admins
+**Remaining Critical Issues (8 tables need review):**
+1. 🔴 **time_entries** - Migration failed, needs schema review
+2. 🔴 **projects** - Needs RLS policy adjustment
+3. 🔴 **expenses** - Needs proper access controls
+4. 🔴 **safety_incidents** - Medical info needs protection
+5. 🔴 **estimates** - Pricing data needs restriction
+6. 🔴 **opportunities** - Already fixed, may need verification
+7. 🔴 **companies** - Current policies may be sufficient
+8. 🔴 **Others** - Additional tables may need review
 
-**Infrastructure Items (Non-Blocking):**
-- ⚠️ Enable leaked password protection in Supabase dashboard (Auth → Password Protection)
-- ⚠️ Schedule Postgres upgrade for security patches (Platform → Settings)
-- ⚠️ Move extensions out of public schema (infrastructure level)
-
-**Server-Side Validation:**
-- ✅ Template created with comprehensive validation
-- Pattern should be applied to all future edge functions
+**Key Learnings:**
+- Initial 12 tables successfully secured with role-based access
+- Second scan revealed broader scope of security requirements
+- Need to audit table schemas before applying RLS policies
+- Some tables may lack necessary columns for proper scoping
 
 **Next Steps:**
-1. Re-run security scan to verify all 12 fixes are working
-2. Test application with new RLS policies across different user roles
-3. Implement rate limiting on API endpoints
-4. Document role-based access control patterns for team
+1. Review table schemas for missing company/user relationships
+2. Complete RLS policies for remaining critical tables
+3. Run third security scan to verify all fixes
+4. Implement rate limiting on API endpoints
+5. Document security model for team reference
+
+**Infrastructure (Non-Blocking):**
+- ⚠️ Enable leaked password protection in Supabase dashboard
+- ⚠️ Schedule Postgres upgrade
+- ⚠️ Move extensions out of public schema
 
 ### API Security
 - [ ] Rate limiting on all endpoints
