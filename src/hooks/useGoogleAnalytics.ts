@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
+// Type for gtag function
+type GtagFunction = (
+  command: 'config' | 'event' | 'js' | 'set',
+  targetId: string | Date,
+  config?: any
+) => void;
+
 // Extend the Window interface to include gtag
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'js' | 'set',
-      targetId: string | Date,
-      config?: any
-    ) => void;
-    dataLayer: any[];
+    gtag?: GtagFunction;
+    dataLayer?: any[];
   }
 }
 
