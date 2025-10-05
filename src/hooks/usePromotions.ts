@@ -6,10 +6,10 @@ interface Promotion {
   name: string;
   description?: string;
   discount_percentage: number;
-  start_date: string;
-  end_date: string;
-  applies_to: string[];
-  display_on: string[];
+  start_date?: string;
+  end_date?: string;
+  applies_to?: string[];
+  display_on?: string[];
 }
 
 export const usePromotions = (displayLocation?: 'homepage' | 'upgrade') => {
@@ -38,8 +38,8 @@ export const usePromotions = (displayLocation?: 'homepage' | 'upgrade') => {
 
   const getPromotionForPlan = (planTier: string): Promotion | null => {
     return promotions.find(promo => 
-      promo.applies_to.includes(planTier) &&
-      (displayLocation ? promo.display_on.includes(displayLocation) : true)
+      promo.applies_to?.includes(planTier) &&
+      (displayLocation ? promo.display_on?.includes(displayLocation) : true)
     ) || null;
   };
 
