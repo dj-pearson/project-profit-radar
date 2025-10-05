@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { useInsertMutation, useUpdateMutation } from '@/hooks/useSupabaseMutation';
 import { useFinancialSettings } from '@/hooks/useFinancialSettings';
 import { useGPSLocation } from '@/hooks/useGPSLocation';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingState } from '@/components/common/LoadingState';
 import { ErrorState } from '@/components/common/ErrorState';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Wifi } from 'lucide-react';
 import { ActiveTimer } from './ActiveTimer';
 import { TimeSummaryCards } from './TimeSummaryCards';
 import { TimeEntriesList } from './TimeEntriesList';
@@ -44,8 +46,8 @@ export const TimeTrackingDashboard = () => {
   const { toast } = useToast();
   const { settings: financialSettings } = useFinancialSettings();
   const { getCurrentLocation, isLoading: locationLoading } = useGPSLocation();
-  const [showLocationDialog, setShowLocationDialog] = useState(false);
-  const [locationData, setLocationData] = useState<{
+  const [showLocationDialog, setShowLocationDialog] = React.useState(false);
+  const [locationData, setLocationData] = React.useState<{
     latitude?: number;
     longitude?: number;
     accuracy?: number;
@@ -83,6 +85,17 @@ export const TimeTrackingDashboard = () => {
         .select('id, name')
         .eq('created_by', user?.id)
         .order('name', { ascending: true });
+    },
+    enabled: !!user?.id
+  });
+
+  // Set up real-time subscription for time entries
+  useRealtimeSubscription({
+    table: 'time_entries',
+    filter: `user_id=eq.${user?.id}`,
+    onChange: () => {
+      console.log('Time entry changed, refetching...');
+      refetchEntries();
     },
     enabled: !!user?.id
   });
@@ -197,6 +210,16 @@ export const TimeTrackingDashboard = () => {
   return (
     <>
       <div className="space-y-6">
+        {/* Real-time indicator */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              <Wifi className="h-3 w-3 mr-1 text-green-500" />
+              Live Updates
+            </Badge>
+          </div>
+        </div>
+
         <ActiveTimer
           activeEntry={activeEntry}
           onStart={startTimer}
