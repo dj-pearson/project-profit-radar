@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, MapPin, Save } from 'lucide-react';
+import { Clock, MapPin, Save, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { timeEntrySchema, type TimeEntryInput } from '@/lib/validations';
 
 interface Project {
   id: string;
@@ -24,15 +28,26 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    project_id: '',
-    task_description: '',
-    start_time: '',
-    end_time: '',
-    hourly_rate: '75.00',
-    notes: '',
-    location_address: ''
+  
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm<TimeEntryInput>({
+    resolver: zodResolver(timeEntrySchema),
+    defaultValues: {
+      project_id: '',
+      task_description: '',
+      start_time: '',
+      end_time: '',
+      notes: '',
+    }
   });
+  
+  const formValues = watch();
 
   useEffect(() => {
     fetchProjects();
@@ -41,12 +56,9 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     
-    setFormData(prev => ({
-      ...prev,
-      start_time: oneHourAgo.toISOString().slice(0, 16),
-      end_time: now.toISOString().slice(0, 16)
-    }));
-  }, []);
+    setValue('start_time', oneHourAgo.toISOString());
+    setValue('end_time', now.toISOString());
+  }, [setValue]);
 
   const fetchProjects = async () => {
     try {
@@ -63,18 +75,7 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.task_description || !formData.start_time || !formData.end_time) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSubmit = async (data: TimeEntryInput) => {
     setLoading(true);
 
     try {
@@ -82,11 +83,15 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
         .from('time_entries')
         .insert({
           user_id: user?.id,
-          project_id: formData.project_id || null,
-          description: formData.task_description,
-          start_time: formData.start_time,
-          end_time: formData.end_time,
-          location: formData.location_address || null
+          project_id: data.project_id || null,
+          description: data.task_description,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          notes: data.notes || null,
+          gps_latitude: data.location_latitude,
+          gps_longitude: data.location_longitude,
+          location_accuracy: data.location_accuracy,
+          location: data.location_address || null,
         });
 
       if (error) throw error;
@@ -97,16 +102,7 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
       });
 
       // Reset form
-      setFormData({
-        project_id: '',
-        task_description: '',
-        start_time: '',
-        end_time: '',
-        hourly_rate: '75.00',
-        notes: '',
-        location_address: ''
-      });
-
+      reset();
       onEntryCreated?.();
     } catch (error) {
       console.error('Error creating time entry:', error);
@@ -139,21 +135,24 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
             
             if (response.ok) {
               const data = await response.json();
-              setFormData(prev => ({
-                ...prev,
-                location_address: data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-              }));
+              const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+              setValue('location_address', address);
+              setValue('location_latitude', latitude);
+              setValue('location_longitude', longitude);
+              setValue('location_accuracy', position.coords.accuracy);
             } else {
-              setFormData(prev => ({
-                ...prev,
-                location_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-              }));
+              const coords = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+              setValue('location_address', coords);
+              setValue('location_latitude', latitude);
+              setValue('location_longitude', longitude);
+              setValue('location_accuracy', position.coords.accuracy);
             }
           } catch {
-            setFormData(prev => ({
-              ...prev,
-              location_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-            }));
+            const coords = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            setValue('location_address', coords);
+            setValue('location_latitude', latitude);
+            setValue('location_longitude', longitude);
+            setValue('location_accuracy', position.coords.accuracy);
           }
           
           toast({
@@ -189,13 +188,21 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {Object.keys(errors).length > 0 && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please fix the validation errors below
+            </AlertDescription>
+          </Alert>
+        )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="project">Project (Optional)</Label>
               <Select
-                value={formData.project_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
+                value={formValues.project_id}
+                onValueChange={(value) => setValue('project_id', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a project" />
@@ -209,19 +216,6 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
-              <Input
-                id="hourly_rate"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.hourly_rate}
-                onChange={(e) => setFormData(prev => ({ ...prev, hourly_rate: e.target.value }))}
-                required
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -229,10 +223,11 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
             <Input
               id="task_description"
               placeholder="What did you work on?"
-              value={formData.task_description}
-              onChange={(e) => setFormData(prev => ({ ...prev, task_description: e.target.value }))}
-              required
+              {...register('task_description')}
             />
+            {errors.task_description && (
+              <p className="text-sm text-destructive">{errors.task_description.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -241,10 +236,11 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
               <Input
                 id="start_time"
                 type="datetime-local"
-                value={formData.start_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                required
+                {...register('start_time')}
               />
+              {errors.start_time && (
+                <p className="text-sm text-destructive">{errors.start_time.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -252,10 +248,11 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
               <Input
                 id="end_time"
                 type="datetime-local"
-                value={formData.end_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                required
+                {...register('end_time')}
               />
+              {errors.end_time && (
+                <p className="text-sm text-destructive">{errors.end_time.message}</p>
+              )}
             </div>
           </div>
 
@@ -265,8 +262,7 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
               <Input
                 id="location_address"
                 placeholder="Job site address or location"
-                value={formData.location_address}
-                onChange={(e) => setFormData(prev => ({ ...prev, location_address: e.target.value }))}
+                {...register('location_address')}
                 className="flex-1"
               />
               <Button
@@ -280,6 +276,9 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
                 GPS
               </Button>
             </div>
+            {errors.location_address && (
+              <p className="text-sm text-destructive">{errors.location_address.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -287,10 +286,12 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
             <Textarea
               id="notes"
               placeholder="Additional details about the work performed..."
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              {...register('notes')}
               rows={3}
             />
+            {errors.notes && (
+              <p className="text-sm text-destructive">{errors.notes.message}</p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
