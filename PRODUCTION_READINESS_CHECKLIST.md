@@ -70,8 +70,8 @@
 - [x] Input sanitization functions implemented
 - [x] Type-safe validation with clear error messages
 - [x] Time tracking forms integrated with validation
-- [ ] Expense forms integrated with validation
-- [ ] Project forms integrated with validation
+- [x] Expense forms integrated with validation
+- [ ] Project forms integrated with validation  
 - [ ] All RLS policies audited and tested
 - [ ] Server-side validation in edge functions
 - [ ] SQL injection prevention verified

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePaginatedQuery } from '@/hooks/useSupabaseQuery';
@@ -14,8 +17,9 @@ import { LoadingState, TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { expenseSchema, type ExpenseInput } from '@/lib/validations';
 
 interface Expense {
   id: string;
@@ -69,18 +73,29 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    category: '',
-    vendor_name: '',
-    amount: '',
-    expense_date: format(new Date(), 'yyyy-MM-dd'),
-    payment_method: 'credit_card',
-    payment_status: 'pending',
-    description: '',
-    is_billable: false,
-    tax_amount: '0',
+  // Form with validation
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm<ExpenseInput>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      vendor_name: '',
+      amount: 0,
+      tax_amount: 0,
+      expense_date: format(new Date(), 'yyyy-MM-dd'),
+      payment_method: 'Credit Card',
+      payment_status: 'pending',
+      description: '',
+      is_billable: false,
+    }
   });
+
+  const formValues = watch();
 
   // Fetch expenses
   const {
@@ -116,9 +131,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
     successMessage: 'Expense deleted successfully',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: ExpenseInput) => {
     if (!userProfile?.company_id) {
       toast({
         title: 'Error',
@@ -130,15 +143,15 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
 
     const expenseData = {
       company_id: userProfile.company_id,
-      project_id: projectId || null,
-      vendor_name: formData.vendor_name,
-      amount: parseFloat(formData.amount),
-      expense_date: formData.expense_date,
-      payment_method: formData.payment_method,
-      payment_status: formData.payment_status,
-      description: formData.description || '',
-      is_billable: formData.is_billable,
-      tax_amount: parseFloat(formData.tax_amount) || 0,
+      project_id: projectId || data.project_id || null,
+      vendor_name: data.vendor_name,
+      amount: data.amount,
+      tax_amount: data.tax_amount || 0,
+      expense_date: data.expense_date,
+      payment_method: data.payment_method,
+      payment_status: data.payment_status || 'pending',
+      description: data.description || '',
+      is_billable: data.is_billable || false,
       created_by: userProfile.id,
     };
 
@@ -163,32 +176,30 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   };
 
   const resetForm = () => {
-    setFormData({
-      category: '',
+    reset({
       vendor_name: '',
-      amount: '',
+      amount: 0,
+      tax_amount: 0,
       expense_date: format(new Date(), 'yyyy-MM-dd'),
-      payment_method: 'credit_card',
+      payment_method: 'Credit Card',
       payment_status: 'pending',
       description: '',
       is_billable: false,
-      tax_amount: '0',
     });
     setEditingExpense(null);
   };
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense);
-    setFormData({
-      category: '', // Not used in current schema
+    reset({
       vendor_name: expense.vendor_name || '',
-      amount: expense.amount.toString(),
+      amount: expense.amount,
+      tax_amount: expense.tax_amount || 0,
       expense_date: expense.expense_date,
-      payment_method: expense.payment_method || 'credit_card',
-      payment_status: expense.payment_status || 'pending',
+      payment_method: (expense.payment_method as any) || 'Credit Card',
+      payment_status: (expense.payment_status as any) || 'pending',
       description: expense.description || '',
       is_billable: expense.is_billable || false,
-      tax_amount: expense.tax_amount?.toString() || '0',
     });
     setIsDialogOpen(true);
   };
@@ -272,7 +283,15 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
-                <form onSubmit={handleSubmit}>
+                {Object.keys(errors).length > 0 && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Please fix the validation errors below
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <form onSubmit={handleFormSubmit(onSubmit)}>
                   <DialogHeader>
                     <DialogTitle>
                       {editingExpense ? 'Edit Expense' : 'Record New Expense'}
@@ -289,12 +308,11 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                         <Input
                           id="vendor_name"
                           placeholder="Vendor name"
-                          value={formData.vendor_name}
-                          onChange={(e) =>
-                            setFormData({ ...formData, vendor_name: e.target.value })
-                          }
-                          required
+                          {...register('vendor_name')}
                         />
+                        {errors.vendor_name && (
+                          <p className="text-sm text-destructive">{errors.vendor_name.message}</p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -304,12 +322,11 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                           type="number"
                           step="0.01"
                           placeholder="0.00"
-                          value={formData.amount}
-                          onChange={(e) =>
-                            setFormData({ ...formData, amount: e.target.value })
-                          }
-                          required
+                          {...register('amount', { valueAsNumber: true })}
                         />
+                        {errors.amount && (
+                          <p className="text-sm text-destructive">{errors.amount.message}</p>
+                        )}
                       </div>
                     </div>
 
@@ -321,11 +338,11 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                           type="number"
                           step="0.01"
                           placeholder="0.00"
-                          value={formData.tax_amount}
-                          onChange={(e) =>
-                            setFormData({ ...formData, tax_amount: e.target.value })
-                          }
+                          {...register('tax_amount', { valueAsNumber: true })}
                         />
+                        {errors.tax_amount && (
+                          <p className="text-sm text-destructive">{errors.tax_amount.message}</p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -333,12 +350,11 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                         <Input
                           id="expense_date"
                           type="date"
-                          value={formData.expense_date}
-                          onChange={(e) =>
-                            setFormData({ ...formData, expense_date: e.target.value })
-                          }
-                          required
+                          {...register('expense_date')}
                         />
+                        {errors.expense_date && (
+                          <p className="text-sm text-destructive">{errors.expense_date.message}</p>
+                        )}
                       </div>
                     </div>
 
@@ -346,11 +362,8 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                       <div className="space-y-2">
                         <Label htmlFor="payment_method">Payment Method *</Label>
                         <Select
-                          value={formData.payment_method}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, payment_method: value })
-                          }
-                          required
+                          value={formValues.payment_method}
+                          onValueChange={(value: any) => setValue('payment_method', value)}
                         >
                           <SelectTrigger id="payment_method">
                             <SelectValue placeholder="Select method" />
@@ -363,15 +376,16 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                             ))}
                           </SelectContent>
                         </Select>
+                        {errors.payment_method && (
+                          <p className="text-sm text-destructive">{errors.payment_method.message}</p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="payment_status">Payment Status</Label>
                         <Select
-                          value={formData.payment_status}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, payment_status: value })
-                          }
+                          value={formValues.payment_status}
+                          onValueChange={(value: any) => setValue('payment_status', value)}
                         >
                           <SelectTrigger id="payment_status">
                             <SelectValue />
@@ -390,10 +404,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                       <input
                         type="checkbox"
                         id="is_billable"
-                        checked={formData.is_billable}
-                        onChange={(e) =>
-                          setFormData({ ...formData, is_billable: e.target.checked })
-                        }
+                        {...register('is_billable')}
                         className="h-4 w-4 rounded border-gray-300"
                       />
                       <Label htmlFor="is_billable" className="text-sm font-normal">
@@ -406,12 +417,12 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                       <Textarea
                         id="description"
                         placeholder="Additional details..."
-                        value={formData.description}
-                        onChange={(e) =>
-                          setFormData({ ...formData, description: e.target.value })
-                        }
+                        {...register('description')}
                         rows={3}
                       />
+                      {errors.description && (
+                        <p className="text-sm text-destructive">{errors.description.message}</p>
+                      )}
                     </div>
                   </div>
 
