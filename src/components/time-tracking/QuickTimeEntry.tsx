@@ -120,16 +120,41 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
     }
   };
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
-          // In a real app, you'd reverse geocode these coordinates
-          setFormData(prev => ({
-            ...prev,
-            location_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-          }));
+          
+          // Try to reverse geocode
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
+              {
+                headers: {
+                  'User-Agent': 'BuildDesk Construction Management App'
+                }
+              }
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              setFormData(prev => ({
+                ...prev,
+                location_address: data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+              }));
+            } else {
+              setFormData(prev => ({
+                ...prev,
+                location_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+              }));
+            }
+          } catch {
+            setFormData(prev => ({
+              ...prev,
+              location_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+            }));
+          }
           
           toast({
             title: "Location Added",
@@ -142,6 +167,11 @@ export const QuickTimeEntry = ({ onEntryCreated }: QuickTimeEntryProps) => {
             description: "Unable to get current location",
             variant: "destructive",
           });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
     }

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Play, Square } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Play, Square, MapPin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface TimeEntry {
@@ -9,6 +10,10 @@ interface TimeEntry {
   description?: string;
   start_time: string;
   end_time?: string;
+  location?: string;
+  gps_latitude?: number;
+  gps_longitude?: number;
+  location_accuracy?: number;
 }
 
 interface ActiveTimerProps {
@@ -40,10 +45,21 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium truncate">{activeEntry.description || 'Work session'}</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-medium truncate">{activeEntry.description || 'Work session'}</h3>
+                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                    Active
+                  </Badge>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Started {formatDistanceToNow(new Date(activeEntry.start_time))} ago
                 </p>
+                {activeEntry.location && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{activeEntry.location}</span>
+                  </div>
+                )}
               </div>
               <Button 
                 onClick={onStop} 

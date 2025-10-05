@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { useInsertMutation, useUpdateMutation } from '@/hooks/useSupabaseMutation';
 import { useFinancialSettings } from '@/hooks/useFinancialSettings';
+import { useGPSLocation } from '@/hooks/useGPSLocation';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingState } from '@/components/common/LoadingState';
 import { ErrorState } from '@/components/common/ErrorState';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { MapPin } from 'lucide-react';
 import { ActiveTimer } from './ActiveTimer';
 import { TimeSummaryCards } from './TimeSummaryCards';
 import { TimeEntriesList } from './TimeEntriesList';
@@ -39,6 +43,14 @@ export const TimeTrackingDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { settings: financialSettings } = useFinancialSettings();
+  const { getCurrentLocation, isLoading: locationLoading } = useGPSLocation();
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [locationData, setLocationData] = useState<{
+    latitude?: number;
+    longitude?: number;
+    accuracy?: number;
+    address?: string;
+  } | null>(null);
 
   // Fetch time entries
   const { 
@@ -104,18 +116,42 @@ export const TimeTrackingDashboard = () => {
       return;
     }
 
+    // Get location first
+    const result = await getCurrentLocation();
+    
+    if (result.coordinates) {
+      setLocationData({
+        latitude: result.coordinates.latitude,
+        longitude: result.coordinates.longitude,
+        accuracy: result.coordinates.accuracy,
+        address: result.address
+      });
+      setShowLocationDialog(true);
+    } else {
+      // Start without location if user declines
+      await startTimerWithLocation(null);
+    }
+  };
+
+  const startTimerWithLocation = async (location: typeof locationData) => {
     try {
       await insertMutation.mutateAsync({
         user_id: user?.id,
         description: 'Work session',
-        start_time: new Date().toISOString()
+        start_time: new Date().toISOString(),
+        location: location?.address,
+        gps_latitude: location?.latitude,
+        gps_longitude: location?.longitude,
+        location_accuracy: location?.accuracy
       });
 
       toast({
         title: "Timer Started",
-        description: "Started tracking your work session",
+        description: location ? "Started tracking with location" : "Started tracking your work session",
       });
       
+      setShowLocationDialog(false);
+      setLocationData(null);
       refetchEntries();
     } catch (error) {
       // Error handling done by mutation hook
@@ -159,24 +195,74 @@ export const TimeTrackingDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <ActiveTimer
-        activeEntry={activeEntry}
-        onStart={startTimer}
-        onStop={stopTimer}
-        isLoading={insertMutation.isPending || updateMutation.isPending}
-      />
+    <>
+      <div className="space-y-6">
+        <ActiveTimer
+          activeEntry={activeEntry}
+          onStart={startTimer}
+          onStop={stopTimer}
+          isLoading={insertMutation.isPending || updateMutation.isPending || locationLoading}
+        />
 
-      <TimeSummaryCards
-        totalHours={totalHours}
-        totalEarnings={totalEarnings}
-        activeProjects={projects?.length || 0}
-      />
+        <TimeSummaryCards
+          totalHours={totalHours}
+          totalEarnings={totalEarnings}
+          activeProjects={projects?.length || 0}
+        />
 
-      <TimeEntriesList
-        entries={timeEntries || []}
-        hourlyRate={hourlyRate}
-      />
-    </div>
+        <TimeEntriesList
+          entries={timeEntries || []}
+          hourlyRate={hourlyRate}
+        />
+      </div>
+
+      {/* Location Confirmation Dialog */}
+      <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Location</DialogTitle>
+            <DialogDescription>
+              Start timer with your current location?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {locationData && (
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-muted">
+              <MapPin className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">
+                  {locationData.address || 'Location captured'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {locationData.latitude?.toFixed(6)}, {locationData.longitude?.toFixed(6)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Accuracy: ±{Math.round(locationData.accuracy || 0)}m
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowLocationDialog(false);
+                startTimerWithLocation(null);
+              }}
+              className="w-full sm:w-auto"
+            >
+              Start Without Location
+            </Button>
+            <Button
+              onClick={() => startTimerWithLocation(locationData)}
+              className="w-full sm:w-auto"
+            >
+              Start With Location
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
