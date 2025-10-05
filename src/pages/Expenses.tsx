@@ -1,18 +1,14 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ExpenseTracker } from '@/components/expenses/ExpenseTracker';
 
-const Expenses: React.FC = () => {
+const Expenses = () => {
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Expenses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Expense management coming soon...</p>
-        </CardContent>
-      </Card>
-    </div>
+    <DashboardLayout title="Expense Tracking">
+      <div className="space-y-6">
+        <ExpenseTracker />
+      </div>
+    </DashboardLayout>
   );
 };
 
