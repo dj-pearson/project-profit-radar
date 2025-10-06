@@ -676,6 +676,19 @@ export const AppSidebar = () => {
   const { canAccessRoute } = usePermissions();
   const currentPath = location.pathname;
 
+  // Preload map for major routes
+  const routePreloadMap: Record<string, () => Promise<any>> = {
+    '/dashboard': () => import('@/pages/Dashboard'),
+    '/projects': () => import('@/pages/Projects'),
+    '/financial': () => import('@/pages/FinancialDashboard'),
+    '/team': () => import('@/pages/TeamManagement'),
+    '/crm': () => import('@/pages/CRMDashboard'),
+    '/schedule-management': () => import('@/pages/ScheduleManagement'),
+    '/job-costing': () => import('@/pages/JobCosting'),
+    '/estimates': () => import('@/pages/EstimatesHub'),
+    '/safety': () => import('@/pages/Safety'),
+  };
+
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive
       ? "bg-accent text-accent-foreground font-medium"
@@ -737,17 +750,9 @@ export const AppSidebar = () => {
                           to={item.url} 
                           className={getNavClass}
                           onMouseEnter={() => {
-                            // Preload route on hover for better perceived performance
-                            const routeMap: Record<string, () => Promise<any>> = {
-                              '/dashboard': () => import('@/pages/Dashboard'),
-                              '/projects': () => import('@/pages/Projects'),
-                              '/financial': () => import('@/pages/FinancialDashboard'),
-                              '/team': () => import('@/pages/TeamManagement'),
-                              '/crm': () => import('@/pages/CRMDashboard'),
-                            };
-                            const preloadFn = routeMap[item.url];
+                            const preloadFn = routePreloadMap[item.url];
                             if (preloadFn && 'requestIdleCallback' in window) {
-                              requestIdleCallback(() => preloadFn().catch(() => {}));
+                              requestIdleCallback(() => preloadFn().catch(() => {}), { timeout: 1000 });
                             }
                           }}
                         >

@@ -81,13 +81,17 @@ export default defineConfig(({ mode }) => ({
     target: "esnext",
     minify: "esbuild",
     sourcemap: false,
-    chunkSizeWarningLimit: 500, // Further reduced for optimal loading
+    chunkSizeWarningLimit: 500,
     reportCompressedSize: true,
     emptyOutDir: true,
 
     // Advanced compression and optimization
     cssCodeSplit: true,
+    cssMinify: true,
     assetsInlineLimit: 8192, // Inline assets up to 8KB
+    modulePreload: {
+      polyfill: false, // Remove polyfill for modern browsers
+    },
     
     // Performance optimizations
     rollupOptions: {
