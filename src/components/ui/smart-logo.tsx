@@ -42,7 +42,7 @@ const SmartLogo = ({
   // Image sources with fallback priority
   const imageSources = {
     remote:
-      "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png",
+      "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
     local: "/BuildDeskLogo.png",
   };
 
@@ -191,7 +191,7 @@ export const useLogoStatus = () => {
           remoteImg.onerror = reject;
         });
         remoteImg.src =
-          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets//BuildDeskLogo.png";
+          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90";
 
         await remotePromise;
         setStatus("remote");

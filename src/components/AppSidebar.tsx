@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
+import { preloadOnHover } from "@/utils/routePreloader";
 import {
   Sidebar,
   SidebarContent,
@@ -732,7 +733,24 @@ export const AppSidebar = () => {
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild>
-                        <NavLink to={item.url} className={getNavClass}>
+                        <NavLink 
+                          to={item.url} 
+                          className={getNavClass}
+                          onMouseEnter={() => {
+                            // Preload route on hover for better perceived performance
+                            const routeMap: Record<string, () => Promise<any>> = {
+                              '/dashboard': () => import('@/pages/Dashboard'),
+                              '/projects': () => import('@/pages/Projects'),
+                              '/financial': () => import('@/pages/FinancialDashboard'),
+                              '/team': () => import('@/pages/TeamManagement'),
+                              '/crm': () => import('@/pages/CRMDashboard'),
+                            };
+                            const preloadFn = routeMap[item.url];
+                            if (preloadFn && 'requestIdleCallback' in window) {
+                              requestIdleCallback(() => preloadFn().catch(() => {}));
+                            }
+                          }}
+                        >
                           <item.icon className="h-4 w-4" />
                           {!collapsed && (
                             <div className="flex items-center justify-between w-full">
