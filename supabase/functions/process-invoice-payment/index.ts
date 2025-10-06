@@ -1,18 +1,23 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateRequest, uuidSchema } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface PaymentRequest {
-  invoice_id: string;
-  payment_method?: 'stripe_checkout' | 'stripe_payment_intent' | 'manual';
-  manual_payment_amount?: number;
-  manual_payment_notes?: string;
-}
+// SECURITY: Input validation schema
+const PaymentRequestSchema = z.object({
+  invoice_id: uuidSchema,
+  payment_method: z.enum(['stripe_checkout', 'stripe_payment_intent', 'manual']).optional(),
+  manual_payment_amount: z.number().positive().max(999999999.99).optional(),
+  manual_payment_notes: z.string().max(1000).optional()
+});
+
+type PaymentRequest = z.infer<typeof PaymentRequestSchema>;
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -42,8 +47,17 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const paymentData: PaymentRequest = await req.json();
-    logStep("Payment request received", { 
+    // SECURITY: Validate request body
+    const requestBody = await req.json();
+    const validation = validateRequest(PaymentRequestSchema, requestBody);
+    
+    if (!validation.success) {
+      logStep("Validation failed", { error: validation.error });
+      throw new Error(validation.error);
+    }
+    
+    const paymentData = validation.data;
+    logStep("Payment request validated", { 
       invoiceId: paymentData.invoice_id, 
       method: paymentData.payment_method 
     });

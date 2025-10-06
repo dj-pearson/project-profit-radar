@@ -1,17 +1,26 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateRequest, createErrorResponse } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CheckoutRequest {
-  subscription_tier: 'starter' | 'professional' | 'enterprise';
-  billing_period: 'monthly' | 'annual';
-  company_id?: string;
-}
+// SECURITY: Input validation schema
+const CheckoutRequestSchema = z.object({
+  subscription_tier: z.enum(['starter', 'professional', 'enterprise'], {
+    errorMap: () => ({ message: 'Invalid subscription tier' })
+  }),
+  billing_period: z.enum(['monthly', 'annual'], {
+    errorMap: () => ({ message: 'Invalid billing period' })
+  }),
+  company_id: z.string().uuid('Invalid company ID').optional()
+});
+
+type CheckoutRequest = z.infer<typeof CheckoutRequestSchema>;
 
 // Helper logging function for enhanced debugging
 const logStep = (step: string, details?: any) => {
@@ -48,8 +57,17 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { subscription_tier, billing_period = 'monthly', company_id }: CheckoutRequest = await req.json();
-    logStep("Request parsed", { subscription_tier, billing_period, company_id });
+    // SECURITY: Validate request body
+    const requestBody = await req.json();
+    const validation = validateRequest(CheckoutRequestSchema, requestBody);
+    
+    if (!validation.success) {
+      logStep("Validation failed", { error: validation.error });
+      return createErrorResponse(400, validation.error, corsHeaders);
+    }
+    
+    const { subscription_tier, billing_period, company_id } = validation.data;
+    logStep("Request validated", { subscription_tier, billing_period, company_id });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
