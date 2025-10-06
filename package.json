@@ -27,7 +27,10 @@
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
     "mcp:context7": "npx @upstash/context7-mcp",
     "mcp:supabase": "npx -y @supabase/mcp-server-supabase@latest --project-id ilhzuvemiuyfuxfegtlv --access-token \"${SUPABASE_ACCESS_TOKEN}\"",
-    "security-check": "powershell -ExecutionPolicy Bypass -File scripts/security-check.ps1"
+    "security-check": "powershell -ExecutionPolicy Bypass -File scripts/security-check.ps1",
+    "analyze": "node scripts/analyze-bundle.js",
+    "optimize:fonts": "powershell -ExecutionPolicy Bypass -File scripts/optimize-fonts.ps1",
+    "optimize:fonts:unix": "chmod +x scripts/optimize-fonts.sh && ./scripts/optimize-fonts.sh"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
@@ -133,6 +136,8 @@
     "globals": "^15.9.0",
     "postcss": "^8.4.47",
     "rollup-plugin-visualizer": "^5.12.0",
+    "sharp": "0.34.4",
+    "svgo": "4.0.0",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
