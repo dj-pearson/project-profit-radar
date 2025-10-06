@@ -20,7 +20,7 @@ import { AdvancedCoreWebVitals } from "@/components/performance/AdvancedCoreWebV
 import { SiteSearchSchema } from "@/components/seo/SiteSearchSchema";
 import { initializeSEOBackendIntegration } from "@/utils/seoBackendSync";
 import { supabase } from "@/integrations/supabase/client";
-import { initializeFontOptimization, monitorFontPerformance, optimizeCriticalFonts } from "@/utils/fontOptimization";
+import { initializeFontOptimizations, monitorFontPerformance } from "@/utils/fontOptimization";
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
@@ -38,8 +38,9 @@ const Index = () => {
   // Initialize SEO backend integration on app start
   React.useEffect(() => {
     // Initialize font optimization first for better performance
-    optimizeCriticalFonts();
-    initializeFontOptimization();
+    initializeFontOptimizations([
+      { family: 'Inter', preload: true, display: 'swap' }
+    ]);
     monitorFontPerformance();
     
     // Then initialize SEO backend integration only when authenticated

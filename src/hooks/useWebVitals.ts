@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
+import { createRUMMetric, sendRUMData } from '@/utils/realUserMonitoring';
+import type { Metric } from 'web-vitals';
 
 interface WebVitalsMetric {
   name: string;
@@ -16,39 +18,39 @@ interface WebVitalsConfig {
 }
 
 export const useWebVitals = (config: WebVitalsConfig = {}) => {
-  const { enableReporting = true, enableLogging = true, reportToAnalytics } = config;
+  const {
+    enableReporting = true,
+    enableLogging = true,
+    reportToAnalytics,
+  } = config;
 
   useEffect(() => {
     if (!enableReporting) return;
 
-    const handleMetric = (metric: any) => {
+    const handleMetric = (metric: Metric) => {
       const webVitalMetric: WebVitalsMetric = {
         name: metric.name,
         value: metric.value,
         rating: metric.rating,
         delta: metric.delta,
-        id: metric.id
+        id: metric.id,
       };
 
       if (enableLogging) {
         console.log(`[Web Vitals] ${metric.name}:`, {
           value: `${metric.value.toFixed(2)}ms`,
           rating: metric.rating,
-          id: metric.id
+          id: metric.id,
         });
       }
 
-      // Report to analytics
+      // Send to RUM system
+      const rumMetric = createRUMMetric(metric);
+      sendRUMData(rumMetric);
+
+      // Custom analytics callback
       if (reportToAnalytics) {
         reportToAnalytics(webVitalMetric);
-      } else if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', metric.name, {
-          value: Math.round(metric.value),
-          metric_rating: metric.rating,
-          metric_delta: Math.round(metric.delta),
-          metric_id: metric.id,
-          event_category: 'Web Vitals'
-        });
       }
     };
 
@@ -64,10 +66,20 @@ export const useWebVitals = (config: WebVitalsConfig = {}) => {
 // Standalone function for manual reporting
 export const reportWebVitals = (onPerfEntry?: (metric: WebVitalsMetric) => void) => {
   if (onPerfEntry) {
-    onCLS((metric) => onPerfEntry(metric as any));
-    onFCP((metric) => onPerfEntry(metric as any));
-    onINP((metric) => onPerfEntry(metric as any));
-    onLCP((metric) => onPerfEntry(metric as any));
-    onTTFB((metric) => onPerfEntry(metric as any));
+    const handler = (metric: Metric) => {
+      onPerfEntry({
+        name: metric.name,
+        value: metric.value,
+        rating: metric.rating,
+        delta: metric.delta,
+        id: metric.id,
+      });
+    };
+
+    onCLS(handler);
+    onFCP(handler);
+    onINP(handler);
+    onLCP(handler);
+    onTTFB(handler);
   }
 };

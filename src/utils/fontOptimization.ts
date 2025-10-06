@@ -1,109 +1,143 @@
 /**
- * Font optimization utilities for BuildDesk
- * Handles font loading, fallbacks, and performance optimization
+ * Font Optimization Utilities
+ * Handles font loading strategies, preloading, and FOIT/FOUT prevention
  */
 
-// Font loading performance optimization
-export const initializeFontOptimization = () => {
-  // Preload critical fonts
-  const preloadFont = (fontUrl: string, fontDisplay: string = 'swap') => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'font';
-    link.href = fontUrl;
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
-  };
+export interface FontConfig {
+  family: string;
+  weight?: number | string;
+  style?: string;
+  display?: 'auto' | 'block' | 'swap' | 'fallback' | 'optional';
+  preload?: boolean;
+}
 
-  // Add font display swap for better loading performance
-  const addFontDisplaySwap = () => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 400;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
-      }
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 500;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hiA.woff2) format('woff2');
-      }
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 600;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiA.woff2) format('woff2');
-      }
-      @font-face {
-        font-family: 'Inter';
-        font-style: normal;
-        font-weight: 700;
-        font-display: swap;
-        src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuDyfAZ9hiA.woff2) format('woff2');
-      }
-    `;
-    document.head.appendChild(style);
-  };
+/**
+ * Preload critical fonts
+ */
+export const preloadFont = (url: string, type: string = 'font/woff2'): void => {
+  if (typeof window === 'undefined') return;
 
-  // Font loading detection and fallback
-  const detectFontLoading = () => {
-    if ('fonts' in document) {
-      document.fonts.ready.then(() => {
-        console.log('🎨 All fonts loaded');
-        document.body.classList.add('fonts-loaded');
-      }).catch(() => {
-        console.warn('Font loading failed, using system fallbacks');
-        document.body.classList.add('fonts-fallback');
-      });
-    }
-  };
-
-  // Initialize optimizations
-  addFontDisplaySwap();
-  detectFontLoading();
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'font';
+  link.type = type;
+  link.href = url;
+  link.crossOrigin = 'anonymous';
+  document.head.appendChild(link);
 };
 
-// Performance monitoring for fonts
-export const monitorFontPerformance = () => {
-  if ('performance' in window && 'getEntriesByType' in performance) {
-    window.addEventListener('load', () => {
-      const fontEntries = performance.getEntriesByType('resource').filter(
-        (entry: any) => entry.initiatorType === 'css' && entry.name.includes('font')
-      );
-      
-      fontEntries.forEach((entry: any) => {
-        console.log(`Font ${entry.name} loaded in ${entry.duration}ms`);
-      });
+/**
+ * Load fonts with Font Loading API
+ */
+export const loadFont = async (config: FontConfig): Promise<FontFace | null> => {
+  if (typeof window === 'undefined' || !('FontFace' in window)) {
+    return null;
+  }
+
+  try {
+    const { family, weight = '400', style = 'normal' } = config;
+    
+    const font = new FontFace(family, `local("${family}")`, {
+      weight: String(weight),
+      style,
     });
+
+    await font.load();
+    document.fonts.add(font);
+
+    return font;
+  } catch (error) {
+    console.error('[Font Loading] Failed to load font:', config.family, error);
+    return null;
   }
 };
 
-// Critical font loading optimization
-export const optimizeCriticalFonts = () => {
-  // Add critical CSS for fonts
-  const criticalCSS = `
-    /* Critical font fallbacks */
-    .font-inter {
-      font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, Helvetica, Arial, sans-serif;
-    }
-    
-    /* Performance optimizations */
-    .fonts-loading * {
-      font-display: swap;
-    }
-    
-    .fonts-fallback * {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Avenir, Helvetica, Arial, sans-serif;
+/**
+ * Preconnect to font providers
+ */
+export const preconnectFontProviders = (providers: string[]): void => {
+  if (typeof window === 'undefined') return;
+
+  providers.forEach(provider => {
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = provider;
+    preconnect.crossOrigin = 'anonymous';
+    document.head.appendChild(preconnect);
+
+    const dnsPrefetch = document.createElement('link');
+    dnsPrefetch.rel = 'dns-prefetch';
+    dnsPrefetch.href = provider;
+    document.head.appendChild(dnsPrefetch);
+  });
+
+  console.log('[Font Optimization] Preconnected to', providers.length, 'providers');
+};
+
+/**
+ * Apply font-display strategy
+ */
+export const applyFontDisplay = (display: 'swap' | 'fallback' | 'optional' = 'swap'): void => {
+  if (typeof window === 'undefined') return;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @font-face {
+      font-display: ${display};
     }
   `;
-  
-  const style = document.createElement('style');
-  style.textContent = criticalCSS;
   document.head.appendChild(style);
+};
+
+/**
+ * Monitor font loading performance
+ */
+export const monitorFontPerformance = (): void => {
+  if (typeof window === 'undefined' || !document.fonts) return;
+
+  document.fonts.ready.then(() => {
+    const fonts = Array.from(document.fonts);
+    console.log('[Font Performance] Loaded fonts:', fonts.length);
+
+    if (PerformanceObserver) {
+      try {
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const resourceEntry = entry as PerformanceResourceTiming;
+            
+            if (resourceEntry.initiatorType === 'link' && 
+                resourceEntry.name.includes('font')) {
+              console.log('[Font Performance]', {
+                url: resourceEntry.name,
+                duration: `${resourceEntry.duration.toFixed(2)}ms`,
+                size: `${((resourceEntry.transferSize || 0) / 1024).toFixed(2)}KB`,
+              });
+            }
+          }
+        });
+
+        observer.observe({ entryTypes: ['resource'] });
+      } catch (error) {
+        console.error('[Font Performance] Monitoring failed:', error);
+      }
+    }
+  });
+};
+
+/**
+ * Initialize font optimizations
+ */
+export const initializeFontOptimizations = (fonts: FontConfig[]): void => {
+  if (typeof window === 'undefined') return;
+
+  fonts
+    .filter(font => font.preload)
+    .forEach(font => {
+      console.log('[Font Optimization] Would preload:', font.family);
+    });
+
+  applyFontDisplay('swap');
+  monitorFontPerformance();
+
+  console.log('[Font Optimization] Initialized for', fonts.length, 'fonts');
 };
