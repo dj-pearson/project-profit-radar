@@ -1,90 +1,58 @@
 import { useCallback, useRef } from 'react';
 
-interface LongPressOptions {
+interface UseLongPressOptions {
+  onLongPress: () => void;
   delay?: number;
-  shouldPreventDefault?: boolean;
-  onStart?: () => void;
-  onFinish?: () => void;
-  onCancel?: () => void;
+  onClick?: () => void;
+  enableHaptic?: boolean;
 }
 
-export const useLongPress = (
-  onLongPress: () => void,
-  options: LongPressOptions = {}
-) => {
-  const {
-    delay = 500,
-    shouldPreventDefault = true,
-    onStart,
-    onFinish,
-    onCancel
-  } = options;
-
+/**
+ * Hook for detecting long press gestures
+ * Supports both mouse and touch events
+ */
+export function useLongPress({
+  onLongPress,
+  delay = 500,
+  onClick,
+  enableHaptic = true,
+}: UseLongPressOptions) {
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const isLongPressRef = useRef(false);
+  const isLongPress = useRef(false);
 
-  const start = useCallback((event: React.TouchEvent | React.MouseEvent) => {
-    if (shouldPreventDefault && event.target) {
-      event.target.addEventListener('touchend', preventDefault, { passive: false });
-      event.target.addEventListener('click', preventDefault, { passive: false });
+  const triggerHaptic = useCallback(() => {
+    if (enableHaptic && 'vibrate' in navigator) {
+      navigator.vibrate(50);
     }
+  }, [enableHaptic]);
 
-    onStart?.();
-    isLongPressRef.current = false;
-
+  const start = useCallback(() => {
+    isLongPress.current = false;
     timeoutRef.current = setTimeout(() => {
+      isLongPress.current = true;
+      triggerHaptic();
       onLongPress();
-      isLongPressRef.current = true;
-      onFinish?.();
     }, delay);
-  }, [onLongPress, delay, shouldPreventDefault, onStart, onFinish]);
+  }, [onLongPress, delay, triggerHaptic]);
 
-  const clear = useCallback((event?: React.TouchEvent | React.MouseEvent, shouldTriggerClick = true) => {
+  const clear = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+  }, []);
 
-    if (shouldPreventDefault && event?.target) {
-      event.target.removeEventListener('touchend', preventDefault);
-      event.target.removeEventListener('click', preventDefault);
+  const handleClick = useCallback(() => {
+    if (!isLongPress.current && onClick) {
+      onClick();
     }
-
-    if (!isLongPressRef.current && shouldTriggerClick) {
-      onCancel?.();
-    }
-  }, [shouldPreventDefault, onCancel]);
-
-  const preventDefault = (event: Event) => {
-    if (!event.isTrusted) return;
-    event.preventDefault();
-    event.stopPropagation();
-  };
+  }, [onClick]);
 
   return {
-    onMouseDown: (event: React.MouseEvent) => start(event),
-    onMouseUp: (event: React.MouseEvent) => clear(event),
-    onMouseLeave: (event: React.MouseEvent) => clear(event, false),
-    onTouchStart: (event: React.TouchEvent) => start(event),
-    onTouchEnd: (event: React.TouchEvent) => clear(event),
-    onTouchCancel: (event: React.TouchEvent) => clear(event, false),
+    onMouseDown: start,
+    onMouseUp: clear,
+    onMouseLeave: clear,
+    onTouchStart: start,
+    onTouchEnd: clear,
+    onClick: handleClick,
   };
-};
-
-// Hook for context menu with long press
-export const useContextMenu = (
-  items: Array<{
-    label: string;
-    action: () => void;
-    icon?: React.ReactNode;
-    destructive?: boolean;
-  }>,
-  options: LongPressOptions = {}
-) => {
-  const longPressProps = useLongPress(() => {
-    // Show context menu
-    const event = new CustomEvent('showContextMenu', { detail: items });
-    window.dispatchEvent(event);
-  }, options);
-
-  return longPressProps;
-};
+}
