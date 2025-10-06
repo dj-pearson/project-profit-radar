@@ -20759,6 +20759,33 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_security: {
         Row: {
           account_locked_until: string | null
@@ -22063,10 +22090,14 @@ export type Database = {
       get_active_promotions: {
         Args: Record<PropertyKey, never> | { p_display_location?: string }
         Returns: {
+          applies_to: string[]
           description: string
           discount_percentage: number
+          display_on: string[]
+          end_date: string
           id: string
           name: string
+          start_date: string
         }[]
       }
       get_equipment_schedule: {
@@ -22083,11 +22114,16 @@ export type Database = {
               p_start_date?: string
             }
         Returns: {
+          assigned_quantity: number
+          assignment_id: string
+          assignment_status: string
+          days_duration: number
           end_date: string
+          equipment_id: string
+          equipment_name: string
+          project_id: string
           project_name: string
-          schedule_id: string
           start_date: string
-          status: string
         }[]
       }
       get_role_permissions: {
@@ -22104,6 +22140,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      get_user_primary_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -22116,6 +22156,13 @@ export type Database = {
         Args:
           | { p_ip_address?: unknown; p_user_agent?: string; p_user_id: string }
           | { p_user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
         Returns: boolean
       }
       increment_article_view_count: {
@@ -22131,6 +22178,14 @@ export type Database = {
       }
       is_account_locked: {
         Args: { p_user_id: string }
+        Returns: boolean
+      }
+      is_channel_admin: {
+        Args: { _channel_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_channel_member: {
+        Args: { _channel_id: string; _user_id: string }
         Returns: boolean
       }
       log_api_usage: {

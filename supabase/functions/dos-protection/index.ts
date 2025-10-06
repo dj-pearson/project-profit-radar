@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,27 @@ interface AttackPattern {
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
+// SECURITY: Input validation schemas
+const IPAddressSchema = z.string().ip('Invalid IP address');
+const ActionSchema = z.enum([
+  'get_settings',
+  'update_settings',
+  'get_metrics',
+  'block_ip',
+  'unblock_ip',
+  'whitelist_ip',
+  'analyze_traffic',
+  'detect_attacks'
+]);
+
+const RequestSchema = z.object({
+  action: ActionSchema,
+  ip_address: IPAddressSchema.optional(),
+  reason: z.string().max(500).optional(),
+  hours: z.number().int().positive().max(168).optional(),
+  settings: z.record(z.unknown()).optional(),
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,7 +57,28 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, ...params } = await req.json();
+    // SECURITY: Validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch {
+      console.error("[DoS] Invalid JSON in request body");
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const validation = RequestSchema.safeParse(requestBody);
+    if (!validation.success) {
+      console.error("[DoS] Validation failed:", validation.error.errors);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request parameters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { action, ...params } = validation.data;
 
     switch (action) {
       case 'get_settings':
