@@ -4,10 +4,14 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 
 const Dashboard = () => {
   const { userProfile, loading: authLoading } = useAuth();
   const { data, loading: dataLoading } = useDashboardData();
+  
+  // Inject critical CSS for dashboard
+  useCriticalCSS('dashboard');
 
   // Show loading state while auth or data is loading
   if (authLoading || dataLoading) {

@@ -27,12 +27,13 @@ import StickyDemoCTA from "@/components/StickyDemoCTA";
 
 import { FontOptimization, useFontOptimization } from "@/components/performance/FontOptimization";
 import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
-// import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
+import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
+
 const Index = () => {
   // Initialize all performance optimizations
   useCriticalResources();
   useFontOptimization();
-  // useCriticalCSS('homepage');
+  useCriticalCSS('homepage');
 
   // Initialize SEO backend integration on app start
   React.useEffect(() => {
