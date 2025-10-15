@@ -838,7 +838,6 @@ const PunchList = () => {
           </div>
         </DialogContent>
       </Dialog>
-        </div>
       </DashboardLayout>
     </RoleGuard>
   );
