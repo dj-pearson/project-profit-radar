@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { JobCostingDashboard } from '@/components/job-costing/JobCostingDashboard';
 import { BudgetManager } from '@/components/job-costing/BudgetManager';
 import { LaborTracking } from '@/components/job-costing/LaborTracking';
@@ -85,8 +86,9 @@ const JobCosting: React.FC = () => {
   }
 
   return (
-    <DashboardLayout title="Job Costing">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
+      <DashboardLayout title="Job Costing">
+        <div className="space-y-6">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -154,8 +156,9 @@ const JobCosting: React.FC = () => {
             </CardContent>
           </Card>
         )}
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 

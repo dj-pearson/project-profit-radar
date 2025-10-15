@@ -11,6 +11,7 @@ import { ProjectTimeline } from '@/components/schedule/ProjectTimeline';
 import { ScheduleOverview } from '@/components/schedule/ScheduleOverview';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 
 interface Project {
   id: string;
@@ -133,8 +134,9 @@ const ScheduleManagement = () => {
   }
 
   return (
-    <DashboardLayout title="Schedule Management">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
+      <DashboardLayout title="Schedule Management">
+        <div className="space-y-6">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
@@ -244,6 +246,7 @@ const ScheduleManagement = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -303,11 +304,12 @@ const TeamManagement = () => {
   };
 
   return (
-    <DashboardLayout 
-      title="Team Management"
-      showTrialBanner={false}
-    >
-      <div className="flex justify-end mb-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
+      <DashboardLayout
+        title="Team Management"
+        showTrialBanner={false}
+      >
+        <div className="flex justify-end mb-6">
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
               <Button size="sm" className="shrink-0" onClick={handleInviteClick}>
                 <Plus className="h-4 w-4 mr-1 sm:mr-2" />
@@ -589,6 +591,7 @@ const TeamManagement = () => {
           currentLimit={checkLimit('teamMembers').limit}
         />
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

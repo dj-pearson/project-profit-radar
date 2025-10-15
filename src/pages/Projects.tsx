@@ -145,8 +145,10 @@ const Projects = () => {
     updates: any
   ) => {
     try {
-      await projectService.updateProject(projectId, updates);
-      
+      // Pass company_id to enforce access control (null for root_admin)
+      const companyId = userProfile?.role !== 'root_admin' ? userProfile?.company_id : undefined;
+      await projectService.updateProject(projectId, updates, companyId);
+
       setProjects((prev) =>
         prev.map((project) =>
           project.id === projectId ? { ...project, ...updates } : project
@@ -168,7 +170,9 @@ const Projects = () => {
 
   const handleDeleteProject = async (projectId: string) => {
     try {
-      await projectService.deleteProject(projectId);
+      // Pass company_id to enforce access control (null for root_admin)
+      const companyId = userProfile?.role !== 'root_admin' ? userProfile?.company_id : undefined;
+      await projectService.deleteProject(projectId, companyId);
       setProjects((prev) => prev.filter((project) => project.id !== projectId));
 
       toast({

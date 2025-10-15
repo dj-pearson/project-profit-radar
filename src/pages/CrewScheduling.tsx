@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
@@ -344,8 +345,9 @@ const CrewScheduling = () => {
   }
 
   return (
-    <DashboardLayout title="Crew Scheduling & Dispatch" showTrialBanner={false}>
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
+      <DashboardLayout title="Crew Scheduling & Dispatch" showTrialBanner={false}>
+        <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -615,6 +617,7 @@ const CrewScheduling = () => {
         </div>
       </div>
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -225,8 +226,9 @@ const Companies = () => {
   }
 
   return (
-    <DashboardLayout title="Companies" showTrialBanner={false}>
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
+      <DashboardLayout title="Companies" showTrialBanner={false}>
+        <div className="space-y-6">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -514,6 +516,7 @@ const Companies = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

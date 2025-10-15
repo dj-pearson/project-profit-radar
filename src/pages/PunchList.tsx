@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -392,8 +393,9 @@ const PunchList = () => {
   }
 
   return (
-    <DashboardLayout title="Punch List">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
+      <DashboardLayout title="Punch List">
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Punch List / Issue Tracking</h2>
@@ -836,7 +838,9 @@ const PunchList = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 

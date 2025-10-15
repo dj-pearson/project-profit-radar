@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
+import {
   Users,
   Search,
   Filter,
@@ -193,8 +194,9 @@ const UsersPage = () => {
   }
 
   return (
-    <DashboardLayout title="Users" showTrialBanner={false}>
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
+      <DashboardLayout title="Users" showTrialBanner={false}>
+        <div className="space-y-6">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -400,6 +402,7 @@ const UsersPage = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

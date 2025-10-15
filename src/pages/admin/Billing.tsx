@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -186,8 +187,9 @@ const Billing = () => {
   }
 
   return (
-    <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
+      <DashboardLayout title="Billing & Subscriptions" showTrialBanner={false}>
+        <div className="space-y-6">
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
@@ -441,6 +443,7 @@ const Billing = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

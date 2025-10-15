@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -240,9 +241,10 @@ const SecurityMonitoring = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
+      <div className="container mx-auto p-4 sm:p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-construction-dark">Security Monitoring</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
@@ -421,6 +423,7 @@ const SecurityMonitoring = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </RoleGuard>
   );
 };
 

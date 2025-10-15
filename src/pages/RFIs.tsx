@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -446,8 +447,9 @@ const RFIs = () => {
   }
 
   return (
-    <DashboardLayout title="Request for Information (RFI)">
-      <Helmet>
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
+      <DashboardLayout title="Request for Information (RFI)">
+        <Helmet>
         <title>RFIs Tracker – Formal Questions & Approvals | BuildDesk</title>
         <meta name="description" content="Create and track RFIs with due dates, responses, and audit trail for accountability." />
         <link rel="canonical" href="/rfis" />
@@ -860,7 +862,8 @@ const RFIs = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 
