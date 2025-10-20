@@ -14,9 +14,6 @@
       "android": {
         "resourceClass": "medium",
         "gradleCommand": ":app:assembleDebug"
-      },
-      "env": {
-        "NODE_ENV": "development"
       }
     },
     "preview": {
@@ -28,9 +25,6 @@
       "android": {
         "resourceClass": "medium",
         "gradleCommand": ":app:assembleRelease"
-      },
-      "env": {
-        "NODE_ENV": "preview"
       }
     },
     "production": {
@@ -41,9 +35,6 @@
       "android": {
         "resourceClass": "medium",
         "gradleCommand": ":app:bundleRelease"
-      },
-      "env": {
-        "NODE_ENV": "production"
       }
     },
     "production-ios": {
