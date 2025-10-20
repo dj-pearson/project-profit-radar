@@ -30,7 +30,13 @@
     "security-check": "powershell -ExecutionPolicy Bypass -File scripts/security-check.ps1",
     "analyze": "node scripts/analyze-bundle.js",
     "optimize:fonts": "powershell -ExecutionPolicy Bypass -File scripts/optimize-fonts.ps1",
-    "optimize:fonts:unix": "chmod +x scripts/optimize-fonts.sh && ./scripts/optimize-fonts.sh"
+    "optimize:fonts:unix": "chmod +x scripts/optimize-fonts.sh && ./scripts/optimize-fonts.sh",
+    "ios:sync": "npm run build && npx cap sync ios",
+    "ios:open": "npx cap open ios",
+    "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "npm run build && npx cap sync android && npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",

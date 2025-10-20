@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>project-profit-radar</string>
+	<string>BuildDesk</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>BuildDesk needs camera access to capture photos of construction sites, materials, and documents.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>BuildDesk needs photo library access to save and retrieve construction site images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>BuildDesk needs permission to save photos to your library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>BuildDesk uses your location to tag construction sites and field reports.</string>
 </dict>
 </plist>

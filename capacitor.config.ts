@@ -1,29 +1,31 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.ed4c0428159f4b25813615b119a75bd5',
-  appName: 'project-profit-radar',
-  webDir: 'dist',
-  server: {
-    url: 'https://ed4c0428-159f-4b25-8136-15b119a75bd5.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
+  appId: "com.builddesk.app",
+  appName: "BuildDesk",
+  webDir: "dist",
+  // Remove 'server' config for production builds
+  // For development, uncomment the server block below:
+  // server: {
+  //   url: 'https://ed4c0428-159f-4b25-8136-15b119a75bd5.lovableproject.com?forceHideBadge=true',
+  //   cleartext: true,
+  // },
   plugins: {
     Camera: {
-      permissions: ["camera", "photos"]
+      permissions: ["camera", "photos"],
     },
     Geolocation: {
-      permissions: ["location"]
+      permissions: ["location"],
     },
     LocalNotifications: {
       smallIcon: "ic_stat_icon_config_sample",
       iconColor: "#488AFF",
-      sound: "beep.wav"
+      sound: "beep.wav",
     },
     PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"]
-    }
-  }
+      presentationOptions: ["badge", "sound", "alert"],
+    },
+  },
 };
 
 export default config;
