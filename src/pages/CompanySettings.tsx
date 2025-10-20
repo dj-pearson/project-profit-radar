@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -223,8 +224,9 @@ const CompanySettings = () => {
   }
 
   return (
-    <DashboardLayout title="Company Settings">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
+      <DashboardLayout title="Company Settings">
+        <div className="space-y-6">
         {/* Company Profile */}
         <Card>
           <CardHeader>
@@ -516,6 +518,7 @@ const CompanySettings = () => {
         </div>
       </div>
     </DashboardLayout>
+    </RoleGuard>
   );
 };
 

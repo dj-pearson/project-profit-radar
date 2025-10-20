@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { RoleGuard, ROLE_GROUPS } from "@/components/auth/RoleGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -200,8 +201,9 @@ export default function SystemAdminSettings() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ROOT_ADMIN}>
+      <DashboardLayout>
+        <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">System Admin Settings</h1>
@@ -458,5 +460,6 @@ export default function SystemAdminSettings() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </RoleGuard>
   );
 }

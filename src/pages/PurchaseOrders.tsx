@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -184,8 +185,9 @@ const PurchaseOrders = () => {
   const pendingCount = purchaseOrders.filter(po => ['draft', 'sent'].includes(po.status)).length;
 
   return (
-    <DashboardLayout title="Purchase Orders">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
+      <DashboardLayout title="Purchase Orders">
+        <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -360,8 +362,9 @@ const PurchaseOrders = () => {
             )}
           </CardContent>
         </Card>
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 

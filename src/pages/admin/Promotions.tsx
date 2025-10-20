@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -217,9 +218,10 @@ const Promotions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur-sm">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
             <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
@@ -467,6 +469,7 @@ const Promotions = () => {
         )}
       </div>
     </div>
+    </RoleGuard>
   );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { gtag } from '@/hooks/useGoogleAnalytics';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
 import JobProfitabilityOverview from '@/components/financial/JobProfitabilityOverview';
 import InvoicingPayments from '@/components/financial/InvoicingPayments';
@@ -25,8 +26,9 @@ const FinancialDashboard = () => {
   }, []);
 
   return (
-    <DashboardLayout title="Financial Dashboard">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
+      <DashboardLayout title="Financial Dashboard">
+        <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
@@ -117,8 +119,9 @@ const FinancialDashboard = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 

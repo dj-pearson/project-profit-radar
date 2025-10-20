@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -254,9 +255,10 @@ const Analytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
+    <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b bg-card">
         <ResponsiveContainer>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
             <div>
@@ -627,6 +629,7 @@ const Analytics = () => {
         </Tabs>
       </ResponsiveContainer>
     </div>
+    </RoleGuard>
   );
 };
 

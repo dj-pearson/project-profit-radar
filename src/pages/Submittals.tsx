@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -384,8 +385,9 @@ const Submittals = () => {
   }
 
   return (
-    <DashboardLayout title="Submittals">
-      <Helmet>
+    <RoleGuard allowedRoles={ROLE_GROUPS.PROJECT_VIEWERS}>
+      <DashboardLayout title="Submittals">
+        <Helmet>
         <title>Submittals Tracker – Approvals & Accountability | BuildDesk</title>
         <meta name="description" content="Manage submittals with formal approvals, due dates, and review history for full accountability." />
         <link rel="canonical" href="/submittals" />
@@ -793,8 +795,9 @@ const Submittals = () => {
           </div>
         </DialogContent>
       </Dialog>
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 

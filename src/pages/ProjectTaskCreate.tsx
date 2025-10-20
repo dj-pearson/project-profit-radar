@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
 import { LoadingState } from '@/components/ui/loading-spinner';
@@ -10,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 
 const ProjectTaskCreate = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const { userProfile } = useAuth();
   const navigate = useNavigate();
   const [project, setProject] = useState<ProjectWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,20 @@ const ProjectTaskCreate = () => {
   const loadProject = async (projectId: string) => {
     try {
       setLoading(true);
-      const data = await projectService.getProject(projectId);
+      // Pass company_id to enforce access control (null for root_admin)
+      const companyId = userProfile?.role !== 'root_admin' ? userProfile?.company_id : undefined;
+      const data = await projectService.getProject(projectId, companyId);
+
+      if (!data) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "Project not found or you don't have permission to access it.",
+        });
+        navigate('/projects');
+        return;
+      }
+
       setProject(data);
     } catch (error: any) {
       toast({

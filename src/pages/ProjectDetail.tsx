@@ -36,15 +36,40 @@ const ProjectDetail = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    // Check role-based access - only allow roles that can view projects
+    const allowedRoles = ['root_admin', 'admin', 'project_manager', 'field_supervisor', 'office_staff', 'accounting'];
+    if (userProfile && !allowedRoles.includes(userProfile.role)) {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You don't have permission to view project details.",
+      });
+      navigate('/dashboard');
+      return;
+    }
+
     if (projectId) {
       loadProject(projectId);
     }
-  }, [projectId]);
+  }, [projectId, userProfile]);
 
   const loadProject = async (projectId: string) => {
     try {
       setLoading(true);
-      const data = await projectService.getProject(projectId);
+      // Pass company_id to enforce access control (null for root_admin)
+      const companyId = userProfile?.role !== 'root_admin' ? userProfile?.company_id : undefined;
+      const data = await projectService.getProject(projectId, companyId);
+
+      if (!data) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "Project not found or you don't have permission to access it.",
+        });
+        navigate('/projects');
+        return;
+      }
+
       setProject(data);
     } catch (error: any) {
       toast({
@@ -52,6 +77,7 @@ const ProjectDetail = () => {
         title: "Error loading project",
         description: error.message,
       });
+      navigate('/projects');
     } finally {
       setLoading(false);
     }

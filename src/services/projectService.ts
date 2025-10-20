@@ -88,8 +88,8 @@ class ProjectService {
     return data || [];
   }
 
-  async getProject(projectId: string): Promise<ProjectWithRelations | null> {
-    const { data, error } = await supabase
+  async getProject(projectId: string, companyId?: string): Promise<ProjectWithRelations | null> {
+    let query = supabase
       .from('projects')
       .select(`
         *,
@@ -100,8 +100,14 @@ class ProjectService {
         job_costs(id, total_cost),
         change_orders(id, title, description, amount, status)
       `)
-      .eq('id', projectId)
-      .single();
+      .eq('id', projectId);
+
+    // Enforce company_id filter for non-root_admin users
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
     return data;
@@ -122,11 +128,18 @@ class ProjectService {
     return data;
   }
 
-  async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
-    const { data, error } = await supabase
+  async updateProject(projectId: string, updates: Partial<Project>, companyId?: string): Promise<Project> {
+    let query = supabase
       .from('projects')
       .update(updates)
-      .eq('id', projectId)
+      .eq('id', projectId);
+
+    // Enforce company_id filter for non-root_admin users
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { data, error } = await query
       .select()
       .single();
 
@@ -134,11 +147,18 @@ class ProjectService {
     return data;
   }
 
-  async deleteProject(projectId: string): Promise<void> {
-    const { error } = await supabase
+  async deleteProject(projectId: string, companyId?: string): Promise<void> {
+    let query = supabase
       .from('projects')
       .delete()
       .eq('id', projectId);
+
+    // Enforce company_id filter for non-root_admin users
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
   }
@@ -170,8 +190,8 @@ class ProjectService {
     return stats;
   }
 
-  async updateProjectCompletion(projectId: string, percentage: number): Promise<void> {
-    const updates: Partial<Project> = { 
+  async updateProjectCompletion(projectId: string, percentage: number, companyId?: string): Promise<void> {
+    const updates: Partial<Project> = {
       completion_percentage: percentage,
       updated_at: new Date().toISOString()
     };
@@ -183,10 +203,17 @@ class ProjectService {
       updates.status = 'active';
     }
 
-    const { error } = await supabase
+    let query = supabase
       .from('projects')
       .update(updates)
       .eq('id', projectId);
+
+    // Enforce company_id filter for non-root_admin users
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
   }
@@ -228,12 +255,12 @@ class ProjectService {
     return data || [];
   }
 
-  async duplicateProject(projectId: string, newName: string): Promise<Project> {
-    const original = await this.getProject(projectId);
-    if (!original) throw new Error('Project not found');
+  async duplicateProject(projectId: string, newName: string, companyId?: string): Promise<Project> {
+    const original = await this.getProject(projectId, companyId);
+    if (!original) throw new Error('Project not found or access denied');
 
     const { tasks, materials, documents, project_phases, job_costs, change_orders, ...projectData } = original;
-    
+
     const duplicateData: CreateProjectData = {
       ...projectData,
       name: newName,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -230,8 +231,9 @@ const Vendors = () => {
   const activeVendors = vendors.filter(v => v.is_active).length;
 
   return (
-    <DashboardLayout title="Vendors">
-      <div className="space-y-6">
+    <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
+      <DashboardLayout title="Vendors">
+        <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -465,8 +467,9 @@ const Vendors = () => {
             )}
           </CardContent>
         </Card>
-      </div>
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </RoleGuard>
   );
 };
 
