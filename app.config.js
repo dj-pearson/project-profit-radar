@@ -4,6 +4,12 @@ export default {
     slug: "build-desk-2rirxbgg70kpf2ce6py3e",
     version: "1.0.0",
     orientation: "portrait",
+    updates: {
+      url: "https://u.expo.dev/e9733a8e-5df1-4d6e-9c1f-c13774542b16"
+    },
+    runtimeVersion: {
+      policy: "appVersion"
+    },
     icon: "./public/icon-512x512.png",
     userInterfaceStyle: "automatic",
     splash: {
@@ -18,6 +24,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.builddesk.app",
       buildNumber: "1.0.0",
+      scheme: "builddesk",
       infoPlist: {
         NSCameraUsageDescription: "BuildDesk uses the camera to capture photos of construction sites, materials, and project progress for documentation and reporting.",
         NSPhotoLibraryUsageDescription: "BuildDesk accesses your photo library to select and attach images to projects, daily reports, and material documentation.",

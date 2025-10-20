@@ -2,6 +2,7 @@
   "name": "builddesk",
   "private": true,
   "version": "0.0.0",
+  "main": "App.tsx",
   "type": "module",
   "packageManager": "npm@10.9.2",
   "engines": {
@@ -123,6 +124,7 @@
     "expo-notifications": "0.32.12",
     "expo-router": "6.0.12",
     "expo-task-manager": "14.0.7",
+    "expo-updates": "29.0.12",
     "input-otp": "^1.2.4",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
