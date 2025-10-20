@@ -17,6 +17,10 @@ bun.lockb
 yarn.lock
 pnpm-lock.yaml
 
+# Expo
+.expo/
+.expo-shared/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

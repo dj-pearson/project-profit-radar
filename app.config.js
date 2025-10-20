@@ -10,12 +10,12 @@ export default {
     runtimeVersion: {
       policy: "appVersion"
     },
-    icon: "./public/icon-512x512.png",
+    icon: "./public/android-chrome-512x512.png",
     userInterfaceStyle: "automatic",
     splash: {
-      image: "./public/splash-screen.png",
+      image: "./public/BuildDeskLogo.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#4A90E2"
     },
     assetBundlePatterns: [
       "**/*"
@@ -42,8 +42,8 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./public/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        foregroundImage: "./public/android-chrome-512x512.png",
+        backgroundColor: "#4A90E2"
       },
       package: "com.builddesk.app",
       versionCode: 1,
@@ -110,9 +110,8 @@ export default {
       [
         "expo-notifications",
         {
-          icon: "./public/notification-icon.png",
-          color: "#4A90E2",
-          sounds: ["./public/notification-sound.wav"]
+          icon: "./public/android-chrome-192x192.png",
+          color: "#4A90E2"
         }
       ],
       [
