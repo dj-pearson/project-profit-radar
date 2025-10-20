@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Platform } from 'react-native';
 import { supabase } from '@/integrations/supabase/client';
+
+// Conditionally import react-router-dom only on web
+let useLocation: any = () => ({ pathname: '', search: '' });
+if (Platform.OS === 'web') {
+  try {
+    const ReactRouterDOM = require('react-router-dom');
+    useLocation = ReactRouterDOM.useLocation;
+  } catch (e) {
+    console.warn('react-router-dom not available');
+  }
+}
 
 // Type for gtag function
 type GtagFunction = (

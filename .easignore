@@ -1,0 +1,26 @@
+# Exclude files from EAS Build uploads
+.git
+.expo
+node_modules/.cache
+*.log
+.DS_Store
+.vscode
+.idea
+dist
+dist-ssr
+coverage
+.env.local
+.env.*.local
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+tests
+docs
+*.md
+!README.md
+scripts
+public/assets/*.mp4
+public/assets/*.mov
+

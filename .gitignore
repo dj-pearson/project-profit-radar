@@ -20,6 +20,8 @@ pnpm-lock.yaml
 # Expo
 .expo/
 .expo-shared/
+android/
+ios/
 
 # Editor directories and files
 .vscode/*

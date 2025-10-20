@@ -7,11 +7,21 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { Platform } from "react-native";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import type { ReactNode, FC } from "react";
+
+// Platform-safe window location helpers
+const isWeb = Platform.OS === "web";
+const getWindowLocation = () => {
+  if (isWeb && typeof window !== "undefined") {
+    return window.location;
+  }
+  return null;
+};
 
 interface UserProfile {
   id: string;
@@ -124,8 +134,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       duration: 5000,
     });
 
-    // Redirect to auth page
-    window.location.href = '/auth';
+    // Redirect to auth page (web only)
+    const location = getWindowLocation();
+    if (location) {
+      location.href = '/auth';
+    }
   }, [toast]);
 
   // Monitor session validity
@@ -424,26 +437,29 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
       }
 
-      // Check if this is a password recovery session
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = urlParams.get('type') || hashParams.get('type');
-      
-      // If this is a password recovery session, handle it specially
-      if (type === 'recovery' && session?.user) {
-        console.log("Password recovery session detected in auth state change");
-        setSession(session);
-        setUser(session.user);
-        setLoading(false);
+      // Check if this is a password recovery session (web only)
+      const location = getWindowLocation();
+      if (location) {
+        const urlParams = new URLSearchParams(location.search);
+        const hashParams = new URLSearchParams(location.hash.substring(1));
+        const type = urlParams.get('type') || hashParams.get('type');
         
-        // Don't fetch profile for password recovery - redirect using React Router for SEO
-        if (window.location.pathname === '/auth') {
-          // Use setTimeout to avoid redirect during render cycle
-          setTimeout(() => {
-            window.location.href = `/reset-password${window.location.search}${window.location.hash}`;
-          }, 100);
+        // If this is a password recovery session, handle it specially
+        if (type === 'recovery' && session?.user) {
+          console.log("Password recovery session detected in auth state change");
+          setSession(session);
+          setUser(session.user);
+          setLoading(false);
+          
+          // Don't fetch profile for password recovery - redirect using React Router for SEO
+          if (location.pathname === '/auth') {
+            // Use setTimeout to avoid redirect during render cycle
+            setTimeout(() => {
+              location.href = `/reset-password${location.search}${location.hash}`;
+            }, 100);
+          }
+          return;
         }
-        return;
       }
 
       setSession(session);
@@ -578,10 +594,13 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       console.log("Signing in with Google...");
       setLoading(true);
 
+      const location = getWindowLocation();
+      const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
         },
       });
 
@@ -608,8 +627,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         console.log("FIXED AuthContext: Signing up...");
         setLoading(true);
 
-        const redirectUrl = `${window.location.origin}/`;
-        const { data, error } = await supabase.auth.signUp({
+        const location = getWindowLocation();
+        const redirectUrl = location ? `${location.origin}/` : 'builddesk://';
+        const { data, error} = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -672,8 +692,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const resetPassword = useCallback(async (email: string) => {
     try {
       console.log("FIXED AuthContext: Resetting password...");
+      const location = getWindowLocation();
+      const redirectUrl = location ? `${location.origin}/auth` : 'builddesk://auth';
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: redirectUrl,
       });
 
       if (error) {
