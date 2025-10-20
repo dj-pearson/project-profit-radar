@@ -9,13 +9,11 @@
       "channel": "development",
       "ios": {
         "resourceClass": "m-medium",
-        "simulator": true,
-        "bundleIdentifier": "com.builddesk.app.dev"
+        "simulator": true
       },
       "android": {
         "resourceClass": "medium",
-        "gradleCommand": ":app:assembleDebug",
-        "applicationId": "com.builddesk.app.dev"
+        "gradleCommand": ":app:assembleDebug"
       },
       "env": {
         "NODE_ENV": "development"
@@ -25,13 +23,11 @@
       "distribution": "internal",
       "channel": "preview",
       "ios": {
-        "resourceClass": "m-medium",
-        "bundleIdentifier": "com.builddesk.app.preview"
+        "resourceClass": "m-medium"
       },
       "android": {
         "resourceClass": "medium",
-        "gradleCommand": ":app:assembleRelease",
-        "applicationId": "com.builddesk.app.preview"
+        "gradleCommand": ":app:assembleRelease"
       },
       "env": {
         "NODE_ENV": "preview"
@@ -40,13 +36,11 @@
     "production": {
       "channel": "production",
       "ios": {
-        "resourceClass": "m-medium",
-        "bundleIdentifier": "com.builddesk.app"
+        "resourceClass": "m-medium"
       },
       "android": {
         "resourceClass": "medium",
-        "gradleCommand": ":app:bundleRelease",
-        "applicationId": "com.builddesk.app"
+        "gradleCommand": ":app:bundleRelease"
       },
       "env": {
         "NODE_ENV": "production"
@@ -56,7 +50,6 @@
       "extends": "production",
       "ios": {
         "resourceClass": "m-large",
-        "bundleIdentifier": "com.builddesk.app",
         "buildConfiguration": "Release"
       }
     },
@@ -74,7 +67,7 @@
       "ios": {
         "appleId": "your-apple-id@example.com",
         "ascAppId": "your-app-store-connect-app-id",
-        "appleTeamId": "your-apple-team-id"
+        "appleTeamId": "4G65K64G73"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
@@ -85,7 +78,7 @@
       "ios": {
         "appleId": "your-apple-id@example.com",
         "ascAppId": "your-app-store-connect-app-id",
-        "appleTeamId": "your-apple-team-id"
+        "appleTeamId": "4G65K64G73"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
