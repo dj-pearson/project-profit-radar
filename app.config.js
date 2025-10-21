@@ -21,8 +21,9 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.builddesk.app",
-      buildNumber: "7",
+      buildNumber: "8",
       scheme: "builddesk",
+      // CRITICAL: Use JavaScriptCore instead of Hermes to fix iOS crashes
       jsEngine: "jsc",
       infoPlist: {
         NSCameraUsageDescription:
