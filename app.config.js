@@ -21,7 +21,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.builddesk.app",
-      buildNumber: "6",
+      buildNumber: "7",
       scheme: "builddesk",
       jsEngine: "jsc",
       infoPlist: {
