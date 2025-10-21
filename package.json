@@ -97,6 +97,7 @@
     "expo-camera": "17.0.8",
     "expo-constants": "18.0.9",
     "expo-contacts": "15.0.9",
+    "expo-dev-client": "^6.0.15",
     "expo-device": "8.0.9",
     "expo-file-system": "19.0.17",
     "expo-linear-gradient": "15.0.7",

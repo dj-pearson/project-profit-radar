@@ -5,45 +5,53 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     updates: {
-      url: "https://u.expo.dev/e9733a8e-5df1-4d6e-9c1f-c13774542b16"
+      enabled: false,
     },
     runtimeVersion: {
-      policy: "appVersion"
+      policy: "appVersion",
     },
     icon: "./public/android-chrome-512x512.png",
     userInterfaceStyle: "automatic",
     splash: {
       image: "./public/BuildDeskLogo.png",
       resizeMode: "contain",
-      backgroundColor: "#4A90E2"
+      backgroundColor: "#4A90E2",
     },
-    assetBundlePatterns: [
-      "**/*"
-    ],
+    assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.builddesk.app",
-      buildNumber: "1.0.0",
+      buildNumber: "4",
       scheme: "builddesk",
       infoPlist: {
-        NSCameraUsageDescription: "BuildDesk uses the camera to capture photos of construction sites, materials, and project progress for documentation and reporting.",
-        NSPhotoLibraryUsageDescription: "BuildDesk accesses your photo library to select and attach images to projects, daily reports, and material documentation.",
-        NSLocationWhenInUseUsageDescription: "BuildDesk uses your location to automatically track job site visits, log field work hours, and provide location-based project management features.",
-        NSLocationAlwaysAndWhenInUseUsageDescription: "BuildDesk uses location services to enable automatic job site check-ins, geofenced time tracking, and location-based project notifications.",
-        NSMicrophoneUsageDescription: "BuildDesk uses the microphone to record voice notes for daily reports, project updates, and team communication.",
-        NSContactsUsageDescription: "BuildDesk accesses your contacts to help you quickly add team members, clients, and subcontractors to your projects.",
-        NSCalendarsUsageDescription: "BuildDesk integrates with your calendar to schedule project milestones, meetings, and important deadlines.",
-        NSRemindersUsageDescription: "BuildDesk can create reminders for project tasks, safety inspections, and follow-up activities.",
-        NSFaceIDUsageDescription: "BuildDesk uses Face ID for secure and convenient authentication to protect your project data.",
-        NSLocalNetworkUsageDescription: "BuildDesk uses local network access to sync data with nearby devices and connect to project management systems on your network.",
-        UIBackgroundModes: ["location", "background-fetch", "background-processing"],
-        ITSAppUsesNonExemptEncryption: false
-      }
+        NSCameraUsageDescription:
+          "BuildDesk uses the camera to capture photos of construction sites, materials, and project progress for documentation and reporting.",
+        NSPhotoLibraryUsageDescription:
+          "BuildDesk accesses your photo library to select and attach images to projects, daily reports, and material documentation.",
+        NSLocationWhenInUseUsageDescription:
+          "BuildDesk uses your location to automatically track job site visits, log field work hours, and provide location-based project management features.",
+        NSLocationAlwaysAndWhenInUseUsageDescription:
+          "BuildDesk uses location services to enable automatic job site check-ins, geofenced time tracking, and location-based project notifications.",
+        NSMicrophoneUsageDescription:
+          "BuildDesk uses the microphone to record voice notes for daily reports, project updates, and team communication.",
+        NSContactsUsageDescription:
+          "BuildDesk accesses your contacts to help you quickly add team members, clients, and subcontractors to your projects.",
+        NSCalendarsUsageDescription:
+          "BuildDesk integrates with your calendar to schedule project milestones, meetings, and important deadlines.",
+        NSRemindersUsageDescription:
+          "BuildDesk can create reminders for project tasks, safety inspections, and follow-up activities.",
+        NSFaceIDUsageDescription:
+          "BuildDesk uses Face ID for secure and convenient authentication to protect your project data.",
+        NSLocalNetworkUsageDescription:
+          "BuildDesk uses local network access to sync data with nearby devices and connect to project management systems on your network.",
+        UIBackgroundModes: ["location", "fetch", "remote-notification"],
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
         foregroundImage: "./public/android-chrome-512x512.png",
-        backgroundColor: "#4A90E2"
+        backgroundColor: "#4A90E2",
       },
       package: "com.builddesk.app",
       versionCode: 1,
@@ -69,87 +77,32 @@ export default {
         "WRITE_CALENDAR",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
       ],
-      blockedPermissions: [
-        "CALL_PHONE",
-        "SEND_SMS",
-        "READ_SMS",
-        "WRITE_SMS"
-      ]
+      blockedPermissions: ["CALL_PHONE", "SEND_SMS", "READ_SMS", "WRITE_SMS"],
     },
     web: {
       favicon: "./public/favicon.ico",
-      bundler: "metro"
+      bundler: "metro",
     },
     plugins: [
-      "expo-router",
+      // Minimal plugins for testing - re-enable others once app launches
       [
         "expo-camera",
         {
-          cameraPermission: "BuildDesk uses the camera to capture photos of construction sites, materials, and project progress for documentation and reporting."
-        }
+          cameraPermission:
+            "BuildDesk uses the camera to capture photos of construction sites.",
+        },
       ],
-      [
-        "expo-location",
-        {
-          locationAlwaysAndWhenInUsePermission: "BuildDesk uses location services to enable automatic job site check-ins, geofenced time tracking, and location-based project notifications.",
-          locationWhenInUsePermission: "BuildDesk uses your location to automatically track job site visits, log field work hours, and provide location-based project management features.",
-          isIosBackgroundLocationEnabled: true,
-          isAndroidBackgroundLocationEnabled: true
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          photosPermission: "BuildDesk accesses your photo library to select and attach images to projects, daily reports, and material documentation.",
-          savePhotosPermission: "BuildDesk saves project photos and documentation to your device for offline access and backup.",
-          isAccessMediaLocationEnabled: true
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          icon: "./public/android-chrome-192x192.png",
-          color: "#4A90E2"
-        }
-      ],
-      [
-        "expo-local-authentication",
-        {
-          faceIDPermission: "BuildDesk uses Face ID for secure and convenient authentication to protect your project data."
-        }
-      ],
-      [
-        "expo-contacts",
-        {
-          contactsPermission: "BuildDesk accesses your contacts to help you quickly add team members, clients, and subcontractors to your projects."
-        }
-      ],
-      [
-        "expo-calendar",
-        {
-          calendarPermission: "BuildDesk integrates with your calendar to schedule project milestones, meetings, and important deadlines."
-        }
-      ],
-      [
-        "expo-background-fetch",
-        {
-          minimumInterval: 15
-        }
-      ],
-      [
-        "expo-task-manager"
-      ]
     ],
     experiments: {
-      typedRoutes: false
+      typedRoutes: false,
     },
     extra: {
       eas: {
-        projectId: "e9733a8e-5df1-4d6e-9c1f-c13774542b16"
-      }
+        projectId: "e9733a8e-5df1-4d6e-9c1f-c13774542b16",
+      },
     },
-    owner: "djpearson"
-  }
+    owner: "djpearson",
+  },
 };
