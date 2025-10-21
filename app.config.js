@@ -21,8 +21,9 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.builddesk.app",
-      buildNumber: "5",
+      buildNumber: "6",
       scheme: "builddesk",
+      jsEngine: "jsc",
       infoPlist: {
         NSCameraUsageDescription:
           "BuildDesk uses the camera to capture photos of construction sites, materials, and project progress for documentation and reporting.",

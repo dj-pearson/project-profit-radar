@@ -1,9 +1,9 @@
 {
-  "id" : "ACEMa2-TzGqNKiPNTmtytuA",
-  "timestamp" : "2025-10-21T02:14:37.795Z[UTC]",
+  "id" : "AK-dJiKWzezq3luEr0gQzZE",
+  "timestamp" : "2025-10-21T02:59:18.791Z[UTC]",
   "appAppleId" : 6754256576,
   "cfBundleShortVersion" : "1.0.0",
-  "cfBundleVersion" : "4",
+  "cfBundleVersion" : "5",
   "deviceModel" : "iPhone16,1",
   "osVersion" : "26.1",
   "locale" : "en-US",
@@ -13,12 +13,12 @@
   "connectionStatus" : "WI_FI",
   "pairedAppleWatch" : "",
   "appUptimeMillis" : null,
-  "availableDiskBytes" : 72409493504,
+  "availableDiskBytes" : 71922126848,
   "totalDiskBytes" : 510243573760,
   "networkType" : null,
-  "batteryPercentage" : 35,
+  "batteryPercentage" : 25,
   "screenWidth" : 393,
   "screenHeight" : 852,
   "emailAddress" : "pearsonperformance@gmail.com",
-  "comment" : "Again"
+  "comment" : "Crashy "
 }
