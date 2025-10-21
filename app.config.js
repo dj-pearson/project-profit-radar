@@ -21,7 +21,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.builddesk.app",
-      buildNumber: "4",
+      buildNumber: "5",
       scheme: "builddesk",
       infoPlist: {
         NSCameraUsageDescription:
@@ -86,7 +86,7 @@ export default {
       bundler: "metro",
     },
     plugins: [
-      // Minimal plugins for testing - re-enable others once app launches
+      "expo-router",
       [
         "expo-camera",
         {
