@@ -6,6 +6,7 @@ import { AuthProvider } from '../src/contexts/AuthContext';
 import { PlatformProvider } from '../src/contexts/PlatformContext';
 import { MobileThemeProvider } from '../src/mobile/contexts/MobileThemeContext';
 import { MobileNavigationProvider } from '../src/mobile/contexts/MobileNavigationContext';
+import GlobalErrorBoundary from '../src/components/GlobalErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,12 +19,13 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PlatformProvider>
-            <MobileThemeProvider>
-              <MobileNavigationProvider>
+    <GlobalErrorBoundary>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <PlatformProvider>
+              <MobileThemeProvider>
+                <MobileNavigationProvider>
               <Stack
                 screenOptions={{
                   headerStyle: {
@@ -69,11 +71,12 @@ export default function RootLayout() {
                 />
                 </Stack>
                 <StatusBar style="auto" />
-              </MobileNavigationProvider>
-            </MobileThemeProvider>
-          </PlatformProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+                </MobileNavigationProvider>
+              </MobileThemeProvider>
+            </PlatformProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GlobalErrorBoundary>
   );
 }

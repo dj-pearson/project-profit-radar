@@ -82,6 +82,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const sessionTimeoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMountedRef = useRef(true); // Track if component is mounted to prevent crashes
   
   // Session monitoring constants
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -199,9 +200,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       clearTimeout(inactivityTimeoutRef.current);
     }
 
-    // Start periodic session validation
+    // Start periodic session validation with mounted check to prevent crashes
     sessionTimeoutRef.current = setInterval(() => {
-      checkSessionValidity();
+      if (isMountedRef.current) {
+        checkSessionValidity();
+      }
     }, SESSION_CHECK_INTERVAL);
 
     // Setup inactivity timeout
@@ -228,8 +231,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     // Initial reset
     resetInactivityTimer();
 
-    // Cleanup function
+    // CRITICAL CLEANUP for iOS crash prevention
     return () => {
+      console.log('[AuthContext] Cleaning up - preventing iOS crashes');
+      isMountedRef.current = false; // Mark as unmounted FIRST
+      
       if (sessionTimeoutRef.current) {
         clearInterval(sessionTimeoutRef.current);
         sessionTimeoutRef.current = null;
@@ -440,12 +446,20 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       // Check if this is a password recovery session (web only)
       const location = getWindowLocation();
       if (location) {
-        const urlParams = new URLSearchParams(location.search);
-        const hashParams = new URLSearchParams(location.hash.substring(1));
-        const type = urlParams.get('type') || hashParams.get('type');
-        
-        // If this is a password recovery session, handle it specially
-        if (type === 'recovery' && session?.user) {
+        try {
+          // Safe URL parsing with polyfill (prevents iOS crashes)
+          const searchString = location.search || '';
+          const hashString = location.hash || '';
+          
+          const urlParams = new URLSearchParams(searchString);
+          const hashParams = hashString.length > 1 
+            ? new URLSearchParams(hashString.substring(1))
+            : new URLSearchParams();
+          
+          const type = urlParams.get('type') || hashParams.get('type');
+          
+          // If this is a password recovery session, handle it specially
+          if (type === 'recovery' && session?.user) {
           console.log("Password recovery session detected in auth state change");
           setSession(session);
           setUser(session.user);
@@ -458,7 +472,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
               location.href = `/reset-password${location.search}${location.hash}`;
             }, 100);
           }
-          return;
+            return;
+          }
+        } catch (error) {
+          console.error('[AuthContext] Failed to parse URL parameters:', error);
+          // Continue without crashing - just skip URL parameter parsing
         }
       }
 
