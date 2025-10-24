@@ -31,6 +31,10 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Exclude React Native and Expo from web build
+      "react-native": path.resolve(__dirname, "./src/lib/react-native-web-fallback.ts"),
+      "react-native-web": path.resolve(__dirname, "./src/lib/react-native-web-fallback.ts"),
+      "@react-native-async-storage/async-storage": path.resolve(__dirname, "./src/lib/storage-web-fallback.ts"),
       // Provide web fallbacks for Capacitor modules
       "@capacitor/core": path.resolve(
         __dirname,
@@ -175,7 +179,14 @@ export default defineConfig(({ mode }) => ({
       "clsx",
       "tailwind-merge",
     ],
-    exclude: [],
+    exclude: [
+      "react-native",
+      "react-native-web", 
+      "@react-native-async-storage/async-storage",
+      "expo",
+      "expo-router",
+      "expo-constants"
+    ],
   },
 
   // Mobile-optimized esbuild settings
