@@ -3,14 +3,12 @@ import ErrorBoundary from './ErrorBoundary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Home } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface CriticalErrorFallbackProps {
   error?: Error;
 }
 
 const CriticalErrorFallback: React.FC<CriticalErrorFallbackProps> = ({ error }) => {
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -36,7 +34,7 @@ const CriticalErrorFallback: React.FC<CriticalErrorFallbackProps> = ({ error }) 
             <Button onClick={() => window.location.reload()} variant="outline">
               Reload Page
             </Button>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => window.location.href = '/'}>
               <Home className="h-4 w-4 mr-2" />
               Go Home
             </Button>
