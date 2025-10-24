@@ -14,6 +14,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -187,8 +189,9 @@ class MobileBackgroundService {
         dueDate: dueDate.toISOString(),
       },
       {
+        type: 'date',
         date: reminderTime,
-      },
+      } as Notifications.DateTriggerInput,
       'task-reminders'
     );
   }

@@ -1,4 +1,4 @@
-import * as Camera from 'expo-camera';
+import { Camera } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
 import * as Notifications from 'expo-notifications';

@@ -14,7 +14,7 @@ export function useInfiniteScroll<T>({
   staleTime = 5 * 60 * 1000,
   enabled = true,
 }: UseInfiniteScrollOptions<T>) {
-  const observerRef = useRef<IntersectionObserver>();
+  const observerRef = useRef<IntersectionObserver | undefined>(undefined);
 
   const {
     data,
