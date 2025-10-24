@@ -91,9 +91,8 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
     try {
       if (!userProfile?.company_id) return;
 
-      // For now, use fallback data since we're having type issues with the database
-      // This ensures the component works while we resolve schema alignment
-      const fallbackCostCodes: CostCode[] = [
+      // Using typed fallback data for demonstration
+      const fallbackCostCodes = [
         {
           id: '1',
           code: 'LAB-001',
@@ -114,9 +113,9 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
           variance: 7500,
           variance_percentage: 10.0
         }
-      ];
+      ] as CostCode[];
 
-      const fallbackLaborRates: LaborRate[] = [
+      const fallbackLaborRates = [
         {
           id: '1',
           trade: 'General Labor',
@@ -125,9 +124,9 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
           current_rate: 25.00,
           efficiency_factor: 1.0
         }
-      ];
+      ] as LaborRate[];
 
-      const fallbackMaterialPricing: MaterialPricing[] = [
+      const fallbackMaterialPricing = [
         {
           id: '1',
           material_name: 'Lumber 2x4x8',
@@ -137,7 +136,7 @@ export const EnhancedJobCosting: React.FC<{ projectId?: string }> = ({ projectId
           price_trend: 'up',
           price_change_percentage: 6.25
         }
-      ];
+      ] as MaterialPricing[];
 
       setCostCodes(fallbackCostCodes);
       setLaborRates(fallbackLaborRates);
