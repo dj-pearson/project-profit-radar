@@ -32,7 +32,7 @@ export function useLongPress({
       isLongPress.current = true;
       triggerHaptic();
       onLongPress();
-    }, delay);
+    }, delay) as any;
   }, [onLongPress, delay, triggerHaptic]);
 
   const clear = useCallback(() => {

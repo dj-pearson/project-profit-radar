@@ -124,13 +124,13 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
   }, [selectedProject]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (isTracking && !onBreak) {
       interval = setInterval(() => {
         setElapsedTime(prev => prev + 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => interval && clearInterval(interval);
   }, [isTracking, onBreak]);
 
   const loadInitialData = async () => {

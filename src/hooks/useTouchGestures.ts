@@ -80,7 +80,7 @@ export const useTouchGestures = (
           type: 'long-press',
           duration: Date.now() - state.startTime
         });
-      }, longPressThreshold);
+      }, longPressThreshold) as any;
     }
   }, [calculateDistance, onLongPress, longPressThreshold]);
 

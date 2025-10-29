@@ -193,7 +193,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
       // Start timing
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
-      }, 1000);
+      }, 1000) as any;
 
       toast({
         title: "Recording Started",

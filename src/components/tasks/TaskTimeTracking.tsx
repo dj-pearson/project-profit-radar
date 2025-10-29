@@ -41,7 +41,7 @@ export const TaskTimeTracking: React.FC<TaskTimeTrackingProps> = ({ taskId }) =>
   }, [taskId]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
     
     if (isTracking && currentStartTime) {
       interval = setInterval(() => {

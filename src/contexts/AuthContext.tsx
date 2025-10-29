@@ -7,7 +7,6 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Platform } from "react-native";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +14,7 @@ import { gtag } from "@/hooks/useGoogleAnalytics";
 import type { ReactNode, FC } from "react";
 
 // Platform-safe window location helpers
-const isWeb = Platform.OS === "web";
+const isWeb = typeof window !== "undefined";
 const getWindowLocation = () => {
   if (isWeb && typeof window !== "undefined") {
     return window.location;
