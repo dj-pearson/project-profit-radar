@@ -19,21 +19,67 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, company_id, queue_id } = await req.json();
+    const body = await req.json();
+    const { topic, company_id, queue_id, action, customSettings } = body;
     
-    if (!topic || !company_id || !queue_id) {
-      throw new Error('Missing required fields: topic, company_id, queue_id');
+    // Handle both payload formats:
+    // 1. Direct format: { topic, company_id, queue_id }
+    // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...} }
+    
+    let finalTopic = topic;
+    let finalCompanyId = company_id || customSettings?.company_id;
+    let finalQueueId = queue_id || customSettings?.queue_id;
+    
+    // If no topic provided, generate a random one
+    if (!finalTopic || finalTopic.trim() === '') {
+      const topics = [
+        "Construction Project Management Best Practices",
+        "Safety Compliance in Modern Construction",
+        "Technology Trends Transforming Construction",
+        "Effective Budget Management for Contractors",
+        "Improving Communication on Construction Sites",
+        "Document Management for Construction Projects",
+        "Time Tracking and Productivity in Construction"
+      ];
+      finalTopic = topics[Math.floor(Math.random() * topics.length)];
+      logStep("Generated random topic", { topic: finalTopic });
     }
 
-    logStep("Starting blog generation", { topic, company_id, queue_id });
+    logStep("Starting blog generation", { 
+      topic: finalTopic, 
+      company_id: finalCompanyId, 
+      queue_id: finalQueueId,
+      action: action || 'direct'
+    });
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // If no company_id, fetch the first available company (for auto-generation mode)
+    if (!finalCompanyId) {
+      logStep("No company_id provided, fetching default company");
+      const { data: companies } = await supabaseClient
+        .from('companies')
+        .select('id')
+        .limit(1)
+        .single();
+      
+      if (companies) {
+        finalCompanyId = companies.id;
+        logStep("Using default company", { company_id: finalCompanyId });
+      } else {
+        throw new Error('No company found. Please provide a company_id.');
+      }
+    }
+
+    // Use model from customSettings if provided
+    const model = customSettings?.preferred_model || 'claude-sonnet-4-5';
+    logStep("Using AI model", { model });
+
     // Use centralized AI service for blog generation
-    const blogContent = await aiService.generateBlogContent(topic, 'claude-sonnet-4');
+    const blogContent = await aiService.generateBlogContent(finalTopic, model);
     
     logStep("Blog content generated", { 
       title: blogContent.title,
@@ -42,15 +88,15 @@ serve(async (req) => {
 
     // Store the generated content in database
     const insertData = {
-      company_id: company_id,
-      queue_id: queue_id,
+      company_id: finalCompanyId,
+      queue_id: finalQueueId,
       title: blogContent.title,
       content: blogContent.content,
       excerpt: blogContent.excerpt,
       seo_description: blogContent.seo_description,
-      keywords: blogContent.keywords || [topic],
+      keywords: blogContent.keywords || [finalTopic],
       estimated_read_time: blogContent.estimated_read_time || 5,
-      topic: topic,
+      topic: finalTopic,
       status: 'published',
       published_at: new Date().toISOString(),
       slug: generateSlug(blogContent.title)
@@ -71,18 +117,24 @@ serve(async (req) => {
     
     logStep("Blog post created successfully", { id: blogPost.id, title: blogPost.title });
 
-    // Update queue item status to completed
-    const { error: updateError } = await supabaseClient
-      .from('blog_generation_queue')
-      .update({ 
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        error_message: null
-      })
-      .eq('id', queue_id);
+    // Update queue item status to completed (only if queue_id was provided)
+    if (finalQueueId) {
+      const { error: updateError } = await supabaseClient
+        .from('blog_generation_queue')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          error_message: null
+        })
+        .eq('id', finalQueueId);
 
-    if (updateError) {
-      logStep("Failed to update queue status", { error: updateError.message });
+      if (updateError) {
+        logStep("Failed to update queue status", { error: updateError.message });
+      } else {
+        logStep("Queue status updated to completed");
+      }
+    } else {
+      logStep("No queue_id provided, skipping queue update");
     }
 
     // Trigger social media automation if enabled
@@ -91,7 +143,7 @@ serve(async (req) => {
       await supabaseClient.functions.invoke('blog_social_webhook', {
         body: {
           blog_post_id: blogPost.id,
-          company_id: company_id,
+          company_id: finalCompanyId,
           title: blogPost.title,
           excerpt: blogPost.excerpt || '',
           url: `https://builddesk.com/blog/${blogPost.slug}`
