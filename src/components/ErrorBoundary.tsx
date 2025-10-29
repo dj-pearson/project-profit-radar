@@ -32,6 +32,18 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
+        // If a fallback React element was provided, inject the error prop
+        if (React.isValidElement(this.props.fallback)) {
+          return React.cloneElement(this.props.fallback as React.ReactElement<any>, {
+            error: this.state.error,
+          });
+        }
+        // If a fallback render function was provided
+        if (typeof this.props.fallback === 'function') {
+          // @ts-expect-error allow render function fallbacks
+          return (this.props.fallback as any)(this.state.error);
+        }
+        // Otherwise render as-is
         return this.props.fallback;
       }
 
@@ -47,6 +59,11 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-muted-foreground">
               We encountered an unexpected error. Please try refreshing the page.
             </p>
+            {this.state.error && (
+              <div className="bg-muted p-3 rounded-md text-sm font-mono">
+                {this.state.error.message}
+              </div>
+            )}
             <Button 
               onClick={() => window.location.reload()} 
               className="w-full"
