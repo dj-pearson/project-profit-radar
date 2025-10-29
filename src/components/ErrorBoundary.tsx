@@ -40,7 +40,6 @@ class ErrorBoundary extends Component<Props, State> {
         }
         // If a fallback render function was provided
         if (typeof this.props.fallback === 'function') {
-          // @ts-expect-error allow render function fallbacks
           return (this.props.fallback as any)(this.state.error);
         }
         // Otherwise render as-is

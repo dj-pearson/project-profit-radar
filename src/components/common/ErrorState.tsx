@@ -91,7 +91,7 @@ export function EmptyState({
   title?: string;
   description?: string;
   action?: React.ReactNode;
-  icon?: React.ElementType;
+  icon?: React.ComponentType<{ className?: string }>;
 }) {
   return (
     <Card>

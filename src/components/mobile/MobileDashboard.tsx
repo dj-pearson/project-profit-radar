@@ -43,7 +43,7 @@ interface QuickAction {
   id: string;
   title: string;
   description: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   component: string;
   badge?: string;

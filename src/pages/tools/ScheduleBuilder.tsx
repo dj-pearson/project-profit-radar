@@ -36,7 +36,7 @@ interface ProjectTemplateDisplay {
   description: string;
   duration: string;
   phases: number;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
