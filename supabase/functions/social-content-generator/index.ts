@@ -257,11 +257,43 @@ Business Outcome Focus: ${template.cta_focus}
 
 Your CTA should specifically mention BuildDesk's 14-day free trial and build-desk.com.
 
-Examples of strong openings:
+Examples of diverse pain points to address (rotate through these - don't reuse the same ones):
+Budget & Financials:
 - "Still losing money on projects that go over budget?"
 - "What if I told you there's a way to increase project profitability by 25%?"
 - "The #1 mistake contractors make when managing project costs..."
 
+Document Management:
+- "Still spending hours hunting down the latest project drawings while your crew waits on-site?"
+- "Lost a change order request because it was buried in email?"
+- "How much time does your team waste searching for the right documents?"
+
+Communication & Coordination:
+- "Tired of playing phone tag with subcontractors about schedule changes?"
+- "Ever had a crew show up to a job without knowing about last-minute changes?"
+- "What's the real cost of miscommunication on your construction projects?"
+
+Time Management:
+- "Still tracking crew hours on paper timesheets in 2025?"
+- "How many hours per week do you spend on administrative tasks instead of managing projects?"
+- "What if you could cut your weekly admin time in half?"
+
+Safety & Compliance:
+- "Worried about staying compliant with the latest safety regulations?"
+- "How confident are you in your current safety documentation?"
+- "One missed safety inspection could cost you everything..."
+
+Client Relations:
+- "Ever had a client blindsided by project delays?"
+- "What if clients could see real-time project progress without calling you?"
+- "The secret to winning repeat business? Communication."
+
+Material & Equipment:
+- "Ever had work stop because materials didn't show up when expected?"
+- "How much money are you losing to equipment sitting idle?"
+- "Know exactly where every piece of equipment is, every time."
+
+Choose ONE unique pain point per post. Never repeat the same opening in consecutive posts.
 Write like a seasoned marketing professional who understands both construction and technology.
 
 Format your response as:
