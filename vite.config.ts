@@ -31,9 +31,6 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Force single React instance to avoid ReactCurrentBatchConfig errors
-      react: path.resolve(__dirname, "./node_modules/react"),
-      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
       // Exclude React Native and Expo from web build
       "react-native": path.resolve(__dirname, "./src/lib/react-native-web-fallback.ts"),
       "react-native-web": path.resolve(__dirname, "./src/lib/react-native-web-fallback.ts"),
@@ -178,8 +175,6 @@ export default defineConfig(({ mode }) => ({
       "react-dom",
       "react/jsx-runtime",
       "react/jsx-dev-runtime",
-      "react-router-dom",
-      "react-helmet-async",
       "@radix-ui/react-slot",
       "clsx",
       "tailwind-merge",
