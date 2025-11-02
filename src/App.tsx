@@ -122,6 +122,7 @@ import SupportTickets from "./pages/admin/SupportTickets";
 import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import { LeadManagement } from "./pages/admin/LeadManagement";
 import { DemoManagement } from "./pages/admin/DemoManagement";
+import { ConversionAnalytics } from "./pages/admin/ConversionAnalytics";
 import UnifiedSEODashboard from "./pages/UnifiedSEODashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
@@ -413,6 +414,7 @@ const App = () => {
               <Route path="/admin/settings" element={<Settings />} />
               <Route path="/admin/leads" element={<LeadManagement />} />
               <Route path="/admin/demos" element={<DemoManagement />} />
+              <Route path="/admin/conversion-analytics" element={<ConversionAnalytics />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
