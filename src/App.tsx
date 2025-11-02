@@ -143,6 +143,12 @@ import { WorkflowAutomation } from "./pages/WorkflowAutomation";
 // AI Insights
 import { AIInsights } from "./pages/AIInsights";
 
+// Tenant Management
+import { TenantManagement } from "./pages/admin/TenantManagement";
+import { SSOManagement } from "./pages/admin/SSOManagement";
+import { PermissionManagement } from "./pages/admin/PermissionManagement";
+import { AuditLoggingCompliance } from "./pages/admin/AuditLoggingCompliance";
+
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
 import PaymentCenter from "./pages/PaymentCenter";
@@ -437,6 +443,10 @@ const App = () => {
               <Route path="/admin/retention-analytics" element={<RetentionAnalytics />} />
               <Route path="/admin/revenue-analytics" element={<RevenueAnalytics />} />
               <Route path="/admin/churn-prediction" element={<ChurnPrediction />} />
+              <Route path="/admin/tenants" element={<TenantManagement />} />
+              <Route path="/admin/sso" element={<SSOManagement />} />
+              <Route path="/admin/permissions" element={<PermissionManagement />} />
+              <Route path="/admin/audit" element={<AuditLoggingCompliance />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
