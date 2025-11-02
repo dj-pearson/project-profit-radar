@@ -1,9 +1,16 @@
 -- User Behavior Analytics System
 -- Track user events, engagement, and conversion metrics
 
+-- Drop existing tables if they exist (CASCADE will drop dependent objects)
+DROP TABLE IF EXISTS feature_usage CASCADE;
+DROP TABLE IF EXISTS user_attribution CASCADE;
+DROP TABLE IF EXISTS conversion_events CASCADE;
+DROP TABLE IF EXISTS user_engagement_summary CASCADE;
+DROP TABLE IF EXISTS user_events CASCADE;
+
 -- User events tracking
-CREATE TABLE IF NOT EXISTS user_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE user_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- User identification
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -41,16 +48,16 @@ CREATE TABLE IF NOT EXISTS user_events (
 );
 
 -- Indexes for fast querying
-CREATE INDEX idx_user_events_user_id ON user_events(user_id);
-CREATE INDEX idx_user_events_anonymous_id ON user_events(anonymous_id);
-CREATE INDEX idx_user_events_name ON user_events(event_name);
-CREATE INDEX idx_user_events_category ON user_events(event_category);
-CREATE INDEX idx_user_events_created_at ON user_events(created_at DESC);
-CREATE INDEX idx_user_events_session ON user_events(session_id);
-CREATE INDEX idx_user_events_user_created ON user_events(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_events_user_id ON user_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_events_anonymous_id ON user_events(anonymous_id);
+CREATE INDEX IF NOT EXISTS idx_user_events_name ON user_events(event_name);
+CREATE INDEX IF NOT EXISTS idx_user_events_category ON user_events(event_category);
+CREATE INDEX IF NOT EXISTS idx_user_events_created_at ON user_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_events_session ON user_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_user_events_user_created ON user_events(user_id, created_at DESC);
 
 -- User engagement summary (aggregated metrics)
-CREATE TABLE IF NOT EXISTS user_engagement_summary (
+CREATE TABLE user_engagement_summary (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Activity counts
@@ -117,15 +124,15 @@ CREATE TABLE IF NOT EXISTS user_engagement_summary (
 );
 
 -- Indexes
-CREATE INDEX idx_engagement_engagement_score ON user_engagement_summary(engagement_score DESC);
-CREATE INDEX idx_engagement_health_score ON user_engagement_summary(health_score DESC);
-CREATE INDEX idx_engagement_churn_risk ON user_engagement_summary(churn_risk_score DESC);
-CREATE INDEX idx_engagement_last_active ON user_engagement_summary(last_active_at DESC);
-CREATE INDEX idx_engagement_is_trial ON user_engagement_summary(is_trial);
+CREATE INDEX IF NOT EXISTS idx_engagement_engagement_score ON user_engagement_summary(engagement_score DESC);
+CREATE INDEX IF NOT EXISTS idx_engagement_health_score ON user_engagement_summary(health_score DESC);
+CREATE INDEX IF NOT EXISTS idx_engagement_churn_risk ON user_engagement_summary(churn_risk_score DESC);
+CREATE INDEX IF NOT EXISTS idx_engagement_last_active ON user_engagement_summary(last_active_at DESC);
+CREATE INDEX IF NOT EXISTS idx_engagement_is_trial ON user_engagement_summary(is_trial);
 
 -- Conversion events (funnel tracking)
-CREATE TABLE IF NOT EXISTS conversion_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE conversion_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- User identification
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -160,13 +167,13 @@ CREATE TABLE IF NOT EXISTS conversion_events (
 );
 
 -- Indexes
-CREATE INDEX idx_conversion_events_user ON conversion_events(user_id);
-CREATE INDEX idx_conversion_events_type ON conversion_events(event_type);
-CREATE INDEX idx_conversion_events_funnel ON conversion_events(funnel_name, event_step);
-CREATE INDEX idx_conversion_events_created_at ON conversion_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conversion_events_user ON conversion_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversion_events_type ON conversion_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_conversion_events_funnel ON conversion_events(funnel_name, event_step);
+CREATE INDEX IF NOT EXISTS idx_conversion_events_created_at ON conversion_events(created_at DESC);
 
 -- User attribution (first and last touch)
-CREATE TABLE IF NOT EXISTS user_attribution (
+CREATE TABLE user_attribution (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- First touch attribution
@@ -199,13 +206,13 @@ CREATE TABLE IF NOT EXISTS user_attribution (
 );
 
 -- Indexes
-CREATE INDEX idx_user_attribution_first_source ON user_attribution(first_touch_utm_source);
-CREATE INDEX idx_user_attribution_first_medium ON user_attribution(first_touch_utm_medium);
-CREATE INDEX idx_user_attribution_last_source ON user_attribution(last_touch_utm_source);
+CREATE INDEX IF NOT EXISTS idx_user_attribution_first_source ON user_attribution(first_touch_utm_source);
+CREATE INDEX IF NOT EXISTS idx_user_attribution_first_medium ON user_attribution(first_touch_utm_medium);
+CREATE INDEX IF NOT EXISTS idx_user_attribution_last_source ON user_attribution(last_touch_utm_source);
 
 -- Feature usage tracking
-CREATE TABLE IF NOT EXISTS feature_usage (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE feature_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Feature details
@@ -226,9 +233,9 @@ CREATE TABLE IF NOT EXISTS feature_usage (
 );
 
 -- Indexes
-CREATE INDEX idx_feature_usage_user ON feature_usage(user_id);
-CREATE INDEX idx_feature_usage_feature ON feature_usage(feature_name);
-CREATE INDEX idx_feature_usage_last_used ON feature_usage(last_used_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feature_usage_user ON feature_usage(user_id);
+CREATE INDEX IF NOT EXISTS idx_feature_usage_feature ON feature_usage(feature_name);
+CREATE INDEX IF NOT EXISTS idx_feature_usage_last_used ON feature_usage(last_used_at DESC);
 
 -- Function to calculate engagement score
 CREATE OR REPLACE FUNCTION calculate_engagement_score(p_user_id UUID)

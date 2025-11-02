@@ -1,9 +1,15 @@
 -- Lead Tracking System
 -- Creates tables for capturing and tracking leads before signup
 
+-- Drop existing tables if they exist (CASCADE will drop dependent objects)
+DROP TABLE IF EXISTS lead_activities CASCADE;
+DROP TABLE IF EXISTS demo_requests CASCADE;
+DROP TABLE IF EXISTS sales_contact_requests CASCADE;
+DROP TABLE IF EXISTS leads CASCADE;
+
 -- Leads table for pre-signup captures
-CREATE TABLE IF NOT EXISTS leads (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Contact information
   email TEXT UNIQUE NOT NULL,
@@ -62,16 +68,16 @@ CREATE TABLE IF NOT EXISTS leads (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_leads_email ON leads(email);
-CREATE INDEX idx_leads_status ON leads(lead_status);
-CREATE INDEX idx_leads_score ON leads(lead_score DESC);
-CREATE INDEX idx_leads_created_at ON leads(created_at DESC);
-CREATE INDEX idx_leads_assigned_to ON leads(assigned_to);
-CREATE INDEX idx_leads_priority ON leads(priority);
+CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(lead_status);
+CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(lead_score DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_assigned_to ON leads(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_leads_priority ON leads(priority);
 
 -- Lead activities for detailed tracking
-CREATE TABLE IF NOT EXISTS lead_activities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE lead_activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id UUID REFERENCES leads(id) ON DELETE CASCADE,
 
   -- Activity details
@@ -90,13 +96,13 @@ CREATE TABLE IF NOT EXISTS lead_activities (
 );
 
 -- Indexes
-CREATE INDEX idx_lead_activities_lead_id ON lead_activities(lead_id);
-CREATE INDEX idx_lead_activities_type ON lead_activities(activity_type);
-CREATE INDEX idx_lead_activities_created_at ON lead_activities(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_lead_activities_lead_id ON lead_activities(lead_id);
+CREATE INDEX IF NOT EXISTS idx_lead_activities_type ON lead_activities(activity_type);
+CREATE INDEX IF NOT EXISTS idx_lead_activities_created_at ON lead_activities(created_at DESC);
 
 -- Demo requests tracking
-CREATE TABLE IF NOT EXISTS demo_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE demo_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id UUID REFERENCES leads(id),
 
   -- Contact info (denormalized for convenience)
@@ -139,15 +145,15 @@ CREATE TABLE IF NOT EXISTS demo_requests (
 );
 
 -- Indexes
-CREATE INDEX idx_demo_requests_lead_id ON demo_requests(lead_id);
-CREATE INDEX idx_demo_requests_email ON demo_requests(email);
-CREATE INDEX idx_demo_requests_status ON demo_requests(status);
-CREATE INDEX idx_demo_requests_scheduled_at ON demo_requests(scheduled_at);
-CREATE INDEX idx_demo_requests_created_at ON demo_requests(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_demo_requests_lead_id ON demo_requests(lead_id);
+CREATE INDEX IF NOT EXISTS idx_demo_requests_email ON demo_requests(email);
+CREATE INDEX IF NOT EXISTS idx_demo_requests_status ON demo_requests(status);
+CREATE INDEX IF NOT EXISTS idx_demo_requests_scheduled_at ON demo_requests(scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_demo_requests_created_at ON demo_requests(created_at DESC);
 
 -- Contact sales requests
-CREATE TABLE IF NOT EXISTS sales_contact_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE sales_contact_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id UUID REFERENCES leads(id),
 
   -- Contact info
@@ -180,11 +186,11 @@ CREATE TABLE IF NOT EXISTS sales_contact_requests (
 );
 
 -- Indexes
-CREATE INDEX idx_sales_contacts_lead_id ON sales_contact_requests(lead_id);
-CREATE INDEX idx_sales_contacts_email ON sales_contact_requests(email);
-CREATE INDEX idx_sales_contacts_status ON sales_contact_requests(status);
-CREATE INDEX idx_sales_contacts_assigned_to ON sales_contact_requests(assigned_to);
-CREATE INDEX idx_sales_contacts_created_at ON sales_contact_requests(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sales_contacts_lead_id ON sales_contact_requests(lead_id);
+CREATE INDEX IF NOT EXISTS idx_sales_contacts_email ON sales_contact_requests(email);
+CREATE INDEX IF NOT EXISTS idx_sales_contacts_status ON sales_contact_requests(status);
+CREATE INDEX IF NOT EXISTS idx_sales_contacts_assigned_to ON sales_contact_requests(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_sales_contacts_created_at ON sales_contact_requests(created_at DESC);
 
 -- Function to update lead score based on activities
 CREATE OR REPLACE FUNCTION update_lead_score()

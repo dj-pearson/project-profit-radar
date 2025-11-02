@@ -1,9 +1,17 @@
 -- Email Campaigns System
 -- Creates tables for email marketing automation and nurture sequences
 
+-- Drop existing tables if they exist (CASCADE will drop dependent objects)
+DROP TABLE IF EXISTS email_clicks CASCADE;
+DROP TABLE IF EXISTS email_queue CASCADE;
+DROP TABLE IF EXISTS email_sends CASCADE;
+DROP TABLE IF EXISTS email_unsubscribes CASCADE;
+DROP TABLE IF EXISTS email_preferences CASCADE;
+DROP TABLE IF EXISTS email_campaigns CASCADE;
+
 -- Email campaign definitions
-CREATE TABLE IF NOT EXISTS email_campaigns (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE email_campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Campaign identification
   campaign_name TEXT UNIQUE NOT NULL,
@@ -60,14 +68,14 @@ CREATE TABLE IF NOT EXISTS email_campaigns (
 );
 
 -- Indexes
-CREATE INDEX idx_email_campaigns_name ON email_campaigns(campaign_name);
-CREATE INDEX idx_email_campaigns_type ON email_campaigns(campaign_type);
-CREATE INDEX idx_email_campaigns_sequence ON email_campaigns(sequence_name, sequence_order);
-CREATE INDEX idx_email_campaigns_active ON email_campaigns(is_active);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_name ON email_campaigns(campaign_name);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_type ON email_campaigns(campaign_type);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_sequence ON email_campaigns(sequence_name, sequence_order);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_active ON email_campaigns(is_active);
 
 -- Email sends tracking
-CREATE TABLE IF NOT EXISTS email_sends (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE email_sends (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Campaign reference
   campaign_id UUID REFERENCES email_campaigns(id) ON DELETE SET NULL,
@@ -124,16 +132,16 @@ CREATE TABLE IF NOT EXISTS email_sends (
 );
 
 -- Indexes
-CREATE INDEX idx_email_sends_campaign ON email_sends(campaign_id);
-CREATE INDEX idx_email_sends_user ON email_sends(user_id);
-CREATE INDEX idx_email_sends_email ON email_sends(recipient_email);
-CREATE INDEX idx_email_sends_status ON email_sends(status);
-CREATE INDEX idx_email_sends_sent_at ON email_sends(sent_at DESC);
-CREATE INDEX idx_email_sends_provider_id ON email_sends(email_provider_id);
+CREATE INDEX IF NOT EXISTS idx_email_sends_campaign ON email_sends(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_email_sends_user ON email_sends(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_sends_email ON email_sends(recipient_email);
+CREATE INDEX IF NOT EXISTS idx_email_sends_status ON email_sends(status);
+CREATE INDEX IF NOT EXISTS idx_email_sends_sent_at ON email_sends(sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_sends_provider_id ON email_sends(email_provider_id);
 
 -- Email queue for scheduled sends
-CREATE TABLE IF NOT EXISTS email_queue (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE email_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Campaign reference
   campaign_id UUID REFERENCES email_campaigns(id) ON DELETE CASCADE,
@@ -161,14 +169,14 @@ CREATE TABLE IF NOT EXISTS email_queue (
 );
 
 -- Indexes
-CREATE INDEX idx_email_queue_scheduled ON email_queue(scheduled_for) WHERE status = 'pending';
-CREATE INDEX idx_email_queue_status ON email_queue(status);
-CREATE INDEX idx_email_queue_user ON email_queue(user_id);
-CREATE INDEX idx_email_queue_priority ON email_queue(priority, scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_email_queue_scheduled ON email_queue(scheduled_for) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_email_queue_status ON email_queue(status);
+CREATE INDEX IF NOT EXISTS idx_email_queue_user ON email_queue(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_queue_priority ON email_queue(priority, scheduled_for);
 
 -- Email click tracking
-CREATE TABLE IF NOT EXISTS email_clicks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE email_clicks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email_send_id UUID REFERENCES email_sends(id) ON DELETE CASCADE,
 
   -- Click details
@@ -192,13 +200,13 @@ CREATE TABLE IF NOT EXISTS email_clicks (
 );
 
 -- Indexes
-CREATE INDEX idx_email_clicks_send ON email_clicks(email_send_id);
-CREATE INDEX idx_email_clicks_url ON email_clicks(url);
-CREATE INDEX idx_email_clicks_clicked_at ON email_clicks(clicked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_clicks_send ON email_clicks(email_send_id);
+CREATE INDEX IF NOT EXISTS idx_email_clicks_url ON email_clicks(url);
+CREATE INDEX IF NOT EXISTS idx_email_clicks_clicked_at ON email_clicks(clicked_at DESC);
 
 -- Email unsubscribes
-CREATE TABLE IF NOT EXISTS email_unsubscribes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE email_unsubscribes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -222,12 +230,12 @@ CREATE TABLE IF NOT EXISTS email_unsubscribes (
 );
 
 -- Indexes
-CREATE INDEX idx_email_unsubscribes_email ON email_unsubscribes(email);
-CREATE INDEX idx_email_unsubscribes_user ON email_unsubscribes(user_id);
-CREATE INDEX idx_email_unsubscribes_active ON email_unsubscribes(is_active);
+CREATE INDEX IF NOT EXISTS idx_email_unsubscribes_email ON email_unsubscribes(email);
+CREATE INDEX IF NOT EXISTS idx_email_unsubscribes_user ON email_unsubscribes(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_unsubscribes_active ON email_unsubscribes(is_active);
 
 -- Email preferences
-CREATE TABLE IF NOT EXISTS email_preferences (
+CREATE TABLE email_preferences (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Subscription preferences

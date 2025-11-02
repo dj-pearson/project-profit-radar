@@ -9,11 +9,16 @@
 --   - Trigger history and analytics
 -- =====================================================
 
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS user_trigger_history CASCADE;
+DROP TABLE IF EXISTS behavioral_trigger_executions CASCADE;
+DROP TABLE IF EXISTS behavioral_trigger_rules CASCADE;
+
 -- =====================================================
 -- 1. TRIGGER RULES TABLE
 -- =====================================================
 
-CREATE TABLE IF NOT EXISTS behavioral_trigger_rules (
+CREATE TABLE behavioral_trigger_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Rule identification
@@ -55,7 +60,7 @@ CREATE TABLE IF NOT EXISTS behavioral_trigger_rules (
 -- 2. TRIGGER EXECUTIONS TABLE
 -- =====================================================
 
-CREATE TABLE IF NOT EXISTS behavioral_trigger_executions (
+CREATE TABLE behavioral_trigger_executions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   rule_id UUID NOT NULL REFERENCES behavioral_trigger_rules(id) ON DELETE CASCADE,
@@ -84,7 +89,7 @@ CREATE TABLE IF NOT EXISTS behavioral_trigger_executions (
 -- =====================================================
 -- Track which triggers a user has received to enforce cooldowns and max triggers
 
-CREATE TABLE IF NOT EXISTS user_trigger_history (
+CREATE TABLE user_trigger_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -103,21 +108,21 @@ CREATE TABLE IF NOT EXISTS user_trigger_history (
 -- =====================================================
 
 -- Trigger rules
-CREATE INDEX idx_trigger_rules_active ON behavioral_trigger_rules(is_active);
-CREATE INDEX idx_trigger_rules_trigger_type ON behavioral_trigger_rules(trigger_type);
-CREATE INDEX idx_trigger_rules_event_name ON behavioral_trigger_rules(event_name) WHERE event_name IS NOT NULL;
-CREATE INDEX idx_trigger_rules_priority ON behavioral_trigger_rules(priority);
+CREATE INDEX IF NOT EXISTS idx_trigger_rules_active ON behavioral_trigger_rules(is_active);
+CREATE INDEX IF NOT EXISTS idx_trigger_rules_trigger_type ON behavioral_trigger_rules(trigger_type);
+CREATE INDEX IF NOT EXISTS idx_trigger_rules_event_name ON behavioral_trigger_rules(event_name) WHERE event_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_trigger_rules_priority ON behavioral_trigger_rules(priority);
 
 -- Trigger executions
-CREATE INDEX idx_trigger_executions_rule_id ON behavioral_trigger_executions(rule_id);
-CREATE INDEX idx_trigger_executions_user_id ON behavioral_trigger_executions(user_id);
-CREATE INDEX idx_trigger_executions_status ON behavioral_trigger_executions(status);
-CREATE INDEX idx_trigger_executions_triggered_at ON behavioral_trigger_executions(triggered_at);
+CREATE INDEX IF NOT EXISTS idx_trigger_executions_rule_id ON behavioral_trigger_executions(rule_id);
+CREATE INDEX IF NOT EXISTS idx_trigger_executions_user_id ON behavioral_trigger_executions(user_id);
+CREATE INDEX IF NOT EXISTS idx_trigger_executions_status ON behavioral_trigger_executions(status);
+CREATE INDEX IF NOT EXISTS idx_trigger_executions_triggered_at ON behavioral_trigger_executions(triggered_at);
 
 -- User trigger history
-CREATE INDEX idx_user_trigger_history_user_id ON user_trigger_history(user_id);
-CREATE INDEX idx_user_trigger_history_rule_id ON user_trigger_history(rule_id);
-CREATE INDEX idx_user_trigger_history_triggered_at ON user_trigger_history(triggered_at);
+CREATE INDEX IF NOT EXISTS idx_user_trigger_history_user_id ON user_trigger_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_trigger_history_rule_id ON user_trigger_history(rule_id);
+CREATE INDEX IF NOT EXISTS idx_user_trigger_history_triggered_at ON user_trigger_history(triggered_at);
 
 -- =====================================================
 -- 5. ROW LEVEL SECURITY (RLS)

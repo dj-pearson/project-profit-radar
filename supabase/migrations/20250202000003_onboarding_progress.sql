@@ -9,11 +9,14 @@
 --   - Dismissal tracking
 -- =====================================================
 
+-- Drop existing table if exists
+DROP TABLE IF EXISTS onboarding_progress CASCADE;
+
 -- =====================================================
 -- 1. ONBOARDING PROGRESS TABLE
 -- =====================================================
 
-CREATE TABLE IF NOT EXISTS onboarding_progress (
+CREATE TABLE onboarding_progress (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 
@@ -38,13 +41,13 @@ CREATE TABLE IF NOT EXISTS onboarding_progress (
 -- 2. INDEXES
 -- =====================================================
 
-CREATE INDEX idx_onboarding_progress_user_id ON onboarding_progress(user_id);
-CREATE INDEX idx_onboarding_progress_completed_at ON onboarding_progress(completed_at);
-CREATE INDEX idx_onboarding_progress_dismissed ON onboarding_progress(dismissed);
-CREATE INDEX idx_onboarding_progress_total_points ON onboarding_progress(total_points);
+CREATE INDEX IF NOT EXISTS idx_onboarding_progress_user_id ON onboarding_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_onboarding_progress_completed_at ON onboarding_progress(completed_at);
+CREATE INDEX IF NOT EXISTS idx_onboarding_progress_dismissed ON onboarding_progress(dismissed);
+CREATE INDEX IF NOT EXISTS idx_onboarding_progress_total_points ON onboarding_progress(total_points);
 
 -- Index for finding incomplete onboarding
-CREATE INDEX idx_onboarding_progress_incomplete
+CREATE INDEX IF NOT EXISTS idx_onboarding_progress_incomplete
   ON onboarding_progress(user_id)
   WHERE completed_at IS NULL AND dismissed = FALSE;
 
