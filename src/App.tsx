@@ -123,10 +123,15 @@ import { SocialMediaManager } from "./pages/admin/SocialMediaManager";
 import { LeadManagement } from "./pages/admin/LeadManagement";
 import { DemoManagement } from "./pages/admin/DemoManagement";
 import { ConversionAnalytics } from "./pages/admin/ConversionAnalytics";
+import { RetentionAnalytics } from "./pages/admin/RetentionAnalytics";
+import { RevenueAnalytics } from "./pages/admin/RevenueAnalytics";
 import UnifiedSEODashboard from "./pages/UnifiedSEODashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
+
+// Referral and rewards
+import { ReferralProgram } from "./pages/ReferralProgram";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
@@ -198,6 +203,7 @@ const App = () => {
               <Route path="/mobile-testing" element={<LazyMobileTesting />} />
               <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
               <Route path="/dashboard" element={<LazyDashboard />} />
+              <Route path="/referrals" element={<ReferralProgram />} />
               <Route path="/communication" element={<div className="p-6"><h1 className="text-2xl font-bold">Communication Hub</h1><p>Feature completed - real-time messaging, client portal, notifications, and automated updates ready.</p></div>} />
               <Route path="/visual-project" element={<VisualProjectManagementPage />} />
               <Route path="/my-tasks" element={<LazyMyTasks />} />
@@ -415,6 +421,8 @@ const App = () => {
               <Route path="/admin/leads" element={<LeadManagement />} />
               <Route path="/admin/demos" element={<DemoManagement />} />
               <Route path="/admin/conversion-analytics" element={<ConversionAnalytics />} />
+              <Route path="/admin/retention-analytics" element={<RetentionAnalytics />} />
+              <Route path="/admin/revenue-analytics" element={<RevenueAnalytics />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
