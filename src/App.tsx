@@ -143,11 +143,15 @@ import { WorkflowAutomation } from "./pages/WorkflowAutomation";
 // AI Insights
 import { AIInsights } from "./pages/AIInsights";
 
-// Tenant Management
+// Tenant Management & Phase 4
 import { TenantManagement } from "./pages/admin/TenantManagement";
 import { SSOManagement } from "./pages/admin/SSOManagement";
 import { PermissionManagement } from "./pages/admin/PermissionManagement";
 import { AuditLoggingCompliance } from "./pages/admin/AuditLoggingCompliance";
+import { GPSTimeTracking } from "./pages/admin/GPSTimeTracking";
+import { APIKeyManagement } from "./pages/admin/APIKeyManagement";
+import { WebhookManagement } from "./pages/admin/WebhookManagement";
+import { DeveloperPortal } from "./pages/admin/DeveloperPortal";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
@@ -447,6 +451,10 @@ const App = () => {
               <Route path="/admin/sso" element={<SSOManagement />} />
               <Route path="/admin/permissions" element={<PermissionManagement />} />
               <Route path="/admin/audit" element={<AuditLoggingCompliance />} />
+              <Route path="/admin/gps-tracking" element={<GPSTimeTracking />} />
+              <Route path="/admin/api-keys" element={<APIKeyManagement />} />
+              <Route path="/admin/webhooks" element={<WebhookManagement />} />
+              <Route path="/admin/developer-portal" element={<DeveloperPortal />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
