@@ -125,6 +125,7 @@ import { DemoManagement } from "./pages/admin/DemoManagement";
 import { ConversionAnalytics } from "./pages/admin/ConversionAnalytics";
 import { RetentionAnalytics } from "./pages/admin/RetentionAnalytics";
 import { RevenueAnalytics } from "./pages/admin/RevenueAnalytics";
+import { ChurnPrediction } from "./pages/admin/ChurnPrediction";
 import UnifiedSEODashboard from "./pages/UnifiedSEODashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
@@ -132,6 +133,15 @@ import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
 // Referral and rewards
 import { ReferralProgram } from "./pages/ReferralProgram";
+
+// Integrations
+import { IntegrationMarketplace } from "./pages/IntegrationMarketplace";
+
+// Automation
+import { WorkflowAutomation } from "./pages/WorkflowAutomation";
+
+// AI Insights
+import { AIInsights } from "./pages/AIInsights";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
@@ -204,6 +214,9 @@ const App = () => {
               <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
               <Route path="/dashboard" element={<LazyDashboard />} />
               <Route path="/referrals" element={<ReferralProgram />} />
+              <Route path="/integrations" element={<IntegrationMarketplace />} />
+              <Route path="/workflows" element={<WorkflowAutomation />} />
+              <Route path="/ai-insights" element={<AIInsights />} />
               <Route path="/communication" element={<div className="p-6"><h1 className="text-2xl font-bold">Communication Hub</h1><p>Feature completed - real-time messaging, client portal, notifications, and automated updates ready.</p></div>} />
               <Route path="/visual-project" element={<VisualProjectManagementPage />} />
               <Route path="/my-tasks" element={<LazyMyTasks />} />
@@ -423,6 +436,7 @@ const App = () => {
               <Route path="/admin/conversion-analytics" element={<ConversionAnalytics />} />
               <Route path="/admin/retention-analytics" element={<RetentionAnalytics />} />
               <Route path="/admin/revenue-analytics" element={<RevenueAnalytics />} />
+              <Route path="/admin/churn-prediction" element={<ChurnPrediction />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
