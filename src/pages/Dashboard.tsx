@@ -2,6 +2,7 @@ import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
@@ -35,10 +36,11 @@ const Dashboard = () => {
   if (!hasData && userProfile) {
     return (
       <DashboardLayout title="Dashboard">
-        <EmptyDashboard 
-          userRole={userProfile.role} 
+        <EmptyDashboard
+          userRole={userProfile.role}
           onAction={handleEmptyAction}
         />
+        <OnboardingChecklist />
       </DashboardLayout>
     );
   }
@@ -46,6 +48,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout title="Dashboard">
       <RoleDashboard />
+      <OnboardingChecklist />
     </DashboardLayout>
   );
 };
