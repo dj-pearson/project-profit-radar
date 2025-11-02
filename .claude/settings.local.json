@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run dev:*)",
       "Bash(npx @modelcontextprotocol/server-puppeteer:*)",
-      "Bash(start http://localhost:8080)"
+      "Bash(start http://localhost:8080)",
+      "Bash(cat:*)",
+      "Bash(src/hooks/useAnalytics.ts)"
     ],
     "deny": [],
     "ask": []
