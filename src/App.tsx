@@ -153,6 +153,9 @@ import { APIKeyManagement } from "./pages/admin/APIKeyManagement";
 import { WebhookManagement } from "./pages/admin/WebhookManagement";
 import { DeveloperPortal } from "./pages/admin/DeveloperPortal";
 
+// Phase 5 - AI Intelligence
+import { AIEstimating } from "./pages/admin/AIEstimating";
+
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
 import PaymentCenter from "./pages/PaymentCenter";
@@ -455,6 +458,7 @@ const App = () => {
               <Route path="/admin/api-keys" element={<APIKeyManagement />} />
               <Route path="/admin/webhooks" element={<WebhookManagement />} />
               <Route path="/admin/developer-portal" element={<DeveloperPortal />} />
+              <Route path="/admin/ai-estimating" element={<AIEstimating />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
