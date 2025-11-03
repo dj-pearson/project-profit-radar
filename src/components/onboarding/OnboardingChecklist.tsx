@@ -174,7 +174,7 @@ export const OnboardingChecklist = () => {
 
     const loadProgress = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('onboarding_progress')
           .select('*')
           .eq('user_id', user.id)
@@ -204,7 +204,7 @@ export const OnboardingChecklist = () => {
     const newTotalPoints = progress.total_points + points;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('onboarding_progress')
         .upsert({
           user_id: user.id,
@@ -243,7 +243,7 @@ export const OnboardingChecklist = () => {
     if (!user) return;
 
     try {
-      await supabase
+      await (supabase as any)
         .from('onboarding_progress')
         .upsert({
           user_id: user.id,

@@ -35,7 +35,7 @@ export const useBehavioralTriggers = () => {
 
     try {
       // Track the event in user_events table first (for analytics)
-      await supabase
+      await (supabase as any)
         .from('user_events')
         .insert({
           user_id: user.id,

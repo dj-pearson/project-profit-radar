@@ -65,14 +65,14 @@ export const AIInsights = () => {
       // For now, we'll generate sample insights based on user data
 
       // Load user health score
-      const { data: healthData } = await supabase
+      const { data: healthData } = await (supabase as any)
         .from('user_health_scores')
         .select('*')
         .eq('user_id', user?.id)
         .single();
 
       // Load user metrics
-      const { data: metricsData } = await supabase
+      const { data: metricsData } = await (supabase as any)
         .from('revenue_metrics')
         .select('*')
         .order('period_start', { ascending: false })

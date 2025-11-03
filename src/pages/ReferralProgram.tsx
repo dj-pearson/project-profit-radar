@@ -72,7 +72,7 @@ export const ReferralProgram = () => {
     setLoading(true);
     try {
       // Load referral code
-      const { data: codeData, error: codeError } = await supabase
+      const { data: codeData, error: codeError } = await (supabase as any)
         .from('referral_codes')
         .select('*')
         .eq('user_id', user.id)
@@ -82,7 +82,7 @@ export const ReferralProgram = () => {
       setReferralCode(codeData);
 
       // Load stats
-      const { data: statsData, error: statsError } = await supabase.rpc('get_user_referral_stats', {
+      const { data: statsData, error: statsError } = await (supabase as any).rpc('get_user_referral_stats', {
         p_user_id: user.id,
       });
 
@@ -92,7 +92,7 @@ export const ReferralProgram = () => {
       }
 
       // Load referrals
-      const { data: referralsData, error: referralsError } = await supabase
+      const { data: referralsData, error: referralsError } = await (supabase as any)
         .from('referrals')
         .select('*')
         .eq('referrer_user_id', user.id)

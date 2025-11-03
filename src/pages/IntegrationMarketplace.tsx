@@ -71,7 +71,7 @@ export const IntegrationMarketplace = () => {
     setLoading(true);
     try {
       // Load available apps
-      const { data: appsData, error: appsError } = await supabase
+      const { data: appsData, error: appsError } = await (supabase as any)
         .from('integration_apps')
         .select('*')
         .eq('is_active', true)
@@ -82,7 +82,7 @@ export const IntegrationMarketplace = () => {
 
       // Load user's installed integrations
       if (user) {
-        const { data: userIntegrationsData, error: userIntegrationsError } = await supabase
+        const { data: userIntegrationsData, error: userIntegrationsError } = await (supabase as any)
           .from('user_integrations')
           .select(`
             *,
@@ -126,7 +126,7 @@ export const IntegrationMarketplace = () => {
         window.location.href = `/integrations/${app.slug}/oauth/authorize`;
       } else {
         // Create integration record
-        const { error } = await supabase.from('user_integrations').insert({
+        const { error } = await (supabase as any).from('user_integrations').insert({
           user_id: user?.id,
           app_id: app.id,
           status: 'pending',
@@ -155,7 +155,7 @@ export const IntegrationMarketplace = () => {
 
   const disconnectIntegration = async (integrationId: string, appName: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_integrations')
         .update({ status: 'disconnected', is_active: false })
         .eq('id', integrationId);

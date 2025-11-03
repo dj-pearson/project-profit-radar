@@ -179,13 +179,13 @@ class OfflineSyncEngine {
       try {
         switch (item.action) {
           case 'insert':
-            await supabase.from(item.table).insert(item.data);
+            await (supabase as any).from(item.table).insert(item.data);
             break;
           case 'update':
-            await supabase.from(item.table).update(item.data).eq('id', item.data.id);
+            await (supabase as any).from(item.table).update(item.data).eq('id', item.data.id);
             break;
           case 'delete':
-            await supabase.from(item.table).delete().eq('id', item.data.id);
+            await (supabase as any).from(item.table).delete().eq('id', item.data.id);
             break;
         }
 
@@ -224,7 +224,7 @@ class OfflineSyncEngine {
         const lastSyncAt = metadata?.last_sync_at || new Date(0).toISOString();
 
         // Fetch changes since last sync
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from(table)
           .select('*')
           .gte('updated_at', lastSyncAt)

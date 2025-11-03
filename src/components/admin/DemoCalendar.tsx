@@ -96,7 +96,7 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
       const startDate = startOfMonth(subMonths(currentDate, 1));
       const endDate = endOfMonth(addMonths(currentDate, 1));
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('demo_requests')
         .select('*')
         .or(`preferred_date.gte.${format(startDate, 'yyyy-MM-dd')},scheduled_date.gte.${format(startDate, 'yyyy-MM-dd')}`)
@@ -120,7 +120,7 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
   // Update demo status
   const updateDemoStatus = async (demoId: string, status: DemoRequest['status']) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('demo_requests')
         .update({ status })
         .eq('id', demoId);
@@ -151,7 +151,7 @@ export const DemoCalendar = ({ onDemoScheduled }: DemoCalendarProps) => {
 
     setIsScheduling(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('demo_requests')
         .update({
           scheduled_date: scheduleForm.scheduled_date,
