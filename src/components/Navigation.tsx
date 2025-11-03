@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { usePermissions } from '@/hooks/usePermissions';
-import { 
+import {
   Building2,
   FileText,
   Users,
@@ -21,7 +21,34 @@ import {
   Shield,
   Globe,
   Lock,
-  CalendarDays
+  CalendarDays,
+  Brain,
+  AlertTriangle,
+  Zap,
+  ShoppingCart,
+  PieChart,
+  UserCheck,
+  Receipt,
+  FileBarChart,
+  MapPin,
+  Key,
+  Webhook,
+  Code2,
+  UserCog,
+  FileCheck,
+  LifeBuoy,
+  Search,
+  Share2,
+  Users2,
+  Filter,
+  Megaphone,
+  Target,
+  Activity,
+  Coins,
+  LineChart,
+  Database,
+  ShieldCheck,
+  ClipboardCheck
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -73,6 +100,14 @@ const Navigation = ({ userRole }: NavigationProps) => {
           roles: ["admin", "project_manager", "field_supervisor", "office_staff", "root_admin"]
         },
         {
+          title: "GPS Time Tracking",
+          description: "Location-based time tracking with geofencing",
+          icon: MapPin,
+          path: "/admin/gps-tracking",
+          roles: ["admin", "project_manager", "field_supervisor", "root_admin"],
+          badge: "New"
+        },
+        {
           title: "Daily Reports",
           description: "Create and view daily progress reports",
           icon: Clipboard,
@@ -115,6 +150,92 @@ const Navigation = ({ userRole }: NavigationProps) => {
         }
       ]
     },
+    // AI & Intelligence
+    {
+      category: "AI & Intelligence",
+      items: [
+        {
+          title: "AI Estimating",
+          description: "ML-powered cost prediction and bidding",
+          icon: Brain,
+          path: "/admin/ai-estimating",
+          roles: ["admin", "project_manager", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Risk Prediction",
+          description: "Predictive analytics for project risks",
+          icon: AlertTriangle,
+          path: "/admin/risk-prediction",
+          roles: ["admin", "project_manager", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Auto-Scheduling",
+          description: "AI-optimized crew scheduling",
+          icon: Zap,
+          path: "/admin/auto-scheduling",
+          roles: ["admin", "project_manager", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Safety Automation",
+          description: "OSHA compliance tracking",
+          icon: Shield,
+          path: "/admin/safety-automation",
+          roles: ["admin", "project_manager", "field_supervisor", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Smart Procurement",
+          description: "AI material forecasting & supplier optimization",
+          icon: ShoppingCart,
+          path: "/admin/smart-procurement",
+          roles: ["admin", "project_manager", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Advanced Dashboards",
+          description: "Real-time financial insights & KPIs",
+          icon: PieChart,
+          path: "/admin/advanced-dashboards",
+          roles: ["admin", "project_manager", "accounting", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Client Portal Pro",
+          description: "Enhanced client collaboration",
+          icon: UserCheck,
+          path: "/admin/client-portal-pro",
+          roles: ["admin", "project_manager", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Billing Automation",
+          description: "Automated invoicing & payment reminders",
+          icon: Receipt,
+          path: "/admin/billing-automation",
+          roles: ["admin", "accounting", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Reporting Engine",
+          description: "Custom report builder with scheduling",
+          icon: FileBarChart,
+          path: "/admin/reporting-engine",
+          roles: ["admin", "project_manager", "accounting", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "AI Model Manager",
+          description: "Configure and manage AI models",
+          icon: Settings,
+          path: "/admin/ai-models",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        }
+      ]
+    },
     // Team & Documents
     {
       category: "Team & Documents",
@@ -135,6 +256,128 @@ const Navigation = ({ userRole }: NavigationProps) => {
         }
       ]
     },
+    // Developer Tools
+    {
+      category: "Developer Tools",
+      items: [
+        {
+          title: "API Keys",
+          description: "Manage API authentication keys",
+          icon: Key,
+          path: "/admin/api-keys",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Webhooks",
+          description: "Configure event webhooks",
+          icon: Webhook,
+          path: "/admin/webhooks",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Developer Portal",
+          description: "API documentation and testing",
+          icon: Code2,
+          path: "/admin/developer-portal",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        }
+      ]
+    },
+    // Marketing & Growth
+    {
+      category: "Marketing & Growth",
+      items: [
+        {
+          title: "Lead Management",
+          description: "Track and nurture sales leads",
+          icon: Users2,
+          path: "/admin/lead-management",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Demo Management",
+          description: "Schedule and track product demos",
+          icon: Calendar,
+          path: "/admin/demo-management",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "SEO Manager",
+          description: "Search engine optimization tools",
+          icon: Search,
+          path: "/admin/seo-manager",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Social Media",
+          description: "Social media content management",
+          icon: Share2,
+          path: "/admin/social-media",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Promotions",
+          description: "Manage campaigns and promotions",
+          icon: Megaphone,
+          path: "/admin/promotions",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Funnel Manager",
+          description: "Track and optimize conversion funnels",
+          icon: Filter,
+          path: "/admin/funnel-manager",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        }
+      ]
+    },
+    // Advanced Analytics
+    {
+      category: "Advanced Analytics",
+      items: [
+        {
+          title: "Conversion Analytics",
+          description: "Track conversion metrics and rates",
+          icon: Target,
+          path: "/admin/conversion-analytics",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Retention Analytics",
+          description: "Customer retention and churn analysis",
+          icon: Activity,
+          path: "/admin/retention-analytics",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Revenue Analytics",
+          description: "Revenue tracking and forecasting",
+          icon: Coins,
+          path: "/admin/revenue-analytics",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        },
+        {
+          title: "Churn Prediction",
+          description: "AI-powered churn risk prediction",
+          icon: LineChart,
+          path: "/admin/churn-prediction",
+          roles: ["admin", "root_admin"],
+          badge: "New"
+        }
+      ]
+    },
     // Root Admin Only
     {
       category: "System Administration",
@@ -152,6 +395,46 @@ const Navigation = ({ userRole }: NavigationProps) => {
           description: "Platform user management",
           icon: Users,
           path: "/admin/users",
+          roles: ["root_admin"],
+          badge: "Admin"
+        },
+        {
+          title: "Tenant Management",
+          description: "Multi-tenant configuration and isolation",
+          icon: Database,
+          path: "/admin/tenants",
+          roles: ["root_admin"],
+          badge: "Admin"
+        },
+        {
+          title: "Permission Management",
+          description: "Role-based access control configuration",
+          icon: ShieldCheck,
+          path: "/admin/permissions",
+          roles: ["root_admin"],
+          badge: "Admin"
+        },
+        {
+          title: "SSO Management",
+          description: "Single sign-on configuration",
+          icon: Key,
+          path: "/admin/sso",
+          roles: ["root_admin"],
+          badge: "Admin"
+        },
+        {
+          title: "Audit & Compliance",
+          description: "Security audit logs and compliance reporting",
+          icon: ClipboardCheck,
+          path: "/admin/audit",
+          roles: ["root_admin"],
+          badge: "Admin"
+        },
+        {
+          title: "Support Tickets",
+          description: "Customer support ticket management",
+          icon: LifeBuoy,
+          path: "/admin/support-tickets",
           roles: ["root_admin"],
           badge: "Admin"
         },
@@ -226,7 +509,11 @@ const Navigation = ({ userRole }: NavigationProps) => {
             <CardDescription>
               {category.category === "Project Management" && "Core construction project management tools"}
               {category.category === "Financial Management" && "Budget tracking and financial analysis"}
+              {category.category === "AI & Intelligence" && "AI-powered analytics, automation, and predictive insights"}
               {category.category === "Team & Documents" && "Collaboration and document organization"}
+              {category.category === "Developer Tools" && "API integration and webhook management"}
+              {category.category === "Marketing & Growth" && "Lead generation, SEO, and customer acquisition tools"}
+              {category.category === "Advanced Analytics" && "Conversion tracking, retention metrics, and revenue insights"}
               {category.category === "System Administration" && "Platform-wide administration and oversight"}
             </CardDescription>
           </CardHeader>
