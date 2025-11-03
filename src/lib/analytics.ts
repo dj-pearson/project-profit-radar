@@ -71,22 +71,22 @@ const trackInSupabase = async (
     // Get URL parameters for attribution
     const urlParams = new URLSearchParams(window.location.search);
 
-    await supabase.from('user_events').insert({
-      user_id: user?.id || null,
-      anonymous_id: !user ? getAnonymousId() : null,
-      event_name: eventName,
-      event_category: getCategoryFromEvent(eventName),
-      event_properties: properties || {},
-      page_url: window.location.href,
-      page_title: document.title,
-      referrer: document.referrer,
-      user_agent: navigator.userAgent,
-      utm_source: urlParams.get('utm_source'),
-      utm_medium: urlParams.get('utm_medium'),
-      utm_campaign: urlParams.get('utm_campaign'),
-      utm_content: urlParams.get('utm_content'),
-      utm_term: urlParams.get('utm_term'),
-    });
+  await (supabase as any).from('user_events').insert({
+    user_id: user?.id || null,
+    anonymous_id: !user ? getAnonymousId() : null,
+    event_name: eventName,
+    event_category: getCategoryFromEvent(eventName),
+    event_properties: properties || {},
+    page_url: window.location.href,
+    page_title: document.title,
+    referrer: document.referrer,
+    user_agent: navigator.userAgent,
+    utm_source: urlParams.get('utm_source'),
+    utm_medium: urlParams.get('utm_medium'),
+    utm_campaign: urlParams.get('utm_campaign'),
+    utm_content: urlParams.get('utm_content'),
+    utm_term: urlParams.get('utm_term'),
+  });
   } catch (error) {
     console.error('Supabase tracking error:', error);
   }
@@ -149,7 +149,7 @@ export class Analytics {
 
     // Store user properties
     try {
-      await supabase.from('user_engagement_summary').upsert({
+      await (supabase as any).from('user_engagement_summary').upsert({
         user_id: userId,
         ...properties,
       }, { onConflict: 'user_id' });
@@ -185,7 +185,7 @@ export class Analytics {
     const { data: { user } } = await supabase.auth.getUser();
 
     try {
-      await supabase.from('conversion_events').insert({
+      await (supabase as any).from('conversion_events').insert({
         user_id: user?.id || null,
         anonymous_id: !user ? getAnonymousId() : null,
         event_type: event.event_type,

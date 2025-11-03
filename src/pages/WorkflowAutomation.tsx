@@ -61,7 +61,7 @@ export const WorkflowAutomation = () => {
     setLoading(true);
     try {
       // Load user workflows
-      const { data: workflowsData, error: workflowsError } = await supabase
+      const { data: workflowsData, error: workflowsError } = await (supabase as any)
         .from('workflows')
         .select('*')
         .eq('user_id', user?.id)
@@ -72,7 +72,7 @@ export const WorkflowAutomation = () => {
       setWorkflows(workflowsData || []);
 
       // Load templates
-      const { data: templatesData, error: templatesError } = await supabase
+      const { data: templatesData, error: templatesError } = await (supabase as any)
         .from('workflows')
         .select('*')
         .eq('is_template', true)
@@ -108,7 +108,7 @@ export const WorkflowAutomation = () => {
 
   const toggleWorkflowStatus = async (workflowId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('workflows')
         .update({ is_active: !currentStatus })
         .eq('id', workflowId);
@@ -134,7 +134,7 @@ export const WorkflowAutomation = () => {
   const duplicateWorkflow = async (workflowId: string, name: string) => {
     try {
       // Get workflow data
-      const { data: workflow, error: workflowError } = await supabase
+      const { data: workflow, error: workflowError } = await (supabase as any)
         .from('workflows')
         .select('*')
         .eq('id', workflowId)
@@ -143,7 +143,7 @@ export const WorkflowAutomation = () => {
       if (workflowError) throw workflowError;
 
       // Create duplicate
-      const { error: insertError } = await supabase.from('workflows').insert({
+      const { error: insertError } = await (supabase as any).from('workflows').insert({
         user_id: user?.id,
         name: `${name} (Copy)`,
         description: workflow.description,
@@ -174,7 +174,7 @@ export const WorkflowAutomation = () => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('workflows')
         .delete()
         .eq('id', workflowId);
@@ -199,7 +199,7 @@ export const WorkflowAutomation = () => {
 
   const useTemplate = async (templateId: string, templateName: string) => {
     try {
-      const { data: template, error: templateError } = await supabase
+      const { data: template, error: templateError } = await (supabase as any)
         .from('workflows')
         .select('*')
         .eq('id', templateId)
@@ -207,7 +207,7 @@ export const WorkflowAutomation = () => {
 
       if (templateError) throw templateError;
 
-      const { error: insertError } = await supabase.from('workflows').insert({
+      const { error: insertError } = await (supabase as any).from('workflows').insert({
         user_id: user?.id,
         name: templateName,
         description: template.description,

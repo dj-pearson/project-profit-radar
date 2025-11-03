@@ -24,7 +24,7 @@ export const useExitIntent = (
 
   const [hasShown, setHasShown] = useState(false);
   const [lastTriggered, setLastTriggered] = useState<number>(0);
-  const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
+  const [idleTimer, setIdleTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Check if user has dismissed before
   const checkDismissed = useCallback(() => {
