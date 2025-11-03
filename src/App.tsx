@@ -155,6 +155,14 @@ import { DeveloperPortal } from "./pages/admin/DeveloperPortal";
 
 // Phase 5 - AI Intelligence
 import { AIEstimating } from "./pages/admin/AIEstimating";
+import { RiskPrediction } from "./pages/admin/RiskPrediction";
+import { AutoScheduling } from "./pages/admin/AutoScheduling";
+import { SafetyAutomation } from "./pages/admin/SafetyAutomation";
+import { SmartProcurement } from "./pages/admin/SmartProcurement";
+import { AdvancedDashboards } from "./pages/admin/AdvancedDashboards";
+import { ClientPortalPro } from "./pages/admin/ClientPortalPro";
+import { BillingAutomation } from "./pages/admin/BillingAutomation";
+import { ReportingEngine } from "./pages/admin/ReportingEngine";
 
 // Marketing and landing pages
 import PricingPage from "./pages/Pricing";
@@ -459,6 +467,14 @@ const App = () => {
               <Route path="/admin/webhooks" element={<WebhookManagement />} />
               <Route path="/admin/developer-portal" element={<DeveloperPortal />} />
               <Route path="/admin/ai-estimating" element={<AIEstimating />} />
+              <Route path="/admin/risk-prediction" element={<RiskPrediction />} />
+              <Route path="/admin/auto-scheduling" element={<AutoScheduling />} />
+              <Route path="/admin/safety-automation" element={<SafetyAutomation />} />
+              <Route path="/admin/smart-procurement" element={<SmartProcurement />} />
+              <Route path="/admin/advanced-dashboards" element={<AdvancedDashboards />} />
+              <Route path="/admin/client-portal-pro" element={<ClientPortalPro />} />
+              <Route path="/admin/billing-automation" element={<BillingAutomation />} />
+              <Route path="/admin/reporting-engine" element={<ReportingEngine />} />
               <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
               <Route
                 path="/system-admin/settings"
