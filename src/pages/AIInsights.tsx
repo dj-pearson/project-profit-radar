@@ -88,7 +88,7 @@ export const AIInsights = () => {
           type: 'recommendation',
           category: 'feature_adoption',
           title: 'Increase feature adoption to boost productivity',
-          description: 'You're only using 40% of BuildDesk features. Enabling time tracking and automated workflows could save you 10+ hours per week.',
+          description: "You're only using 40% of BuildDesk features. Enabling time tracking and automated workflows could save you 10+ hours per week.",
           impact: 'high',
           confidence: 85,
           action_items: [
@@ -134,7 +134,7 @@ export const AIInsights = () => {
         type: 'alert',
         category: 'churn_risk',
         title: '3 customers at high risk of churning',
-        description: 'Three customers haven't logged in for 15+ days and have declining engagement scores. Immediate intervention recommended.',
+        description: "Three customers haven't logged in for 15+ days and have declining engagement scores. Immediate intervention recommended.",
         impact: 'high',
         confidence: 92,
         action_items: [
@@ -171,7 +171,7 @@ export const AIInsights = () => {
         type: 'recommendation',
         category: 'efficiency',
         title: 'Automate invoice reminders to save 5 hours/week',
-        description: 'You're manually following up on 15 overdue invoices per month. Setting up automated reminders could save significant time.',
+        description: "You're manually following up on 15 overdue invoices per month. Setting up automated reminders could save significant time.",
         impact: 'medium',
         confidence: 88,
         action_items: [

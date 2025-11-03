@@ -127,7 +127,7 @@ export const useBehavioralTriggers = () => {
     onboardingCompleted: () => triggerEvent({ eventName: 'onboarding_completed' }),
 
     // Conversion events
-    upgradePage Viewed: () => triggerEvent({ eventName: 'upgrade_page_viewed' }),
+    upgradePageViewed: () => triggerEvent({ eventName: 'upgrade_page_viewed' }),
     pricingViewed: () => triggerEvent({ eventName: 'pricing_viewed' }),
     checkoutStarted: (plan: string) =>
       triggerEvent({ eventName: 'checkout_started', eventData: { plan } }),

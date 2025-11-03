@@ -281,7 +281,7 @@ export const ContactSalesModal = ({ isOpen, onClose }: ContactSalesModalProps) =
                       <SelectValue placeholder="Select timeline" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="immediate">Immediate (< 1 month)</SelectItem>
+                      <SelectItem value="immediate">Immediate (&lt; 1 month)</SelectItem>
                       <SelectItem value="1-3_months">1-3 months</SelectItem>
                       <SelectItem value="3-6_months">3-6 months</SelectItem>
                       <SelectItem value="6-12_months">6-12 months</SelectItem>
