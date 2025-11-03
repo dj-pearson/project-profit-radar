@@ -99,3 +99,6 @@ DEPLOY_CROSS_PLATFORM_SEO.md
 ENHANCED_SEARCH_CONSOLE_DEBUG.md
 DEPLOYMENT-CHECKLIST.md
 nul
+supabase/.temp/gotrue-version
+supabase/.temp/project-ref
+supabase/.temp/storage-version
