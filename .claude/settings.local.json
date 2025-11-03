@@ -5,7 +5,9 @@
       "Bash(npx @modelcontextprotocol/server-puppeteer:*)",
       "Bash(start http://localhost:8080)",
       "Bash(cat:*)",
-      "Bash(src/hooks/useAnalytics.ts)"
+      "Bash(src/hooks/useAnalytics.ts)",
+      "Bash(npx supabase:*)",
+      "Bash(src/integrations/supabase/types.ts)"
     ],
     "deny": [],
     "ask": []
