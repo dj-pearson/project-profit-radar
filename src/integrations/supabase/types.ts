@@ -12824,23 +12824,33 @@ export type Database = {
           converted_at: string | null
           converted_to_user_id: string | null
           created_at: string | null
+          decision_maker: boolean | null
+          decision_timeline: string | null
           demo_scheduled_at: string | null
           downloaded_resource: boolean | null
           email: string
+          estimated_budget: number | null
+          financing_secured: boolean | null
           first_name: string | null
           first_seen_at: string | null
           id: string
           industry: string | null
           interest_type: string | null
+          job_title: string | null
           landing_page: string | null
           last_activity_at: string | null
+          last_contact_date: string | null
           last_name: string | null
           lead_score: number | null
           lead_source: string | null
           lead_status: string | null
+          lead_temperature: string | null
+          next_follow_up_date: string | null
           notes: string | null
           phone: string | null
           priority: string | null
+          project_name: string | null
+          project_type: string | null
           referrer: string | null
           requested_demo: boolean | null
           requested_sales_contact: boolean | null
@@ -12865,23 +12875,33 @@ export type Database = {
           converted_at?: string | null
           converted_to_user_id?: string | null
           created_at?: string | null
+          decision_maker?: boolean | null
+          decision_timeline?: string | null
           demo_scheduled_at?: string | null
           downloaded_resource?: boolean | null
           email: string
+          estimated_budget?: number | null
+          financing_secured?: boolean | null
           first_name?: string | null
           first_seen_at?: string | null
           id?: string
           industry?: string | null
           interest_type?: string | null
+          job_title?: string | null
           landing_page?: string | null
           last_activity_at?: string | null
+          last_contact_date?: string | null
           last_name?: string | null
           lead_score?: number | null
           lead_source?: string | null
           lead_status?: string | null
+          lead_temperature?: string | null
+          next_follow_up_date?: string | null
           notes?: string | null
           phone?: string | null
           priority?: string | null
+          project_name?: string | null
+          project_type?: string | null
           referrer?: string | null
           requested_demo?: boolean | null
           requested_sales_contact?: boolean | null
@@ -12906,23 +12926,33 @@ export type Database = {
           converted_at?: string | null
           converted_to_user_id?: string | null
           created_at?: string | null
+          decision_maker?: boolean | null
+          decision_timeline?: string | null
           demo_scheduled_at?: string | null
           downloaded_resource?: boolean | null
           email?: string
+          estimated_budget?: number | null
+          financing_secured?: boolean | null
           first_name?: string | null
           first_seen_at?: string | null
           id?: string
           industry?: string | null
           interest_type?: string | null
+          job_title?: string | null
           landing_page?: string | null
           last_activity_at?: string | null
+          last_contact_date?: string | null
           last_name?: string | null
           lead_score?: number | null
           lead_source?: string | null
           lead_status?: string | null
+          lead_temperature?: string | null
+          next_follow_up_date?: string | null
           notes?: string | null
           phone?: string | null
           priority?: string | null
+          project_name?: string | null
+          project_type?: string | null
           referrer?: string | null
           requested_demo?: boolean | null
           requested_sales_contact?: boolean | null
