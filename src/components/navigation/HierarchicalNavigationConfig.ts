@@ -607,6 +607,20 @@ export const hierarchicalNavigation: NavigationArea[] = [
             roles: ["root_admin"],
             badge: "Admin",
           },
+          {
+            title: "System Admin Settings",
+            url: "/system-admin/settings",
+            icon: Settings,
+            roles: ["root_admin"],
+            badge: "Admin",
+          },
+          {
+            title: "AI Models",
+            url: "/admin/ai-models",
+            icon: Zap,
+            roles: ["root_admin"],
+            badge: "Admin",
+          },
         ],
       },
       {
@@ -666,7 +680,7 @@ export const hierarchicalNavigation: NavigationArea[] = [
             url: "/admin/seo-management",
             icon: Globe,
             roles: ["root_admin"],
-            badge: "Unified",
+            badge: "Admin",
           },
           {
             title: "Analytics",
