@@ -5,5 +5,7 @@ http://build-desk.com/*  https://build-desk.com/:splat  301!
 /auth?error_recovery*  /auth  302
 /auth?refresh*  /auth  302
 
-# SPA fallback - serve index.html for all routes
+# SPA fallback - serve index.html for all routes (200 rewrite, not redirect)
+# This preserves the URL and lets the client-side router handle it
+# Static files are served automatically by the CDN before hitting this rule
 /*    /index.html   200
