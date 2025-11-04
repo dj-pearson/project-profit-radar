@@ -5354,6 +5354,59 @@ export type Database = {
           },
         ]
       }
+      crm_activities: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          duration_minutes: number | null
+          id: string
+          lead_id: string | null
+          opportunity_id: string | null
+          outcome: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string | null
+          opportunity_id?: string | null
+          outcome?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          duration_minutes?: number | null
+          id?: string
+          lead_id?: string | null
+          opportunity_id?: string | null
+          outcome?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cross_module_relationships: {
         Row: {
           company_id: string
@@ -12792,6 +12845,7 @@ export type Database = {
           requested_demo: boolean | null
           requested_sales_contact: boolean | null
           started_signup: boolean | null
+          status: string | null
           tags: string[] | null
           updated_at: string | null
           utm_campaign: string | null
@@ -12832,6 +12886,7 @@ export type Database = {
           requested_demo?: boolean | null
           requested_sales_contact?: boolean | null
           started_signup?: boolean | null
+          status?: string | null
           tags?: string[] | null
           updated_at?: string | null
           utm_campaign?: string | null
@@ -12872,6 +12927,7 @@ export type Database = {
           requested_demo?: boolean | null
           requested_sales_contact?: boolean | null
           started_signup?: boolean | null
+          status?: string | null
           tags?: string[] | null
           updated_at?: string | null
           utm_campaign?: string | null
@@ -26471,7 +26527,10 @@ export type Database = {
           created_at: string | null
           custom_headers: Json | null
           description: string | null
+          endpoint_name: string | null
+          events: string[] | null
           failed_deliveries: number | null
+          failure_count: number | null
           id: string
           is_active: boolean | null
           is_verified: boolean | null
@@ -26481,11 +26540,13 @@ export type Database = {
           max_retries: number | null
           metadata: Json | null
           rate_limit_per_minute: number | null
+          retry_attempts: number | null
           retry_delay_seconds: number | null
           secret: string
           subscribed_events: string[]
           successful_deliveries: number | null
           tenant_id: string | null
+          timeout_seconds: number | null
           total_deliveries: number | null
           updated_at: string | null
           url: string
@@ -26501,7 +26562,10 @@ export type Database = {
           created_at?: string | null
           custom_headers?: Json | null
           description?: string | null
+          endpoint_name?: string | null
+          events?: string[] | null
           failed_deliveries?: number | null
+          failure_count?: number | null
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
@@ -26511,11 +26575,13 @@ export type Database = {
           max_retries?: number | null
           metadata?: Json | null
           rate_limit_per_minute?: number | null
+          retry_attempts?: number | null
           retry_delay_seconds?: number | null
           secret: string
           subscribed_events?: string[]
           successful_deliveries?: number | null
           tenant_id?: string | null
+          timeout_seconds?: number | null
           total_deliveries?: number | null
           updated_at?: string | null
           url: string
@@ -26531,7 +26597,10 @@ export type Database = {
           created_at?: string | null
           custom_headers?: Json | null
           description?: string | null
+          endpoint_name?: string | null
+          events?: string[] | null
           failed_deliveries?: number | null
+          failure_count?: number | null
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
@@ -26541,11 +26610,13 @@ export type Database = {
           max_retries?: number | null
           metadata?: Json | null
           rate_limit_per_minute?: number | null
+          retry_attempts?: number | null
           retry_delay_seconds?: number | null
           secret?: string
           subscribed_events?: string[]
           successful_deliveries?: number | null
           tenant_id?: string | null
+          timeout_seconds?: number | null
           total_deliveries?: number | null
           updated_at?: string | null
           url?: string

@@ -153,7 +153,7 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
 
       // Load activities
       const { data: activitiesData } = await supabase
-        .from('lead_activities')
+        .from('crm_activities')
         .select('*')
         .eq('lead_id', leadId)
         .order('activity_date', { ascending: false });

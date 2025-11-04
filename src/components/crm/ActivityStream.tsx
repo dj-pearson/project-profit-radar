@@ -63,13 +63,13 @@ export const ActivityStream: React.FC<ActivityStreamProps> = ({
   const loadActivities = async () => {
     try {
       let query = supabase
-        .from('lead_activities')
+        .from('crm_activities')
         .select(`
           *,
           lead:leads(first_name, last_name, company_name),
           opportunity:procurement_opportunities(name, estimated_value)
         `)
-        .order('activity_date', { ascending: false })
+        .order('activity_date', { ascending: false})
         .limit(limit);
 
       // Apply filters
