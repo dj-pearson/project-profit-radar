@@ -202,6 +202,7 @@ import QuickBooksIntegrationGuide from "./pages/resources/QuickBooksIntegrationG
 import ConstructionMobileAppGuide from "./pages/resources/ConstructionMobileAppGuide";
 import BuildDeskVsCoConstruct from "./pages/BuildDeskVsCoConstruct";
 import MobileShowcase from "./pages/MobileShowcase";
+import AdvancedMobileShowcase from "./pages/AdvancedMobileShowcase";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
@@ -242,6 +243,7 @@ const App = () => {
               <Route path="/mobile-testing" element={<LazyMobileTesting />} />
               <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
               <Route path="/mobile-showcase" element={<MobileShowcase />} />
+              <Route path="/mobile-showcase-advanced" element={<AdvancedMobileShowcase />} />
               <Route path="/dashboard" element={<LazyDashboard />} />
               <Route path="/referrals" element={<ReferralProgram />} />
               <Route path="/integrations" element={<IntegrationMarketplace />} />

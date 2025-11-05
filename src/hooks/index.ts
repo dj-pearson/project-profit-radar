@@ -19,9 +19,26 @@ export {
   useSafeArea
 } from './useTouchDevice';
 
-// Gesture Hooks
+// Basic Gesture Hooks
 export {
   useSwipeGesture,
   useSwipeableItem,
   usePullToRefresh
 } from './useSwipeGesture';
+
+// Advanced Gesture Hooks
+export {
+  useLongPress,
+  useDoubleTap,
+  usePinchZoom,
+  useDragGesture,
+  useRotationGesture,
+  useMultiTouchGestures
+} from './useAdvancedGestures';
+
+// Navigation Hooks
+export {
+  useMobileNavigation,
+  useCustomNavigation,
+  type MobileNavItem
+} from './useMobileNavigation';

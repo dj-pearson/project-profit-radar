@@ -31,6 +31,17 @@ export {
 
 // Navigation
 export { MobileBottomNav, MobileBottomNavWrapper } from './MobileBottomNav';
+export { EnhancedMobileBottomNav, EnhancedMobileBottomNavWrapper } from './EnhancedMobileBottomNav';
+
+// Gesture Demos
+export {
+  LongPressDemo,
+  DoubleTapDemo,
+  PinchZoomDemo,
+  DragDemo,
+  RotationDemo,
+  CombinedGesturesDemo
+} from './GestureDemos';
 
 // Existing mobile components
 export { MobileDashboard } from './MobileDashboard';
