@@ -48,6 +48,7 @@ import {
   Calculator,
   Brain,
   Bot,
+  Search,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -646,10 +647,10 @@ const navigationCategories: NavigationCategory[] = [
       },
       {
         title: "SEO Management",
-        url: "/admin/seo-management",
-        icon: Globe,
+        url: "/admin/seo",
+        icon: Search,
         roles: ["root_admin"],
-        badge: "Unified",
+        badge: "New",
       },
       {
         title: "Security Monitoring",

@@ -127,6 +127,7 @@ import { RetentionAnalytics } from "./pages/admin/RetentionAnalytics";
 import { RevenueAnalytics } from "./pages/admin/RevenueAnalytics";
 import { ChurnPrediction } from "./pages/admin/ChurnPrediction";
 import UnifiedSEODashboard from "./pages/UnifiedSEODashboard";
+import SEODashboard from "./pages/SEODashboard";
 import Upgrade from "./pages/Upgrade";
 import ScheduleBuilder from "./pages/tools/ScheduleBuilder";
 
@@ -493,7 +494,7 @@ const App = () => {
                 path="/knowledge-base-admin"
                 element={<KnowledgeBaseAdmin />}
               />
-              <Route path="/admin/seo" element={<Navigate to="/admin/seo-management" replace />} />
+              <Route path="/admin/seo" element={<SEODashboard />} />
               <Route path="/admin/funnels" element={<FunnelManager />} />
               <Route
                 path="/admin/support-tickets"
