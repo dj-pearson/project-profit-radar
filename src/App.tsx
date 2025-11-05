@@ -201,6 +201,7 @@ import ProcoreVsBuildDeskComparison from "./pages/resources/ProcoreVsBuildDeskCo
 import QuickBooksIntegrationGuide from "./pages/resources/QuickBooksIntegrationGuide";
 import ConstructionMobileAppGuide from "./pages/resources/ConstructionMobileAppGuide";
 import BuildDeskVsCoConstruct from "./pages/BuildDeskVsCoConstruct";
+import MobileShowcase from "./pages/MobileShowcase";
 
 import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
@@ -240,6 +241,7 @@ const App = () => {
               <Route path="/collaboration" element={<LazyCollaboration />} />
               <Route path="/mobile-testing" element={<LazyMobileTesting />} />
               <Route path="/mobile-dashboard" element={<LazyMobileDashboard />} />
+              <Route path="/mobile-showcase" element={<MobileShowcase />} />
               <Route path="/dashboard" element={<LazyDashboard />} />
               <Route path="/referrals" element={<ReferralProgram />} />
               <Route path="/integrations" element={<IntegrationMarketplace />} />
