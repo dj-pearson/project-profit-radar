@@ -206,11 +206,17 @@ import { GenericPage } from "@/components/pages/GenericPage";
 import { UnifiedSEOSystem } from "@/components/seo/UnifiedSEOSystem";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import AccessibilityPage from "./pages/AccessibilityPage";
+import { CommandPalette } from "@/components/navigation/CommandPalette";
+import { KeyboardShortcutsPanel } from "@/components/help/KeyboardShortcutsPanel";
+import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 // Create a client
 // Query client is now imported from lib/queryClient.ts
 
 const App = () => {
+  // Get global keyboard shortcuts for the shortcuts panel
+  const globalShortcuts = useGlobalShortcuts();
+
   // Preload high-priority routes on app initialization
   useEffect(() => {
     preloadHighPriorityRoutes();
@@ -535,6 +541,10 @@ const App = () => {
           <NotificationPermission />
           <Toaster />
           <ShortcutsHelp />
+
+          {/* Usability Enhancements */}
+          <CommandPalette />
+          <KeyboardShortcutsPanel shortcuts={globalShortcuts} />
         </BrowserRouter>
       </HelmetProvider>
     </ThemeProvider>
