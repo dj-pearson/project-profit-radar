@@ -195,7 +195,7 @@ export function ProgressIndicator({
               size={iconSizes[size]}
               className={cn(
                 config.color,
-                config.animate && "animate-spin"
+                'animate' in config && config.animate && "animate-spin"
               )}
             />
           )}

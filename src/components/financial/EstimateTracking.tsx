@@ -45,7 +45,7 @@ const EstimateTracking = () => {
         .from('leads')
         .select('*')
         .eq('company_id', userProfile?.company_id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
 
       if (error) throw error;
 

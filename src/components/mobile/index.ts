@@ -46,11 +46,11 @@ export {
 // Existing mobile components
 export { MobileDashboard } from './MobileDashboard';
 export { MobileFieldInterface } from './MobileFieldInterface';
-export { MobileTimeTracker } from './MobileTimeTracker';
-export { MobileCamera, EnhancedMobileCamera } from './MobileCamera';
-export { MobileMaterialScanner } from './MobileMaterialScanner';
+export { default as MobileTimeTracker } from './MobileTimeTracker';
+export { default as MobileCamera, default as EnhancedMobileCamera } from './MobileCamera';
+export { default as MobileMaterialScanner } from './MobileMaterialScanner';
 export { MobileMaterialTracker } from './MobileMaterialTracker';
-export { MobileEquipmentManager } from './MobileEquipmentManager';
-export { MobileSafetyIncidentManager } from './MobileSafetyIncidentManager';
-export { VoiceNotes } from './VoiceNotes';
+export { default as MobileEquipmentManager } from './MobileEquipmentManager';
+export { default as MobileSafetyIncidentManager } from './MobileSafetyIncidentManager';
+export { default as VoiceNotes } from './VoiceNotes';
 export { OfflineDataManager } from './OfflineDataManager';

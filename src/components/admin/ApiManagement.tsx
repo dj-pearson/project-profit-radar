@@ -138,10 +138,9 @@ const ApiManagement: React.FC = () => {
         .from('webhook_endpoints')
         .insert({
           ...webhookData,
-          company_id: profile.company_id,
           secret_token: crypto.randomUUID(), // Generate random secret
           created_by: user?.id
-        })
+        } as any)
         .select()
         .single();
       

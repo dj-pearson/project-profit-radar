@@ -40,8 +40,7 @@ export const LeadConversionAnalytics = () => {
       // Get all leads for the company
       const { data: leads } = await supabase
         .from('leads')
-        .select('status, lead_source, created_at, estimated_budget')
-        .eq('company_id', userProfile.company_id);
+        .select('status, lead_source, created_at, estimated_budget') as any;
 
       // Generate monthly conversion data
       const monthlyData = [];

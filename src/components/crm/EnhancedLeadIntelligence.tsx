@@ -107,7 +107,7 @@ export const EnhancedLeadIntelligence: React.FC = () => {
 
       if (roiError) throw roiError;
 
-      setAiLeadScores((scoresData || []).map(score => ({
+      setAiLeadScores(((scoresData || []) as any).map((score: any) => ({
         ...score,
         key_insights: Array.isArray(score.key_insights) ? score.key_insights : [],
         risk_factors: Array.isArray(score.risk_factors) ? score.risk_factors : [],

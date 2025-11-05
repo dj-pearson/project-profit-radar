@@ -81,7 +81,7 @@ export const LeadScoring: React.FC<LeadScoringProps> = ({
       const { data, error } = await query;
 
       if (error) throw error;
-      setLeadScores(data?.map(score => ({
+      setLeadScores((data as any)?.map((score: any) => ({
         ...score,
         score_factors: typeof score.score_factors === 'object' && score.score_factors !== null
           ? score.score_factors as Record<string, number>

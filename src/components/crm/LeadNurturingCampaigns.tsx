@@ -143,7 +143,7 @@ export const LeadNurturingCampaigns: React.FC = () => {
       if (enrollmentsError) throw enrollmentsError;
 
       setCampaignSteps(stepsData || []);
-      setEnrollments(enrollmentsData || []);
+      setEnrollments((enrollmentsData as any) || []);
     } catch (error: any) {
       toast({
         title: "Error loading campaign details",

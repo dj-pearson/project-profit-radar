@@ -274,7 +274,7 @@ export const LeadDetailView: React.FC<LeadDetailViewProps> = ({ leadId, onBack, 
 
       if (error) throw error;
 
-      setActivities([data, ...activities]);
+      setActivities([data as any, ...activities]);
       setNewActivity({
         activity_type: 'call',
         description: '',

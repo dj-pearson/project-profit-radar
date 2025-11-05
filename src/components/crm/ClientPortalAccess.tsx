@@ -75,7 +75,6 @@ export const ClientPortalAccess = () => {
           *,
           projects:project_id (name)
         `)
-        .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
 
       if (accessError) throw accessError;
@@ -132,7 +131,7 @@ export const ClientPortalAccess = () => {
           access_level: newAccess.access_level,
           expires_at: expiresAt,
           created_by: userProfile?.id
-        });
+        } as any);
 
       if (error) throw error;
 
