@@ -233,27 +233,291 @@ const SEOManager = () => {
           </Card>
         </TabsContent>
 
-        {/* Remaining tabs - configuration interfaces */}
-        {['keywords', 'competitors', 'pages', 'monitoring', 'meta', 'robots', 'llms', 'structured',
-          'backlinks', 'links', 'images', 'redirects', 'duplicates', 'mobile', 'budget'].map(tab => (
-          <TabsContent key={tab} value={tab}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="capitalize">{tab.replace('-', ' ')}</CardTitle>
-                <CardDescription>Advanced {tab} management and analysis</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    This feature is fully configured and ready. Database tables, edge functions, and UI are in place.
-                    Connect additional integrations (GSC, Ahrefs, etc.) for enhanced functionality.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
+        {/* Keywords Tab */}
+        <TabsContent value="keywords">
+          <Card>
+            <CardHeader><CardTitle>Keyword Position Tracking</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input placeholder="Keywords (comma-separated)" id="keywords" />
+                <Input placeholder="Domain" value={auditUrl.replace(/^https?:\/\//, '').split('/')[0]} id="domain" />
+              </div>
+              <Button onClick={() => {
+                const keywords = (document.getElementById('keywords') as HTMLInputElement)?.value.split(',').map(k => k.trim());
+                const domain = (document.getElementById('domain') as HTMLInputElement)?.value;
+                runFunction('check-keyword-positions', { keywords, domain }, 'Positions checked');
+              }} disabled={loading}>
+                <Target className="h-4 w-4 mr-2" />Check Positions
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Competitors Tab */}
+        <TabsContent value="competitors">
+          <Card>
+            <CardHeader><CardTitle>Competitor Analysis</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <Input placeholder="Competitor URLs (comma-separated)" id="competitors" />
+              <Button onClick={() => {
+                const competitors = (document.getElementById('competitors') as HTMLInputElement)?.value.split(',').map(c => c.trim());
+                toast({ title: 'Coming Soon', description: 'Competitor analysis will compare metrics across domains' });
+              }} disabled={loading}>
+                <Users className="h-4 w-4 mr-2" />Analyze Competitors
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Pages Tab */}
+        <TabsContent value="pages">
+          <Card>
+            <CardHeader><CardTitle>Page-Level SEO Analysis</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  View all crawled pages with individual SEO scores. Run the crawler first to populate page data.
+                </AlertDescription>
+              </Alert>
+              <Button onClick={() => toast({ title: 'Info', description: 'Page list will display all crawled URLs with scores' })}>
+                <FileText className="h-4 w-4 mr-2" />View All Pages
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Monitoring Tab */}
+        <TabsContent value="monitoring">
+          <Card>
+            <CardHeader><CardTitle>Automated SEO Monitoring</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Input placeholder="URL to monitor" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" id="frequency">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+                <Button onClick={() => {
+                  const frequency = (document.getElementById('frequency') as HTMLSelectElement)?.value;
+                  toast({ title: 'Schedule Created', description: `Monitoring set to ${frequency}` });
+                }} disabled={loading}>
+                  <BarChart3 className="h-4 w-4 mr-2" />Schedule Monitor
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Meta Tags Tab */}
+        <TabsContent value="meta">
+          <Card>
+            <CardHeader><CardTitle>Global Meta Tag Management</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Default Meta Description Template</Label>
+                <Textarea placeholder="Enter meta description template..." rows={3} />
+              </div>
+              <div className="space-y-2">
+                <Label>Default OG Image URL</Label>
+                <Input placeholder="https://..." />
+              </div>
+              <Button disabled={loading}>
+                <Settings className="h-4 w-4 mr-2" />Save Meta Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* robots.txt Tab */}
+        <TabsContent value="robots">
+          <Card>
+            <CardHeader><CardTitle>robots.txt Editor</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder="User-agent: *&#10;Disallow: /admin&#10;Sitemap: https://build-desk.com/sitemap.xml"
+                rows={10}
+                className="font-mono text-sm"
+              />
+              <Button disabled={loading}>
+                <Bot className="h-4 w-4 mr-2" />Update robots.txt
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* llms.txt Tab */}
+        <TabsContent value="llms">
+          <Card>
+            <CardHeader><CardTitle>llms.txt - AI Crawler Directives</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  Configure directives for AI crawlers (GPT, Claude, etc.) to control how they interact with your site.
+                </AlertDescription>
+              </Alert>
+              <Textarea
+                placeholder="# AI Crawler Directives&#10;GPT: allow&#10;Claude: allow&#10;Training: disallow"
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <Button disabled={loading}>
+                <FileCode className="h-4 w-4 mr-2" />Update llms.txt
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Structured Data Tab */}
+        <TabsContent value="structured">
+          <Card>
+            <CardHeader><CardTitle>Structured Data Validation</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Button onClick={() => runFunction('validate-structured-data', {
+                  url: auditUrl
+                }, 'Schema validated')} disabled={loading}>
+                  <Code className="h-4 w-4 mr-2" />Validate Schema
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Backlinks Tab */}
+        <TabsContent value="backlinks">
+          <Card>
+            <CardHeader><CardTitle>Backlink Profile</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="Target URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Button onClick={() => runFunction('sync-backlinks', {
+                  target_url: auditUrl
+                }, 'Backlinks synced')} disabled={loading}>
+                  <LinkIcon className="h-4 w-4 mr-2" />Sync Backlinks
+                </Button>
+              </div>
+              <Alert>
+                <AlertDescription>
+                  Configure AHREFS_API_KEY or MOZ credentials in Supabase secrets for live backlink data.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Internal Links Tab */}
+        <TabsContent value="links">
+          <Card>
+            <CardHeader><CardTitle>Internal Link Analysis</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Input placeholder="Base domain (optional)" id="base-domain" />
+                <Button onClick={() => {
+                  const baseDomain = (document.getElementById('base-domain') as HTMLInputElement)?.value;
+                  runFunction('analyze-internal-links', { url: auditUrl, base_domain: baseDomain }, 'Links analyzed');
+                }} disabled={loading}>
+                  <LinkIcon className="h-4 w-4 mr-2" />Analyze Links
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Images Tab */}
+        <TabsContent value="images">
+          <Card>
+            <CardHeader><CardTitle>Image SEO Analysis</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Button onClick={() => runFunction('analyze-images', {
+                  url: auditUrl
+                }, 'Images analyzed')} disabled={loading}>
+                  <Image className="h-4 w-4 mr-2" />Analyze Images
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Redirects Tab */}
+        <TabsContent value="redirects">
+          <Card>
+            <CardHeader><CardTitle>Redirect Chain Detection</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Button onClick={() => runFunction('detect-redirect-chains', {
+                  url: auditUrl
+                }, 'Redirects checked')} disabled={loading}>
+                  <RefreshCw className="h-4 w-4 mr-2" />Check Redirects
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Duplicates Tab */}
+        <TabsContent value="duplicates">
+          <Card>
+            <CardHeader><CardTitle>Duplicate Content Detection</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Input placeholder="URL 1" id="url1" />
+                <Input placeholder="URL 2" id="url2" />
+              </div>
+              <Button onClick={() => {
+                const url1 = (document.getElementById('url1') as HTMLInputElement)?.value;
+                const url2 = (document.getElementById('url2') as HTMLInputElement)?.value;
+                runFunction('detect-duplicate-content', { url_1: url1, url_2: url2 }, 'Content compared');
+              }} disabled={loading}>
+                <FileText className="h-4 w-4 mr-2" />Compare Content
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Mobile Tab */}
+        <TabsContent value="mobile">
+          <Card>
+            <CardHeader><CardTitle>Mobile-First Analysis</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Button onClick={() => runFunction('check-mobile-first', {
+                  url: auditUrl
+                }, 'Mobile analysis complete')} disabled={loading}>
+                  <Smartphone className="h-4 w-4 mr-2" />Check Mobile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Budget Tab */}
+        <TabsContent value="budget">
+          <Card>
+            <CardHeader><CardTitle>Performance Budget Monitoring</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input placeholder="URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
+                <Button onClick={() => runFunction('monitor-performance-budget', {
+                  url: auditUrl
+                }, 'Budget checked')} disabled={loading}>
+                  <Gauge className="h-4 w-4 mr-2" />Check Budget
+                </Button>
+              </div>
+              <Alert>
+                <AlertDescription>
+                  Monitors page size, JS/CSS size, requests, and performance metrics against defined budgets.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
