@@ -197,6 +197,9 @@ async function executeAction(step: WorkflowStep, context: any, supabase: any) {
     case 'send_email':
       return await sendEmail(params, context, supabase);
     
+    case 'send_sms':
+      return await sendSMS(params, context);
+    
     case 'create_task':
       return await createTask(params, context, supabase);
     
@@ -226,6 +229,66 @@ async function sendEmail(params: any, context: any, supabase: any) {
     subject: params.subject,
     message: 'Email would be sent in production'
   };
+}
+
+async function sendSMS(params: any, context: any) {
+  console.log('Sending SMS:', params);
+  
+  const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+  const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER');
+  
+  if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+    console.warn('Twilio credentials not configured');
+    return {
+      sent: false,
+      error: 'Twilio not configured'
+    };
+  }
+  
+  const toPhone = params.to || context.phone;
+  const message = params.message || params.body;
+  
+  if (!toPhone || !message) {
+    throw new Error('Phone number and message are required');
+  }
+  
+  try {
+    const auth = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          To: toPhone,
+          From: twilioPhoneNumber,
+          Body: message,
+        }),
+      }
+    );
+    
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Twilio API error: ${error}`);
+    }
+    
+    const data = await response.json();
+    
+    return {
+      sent: true,
+      sid: data.sid,
+      to: toPhone,
+      message: message,
+      status: data.status
+    };
+  } catch (error: any) {
+    console.error('Failed to send SMS:', error);
+    throw new Error(`SMS sending failed: ${error.message}`);
+  }
 }
 
 async function createTask(params: any, context: any, supabase: any) {

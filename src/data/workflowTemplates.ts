@@ -214,5 +214,63 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: 2
       }
     ]
+  },
+  {
+    id: 'urgent-lead-sms',
+    name: 'Urgent Lead SMS Alert',
+    description: 'Send instant SMS notification for urgent high-priority leads',
+    category: 'sales',
+    icon: 'MessageSquare',
+    trigger_config: {
+      trigger_type: 'record_created',
+      table: 'leads'
+    },
+    steps: [
+      {
+        step_type: 'condition',
+        config: {
+          conditions: [
+            {
+              field: 'priority',
+              operator: 'equals',
+              value: 'urgent'
+            }
+          ],
+          logic_operator: 'AND'
+        },
+        position: 0
+      },
+      {
+        step_type: 'action',
+        config: {
+          action_type: 'send_sms',
+          to: '{{assigned_to_phone}}',
+          message: 'URGENT: New lead from {{company_name}}. Budget: ${{estimated_budget}}. Contact: {{phone}}'
+        },
+        position: 1
+      }
+    ]
+  },
+  {
+    id: 'appointment-reminder-sms',
+    name: 'Appointment Reminder SMS',
+    description: 'Send SMS reminder 24 hours before scheduled meeting',
+    category: 'follow_up',
+    icon: 'Clock',
+    trigger_config: {
+      trigger_type: 'schedule',
+      schedule: 'hourly'
+    },
+    steps: [
+      {
+        step_type: 'action',
+        config: {
+          action_type: 'send_sms',
+          to: '{{lead_phone}}',
+          message: 'Hi {{first_name}}, reminder: You have a meeting with us tomorrow at {{meeting_time}}. Reply CONFIRM to confirm. - {{company_name}}'
+        },
+        position: 0
+      }
+    ]
   }
 ];
