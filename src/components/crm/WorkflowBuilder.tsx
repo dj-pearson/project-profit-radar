@@ -10,12 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit, LayoutTemplate, Activity, TestTube, CalendarClock, History } from "lucide-react";
+import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit, LayoutTemplate, Activity, TestTube, CalendarClock, History, ShieldAlert } from "lucide-react";
 import { WorkflowTemplateLibrary } from "./WorkflowTemplateLibrary";
 import { WorkflowAnalytics } from "./WorkflowAnalytics";
 import { WorkflowTester } from "./WorkflowTester";
 import { WorkflowScheduler } from "./WorkflowScheduler";
 import { WorkflowVersionControl } from "./WorkflowVersionControl";
+import { WorkflowErrorHandling } from "./WorkflowErrorHandling";
 
 interface WorkflowBuilderProps {
   workflowId?: string;
@@ -60,6 +61,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
   const [showTester, setShowTester] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [showErrorHandling, setShowErrorHandling] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -299,6 +301,14 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
             Versions
           </Button>
           <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowErrorHandling(true)}
+          >
+            <ShieldAlert className="h-4 w-4 mr-2" />
+            Error Handling
+          </Button>
+          <Button
             className="w-full"
             onClick={() => saveWorkflowMutation.mutate()}
             disabled={!workflowName || saveWorkflowMutation.isPending}
@@ -311,7 +321,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
         </>
       )}
 
-      {/* Main Canvas or Templates or Analytics or Tester or Scheduler or Versions */}
+      {/* Main Canvas or Templates or Analytics or Tester or Scheduler or Versions or Error Handling */}
       {showTemplates ? (
         <div className="flex-1 p-8 overflow-auto">
           <div className="max-w-6xl mx-auto">
@@ -377,6 +387,17 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
             />
           </div>
         </div>
+      ) : showErrorHandling ? (
+        <div className="flex-1 p-8 overflow-auto">
+          <div className="max-w-3xl mx-auto">
+            <div className="mb-6">
+              <Button variant="outline" onClick={() => setShowErrorHandling(false)}>
+                ← Back to Canvas
+              </Button>
+            </div>
+            <WorkflowErrorHandling workflowId={workflowId} />
+          </div>
+        </div>
       ) : (
         <div className="flex-1 relative">
           <ReactFlow
@@ -396,7 +417,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
       )}
 
       {/* Right Sidebar - Node Configuration */}
-      {!showTemplates && !showAnalytics && !showTester && !showScheduler && !showVersions && selectedNode && selectedNode.id !== "trigger" && (
+      {!showTemplates && !showAnalytics && !showTester && !showScheduler && !showVersions && !showErrorHandling && selectedNode && selectedNode.id !== "trigger" && (
         <div className="w-80 border-l bg-background p-4 overflow-y-auto">
           <Card>
             <CardHeader>
