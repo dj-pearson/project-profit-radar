@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from './logger';
+import { safeStorage } from './safeStorage';
 
 /**
  * Analytics tracking utilities for BuildDesk
@@ -36,7 +38,7 @@ const initPostHog = async () => {
   // Only load if API key is available
   const apiKey = import.meta.env.VITE_POSTHOG_API_KEY;
   if (!apiKey) {
-    console.warn('PostHog API key not found. Analytics will be tracked in Supabase only.');
+    logger.info('PostHog API key not found. Analytics will be tracked in Supabase only.');
     return null;
   }
 
@@ -53,9 +55,10 @@ const initPostHog = async () => {
         recordCrossOriginIframes: true,
       },
     });
+    logger.info('PostHog initialized successfully');
     return posthog;
   } catch (error) {
-    console.error('Failed to initialize PostHog:', error);
+    logger.error('Failed to initialize PostHog', error as Error);
     return null;
   }
 };
@@ -88,22 +91,18 @@ const trackInSupabase = async (
     utm_term: urlParams.get('utm_term'),
   });
   } catch (error) {
-    console.error('Supabase tracking error:', error);
+    logger.error('Supabase tracking error', error as Error, { eventName });
   }
 };
 
 // Get or create anonymous ID
 const getAnonymousId = (): string => {
-  try {
-    let anonId = localStorage.getItem('anonId');
-    if (!anonId) {
-      anonId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('anonId', anonId);
-    }
-    return anonId;
-  } catch {
-    return `anon_${Date.now()}`;
+  let anonId = safeStorage.getItem('anonId');
+  if (!anonId) {
+    anonId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    safeStorage.setItem('anonId', anonId);
   }
+  return anonId || `anon_${Date.now()}`; // Fallback if storage fails
 };
 
 // Categorize events
@@ -154,7 +153,7 @@ export class Analytics {
         ...properties,
       }, { onConflict: 'user_id' });
     } catch (error) {
-      console.error('Failed to update user properties:', error);
+      logger.error('Failed to update user properties', error as Error, { userId });
     }
   }
 
@@ -202,7 +201,10 @@ export class Analytics {
         event_metadata: event.event_metadata,
       });
     } catch (error) {
-      console.error('Conversion tracking error:', error);
+      logger.error('Conversion tracking error', error as Error, {
+        eventType: event.event_type,
+        funnelName: event.funnel_name
+      });
     }
 
     // Also track as regular event

@@ -69,6 +69,7 @@ mcp-*.log
 mcp-debug.*
 
 # Supabase secrets and sensitive files
+.env
 .env.local
 .env.production
 supabase/.env

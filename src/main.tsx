@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
@@ -6,6 +7,13 @@ import { reportWebVitals } from "./hooks/useWebVitals";
 import { initializeResourceOptimizations } from "./utils/resourcePrioritization";
 import { initializeRUM } from "./utils/realUserMonitoring";
 import { registerServiceWorker } from "./utils/serviceWorkerManager";
+import { logger } from "./lib/logger";
+import { validateEnvironment } from "./lib/envValidation";
+
+// Validate environment variables first
+if (typeof window !== 'undefined') {
+  validateEnvironment();
+}
 
 // Initialize resource optimizations early
 if (typeof window !== 'undefined') {
@@ -20,10 +28,12 @@ if (typeof window !== 'undefined') {
 }
 
 // Register service worker (production only)
-if (import.meta.env.PROD && typeof window !== 'undefined') {
+if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   registerServiceWorker({
     enabled: true,
     updateInterval: 60 * 60 * 1000, // Check for updates every hour
+  }).catch((error) => {
+    logger.error('Service worker registration failed', error);
   });
 }
 
@@ -31,9 +41,19 @@ if (import.meta.env.PROD && typeof window !== 'undefined') {
 if (typeof window !== 'undefined') {
   reportWebVitals((metric) => {
     if (import.meta.env.DEV) {
-      console.log('[Web Vitals]', metric.name, metric.value);
+      logger.debug(`Web Vitals: ${metric.name}`, { value: metric.value });
     }
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Wrap in StrictMode for development to catch potential issues
+const rootElement = document.getElementById("root")!;
+const app = import.meta.env.DEV ? (
+  <StrictMode>
+    <App />
+  </StrictMode>
+) : (
+  <App />
+);
+
+createRoot(rootElement).render(app);
