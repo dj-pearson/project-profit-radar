@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { ReactFlow, MiniMap, Controls, Background, Node, Edge, addEdge, Connection, useNodesState, useEdgesState, BackgroundVariant } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit } from "lucide-react";
+import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit, LayoutTemplate } from "lucide-react";
+import { WorkflowTemplateLibrary } from "./WorkflowTemplateLibrary";
 
 interface WorkflowBuilderProps {
   workflowId?: string;
@@ -50,8 +51,15 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
   const [workflowName, setWorkflowName] = useState("");
   const [workflowDescription, setWorkflowDescription] = useState("");
   const [triggerType, setTriggerType] = useState("record_created");
+  const [showTemplates, setShowTemplates] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (nodes.length > 1) {
+      setShowTemplates(false);
+    }
+  }, [nodes]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -71,6 +79,39 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
       position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 200 },
     };
     setNodes((nds) => [...nds, newNode]);
+  };
+
+  const loadTemplate = (template: any) => {
+    setWorkflowName(template.name);
+    setWorkflowDescription(template.description);
+    setTriggerType(template.trigger_config.trigger_type);
+    
+    const templateNodes: Node[] = [
+      {
+        id: "trigger",
+        type: "input",
+        data: { label: `Trigger: ${template.trigger_config.trigger_type}` },
+        position: { x: 250, y: 50 },
+      },
+      ...template.steps.map((step: any, index: number) => ({
+        id: `${step.step_type}-${Date.now()}-${index}`,
+        type: "default",
+        data: {
+          label: step.config.action_type || step.step_type,
+          actionType: step.config.action_type,
+          config: step.config
+        },
+        position: { x: 250, y: 200 + (index * 100) },
+      }))
+    ];
+
+    setNodes(templateNodes);
+    setEdges([]);
+    setShowTemplates(false);
+    toast({
+      title: "Template loaded",
+      description: "Customize and save your workflow.",
+    });
   };
 
   const saveWorkflowMutation = useMutation({
@@ -144,8 +185,10 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
 
   return (
     <div className="h-screen flex">
-      {/* Left Sidebar - Action Palette */}
-      <div className="w-64 border-r bg-background p-4 space-y-4 overflow-y-auto">
+      {!showTemplates && (
+        <>
+          {/* Left Sidebar - Action Palette */}
+          <div className="w-64 border-r bg-background p-4 space-y-4 overflow-y-auto">
         <div>
           <h3 className="font-semibold mb-2">Workflow Details</h3>
           <div className="space-y-3">
@@ -206,7 +249,15 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
           </div>
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t space-y-2">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowTemplates(true)}
+          >
+            <LayoutTemplate className="h-4 w-4 mr-2" />
+            Browse Templates
+          </Button>
           <Button
             className="w-full"
             onClick={() => saveWorkflowMutation.mutate()}
@@ -217,10 +268,24 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
           </Button>
         </div>
       </div>
+        </>
+      )}
 
-      {/* Main Canvas */}
-      <div className="flex-1 relative">
-        <ReactFlow
+      {/* Main Canvas or Templates */}
+      {showTemplates ? (
+        <div className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-6">
+              <Button variant="outline" onClick={() => setShowTemplates(false)}>
+                ← Back to Canvas
+              </Button>
+            </div>
+            <WorkflowTemplateLibrary onSelectTemplate={loadTemplate} />
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 relative">
+          <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
@@ -233,10 +298,11 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
           <Controls />
           <MiniMap />
         </ReactFlow>
-      </div>
+        </div>
+      )}
 
       {/* Right Sidebar - Node Configuration */}
-      {selectedNode && selectedNode.id !== "trigger" && (
+      {!showTemplates && selectedNode && selectedNode.id !== "trigger" && (
         <div className="w-80 border-l bg-background p-4 overflow-y-auto">
           <Card>
             <CardHeader>
