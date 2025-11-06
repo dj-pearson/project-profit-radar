@@ -74,7 +74,7 @@
   - [x] Add bookings table migration
   - [x] Build booking page creator UI (BookingPageManager)
   - [x] Implement public booking form (PublicBookingForm)
-  - [ ] Add booking confirmation emails
+  - [x] Add booking confirmation emails
   
 - [ ] **Calendar Sync**
   - [ ] Integrate Google Calendar API

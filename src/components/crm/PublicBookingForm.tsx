@@ -105,7 +105,7 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
 
       const endTime = addMinutes(selectedTime, bookingPage.duration_minutes);
 
-      const { error } = await supabase.from("bookings").insert({
+      const { data, error } = await supabase.from("bookings").insert({
         booking_page_id: bookingPage.id,
         attendee_name: formData.name,
         attendee_email: formData.email,
@@ -114,9 +114,20 @@ export function PublicBookingForm({ slug }: PublicBookingFormProps) {
         scheduled_at: selectedTime.toISOString(),
         end_at: endTime.toISOString(),
         status: "confirmed",
-      });
+      }).select().single();
 
       if (error) throw error;
+      
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('send-booking-confirmation', {
+          body: { bookingId: data.id }
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+      }
+      
+      return data;
     },
     onSuccess: () => {
       setIsSubmitted(true);
