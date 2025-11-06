@@ -571,38 +571,38 @@ const CRMDashboard = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColorClass = (status: string) => {
     switch (status) {
-      case 'new': return 'blue';
-      case 'contacted': return 'yellow';
-      case 'qualified': return 'green';
-      case 'proposal_sent': return 'purple';
-      case 'negotiating': return 'orange';
-      case 'won': return 'green';
-      case 'lost': return 'red';
-      default: return 'gray';
+      case 'new': return 'text-blue-600 border-blue-300';
+      case 'contacted': return 'text-yellow-600 border-yellow-300';
+      case 'qualified': return 'text-green-600 border-green-300';
+      case 'proposal_sent': return 'text-purple-600 border-purple-300';
+      case 'negotiating': return 'text-orange-600 border-orange-300';
+      case 'won': return 'text-green-600 border-green-300';
+      case 'lost': return 'text-red-600 border-red-300';
+      default: return 'text-gray-600 border-gray-300';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColorClass = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'red';
-      case 'high': return 'orange';
-      case 'medium': return 'yellow';
-      case 'low': return 'gray';
-      default: return 'gray';
+      case 'urgent': return 'text-red-600 border-red-300';
+      case 'high': return 'text-orange-600 border-orange-300';
+      case 'medium': return 'text-yellow-600 border-yellow-300';
+      case 'low': return 'text-gray-600 border-gray-300';
+      default: return 'text-gray-600 border-gray-300';
     }
   };
 
-  const getStageColor = (stage: string) => {
+  const getStageColorClass = (stage: string) => {
     switch (stage) {
-      case 'prospecting': return 'blue';
-      case 'qualification': return 'yellow';
-      case 'proposal': return 'purple';
-      case 'negotiation': return 'orange';
-      case 'closed_won': return 'green';
-      case 'closed_lost': return 'red';
-      default: return 'gray';
+      case 'prospecting': return 'text-blue-600 border-blue-300';
+      case 'qualification': return 'text-yellow-600 border-yellow-300';
+      case 'proposal': return 'text-purple-600 border-purple-300';
+      case 'negotiation': return 'text-orange-600 border-orange-300';
+      case 'closed_won': return 'text-green-600 border-green-300';
+      case 'closed_lost': return 'text-red-600 border-red-300';
+      default: return 'text-gray-600 border-gray-300';
     }
   };
 
@@ -878,12 +878,12 @@ const CRMDashboard = () => {
                                   <p className="font-medium truncate">
                                     {lead.first_name} {lead.last_name}
                                   </p>
-                                  <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600`}>
-                                    {lead.status}
-                                  </Badge>
-                                  <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600`}>
-                                    {lead.priority}
-                                  </Badge>
+                                 <Badge variant="outline" className={getStatusColorClass(lead.status)}>
+                                   {lead.status}
+                                 </Badge>
+                                 <Badge variant="outline" className={getPriorityColorClass(lead.priority)}>
+                                   {lead.priority}
+                                 </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground truncate">
                                   {lead.project_name || lead.company_name || 'No project'}
@@ -936,9 +936,9 @@ const CRMDashboard = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2">
                                   <p className="font-medium truncate">{opportunity.name}</p>
-                                  <Badge variant="outline" className={`text-${getStageColor(opportunity.stage)}-600`}>
-                                    {opportunity.stage}
-                                  </Badge>
+                                 <Badge variant="outline" className={getStageColorClass(opportunity.stage)}>
+                                   {opportunity.stage}
+                                 </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {opportunity.project_type || 'General Construction'}
@@ -1045,12 +1045,12 @@ const CRMDashboard = () => {
                                     </p>
                                   </div>
                                   <div className="flex flex-col items-center space-y-1">
-                                    <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600`}>
-                                      {lead.status}
-                                    </Badge>
-                                    <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600`}>
-                                      {lead.priority}
-                                    </Badge>
+                                   <Badge variant="outline" className={getStatusColorClass(lead.status)}>
+                                     {lead.status}
+                                   </Badge>
+                                   <Badge variant="outline" className={getPriorityColorClass(lead.priority)}>
+                                     {lead.priority}
+                                   </Badge>
                                   </div>
                                 </div>
                                 <div className="mt-2">
@@ -1132,9 +1132,9 @@ const CRMDashboard = () => {
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center space-x-2">
                                         <p className="font-medium truncate">{opportunity.name}</p>
-                                        <Badge variant="outline" className={`text-${getStageColor(opportunity.stage)}-600`}>
-                                          {opportunity.stage}
-                                        </Badge>
+                                       <Badge variant="outline" className={getStageColorClass(opportunity.stage)}>
+                                         {opportunity.stage}
+                                       </Badge>
                                       </div>
                                       <p className="text-sm text-muted-foreground mt-1">
                                         {opportunity.project_type || 'General Construction'}
