@@ -232,15 +232,10 @@ export function RiskPrediction() {
           }
         }
       );
+      
       if (invokeError) throw invokeError;
 
-      if (!response.ok) {
-        throw new Error('Failed to generate prediction');
-      }
-
-      const result = await response.json();
-
-      // Reload data
+      // Reload data to show the new prediction
       await loadLatestPrediction(selectedProjectId);
 
     } catch (error) {
