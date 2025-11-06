@@ -7,6 +7,7 @@ import { reportWebVitals } from "./hooks/useWebVitals";
 import { initializeResourceOptimizations } from "./utils/resourcePrioritization";
 import { initializeRUM } from "./utils/realUserMonitoring";
 import { registerServiceWorker } from "./utils/serviceWorkerManager";
+import { logger } from "./lib/logger";
 
 // Initialize resource optimizations early
 if (typeof window !== 'undefined') {
@@ -21,10 +22,12 @@ if (typeof window !== 'undefined') {
 }
 
 // Register service worker (production only)
-if (import.meta.env.PROD && typeof window !== 'undefined') {
+if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   registerServiceWorker({
     enabled: true,
     updateInterval: 60 * 60 * 1000, // Check for updates every hour
+  }).catch((error) => {
+    logger.error('Service worker registration failed', error);
   });
 }
 
@@ -32,7 +35,7 @@ if (import.meta.env.PROD && typeof window !== 'undefined') {
 if (typeof window !== 'undefined') {
   reportWebVitals((metric) => {
     if (import.meta.env.DEV) {
-      console.log('[Web Vitals]', metric.name, metric.value);
+      logger.debug(`Web Vitals: ${metric.name}`, { value: metric.value });
     }
   });
 }

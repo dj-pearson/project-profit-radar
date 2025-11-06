@@ -3,6 +3,8 @@
  * Handles SW lifecycle, updates, and communication
  */
 
+import { logger } from '@/lib/logger';
+
 export interface ServiceWorkerConfig {
   enabled: boolean;
   scope?: string;
@@ -14,7 +16,7 @@ export interface ServiceWorkerConfig {
  */
 export const registerServiceWorker = async (config: ServiceWorkerConfig = { enabled: true }): Promise<ServiceWorkerRegistration | null> => {
   if (!config.enabled || typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-    console.log('[SW] Service worker not supported or disabled');
+    logger.info('Service worker not supported or disabled');
     return null;
   }
 
@@ -23,7 +25,7 @@ export const registerServiceWorker = async (config: ServiceWorkerConfig = { enab
       scope: config.scope || '/',
     });
 
-    console.log('[SW] Service worker registered:', registration.scope);
+    logger.info('Service worker registered', { scope: registration.scope });
 
     // Check for updates
     registration.addEventListener('updatefound', () => {
@@ -48,7 +50,7 @@ export const registerServiceWorker = async (config: ServiceWorkerConfig = { enab
 
     return registration;
   } catch (error) {
-    console.error('[SW] Registration failed:', error);
+    logger.error('Service worker registration failed', error as Error);
     return null;
   }
 };
@@ -64,10 +66,10 @@ export const unregisterServiceWorker = async (): Promise<boolean> => {
   try {
     const registration = await navigator.serviceWorker.ready;
     const success = await registration.unregister();
-    console.log('[SW] Service worker unregistered:', success);
+    logger.info('Service worker unregistered', { success });
     return success;
   } catch (error) {
-    console.error('[SW] Unregistration failed:', error);
+    logger.error('Service worker unregistration failed', error as Error);
     return false;
   }
 };
@@ -83,9 +85,9 @@ export const updateServiceWorker = async (): Promise<void> => {
   try {
     const registration = await navigator.serviceWorker.ready;
     await registration.update();
-    console.log('[SW] Service worker update check complete');
+    logger.info('Service worker update check complete');
   } catch (error) {
-    console.error('[SW] Update failed:', error);
+    logger.error('Service worker update failed', error as Error);
   }
 };
 
@@ -102,17 +104,17 @@ export const clearServiceWorkerCache = async (): Promise<void> => {
     
     if (registration.active) {
       registration.active.postMessage({ type: 'CLEAR_CACHE' });
-      console.log('[SW] Cache clear requested');
+      logger.info('Service worker cache clear requested');
     }
 
     // Also clear using Cache API
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
-      console.log('[SW] All caches cleared');
+      logger.info('All service worker caches cleared');
     }
   } catch (error) {
-    console.error('[SW] Cache clear failed:', error);
+    logger.error('Service worker cache clear failed', error as Error);
   }
 };
 
@@ -120,8 +122,8 @@ export const clearServiceWorkerCache = async (): Promise<void> => {
  * Notify about service worker update
  */
 const notifyUpdate = (): void => {
-  console.log('[SW] New version available');
-  
+  logger.info('Service worker: New version available');
+
   // Dispatch custom event for app to handle
   window.dispatchEvent(new CustomEvent('sw-update-available', {
     detail: { message: 'A new version is available. Refresh to update.' }
@@ -148,7 +150,7 @@ export const skipWaitingAndActivate = async (): Promise<void> => {
       });
     }
   } catch (error) {
-    console.error('[SW] Skip waiting failed:', error);
+    logger.error('Service worker skip waiting failed', error as Error);
   }
 };
 
@@ -176,7 +178,7 @@ export const getCacheSize = async (): Promise<{ usage: number; quota: number } |
       quota: estimate.quota || 0,
     };
   } catch (error) {
-    console.error('[SW] Failed to get cache size:', error);
+    logger.error('Failed to get service worker cache size', error as Error);
     return null;
   }
 };

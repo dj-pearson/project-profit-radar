@@ -1,5 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { safeStorage } from './safeStorage';
+import { logger } from './logger';
 
 /**
  * Enhanced React Query configuration for optimal performance
@@ -220,3 +222,128 @@ export const devTools = {
     });
   },
 };
+
+/**
+ * Query cache persistence for offline support
+ */
+const CACHE_KEY = 'builddesk-query-cache';
+const CACHE_VERSION = 1;
+const MAX_CACHE_AGE = 24 * 60 * 60 * 1000; // 24 hours
+
+interface PersistedCache {
+  version: number;
+  timestamp: number;
+  data: any;
+}
+
+/**
+ * Save query cache to localStorage
+ */
+export const persistQueryCache = () => {
+  try {
+    const cache = queryClient.getQueryCache();
+    const queries = cache.getAll();
+
+    // Filter out stale or error queries
+    const dataToCache = queries
+      .filter(query => {
+        const state = (query as any).state;
+        return state.status === 'success' && state.data !== undefined;
+      })
+      .map(query => ({
+        queryKey: query.queryKey,
+        queryHash: query.queryHash,
+        state: (query as any).state,
+      }));
+
+    const persistedCache: PersistedCache = {
+      version: CACHE_VERSION,
+      timestamp: Date.now(),
+      data: dataToCache,
+    };
+
+    const success = safeStorage.setJSON(CACHE_KEY, persistedCache);
+    if (success) {
+      logger.debug('Query cache persisted', { queries: dataToCache.length });
+    }
+  } catch (error) {
+    logger.error('Failed to persist query cache', error as Error);
+  }
+};
+
+/**
+ * Restore query cache from localStorage
+ */
+export const restoreQueryCache = () => {
+  try {
+    const persistedCache = safeStorage.getJSON<PersistedCache | null>(CACHE_KEY, null);
+
+    if (!persistedCache) {
+      logger.debug('No persisted cache found');
+      return;
+    }
+
+    // Check version compatibility
+    if (persistedCache.version !== CACHE_VERSION) {
+      logger.warn('Persisted cache version mismatch, clearing cache');
+      safeStorage.removeItem(CACHE_KEY);
+      return;
+    }
+
+    // Check if cache is too old
+    const cacheAge = Date.now() - persistedCache.timestamp;
+    if (cacheAge > MAX_CACHE_AGE) {
+      logger.debug('Persisted cache expired, clearing');
+      safeStorage.removeItem(CACHE_KEY);
+      return;
+    }
+
+    // Restore queries
+    const cache = queryClient.getQueryCache();
+    let restored = 0;
+
+    persistedCache.data.forEach((queryData: any) => {
+      try {
+        const query = cache.find(queryData.queryKey);
+        if (query) {
+          (query as any).state = queryData.state;
+          restored++;
+        }
+      } catch (error) {
+        logger.warn('Failed to restore individual query', error as Error);
+      }
+    });
+
+    logger.info('Query cache restored', {
+      total: persistedCache.data.length,
+      restored,
+      age: Math.round(cacheAge / 1000 / 60) + ' minutes'
+    });
+  } catch (error) {
+    logger.error('Failed to restore query cache', error as Error);
+  }
+};
+
+/**
+ * Clear persisted cache
+ */
+export const clearPersistedCache = () => {
+  safeStorage.removeItem(CACHE_KEY);
+  logger.info('Persisted cache cleared');
+};
+
+// Automatically persist cache on visibility change and before unload
+if (typeof window !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      persistQueryCache();
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    persistQueryCache();
+  });
+
+  // Restore cache on init
+  restoreQueryCache();
+}
