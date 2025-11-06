@@ -509,7 +509,6 @@ const CRMDashboard = () => {
           assigned_to,
           created_at
         `)
-        .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false }) as any;
 
       if (leadsError) throw leadsError;
@@ -640,10 +639,9 @@ const CRMDashboard = () => {
         }
       });
       
-      // Ensure company_id is included in the update for RLS
+      // Update data without company_id (column doesn't exist on leads table)
       const updateData = {
-        ...cleanedUpdates,
-        company_id: userProfile?.company_id
+        ...cleanedUpdates
       };
       
       console.log('Final update data:', updateData);

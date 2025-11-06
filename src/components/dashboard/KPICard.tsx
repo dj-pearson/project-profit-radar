@@ -81,7 +81,7 @@ export const KPICard = ({
         </CardTitle>
         {icon && (
           <div className={cn("p-2 rounded-md", getStatusColor())}>
-            {typeof icon === 'function' ? React.createElement(icon, { className: "h-4 w-4" }) : icon}
+            {React.isValidElement(icon) ? icon : React.createElement(icon as React.ComponentType, { className: "h-4 w-4" })}
           </div>
         )}
       </CardHeader>
