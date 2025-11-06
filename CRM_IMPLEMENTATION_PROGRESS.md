@@ -8,21 +8,21 @@
 
 ## 🎯 Phase 1 (30 Days) - Critical Gaps
 
-### 1. Sales User Roles & Permissions
-- [ ] **Add sales user roles** (sales_representative, sales_manager, business_development)
-  - [ ] Create SQL migration for new roles
-  - [ ] Update user_role enum type
-  - [ ] Add role definitions to get_role_permissions function
+### 1. Sales User Roles & Permissions ✅
+- [x] **Add sales user roles** (sales_representative, sales_manager, business_development)
+  - [x] Create SQL migration for new roles
+  - [x] Update user_role enum type
+  - [x] Add role definitions to get_role_permissions function
   - [ ] Update RLS policies for CRM tables (leads, contacts, opportunities, deals, pipeline_stages)
   - [ ] Update UI role selection components
   - [ ] Test role-based access control
 
-### 2. Calling Features via Twilio
-- [ ] **Twilio Integration Setup**
-  - [ ] Add Twilio credentials to secrets
-  - [ ] Create edge function for Twilio API
-  - [ ] Add call_logs table migration
-  - [ ] Implement RLS policies for call logs
+### 2. Calling Features via Twilio 🚧
+- [x] **Twilio Integration Setup**
+  - [x] Add Twilio credentials to secrets (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
+  - [ ] Create edge function for Twilio API (in progress)
+  - [x] Add call_logs table migration
+  - [x] Implement RLS policies for call logs
   
 - [ ] **Click-to-Call Functionality**
   - [ ] Add click-to-call buttons to lead/contact cards
