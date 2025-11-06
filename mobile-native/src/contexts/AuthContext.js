@@ -44,11 +44,11 @@ export function AuthProvider({children}) {
   // Initialize auth state
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({data: {session}}) => {
+    supabase.auth.getSession().then(async ({data: {session}}) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id);
       }
       setLoading(false);
     });
@@ -56,11 +56,11 @@ export function AuthProvider({children}) {
     // Listen for auth changes
     const {
       data: {subscription},
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id);
       } else {
         setUserProfile(null);
       }

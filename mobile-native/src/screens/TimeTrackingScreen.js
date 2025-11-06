@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useAuth} from '../contexts/AuthContext';
@@ -23,11 +24,30 @@ export default function TimeTrackingScreen() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [todayEntries, setTodayEntries] = useState([]);
   const [todayTotal, setTodayTotal] = useState(0);
+  const [isClocking, setIsClocking] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    checkClockStatus();
-    fetchTodayEntries();
-  }, []);
+    const loadData = async () => {
+      if (user?.id) {
+        setLoading(true);
+        setError(null);
+        try {
+          await Promise.all([checkClockStatus(), fetchTodayEntries()]);
+        } catch (err) {
+          setError('Failed to load time tracking data. Please pull to refresh.');
+          console.error('Error loading data:', err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id]);
 
   useEffect(() => {
     let interval;
@@ -51,38 +71,56 @@ export default function TimeTrackingScreen() {
         .is('clock_out', null)
         .order('clock_in', {ascending: false})
         .limit(1)
-        .single();
+        .maybeSingle();
+
+      if (error) throw error;
 
       if (data) {
         setIsClockedIn(true);
         setCurrentEntry(data);
+      } else {
+        setIsClockedIn(false);
+        setCurrentEntry(null);
       }
     } catch (error) {
-      // No active clock-in found
-      console.log('No active time entry');
+      console.error('Error checking clock status:', error);
+      setIsClockedIn(false);
+      setCurrentEntry(null);
     }
   };
 
   const fetchTodayEntries = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      // Get start and end of today in user's local timezone
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
       const {data, error} = await supabase
         .from('time_entries')
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', today)
+        .gte('clock_in', startOfDay.toISOString())
+        .lt('clock_in', endOfDay.toISOString())
         .order('clock_in', {ascending: false});
 
       if (error) throw error;
 
       setTodayEntries(data || []);
-      const total = data?.reduce((sum, entry) => {
+
+      // Calculate total including currently active entry
+      let total = 0;
+      data?.forEach(entry => {
         if (entry.clock_in && entry.clock_out) {
           const duration = new Date(entry.clock_out) - new Date(entry.clock_in);
-          return sum + duration / (1000 * 60 * 60); // Convert to hours
+          total += duration / (1000 * 60 * 60); // Convert to hours
+        } else if (entry.clock_in && !entry.clock_out) {
+          // Include active entry in total
+          const duration = new Date() - new Date(entry.clock_in);
+          total += duration / (1000 * 60 * 60);
         }
-        return sum;
-      }, 0) || 0;
+      });
+
       setTodayTotal(total);
     } catch (error) {
       console.error('Error fetching today entries:', error);
@@ -90,16 +128,24 @@ export default function TimeTrackingScreen() {
   };
 
   const handleClockIn = async () => {
+    // Prevent duplicate clock-ins
+    if (isClocking || isClockedIn) {
+      return;
+    }
+
+    setIsClocking(true);
     try {
       // TODO: Get GPS location
       const location = {latitude: 0, longitude: 0};
+
+      const clockInTime = new Date();
 
       const {data, error} = await supabase
         .from('time_entries')
         .insert({
           user_id: user.id,
-          clock_in: new Date().toISOString(),
-          date: new Date().toISOString().split('T')[0],
+          clock_in: clockInTime.toISOString(),
+          date: clockInTime.toISOString().split('T')[0],
           location_in: JSON.stringify(location),
         })
         .select()
@@ -109,14 +155,23 @@ export default function TimeTrackingScreen() {
 
       setIsClockedIn(true);
       setCurrentEntry(data);
+      fetchTodayEntries();
       Alert.alert('Success', 'Clocked in successfully');
     } catch (error) {
       console.error('Error clocking in:', error);
-      Alert.alert('Error', 'Failed to clock in');
+      Alert.alert('Error', error.message || 'Failed to clock in. Please try again.');
+    } finally {
+      setIsClocking(false);
     }
   };
 
   const handleClockOut = async () => {
+    // Prevent duplicate clock-outs
+    if (isClocking || !isClockedIn || !currentEntry) {
+      return;
+    }
+
+    setIsClocking(true);
     try {
       // TODO: Get GPS location
       const location = {latitude: 0, longitude: 0};
@@ -138,7 +193,9 @@ export default function TimeTrackingScreen() {
       Alert.alert('Success', 'Clocked out successfully');
     } catch (error) {
       console.error('Error clocking out:', error);
-      Alert.alert('Error', 'Failed to clock out');
+      Alert.alert('Error', error.message || 'Failed to clock out. Please try again.');
+    } finally {
+      setIsClocking(false);
     }
   };
 
@@ -149,12 +206,28 @@ export default function TimeTrackingScreen() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={styles.loadingText}>Loading time tracking data...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Time Tracking</Text>
         <Text style={styles.headerDate}>{new Date().toLocaleDateString()}</Text>
       </View>
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Icon name="error-outline" size={24} color="#ef4444" />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
 
       <View style={styles.clockCard}>
         <View style={styles.clockStatus}>
@@ -167,11 +240,16 @@ export default function TimeTrackingScreen() {
         <Text style={styles.timerText}>{formatTime(elapsedTime)}</Text>
 
         <TouchableOpacity
-          style={[styles.clockButton, isClockedIn ? styles.clockOutButton : styles.clockInButton]}
-          onPress={isClockedIn ? handleClockOut : handleClockIn}>
+          style={[
+            styles.clockButton,
+            isClockedIn ? styles.clockOutButton : styles.clockInButton,
+            isClocking && styles.clockButtonDisabled,
+          ]}
+          onPress={isClockedIn ? handleClockOut : handleClockIn}
+          disabled={isClocking}>
           <Icon name={isClockedIn ? 'alarm-off' : 'alarm-on'} size={32} color="#fff" />
           <Text style={styles.clockButtonText}>
-            {isClockedIn ? 'Clock Out' : 'Clock In'}
+            {isClocking ? 'Processing...' : isClockedIn ? 'Clock Out' : 'Clock In'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -225,6 +303,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    padding: 16,
+    backgroundColor: '#fee2e2',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  errorText: {
+    marginLeft: 12,
+    flex: 1,
+    fontSize: 14,
+    color: '#991b1b',
   },
   header: {
     padding: 20,
@@ -290,6 +395,10 @@ const styles = StyleSheet.create({
   },
   clockOutButton: {
     backgroundColor: '#ef4444',
+  },
+  clockButtonDisabled: {
+    backgroundColor: '#9ca3af',
+    opacity: 0.6,
   },
   clockButtonText: {
     color: '#fff',
