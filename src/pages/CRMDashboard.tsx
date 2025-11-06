@@ -885,12 +885,12 @@ const CRMDashboard = () => {
                                    {lead.priority}
                                  </Badge>
                                 </div>
-                                <p className="text-sm text-muted-foreground truncate">
-                                  {lead.project_name || lead.company_name || 'No project'}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {lead.estimated_budget ? formatCurrency(lead.estimated_budget) : 'Budget TBD'}
-                                </p>
+                               <p className="text-sm text-muted-foreground truncate">
+                                 {lead.company_name || 'No company'}
+                               </p>
+                               <p className="text-xs text-muted-foreground">
+                                 Source: {lead.lead_source}
+                               </p>
                               </div>
                               <div className="flex flex-col items-end space-y-1">
                                 <div className="flex space-x-2">
@@ -1053,41 +1053,36 @@ const CRMDashboard = () => {
                                    </Badge>
                                   </div>
                                 </div>
-                                <div className="mt-2">
-                                  <p className="text-sm font-medium">
-                                    {lead.project_name || lead.company_name || 'No project specified'}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {lead.project_type || 'Project type not specified'} • {lead.estimated_budget ? formatCurrency(lead.estimated_budget) : 'Budget TBD'}
-                                  </p>
-                                </div>
+                               <div className="mt-2">
+                                 <p className="text-sm font-medium">
+                                   {lead.company_name || 'No company specified'}
+                                 </p>
+                                 <p className="text-sm text-muted-foreground">
+                                   Source: {lead.lead_source}
+                                 </p>
+                               </div>
                               </div>
-                              <div className="text-right space-y-1">
-                                <p className="text-sm text-muted-foreground">Source: {lead.lead_source}</p>
-                                <p className="text-xs text-muted-foreground">Created: {formatDate(lead.created_at)}</p>
-                                {lead.next_follow_up_date && (
-                                  <p className="text-xs text-orange-600">
-                                    Follow-up: {formatDate(lead.next_follow_up_date)}
-                                  </p>
-                                )}
-                                
-                                {/* LEAN Navigation: Quick action buttons */}
-                                <div className="flex space-x-1 mt-2">
-                                  {['qualified', 'proposal_sent', 'negotiating'].includes(lead.status) && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="text-xs px-2 py-1 h-6"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/crm/opportunities?lead=${lead.id}&name=${encodeURIComponent(lead.project_name || `${lead.first_name} ${lead.last_name} Project`)}&budget=${lead.estimated_budget || ''}&type=${lead.project_type || ''}`);
-                                      }}
-                                    >
-                                      Convert
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
+                             <div className="text-right space-y-1">
+                               <p className="text-sm text-muted-foreground">Priority: {lead.priority}</p>
+                               <p className="text-xs text-muted-foreground">Created: {formatDate(lead.created_at)}</p>
+                               
+                               {/* LEAN Navigation: Quick action buttons */}
+                               <div className="flex space-x-1 mt-2">
+                                 {['qualified', 'proposal_sent', 'negotiating'].includes(lead.status) && (
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     className="text-xs px-2 py-1 h-6"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       navigate(`/crm/opportunities?lead=${lead.id}&name=${encodeURIComponent(`${lead.first_name} ${lead.last_name} Project`)}`);
+                                     }}
+                                   >
+                                     Convert
+                                   </Button>
+                                 )}
+                               </div>
+                             </div>
                             </div>
                           </LeadEditDialog>
                         ))}
