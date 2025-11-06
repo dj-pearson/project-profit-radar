@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTitle>Something went wrong</AlertTitle>
               <AlertDescription className="mt-2 space-y-3">
                 <p>An error occurred while rendering this component.</p>
-                {process.env.NODE_ENV === 'development' && this.state.error && (
+                {import.meta.env.DEV && this.state.error && (
                   <details className="text-xs">
                     <summary className="cursor-pointer">Error details</summary>
                     <pre className="mt-2 whitespace-pre-wrap break-words">

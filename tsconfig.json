@@ -19,7 +19,7 @@
     "noUnusedParameters": false,
     "skipLibCheck": true,
     "allowJs": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "strictNullChecks": false
   },
   "extends": "expo/tsconfig.base"

@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
@@ -36,4 +37,14 @@ if (typeof window !== 'undefined') {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Wrap in StrictMode for development to catch potential issues
+const rootElement = document.getElementById("root")!;
+const app = import.meta.env.DEV ? (
+  <StrictMode>
+    <App />
+  </StrictMode>
+) : (
+  <App />
+);
+
+createRoot(rootElement).render(app);
