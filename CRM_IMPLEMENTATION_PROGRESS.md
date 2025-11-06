@@ -17,29 +17,32 @@
   - [ ] Update UI role selection components
   - [ ] Test role-based access control
 
-### 2. Calling Features via Twilio 🚧
+### 2. Calling Features via Twilio ✅
 - [x] **Twilio Integration Setup**
   - [x] Add Twilio credentials to secrets (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
-  - [ ] Create edge function for Twilio API (in progress)
+  - [x] Create edge function for Twilio API
   - [x] Add call_logs table migration
   - [x] Implement RLS policies for call logs
+  - [x] Create call-recordings storage bucket
   
-- [ ] **Click-to-Call Functionality**
-  - [ ] Add click-to-call buttons to lead/contact cards
-  - [ ] Implement outbound calling UI
-  - [ ] Add call status indicators
+- [x] **Click-to-Call Functionality**
+  - [x] Created ClickToCall component with call UI
+  - [x] Implement outbound calling via Twilio
+  - [x] Add real-time call status tracking
+  - [ ] Integrate into CRM lead/contact cards
   
-- [ ] **Call Logging & Recordings**
-  - [ ] Auto-log all calls to database
-  - [ ] Store call recordings in Supabase Storage
-  - [ ] Add call history view component
-  - [ ] Implement call playback UI
+- [x] **Call Logging & Recordings**
+  - [x] Auto-log all calls to database
+  - [x] Store call recordings in Supabase Storage
+  - [x] Add CallHistory component
+  - [x] Implement call playback UI
+  - [x] Add call notes functionality
   
-- [ ] **Auto-Transcription & Sentiment Analysis**
-  - [ ] Integrate speech-to-text service
-  - [ ] Add transcription storage to call_logs
-  - [ ] Implement sentiment analysis
-  - [ ] Display sentiment scores in UI
+- [ ] **Auto-Transcription & Sentiment Analysis** (Planned for Phase 2)
+  - [ ] Integrate speech-to-text service (Deepgram/AssemblyAI)
+  - [x] Add transcription storage to call_logs (schema ready)
+  - [ ] Implement sentiment analysis AI
+  - [x] Display sentiment scores in UI (UI ready)
 
 ### 3. Email Sync (Gmail/Outlook OAuth)
 - [ ] **OAuth Setup**
@@ -242,9 +245,26 @@
 ## 📝 Notes & Decisions
 
 ### 2025-11-06 - Project Kickoff
-- Starting with Phase 1 implementation
-- Prioritizing sales user roles as foundation
-- All features will integrate with existing CRM structure
+- ✅ Created comprehensive progress tracking document
+- ✅ Added sales user roles (sales_representative, sales_manager, business_development)
+- ✅ Updated role permissions and hierarchy
+- ✅ Created call_logs table with RLS policies
+- ✅ Configured Twilio secrets (SID, Auth Token, Phone Number)
+- ✅ Built twilio-calling edge function with:
+  - Outbound calling
+  - Call status tracking
+  - Recording management
+  - Callback handling
+- ✅ Created ClickToCall UI component with:
+  - Real-time call timer
+  - Mute functionality
+  - Call notes
+  - Status indicators
+- ✅ Created CallHistory component with:
+  - Call log display
+  - Recording playback
+  - Sentiment display (ready for AI integration)
+- 🚧 **Next:** Integrate calling into CRM pages and start email sync
 
 ---
 
