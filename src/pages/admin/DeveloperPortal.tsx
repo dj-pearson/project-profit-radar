@@ -76,10 +76,10 @@ export function DeveloperPortal() {
         .from('api_documentation')
         .select('*')
         .order('category', { ascending: true })
-        .order('endpoint', { ascending: true });
+        .order('endpoint_path', { ascending: true }) as any;
 
       if (error) throw error;
-      setDocs(data || []);
+      setDocs(data as any || []);
       if (data && data.length > 0 && !selectedDoc) {
         setSelectedDoc(data[0]);
       }

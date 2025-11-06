@@ -136,10 +136,10 @@ export const LeadManagement = () => {
           .from('leads')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(100) as any;
 
         if (error) throw error;
-        setLeads(data || []);
+        setLeads(data as any || []);
       } else if (activeTab === 'demos') {
         const { data, error } = await supabase
           .from('demo_requests')
@@ -148,10 +148,10 @@ export const LeadManagement = () => {
             leads (*)
           `)
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(100) as any;
 
         if (error) throw error;
-        setDemoRequests(data || []);
+        setDemoRequests(data as any || []);
       } else if (activeTab === 'sales') {
         const { data, error } = await supabase
           .from('sales_contact_requests')
@@ -160,10 +160,10 @@ export const LeadManagement = () => {
             leads (*)
           `)
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(100) as any;
 
         if (error) throw error;
-        setSalesContacts(data || []);
+        setSalesContacts(data as any || []);
       }
     } catch (error) {
       console.error('Failed to load data:', error);

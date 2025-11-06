@@ -93,11 +93,11 @@ export const APIKeyManagement = () => {
       const { data: keysData, error: keysError } = await supabase
         .from('api_keys')
         .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+        .eq('created_by', user?.id)
+        .order('created_at', { ascending: false }) as any;
 
       if (keysError) throw keysError;
-      setApiKeys(keysData || []);
+      setApiKeys(keysData as any || []);
 
       // Load recent request logs
       if (keysData && keysData.length > 0) {
@@ -109,7 +109,7 @@ export const APIKeyManagement = () => {
           .limit(50);
 
         if (logsError) throw logsError;
-        setRequestLogs(logsData || []);
+        setRequestLogs(logsData as any || []);
       }
     } catch (error) {
       console.error('Failed to load API data:', error);
@@ -153,15 +153,13 @@ export const APIKeyManagement = () => {
       const { error } = await supabase
         .from('api_keys')
         .insert({
-          user_id: user?.id,
-          name: newKeyName,
-          description: newKeyDescription,
-          key_prefix: keyPrefix,
-          key_hash: keyHash,
-          scopes: newKeyScopes,
-          environment: newKeyEnvironment,
+          created_by: user?.id,
+          key_name: newKeyName,
+          api_key_prefix: keyPrefix,
+          api_key_hash: keyHash,
+          permissions: newKeyScopes,
           is_active: true,
-        });
+        } as any);
 
       if (error) throw error;
 

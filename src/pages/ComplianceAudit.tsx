@@ -195,7 +195,7 @@ const ComplianceAudit = () => {
         todayEvents: todayResult.data?.length || 0
       });
 
-      setAuditEvents(recentEvents || []);
+      setAuditEvents(recentEvents as any || []);
       setDataAccessLogs(recentAccess || []);
     } catch (error) {
       console.error('Error fetching audit data:', error);

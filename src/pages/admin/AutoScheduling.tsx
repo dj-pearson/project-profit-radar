@@ -124,7 +124,7 @@ export function AutoScheduling() {
         .from('user_profiles')
         .select('id, first_name, last_name, role')
         .eq('tenant_id', userProfile.tenant_id)
-        .in('role', ['field_supervisor', 'crew_member'])
+        .in('role', ['field_supervisor', 'foreman'])
         .order('first_name');
 
       if (error) throw error;
@@ -149,10 +149,10 @@ export function AutoScheduling() {
         .select('*')
         .eq('tenant_id', userProfile.tenant_id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(20) as any;
 
       if (error) throw error;
-      setSchedules(data || []);
+      setSchedules(data as any || []);
     } catch (error) {
       console.error('Error loading schedules:', error);
     }
@@ -186,7 +186,7 @@ export function AutoScheduling() {
       if (!session) throw new Error('No session');
 
       const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/auto-scheduling`,
+        `https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/auto-scheduling`,
         {
           method: 'POST',
           headers: {

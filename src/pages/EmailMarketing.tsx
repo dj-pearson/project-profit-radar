@@ -64,7 +64,7 @@ export default function EmailMarketing() {
           email_integrations(provider_name)
         `)
         .eq('company_id', userProfile.company_id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
 
       if (campaignError) throw campaignError;
 

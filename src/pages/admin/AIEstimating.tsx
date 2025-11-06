@@ -61,13 +61,13 @@ export function AIEstimating() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('ai_estimates')
+        .from('ai_cost_predictions')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(20) as any;
 
       if (error) throw error;
-      setEstimates(data || []);
+      setEstimates(data as any || []);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -98,7 +98,7 @@ export function AIEstimating() {
         .eq('id', user?.id)
         .single();
 
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/ai-estimating`, {
+      const response = await fetch(`https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/ai-estimating`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

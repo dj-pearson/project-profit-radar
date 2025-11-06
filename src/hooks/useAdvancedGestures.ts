@@ -12,7 +12,7 @@ export function useLongPress(
   } = {}
 ) {
   const { threshold = 500, onStart, onCancel } = options;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
   const [isPressed, setIsPressed] = useState(false);
 
   const start = useCallback(() => {
@@ -22,7 +22,7 @@ export function useLongPress(
     timeoutRef.current = setTimeout(() => {
       onLongPress();
       setIsPressed(false);
-    }, threshold);
+    }, threshold) as unknown as number;
   }, [onLongPress, threshold, onStart]);
 
   const cancel = useCallback(() => {
@@ -69,7 +69,7 @@ export function useDoubleTap(
 ) {
   const { threshold = 300, onSingleTap } = options;
   const lastTapRef = useRef<number>(0);
-  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const tapTimeoutRef = useRef<number | null>(null);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
@@ -90,7 +90,7 @@ export function useDoubleTap(
       if (onSingleTap) {
         tapTimeoutRef.current = setTimeout(() => {
           onSingleTap();
-        }, threshold);
+        }, threshold) as unknown as number;
       }
     }
   }, [onDoubleTap, onSingleTap, threshold]);

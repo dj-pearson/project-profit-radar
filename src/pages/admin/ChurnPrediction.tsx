@@ -155,7 +155,7 @@ export const ChurnPrediction = () => {
       // Update intervention status
       const { error } = await supabase
         .from('churn_predictions')
-        .update({ intervention_attempted: true })
+        .update({ intervention_taken: true, intervention_type: 'email' } as any)
         .eq('id', predictionId);
 
       if (error) throw error;
