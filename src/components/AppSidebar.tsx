@@ -1,8 +1,6 @@
-import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
-import { preloadOnHover } from "@/utils/routePreloader";
 import {
   Sidebar,
   SidebarContent,
@@ -263,6 +261,42 @@ const navigationCategories: NavigationCategory[] = [
         title: "Opportunities",
         url: "/crm/opportunities",
         icon: TrendingUp,
+        roles: ["admin", "project_manager", "office_staff", "root_admin"],
+      },
+      {
+        title: "Pipeline",
+        url: "/crm/pipeline",
+        icon: TrendingUp,
+        roles: ["admin", "project_manager", "office_staff", "root_admin"],
+      },
+      {
+        title: "Lead Intelligence",
+        url: "/crm/lead-intelligence",
+        icon: Brain,
+        roles: ["admin", "project_manager", "office_staff", "root_admin"],
+      },
+      {
+        title: "Workflows",
+        url: "/crm/workflows",
+        icon: Settings,
+        roles: ["admin", "project_manager", "root_admin"],
+      },
+      {
+        title: "Campaigns",
+        url: "/crm/campaigns",
+        icon: MessageSquare,
+        roles: ["admin", "project_manager", "office_staff", "root_admin"],
+      },
+      {
+        title: "Analytics",
+        url: "/crm/analytics",
+        icon: BarChart3,
+        roles: ["admin", "project_manager", "office_staff", "root_admin"],
+      },
+      {
+        title: "Email Marketing",
+        url: "/email-marketing",
+        icon: MessageSquare,
         roles: ["admin", "project_manager", "office_staff", "root_admin"],
       },
     ],
@@ -527,12 +561,6 @@ const navigationCategories: NavigationCategory[] = [
         badge: "New",
       },
       {
-        title: "Email Marketing",
-        url: "/email-marketing",
-        icon: MessageSquare,
-        roles: ["admin", "office_staff", "root_admin"],
-      },
-      {
         title: "Automated Workflows",
         url: "/workflows",
         icon: Settings,
@@ -672,10 +700,8 @@ const navigationCategories: NavigationCategory[] = [
 
 export const AppSidebar = () => {
   const { state } = useSidebar();
-  const location = useLocation();
   const { userProfile } = useAuth();
   const { canAccessRoute } = usePermissions();
-  const currentPath = location.pathname;
 
   // Preload map for major routes
   const routePreloadMap: Record<string, () => Promise<any>> = {
@@ -743,7 +769,6 @@ export const AppSidebar = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 {category.items.map((item) => {
-                  const isActive = currentPath === item.url;
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild>
