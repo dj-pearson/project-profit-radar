@@ -1,0 +1,320 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface WorkflowStep {
+  id: string;
+  step_type: 'trigger' | 'action' | 'condition' | 'delay';
+  config: any;
+  position: number;
+}
+
+interface WorkflowExecution {
+  workflow_id: string;
+  trigger_data: any;
+  user_id: string;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { workflow_id, trigger_data, user_id } = await req.json() as WorkflowExecution;
+
+    console.log('Executing workflow:', { workflow_id, trigger_data, user_id });
+
+    // Get workflow definition
+    const { data: workflow, error: workflowError } = await supabase
+      .from('workflow_definitions')
+      .select('*, workflow_steps(*)')
+      .eq('id', workflow_id)
+      .single();
+
+    if (workflowError || !workflow) {
+      throw new Error(`Workflow not found: ${workflowError?.message}`);
+    }
+
+    if (!workflow.is_active) {
+      throw new Error('Workflow is not active');
+    }
+
+    // Create execution record
+    const { data: execution, error: executionError } = await supabase
+      .from('workflow_executions')
+      .insert({
+        workflow_id,
+        status: 'running',
+        trigger_data,
+        started_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (executionError) {
+      throw new Error(`Failed to create execution: ${executionError.message}`);
+    }
+
+    // Sort steps by position
+    const steps = (workflow.workflow_steps || []).sort((a: WorkflowStep, b: WorkflowStep) => 
+      a.position - b.position
+    );
+
+    let executionContext = { ...trigger_data };
+    const stepResults = [];
+
+    // Execute steps sequentially
+    for (const step of steps) {
+      console.log('Executing step:', step.id, step.step_type);
+
+      const stepStartTime = Date.now();
+      let stepStatus = 'success';
+      let stepOutput = null;
+      let errorMessage = null;
+
+      try {
+        switch (step.step_type) {
+          case 'action':
+            stepOutput = await executeAction(step, executionContext, supabase);
+            break;
+          
+          case 'condition':
+            const conditionResult = evaluateCondition(step, executionContext);
+            stepOutput = { passed: conditionResult };
+            if (!conditionResult) {
+              console.log('Condition failed, stopping workflow');
+              stepStatus = 'skipped';
+            }
+            break;
+          
+          case 'delay':
+            const delayMs = step.config.delay_seconds * 1000;
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+            stepOutput = { delayed_ms: delayMs };
+            break;
+          
+          default:
+            stepOutput = { skipped: true };
+        }
+
+        // Record step execution
+        await supabase.from('workflow_step_executions').insert({
+          execution_id: execution.id,
+          step_id: step.id,
+          status: stepStatus,
+          output: stepOutput,
+          error_message: errorMessage,
+          started_at: new Date(stepStartTime).toISOString(),
+          completed_at: new Date().toISOString(),
+        });
+
+        stepResults.push({ step_id: step.id, status: stepStatus, output: stepOutput });
+
+        // Update execution context
+        if (stepOutput) {
+          executionContext = { ...executionContext, ...stepOutput };
+        }
+
+      } catch (stepError: any) {
+        console.error('Step execution failed:', stepError);
+        stepStatus = 'failed';
+        errorMessage = stepError.message;
+
+        await supabase.from('workflow_step_executions').insert({
+          execution_id: execution.id,
+          step_id: step.id,
+          status: stepStatus,
+          error_message: errorMessage,
+          started_at: new Date(stepStartTime).toISOString(),
+          completed_at: new Date().toISOString(),
+        });
+
+        stepResults.push({ step_id: step.id, status: stepStatus, error: errorMessage });
+        break; // Stop execution on error
+      }
+    }
+
+    // Update execution record
+    const finalStatus = stepResults.some(r => r.status === 'failed') ? 'failed' : 'completed';
+    await supabase
+      .from('workflow_executions')
+      .update({
+        status: finalStatus,
+        completed_at: new Date().toISOString(),
+        output: { steps: stepResults },
+      })
+      .eq('id', execution.id);
+
+    // Update workflow last_executed_at
+    await supabase
+      .from('workflow_definitions')
+      .update({ last_executed_at: new Date().toISOString() })
+      .eq('id', workflow_id);
+
+    console.log('Workflow execution completed:', finalStatus);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        execution_id: execution.id,
+        status: finalStatus,
+        steps: stepResults,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    console.error('Workflow execution error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
+  }
+});
+
+async function executeAction(step: WorkflowStep, context: any, supabase: any) {
+  const { action_type, ...params } = step.config;
+
+  console.log('Executing action:', action_type, params);
+
+  switch (action_type) {
+    case 'send_email':
+      return await sendEmail(params, context, supabase);
+    
+    case 'create_task':
+      return await createTask(params, context, supabase);
+    
+    case 'update_field':
+      return await updateField(params, context, supabase);
+    
+    case 'send_notification':
+      return await sendNotification(params, context, supabase);
+    
+    case 'webhook':
+      return await callWebhook(params, context);
+    
+    default:
+      console.log('Unknown action type:', action_type);
+      return { skipped: true, reason: 'Unknown action type' };
+  }
+}
+
+async function sendEmail(params: any, context: any, supabase: any) {
+  console.log('Sending email:', params);
+  
+  // Placeholder for email sending
+  // In production, integrate with Resend, SendGrid, etc.
+  return { 
+    sent: true, 
+    to: params.to, 
+    subject: params.subject,
+    message: 'Email would be sent in production'
+  };
+}
+
+async function createTask(params: any, context: any, supabase: any) {
+  console.log('Creating task:', params);
+  
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      title: params.title || 'Automated Task',
+      description: params.description || '',
+      status: 'pending',
+      priority: params.priority || 'medium',
+      project_id: context.project_id || params.project_id,
+      assigned_to: params.assigned_to,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create task: ${error.message}`);
+  }
+
+  return { task_created: true, task_id: data.id };
+}
+
+async function updateField(params: any, context: any, supabase: any) {
+  console.log('Updating field:', params);
+  
+  const { table, record_id, field, value } = params;
+  
+  const { error } = await supabase
+    .from(table)
+    .update({ [field]: value })
+    .eq('id', record_id || context.record_id);
+
+  if (error) {
+    throw new Error(`Failed to update field: ${error.message}`);
+  }
+
+  return { field_updated: true, table, field, value };
+}
+
+async function sendNotification(params: any, context: any, supabase: any) {
+  console.log('Sending notification:', params);
+  
+  // Placeholder for notification system
+  return { 
+    notification_sent: true, 
+    message: params.message,
+    user_id: params.user_id 
+  };
+}
+
+async function callWebhook(params: any, context: any) {
+  console.log('Calling webhook:', params.url);
+  
+  const response = await fetch(params.url, {
+    method: params.method || 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...params.headers,
+    },
+    body: JSON.stringify({
+      ...params.payload,
+      context,
+    }),
+  });
+
+  const responseData = await response.text();
+  
+  return { 
+    webhook_called: true, 
+    status: response.status,
+    response: responseData,
+  };
+}
+
+function evaluateCondition(step: WorkflowStep, context: any): boolean {
+  const { field, operator, value } = step.config;
+  const fieldValue = context[field];
+
+  console.log('Evaluating condition:', { field, operator, value, fieldValue });
+
+  switch (operator) {
+    case 'equals':
+      return fieldValue == value;
+    case 'not_equals':
+      return fieldValue != value;
+    case 'greater_than':
+      return Number(fieldValue) > Number(value);
+    case 'less_than':
+      return Number(fieldValue) < Number(value);
+    case 'contains':
+      return String(fieldValue).includes(String(value));
+    case 'exists':
+      return fieldValue !== null && fieldValue !== undefined;
+    default:
+      return false;
+  }
+}

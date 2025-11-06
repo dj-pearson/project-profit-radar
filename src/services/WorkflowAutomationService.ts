@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface WorkflowTrigger {
   type: 'project_status_change' | 'task_completion' | 'invoice_created' | 'deadline_approaching' | 'budget_threshold';
@@ -65,65 +66,29 @@ class WorkflowAutomationService {
 
   async getWorkflowRules(companyId: string): Promise<WorkflowRule[]> {
     try {
-      // Mock workflow rules
-      const mockRules: WorkflowRule[] = [
-        {
-          id: 'rule-1',
-          name: 'Project Completion Notification',
-          description: 'Send notification when project is completed',
-          isActive: true,
-          trigger: {
-            type: 'project_status_change',
-            conditions: { status: 'completed' }
-          },
-          conditions: [],
-          actions: [
-            {
-              type: 'send_email',
-              parameters: {
-                to: 'project_manager',
-                template: 'project_completion'
-              }
-            }
-          ],
-          priority: 1,
-          createdBy: 'user-123',
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          executionCount: 5
-        },
-        {
-          id: 'rule-2',
-          name: 'Invoice Auto-Creation',
-          description: 'Automatically create invoice when project reaches 50% completion',
-          isActive: true,
-          trigger: {
-            type: 'project_status_change',
-            conditions: { completion_percentage: 50 }
-          },
-          conditions: [
-            {
-              field: 'completion_percentage',
-              operator: 'greater_than',
-              value: 50
-            }
-          ],
-          actions: [
-            {
-              type: 'create_invoice',
-              parameters: {
-                amount_percentage: 50,
-                description: 'Progress billing - 50% completion'
-              }
-            }
-          ],
-          priority: 2,
-          createdBy: 'user-456',
-          createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          executionCount: 12
-        }
-      ];
+      const { data, error } = await supabase
+        .from('workflow_definitions')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false });
 
-      return mockRules;
+      if (error) throw error;
+
+      // Map database records to WorkflowRule interface
+      return (data || []).map(wf => ({
+        id: wf.id,
+        name: wf.name,
+        description: wf.description || '',
+        isActive: wf.is_active,
+        trigger: wf.trigger_config as WorkflowTrigger,
+        conditions: [],
+        actions: [],
+        priority: 1,
+        createdBy: wf.created_by,
+        createdAt: wf.created_at,
+        lastTriggered: wf.last_executed_at,
+        executionCount: 0
+      }));
     } catch (error: any) {
       console.error('Error fetching workflow rules:', error);
       toast.error('Failed to load workflow rules');
