@@ -32,7 +32,7 @@ interface SearchHighlightProps {
    * HTML element to use as container
    * Default: span
    */
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }
 
 /**
@@ -57,8 +57,10 @@ export function SearchHighlight({
   caseSensitive = false,
   highlightClassName = "bg-yellow-200 dark:bg-yellow-900 font-semibold px-0.5 rounded",
   className,
-  as: Component = "span",
+  as = "span",
 }: SearchHighlightProps) {
+  const Component = as as any;
+  
   // If no query, return plain text
   if (!query || query.trim() === "") {
     return <Component className={className}>{text}</Component>;

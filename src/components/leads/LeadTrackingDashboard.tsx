@@ -123,15 +123,15 @@ export function LeadTrackingDashboard() {
     try {
       const { data: leadsData, error } = await supabase
         .from('leads')
-        .select('status, qualification_status, created_at');
+        .select('status, created_at');
 
       if (error) throw error;
 
       const leads = leadsData || [];
       const total = leads.length;
       const newLeads = leads.filter(l => l.status === 'new').length;
-      const qualified = leads.filter(l => l.qualification_status === 'qualified').length;
-      const opportunities = leads.filter(l => l.qualification_status === 'opportunity').length;
+      const qualified = leads.filter(l => l.status === 'qualified').length;
+      const opportunities = leads.filter(l => l.status === 'proposal' || l.status === 'negotiation').length;
       const converted = 0; // Need to add conversion tracking
       const avgScore = 0; // Need to add scoring system
 
