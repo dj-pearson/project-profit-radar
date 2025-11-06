@@ -21,6 +21,7 @@ import CRMLeadIntelligence from '@/pages/CRMLeadIntelligence';
 import CRMWorkflows from '@/pages/CRMWorkflows';
 import CRMCampaigns from '@/pages/CRMCampaigns';
 import CRMAnalytics from '@/pages/CRMAnalytics';
+import LeadDetailPage from '@/pages/LeadDetailPage';
 import EmailMarketing from '@/pages/EmailMarketing';
 
 export const peopleRoutes = (
@@ -34,6 +35,7 @@ export const peopleRoutes = (
     {/* CRM */}
     <Route path="/crm" element={<CRMDashboard />} />
     <Route path="/crm/leads" element={<CRMLeads />} />
+    <Route path="/crm/leads/:id" element={<LeadDetailPage />} />
     <Route path="/crm/contacts" element={<CRMContacts />} />
     <Route path="/crm/opportunities" element={<CRMOpportunities />} />
     <Route path="/crm/pipeline" element={<CRMPipeline />} />
