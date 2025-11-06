@@ -86,7 +86,7 @@ if [ -d "$TEMP_DIR" ]; then
 
         # Update package name
         cd android
-        find . -type f \( -name "*.gradle" -o -name "*.xml" -o -name "*.java" -o -name "*.kt" \) -exec sed -i.bak "s/com.$TEMP_DIR/com.builddeskmo bile/g" {} \;
+        find . -type f \( -name "*.gradle" -o -name "*.xml" -o -name "*.java" -o -name "*.kt" \) -exec sed -i.bak "s/com.$TEMP_DIR/com.builddeskmobile/g" {} \;
         find . -type f \( -name "*.gradle" -o -name "*.xml" -o -name "*.java" -o -name "*.kt" \) -exec sed -i.bak "s/$TEMP_DIR/BuildDeskMobile/g" {} \;
         find . -name "*.bak" -delete
 

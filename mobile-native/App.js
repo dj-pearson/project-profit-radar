@@ -32,11 +32,12 @@ function AppContent() {
     // Initialize app
     const initializeApp = async () => {
       try {
-        // Add any initialization logic here
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Add any initialization logic here (e.g., preload critical data)
+        // For now, just mark as ready immediately
         setIsReady(true);
       } catch (error) {
         console.error('Error initializing app:', error);
+        // Still mark as ready to prevent app from being stuck
         setIsReady(true);
       }
     };

@@ -11,7 +11,7 @@ mkdir -p ios/BuildDeskMobile
 mkdir -p ios/BuildDeskMobileTests
 
 # Create Android directory structure
-mkdir -p android/app/src/main/java/com/builddeskmo mobile
+mkdir -p android/app/src/main/java/com/builddeskmobile
 mkdir -p android/app/src/main/res/values
 mkdir -p android/app/src/main/res/drawable
 mkdir -p android/gradle/wrapper
