@@ -133,14 +133,9 @@ const CRMLeads = () => {
   }, [location.pathname]);
 
   const loadLeadsData = async (): Promise<Lead[]> => {
-    if (!userProfile?.company_id) {
-      throw new Error('No company associated with user');
-    }
-
     const { data, error } = await (supabase as any)
       .from('leads')
       .select('*')
-      .eq('company_id', userProfile.company_id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -203,9 +198,7 @@ const CRMLeads = () => {
         next_follow_up_date: newLead.next_follow_up_date,
         last_contact_date: newLead.last_contact_date,
         notes: newLead.notes,
-        tags: newLead.tags,
-        company_id: userProfile.company_id,
-        created_by: user?.id
+        tags: newLead.tags
       };
 
       const { error } = await supabase
@@ -241,26 +234,26 @@ const CRMLeads = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'new': return 'blue';
-      case 'contacted': return 'yellow';
-      case 'qualified': return 'green';
-      case 'proposal_sent': return 'purple';
-      case 'negotiating': return 'orange';
-      case 'won': return 'green';
-      case 'lost': return 'red';
-      default: return 'gray';
+      case 'new': return 'text-blue-600 border-blue-200';
+      case 'contacted': return 'text-yellow-600 border-yellow-200';
+      case 'qualified': return 'text-green-600 border-green-200';
+      case 'proposal_sent': return 'text-purple-600 border-purple-200';
+      case 'negotiating': return 'text-orange-600 border-orange-200';
+      case 'won': return 'text-green-600 border-green-200';
+      case 'lost': return 'text-red-600 border-red-200';
+      default: return 'text-gray-600 border-gray-200';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'red';
-      case 'high': return 'orange';
-      case 'medium': return 'yellow';
-      case 'low': return 'gray';
-      default: return 'gray';
+      case 'urgent': return 'text-red-600 border-red-200';
+      case 'high': return 'text-orange-600 border-orange-200';
+      case 'medium': return 'text-yellow-600 border-yellow-200';
+      case 'low': return 'text-gray-600 border-gray-200';
+      default: return 'text-gray-600 border-gray-200';
     }
   };
 
@@ -784,12 +777,12 @@ const CRMLeads = () => {
                                   </Button>
                                   <div className="flex flex-col items-end space-y-1">
                                     <div className="flex space-x-2">
-                                      <Badge variant="outline" className={`text-${getStatusColor(lead.status)}-600 border-${getStatusColor(lead.status)}-200`}>
-                                        {lead.status.replace('_', ' ')}
-                                      </Badge>
-                                      <Badge variant="outline" className={`text-${getPriorityColor(lead.priority)}-600 border-${getPriorityColor(lead.priority)}-200`}>
-                                        {lead.priority}
-                                      </Badge>
+                                       <Badge variant="outline" className={getStatusBadgeClass(lead.status)}>
+                                         {lead.status.replace('_', ' ')}
+                                       </Badge>
+                                       <Badge variant="outline" className={getPriorityBadgeClass(lead.priority)}>
+                                         {lead.priority}
+                                       </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
                                       Source: {lead.lead_source.replace('_', ' ')}
