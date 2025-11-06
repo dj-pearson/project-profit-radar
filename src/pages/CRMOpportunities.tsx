@@ -167,14 +167,9 @@ const CRMOpportunities = () => {
   };
 
   const loadLeadsData = async (): Promise<Lead[]> => {
-    if (!userProfile?.company_id) {
-      throw new Error('No company associated with user');
-    }
-
     const { data, error } = await (supabase as any)
       .from('leads')
       .select('id, first_name, last_name')
-      .eq('company_id', userProfile.company_id)
       .in('status', ['qualified', 'proposal_sent', 'negotiating'])
       .order('created_at', { ascending: false }) as any;
 
