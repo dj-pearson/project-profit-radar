@@ -6896,6 +6896,104 @@ export type Database = {
           },
         ]
       }
+      email_accounts: {
+        Row: {
+          access_token: string
+          company_id: string
+          created_at: string | null
+          display_name: string | null
+          email_address: string
+          id: string
+          is_primary: boolean | null
+          last_sync_at: string | null
+          provider: string
+          provider_account_id: string | null
+          refresh_token: string | null
+          sync_enabled: boolean | null
+          sync_from_date: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token: string
+          company_id: string
+          created_at?: string | null
+          display_name?: string | null
+          email_address: string
+          id?: string
+          is_primary?: boolean | null
+          last_sync_at?: string | null
+          provider: string
+          provider_account_id?: string | null
+          refresh_token?: string | null
+          sync_enabled?: boolean | null
+          sync_from_date?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          company_id?: string
+          created_at?: string | null
+          display_name?: string | null
+          email_address?: string
+          id?: string
+          is_primary?: boolean | null
+          last_sync_at?: string | null
+          provider?: string
+          provider_account_id?: string | null
+          refresh_token?: string | null
+          sync_enabled?: boolean | null
+          sync_from_date?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_attachments: {
+        Row: {
+          content_type: string | null
+          created_at: string | null
+          email_message_id: string | null
+          filename: string
+          id: string
+          provider_attachment_id: string | null
+          size_bytes: number | null
+          storage_path: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string | null
+          email_message_id?: string | null
+          filename: string
+          id?: string
+          provider_attachment_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string | null
+          email_message_id?: string | null
+          filename?: string
+          id?: string
+          provider_attachment_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_attachments_email_message_id_fkey"
+            columns: ["email_message_id"]
+            isOneToOne: false
+            referencedRelation: "email_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaign_analytics: {
         Row: {
           campaign_id: string
@@ -7245,6 +7343,141 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_messages: {
+        Row: {
+          bcc_addresses: string[] | null
+          body_html: string | null
+          body_text: string | null
+          cc_addresses: string[] | null
+          clicked_at: string | null
+          clicked_count: number | null
+          company_id: string
+          contact_id: string | null
+          created_at: string | null
+          deal_id: string | null
+          direction: string | null
+          email_account_id: string | null
+          from_address: string
+          from_name: string | null
+          has_attachments: boolean | null
+          id: string
+          is_read: boolean | null
+          labels: string[] | null
+          lead_id: string | null
+          opened_at: string | null
+          opened_count: number | null
+          opportunity_id: string | null
+          provider_message_id: string
+          received_at: string | null
+          sent_at: string | null
+          snippet: string | null
+          subject: string | null
+          thread_id: string | null
+          to_addresses: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          bcc_addresses?: string[] | null
+          body_html?: string | null
+          body_text?: string | null
+          cc_addresses?: string[] | null
+          clicked_at?: string | null
+          clicked_count?: number | null
+          company_id: string
+          contact_id?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          direction?: string | null
+          email_account_id?: string | null
+          from_address: string
+          from_name?: string | null
+          has_attachments?: boolean | null
+          id?: string
+          is_read?: boolean | null
+          labels?: string[] | null
+          lead_id?: string | null
+          opened_at?: string | null
+          opened_count?: number | null
+          opportunity_id?: string | null
+          provider_message_id: string
+          received_at?: string | null
+          sent_at?: string | null
+          snippet?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_addresses: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          bcc_addresses?: string[] | null
+          body_html?: string | null
+          body_text?: string | null
+          cc_addresses?: string[] | null
+          clicked_at?: string | null
+          clicked_count?: number | null
+          company_id?: string
+          contact_id?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          direction?: string | null
+          email_account_id?: string | null
+          from_address?: string
+          from_name?: string | null
+          has_attachments?: boolean | null
+          id?: string
+          is_read?: boolean | null
+          labels?: string[] | null
+          lead_id?: string | null
+          opened_at?: string | null
+          opened_count?: number | null
+          opportunity_id?: string | null
+          provider_message_id?: string
+          received_at?: string | null
+          sent_at?: string | null
+          snippet?: string | null
+          subject?: string | null
+          thread_id?: string | null
+          to_addresses?: string[]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_messages_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_messages_email_account_id_fkey"
+            columns: ["email_account_id"]
+            isOneToOne: false
+            referencedRelation: "email_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_messages_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
         ]

@@ -44,22 +44,25 @@
   - [ ] Implement sentiment analysis AI
   - [x] Display sentiment scores in UI (UI ready)
 
-### 3. Email Sync (Gmail/Outlook OAuth)
+### 3. Email Sync (Gmail/Outlook OAuth) 🚧
 - [ ] **OAuth Setup**
-  - [ ] Configure Google OAuth app
-  - [ ] Configure Microsoft OAuth app
+  - [ ] Configure Google OAuth app (user action required)
+  - [ ] Configure Microsoft OAuth app (user action required)
   - [ ] Add OAuth secrets to Supabase
-  - [ ] Create email_accounts table migration
+  - [x] Create email_accounts table migration
+  - [x] Create email_messages table migration
+  - [x] Create email_attachments table migration
   
 - [ ] **2-Way Inbox Synchronization**
   - [ ] Create edge function for Gmail sync
   - [ ] Create edge function for Outlook sync
-  - [ ] Add email_messages table migration
   - [ ] Implement webhook handlers
   - [ ] Add background sync scheduler
+  - [ ] Create EmailSync UI component
   
 - [ ] **Automatic Email Tracking**
-  - [ ] Track email opens
+  - [x] Add tracking fields to schema (opened_at, clicked_at, counts)
+  - [ ] Track email opens (pixel tracking)
   - [ ] Track link clicks
   - [ ] Log email replies
   - [ ] Display email activity timeline
