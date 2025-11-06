@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit, LayoutTemplate } from "lucide-react";
+import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit, LayoutTemplate, Activity } from "lucide-react";
 import { WorkflowTemplateLibrary } from "./WorkflowTemplateLibrary";
+import { WorkflowAnalytics } from "./WorkflowAnalytics";
 
 interface WorkflowBuilderProps {
   workflowId?: string;
@@ -52,6 +53,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
   const [workflowDescription, setWorkflowDescription] = useState("");
   const [triggerType, setTriggerType] = useState("record_created");
   const [showTemplates, setShowTemplates] = useState(true);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -259,6 +261,14 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
             Browse Templates
           </Button>
           <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowAnalytics(true)}
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            View Analytics
+          </Button>
+          <Button
             className="w-full"
             onClick={() => saveWorkflowMutation.mutate()}
             disabled={!workflowName || saveWorkflowMutation.isPending}
@@ -271,7 +281,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
         </>
       )}
 
-      {/* Main Canvas or Templates */}
+      {/* Main Canvas or Templates or Analytics */}
       {showTemplates ? (
         <div className="flex-1 p-8 overflow-auto">
           <div className="max-w-6xl mx-auto">
@@ -281,6 +291,17 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
               </Button>
             </div>
             <WorkflowTemplateLibrary onSelectTemplate={loadTemplate} />
+          </div>
+        </div>
+      ) : showAnalytics ? (
+        <div className="flex-1 p-8 overflow-auto">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-6">
+              <Button variant="outline" onClick={() => setShowAnalytics(false)}>
+                ← Back to Canvas
+              </Button>
+            </div>
+            <WorkflowAnalytics workflowId={workflowId} />
           </div>
         </div>
       ) : (
@@ -302,7 +323,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
       )}
 
       {/* Right Sidebar - Node Configuration */}
-      {!showTemplates && selectedNode && selectedNode.id !== "trigger" && (
+      {!showTemplates && !showAnalytics && selectedNode && selectedNode.id !== "trigger" && (
         <div className="w-80 border-l bg-background p-4 overflow-y-auto">
           <Card>
             <CardHeader>
