@@ -87,11 +87,19 @@ Deno.serve(async (req) => {
             break;
           
           case 'condition':
-            const conditionResult = evaluateCondition(step, executionContext);
-            stepOutput = { passed: conditionResult };
-            if (!conditionResult) {
-              console.log('Condition failed, stopping workflow');
-              stepStatus = 'skipped';
+            const conditionResult = evaluateConditions(step, executionContext);
+            stepOutput = { passed: conditionResult, branch: conditionResult ? 'true' : 'false' };
+            executionContext.last_condition_result = conditionResult;
+            
+            // Find next steps based on branch
+            const nextSteps = steps.filter((s: WorkflowStep) => {
+              const currentIndex = steps.findIndex((st: WorkflowStep) => st.id === step.id);
+              return s.position > step.position;
+            });
+            
+            if (nextSteps.length > 0 && !conditionResult) {
+              // Skip to alternative branch or end
+              console.log('Condition failed, branching to false path');
             }
             break;
           
@@ -295,26 +303,41 @@ async function callWebhook(params: any, context: any) {
   };
 }
 
-function evaluateCondition(step: WorkflowStep, context: any): boolean {
-  const { field, operator, value } = step.config;
-  const fieldValue = context[field];
+function evaluateConditions(step: WorkflowStep, context: any): boolean {
+  const { conditions, logic_operator } = step.config;
 
-  console.log('Evaluating condition:', { field, operator, value, fieldValue });
+  if (!conditions || conditions.length === 0) {
+    return true;
+  }
 
-  switch (operator) {
-    case 'equals':
-      return fieldValue == value;
-    case 'not_equals':
-      return fieldValue != value;
-    case 'greater_than':
-      return Number(fieldValue) > Number(value);
-    case 'less_than':
-      return Number(fieldValue) < Number(value);
-    case 'contains':
-      return String(fieldValue).includes(String(value));
-    case 'exists':
-      return fieldValue !== null && fieldValue !== undefined;
-    default:
-      return false;
+  console.log('Evaluating conditions:', { conditions, logic_operator, context });
+
+  const results = conditions.map((condition: any) => {
+    const fieldValue = context[condition.field];
+    
+    switch (condition.operator) {
+      case 'equals':
+        return fieldValue == condition.value;
+      case 'not_equals':
+        return fieldValue != condition.value;
+      case 'greater_than':
+        return Number(fieldValue) > Number(condition.value);
+      case 'less_than':
+        return Number(fieldValue) < Number(condition.value);
+      case 'contains':
+        return String(fieldValue).includes(String(condition.value));
+      case 'exists':
+        return fieldValue !== null && fieldValue !== undefined;
+      default:
+        return false;
+    }
+  });
+
+  // Apply logic operator
+  if (logic_operator === 'OR') {
+    return results.some(r => r === true);
+  } else {
+    // Default to AND
+    return results.every(r => r === true);
   }
 }

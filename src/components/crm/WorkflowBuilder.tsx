@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save } from "lucide-react";
+import { Mail, Phone, MessageSquare, Clock, Webhook, Plus, Save, GitBranch, CheckCircle2, Edit } from "lucide-react";
 
 interface WorkflowBuilderProps {
   workflowId?: string;
@@ -23,6 +23,7 @@ const actionTypes = [
   { value: "update_field", label: "Update Field", icon: Plus },
   { value: "wait", label: "Wait/Delay", icon: Clock },
   { value: "webhook", label: "Webhook", icon: Webhook },
+  { value: "condition", label: "Condition", icon: GitBranch },
 ];
 
 const triggerTypes = [
@@ -323,6 +324,37 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps) {
                     </Select>
                   </div>
                 </>
+              )}
+
+              {selectedNode.data.actionType === "condition" && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Add conditions to control workflow branching. Connect the "true" and "false" outputs to different paths.
+                  </p>
+                  <div>
+                    <Label>Field</Label>
+                    <Input placeholder="status" />
+                  </div>
+                  <div>
+                    <Label>Operator</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select operator" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="equals">Equals</SelectItem>
+                        <SelectItem value="not_equals">Not Equals</SelectItem>
+                        <SelectItem value="greater_than">Greater Than</SelectItem>
+                        <SelectItem value="less_than">Less Than</SelectItem>
+                        <SelectItem value="contains">Contains</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Value</Label>
+                    <Input placeholder="completed" />
+                  </div>
+                </div>
               )}
 
               <Button variant="outline" className="w-full">
