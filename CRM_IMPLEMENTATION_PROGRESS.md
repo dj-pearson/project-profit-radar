@@ -67,12 +67,13 @@
   - [ ] Log email replies
   - [ ] Display email activity timeline
 
-### 4. Meeting Scheduler
-- [ ] **Calendly-Style Booking**
-  - [ ] Create booking_pages table migration
-  - [ ] Add availability_rules table migration
-  - [ ] Build booking page creator UI
-  - [ ] Implement public booking form
+### 4. Meeting Scheduler ✅
+- [x] **Calendly-Style Booking**
+  - [x] Create booking_pages table migration
+  - [x] Add availability_rules table migration
+  - [x] Add bookings table migration
+  - [x] Build booking page creator UI (BookingPageManager)
+  - [x] Implement public booking form (PublicBookingForm)
   - [ ] Add booking confirmation emails
   
 - [ ] **Calendar Sync**

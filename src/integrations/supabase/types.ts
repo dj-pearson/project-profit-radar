@@ -1855,6 +1855,41 @@ export type Database = {
           },
         ]
       }
+      availability_rules: {
+        Row: {
+          booking_page_id: string
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          start_time: string
+        }
+        Insert: {
+          booking_page_id: string
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          start_time: string
+        }
+        Update: {
+          booking_page_id?: string
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_rules_booking_page_id_fkey"
+            columns: ["booking_page_id"]
+            isOneToOne: false
+            referencedRelation: "booking_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       behavioral_trigger_executions: {
         Row: {
           created_at: string | null
@@ -2996,6 +3031,172 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_pages: {
+        Row: {
+          booking_advance_days: number | null
+          booking_notice_hours: number | null
+          buffer_after_minutes: number | null
+          buffer_before_minutes: number | null
+          collect_notes: boolean | null
+          collect_phone: boolean | null
+          confirmation_message: string | null
+          created_at: string
+          custom_fields: Json | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean | null
+          location_details: Json | null
+          location_type: string | null
+          max_bookings_per_day: number | null
+          redirect_url: string | null
+          requires_approval: boolean | null
+          slug: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_advance_days?: number | null
+          booking_notice_hours?: number | null
+          buffer_after_minutes?: number | null
+          buffer_before_minutes?: number | null
+          collect_notes?: boolean | null
+          collect_phone?: boolean | null
+          confirmation_message?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean | null
+          location_details?: Json | null
+          location_type?: string | null
+          max_bookings_per_day?: number | null
+          redirect_url?: string | null
+          requires_approval?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_advance_days?: number | null
+          booking_notice_hours?: number | null
+          buffer_after_minutes?: number | null
+          buffer_before_minutes?: number | null
+          collect_notes?: boolean | null
+          collect_phone?: boolean | null
+          confirmation_message?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean | null
+          location_details?: Json | null
+          location_type?: string | null
+          max_bookings_per_day?: number | null
+          redirect_url?: string | null
+          requires_approval?: boolean | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          attendee_email: string
+          attendee_name: string
+          attendee_notes: string | null
+          attendee_phone: string | null
+          booking_page_id: string
+          calendar_event_id: string | null
+          cancellation_reason: string | null
+          contact_id: string | null
+          created_at: string
+          custom_field_responses: Json | null
+          end_at: string
+          google_meet_link: string | null
+          id: string
+          lead_id: string | null
+          reminder_sent: boolean | null
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string | null
+          zoom_meeting_id: string | null
+        }
+        Insert: {
+          attendee_email: string
+          attendee_name: string
+          attendee_notes?: string | null
+          attendee_phone?: string | null
+          booking_page_id: string
+          calendar_event_id?: string | null
+          cancellation_reason?: string | null
+          contact_id?: string | null
+          created_at?: string
+          custom_field_responses?: Json | null
+          end_at: string
+          google_meet_link?: string | null
+          id?: string
+          lead_id?: string | null
+          reminder_sent?: boolean | null
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          zoom_meeting_id?: string | null
+        }
+        Update: {
+          attendee_email?: string
+          attendee_name?: string
+          attendee_notes?: string | null
+          attendee_phone?: string | null
+          booking_page_id?: string
+          calendar_event_id?: string | null
+          cancellation_reason?: string | null
+          contact_id?: string | null
+          created_at?: string
+          custom_field_responses?: Json | null
+          end_at?: string
+          google_meet_link?: string | null
+          id?: string
+          lead_id?: string | null
+          reminder_sent?: boolean | null
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          zoom_meeting_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_booking_page_id_fkey"
+            columns: ["booking_page_id"]
+            isOneToOne: false
+            referencedRelation: "booking_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
