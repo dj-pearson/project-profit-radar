@@ -215,28 +215,15 @@ import { useGlobalShortcuts } from "@/hooks/useKeyboardShortcuts";
 // Create a client
 // Query client is now imported from lib/queryClient.ts
 
-const App = () => {
-  // Get global keyboard shortcuts for the shortcuts panel
+// Component that needs Router context
+const AppContent = () => {
   const globalShortcuts = useGlobalShortcuts();
-
-  // Preload high-priority routes on app initialization
-  useEffect(() => {
-    preloadHighPriorityRoutes();
-  }, []);
-
+  
   return (
-    <CriticalErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AccessibilityProvider>
-            <ContextMenuProvider>
-              <PlatformProvider>
-                <ThemeProvider>
-                  <HelmetProvider>
-                    <BrowserRouter>
-                    <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
-                    <Suspense fallback={<DashboardSkeleton />}>
-                      <Routes>
+    <>
+      <UnifiedSEOSystem autoOptimize={true} enableAnalytics={true} />
+      <Suspense fallback={<DashboardSkeleton />}>
+        <Routes>
               <Route path="/" element={<LazyIndex />} />
               <Route path="/marketplace" element={<LazyAPIMarketplace />} />
               <Route path="/collaboration" element={<LazyCollaboration />} />
@@ -549,15 +536,36 @@ const App = () => {
           {/* Usability Enhancements */}
           <CommandPalette />
           <KeyboardShortcutsPanel shortcuts={globalShortcuts} />
-        </BrowserRouter>
-      </HelmetProvider>
-    </ThemeProvider>
-  </PlatformProvider>
-          </ContextMenuProvider>
+    </>
+  );
+};
+
+const App = () => {
+  // Preload high-priority routes on app initialization
+  useEffect(() => {
+    preloadHighPriorityRoutes();
+  }, []);
+
+  return (
+    <CriticalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AccessibilityProvider>
+            <ContextMenuProvider>
+              <PlatformProvider>
+                <ThemeProvider>
+                  <HelmetProvider>
+                    <BrowserRouter>
+                      <AppContent />
+                    </BrowserRouter>
+                  </HelmetProvider>
+                </ThemeProvider>
+              </PlatformProvider>
+            </ContextMenuProvider>
           </AccessibilityProvider>
-  </AuthProvider>
-</QueryClientProvider>
-</CriticalErrorBoundary>
+        </AuthProvider>
+      </QueryClientProvider>
+    </CriticalErrorBoundary>
   );
 };
 
