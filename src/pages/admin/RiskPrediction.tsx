@@ -157,7 +157,7 @@ export function RiskPrediction() {
       }
 
       if (predictionData) {
-        setPrediction(predictionData);
+        setPrediction(predictionData as unknown as RiskPrediction);
 
         // Load risk factors
         const { data: factorsData } = await supabase
@@ -167,21 +167,21 @@ export function RiskPrediction() {
         setFactors(factorsData || []);
 
         // Load recommendations
-        const { data: recsData } = await supabase
+        const { data: recsData } = await (supabase as any)
           .from('risk_recommendations')
           .select('*')
           .eq('risk_prediction_id', predictionData.id)
           .order('priority', { ascending: false });
-        setRecommendations(recsData || []);
+        setRecommendations((recsData as unknown as RiskRecommendation[]) || []);
 
         // Load active alerts
-        const { data: alertsData } = await supabase
+        const { data: alertsData } = await (supabase as any)
           .from('risk_alerts')
           .select('*')
           .eq('project_id', projectId)
           .eq('status', 'active')
           .order('severity', { ascending: false });
-        setAlerts(alertsData || []);
+        setAlerts((alertsData as unknown as RiskAlert[]) || []);
       } else {
         setPrediction(null);
         setFactors([]);
@@ -190,14 +190,14 @@ export function RiskPrediction() {
       }
 
       // Load prediction history
-      const { data: historyData } = await supabase
+      const { data: historyData } = await (supabase as any)
         .from('risk_predictions')
         .select('*')
         .eq('project_id', projectId)
         .eq('tenant_id', userProfile.tenant_id)
         .order('created_at', { ascending: false })
         .limit(10);
-      setHistory(historyData || []);
+      setHistory((historyData as unknown as RiskPrediction[]) || []);
 
     } catch (error) {
       console.error('Error loading prediction:', error);
@@ -222,21 +222,17 @@ export function RiskPrediction() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/risk-prediction`,
+      const { data: invokeData, error: invokeError } = await (supabase as any).functions.invoke(
+        'risk-prediction',
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
+          body: {
             tenant_id: userProfile.tenant_id,
             project_id: selectedProjectId,
             user_id: user?.id
-          })
+          }
         }
       );
+      if (invokeError) throw invokeError;
 
       if (!response.ok) {
         throw new Error('Failed to generate prediction');

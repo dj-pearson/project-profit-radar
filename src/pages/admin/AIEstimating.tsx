@@ -60,7 +60,7 @@ export function AIEstimating() {
   const fetchEstimates = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_cost_predictions')
         .select('*')
         .order('created_at', { ascending: false })

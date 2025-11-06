@@ -56,7 +56,7 @@ export default function EmailMarketing() {
     setLoading(true);
     try {
       // Load campaigns
-      const { data: campaignData, error: campaignError } = await supabase
+      const { data: campaignData, error: campaignError } = await (supabase as any)
         .from('email_campaigns')
         .select(`
           *,
@@ -69,7 +69,7 @@ export default function EmailMarketing() {
       if (campaignError) throw campaignError;
 
       // Load templates
-      const { data: templateData, error: templateError } = await supabase
+      const { data: templateData, error: templateError } = await (supabase as any)
         .from('email_templates')
         .select('*')
         .eq('company_id', userProfile.company_id)
@@ -78,7 +78,7 @@ export default function EmailMarketing() {
       if (templateError) throw templateError;
 
       // Load email lists
-      const { data: listData, error: listError } = await supabase
+      const { data: listData, error: listError } = await (supabase as any)
         .from('email_lists')
         .select('*')
         .eq('company_id', userProfile.company_id)

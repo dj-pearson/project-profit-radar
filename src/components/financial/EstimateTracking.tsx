@@ -41,7 +41,7 @@ const EstimateTracking = () => {
       setLoading(true);
       
       // Load leads as estimates since we don't have a dedicated estimates table
-      const { data: leads, error } = await supabase
+      const { data: leads, error } = await (supabase as any)
         .from('leads')
         .select('*')
         .eq('company_id', userProfile?.company_id)

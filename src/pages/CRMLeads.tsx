@@ -137,7 +137,7 @@ const CRMLeads = () => {
       throw new Error('No company associated with user');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('leads')
       .select('*')
       .eq('company_id', userProfile.company_id)

@@ -111,7 +111,7 @@ export const RetentionAnalytics = () => {
       });
 
       if (error) throw error;
-      setCohortData(data || []);
+      setCohortData((data as any) || []);
     } catch (error) {
       console.error('Failed to load cohort data:', error);
     }
@@ -119,7 +119,7 @@ export const RetentionAnalytics = () => {
 
   const loadHealthDistribution = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_health_scores')
         .select('churn_risk_level');
 
@@ -144,7 +144,7 @@ export const RetentionAnalytics = () => {
   const loadAtRiskUsers = async () => {
     try {
       // Get users with high or critical churn risk
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_health_scores')
         .select(`
           user_id,
@@ -163,7 +163,7 @@ export const RetentionAnalytics = () => {
       // Get user emails
       if (data && data.length > 0) {
         const userIds = data.map(u => u.user_id);
-        const { data: profiles } = await supabase
+        const { data: profiles } = await (supabase as any)
           .from('user_profiles')
           .select('id, email')
           .in('id', userIds);

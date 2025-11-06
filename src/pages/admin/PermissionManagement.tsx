@@ -104,7 +104,7 @@ export const PermissionManagement = () => {
     setLoading(true);
     try {
       // Load all permissions
-      const { data: permissionsData, error: permissionsError } = await supabase
+      const { data: permissionsData, error: permissionsError } = await (supabase as any)
         .from('permissions')
         .select('*')
         .order('category', { ascending: true })
@@ -114,7 +114,7 @@ export const PermissionManagement = () => {
       setPermissions(permissionsData || []);
 
       // Load custom roles with counts
-      const { data: rolesData, error: rolesError } = await supabase
+      const { data: rolesData, error: rolesError } = await (supabase as any)
         .from('custom_roles')
         .select('*')
         .order('created_at', { ascending: false });
@@ -124,12 +124,12 @@ export const PermissionManagement = () => {
       // Get permission and user counts for each role
       const rolesWithCounts = await Promise.all(
         (rolesData || []).map(async (role) => {
-          const { count: permCount } = await supabase
+          const { count: permCount } = await (supabase as any)
             .from('role_permissions')
             .select('*', { count: 'exact', head: true })
             .eq('role_id', role.id);
 
-          const { count: userCount } = await supabase
+          const { count: userCount } = await (supabase as any)
             .from('tenant_users')
             .select('*', { count: 'exact', head: true })
             .contains('custom_roles', [role.id]);
@@ -142,27 +142,27 @@ export const PermissionManagement = () => {
         })
       );
 
-      setCustomRoles(rolesWithCounts);
+      setCustomRoles(rolesWithCounts as any);
 
       // Load user permissions
-      const { data: userPermsData, error: userPermsError } = await supabase
+      const { data: userPermsData, error: userPermsError } = await (supabase as any)
         .from('user_permissions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (userPermsError) throw userPermsError;
-      setUserPermissions(userPermsData || []);
+      setUserPermissions((userPermsData as any) || []);
 
       // Load audit logs
-      const { data: auditData, error: auditError } = await supabase
+      const { data: auditData, error: auditError } = await (supabase as any)
         .from('permission_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
       if (auditError) throw auditError;
-      setAuditLogs(auditData || []);
+      setAuditLogs((auditData as any) || []);
     } catch (error) {
       console.error('Failed to load permission data:', error);
       toast({
@@ -187,7 +187,7 @@ export const PermissionManagement = () => {
 
     try {
       // Create role
-      const { data: role, error: roleError } = await supabase
+      const { data: role, error: roleError } = await (supabase as any)
         .from('custom_roles')
         .insert({
           name: newRoleName,
@@ -207,7 +207,7 @@ export const PermissionManagement = () => {
         permission_id: permId,
       }));
 
-      const { error: permError } = await supabase
+      const { error: permError } = await (supabase as any)
         .from('role_permissions')
         .insert(rolePermissions);
 
@@ -236,7 +236,7 @@ export const PermissionManagement = () => {
 
   const toggleRoleStatus = async (roleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('custom_roles')
         .update({ is_active: !currentStatus })
         .eq('id', roleId);
@@ -267,7 +267,7 @@ export const PermissionManagement = () => {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('custom_roles')
         .delete()
         .eq('id', roleId);

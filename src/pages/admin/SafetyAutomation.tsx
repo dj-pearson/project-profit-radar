@@ -216,7 +216,7 @@ export function SafetyAutomation() {
         .order('incident_date', { ascending: false });
 
       if (error) throw error;
-      setOshaLogs(data || []);
+      setOshaLogs((data as any) || []);
     } catch (error) {
       console.error('Error loading OSHA logs:', error);
     }

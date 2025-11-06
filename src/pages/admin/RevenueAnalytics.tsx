@@ -75,14 +75,14 @@ export const RevenueAnalytics = () => {
       }
 
       // Load revenue metrics
-      const { data: metricsData, error: metricsError } = await supabase
+      const { data: metricsData, error: metricsError } = await (supabase as any)
         .from('revenue_metrics')
         .select('*')
         .gte('period_start', startDate.toISOString())
         .order('period_start', { ascending: true });
 
       if (metricsError) throw metricsError;
-      setMetrics(metricsData || []);
+      setMetrics((metricsData as unknown as RevenueMetric[]) || []);
 
       // Load cohort LTV data
       const { data: cohortData, error: cohortError } = await supabase

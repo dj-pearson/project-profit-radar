@@ -41,13 +41,13 @@ export const PerformanceMetrics = () => {
 
     try {
       // Get leads data
-      const { data: leads } = await supabase
+      const { data: leads } = await (supabase as any)
         .from('leads')
         .select('status, created_at')
         .eq('company_id', userProfile.company_id) as any;
 
       // Get activities data
-      const { data: activities } = await supabase
+      const { data: activities } = await (supabase as any)
         .from('lead_activities')
         .select('created_at')
         .eq('company_id', userProfile.company_id);

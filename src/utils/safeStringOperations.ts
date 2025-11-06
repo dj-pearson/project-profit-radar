@@ -67,8 +67,8 @@ export function safeReplaceAll(
 
     // If searchValue is a string, use replaceAll if available, or global regex
     if (typeof searchValue === 'string') {
-      if (str.replaceAll) {
-        return str.replaceAll(searchValue, replaceValue);
+      if (typeof (str as any).replaceAll === 'function') {
+        return (str as any).replaceAll(searchValue, replaceValue);
       } else {
         // Fallback for older environments
         const escapedSearch = searchValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

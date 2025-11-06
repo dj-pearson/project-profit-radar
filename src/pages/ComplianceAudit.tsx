@@ -127,32 +127,28 @@ const ComplianceAudit = () => {
       // Fetch audit statistics
       const [eventsResult, highRiskResult, dataAccessResult, configResult, todayResult] = await Promise.all([
         // Total events (last 30 days)
-        supabase
+        (supabase as any)
           .from('audit_logs')
           .select('id')
           .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
         
-        // High risk events (last 7 days)
-        supabase
+        (supabase as any)
           .from('audit_logs')
           .select('id')
           .in('risk_level', ['high', 'critical'])
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         
-        // Data access events (last 24 hours)
-        supabase
+        (supabase as any)
           .from('data_access_logs')
           .select('id')
           .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
         
-        // Config changes (last 7 days)
-        supabase
+        (supabase as any)
           .from('system_config_changes')
           .select('id')
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         
-        // Today's events
-        supabase
+        (supabase as any)
           .from('audit_logs')
           .select('id')
           .gte('created_at', `${today}T00:00:00.000Z`)
@@ -160,7 +156,7 @@ const ComplianceAudit = () => {
       ]);
 
       // Fetch recent audit events with user details
-      const { data: recentEvents } = await supabase
+      const { data: recentEvents } = await (supabase as any)
         .from('audit_logs')
         .select(`
           *,
@@ -174,7 +170,7 @@ const ComplianceAudit = () => {
         .limit(50);
 
       // Fetch recent data access logs
-      const { data: recentAccess } = await supabase
+      const { data: recentAccess } = await (supabase as any)
         .from('data_access_logs')
         .select(`
           *,
