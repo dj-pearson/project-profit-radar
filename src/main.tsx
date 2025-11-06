@@ -8,6 +8,12 @@ import { initializeResourceOptimizations } from "./utils/resourcePrioritization"
 import { initializeRUM } from "./utils/realUserMonitoring";
 import { registerServiceWorker } from "./utils/serviceWorkerManager";
 import { logger } from "./lib/logger";
+import { validateEnvironment } from "./lib/envValidation";
+
+// Validate environment variables first
+if (typeof window !== 'undefined') {
+  validateEnvironment();
+}
 
 // Initialize resource optimizations early
 if (typeof window !== 'undefined') {
