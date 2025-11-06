@@ -346,6 +346,12 @@ const navigationCategories: NavigationCategory[] = [
         icon: TrendingUp,
         roles: ["admin", "project_manager", "accounting", "root_admin"],
       },
+      {
+        title: "Payment Center",
+        url: "/payment-center",
+        icon: DollarSign,
+        roles: ["admin", "accounting", "root_admin"],
+      },
     ],
   },
   {
@@ -390,6 +396,20 @@ const navigationCategories: NavigationCategory[] = [
       {
         title: "Materials",
         url: "/materials",
+        icon: Package,
+        roles: [
+          "admin",
+          "superintendent",
+          "project_manager",
+          "foreman",
+          "field_supervisor",
+          "office_staff",
+          "root_admin",
+        ],
+      },
+      {
+        title: "Material Tracking",
+        url: "/material-tracking",
         icon: Package,
         roles: [
           "admin",
@@ -467,7 +487,7 @@ const navigationCategories: NavigationCategory[] = [
         title: "Safety Management",
         url: "/safety",
         icon: Shield,
-        roles: ["admin", "project_manager", "field_supervisor", "root_admin"],
+        roles: ["admin", "superintendent", "project_manager", "field_supervisor", "root_admin"],
       },
       {
         title: "AI Quality Control",
@@ -506,6 +526,12 @@ const navigationCategories: NavigationCategory[] = [
         url: "/warranty-management",
         icon: Wrench,
         roles: ["admin", "project_manager", "office_staff", "root_admin"],
+      },
+      {
+        title: "Field Management",
+        url: "/field-management",
+        icon: Users,
+        roles: ["admin", "superintendent", "project_manager", "field_supervisor", "root_admin"],
       },
       {
         title: "Compliance Audit",
@@ -548,6 +574,12 @@ const navigationCategories: NavigationCategory[] = [
         icon: Calendar,
         roles: ["admin", "project_manager", "office_staff", "root_admin"],
       },
+      {
+        title: "Schedule Builder",
+        url: "/schedule-builder",
+        icon: Calendar,
+        roles: ["admin", "superintendent", "project_manager", "root_admin"],
+      },
     ],
   },
   {
@@ -565,6 +597,18 @@ const navigationCategories: NavigationCategory[] = [
         url: "/workflows",
         icon: Settings,
         roles: ["admin", "project_manager", "root_admin"],
+      },
+      {
+        title: "Workflow Management",
+        url: "/workflow-management",
+        icon: Settings,
+        roles: ["admin", "root_admin"],
+      },
+      {
+        title: "Workflow Testing",
+        url: "/workflow-testing",
+        icon: Settings,
+        roles: ["admin", "root_admin"],
       },
       {
         title: "Trade Handoff Coordination",
@@ -585,6 +629,7 @@ const navigationCategories: NavigationCategory[] = [
         icon: FileText,
         roles: [
           "admin",
+          "superintendent",
           "project_manager",
           "field_supervisor",
           "office_staff",
@@ -598,6 +643,7 @@ const navigationCategories: NavigationCategory[] = [
         icon: MessageSquare,
         roles: [
           "admin",
+          "superintendent",
           "project_manager",
           "field_supervisor",
           "office_staff",
@@ -621,14 +667,14 @@ const navigationCategories: NavigationCategory[] = [
         title: "Users",
         url: "/admin/users",
         icon: Users,
-        roles: ["root_admin"],
+        roles: ["root_admin", "admin"],
         badge: "Admin",
       },
       {
         title: "Billing",
         url: "/admin/billing",
         icon: DollarSign,
-        roles: ["root_admin"],
+        roles: ["root_admin", "admin"],
         badge: "Admin",
       },
       {
@@ -639,17 +685,59 @@ const navigationCategories: NavigationCategory[] = [
         badge: "Admin",
       },
       {
+        title: "Promotions",
+        url: "/admin/promotions",
+        icon: Tag,
+        roles: ["root_admin", "admin"],
+        badge: "Admin",
+      },
+      {
         title: "Analytics",
         url: "/admin/analytics",
         icon: TrendingUp,
-        roles: ["root_admin"],
+        roles: ["root_admin", "admin"],
+        badge: "Admin",
+      },
+      {
+        title: "Funnels",
+        url: "/admin/funnels",
+        icon: TrendingUp,
+        roles: ["root_admin", "admin"],
+        badge: "Admin",
+      },
+      {
+        title: "Support Tickets",
+        url: "/admin/support-tickets",
+        icon: MessageSquare,
+        roles: ["root_admin", "admin"],
+        badge: "Admin",
+      },
+      {
+        title: "Social Media",
+        url: "/admin/social-media",
+        icon: MessageSquare,
+        roles: ["root_admin", "admin"],
+        badge: "Admin",
+      },
+      {
+        title: "SEO Management",
+        url: "/admin/seo-management",
+        icon: Search,
+        roles: ["root_admin", "admin"],
         badge: "Admin",
       },
       {
         title: "Blog Manager",
         url: "/blog-manager",
         icon: MessageSquare,
-        roles: ["root_admin"],
+        roles: ["root_admin", "admin"],
+        badge: "Admin",
+      },
+      {
+        title: "Knowledge Base Admin",
+        url: "/knowledge-base-admin",
+        icon: FileText,
+        roles: ["root_admin", "admin"],
         badge: "Admin",
       },
       {
@@ -663,22 +751,8 @@ const navigationCategories: NavigationCategory[] = [
         title: "System Settings",
         url: "/admin/settings",
         icon: Settings,
-        roles: ["root_admin"],
+        roles: ["root_admin", "admin"],
         badge: "Admin",
-      },
-      {
-        title: "Promotions",
-        url: "/admin/promotions",
-        icon: Tag,
-        roles: ["root_admin"],
-        badge: "Admin",
-      },
-      {
-        title: "SEO Management",
-        url: "/admin/seo",
-        icon: Search,
-        roles: ["root_admin"],
-        badge: "New",
       },
       {
         title: "Security Monitoring",
