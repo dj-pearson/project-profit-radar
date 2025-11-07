@@ -877,28 +877,28 @@ ALTER TABLE account_balances ENABLE ROW LEVEL SECURITY;
 CREATE POLICY fiscal_years_company_policy ON fiscal_years
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY fiscal_periods_company_policy ON fiscal_periods
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY coa_company_policy ON chart_of_accounts
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY tax_codes_company_policy ON tax_codes
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
@@ -906,7 +906,7 @@ CREATE POLICY tax_components_company_policy ON tax_components
     FOR ALL USING (
         parent_tax_code_id IN (
             SELECT id FROM tax_codes WHERE company_id IN (
-                SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+                SELECT company_id FROM user_profiles WHERE id = auth.uid()
             )
         )
     );
@@ -914,98 +914,98 @@ CREATE POLICY tax_components_company_policy ON tax_components
 CREATE POLICY journal_entries_company_policy ON journal_entries
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY journal_entry_lines_company_policy ON journal_entry_lines
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bills_company_policy ON bills
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bill_line_items_company_policy ON bill_line_items
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bill_payments_company_policy ON bill_payments
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bill_payment_applications_company_policy ON bill_payment_applications
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY credit_memos_company_policy ON credit_memos
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY credit_memo_line_items_company_policy ON credit_memo_line_items
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY credit_memo_applications_company_policy ON credit_memo_applications
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bank_accounts_company_policy ON bank_accounts
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bank_transactions_company_policy ON bank_transactions
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bank_reconciliations_company_policy ON bank_reconciliations
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY bank_reconciliation_items_company_policy ON bank_reconciliation_items
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
 CREATE POLICY account_balances_company_policy ON account_balances
     FOR ALL USING (
         company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM user_profiles WHERE id = auth.uid()
         )
     );
 
