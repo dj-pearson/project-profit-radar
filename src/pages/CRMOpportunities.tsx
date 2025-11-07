@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -82,11 +84,13 @@ const CRMOpportunities = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  
+  const { checkLimit, getUpgradeRequirement, subscriptionData, usage } = useSubscription();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
   const [showNewOpportunityDialog, setShowNewOpportunityDialog] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [newOpportunity, setNewOpportunity] = useState<Partial<Opportunity>>({
     stage: 'prospecting',
     probability_percent: 50,
@@ -257,6 +261,19 @@ const CRMOpportunities = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleConvertToProject = (opportunity: Opportunity) => {
+    // Check subscription limit before navigating
+    const limitCheck = checkLimit('projects', 1);
+
+    if (!limitCheck.canAdd) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
+    // Navigate to create project with opportunity data
+    navigate(`/create-project?opportunity=${opportunity.id}&name=${encodeURIComponent(opportunity.name)}&budget=${opportunity.estimated_value}&type=${opportunity.project_type || ''}`);
   };
 
   const getStageColor = (stage: string) => {
@@ -749,9 +766,9 @@ const CRMOpportunities = () => {
                           <div className="flex items-center justify-between pt-3 border-t">
                             <div className="flex space-x-2">
                               {opportunity.stage === 'closed_won' && (
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => navigate(`/create-project?opportunity=${opportunity.id}&name=${encodeURIComponent(opportunity.name)}&budget=${opportunity.estimated_value}&type=${opportunity.project_type || ''}`)}
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleConvertToProject(opportunity)}
                                   className="bg-green-600 hover:bg-green-700"
                                 >
                                   <Building2 className="h-4 w-4 mr-2" />
@@ -780,6 +797,17 @@ const CRMOpportunities = () => {
                 </ErrorBoundary>
               </CardContent>
             </Card>
+
+      {/* Upgrade Prompt */}
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        currentTier={subscriptionData?.subscription_tier || 'starter'}
+        requiredTier={getUpgradeRequirement('projects')}
+        limitType="projects"
+        currentUsage={usage.projects}
+        currentLimit={checkLimit('projects').limit}
+      />
     </DashboardLayout>
   );
 };

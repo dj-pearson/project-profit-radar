@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import {
   format,
   isSameDay,
@@ -54,6 +56,20 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
     new Date(selectedYear, new Date().getMonth())
   );
   const navigate = useNavigate();
+  const { checkLimit, getUpgradeRequirement, subscriptionData, usage } = useSubscription();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  // Handle create project with limit checking
+  const handleCreateProject = () => {
+    const limitCheck = checkLimit('projects', 1);
+
+    if (!limitCheck.canAdd) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
+    navigate('/create-project');
+  };
 
   // Get projects for selected date
   const getProjectsForDate = (date: Date) => {
@@ -310,7 +326,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
               variant="outline"
               size="sm"
               className="w-full justify-start"
-              onClick={() => navigate("/create-project")}
+              onClick={handleCreateProject}
             >
               <CalendarDays className="h-4 w-4 mr-2" />
               Create New Project
@@ -336,6 +352,17 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Upgrade Prompt */}
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        currentTier={subscriptionData?.subscription_tier || 'starter'}
+        requiredTier={getUpgradeRequirement('projects')}
+        limitType="projects"
+        currentUsage={usage.projects}
+        currentLimit={checkLimit('projects').limit}
+      />
     </div>
   );
 };
