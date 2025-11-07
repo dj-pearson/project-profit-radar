@@ -1,7 +1,8 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
+import { GEOOptimizedFAQ } from "@/components/seo/GEOOptimizedFAQ";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -31,13 +32,61 @@ const CommercialContractors = () => {
     }
   ];
 
+  const commercialFAQs = [
+    {
+      question: "What is commercial construction management software?",
+      answer: "Commercial construction management software is specialized project management software designed for commercial building projects. It handles complex multi-phase projects, coordinates multiple subcontractors, manages large budgets, tracks compliance requirements, and provides real-time progress reporting for stakeholders including owners, architects, and general contractors.",
+      category: "Definition"
+    },
+    {
+      question: "How is commercial construction software different from residential?",
+      answer: "Commercial construction software handles larger project scales ($1M-$50M+), manages multiple subcontractors simultaneously, tracks complex compliance requirements (LEED, ADA, building codes), supports multi-phase scheduling with critical path analysis, and includes advanced cost control features for work packages and change orders. Residential software focuses on homeowner communication and selections tracking.",
+      category: "Comparison"
+    },
+    {
+      question: "Does BuildDesk support large commercial projects?",
+      answer: "Yes, BuildDesk manages commercial projects from $500K to $20M+. Features include multi-phase scheduling, subcontractor coordination, cost tracking by work package, compliance documentation, stakeholder reporting, and integration with accounting systems. BuildDesk costs $350/month vs enterprise platforms at $500+/user/month.",
+      category: "Features"
+    },
+    {
+      question: "Can commercial contractors track multiple subcontractors in BuildDesk?",
+      answer: "Yes, BuildDesk includes comprehensive subcontractor management: track contracts and insurance certificates, manage payment applications and lien waivers, coordinate schedules across trades, process subcontractor invoices with job costing integration, verify compliance documentation, and maintain communication logs. All subcontractor costs automatically flow to project budgets.",
+      category: "Subcontractors"
+    }
+  ];
+
+  const articleSchema = createArticleSchema(
+    "Commercial Construction Management Software - BuildDesk",
+    "Specialized construction management software for commercial contractors managing large-scale projects with multiple subcontractors and stakeholders.",
+    "https://build-desk.com/commercial-contractors",
+    ["commercial construction software", "commercial contractor management", "large scale construction projects"]
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://build-desk.com" },
+    { name: "Solutions", url: "https://build-desk.com/solutions" },
+    { name: "Commercial Contractors", url: "https://build-desk.com/commercial-contractors" }
+  ]);
+
   return (
     <>
-      <SEOMetaTags
-        title="Commercial Construction Management Software | BuildDesk"
-        description="Specialized construction management software for commercial contractors. Large-scale project management, subcontractor coordination, and compliance tracking. 14-day free trial."
-        keywords={['commercial construction software', 'commercial contractor management', 'large scale construction projects', 'subcontractor management', 'commercial building software']}
-        canonicalUrl="/commercial-contractors"
+      <PageSEO
+        title="Commercial Construction Management Software - Multi-Trade Coordination | BuildDesk"
+        description="Commercial construction software for contractors managing $500K-$20M+ projects. Multi-phase scheduling, subcontractor coordination, compliance tracking. $350/month vs $500+/user enterprise platforms. 25% faster project delivery, 18% better cost control."
+        keywords={[
+          'commercial construction software',
+          'commercial contractor management',
+          'large scale construction projects',
+          'subcontractor management software',
+          'commercial building software',
+          'commercial construction management',
+          'multi-trade coordination software',
+          'commercial project management software'
+        ]}
+        canonicalUrl="https://build-desk.com/commercial-contractors"
+        schema={[articleSchema, breadcrumbSchema]}
+        ogType="article"
+        lastModified="2025-11-07"
       />
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -138,6 +187,15 @@ const CommercialContractors = () => {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
+            </div>
+
+            {/* GEO-Optimized FAQ Section */}
+            <div className="mt-16">
+              <GEOOptimizedFAQ
+                faqs={commercialFAQs}
+                title="Commercial Construction Software FAQs"
+                description="Get answers about commercial construction management software for large-scale projects"
+              />
             </div>
           </div>
         </main>
