@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -61,19 +62,21 @@ const App = () => {
     <CriticalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AccessibilityProvider>
-            <ContextMenuProvider>
-              <PlatformProvider>
-                <ThemeProvider>
-                  <HelmetProvider>
-                    <BrowserRouter>
-                      <AppContent />
-                    </BrowserRouter>
-                  </HelmetProvider>
-                </ThemeProvider>
-              </PlatformProvider>
-            </ContextMenuProvider>
-          </AccessibilityProvider>
+          <SubscriptionProvider>
+            <AccessibilityProvider>
+              <ContextMenuProvider>
+                <PlatformProvider>
+                  <ThemeProvider>
+                    <HelmetProvider>
+                      <BrowserRouter>
+                        <AppContent />
+                      </BrowserRouter>
+                    </HelmetProvider>
+                  </ThemeProvider>
+                </PlatformProvider>
+              </ContextMenuProvider>
+            </AccessibilityProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </QueryClientProvider>
     </CriticalErrorBoundary>

@@ -1,86 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Clock, CreditCard, AlertTriangle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import TrialConversion from './TrialConversion';
 
 const TrialStatusBanner = () => {
-  const [trialData, setTrialData] = useState<{
-    daysLeft: number;
-    isExpired: boolean;
-    subscriptionStatus?: string;
-    isGracePeriod?: boolean;
-    graceDaysLeft?: number;
-  } | null>(null);
+  const { subscriptionStatus, loading } = useSubscription();
   const [showConversionModal, setShowConversionModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      checkTrialStatus();
-    }
-  }, [user]);
-
-  const checkTrialStatus = async () => {
-    try {
-      // First check subscription status using the check-subscription function
-      const { data: subscriptionData, error: subscriptionError } = await supabase.functions.invoke('check-subscription');
-      
-      if (subscriptionError) {
-        console.error('Error checking subscription:', subscriptionError);
-      } else if (subscriptionData?.subscribed) {
-        // User has active subscription (including complimentary), don't show trial banner
-        setTrialData(null);
-        return;
-      }
-
-      // If no active subscription, check trial status
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
-
-      if (profile?.company_id) {
-        const { data: company } = await supabase
-          .from('companies')
-          .select('trial_end_date, subscription_status, subscription_tier')
-          .eq('id', profile.company_id)
-          .single();
-
-        if (company && company.trial_end_date) {
-          const trialEnd = new Date(company.trial_end_date);
-          const today = new Date();
-          const daysLeft = Math.ceil((trialEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          // Calculate grace period if applicable
-          const isGracePeriod = company.subscription_status === 'grace_period';
-          let graceDaysLeft = 0;
-          if (isGracePeriod) {
-            const gracePeriodEnd = new Date(trialEnd.getTime() + 7 * 24 * 60 * 60 * 1000);
-            graceDaysLeft = Math.ceil((gracePeriodEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            graceDaysLeft = Math.max(0, graceDaysLeft);
-          }
-          
-          setTrialData({
-            daysLeft: Math.max(0, daysLeft),
-            isExpired: daysLeft <= 0,
-            subscriptionStatus: company.subscription_status,
-            isGracePeriod,
-            graceDaysLeft
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error checking trial status:', error);
-    }
-  };
 
   const handleUpgrade = () => {
     setShowConversionModal(true);
@@ -88,17 +16,31 @@ const TrialStatusBanner = () => {
 
   const handleConversionStarted = () => {
     setShowConversionModal(false);
-    // Refresh trial status after conversion starts
-    setTimeout(() => {
-      checkTrialStatus();
-    }, 1000);
   };
 
-  if (!trialData || trialData.subscriptionStatus === 'active') {
+  // Don't show banner if:
+  // - Loading
+  // - No subscription status
+  // - User has active subscription
+  // - User is on complimentary subscription
+  if (loading || !subscriptionStatus) {
     return null;
   }
 
-  const { daysLeft, isExpired, isGracePeriod, graceDaysLeft, subscriptionStatus } = trialData;
+  if (subscriptionStatus.isActive || subscriptionStatus.isComplimentary) {
+    return null;
+  }
+
+  const { isTrial, isGracePeriod, isSuspended, trialDaysLeft, graceDaysLeft } = subscriptionStatus;
+
+  // Prepare trial data for conversion modal
+  const trialData = {
+    daysLeft: trialDaysLeft || 0,
+    isExpired: isTrial && (trialDaysLeft || 0) <= 0,
+    subscriptionStatus: isSuspended ? 'suspended' : isGracePeriod ? 'grace_period' : 'trial',
+    isGracePeriod,
+    graceDaysLeft
+  };
 
   // Component for the modal to avoid repetition
   const TrialConversionModal = () => (
@@ -107,7 +49,7 @@ const TrialStatusBanner = () => {
         <DialogHeader>
           <DialogTitle>Upgrade Your Account</DialogTitle>
         </DialogHeader>
-        <TrialConversion 
+        <TrialConversion
           trialData={trialData}
           onConversionStarted={handleConversionStarted}
         />
@@ -116,7 +58,7 @@ const TrialStatusBanner = () => {
   );
 
   // Show suspended status
-  if (subscriptionStatus === 'suspended') {
+  if (isSuspended) {
     return (
       <>
         <Card className="border-destructive bg-destructive/10 mb-6">
@@ -130,13 +72,12 @@ const TrialStatusBanner = () => {
                 </p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleUpgrade}
-              disabled={loading}
               className="bg-destructive hover:bg-destructive/90"
             >
               <CreditCard className="mr-2 h-4 w-4" />
-              {loading ? 'Processing...' : 'Reactivate Account'}
+              Reactivate Account
             </Button>
           </CardContent>
         </Card>
@@ -146,7 +87,7 @@ const TrialStatusBanner = () => {
   }
 
   // Show grace period status
-  if (isGracePeriod) {
+  if (isGracePeriod && graceDaysLeft !== null) {
     return (
       <>
         <Card className="border-amber-500 bg-amber-50 mb-6">
@@ -156,18 +97,17 @@ const TrialStatusBanner = () => {
               <div>
                 <h3 className="font-semibold text-amber-700">Grace Period Active</h3>
                 <p className="text-sm text-amber-600">
-                  {graceDaysLeft} day{graceDaysLeft !== 1 ? 's' : ''} left in your grace period. 
+                  {graceDaysLeft} day{graceDaysLeft !== 1 ? 's' : ''} left in your grace period.
                   Limited features available.
                 </p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleUpgrade}
-              disabled={loading}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               <CreditCard className="mr-2 h-4 w-4" />
-              {loading ? 'Processing...' : 'Upgrade Now'}
+              Upgrade Now
             </Button>
           </CardContent>
         </Card>
@@ -176,8 +116,8 @@ const TrialStatusBanner = () => {
     );
   }
 
-  // Show expired trial (before grace period)
-  if (isExpired) {
+  // Show trial expiration warning (when trial expired but grace period exists)
+  if (isTrial && trialDaysLeft !== null && trialDaysLeft <= 0 && !isGracePeriod) {
     return (
       <>
         <Card className="border-destructive bg-destructive/5 mb-6">
@@ -191,13 +131,12 @@ const TrialStatusBanner = () => {
                 </p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleUpgrade}
-              disabled={loading}
               className="bg-destructive hover:bg-destructive/90"
             >
               <CreditCard className="mr-2 h-4 w-4" />
-              {loading ? 'Processing...' : 'Upgrade Now'}
+              Upgrade Now
             </Button>
           </CardContent>
         </Card>
@@ -206,7 +145,8 @@ const TrialStatusBanner = () => {
     );
   }
 
-  if (daysLeft <= 7) {
+  // Show trial ending soon warning (≤7 days)
+  if (isTrial && trialDaysLeft !== null && trialDaysLeft > 0 && trialDaysLeft <= 7) {
     return (
       <>
         <Card className="border-construction-orange bg-construction-orange/5 mb-6">
@@ -218,17 +158,16 @@ const TrialStatusBanner = () => {
                   Trial Ending Soon
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {daysLeft} day{daysLeft !== 1 ? 's' : ''} left in your free trial
+                  {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left in your free trial
                 </p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleUpgrade}
-              disabled={loading}
               variant="construction"
             >
               <CreditCard className="mr-2 h-4 w-4" />
-              {loading ? 'Processing...' : 'Upgrade Now'}
+              Upgrade Now
             </Button>
           </CardContent>
         </Card>

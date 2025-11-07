@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Crown } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { HubNavigationSection } from '@/components/hub/HubNavigationSection';
 import { hierarchicalNavigation } from '@/components/navigation/HierarchicalNavigationConfig';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 
 const ProjectsHub = () => {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
+  const { checkLimit, getUpgradeRequirement, subscriptionData, usage, refreshUsage } = useSubscription();
   const [metrics, setMetrics] = useState({
     activeProjects: 0,
     changeOrders: 0,
     dailyReports: 0,
     totalProjects: 0
   });
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -62,7 +66,20 @@ const ProjectsHub = () => {
     };
 
     fetchMetrics();
-  }, [userProfile?.company_id]);
+    refreshUsage(); // Also refresh subscription usage when metrics change
+  }, [userProfile?.company_id, refreshUsage]);
+
+  // Handle create project with limit checking
+  const handleCreateProject = () => {
+    const limitCheck = checkLimit('projects', 1);
+
+    if (!limitCheck.canAdd) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
+    navigate('/create-project');
+  };
 
   // Get project sections from hierarchical navigation config
   const projectsArea = hierarchicalNavigation.find(area => area.id === 'projects');
@@ -134,7 +151,7 @@ const ProjectsHub = () => {
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-3">
-            <Button onClick={() => navigate('/create-project')}>
+            <Button onClick={handleCreateProject}>
               Create New Project
             </Button>
             <Button variant="outline" onClick={() => navigate('/rfis')}>
@@ -152,13 +169,51 @@ const ProjectsHub = () => {
         {/* Navigation Sections */}
         <div className="space-y-8">
           {projectSections.map((section) => (
-            <HubNavigationSection 
-              key={section.id} 
-              label={section.label} 
-              items={section.items} 
+            <HubNavigationSection
+              key={section.id}
+              label={section.label}
+              items={section.items}
             />
           ))}
         </div>
+
+        {/* Subscription Limit Indicator */}
+        {subscriptionData && (
+          <Card className="mt-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-construction-orange" />
+                  <span className="text-sm font-medium">Project Limit</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {usage.projects} / {checkLimit('projects').limit === -1 ? '∞' : checkLimit('projects').limit}
+                  </span>
+                  <Badge variant={subscriptionData.subscription_tier === 'enterprise' || subscriptionData.is_complimentary ? 'default' : 'secondary'}>
+                    {subscriptionData.is_complimentary ? 'Complimentary' : subscriptionData.subscription_tier?.charAt(0).toUpperCase() + subscriptionData.subscription_tier?.slice(1) || 'Free'}
+                  </Badge>
+                </div>
+              </div>
+              {checkLimit('projects').limit !== -1 && usage.projects >= checkLimit('projects').limit * 0.8 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  You're approaching your project limit. Consider upgrading to add more projects.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upgrade Prompt */}
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          currentTier={subscriptionData?.subscription_tier || 'starter'}
+          requiredTier={getUpgradeRequirement('projects')}
+          limitType="projects"
+          currentUsage={usage.projects}
+          currentLimit={checkLimit('projects').limit}
+        />
       </div>
     </DashboardLayout>
   );

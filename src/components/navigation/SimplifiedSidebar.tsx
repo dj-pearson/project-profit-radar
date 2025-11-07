@@ -25,6 +25,7 @@ import { Zap, ChevronRight, Lock } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getNavigationForRole } from './NavigationConfig';
 import { hierarchicalNavigation, NavigationSection, findSectionByUrl } from './HierarchicalNavigationConfig';
+import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
 
 // Fix mobile navigation issues in SimplifiedSidebar
 // Improved responsive behavior and touch handling
@@ -252,23 +253,9 @@ export const SimplifiedSidebar = () => {
       </SidebarContent>
       
       <SidebarFooter className="p-4">
-        {!collapsed && (
-          <div className="space-y-2">
-            <NavLink to="/upgrade">
-              <Button variant="default" className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 h-12 touch-target-44">
-                <Zap className="h-4 w-4 mr-2" />
-                Upgrade Plan
-              </Button>
-            </NavLink>
-          </div>
-        )}
-        {collapsed && (
-          <NavLink to="/upgrade">
-            <Button variant="default" size="icon" className="w-full h-12 touch-target-44">
-              <Zap className="h-4 w-4" />
-            </Button>
-          </NavLink>
-        )}
+        <div className="flex items-center justify-center">
+          <SubscriptionStatusBadge variant={collapsed ? 'compact' : 'full'} showIcon={true} />
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
