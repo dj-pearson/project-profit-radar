@@ -6,15 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  LogOut, 
-  User, 
-  Building2, 
+import {
+  LogOut,
+  User,
+  Building2,
   Smartphone,
   Camera,
-  MapPin,
   Clock,
-  Users,
   Hammer,
   CheckCircle
 } from 'lucide-react';

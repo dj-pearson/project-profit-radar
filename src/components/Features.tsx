@@ -1,17 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  DollarSign, 
-  Smartphone, 
-  Shield, 
-  Zap, 
-  MessageSquare, 
-  Calendar,
+import {
+  DollarSign,
+  Smartphone,
+  Shield,
+  Zap,
   ArrowRight,
   Building2,
   Wrench,
-  FileText,
-  Truck,
-  Users
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
