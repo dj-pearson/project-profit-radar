@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { SEOMetaTags } from '@/components/SEOMetaTags';
+import { PageSEO, createArticleSchema, createBreadcrumbSchema, createHowToSchema } from '@/components/seo/PageSEO';
+import { GEOOptimizedFAQ } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';
-import { ArticleSchema, FAQSchema } from '@/components/EnhancedSchemaMarkup';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -342,12 +342,41 @@ const ConstructionProjectManagementSoftware = () => {
     );
   };
 
+  const projectManagementFAQs = faqData.map(item => ({
+    question: item.question,
+    answer: item.answer,
+    category: "Project Management"
+  }));
+
+  const articleSchema = createArticleSchema(
+    "Best Construction Project Management Software 2025 - Complete Guide",
+    "Comprehensive guide to construction project management software, featuring comparisons, ROI analysis, and implementation best practices for contractors.",
+    "https://build-desk.com/construction-project-management-software",
+    ["construction project management software", "construction management", "project management for contractors"]
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://build-desk.com" },
+    { name: "Solutions", url: "https://build-desk.com/solutions" },
+    { name: "Construction Project Management Software", url: "https://build-desk.com/construction-project-management-software" }
+  ]);
+
+  const howToSchema = createHowToSchema(
+    "How to Implement Construction Project Management Software",
+    [
+      { name: "Assess Current Processes", text: "Document current project management workflows, identify bottlenecks and inefficiencies, survey team members on daily challenges, and analyze historical project performance data." },
+      { name: "Select the Right Software", text: "Define must-have features and nice-to-haves, request demos from top 3-4 vendors, test mobile apps and user interfaces, and compare pricing and implementation costs." },
+      { name: "Plan Implementation", text: "Create implementation timeline and milestones, identify project champions and early adopters, plan data migration from existing systems, and schedule training sessions for all users." },
+      { name: "Execute Rollout", text: "Migrate historical project data, conduct comprehensive user training, start with pilot project for testing, and gather feedback to make adjustments." },
+      { name: "Monitor and Optimize", text: "Track key performance metrics, gather user feedback regularly, optimize workflows based on usage patterns, and ensure adoption across all teams." }
+    ]
+  );
+
   return (
     <>
-      {/* SEO Meta Tags */}
-      <SEOMetaTags
-        title="Best Construction Project Management Software 2025 - BuildDesk"
-        description="Compare the best construction project management software for contractors. Features, pricing, and ROI analysis. Reduce delays by 78% and increase profits."
+      <PageSEO
+        title="Best Construction Project Management Software 2025 - Reduce Delays 78% | BuildDesk"
+        description="Compare top construction project management software for contractors. Reduce delays by 78%, improve profit margins 32%, increase capacity 40%. Features, pricing, ROI calculator. BuildDesk $350/month vs Procore $500+/user. Free trial."
         keywords={[
           'construction project management software',
           'construction management software',
@@ -356,23 +385,14 @@ const ConstructionProjectManagementSoftware = () => {
           'building project management software',
           'construction management platform',
           'contractor project management',
-          'construction project tracking software'
+          'construction project tracking software',
+          'best construction pm software'
         ]}
-        canonicalUrl="/construction-project-management-software"
+        canonicalUrl="https://build-desk.com/construction-project-management-software"
+        schema={[articleSchema, breadcrumbSchema, howToSchema]}
+        ogType="article"
+        lastModified="2025-11-07"
       />
-
-      {/* Schema Markup */}
-      <ArticleSchema
-        title="Best Construction Project Management Software 2025 - Complete Guide"
-        description="Comprehensive guide to construction project management software, featuring comparisons, ROI analysis, and implementation best practices for contractors."
-        publishedDate="2025-01-12"
-        url="https://build-desk.com/construction-project-management-software"
-        keywords={['construction project management software', 'construction management', 'project management for contractors']}
-        wordCount={5200}
-        readingTime={21}
-      />
-
-      <FAQSchema questions={faqData} />
 
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -757,6 +777,15 @@ const ConstructionProjectManagementSoftware = () => {
             <AISearchOptimization page="features" primaryKeyword="construction project management software" />
           </div>
 
+          {/* GEO-Optimized FAQ Section */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <GEOOptimizedFAQ
+              faqs={projectManagementFAQs}
+              title="Construction Project Management Software FAQs"
+              description="Get answers to common questions about construction project management software"
+            />
+          </div>
+
           {/* Final CTA Section */}
           <div className="max-w-4xl mx-auto text-center">
             <Card className="bg-construction-light border-construction-blue">
@@ -765,10 +794,10 @@ const ConstructionProjectManagementSoftware = () => {
                   Ready to Transform Your Project Management?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Join thousands of contractors who've reduced delays by 78% and increased profits by 32% 
+                  Join thousands of contractors who've reduced delays by 78% and increased profits by 32%
                   with BuildDesk's comprehensive project management platform.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
                   <Button size="lg" className="bg-construction-orange hover:bg-construction-orange/90">
                     Start Free 30-Day Trial

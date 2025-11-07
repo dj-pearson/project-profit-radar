@@ -1,7 +1,8 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
+import { GEOOptimizedFAQ } from "@/components/seo/GEOOptimizedFAQ";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -31,13 +32,61 @@ const PlumbingContractorSoftware = () => {
     }
   ];
 
+  const plumbingFAQs = [
+    {
+      question: "What is plumbing contractor software?",
+      answer: "Plumbing contractor software is specialized business management software for plumbing companies. It handles service call dispatch, emergency plumbing requests, preventive maintenance scheduling, plumbing installation projects, technician scheduling and GPS tracking, plumbing material inventory, job costing for plumbing work, and customer communication. BuildDesk includes all plumbing features at $350/month.",
+      category: "Definition"
+    },
+    {
+      question: "How does plumbing software help with emergency calls?",
+      answer: "Plumbing software improves emergency response with GPS-enabled technician dispatch showing nearest available plumber, priority routing for urgent calls (burst pipes, sewer backups), automated customer notifications with ETA updates, mobile access for technicians to receive emergency details, and real-time job status tracking. BuildDesk reduces emergency response time by 40% with intelligent dispatch.",
+      category: "Features"
+    },
+    {
+      question: "Can plumbing contractor software track service history?",
+      answer: "Yes, plumbing contractor software tracks complete customer service history including past plumbing repairs and installations, equipment service records (water heaters, sump pumps, etc.), warranty information and expiration dates, recurring maintenance schedules, customer preferences and notes, and invoice and payment history. BuildDesk provides instant access to customer history for better service.",
+      category: "Service History"
+    },
+    {
+      question: "Does plumbing software help manage plumber licenses?",
+      answer: "Yes, plumbing contractor software tracks master plumber licenses and certifications, journeyman plumber licenses, apprentice plumber training hours, backflow prevention certifications, medical gas certifications, license renewal dates with automated reminders, and continuing education requirements. BuildDesk ensures your plumbing crew maintains proper licensing and compliance.",
+      category: "Licensing"
+    }
+  ];
+
+  const articleSchema = createArticleSchema(
+    "Plumbing Contractor Software - Complete Service Call & Job Management",
+    "Specialized plumbing contractor management software for service calls, emergency dispatch, installations, and maintenance. GPS dispatch, job costing, and technician management for plumbing businesses.",
+    "https://build-desk.com/plumbing-contractor-software",
+    ["plumbing contractor software", "plumbing business management", "plumbing service software"]
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://build-desk.com" },
+    { name: "Solutions", url: "https://build-desk.com/solutions" },
+    { name: "Plumbing Contractor Software", url: "https://build-desk.com/plumbing-contractor-software" }
+  ]);
+
   return (
     <>
-      <SEOMetaTags
-        title="Plumbing Contractor Software - Job Management & Scheduling | BuildDesk"
-        description="Specialized construction management software for plumbing contractors. Service call management, emergency dispatch, job costing, and crew scheduling. 14-day free trial."
-        keywords={['plumbing contractor software', 'plumbing business management', 'plumbing job scheduling', 'plumbing service software', 'plumbing dispatch software', 'plumber management system']}
-        canonicalUrl="/plumbing-contractor-software"
+      <PageSEO
+        title="Plumbing Contractor Software - Service Call Dispatch & Job Costing | BuildDesk"
+        description="Plumbing contractor management software for service calls, emergency dispatch, and installations. GPS technician tracking, job costing, plumber license management, customer service history. $350/month vs $500+ competitors. 40% faster emergency response. Free trial."
+        keywords={[
+          'plumbing contractor software',
+          'plumbing business management',
+          'plumbing job scheduling',
+          'plumbing service software',
+          'plumbing dispatch software',
+          'plumber management system',
+          'plumbing service call software',
+          'plumbing job costing'
+        ]}
+        canonicalUrl="https://build-desk.com/plumbing-contractor-software"
+        schema={[articleSchema, breadcrumbSchema]}
+        ogType="article"
+        lastModified="2025-11-07"
       />
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -138,6 +187,15 @@ const PlumbingContractorSoftware = () => {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
+            </div>
+
+            {/* GEO-Optimized FAQ Section */}
+            <div className="mt-16">
+              <GEOOptimizedFAQ
+                faqs={plumbingFAQs}
+                title="Plumbing Contractor Software FAQs"
+                description="Get answers about plumbing contractor management software and service call features"
+              />
             </div>
           </div>
         </main>

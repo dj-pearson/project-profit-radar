@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { SEOMetaTags } from '@/components/SEOMetaTags';
+import { PageSEO, createArticleSchema, createBreadcrumbSchema, createHowToSchema } from '@/components/seo/PageSEO';
+import { GEOOptimizedFAQ, jobCostingFAQs } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';
-import { ArticleSchema, FAQSchema } from '@/components/EnhancedSchemaMarkup';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -151,37 +151,54 @@ const JobCostingSoftwareDetailed = () => {
     }
   ];
 
+  // Create schemas for SEO
+  const articleSchema = createArticleSchema(
+    "Best Construction Job Costing Software 2025 - Complete Buyer's Guide",
+    "Comprehensive guide to construction job costing software, featuring real-time cost tracking, ROI calculations, and comparison of top solutions.",
+    "2025-01-12",
+    "2025-11-07"
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://builddesk.com" },
+    { name: "Job Costing Software", url: "https://builddesk.com/job-costing-software" }
+  ]);
+
+  const howToSchema = createHowToSchema(
+    "How to Implement Job Costing Software",
+    [
+      { name: "Set Up Cost Codes", text: "Create standardized cost codes for labor, materials, equipment, and overhead categories." },
+      { name: "Configure Project Budgets", text: "Enter estimated costs for each project phase and cost category." },
+      { name: "Track Costs in Real-Time", text: "Use mobile apps to capture time entries, material receipts, and equipment usage as they occur." },
+      { name: "Monitor Budget vs Actual", text: "Review daily reports comparing actual costs to budgets and identify variances early." },
+      { name: "Analyze Profitability", text: "Generate profit margin reports and use insights to improve future project estimates." }
+    ]
+  );
+
   return (
     <>
-      {/* SEO Meta Tags */}
-      <SEOMetaTags
-        title="Best Construction Job Costing Software 2025 - BuildDesk"
-        description="Discover the best job costing software for construction. Real-time cost tracking, QuickBooks integration, and predictive analytics. Improve margins by 15-25%."
+      {/* Enhanced SEO with PageSEO Component */}
+      <PageSEO
+        title="Job Costing Software for Construction - Real-Time Cost Tracking | BuildDesk"
+        description="Construction job costing software with real-time cost tracking, QuickBooks integration, and predictive analytics. Improve profit margins 15-25%. $350/month. Track labor, materials, equipment costs automatically. See ROI calculator."
         keywords={[
           'job costing software construction',
-          'construction job costing',
-          'best job costing software',
+          'construction job costing software',
+          'real-time job costing',
           'construction cost tracking software',
           'job costing software',
           'construction project costing',
-          'real-time job costing',
-          'construction financial management'
+          'best job costing software',
+          'job costing with quickbooks',
+          'construction financial management software',
+          'contractor job costing'
         ]}
         canonicalUrl="/job-costing-software"
+        schema={[articleSchema, breadcrumbSchema, howToSchema]}
+        ogType="article"
+        articlePublishDate="2025-01-12"
+        lastModified="2025-11-07"
       />
-
-      {/* Schema Markup */}
-      <ArticleSchema
-        title="Best Construction Job Costing Software 2025 - Complete Buyer's Guide"
-        description="Comprehensive guide to construction job costing software, featuring real-time cost tracking, ROI calculations, and comparison of top solutions."
-        publishedDate="2025-01-12"
-        url="https://build-desk.com/job-costing-software"
-        keywords={['job costing software construction', 'construction cost tracking', 'job costing software']}
-        wordCount={4800}
-        readingTime={19}
-      />
-
-      <FAQSchema questions={faqData} />
 
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -537,6 +554,15 @@ const JobCostingSoftwareDetailed = () => {
           {/* AI Search Optimization */}
           <div className="max-w-4xl mx-auto mb-16">
             <AISearchOptimization page="features" primaryKeyword="job costing software construction" />
+          </div>
+
+          {/* GEO-Optimized FAQ Section */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <GEOOptimizedFAQ
+              faqs={jobCostingFAQs}
+              title="Construction Job Costing Software: Frequently Asked Questions"
+              description="Get answers to common questions about job costing software for construction contractors"
+            />
           </div>
 
           {/* Final CTA Section */}

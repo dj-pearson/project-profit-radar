@@ -10,7 +10,8 @@ import LazySection from "@/components/LazySection";
 import { TestimonialsSection, ClientLogosSection } from "@/components/TestimonialsSection";
 import { CaseStudiesSection } from "@/components/CaseStudiesSection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
-import { SEOMetaTags, constructionSoftwareStructuredData, organizationStructuredData } from "@/components/SEOMetaTags";
+import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
+import { GEOOptimizedFAQ, homepageFAQs } from "@/components/seo/GEOOptimizedFAQ";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
 import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
@@ -69,13 +70,13 @@ const Index = () => {
         <PageResourcePreloader pageType="homepage" />
         <SiteSearchSchema />
       
-      <SEOMetaTags
-        title="Construction Management Software for Small & Mid GC Teams | BuildDesk"
-        description="Job costing, scheduling, daily logs, OSHA reporting, and time tracking in one simple tool for U.S. contractors. Simple setup, fast onboarding, clear dashboards for jobs, crews, and costs."
+      <PageSEO
+        title="BuildDesk - Construction Management Software for Small Contractors"
+        description="Complete construction management for small contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. $350/month unlimited users. 50% less than Procore. Set up in 1-2 days. Free trial."
         keywords={[
-          'construction management software', 
-          'construction project management software',
+          'construction management software',
           'construction software for small business',
+          'construction project management software',
           'job costing software construction',
           'construction field management software',
           'procore alternative small contractors',
@@ -84,10 +85,15 @@ const Index = () => {
           'OSHA safety reporting software',
           'construction scheduling software',
           'construction budget tracking',
-          'quickbooks construction integration'
+          'quickbooks construction integration',
+          'contractor management software',
+          'construction software for small contractors'
         ]}
         canonicalUrl="https://builddesk.com"
-        structuredData={[constructionSoftwareStructuredData, organizationStructuredData]}
+        schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([
+          { name: "Home", url: "https://builddesk.com" }
+        ])]}
+        lastModified="2025-11-07"
       />
       <SkipLink href="#main-content">Skip to main content</SkipLink>
       <SkipLink href="#navigation">Skip to navigation</SkipLink>
@@ -137,6 +143,17 @@ const Index = () => {
         <LazySection>
           <div className="container mx-auto px-4 py-16">
             <AISearchOptimization page="homepage" primaryKeyword="construction management software" />
+          </div>
+        </LazySection>
+
+        {/* GEO-Optimized FAQ Section */}
+        <LazySection>
+          <div className="container mx-auto px-4 py-16">
+            <GEOOptimizedFAQ
+              faqs={homepageFAQs}
+              title="Construction Management Software FAQs"
+              description="Get answers to common questions about BuildDesk and construction management software"
+            />
           </div>
         </LazySection>
       </main>

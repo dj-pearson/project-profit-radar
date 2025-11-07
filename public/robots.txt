@@ -1,7 +1,35 @@
 User-agent: *
 Allow: /
-Disallow: /auth
-Disallow: /dashboard
-Disallow: /admin
 
+# Block authenticated/app pages from indexing
+Disallow: /dashboard/
+Disallow: /dashboard
+Disallow: /admin/
+Disallow: /admin
+Disallow: /auth/
+Disallow: /auth
+Disallow: /setup/
+Disallow: /setup
+Disallow: /api/
+
+# Block URL parameters that cause duplicate content
+Disallow: /*?*refreshed=
+Disallow: /*?*v=
+Disallow: /*?utm_
+
+# Block internal testing pages if any
+Disallow: /testing/
+Disallow: /test/
+
+# Allow all marketing and public pages
+Allow: /features
+Allow: /pricing
+Allow: /blog
+Allow: /resources
+Allow: /knowledge-base
+
+# Sitemap
 Sitemap: https://builddesk.com/sitemap.xml
+
+# Crawl-delay for polite crawling (optional)
+# Crawl-delay: 1

@@ -1,13 +1,51 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
+import { GEOOptimizedFAQ } from "@/components/seo/GEOOptimizedFAQ";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, Thermometer, DollarSign, Clock, Users, ArrowRight } from "lucide-react";
 
 const HVACContractorSoftware = () => {
+  // Create schemas for SEO
+  const articleSchema = createArticleSchema(
+    "HVAC Contractor Software - Complete Business Management Solution",
+    "Complete guide to HVAC contractor management software featuring installation tracking, preventive maintenance scheduling, technician management, and HVAC-specific job costing.",
+    "2025-01-15",
+    "2025-11-07"
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://builddesk.com" },
+    { name: "HVAC Contractor Software", url: "https://builddesk.com/hvac-contractor-software" }
+  ]);
+
+  // HVAC-specific FAQs
+  const hvacFAQs = [
+    {
+      question: "What features should HVAC contractor software have?",
+      answer: "HVAC contractor software should include preventive maintenance scheduling, equipment tracking, technician certification management, job costing by system type, warranty tracking, and customer service history. BuildDesk includes all these features plus QuickBooks integration.",
+      category: "Features"
+    },
+    {
+      question: "Can BuildDesk track HVAC maintenance schedules?",
+      answer: "Yes, BuildDesk tracks preventive maintenance schedules with automated customer reminders, service history, equipment specifications, and warranty information. Schedule seasonal tune-ups and manage recurring maintenance contracts efficiently.",
+      category: "Maintenance"
+    },
+    {
+      question: "Does BuildDesk manage HVAC technician certifications?",
+      answer: "Yes, BuildDesk tracks technician certifications, EPA licenses, training records, and specialized skills (residential, commercial, heat pumps, etc.). Assign jobs based on technician qualifications and receive certification renewal alerts.",
+      category: "Technicians"
+    },
+    {
+      question: "How does job costing work for HVAC projects?",
+      answer: "BuildDesk's job costing tracks equipment costs, refrigerant usage, labor hours, and material expenses by project type (installation, repair, maintenance). Compare estimates to actuals and calculate profit margins for each job type.",
+      category: "Job Costing"
+    }
+  ];
+
   const features = [
     {
       icon: Thermometer,
@@ -33,11 +71,26 @@ const HVACContractorSoftware = () => {
 
   return (
     <>
-      <SEOMetaTags
-        title="HVAC Contractor Software - Heating & Cooling Business Management | BuildDesk"
-        description="Complete HVAC contractor management software. Installation tracking, preventive maintenance scheduling, job costing, and technician management. 14-day free trial."
-        keywords={['HVAC contractor software', 'HVAC business management', 'heating cooling software', 'HVAC job scheduling', 'HVAC service software', 'HVAC maintenance tracking']}
+      <PageSEO
+        title="HVAC Contractor Software - Installation, Maintenance & Service Management | BuildDesk"
+        description="Complete HVAC contractor management software. Track installations, preventive maintenance, technician certifications, job costing. $350/month. Equipment tracking, warranty management, QuickBooks sync. Free trial."
+        keywords={[
+          'HVAC contractor software',
+          'HVAC business management software',
+          'heating cooling contractor software',
+          'HVAC service management software',
+          'HVAC job scheduling software',
+          'HVAC maintenance tracking',
+          'HVAC contractor management',
+          'HVAC installation software',
+          'hvac technician management',
+          'hvac preventive maintenance software'
+        ]}
         canonicalUrl="/hvac-contractor-software"
+        schema={[articleSchema, breadcrumbSchema]}
+        ogType="article"
+        articlePublishDate="2025-01-15"
+        lastModified="2025-11-07"
       />
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -122,6 +175,15 @@ const HVACContractorSoftware = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* GEO-Optimized FAQ Section */}
+            <div className="mb-16">
+              <GEOOptimizedFAQ
+                faqs={hvacFAQs}
+                title="HVAC Contractor Software FAQs"
+                description="Common questions about HVAC contractor management software and service tracking"
+              />
             </div>
 
             {/* CTA Section */}

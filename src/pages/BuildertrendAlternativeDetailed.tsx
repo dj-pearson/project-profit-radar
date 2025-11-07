@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { SEOMetaTags } from '@/components/SEOMetaTags';
+import { PageSEO, createArticleSchema, createBreadcrumbSchema } from '@/components/seo/PageSEO';
+import { GEOOptimizedFAQ, buildertrendAlternativeFAQs } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';
-import { ArticleSchema, FAQSchema } from '@/components/EnhancedSchemaMarkup';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -182,37 +182,43 @@ const BuildertrendAlternativeDetailed = () => {
     }
   ];
 
+  // Create schemas for SEO
+  const articleSchema = createArticleSchema(
+    "Buildertrend Alternative: Why Commercial Contractors Choose BuildDesk",
+    "Comprehensive comparison of BuildDesk vs Buildertrend for construction management, focusing on commercial projects, multi-trade support, and advanced job costing.",
+    "2025-01-12",
+    "2025-11-07"
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://builddesk.com" },
+    { name: "Buildertrend Alternative", url: "https://builddesk.com/buildertrend-alternative" }
+  ]);
+
   return (
     <>
-      {/* SEO Meta Tags */}
-      <SEOMetaTags
-        title="Buildertrend Alternative: Why Commercial Contractors Choose BuildDesk"
-        description="Discover why contractors are switching from Buildertrend to BuildDesk. Better job costing, multi-trade support, and commercial project management at 50% lower cost."
+      {/* Enhanced SEO with PageSEO Component */}
+      <PageSEO
+        title="Buildertrend Alternative for Commercial Contractors | BuildDesk"
+        description="Why contractors switched from Buildertrend to BuildDesk. Superior job costing, multi-trade support, commercial projects. $350/month vs Buildertrend's $399+. Better QuickBooks integration. See feature comparison."
         keywords={[
           'buildertrend alternative',
+          'buildertrend alternative for commercial contractors',
           'construction management software',
           'buildertrend vs builddesk',
-          'commercial construction software',
           'buildertrend competitor',
+          'commercial construction software',
           'multi-trade construction software',
-          'construction software comparison',
-          'buildertrend replacement'
+          'buildertrend replacement',
+          'best buildertrend alternative 2025',
+          'construction software for multiple trades'
         ]}
         canonicalUrl="/buildertrend-alternative"
+        schema={[articleSchema, breadcrumbSchema]}
+        ogType="article"
+        articlePublishDate="2025-01-12"
+        lastModified="2025-11-07"
       />
-
-      {/* Schema Markup */}
-      <ArticleSchema
-        title="Buildertrend Alternative: Why Commercial Contractors Choose BuildDesk"
-        description="Comprehensive comparison of BuildDesk vs Buildertrend for construction management, focusing on commercial projects, multi-trade support, and advanced job costing."
-        publishedDate="2025-01-12"
-        url="https://build-desk.com/buildertrend-alternative"
-        keywords={['buildertrend alternative', 'construction management software', 'commercial construction software']}
-        wordCount={4200}
-        readingTime={17}
-      />
-
-      <FAQSchema questions={faqData} />
 
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -565,6 +571,15 @@ const BuildertrendAlternativeDetailed = () => {
           {/* AI Search Optimization */}
           <div className="max-w-4xl mx-auto mb-16">
             <AISearchOptimization page="alternatives" primaryKeyword="buildertrend alternative" />
+          </div>
+
+          {/* GEO-Optimized FAQ Section */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <GEOOptimizedFAQ
+              faqs={buildertrendAlternativeFAQs}
+              title="Buildertrend vs BuildDesk: Frequently Asked Questions"
+              description="Get answers to common questions about switching from Buildertrend to BuildDesk"
+            />
           </div>
 
           {/* Final CTA Section */}
