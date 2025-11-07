@@ -393,6 +393,14 @@ export const hierarchicalNavigation: NavigationArea[] = [
             roles: ["admin", "project_manager", "accounting", "root_admin"],
           },
           {
+            title: "Finance Hub",
+            url: "/finance-hub",
+            icon: PieChart,
+            roles: ["admin", "accounting", "root_admin"],
+            badge: "NEW",
+            description: "Enterprise Finance Module",
+          },
+          {
             title: "Estimates",
             url: "/estimates",
             icon: Calculator,
@@ -409,6 +417,48 @@ export const hierarchicalNavigation: NavigationArea[] = [
             url: "/reports",
             icon: BarChart3,
             roles: ["admin", "project_manager", "accounting", "root_admin"],
+          },
+        ],
+      },
+      {
+        id: "enterprise_accounting",
+        label: "Enterprise Accounting",
+        items: [
+          {
+            title: "Chart of Accounts",
+            url: "/finance/chart-of-accounts",
+            icon: FolderOpen,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "General Ledger",
+            url: "/finance/general-ledger",
+            icon: FileText,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Journal Entries",
+            url: "/finance/journal-entries",
+            icon: Clipboard,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+        ],
+      },
+      {
+        id: "payables_receivables",
+        label: "AP/AR",
+        items: [
+          {
+            title: "Accounts Payable",
+            url: "/finance/accounts-payable",
+            icon: FileText,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Accounts Receivable",
+            url: "/invoices",
+            icon: DollarSign,
+            roles: ["admin", "accounting", "office_staff", "root_admin"],
           },
         ],
       },
