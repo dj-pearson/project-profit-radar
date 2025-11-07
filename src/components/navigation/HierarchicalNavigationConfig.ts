@@ -40,6 +40,8 @@ import {
   AlertTriangle,
   Brain,
   Bot,
+  ArrowRightLeft,
+  ClipboardList,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -442,6 +444,12 @@ export const hierarchicalNavigation: NavigationArea[] = [
             icon: Clipboard,
             roles: ["admin", "accounting", "root_admin"],
           },
+          {
+            title: "Fiscal Periods",
+            url: "/finance/fiscal-periods",
+            icon: CalendarDays,
+            roles: ["admin", "accounting", "root_admin"],
+          },
         ],
       },
       {
@@ -455,10 +463,46 @@ export const hierarchicalNavigation: NavigationArea[] = [
             roles: ["admin", "accounting", "root_admin"],
           },
           {
+            title: "Bill Payments",
+            url: "/finance/bill-payments",
+            icon: DollarSign,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
             title: "Accounts Receivable",
             url: "/invoices",
             icon: DollarSign,
             roles: ["admin", "accounting", "office_staff", "root_admin"],
+          },
+        ],
+      },
+      {
+        id: "financial_reports",
+        label: "Financial Reports",
+        items: [
+          {
+            title: "Balance Sheet",
+            url: "/finance/balance-sheet",
+            icon: BarChart3,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Profit & Loss",
+            url: "/finance/profit-loss",
+            icon: TrendingUp,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Cash Flow Statement",
+            url: "/finance/cash-flow",
+            icon: ArrowRightLeft,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Trial Balance",
+            url: "/finance/trial-balance",
+            icon: ClipboardList,
+            roles: ["admin", "accounting", "root_admin"],
           },
         ],
       },

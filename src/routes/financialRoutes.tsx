@@ -23,6 +23,10 @@ const BalanceSheet = lazy(() => import('@/pages/BalanceSheet'));
 const ProfitAndLoss = lazy(() => import('@/pages/ProfitAndLoss'));
 const TrialBalance = lazy(() => import('@/pages/TrialBalance'));
 const AccountsPayable = lazy(() => import('@/pages/AccountsPayable'));
+const GeneralLedger = lazy(() => import('@/pages/GeneralLedger'));
+const CashFlowStatement = lazy(() => import('@/pages/CashFlowStatement'));
+const BillPayments = lazy(() => import('@/pages/BillPayments'));
+const FiscalPeriods = lazy(() => import('@/pages/FiscalPeriods'));
 
 export const financialRoutes = (
   <>
@@ -42,10 +46,20 @@ export const financialRoutes = (
     {/* NEW: Accounts Payable */}
     <Route path="/finance/accounts-payable" element={<AccountsPayable />} />
 
+    {/* NEW: General Ledger */}
+    <Route path="/finance/general-ledger" element={<GeneralLedger />} />
+
+    {/* NEW: Bill Payments */}
+    <Route path="/finance/bill-payments" element={<BillPayments />} />
+
+    {/* NEW: Fiscal Periods */}
+    <Route path="/finance/fiscal-periods" element={<FiscalPeriods />} />
+
     {/* NEW: Financial Reports */}
     <Route path="/finance/balance-sheet" element={<BalanceSheet />} />
     <Route path="/finance/profit-loss" element={<ProfitAndLoss />} />
     <Route path="/finance/trial-balance" element={<TrialBalance />} />
+    <Route path="/finance/cash-flow" element={<CashFlowStatement />} />
 
     {/* Estimates & Invoices */}
     <Route path="/estimates" element={<LazyEstimatesHub />} />
