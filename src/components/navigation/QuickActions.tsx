@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { 
   Plus, 
   Building2, 
@@ -24,7 +26,18 @@ interface QuickAction {
 
 export const QuickActions: React.FC = () => {
   const navigate = useNavigate();
-  
+  const { checkLimit, getUpgradeRequirement, subscriptionData, usage } = useSubscription();
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  const handleCreateProject = () => {
+    const limitCheck = checkLimit('projects', 1);
+    if (!limitCheck.canAdd) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    navigate('/create-project');
+  };
+
   const quickActions: QuickAction[] = [
     {
       title: 'Add New Lead',
@@ -38,7 +51,7 @@ export const QuickActions: React.FC = () => {
       title: 'Create Project',
       description: 'From won opportunity',
       icon: Building2,
-      onClick: () => navigate('/create-project'),
+      onClick: handleCreateProject,
       priority: 'high'
     },
     {
@@ -108,6 +121,17 @@ export const QuickActions: React.FC = () => {
           ))}
         </div>
       </CardContent>
+
+      {/* Upgrade Prompt */}
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        currentTier={subscriptionData?.subscription_tier || 'starter'}
+        requiredTier={getUpgradeRequirement('projects')}
+        limitType="projects"
+        currentUsage={usage.projects}
+        currentLimit={checkLimit('projects').limit}
+      />
     </Card>
   );
 };

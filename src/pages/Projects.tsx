@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 
 interface Project {
   id: string;
@@ -101,6 +103,7 @@ const Projects = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { checkLimit, getUpgradeRequirement, subscriptionData, usage } = useSubscription();
 
   const [projects, setProjects] = useState<ProjectWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,6 +111,7 @@ const Projects = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   // Advanced filter states
   const [budgetMin, setBudgetMin] = useState<string>("");
@@ -138,6 +142,20 @@ const Projects = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCreateProject = (trackingLabel: string = "new_project_click") => {
+    // Check subscription limit before navigating
+    const limitCheck = checkLimit('projects', 1);
+
+    if (!limitCheck.canAdd) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
+    // Track and navigate
+    gtag.trackProject("create", trackingLabel);
+    navigate("/create-project");
   };
 
   const handleUpdateProject = async (
@@ -461,10 +479,7 @@ const Projects = () => {
     <DashboardLayout title="Projects" showTrialBanner={false}>
       <div className="flex justify-end mb-4 sm:mb-6">
         <Button
-          onClick={() => {
-            gtag.trackProject("create", "new_project_click");
-            navigate("/create-project");
-          }}
+          onClick={handleCreateProject}
           size="sm"
           className="text-sm"
         >
@@ -705,12 +720,7 @@ const Projects = () => {
                 <p className="text-muted-foreground mb-4">
                   Get started by creating your first project.
                 </p>
-                <Button
-                  onClick={() => {
-                    gtag.trackProject("create", "empty_state_click");
-                    navigate("/create-project");
-                  }}
-                >
+                <Button onClick={() => handleCreateProject("empty_state_click")}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Project
                 </Button>
@@ -929,6 +939,17 @@ const Projects = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Upgrade Prompt */}
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        currentTier={subscriptionData?.subscription_tier || 'starter'}
+        requiredTier={getUpgradeRequirement('projects')}
+        limitType="projects"
+        currentUsage={usage.projects}
+        currentLimit={checkLimit('projects').limit}
+      />
     </DashboardLayout>
   );
 };

@@ -3,6 +3,7 @@ import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { SubscriptionUsageWidget } from "@/components/subscription/SubscriptionUsageWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
@@ -36,10 +37,17 @@ const Dashboard = () => {
   if (!hasData && userProfile) {
     return (
       <DashboardLayout title="Dashboard">
-        <EmptyDashboard
-          userRole={userProfile.role}
-          onAction={handleEmptyAction}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <EmptyDashboard
+              userRole={userProfile.role}
+              onAction={handleEmptyAction}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <SubscriptionUsageWidget />
+          </div>
+        </div>
         <OnboardingChecklist />
       </DashboardLayout>
     );
@@ -47,7 +55,14 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Dashboard">
-      <RoleDashboard />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2">
+          <RoleDashboard />
+        </div>
+        <div className="lg:col-span-1">
+          <SubscriptionUsageWidget />
+        </div>
+      </div>
       <OnboardingChecklist />
     </DashboardLayout>
   );
