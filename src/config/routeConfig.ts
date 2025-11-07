@@ -57,6 +57,18 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
 
   // Financial
   '/financial': ['root_admin', 'admin', 'project_manager', 'accounting'],
+  '/finance-hub': ['root_admin', 'admin', 'accounting'],
+  '/finance/hub': ['root_admin', 'admin', 'accounting'],
+  '/finance/chart-of-accounts': ['root_admin', 'admin', 'accounting'],
+  '/finance/general-ledger': ['root_admin', 'admin', 'accounting'],
+  '/finance/journal-entries': ['root_admin', 'admin', 'accounting'],
+  '/finance/accounts-payable': ['root_admin', 'admin', 'accounting'],
+  '/finance/bill-payments': ['root_admin', 'admin', 'accounting'],
+  '/finance/balance-sheet': ['root_admin', 'admin', 'project_manager', 'accounting'],
+  '/finance/profit-loss': ['root_admin', 'admin', 'project_manager', 'accounting'],
+  '/finance/trial-balance': ['root_admin', 'admin', 'accounting'],
+  '/finance/cash-flow': ['root_admin', 'admin', 'project_manager', 'accounting'],
+  '/finance/fiscal-periods': ['root_admin', 'admin', 'accounting'],
   '/estimates': ['root_admin', 'admin', 'project_manager', 'accounting'],
   '/reports': ['root_admin', 'admin', 'project_manager', 'accounting'],
   '/purchase-orders': ['root_admin', 'admin', 'project_manager', 'accounting'],
