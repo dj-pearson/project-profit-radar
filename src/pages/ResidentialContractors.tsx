@@ -1,13 +1,27 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { PageSEO, createArticleSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
+import { GEOOptimizedFAQ, residentialContractorFAQs } from "@/components/seo/GEOOptimizedFAQ";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, Home, DollarSign, Users, Calendar, ArrowRight, BarChart3, Heart } from "lucide-react";
 
 const ResidentialContractors = () => {
+  // Create schemas for SEO
+  const articleSchema = createArticleSchema(
+    "Residential Construction Management Software | BuildDesk",
+    "Complete guide to construction management software for residential contractors, custom home builders, and remodelers. Features client portals, warranty tracking, and homeowner communication.",
+    "2025-01-15",
+    "2025-11-07"
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://builddesk.com" },
+    { name: "Residential Contractors", url: "https://builddesk.com/residential-contractors" }
+  ]);
+
   const features = [
     {
       icon: Home,
@@ -33,11 +47,26 @@ const ResidentialContractors = () => {
 
   return (
     <>
-      <SEOMetaTags
-        title="Residential Construction Management Software | BuildDesk"
-        description="Construction management software designed for residential contractors. Custom home builders, remodelers, and residential contractors. Client communication and project transparency."
-        keywords={['residential construction software', 'home builder software', 'residential contractor management', 'custom home construction', 'remodeling software', 'residential project management']}
+      <PageSEO
+        title="Residential Construction Software - Custom Home Builders & Remodelers | BuildDesk"
+        description="Construction management software for residential contractors, custom home builders, and remodelers. Client portals, selections tracking, warranty management. $350/month. 60% better customer satisfaction. See features."
+        keywords={[
+          'residential construction software',
+          'custom home builder software',
+          'residential contractor management',
+          'home remodeling software',
+          'residential construction management',
+          'custom home construction software',
+          'residential project management software',
+          'home builder management software',
+          'residential contractor software',
+          'homeowner communication software'
+        ]}
         canonicalUrl="/residential-contractors"
+        schema={[articleSchema, breadcrumbSchema]}
+        ogType="article"
+        articlePublishDate="2025-01-15"
+        lastModified="2025-11-07"
       />
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -122,6 +151,15 @@ const ResidentialContractors = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* GEO-Optimized FAQ Section */}
+            <div className="mb-16">
+              <GEOOptimizedFAQ
+                faqs={residentialContractorFAQs}
+                title="Residential Construction Software FAQs"
+                description="Common questions about construction management software for residential contractors and custom home builders"
+              />
             </div>
 
             {/* CTA Section */}

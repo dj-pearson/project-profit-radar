@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { SEOMetaTags } from '@/components/SEOMetaTags';
+import { PageSEO, createArticleSchema, createBreadcrumbSchema, createHowToSchema } from '@/components/seo/PageSEO';
+import { GEOOptimizedFAQ } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';
-import { ArticleSchema, FAQSchema } from '@/components/EnhancedSchemaMarkup';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -199,37 +199,54 @@ const ConstructionSchedulingSoftware = () => {
     }
   ];
 
+  // Create schemas for SEO
+  const articleSchema = createArticleSchema(
+    "Best Construction Scheduling Software 2025 - Complete Guide",
+    "Comprehensive guide to construction scheduling software, featuring Gantt charts, resource management, and real-time progress tracking for contractors.",
+    "2025-01-12",
+    "2025-11-07"
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://builddesk.com" },
+    { name: "Construction Scheduling Software", url: "https://builddesk.com/construction-scheduling-software" }
+  ]);
+
+  const howToSchema = createHowToSchema(
+    "How to Create a Construction Schedule",
+    [
+      { name: "Define Project Phases", text: "Break the project into major phases like site prep, foundation, framing, rough-ins, finishes." },
+      { name: "Estimate Task Durations", text: "Use historical data and crew capacity to estimate realistic durations for each task." },
+      { name: "Identify Dependencies", text: "Map task relationships - which tasks must finish before others can start." },
+      { name: "Allocate Resources", text: "Assign crews, equipment, and materials to each task based on availability." },
+      { name: "Monitor and Adjust", text: "Track actual progress daily and adjust the schedule as conditions change." }
+    ]
+  );
+
   return (
     <>
-      {/* SEO Meta Tags */}
-      <SEOMetaTags
-        title="Best Construction Scheduling Software 2025 - BuildDesk"
-        description="Discover the best construction scheduling software for contractors. Gantt charts, resource management, and weather integration. Reduce delays by 85%."
+      {/* Enhanced SEO with PageSEO Component */}
+      <PageSEO
+        title="Construction Scheduling Software - Gantt Charts & Resource Management | BuildDesk"
+        description="Construction scheduling software with Gantt charts, resource management, critical path analysis. Reduce delays 30%. $350/month. Weather integration, crew scheduling, mobile updates. See features."
         keywords={[
           'construction scheduling software',
           'construction project scheduling',
+          'construction schedule management',
           'gantt chart construction',
           'construction timeline software',
-          'project scheduling software',
+          'project scheduling software construction',
           'construction planning software',
           'resource scheduling construction',
-          'construction schedule management'
+          'construction schedule builder',
+          'contractor scheduling software'
         ]}
         canonicalUrl="/construction-scheduling-software"
+        schema={[articleSchema, breadcrumbSchema, howToSchema]}
+        ogType="article"
+        articlePublishDate="2025-01-12"
+        lastModified="2025-11-07"
       />
-
-      {/* Schema Markup */}
-      <ArticleSchema
-        title="Best Construction Scheduling Software 2025 - Complete Guide"
-        description="Comprehensive guide to construction scheduling software, featuring Gantt charts, resource management, and real-time progress tracking for contractors."
-        publishedDate="2025-01-12"
-        url="https://build-desk.com/construction-scheduling-software"
-        keywords={['construction scheduling software', 'project scheduling', 'gantt chart construction']}
-        wordCount={4600}
-        readingTime={18}
-      />
-
-      <FAQSchema questions={faqData} />
 
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -583,6 +600,15 @@ const ConstructionSchedulingSoftware = () => {
           {/* AI Search Optimization */}
           <div className="max-w-4xl mx-auto mb-16">
             <AISearchOptimization page="features" primaryKeyword="construction scheduling software" />
+          </div>
+
+          {/* GEO-Optimized FAQ Section */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <GEOOptimizedFAQ
+              faqs={faqData}
+              title="Construction Scheduling Software: Frequently Asked Questions"
+              description="Common questions about construction scheduling software, Gantt charts, and project timeline management"
+            />
           </div>
 
           {/* Final CTA Section */}
