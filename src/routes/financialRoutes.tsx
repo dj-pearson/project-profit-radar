@@ -18,6 +18,11 @@ import {
 // Enterprise Finance Module - Lazy loaded
 const FinanceHub = lazy(() => import('@/pages/FinanceHub'));
 const ChartOfAccounts = lazy(() => import('@/pages/ChartOfAccounts'));
+const JournalEntries = lazy(() => import('@/pages/JournalEntries'));
+const BalanceSheet = lazy(() => import('@/pages/BalanceSheet'));
+const ProfitAndLoss = lazy(() => import('@/pages/ProfitAndLoss'));
+const TrialBalance = lazy(() => import('@/pages/TrialBalance'));
+const AccountsPayable = lazy(() => import('@/pages/AccountsPayable'));
 
 export const financialRoutes = (
   <>
@@ -30,6 +35,17 @@ export const financialRoutes = (
 
     {/* NEW: Chart of Accounts */}
     <Route path="/finance/chart-of-accounts" element={<ChartOfAccounts />} />
+
+    {/* NEW: Journal Entries */}
+    <Route path="/finance/journal-entries" element={<JournalEntries />} />
+
+    {/* NEW: Accounts Payable */}
+    <Route path="/finance/accounts-payable" element={<AccountsPayable />} />
+
+    {/* NEW: Financial Reports */}
+    <Route path="/finance/balance-sheet" element={<BalanceSheet />} />
+    <Route path="/finance/profit-loss" element={<ProfitAndLoss />} />
+    <Route path="/finance/trial-balance" element={<TrialBalance />} />
 
     {/* Estimates & Invoices */}
     <Route path="/estimates" element={<LazyEstimatesHub />} />
