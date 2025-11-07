@@ -15,34 +15,52 @@ function generateSitemap() {
     { path: '/knowledge-base', priority: '0.7', changefreq: 'weekly' },
     { path: '/tutorials', priority: '0.7', changefreq: 'weekly' },
     { path: '/resources', priority: '0.8', changefreq: 'weekly' },
+    { path: '/blog', priority: '0.8', changefreq: 'weekly' },
+    { path: '/solutions', priority: '0.8', changefreq: 'monthly' },
+    { path: '/faq', priority: '0.7', changefreq: 'monthly' },
     { path: '/tools', priority: '0.7', changefreq: 'monthly' },
     { path: '/roi-calculator', priority: '0.8', changefreq: 'monthly' },
     { path: '/tools/schedule-builder', priority: '0.8', changefreq: 'monthly' },
-    
-    // Authentication & onboarding
-    { path: '/auth', priority: '0.3', changefreq: 'monthly' },
-    { path: '/setup', priority: '0.3', changefreq: 'monthly' },
-    
+
+    // Authentication & onboarding (low priority)
+    { path: '/auth', priority: '0.2', changefreq: 'yearly' },
+    { path: '/setup', priority: '0.2', changefreq: 'yearly' },
+
     // Legal pages
     { path: '/privacy-policy', priority: '0.4', changefreq: 'yearly' },
     { path: '/terms-of-service', priority: '0.4', changefreq: 'yearly' },
-    
-    // Industry/SEO pages
-    { path: '/construction-management-software', priority: '0.8', changefreq: 'monthly' },
-    { path: '/procore-alternative', priority: '0.8', changefreq: 'monthly' },
-    { path: '/buildertrend-alternative', priority: '0.8', changefreq: 'monthly' },
-    { path: '/job-costing-software', priority: '0.8', changefreq: 'monthly' },
-    { path: '/construction-field-management', priority: '0.8', changefreq: 'monthly' },
-    { path: '/osha-compliance-software', priority: '0.8', changefreq: 'monthly' },
 
-    // Industry pages
-    { path: '/residential-contractors', priority: '0.7', changefreq: 'monthly' },
-    { path: '/commercial-contractors', priority: '0.7', changefreq: 'monthly' },
-    { path: '/electrical-contractor-software', priority: '0.7', changefreq: 'monthly' },
-    { path: '/hvac-contractor-software', priority: '0.7', changefreq: 'monthly' },
-    { path: '/plumbing-contractor-software', priority: '0.7', changefreq: 'monthly' },
+    // HIGH PRIORITY: Comparison pages (high intent keywords)
+    { path: '/procore-alternative', priority: '0.9', changefreq: 'weekly' },
+    { path: '/procore-alternative-detailed', priority: '0.8', changefreq: 'weekly' },
+    { path: '/buildertrend-alternative', priority: '0.9', changefreq: 'weekly' },
+    { path: '/builddesk-vs-buildertrend-comparison', priority: '0.8', changefreq: 'monthly' },
+    { path: '/builddesk-vs-coconstruct', priority: '0.8', changefreq: 'monthly' },
 
-    // Blog/Resource articles with /resources prefix
+    // HIGH PRIORITY: Solution pages (feature-specific)
+    { path: '/job-costing-software', priority: '0.9', changefreq: 'weekly' },
+    { path: '/construction-management-software', priority: '0.9', changefreq: 'weekly' },
+    { path: '/construction-project-management-software', priority: '0.8', changefreq: 'weekly' },
+    { path: '/construction-scheduling-software', priority: '0.8', changefreq: 'weekly' },
+    { path: '/construction-field-management', priority: '0.8', changefreq: 'weekly' },
+    { path: '/osha-compliance-software', priority: '0.8', changefreq: 'weekly' },
+
+    // Industry pages (vertical-specific)
+    { path: '/residential-contractors', priority: '0.8', changefreq: 'monthly' },
+    { path: '/commercial-contractors', priority: '0.8', changefreq: 'monthly' },
+    { path: '/electrical-contractor-software', priority: '0.8', changefreq: 'monthly' },
+    { path: '/hvac-contractor-software', priority: '0.8', changefreq: 'monthly' },
+    { path: '/plumbing-contractor-software', priority: '0.8', changefreq: 'monthly' },
+
+    // Resource guides (high-value content)
+    { path: '/resources/best-construction-management-software-small-business-2025', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/job-costing-construction-setup-guide', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/osha-safety-logs-digital-playbook', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-scheduling-software-prevent-delays', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-daily-logs-best-practices', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/procore-vs-builddesk-small-contractors', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/quickbooks-integration-guide', priority: '0.7', changefreq: 'monthly' },
+    { path: '/resources/construction-mobile-app-guide', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/procore-alternatives-smb-contractors-guide', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/top-10-construction-platforms-august-2025', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/construction-management-software-comparison', priority: '0.7', changefreq: 'monthly' },
@@ -57,6 +75,10 @@ function generateSitemap() {
     { path: '/resources/7-hidden-costs-of-poor-project-scheduling-and-how-to-avoid-them', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/construction-material-management-control-costs-reduce-waste-2025', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/7-hidden-costs-of-construction-project-delays-and-how-to-avoid-them', priority: '0.8', changefreq: 'monthly' },
+
+    // Topic pages
+    { path: '/topics/construction-management-basics', priority: '0.7', changefreq: 'monthly' },
+    { path: '/topics/safety-and-osha-compliance', priority: '0.7', changefreq: 'monthly' },
 
     // Knowledge base articles
     { path: '/knowledge-base/article/getting-started-complete-setup-guide', priority: '0.7', changefreq: 'monthly' },

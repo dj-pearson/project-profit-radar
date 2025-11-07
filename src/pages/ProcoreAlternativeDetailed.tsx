@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { SEOMetaTags } from '@/components/SEOMetaTags';
+import { PageSEO, createArticleSchema, createBreadcrumbSchema } from '@/components/seo/PageSEO';
+import { GEOOptimizedFAQ, procoreAlternativeFAQs } from '@/components/seo/GEOOptimizedFAQ';
 import AISearchOptimization from '@/components/AISearchOptimization';
-import { ArticleSchema, FAQSchema } from '@/components/EnhancedSchemaMarkup';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -119,37 +119,43 @@ const ProcoreAlternativeDetailed = () => {
     }
   ];
 
+  // Create schemas for SEO
+  const articleSchema = createArticleSchema(
+    "Procore Alternative: Why 500+ Contractors Choose BuildDesk in 2025",
+    "Comprehensive comparison of BuildDesk vs Procore for construction management, including pricing, features, and customer testimonials from contractors who switched.",
+    "2025-01-12",
+    "2025-11-07"
+  );
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "Home", url: "https://builddesk.com" },
+    { name: "Procore Alternative", url: "https://builddesk.com/procore-alternative" }
+  ]);
+
   return (
     <>
-      {/* SEO Meta Tags */}
-      <SEOMetaTags
-        title="Procore Alternative: Why 500+ Contractors Choose BuildDesk in 2025"
-        description="Discover why contractors are switching from Procore to BuildDesk. Save 60% on costs, implement 10x faster, and get better mobile functionality designed for small-medium contractors."
+      {/* Enhanced SEO with PageSEO Component */}
+      <PageSEO
+        title="Procore Alternative for Small Contractors - Save 50% | BuildDesk"
+        description="Why 500+ contractors switched from Procore to BuildDesk. Save $32K/year, implement in days not months, and get better mobile apps. $350/month vs Procore's $500+/user. Compare features, pricing, and see customer testimonials."
         keywords={[
           'procore alternative',
+          'procore alternative for small contractors',
           'construction management software',
           'procore vs builddesk',
-          'construction software comparison',
           'procore competitor',
-          'affordable construction software',
-          'small contractor software',
-          'procore replacement'
+          'affordable procore alternative',
+          'small contractor construction software',
+          'procore replacement',
+          'best procore alternative 2025',
+          'construction software for small business'
         ]}
         canonicalUrl="/procore-alternative"
+        schema={[articleSchema, breadcrumbSchema]}
+        ogType="article"
+        articlePublishDate="2025-01-12"
+        lastModified="2025-11-07"
       />
-
-      {/* Schema Markup */}
-      <ArticleSchema
-        title="Procore Alternative: Why 500+ Contractors Choose BuildDesk in 2025"
-        description="Comprehensive comparison of BuildDesk vs Procore for construction management, including pricing, features, and customer testimonials from contractors who switched."
-        publishedDate="2025-01-12"
-        url="https://build-desk.com/procore-alternative"
-        keywords={['procore alternative', 'construction management software', 'procore vs builddesk']}
-        wordCount={4500}
-        readingTime={18}
-      />
-
-      <FAQSchema questions={faqData} />
 
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -550,6 +556,15 @@ const ProcoreAlternativeDetailed = () => {
           {/* AI Search Optimization */}
           <div className="max-w-4xl mx-auto mb-16">
             <AISearchOptimization page="alternatives" primaryKeyword="procore alternative" />
+          </div>
+
+          {/* GEO-Optimized FAQ Section */}
+          <div className="max-w-4xl mx-auto mb-16">
+            <GEOOptimizedFAQ
+              faqs={procoreAlternativeFAQs}
+              title="Procore vs BuildDesk: Frequently Asked Questions"
+              description="Get answers to common questions about switching from Procore to BuildDesk"
+            />
           </div>
 
           {/* Final CTA Section */}
