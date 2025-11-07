@@ -134,6 +134,8 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   '/admin/support-tickets': ['root_admin', 'admin'],
   '/admin/social-media': ['root_admin', 'admin'],
   '/admin/seo-management': ['root_admin', 'admin'],
+  '/admin/search-traffic-dashboard': ['root_admin'],
+  '/admin/search-traffic-dashboard/settings': ['root_admin'],
 
   // System Admin (Root Admin Only)
   '/system-admin/settings': ['root_admin'],
