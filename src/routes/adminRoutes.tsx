@@ -33,6 +33,7 @@ import { ChurnPrediction } from '@/pages/admin/ChurnPrediction';
 // SEO & Marketing
 import UnifiedSEODashboard from '@/pages/UnifiedSEODashboard';
 import SEODashboard from '@/pages/SEODashboard';
+import SearchTrafficDashboard from '@/pages/admin/SearchTrafficDashboard';
 import BlogManager from '@/pages/BlogManager';
 import { SocialMediaManager } from '@/pages/admin/SocialMediaManager';
 import { LeadManagement } from '@/pages/admin/LeadManagement';
@@ -100,6 +101,7 @@ export const adminRoutes = (
     {/* Admin - Marketing & SEO */}
     <Route path="/admin/seo" element={<SEODashboard />} />
     <Route path="/admin/seo-management" element={<UnifiedSEODashboard />} />
+    <Route path="/admin/search-traffic-dashboard" element={<SearchTrafficDashboard />} />
     <Route path="/admin/seo-analytics" element={<Navigate to="/admin/seo-management" replace />} />
     <Route path="/admin/seo-analytics-legacy" element={<Navigate to="/admin/seo-management" replace />} />
     <Route path="/seo-management" element={<Navigate to="/admin/seo-management" replace />} />
