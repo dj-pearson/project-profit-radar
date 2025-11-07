@@ -40,6 +40,8 @@ import {
   AlertTriangle,
   Brain,
   Bot,
+  ArrowRightLeft,
+  ClipboardList,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -393,6 +395,14 @@ export const hierarchicalNavigation: NavigationArea[] = [
             roles: ["admin", "project_manager", "accounting", "root_admin"],
           },
           {
+            title: "Finance Hub",
+            url: "/finance-hub",
+            icon: PieChart,
+            roles: ["admin", "accounting", "root_admin"],
+            badge: "NEW",
+            description: "Enterprise Finance Module",
+          },
+          {
             title: "Estimates",
             url: "/estimates",
             icon: Calculator,
@@ -409,6 +419,90 @@ export const hierarchicalNavigation: NavigationArea[] = [
             url: "/reports",
             icon: BarChart3,
             roles: ["admin", "project_manager", "accounting", "root_admin"],
+          },
+        ],
+      },
+      {
+        id: "enterprise_accounting",
+        label: "Enterprise Accounting",
+        items: [
+          {
+            title: "Chart of Accounts",
+            url: "/finance/chart-of-accounts",
+            icon: FolderOpen,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "General Ledger",
+            url: "/finance/general-ledger",
+            icon: FileText,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Journal Entries",
+            url: "/finance/journal-entries",
+            icon: Clipboard,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Fiscal Periods",
+            url: "/finance/fiscal-periods",
+            icon: CalendarDays,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+        ],
+      },
+      {
+        id: "payables_receivables",
+        label: "AP/AR",
+        items: [
+          {
+            title: "Accounts Payable",
+            url: "/finance/accounts-payable",
+            icon: FileText,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Bill Payments",
+            url: "/finance/bill-payments",
+            icon: DollarSign,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Accounts Receivable",
+            url: "/invoices",
+            icon: DollarSign,
+            roles: ["admin", "accounting", "office_staff", "root_admin"],
+          },
+        ],
+      },
+      {
+        id: "financial_reports",
+        label: "Financial Reports",
+        items: [
+          {
+            title: "Balance Sheet",
+            url: "/finance/balance-sheet",
+            icon: BarChart3,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Profit & Loss",
+            url: "/finance/profit-loss",
+            icon: TrendingUp,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Cash Flow Statement",
+            url: "/finance/cash-flow",
+            icon: ArrowRightLeft,
+            roles: ["admin", "accounting", "root_admin"],
+          },
+          {
+            title: "Trial Balance",
+            url: "/finance/trial-balance",
+            icon: ClipboardList,
+            roles: ["admin", "accounting", "root_admin"],
           },
         ],
       },
