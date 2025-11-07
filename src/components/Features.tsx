@@ -7,7 +7,8 @@ import {
   ArrowRight,
   Building2,
   Wrench,
-  FileText
+  FileText,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
