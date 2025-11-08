@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import Tesseract from 'tesseract.js';
 import { 
   FileText, 
   Brain, 
@@ -75,18 +74,20 @@ const DocumentOCRProcessor: React.FC<DocumentOCRProcessorProps> = ({
   const processDocument = async () => {
     setProcessing(true);
     setCurrentStep('ocr');
-    
+
     try {
-      // Step 1: OCR Processing
+      // Step 1: OCR Processing - Lazy load Tesseract.js only when needed
       console.log('Starting OCR processing...');
-      const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+      const Tesseract = await import('tesseract.js');
+
+      const { data: { text } } = await Tesseract.default.recognize(file, 'eng', {
         logger: m => {
           if (m.status === 'recognizing text') {
             setOcrProgress(Math.round(m.progress * 100));
           }
         }
       });
-      
+
       setOcrText(text);
       console.log('OCR completed, extracted text length:', text.length);
       

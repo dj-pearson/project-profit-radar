@@ -164,27 +164,36 @@ class ProjectService {
   }
 
   async getProjectStats(companyId?: string): Promise<ProjectStats> {
-    let query = supabase.from('projects').select('*');
-    
-    if (companyId) {
-      query = query.eq('company_id', companyId);
+    if (!companyId) {
+      throw new Error('Company ID is required for project stats');
     }
 
-    const { data: projects, error } = await query;
+    // Use database aggregation function for better performance
+    const { data, error } = await supabase.rpc('get_project_stats', {
+      company_id: companyId
+    });
+
     if (error) throw error;
 
-    const now = new Date();
+    // Also calculate overdue projects (not in the main aggregation function)
+    const now = new Date().toISOString();
+    const { data: overdueCount, error: overdueError } = await supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', companyId)
+      .lt('end_date', now)
+      .neq('status', 'completed');
+
+    if (overdueError) throw overdueError;
+
     const stats: ProjectStats = {
-      totalProjects: projects?.length || 0,
-      activeProjects: projects?.filter(p => p.status === 'active' || p.status === 'in_progress').length || 0,
-      completedProjects: projects?.filter(p => p.status === 'completed').length || 0,
-      onHoldProjects: projects?.filter(p => p.status === 'on_hold').length || 0,
-      totalBudget: projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
-      avgCompletion: projects?.length ? 
-        projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length : 0,
-      overdueProjects: projects?.filter(p => 
-        p.end_date && new Date(p.end_date) < now && p.status !== 'completed'
-      ).length || 0
+      totalProjects: data.totalProjects || 0,
+      activeProjects: data.activeProjects || 0,
+      completedProjects: data.completedProjects || 0,
+      onHoldProjects: data.onHoldProjects || 0,
+      totalBudget: data.totalBudget || 0,
+      avgCompletion: data.avgCompletion || 0,
+      overdueProjects: overdueCount || 0
     };
 
     return stats;
