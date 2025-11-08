@@ -9,6 +9,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { HubNavigationSection } from '@/components/hub/HubNavigationSection';
 import { hierarchicalNavigation } from '@/components/navigation/HierarchicalNavigationConfig';
+import { QuickBooksSyncStatus } from '@/components/integrations/QuickBooksSyncStatus';
 
 const FinancialHub = () => {
   const navigate = useNavigate();
@@ -81,6 +82,9 @@ const FinancialHub = () => {
   return (
     <DashboardLayout title={financialArea.title}>
       <div>
+        {/* QuickBooks Sync Status - Prominent Widget */}
+        <QuickBooksSyncStatus />
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>

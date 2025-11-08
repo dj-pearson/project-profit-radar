@@ -8,19 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CreatePOFromMaterialDialog } from '@/components/materials/CreatePOFromMaterialDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  Search, 
-  Package, 
-  Truck, 
-  AlertTriangle, 
+import {
+  Plus,
+  Search,
+  Package,
+  Truck,
+  AlertTriangle,
   CheckCircle,
   Clock,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  FileText
 } from 'lucide-react';
 
 export default function Materials() {
@@ -37,6 +40,8 @@ export default function Materials() {
     project_id: ''
   });
   const [materials, setMaterials] = useState<any[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [showCreatePODialog, setShowCreatePODialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -184,6 +189,15 @@ export default function Materials() {
             <p className="text-muted-foreground">Track inventory, orders, and material costs</p>
           </div>
           <div className="flex gap-2">
+            {selectedMaterials.length > 0 && (
+              <Button
+                onClick={() => setShowCreatePODialog(true)}
+                className="bg-construction-blue hover:bg-construction-blue/90"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Create PO ({selectedMaterials.length})
+              </Button>
+            )}
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
@@ -322,16 +336,57 @@ export default function Materials() {
           </div>
 
           <TabsContent value="inventory" className="space-y-4">
+            {selectedMaterials.length > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      {selectedMaterials.length} material(s) selected
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedMaterials([])}
+                    >
+                      Clear Selection
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowCreatePODialog(true)}
+                      className="bg-construction-blue hover:bg-construction-blue/90"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Create Purchase Order
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="grid gap-4">
               {materials.map((material) => (
-                <Card key={material.id} className="hover:shadow-md transition-shadow">
+                <Card key={material.id} className={`hover:shadow-md transition-shadow ${selectedMaterials.includes(material.id) ? 'ring-2 ring-construction-blue' : ''}`}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Package className="h-5 w-5" />
-                          {material.name}
-                        </CardTitle>
+                      <div className="flex items-start gap-3 flex-1">
+                        <Checkbox
+                          checked={selectedMaterials.includes(material.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedMaterials(prev => [...prev, material.id]);
+                            } else {
+                              setSelectedMaterials(prev => prev.filter(id => id !== material.id));
+                            }
+                          }}
+                          className="mt-1"
+                        />
+                        <div className="space-y-1 flex-1">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Package className="h-5 w-5" />
+                            {material.name}
+                          </CardTitle>
                         <CardDescription>
                           {material.material_code} • {material.category}
                         </CardDescription>
@@ -340,6 +395,8 @@ export default function Materials() {
                         <Badge variant={material.quantity_available > (material.minimum_stock_level || 0) ? "default" : "secondary"}>
                           {material.quantity_available > (material.minimum_stock_level || 0) ? "In Stock" : "Low Stock"}
                         </Badge>
+                      </div>
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
@@ -485,6 +542,18 @@ export default function Materials() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Create PO Dialog */}
+        <CreatePOFromMaterialDialog
+          materialIds={selectedMaterials}
+          isOpen={showCreatePODialog}
+          onClose={() => setShowCreatePODialog(false)}
+          onSuccess={() => {
+            setShowCreatePODialog(false);
+            setSelectedMaterials([]);
+            loadMaterials();
+          }}
+        />
       </div>
     </DashboardLayout>
   );

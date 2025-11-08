@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { 
-  Eye, 
-  Edit, 
-  Copy, 
-  Send, 
-  Download, 
+import {
+  Eye,
+  Edit,
+  Copy,
+  Send,
+  Download,
   MoreHorizontal,
   ExternalLink,
   Archive,
-  Trash2
+  Trash2,
+  Building2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EstimateForm } from "./EstimateForm";
+import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -60,6 +62,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
+  const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -335,6 +338,15 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
                           Send to Client
                         </DropdownMenuItem>
                       )}
+                      {!estimate.project && (estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
+                        <DropdownMenuItem
+                          onClick={() => setConvertingEstimate(estimate.id)}
+                          className="text-construction-blue font-medium"
+                        >
+                          <Building2 className="mr-2 h-4 w-4" />
+                          Convert to Project
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem>
                         <Download className="mr-2 h-4 w-4" />
                         Download PDF
@@ -379,6 +391,18 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Convert to Project Dialog */}
+      <ConvertToProjectDialog
+        estimateId={convertingEstimate}
+        isOpen={!!convertingEstimate}
+        onClose={() => setConvertingEstimate(null)}
+        onSuccess={() => {
+          setConvertingEstimate(null);
+          fetchEstimates();
+          onEstimateChange?.();
+        }}
+      />
     </>
   );
 }
