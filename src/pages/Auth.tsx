@@ -32,8 +32,25 @@ const Auth = () => {
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSentType, setEmailSentType] = useState<'signup' | 'reset' | null>(null);
+  const [pendingPlan, setPendingPlan] = useState<{tier: string, period: string} | null>(null);
   const { signIn, signInWithGoogle, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
+
+  // Check for plan context from URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const plan = urlParams.get('plan');
+    const period = urlParams.get('period');
+    const tab = urlParams.get('tab');
+
+    if (plan && period) {
+      setPendingPlan({ tier: plan, period });
+    }
+
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   // Navigate to dashboard after successful authentication
   // Handle special auth parameters for SEO
@@ -42,20 +59,46 @@ const Auth = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = urlParams.get('type') || hashParams.get('type');
+    const redirect = urlParams.get('redirect');
     const errorRecovery = urlParams.has('error_recovery');
     const refresh = urlParams.has('refresh');
-    
+
     // If we have error_recovery or refresh parameters, clean the URL for SEO
     if (errorRecovery || refresh) {
       // Replace URL without parameters to avoid redirect issues
       window.history.replaceState({}, '', '/auth');
       return;
     }
-    
+
     if (user) {
       // Don't redirect to dashboard if this is a password recovery session
       if (type !== 'recovery') {
-        console.log("User authenticated, navigating to dashboard...");
+        console.log("User authenticated, navigating...");
+
+        // Check if there's a pending checkout
+        const pendingCheckout = localStorage.getItem('pendingCheckout');
+        if (pendingCheckout && redirect === 'checkout') {
+          try {
+            const checkout = JSON.parse(pendingCheckout);
+            // Check if checkout is not expired (1 hour)
+            if (Date.now() - checkout.timestamp < 3600000) {
+              console.log("Redirecting to checkout with pending plan...");
+              // Clear the stored checkout
+              localStorage.removeItem('pendingCheckout');
+              // Navigate to pricing which will auto-trigger checkout since user is now authenticated
+              navigate('/pricing');
+              return;
+            } else {
+              // Expired, clear it
+              localStorage.removeItem('pendingCheckout');
+            }
+          } catch (e) {
+            console.error('Error parsing pending checkout:', e);
+            localStorage.removeItem('pendingCheckout');
+          }
+        }
+
+        // Default redirect to dashboard
         navigate("/dashboard");
       }
     }
@@ -229,6 +272,19 @@ const Auth = () => {
           </p>
         </div>
 
+        {/* Plan Context Banner */}
+        {pendingPlan && (
+          <Alert className="mb-4 border-construction-blue bg-construction-blue/5">
+            <Shield className="h-4 w-4 text-construction-blue" />
+            <AlertDescription className="text-construction-dark">
+              <strong>Signing up for {pendingPlan.tier.charAt(0).toUpperCase() + pendingPlan.tier.slice(1)} Plan</strong>
+              <p className="text-sm mt-1">
+                {pendingPlan.period === 'annual' ? 'Annual billing' : 'Monthly billing'} • 14-day free trial
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -367,6 +423,17 @@ const Auth = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
+                    {/* Email Verification Notice */}
+                    <Alert className="border-blue-500 bg-blue-50">
+                      <Mail className="h-4 w-4 text-blue-600" />
+                      <AlertDescription className="text-blue-900">
+                        <strong>Email Verification Required</strong>
+                        <p className="text-sm mt-1">
+                          After signing up, check your email and click the verification link to activate your account. You won't be able to sign in until verified.
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name</Label>

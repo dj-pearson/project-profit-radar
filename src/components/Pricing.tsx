@@ -2,13 +2,14 @@ import { Check, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePromotions } from "@/hooks/usePromotions";
 
 const Pricing = () => {
+  const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { toast } = useToast();
@@ -72,13 +73,22 @@ const Pricing = () => {
   const handleCheckout = async (tier: 'starter' | 'professional' | 'enterprise') => {
     try {
       setLoadingPlan(tier);
-      
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        // Store plan selection for after authentication
+        localStorage.setItem('pendingCheckout', JSON.stringify({
+          tier,
+          billing_period: billingPeriod,
+          timestamp: Date.now(),
+        }));
+
+        // Redirect to signup with plan context
+        navigate(`/auth?tab=signup&plan=${tier}&period=${billingPeriod}&redirect=checkout`);
+
         toast({
-          title: "Authentication Required",
-          description: "Please sign in to subscribe to a plan.",
-          variant: "destructive"
+          title: "Sign up to continue",
+          description: `Create your account to start your ${tier} trial`,
         });
         return;
       }
@@ -94,8 +104,8 @@ const Pricing = () => {
       if (error) throw error;
 
       if (data?.url) {
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
+        // Redirect to Stripe checkout in same tab for clearer flow
+        window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');
       }
