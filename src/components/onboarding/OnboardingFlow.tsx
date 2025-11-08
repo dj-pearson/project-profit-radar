@@ -65,6 +65,7 @@ const steps: OnboardingStep[] = [
 
 export const OnboardingFlow = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [formData, setFormData] = useState({
     companyName: '',
     companyType: '',
@@ -77,7 +78,7 @@ export const OnboardingFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast} = useToast();
   const navigate = useNavigate();
 
   // Auto-recommend tier based on team size and projects
@@ -458,6 +459,28 @@ export const OnboardingFlow = () => {
               </Alert>
             )}
 
+            {/* Billing Period Toggle */}
+            <div className="flex items-center justify-center gap-4 py-4">
+              <span className={billingPeriod === 'monthly' ? 'font-semibold text-construction-dark' : 'text-muted-foreground'}>
+                Monthly
+              </span>
+              <button
+                type="button"
+                onClick={() => setBillingPeriod(prev => prev === 'monthly' ? 'annual' : 'monthly')}
+                className="relative w-12 h-6 bg-gray-200 rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-construction-orange focus:ring-offset-2"
+                aria-label={`Switch to ${billingPeriod === 'monthly' ? 'annual' : 'monthly'} billing`}
+                role="switch"
+                aria-checked={billingPeriod === 'annual'}
+              >
+                <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                  billingPeriod === 'annual' ? 'translate-x-6' : 'translate-x-0'
+                }`} />
+              </button>
+              <span className={billingPeriod === 'annual' ? 'font-semibold text-construction-dark' : 'text-muted-foreground'}>
+                Annual (Save 20%)
+              </span>
+            </div>
+
             <div className="grid gap-4">
               {plans.map((plan) => (
                 <Card
@@ -493,12 +516,16 @@ export const OnboardingFlow = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-construction-blue">
-                          ${plan.monthlyPrice}
+                          ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice}
                         </div>
-                        <div className="text-sm text-muted-foreground">/month</div>
-                        <div className="text-xs text-green-600 mt-1">
-                          Save ${(plan.monthlyPrice - plan.annualPrice) * 12}/yr
+                        <div className="text-sm text-muted-foreground">
+                          /month{billingPeriod === 'annual' && ' (billed annually)'}
                         </div>
+                        {billingPeriod === 'annual' && (
+                          <div className="text-xs text-green-600 mt-1">
+                            Save ${(plan.monthlyPrice * 12) - (plan.annualPrice * 12)}/year
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardHeader>

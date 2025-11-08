@@ -23,6 +23,7 @@ import {
   LazyWorkflowManagement,
   LazyWorkflowTesting,
   LazyAuth,
+  LazyCheckoutSuccess,
   LazyTools,
   LazyResources,
   LazyBlogPost,
@@ -46,6 +47,7 @@ export const appRoutes = (
     <Route path="/dashboard" element={<LazyDashboard />} />
     <Route path="/my-tasks" element={<LazyMyTasks />} />
     <Route path="/auth" element={<LazyAuth />} />
+    <Route path="/checkout/success" element={<LazyCheckoutSuccess />} />
 
     {/* Hubs */}
     <Route path="/projects-hub" element={<LazyProjectsHub />} />
