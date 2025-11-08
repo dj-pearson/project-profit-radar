@@ -1,4 +1,4 @@
-import { Check, Calculator, Loader2 } from "lucide-react";
+import { Check, Calculator, Loader2, Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -213,6 +213,38 @@ const Pricing = () => {
             </Card>
           );
         })}
+        </div>
+
+        {/* Trust Badges & Payment Methods */}
+        <div className="flex flex-col items-center justify-center gap-6 py-8 border-y border-border">
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-5 w-5 text-green-600" />
+              <span className="font-medium">Secure Checkout</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Lock className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">256-bit SSL Encrypted</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="h-5 w-5 text-construction-orange" />
+              <span className="font-medium">14-Day Free Trial</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Accepted Payment Methods</p>
+            <div className="flex items-center gap-4">
+              {/* Payment method placeholders - using text for now since we don't have actual logos */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 rounded border border-border">
+                <span className="text-sm font-semibold text-muted-foreground">VISA</span>
+                <span className="text-sm font-semibold text-muted-foreground">MasterCard</span>
+                <span className="text-sm font-semibold text-muted-foreground">Amex</span>
+                <span className="text-sm font-semibold text-muted-foreground">Discover</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Powered by <span className="font-semibold text-[#635BFF]">Stripe</span></p>
+          </div>
         </div>
 
         {/* Value Props */}
