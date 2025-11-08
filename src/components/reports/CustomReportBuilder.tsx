@@ -25,7 +25,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import * as XLSX from 'xlsx';
 
 interface ReportField {
   id: string;
@@ -297,7 +296,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
     });
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (reportData.length === 0) {
       toast({
         variant: "destructive",
@@ -306,6 +305,9 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
       });
       return;
     }
+
+    // Lazy load XLSX library only when exporting
+    const XLSX = await import('xlsx');
 
     const ws = XLSX.utils.json_to_sheet(reportData);
     const wb = XLSX.utils.book_new();

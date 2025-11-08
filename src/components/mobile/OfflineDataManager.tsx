@@ -159,50 +159,51 @@ export const OfflineDataManager = () => {
       setSyncStatus(prev => ({ ...prev, syncInProgress: true }));
       setSyncProgress(0);
 
-      // Download active projects
+      // Download active projects - only essential columns for offline use
       setSyncProgress(20);
+      const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
       const { data: projects } = await supabase
         .from('projects')
-        .select('*')
+        .select('id, name, status, client_name, budget, completion_percentage, start_date, end_date, site_address')
         .eq('company_id', userProfile.company_id)
         .eq('status', 'active')
         .limit(50);
 
       localStorage.setItem('offline_projects', JSON.stringify(projects || []));
 
-      // Download recent tasks
+      // Download recent tasks - only essential columns
       setSyncProgress(40);
       const { data: tasks } = await supabase
         .from('tasks')
-        .select('*')
+        .select('id, name, description, status, priority, due_date, project_id, assigned_to, completion_percentage, created_at')
         .eq('company_id', userProfile.company_id)
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', oneMonthAgo)
         .limit(100);
 
       localStorage.setItem('offline_tasks', JSON.stringify(tasks || []));
 
-      // Download user's recent time entries
+      // Download user's recent time entries - only essential columns
       setSyncProgress(60);
       const { data: timeEntries } = await supabase
         .from('time_entries')
-        .select('*')
+        .select('id, project_id, user_id, date, hours, notes, status, created_at')
         .eq('user_id', user?.id)
-        .gte('start_time', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('date', oneMonthAgo)
         .limit(50);
 
       localStorage.setItem('offline_time_entries', JSON.stringify(timeEntries || []));
 
-      // Download recent expenses
+      // Download recent expenses - only essential columns
       setSyncProgress(80);
       const { data: expenses } = await supabase
         .from('expenses')
-        .select('*')
+        .select('id, project_id, amount, category, date, receipt_url, status, description, created_at')
         .eq('company_id', userProfile.company_id)
-        .gte('expense_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('date', oneMonthAgo)
         .limit(50);
 
       localStorage.setItem('offline_expenses', JSON.stringify(expenses || []));
-
       setSyncProgress(100);
       localStorage.setItem('lastSync', new Date().toISOString());
       

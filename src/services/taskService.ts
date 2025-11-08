@@ -74,10 +74,17 @@ class TaskService {
     project_id?: string;
     search?: string;
   }): Promise<TaskWithDetails[]> {
-    // Basic fetch without embedded relationships to avoid 400 errors from PostgREST
+    // Use Supabase foreign key joins to fetch related data in a single query
     let query = supabase
       .from('tasks')
-      .select('*')
+      .select(`
+        id, name, description, status, priority, due_date, assigned_to, created_by,
+        start_date, end_date, estimated_hours, actual_hours, completion_percentage,
+        project_id, parent_task_id, dependencies, tags, created_at, updated_at,
+        project:projects!project_id(id, name),
+        assigned_to_profile:user_profiles!assigned_to(id, first_name, last_name, email),
+        created_by_profile:user_profiles!created_by(id, first_name, last_name, email)
+      `)
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -98,43 +105,10 @@ class TaskService {
       throw new Error(`Error fetching tasks: ${error.message}`);
     }
 
-    const tasks = (data || []) as Task[];
-    if (tasks.length === 0) return [];
-
-    // Fetch related project names and user profiles in parallel
-    const projectIds = Array.from(new Set(tasks.map(t => t.project_id).filter(Boolean))) as string[];
-    const userIds = Array.from(
-      new Set(
-        tasks
-          .flatMap(t => [t.assigned_to, t.created_by])
-          .filter((v): v is string => !!v)
-      )
-    );
-
-    const [projectsRes, profilesRes] = await Promise.all([
-      projectIds.length
-        ? supabase.from('projects').select('id, name').in('id', projectIds)
-        : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
-      userIds.length
-        ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
-        : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
-    ]);
-
-    const projectsMap = new Map<string, { id: string; name: string }>();
-    if (!projectsRes.error && projectsRes.data) {
-      for (const p of projectsRes.data as any[]) projectsMap.set(p.id, p);
-    }
-
-    const profilesMap = new Map<string, { first_name: string; last_name: string; email: string }>();
-    if (!profilesRes.error && profilesRes.data) {
-      for (const u of profilesRes.data as any[]) profilesMap.set(u.id, u);
-    }
-
-    return tasks.map(task => ({
+    // Transform the data to match TaskWithDetails interface
+    return (data || []).map((task: any) => ({
       ...task,
-      project_name: task.project_id ? projectsMap.get(task.project_id)?.name || null : null,
-      assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
-      created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
+      project_name: task.project?.name || null,
       tags: task.tags || [],
     }));
   }

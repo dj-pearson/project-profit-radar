@@ -196,5 +196,7 @@ export default defineConfig(({ mode }) => ({
     logOverride: { "this-is-undefined-in-esm": "silent" },
     target: "esnext",
     treeShaking: true,
+    // Strip console logs in production for better performance
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
 }));

@@ -14,9 +14,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { CustomReportBuilder } from '@/components/reports/CustomReportBuilder';
 import ExecutiveDashboard from '@/components/analytics/ExecutiveDashboard';
 import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Eye } from 'lucide-react';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 
 const Reports = () => {
@@ -80,9 +77,9 @@ const Reports = () => {
       if (projectError) throw projectError;
 
       if (format === 'excel') {
-        generateExcelReport(projectData);
+        await generateExcelReport(projectData);
       } else {
-        generatePDFReport(projectData);
+        await generatePDFReport(projectData);
       }
 
       toast({
@@ -101,7 +98,10 @@ const Reports = () => {
     }
   };
 
-  const generateExcelReport = (projectData: any) => {
+  const generateExcelReport = async (projectData: any) => {
+    // Lazy load XLSX library only when exporting
+    const XLSX = await import('xlsx');
+
     const wb = XLSX.utils.book_new();
 
     // Project Overview Sheet
@@ -154,7 +154,11 @@ const Reports = () => {
     XLSX.writeFile(wb, `${projectData.name}_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const generatePDFReport = (projectData: any) => {
+  const generatePDFReport = async (projectData: any) => {
+    // Lazy load jsPDF library only when exporting
+    const { default: jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+
     const doc = new jsPDF();
     
     // Title
