@@ -16,6 +16,15 @@ import {
   CheckCircle, Building2, Users, CreditCard, Rocket,
   Sparkles, TrendingUp, Clock, Gift, Star, AlertCircle
 } from 'lucide-react';
+import {
+  PRICING_PLANS,
+  recommendPlan,
+  getRecommendationMessage,
+  getMonthlyEquivalentPrice,
+  getAnnualSavings,
+  type BillingPeriod,
+  type SubscriptionTier
+} from '@/config/pricing';
 
 interface OnboardingStep {
   id: string;
@@ -65,7 +74,7 @@ const steps: OnboardingStep[] = [
 
 export const OnboardingFlow = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [formData, setFormData] = useState({
     companyName: '',
     companyType: '',
@@ -128,26 +137,8 @@ export const OnboardingFlow = () => {
 
   // Auto-recommend tier based on team size and projects
   useEffect(() => {
-    const recommendTier = () => {
-      const teamSize = formData.teamSize;
-      const projects = formData.expectedProjects;
-
-      // Starter: 1-5 team members, <10 projects
-      if (teamSize <= 5 && projects <= 10) {
-        return 'starter';
-      }
-      // Professional: 6-20 team members, 11-50 projects
-      else if (teamSize <= 20 && projects <= 50) {
-        return 'professional';
-      }
-      // Enterprise: 20+ team members or 50+ projects
-      else {
-        return 'enterprise';
-      }
-    };
-
     if (formData.teamSize > 0 || formData.expectedProjects > 0) {
-      const recommended = recommendTier();
+      const recommended = recommendPlan(formData.teamSize, formData.expectedProjects);
       setFormData(prev => ({
         ...prev,
         recommendedPlan: recommended,
@@ -302,16 +293,6 @@ export const OnboardingFlow = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getTierRecommendation = () => {
-    const tier = formData.recommendedPlan;
-    const messages = {
-      starter: "Perfect for small teams just getting started",
-      professional: "Great choice! This plan fits most construction businesses",
-      enterprise: "Ideal for larger operations with complex needs"
-    };
-    return messages[tier as keyof typeof messages];
   };
 
   const renderStepContent = () => {
@@ -518,64 +499,13 @@ export const OnboardingFlow = () => {
         );
 
       case 'subscription':
-        const plans = [
-          {
-            id: 'starter',
-            name: 'Starter',
-            monthlyPrice: 149,
-            annualPrice: 119,
-            description: 'Perfect for small teams',
-            features: [
-              'Up to 5 team members',
-              'Up to 10 projects',
-              'Basic reporting',
-              'Mobile app',
-              'Email support'
-            ],
-            limits: '5 members • 10 projects'
-          },
-          {
-            id: 'professional',
-            name: 'Professional',
-            monthlyPrice: 299,
-            annualPrice: 239,
-            description: 'Most popular choice',
-            features: [
-              'Up to 20 team members',
-              'Up to 50 projects',
-              'Advanced reporting',
-              'Time tracking',
-              'QuickBooks integration',
-              'Priority support'
-            ],
-            limits: '20 members • 50 projects',
-            popular: true
-          },
-          {
-            id: 'enterprise',
-            name: 'Enterprise',
-            monthlyPrice: 599,
-            annualPrice: 479,
-            description: 'For large operations',
-            features: [
-              'Unlimited team members',
-              'Unlimited projects',
-              'Everything in Professional',
-              'Custom integrations',
-              'Dedicated support',
-              'Advanced analytics'
-            ],
-            limits: 'Unlimited'
-          }
-        ];
-
         return (
           <div className="space-y-4">
             {formData.recommendedPlan && (
               <Alert className="border-construction-blue bg-construction-blue/5">
                 <Star className="h-4 w-4 text-construction-blue" />
                 <AlertDescription className="ml-2">
-                  <strong>Recommended for you:</strong> {getTierRecommendation()}
+                  <strong>Recommended for you:</strong> {getRecommendationMessage(formData.recommendedPlan as SubscriptionTier)}
                 </AlertDescription>
               </Alert>
             )}
@@ -603,7 +533,7 @@ export const OnboardingFlow = () => {
             </div>
 
             <div className="grid gap-4">
-              {plans.map((plan) => (
+              {PRICING_PLANS.map((plan) => (
                 <Card
                   key={plan.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
@@ -622,7 +552,7 @@ export const OnboardingFlow = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <CardTitle className="text-lg">{plan.name}</CardTitle>
-                          {plan.popular && (
+                          {plan.isPopular && (
                             <Badge className="bg-construction-orange">Most Popular</Badge>
                           )}
                           {formData.recommendedPlan === plan.id && (
@@ -637,14 +567,14 @@ export const OnboardingFlow = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-construction-blue">
-                          ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice}
+                          ${getMonthlyEquivalentPrice(plan.tier, billingPeriod)}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           /month{billingPeriod === 'annual' && ' (billed annually)'}
                         </div>
                         {billingPeriod === 'annual' && (
                           <div className="text-xs text-green-600 mt-1">
-                            Save ${(plan.monthlyPrice * 12) - (plan.annualPrice * 12)}/year
+                            Save ${getAnnualSavings(plan.tier)}/year
                           </div>
                         )}
                       </div>
@@ -656,7 +586,7 @@ export const OnboardingFlow = () => {
                         {plan.limits}
                       </div>
                       <ul className="space-y-2 text-sm">
-                        {plan.features.map((feature, index) => (
+                        {plan.features.slice(0, 6).map((feature, index) => (
                           <li key={index} className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                             <span>{feature}</span>

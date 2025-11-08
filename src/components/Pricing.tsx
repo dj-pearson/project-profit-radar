@@ -7,68 +7,14 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePromotions } from "@/hooks/usePromotions";
+import { PRICING_PLANS, getPlanPrice, getAnnualSavings, type BillingPeriod, type SubscriptionTier } from "@/config/pricing";
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { toast } = useToast();
   const { promotions, getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('homepage');
-
-  const plans = [
-    {
-      name: "Starter",
-      tier: "starter" as const,
-      monthlyPrice: 149,
-      annualPrice: 1490,
-      description: "Perfect for small teams (1-5 users)",
-      features: [
-        "Up to 5 active projects",
-        "Basic job costing",
-        "Mobile time tracking",
-        "QuickBooks sync",
-        "Email support",
-        "Basic reporting"
-      ],
-      limitations: ["Limited integrations", "Basic compliance tools"]
-    },
-    {
-      name: "Professional",
-      tier: "professional" as const,
-      monthlyPrice: 299,
-      annualPrice: 2990,
-      description: "Most popular for growing contractors (5-15 users)",
-      features: [
-        "Unlimited projects",
-        "Advanced job costing",
-        "Full mobile suite",
-        "All integrations",
-        "OSHA compliance tools",
-        "Client portal",
-        "Advanced reporting",
-        "Phone support",
-        "Custom workflows"
-      ],
-      isPopular: true
-    },
-    {
-      name: "Enterprise",
-      tier: "enterprise" as const,
-      monthlyPrice: 599,
-      annualPrice: 5990,
-      description: "For established contractors (15+ users)",
-      features: [
-        "Everything in Professional",
-        "Custom integrations",
-        "Advanced automation",
-        "White-label client portal",
-        "Dedicated success manager",
-        "24/7 priority support",
-        "Advanced analytics",
-        "Multi-company management"
-      ]
-    }
-  ];
 
   const handleCheckout = async (tier: 'starter' | 'professional' | 'enterprise') => {
     try {
@@ -172,9 +118,9 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => {
+          {PRICING_PLANS.map((plan, index) => {
             const promotion = getPromotionForPlan(plan.tier);
-            const originalPrice = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+            const originalPrice = getPlanPrice(plan.tier, billingPeriod);
             const discountedPrice = promotion ? calculateDiscountedPrice(originalPrice, plan.tier) : originalPrice;
             const discountAmount = promotion ? getDiscountAmount(originalPrice, plan.tier) : 0;
             
@@ -217,7 +163,7 @@ const Pricing = () => {
                     </span>
                     {billingPeriod === 'annual' && !promotion && (
                       <div className="text-sm text-construction-orange font-medium mt-1">
-                        Save ${(plan.monthlyPrice * 12) - plan.annualPrice}
+                        Save ${getAnnualSavings(plan.tier)}
                       </div>
                     )}
                     {promotion && (
@@ -226,7 +172,7 @@ const Pricing = () => {
                       </div>
                     )}
                   </div>
-                  <CardDescription className="text-base mt-2">{plan.description}</CardDescription>
+                  <CardDescription className="text-base mt-2">{plan.shortDescription || plan.description}</CardDescription>
                 </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
