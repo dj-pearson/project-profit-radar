@@ -77,9 +77,54 @@ export const OnboardingFlow = () => {
     recommendedPlan: 'professional'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const { toast} = useToast();
   const navigate = useNavigate();
+
+  // Load saved progress on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!user) return;
+
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('preferences')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.preferences?.onboarding_progress) {
+          const savedProgress = profile.preferences.onboarding_progress;
+
+          // Resume from saved step
+          if (savedProgress.currentStep !== undefined) {
+            setCurrentStep(savedProgress.currentStep);
+          }
+
+          // Restore form data
+          if (savedProgress.formData) {
+            setFormData(prev => ({
+              ...prev,
+              ...savedProgress.formData
+            }));
+          }
+
+          // Show resuming toast
+          if (savedProgress.currentStep > 0) {
+            toast({
+              title: "Welcome back!",
+              description: "Resuming from where you left off.",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading onboarding progress:', error);
+      }
+    };
+
+    loadProgress();
+  }, [user, toast]);
 
   // Auto-recommend tier based on team size and projects
   useEffect(() => {
@@ -111,8 +156,84 @@ export const OnboardingFlow = () => {
     }
   }, [formData.teamSize, formData.expectedProjects]);
 
+  const saveProgress = async () => {
+    if (!user) return;
+
+    try {
+      setIsSaving(true);
+
+      // Get current preferences
+      const { data: currentProfile } = await supabase
+        .from('user_profiles')
+        .select('preferences')
+        .eq('id', user.id)
+        .single();
+
+      const currentPreferences = currentProfile?.preferences || {};
+
+      // Save current step and form data
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          preferences: {
+            ...currentPreferences,
+            onboarding_progress: {
+              currentStep,
+              formData,
+              savedAt: new Date().toISOString(),
+              completed: false
+            }
+          }
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Progress Saved",
+        description: "You can continue your setup anytime from your dashboard.",
+      });
+
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save your progress. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleNext = async () => {
     if (currentStep === steps.length - 1) {
+      // Clear saved progress on completion
+      try {
+        const { data: currentProfile } = await supabase
+          .from('user_profiles')
+          .select('preferences')
+          .eq('id', user.id)
+          .single();
+
+        const currentPreferences = currentProfile?.preferences || {};
+        delete currentPreferences.onboarding_progress;
+
+        await supabase
+          .from('user_profiles')
+          .update({
+            preferences: {
+              ...currentPreferences,
+              onboarding_completed: true
+            }
+          })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error clearing progress:', error);
+      }
+
       navigate('/dashboard');
       return;
     }
@@ -657,18 +778,30 @@ export const OnboardingFlow = () => {
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentStep === 0 || isLoading}
+              disabled={currentStep === 0 || isLoading || isSaving}
               className="min-w-[100px]"
             >
               Previous
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={!isStepValid() || isLoading}
-              className="min-w-[100px] bg-construction-blue hover:bg-construction-blue/90"
-            >
-              {isLoading ? 'Setting up...' : currentStep === steps.length - 1 ? 'Go to Dashboard' : 'Next'}
-            </Button>
+            <div className="flex gap-2">
+              {currentStep > 0 && currentStep < steps.length - 1 && (
+                <Button
+                  variant="ghost"
+                  onClick={saveProgress}
+                  disabled={isLoading || isSaving}
+                  className="min-w-[120px]"
+                >
+                  {isSaving ? 'Saving...' : 'Skip for now'}
+                </Button>
+              )}
+              <Button
+                onClick={handleNext}
+                disabled={!isStepValid() || isLoading || isSaving}
+                className="min-w-[100px] bg-construction-blue hover:bg-construction-blue/90"
+              >
+                {isLoading ? 'Setting up...' : currentStep === steps.length - 1 ? 'Go to Dashboard' : 'Next'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

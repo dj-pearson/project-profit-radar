@@ -1,4 +1,4 @@
-import { Check, Calculator } from "lucide-react";
+import { Check, Calculator, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -122,8 +122,24 @@ const Pricing = () => {
   };
 
   return (
-    <section id="pricing" className="py-20 bg-background">
-      <div className="container mx-auto px-4">
+    <>
+      {/* Full-page loading overlay */}
+      {loadingPlan && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center shadow-2xl">
+            <Loader2 className="h-16 w-16 animate-spin text-construction-orange mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-construction-dark mb-2">
+              Creating your checkout session...
+            </h3>
+            <p className="text-muted-foreground">
+              You'll be redirected to our secure payment page in a moment.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <section id="pricing" className="py-20 bg-background">
+        <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
@@ -288,6 +304,7 @@ const Pricing = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

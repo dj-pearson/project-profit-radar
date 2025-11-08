@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useTaskAutoDetection } from '@/hooks/useTaskAutoDetection';
 
 interface OnboardingTask {
   id: string;
@@ -257,6 +258,9 @@ export const OnboardingChecklist = () => {
       console.error('Failed to dismiss checklist:', error);
     }
   };
+
+  // Auto-detect task completion
+  useTaskAutoDetection(progress, completeTask);
 
   if (isLoading || isDismissed) return null;
 
