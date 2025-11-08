@@ -11,6 +11,9 @@ import {
   Zap,
   X,
   Sparkles,
+  Lock,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +51,10 @@ export const OnboardingChecklist = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    recommended: false,
+    advanced: false,
+  });
 
   // Define onboarding tasks
   const tasks: OnboardingTask[] = [
@@ -169,6 +176,16 @@ export const OnboardingChecklist = () => {
   const recommendedTasks = tasksWithStatus.filter(t => t.category === 'recommended');
   const advancedTasks = tasksWithStatus.filter(t => t.category === 'advanced');
 
+  // Progressive disclosure logic
+  const essentialComplete = essentialTasks.every(t => t.completed);
+  const recommendedComplete = recommendedTasks.every(t => t.completed);
+  const recommendedUnlocked = essentialComplete;
+  const advancedUnlocked = essentialComplete && recommendedComplete;
+
+  // Count remaining tasks per section
+  const essentialRemaining = essentialTasks.filter(t => !t.completed).length;
+  const recommendedRemaining = recommendedTasks.filter(t => !t.completed).length;
+
   // Load progress from database
   useEffect(() => {
     if (!user) return;
@@ -262,6 +279,31 @@ export const OnboardingChecklist = () => {
   // Auto-detect task completion
   useTaskAutoDetection(progress, completeTask);
 
+  // Auto-expand sections when they unlock (with celebration)
+  useEffect(() => {
+    if (recommendedUnlocked && !expandedSections.recommended && !isLoading) {
+      setExpandedSections(prev => ({ ...prev, recommended: true }));
+      if (essentialComplete) {
+        toast({
+          title: "🎉 New Tasks Unlocked!",
+          description: "You've completed the essentials. Check out recommended tasks!",
+        });
+      }
+    }
+  }, [recommendedUnlocked, expandedSections.recommended, essentialComplete, isLoading, toast]);
+
+  useEffect(() => {
+    if (advancedUnlocked && !expandedSections.advanced && !isLoading) {
+      setExpandedSections(prev => ({ ...prev, advanced: true }));
+      if (recommendedComplete) {
+        toast({
+          title: "🏆 Advanced Tasks Unlocked!",
+          description: "You're on fire! Advanced features are now available.",
+        });
+      }
+    }
+  }, [advancedUnlocked, expandedSections.advanced, recommendedComplete, isLoading, toast]);
+
   if (isLoading || isDismissed) return null;
 
   // Minimized view
@@ -353,44 +395,134 @@ export const OnboardingChecklist = () => {
         {/* Recommended Tasks */}
         {recommendedTasks.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-              Recommended
-            </h4>
-            <div className="space-y-2">
-              {recommendedTasks.map(task => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onComplete={() => completeTask(task.id, task.points)}
-                  onNavigate={(url) => {
-                    if (url) navigate(url);
-                    setIsMinimized(true);
+            <div
+              className={`flex items-center justify-between mb-2 ${!recommendedUnlocked ? 'cursor-pointer' : ''}`}
+              onClick={() => {
+                if (recommendedUnlocked) {
+                  setExpandedSections(prev => ({ ...prev, recommended: !prev.recommended }));
+                }
+              }}
+            >
+              <h4 className={`text-sm font-semibold flex items-center gap-2 ${
+                recommendedUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/50'
+              }`}>
+                {!recommendedUnlocked && <Lock className="h-3 w-3" />}
+                Recommended
+                {!recommendedUnlocked && (
+                  <span className="text-xs font-normal">
+                    (Complete {essentialRemaining} essential task{essentialRemaining !== 1 ? 's' : ''} to unlock)
+                  </span>
+                )}
+              </h4>
+              {recommendedUnlocked && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedSections(prev => ({ ...prev, recommended: !prev.recommended }));
                   }}
-                />
-              ))}
+                >
+                  {expandedSections.recommended ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
             </div>
+            {recommendedUnlocked ? (
+              expandedSections.recommended && (
+                <div className="space-y-2">
+                  {recommendedTasks.map(task => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onComplete={() => completeTask(task.id, task.points)}
+                      onNavigate={(url) => {
+                        if (url) navigate(url);
+                        setIsMinimized(true);
+                      }}
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="bg-muted/30 rounded-lg p-3 border border-dashed border-muted-foreground/30">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Lock className="h-4 w-4" />
+                  <span>{recommendedTasks.length} tasks will unlock here</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Advanced Tasks */}
         {advancedTasks.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-              Advanced
-            </h4>
-            <div className="space-y-2">
-              {advancedTasks.map(task => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onComplete={() => completeTask(task.id, task.points)}
-                  onNavigate={(url) => {
-                    if (url) navigate(url);
-                    setIsMinimized(true);
+            <div
+              className={`flex items-center justify-between mb-2 ${!advancedUnlocked ? 'cursor-pointer' : ''}`}
+              onClick={() => {
+                if (advancedUnlocked) {
+                  setExpandedSections(prev => ({ ...prev, advanced: !prev.advanced }));
+                }
+              }}
+            >
+              <h4 className={`text-sm font-semibold flex items-center gap-2 ${
+                advancedUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/50'
+              }`}>
+                {!advancedUnlocked && <Lock className="h-3 w-3" />}
+                Advanced
+                {!advancedUnlocked && (
+                  <span className="text-xs font-normal">
+                    (Complete {recommendedRemaining} recommended task{recommendedRemaining !== 1 ? 's' : ''} to unlock)
+                  </span>
+                )}
+              </h4>
+              {advancedUnlocked && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedSections(prev => ({ ...prev, advanced: !prev.advanced }));
                   }}
-                />
-              ))}
+                >
+                  {expandedSections.advanced ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
             </div>
+            {advancedUnlocked ? (
+              expandedSections.advanced && (
+                <div className="space-y-2">
+                  {advancedTasks.map(task => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onComplete={() => completeTask(task.id, task.points)}
+                      onNavigate={(url) => {
+                        if (url) navigate(url);
+                        setIsMinimized(true);
+                      }}
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="bg-muted/30 rounded-lg p-3 border border-dashed border-muted-foreground/30">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Lock className="h-4 w-4" />
+                  <span>{advancedTasks.length} tasks will unlock here</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
