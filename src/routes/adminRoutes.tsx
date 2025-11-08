@@ -25,6 +25,7 @@ import Upgrade from '@/pages/Upgrade';
 // Analytics & Business Intelligence
 import Analytics from '@/pages/Analytics';
 import Settings from '@/pages/admin/Settings';
+import AdminIntelligenceDashboard from '@/pages/admin/AdminIntelligenceDashboard';
 import { ConversionAnalytics } from '@/pages/admin/ConversionAnalytics';
 import { RetentionAnalytics } from '@/pages/admin/RetentionAnalytics';
 import { RevenueAnalytics } from '@/pages/admin/RevenueAnalytics';
@@ -91,6 +92,7 @@ export const adminRoutes = (
     <Route path="/upgrade" element={<Upgrade />} />
 
     {/* Admin - Analytics */}
+    <Route path="/admin/intelligence" element={<AdminIntelligenceDashboard />} />
     <Route path="/admin/analytics" element={<Analytics />} />
     <Route path="/admin/settings" element={<Settings />} />
     <Route path="/admin/conversion-analytics" element={<ConversionAnalytics />} />
