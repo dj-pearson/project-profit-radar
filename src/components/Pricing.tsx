@@ -1,84 +1,40 @@
-import { Check, Calculator } from "lucide-react";
+import { Check, Calculator, Loader2, Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePromotions } from "@/hooks/usePromotions";
+import { PRICING_PLANS, getPlanPrice, getAnnualSavings, type BillingPeriod, type SubscriptionTier } from "@/config/pricing";
 
 const Pricing = () => {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const navigate = useNavigate();
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { toast } = useToast();
   const { promotions, getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('homepage');
 
-  const plans = [
-    {
-      name: "Starter",
-      tier: "starter" as const,
-      monthlyPrice: 149,
-      annualPrice: 1490,
-      description: "Perfect for small teams (1-5 users)",
-      features: [
-        "Up to 5 active projects",
-        "Basic job costing",
-        "Mobile time tracking",
-        "QuickBooks sync",
-        "Email support",
-        "Basic reporting"
-      ],
-      limitations: ["Limited integrations", "Basic compliance tools"]
-    },
-    {
-      name: "Professional",
-      tier: "professional" as const,
-      monthlyPrice: 299,
-      annualPrice: 2990,
-      description: "Most popular for growing contractors (5-15 users)",
-      features: [
-        "Unlimited projects",
-        "Advanced job costing",
-        "Full mobile suite",
-        "All integrations",
-        "OSHA compliance tools",
-        "Client portal",
-        "Advanced reporting",
-        "Phone support",
-        "Custom workflows"
-      ],
-      isPopular: true
-    },
-    {
-      name: "Enterprise",
-      tier: "enterprise" as const,
-      monthlyPrice: 599,
-      annualPrice: 5990,
-      description: "For established contractors (15+ users)",
-      features: [
-        "Everything in Professional",
-        "Custom integrations",
-        "Advanced automation",
-        "White-label client portal",
-        "Dedicated success manager",
-        "24/7 priority support",
-        "Advanced analytics",
-        "Multi-company management"
-      ]
-    }
-  ];
-
   const handleCheckout = async (tier: 'starter' | 'professional' | 'enterprise') => {
     try {
       setLoadingPlan(tier);
-      
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        // Store plan selection for after authentication
+        localStorage.setItem('pendingCheckout', JSON.stringify({
+          tier,
+          billing_period: billingPeriod,
+          timestamp: Date.now(),
+        }));
+
+        // Redirect to signup with plan context
+        navigate(`/auth?tab=signup&plan=${tier}&period=${billingPeriod}&redirect=checkout`);
+
         toast({
-          title: "Authentication Required",
-          description: "Please sign in to subscribe to a plan.",
-          variant: "destructive"
+          title: "Sign up to continue",
+          description: `Create your account to start your ${tier} trial`,
         });
         return;
       }
@@ -94,8 +50,8 @@ const Pricing = () => {
       if (error) throw error;
 
       if (data?.url) {
-        // Open Stripe checkout in a new tab
-        window.open(data.url, '_blank');
+        // Redirect to Stripe checkout in same tab for clearer flow
+        window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');
       }
@@ -112,8 +68,24 @@ const Pricing = () => {
   };
 
   return (
-    <section id="pricing" className="py-20 bg-background">
-      <div className="container mx-auto px-4">
+    <>
+      {/* Full-page loading overlay */}
+      {loadingPlan && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center shadow-2xl">
+            <Loader2 className="h-16 w-16 animate-spin text-construction-orange mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-construction-dark mb-2">
+              Creating your checkout session...
+            </h3>
+            <p className="text-muted-foreground">
+              You'll be redirected to our secure payment page in a moment.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <section id="pricing" className="py-20 bg-background">
+        <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
@@ -146,9 +118,9 @@ const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {plans.map((plan, index) => {
+          {PRICING_PLANS.map((plan, index) => {
             const promotion = getPromotionForPlan(plan.tier);
-            const originalPrice = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+            const originalPrice = getPlanPrice(plan.tier, billingPeriod);
             const discountedPrice = promotion ? calculateDiscountedPrice(originalPrice, plan.tier) : originalPrice;
             const discountAmount = promotion ? getDiscountAmount(originalPrice, plan.tier) : 0;
             
@@ -191,7 +163,7 @@ const Pricing = () => {
                     </span>
                     {billingPeriod === 'annual' && !promotion && (
                       <div className="text-sm text-construction-orange font-medium mt-1">
-                        Save ${(plan.monthlyPrice * 12) - plan.annualPrice}
+                        Save ${getAnnualSavings(plan.tier)}
                       </div>
                     )}
                     {promotion && (
@@ -200,7 +172,7 @@ const Pricing = () => {
                       </div>
                     )}
                   </div>
-                  <CardDescription className="text-base mt-2">{plan.description}</CardDescription>
+                  <CardDescription className="text-base mt-2">{plan.shortDescription || plan.description}</CardDescription>
                 </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
@@ -243,6 +215,38 @@ const Pricing = () => {
         })}
         </div>
 
+        {/* Trust Badges & Payment Methods */}
+        <div className="flex flex-col items-center justify-center gap-6 py-8 border-y border-border">
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-5 w-5 text-green-600" />
+              <span className="font-medium">Secure Checkout</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Lock className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">256-bit SSL Encrypted</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="h-5 w-5 text-construction-orange" />
+              <span className="font-medium">14-Day Free Trial</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Accepted Payment Methods</p>
+            <div className="flex items-center gap-4">
+              {/* Payment method placeholders - using text for now since we don't have actual logos */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 rounded border border-border">
+                <span className="text-sm font-semibold text-muted-foreground">VISA</span>
+                <span className="text-sm font-semibold text-muted-foreground">MasterCard</span>
+                <span className="text-sm font-semibold text-muted-foreground">Amex</span>
+                <span className="text-sm font-semibold text-muted-foreground">Discover</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Powered by <span className="font-semibold text-[#635BFF]">Stripe</span></p>
+          </div>
+        </div>
+
         {/* Value Props */}
         <div className="bg-secondary/50 rounded-xl p-8">
           <div className="grid md:grid-cols-3 gap-8 text-center">
@@ -278,6 +282,7 @@ const Pricing = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

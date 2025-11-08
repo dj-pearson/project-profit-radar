@@ -16,6 +16,15 @@ import {
   CheckCircle, Building2, Users, CreditCard, Rocket,
   Sparkles, TrendingUp, Clock, Gift, Star, AlertCircle
 } from 'lucide-react';
+import {
+  PRICING_PLANS,
+  recommendPlan,
+  getRecommendationMessage,
+  getMonthlyEquivalentPrice,
+  getAnnualSavings,
+  type BillingPeriod,
+  type SubscriptionTier
+} from '@/config/pricing';
 
 interface OnboardingStep {
   id: string;
@@ -65,6 +74,7 @@ const steps: OnboardingStep[] = [
 
 export const OnboardingFlow = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [formData, setFormData] = useState({
     companyName: '',
     companyType: '',
@@ -76,32 +86,59 @@ export const OnboardingFlow = () => {
     recommendedPlan: 'professional'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast} = useToast();
   const navigate = useNavigate();
 
-  // Auto-recommend tier based on team size and projects
+  // Load saved progress on mount
   useEffect(() => {
-    const recommendTier = () => {
-      const teamSize = formData.teamSize;
-      const projects = formData.expectedProjects;
+    const loadProgress = async () => {
+      if (!user) return;
 
-      // Starter: 1-5 team members, <10 projects
-      if (teamSize <= 5 && projects <= 10) {
-        return 'starter';
-      }
-      // Professional: 6-20 team members, 11-50 projects
-      else if (teamSize <= 20 && projects <= 50) {
-        return 'professional';
-      }
-      // Enterprise: 20+ team members or 50+ projects
-      else {
-        return 'enterprise';
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('preferences')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.preferences?.onboarding_progress) {
+          const savedProgress = profile.preferences.onboarding_progress;
+
+          // Resume from saved step
+          if (savedProgress.currentStep !== undefined) {
+            setCurrentStep(savedProgress.currentStep);
+          }
+
+          // Restore form data
+          if (savedProgress.formData) {
+            setFormData(prev => ({
+              ...prev,
+              ...savedProgress.formData
+            }));
+          }
+
+          // Show resuming toast
+          if (savedProgress.currentStep > 0) {
+            toast({
+              title: "Welcome back!",
+              description: "Resuming from where you left off.",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading onboarding progress:', error);
       }
     };
 
+    loadProgress();
+  }, [user, toast]);
+
+  // Auto-recommend tier based on team size and projects
+  useEffect(() => {
     if (formData.teamSize > 0 || formData.expectedProjects > 0) {
-      const recommended = recommendTier();
+      const recommended = recommendPlan(formData.teamSize, formData.expectedProjects);
       setFormData(prev => ({
         ...prev,
         recommendedPlan: recommended,
@@ -110,8 +147,84 @@ export const OnboardingFlow = () => {
     }
   }, [formData.teamSize, formData.expectedProjects]);
 
+  const saveProgress = async () => {
+    if (!user) return;
+
+    try {
+      setIsSaving(true);
+
+      // Get current preferences
+      const { data: currentProfile } = await supabase
+        .from('user_profiles')
+        .select('preferences')
+        .eq('id', user.id)
+        .single();
+
+      const currentPreferences = currentProfile?.preferences || {};
+
+      // Save current step and form data
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          preferences: {
+            ...currentPreferences,
+            onboarding_progress: {
+              currentStep,
+              formData,
+              savedAt: new Date().toISOString(),
+              completed: false
+            }
+          }
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Progress Saved",
+        description: "You can continue your setup anytime from your dashboard.",
+      });
+
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save your progress. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleNext = async () => {
     if (currentStep === steps.length - 1) {
+      // Clear saved progress on completion
+      try {
+        const { data: currentProfile } = await supabase
+          .from('user_profiles')
+          .select('preferences')
+          .eq('id', user.id)
+          .single();
+
+        const currentPreferences = currentProfile?.preferences || {};
+        delete currentPreferences.onboarding_progress;
+
+        await supabase
+          .from('user_profiles')
+          .update({
+            preferences: {
+              ...currentPreferences,
+              onboarding_completed: true
+            }
+          })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error clearing progress:', error);
+      }
+
       navigate('/dashboard');
       return;
     }
@@ -180,16 +293,6 @@ export const OnboardingFlow = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getTierRecommendation = () => {
-    const tier = formData.recommendedPlan;
-    const messages = {
-      starter: "Perfect for small teams just getting started",
-      professional: "Great choice! This plan fits most construction businesses",
-      enterprise: "Ideal for larger operations with complex needs"
-    };
-    return messages[tier as keyof typeof messages];
   };
 
   const renderStepContent = () => {
@@ -396,70 +499,41 @@ export const OnboardingFlow = () => {
         );
 
       case 'subscription':
-        const plans = [
-          {
-            id: 'starter',
-            name: 'Starter',
-            monthlyPrice: 149,
-            annualPrice: 119,
-            description: 'Perfect for small teams',
-            features: [
-              'Up to 5 team members',
-              'Up to 10 projects',
-              'Basic reporting',
-              'Mobile app',
-              'Email support'
-            ],
-            limits: '5 members • 10 projects'
-          },
-          {
-            id: 'professional',
-            name: 'Professional',
-            monthlyPrice: 299,
-            annualPrice: 239,
-            description: 'Most popular choice',
-            features: [
-              'Up to 20 team members',
-              'Up to 50 projects',
-              'Advanced reporting',
-              'Time tracking',
-              'QuickBooks integration',
-              'Priority support'
-            ],
-            limits: '20 members • 50 projects',
-            popular: true
-          },
-          {
-            id: 'enterprise',
-            name: 'Enterprise',
-            monthlyPrice: 599,
-            annualPrice: 479,
-            description: 'For large operations',
-            features: [
-              'Unlimited team members',
-              'Unlimited projects',
-              'Everything in Professional',
-              'Custom integrations',
-              'Dedicated support',
-              'Advanced analytics'
-            ],
-            limits: 'Unlimited'
-          }
-        ];
-
         return (
           <div className="space-y-4">
             {formData.recommendedPlan && (
               <Alert className="border-construction-blue bg-construction-blue/5">
                 <Star className="h-4 w-4 text-construction-blue" />
                 <AlertDescription className="ml-2">
-                  <strong>Recommended for you:</strong> {getTierRecommendation()}
+                  <strong>Recommended for you:</strong> {getRecommendationMessage(formData.recommendedPlan as SubscriptionTier)}
                 </AlertDescription>
               </Alert>
             )}
 
+            {/* Billing Period Toggle */}
+            <div className="flex items-center justify-center gap-4 py-4">
+              <span className={billingPeriod === 'monthly' ? 'font-semibold text-construction-dark' : 'text-muted-foreground'}>
+                Monthly
+              </span>
+              <button
+                type="button"
+                onClick={() => setBillingPeriod(prev => prev === 'monthly' ? 'annual' : 'monthly')}
+                className="relative w-12 h-6 bg-gray-200 rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-construction-orange focus:ring-offset-2"
+                aria-label={`Switch to ${billingPeriod === 'monthly' ? 'annual' : 'monthly'} billing`}
+                role="switch"
+                aria-checked={billingPeriod === 'annual'}
+              >
+                <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                  billingPeriod === 'annual' ? 'translate-x-6' : 'translate-x-0'
+                }`} />
+              </button>
+              <span className={billingPeriod === 'annual' ? 'font-semibold text-construction-dark' : 'text-muted-foreground'}>
+                Annual (Save 20%)
+              </span>
+            </div>
+
             <div className="grid gap-4">
-              {plans.map((plan) => (
+              {PRICING_PLANS.map((plan) => (
                 <Card
                   key={plan.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
@@ -478,7 +552,7 @@ export const OnboardingFlow = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <CardTitle className="text-lg">{plan.name}</CardTitle>
-                          {plan.popular && (
+                          {plan.isPopular && (
                             <Badge className="bg-construction-orange">Most Popular</Badge>
                           )}
                           {formData.recommendedPlan === plan.id && (
@@ -493,12 +567,16 @@ export const OnboardingFlow = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-construction-blue">
-                          ${plan.monthlyPrice}
+                          ${getMonthlyEquivalentPrice(plan.tier, billingPeriod)}
                         </div>
-                        <div className="text-sm text-muted-foreground">/month</div>
-                        <div className="text-xs text-green-600 mt-1">
-                          Save ${(plan.monthlyPrice - plan.annualPrice) * 12}/yr
+                        <div className="text-sm text-muted-foreground">
+                          /month{billingPeriod === 'annual' && ' (billed annually)'}
                         </div>
+                        {billingPeriod === 'annual' && (
+                          <div className="text-xs text-green-600 mt-1">
+                            Save ${getAnnualSavings(plan.tier)}/year
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -508,7 +586,7 @@ export const OnboardingFlow = () => {
                         {plan.limits}
                       </div>
                       <ul className="space-y-2 text-sm">
-                        {plan.features.map((feature, index) => (
+                        {plan.features.slice(0, 6).map((feature, index) => (
                           <li key={index} className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                             <span>{feature}</span>
@@ -630,18 +708,30 @@ export const OnboardingFlow = () => {
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentStep === 0 || isLoading}
+              disabled={currentStep === 0 || isLoading || isSaving}
               className="min-w-[100px]"
             >
               Previous
             </Button>
-            <Button
-              onClick={handleNext}
-              disabled={!isStepValid() || isLoading}
-              className="min-w-[100px] bg-construction-blue hover:bg-construction-blue/90"
-            >
-              {isLoading ? 'Setting up...' : currentStep === steps.length - 1 ? 'Go to Dashboard' : 'Next'}
-            </Button>
+            <div className="flex gap-2">
+              {currentStep > 0 && currentStep < steps.length - 1 && (
+                <Button
+                  variant="ghost"
+                  onClick={saveProgress}
+                  disabled={isLoading || isSaving}
+                  className="min-w-[120px]"
+                >
+                  {isSaving ? 'Saving...' : 'Skip for now'}
+                </Button>
+              )}
+              <Button
+                onClick={handleNext}
+                disabled={!isStepValid() || isLoading || isSaving}
+                className="min-w-[100px] bg-construction-blue hover:bg-construction-blue/90"
+              >
+                {isLoading ? 'Setting up...' : currentStep === steps.length - 1 ? 'Go to Dashboard' : 'Next'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
