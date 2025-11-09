@@ -106,16 +106,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setUserProfile(null);
     successfulProfiles.current.clear();
     
-    // Clear local storage
+    // SECURITY: Clear both localStorage and sessionStorage
     try {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('bd.userProfile.') || key.startsWith('sb-ilhzuvemiuyfuxfegtlv-auth-token')) {
+      // Clear localStorage auth tokens
+      const localKeys = Object.keys(localStorage);
+      localKeys.forEach(key => {
+        if (key.startsWith('sb-ilhzuvemiuyfuxfegtlv-auth-token')) {
           localStorage.removeItem(key);
         }
       });
+
+      // Clear sessionStorage user profiles
+      const sessionKeys = Object.keys(sessionStorage);
+      sessionKeys.forEach(key => {
+        if (key.startsWith('bd.userProfile.')) {
+          sessionStorage.removeItem(key);
+        }
+      });
     } catch (error) {
-      console.error('Error clearing localStorage:', error);
+      console.error('Error clearing storage:', error);
     }
 
     // Sign out from Supabase
@@ -305,8 +314,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
 
         console.log("Profile fetched successfully:", data.role);
+        // SECURITY: Use sessionStorage instead of localStorage for PII
+        // sessionStorage is cleared when browser/tab closes, reducing exposure
         try {
-          localStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(data));
+          sessionStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(data));
         } catch {}
         return data as UserProfile;
       } catch (error) {
@@ -359,9 +370,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return;
         }
 
-        // Check localStorage profile cache
+        // SECURITY: Check sessionStorage profile cache (more secure than localStorage)
         try {
-          const stored = localStorage.getItem(`bd.userProfile.${session.user.id}`);
+          const stored = sessionStorage.getItem(`bd.userProfile.${session.user.id}`);
           if (stored) {
             const parsed = JSON.parse(stored);
             console.log("Initial session: Using stored profile");
