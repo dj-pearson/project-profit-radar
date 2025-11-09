@@ -22,8 +22,10 @@ import {
   Activity,
   CreditCard,
   Eye,
+  Bug,
 } from 'lucide-react';
 import { UserActivityTimeline } from './UserActivityTimeline';
+import { DebugConsole } from './DebugConsole';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface TicketContext {
@@ -69,6 +71,7 @@ export const UserContextPanel: React.FC<UserContextPanelProps> = ({
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showDebugConsole, setShowDebugConsole] = useState(false);
 
   useEffect(() => {
     loadContext();
@@ -341,8 +344,8 @@ export const UserContextPanel: React.FC<UserContextPanelProps> = ({
             </div>
           )}
 
-          {/* View Timeline Button */}
-          <div className="pt-4">
+          {/* View Timeline & Debug Console Buttons */}
+          <div className="pt-4 space-y-2">
             <Dialog open={showTimeline} onOpenChange={setShowTimeline}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full">
@@ -359,6 +362,15 @@ export const UserContextPanel: React.FC<UserContextPanelProps> = ({
                 <UserActivityTimeline userId={user.id} companyId={user.company_id} />
               </DialogContent>
             </Dialog>
+
+            <Button
+              variant={showDebugConsole ? "default" : "outline"}
+              className="w-full"
+              onClick={() => setShowDebugConsole(!showDebugConsole)}
+            >
+              <Bug className="h-4 w-4 mr-2" />
+              {showDebugConsole ? 'Hide Debug Console' : 'Show Debug Console'}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -390,6 +402,15 @@ export const UserContextPanel: React.FC<UserContextPanelProps> = ({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Debug Console */}
+      {showDebugConsole && (
+        <DebugConsole
+          userId={user.id}
+          companyId={user.company_id}
+          isFloating={false}
+        />
       )}
     </div>
   );
