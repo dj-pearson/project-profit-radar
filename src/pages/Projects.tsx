@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { LoadingState } from "@/components/ui/loading-spinner";
+import { ProjectCardSkeleton } from "@/components/ui/loading-skeleton";
 import {
   ResponsiveContainer,
   ResponsiveGrid,
@@ -34,6 +35,7 @@ import { TaskManager } from "@/components/tasks/TaskManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   Building2,
   Search,
@@ -107,21 +109,22 @@ const Projects = () => {
 
   const [projects, setProjects] = useState<ProjectWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = usePersistedState<string>("projects-search", "");
+  const [statusFilter, setStatusFilter] = usePersistedState<string>("projects-status-filter", "all");
+  const [activeTab, setActiveTab] = usePersistedState<string>("projects-active-tab", "active");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
-  // Advanced filter states
-  const [budgetMin, setBudgetMin] = useState<string>("");
-  const [budgetMax, setBudgetMax] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [materialFilter, setMaterialFilter] = useState("");
-  const [taskFilter, setTaskFilter] = useState("");
-  const [documentFilter, setDocumentFilter] = useState("");
+  // Advanced filter states with persistence
+  const [budgetMin, setBudgetMin] = usePersistedState<string>("projects-budget-min", "");
+  const [budgetMax, setBudgetMax] = usePersistedState<string>("projects-budget-max", "");
+  const [startDate, setStartDate] = usePersistedState<Date | undefined>("projects-start-date", undefined);
+  const [endDate, setEndDate] = usePersistedState<Date | undefined>("projects-end-date", undefined);
+  const [showAdvancedFilters, setShowAdvancedFilters] = usePersistedState<boolean>("projects-show-advanced", false);
+  const [materialFilter, setMaterialFilter] = usePersistedState<string>("projects-material-filter", "");
+  const [taskFilter, setTaskFilter] = usePersistedState<string>("projects-task-filter", "");
+  const [documentFilter, setDocumentFilter] = usePersistedState<string>("projects-document-filter", "");
 
   useEffect(() => {
     loadProjects();
@@ -377,7 +380,7 @@ const Projects = () => {
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Project actions menu">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -472,7 +475,20 @@ const Projects = () => {
   );
 
   if (loading) {
-    return <LoadingState message="Loading projects..." />;
+    return (
+      <DashboardLayout title="Projects" showTrialBanner={false}>
+        <div className="space-y-6">
+          <div className="flex justify-end">
+            <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+          </div>
+          <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} className="gap-6">
+            {[...Array(6)].map((_, i) => (
+              <ProjectCardSkeleton key={i} />
+            ))}
+          </ResponsiveGrid>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
@@ -486,6 +502,9 @@ const Projects = () => {
           <Plus className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">New Project</span>
           <span className="sm:hidden">New</span>
+          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-muted rounded border border-border">
+            Ctrl+N
+          </kbd>
         </Button>
       </div>
       {/* Search and Filters */}
@@ -681,7 +700,7 @@ const Projects = () => {
       </div>
 
       {/* Projects Tabs */}
-      <Tabs defaultValue="active" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
           <TabsTrigger value="active" className="text-xs sm:text-sm py-2">
             <span className="hidden sm:inline">

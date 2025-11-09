@@ -8,6 +8,7 @@ interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  action?: React.ReactNode; // Support custom action elements
   className?: string;
 }
 
@@ -17,6 +18,7 @@ export const EmptyState = ({
   description,
   actionLabel,
   onAction,
+  action,
   className,
 }: EmptyStateProps) => {
   return (
@@ -25,15 +27,15 @@ export const EmptyState = ({
       className
     )}>
       <div className="rounded-full bg-muted p-6 mb-4">
-        <Icon className="h-10 w-10 text-muted-foreground" />
+        <Icon className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground max-w-md mb-6">
         {description}
       </p>
-      {actionLabel && onAction && (
+      {action || (actionLabel && onAction && (
         <Button onClick={onAction}>{actionLabel}</Button>
-      )}
+      ))}
     </div>
   );
 };

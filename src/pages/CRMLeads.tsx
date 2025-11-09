@@ -12,6 +12,8 @@ import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { usePersistedState } from '@/hooks/usePersistedState';
+import { TableSkeleton } from '@/components/ui/loading-skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -86,10 +88,10 @@ const CRMLeads = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = usePersistedState<string>('crm-leads-search', '');
+  const [statusFilter, setStatusFilter] = usePersistedState<string>('crm-leads-status-filter', 'all');
+  const [sourceFilter, setSourceFilter] = usePersistedState<string>('crm-leads-source-filter', 'all');
+  const [priorityFilter, setPriorityFilter] = usePersistedState<string>('crm-leads-priority-filter', 'all');
   const [showNewLeadDialog, setShowNewLeadDialog] = useState(false);
   const [newLead, setNewLead] = useState<Partial<Lead>>({
     status: 'new',
@@ -299,7 +301,17 @@ const CRMLeads = () => {
   }) || [];
 
   if (loading) {
-    return <LoadingState message="Loading leads..." />;
+    return (
+      <DashboardLayout title="Leads">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div className="h-9 w-64 bg-muted animate-pulse rounded-md" />
+            <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+          </div>
+          <TableSkeleton rows={8} />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   if (!user) {
@@ -392,6 +404,9 @@ const CRMLeads = () => {
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           New Lead
+                          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/50 rounded border border-border">
+                            Ctrl+L
+                          </kbd>
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
