@@ -9,7 +9,9 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
+import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +33,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { user, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isImpersonating } = useImpersonation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,12 +51,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background flex w-full">
+      <ImpersonationBanner />
+      <div className={cn(
+        "min-h-screen bg-background flex w-full",
+        isImpersonating && "pt-20" // Add padding when impersonation banner is showing
+      )}>
         <SimplifiedSidebar />
 
         <div className="flex-1 flex flex-col">
           {/* Mobile-First Header */}
-          <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur-sm">
+          <header className={cn(
+            "sticky z-30 border-b bg-background/95 backdrop-blur-sm",
+            isImpersonating ? "top-20" : "top-0" // Adjust header position when banner is showing
+          )}>
             <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6">
               {/* Left: Menu + Title */}
               <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">

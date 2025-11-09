@@ -25,6 +25,7 @@ import Upgrade from '@/pages/Upgrade';
 // Analytics & Business Intelligence
 import Analytics from '@/pages/Analytics';
 import Settings from '@/pages/admin/Settings';
+import AdminIntelligenceDashboard from '@/pages/admin/AdminIntelligenceDashboard';
 import { ConversionAnalytics } from '@/pages/admin/ConversionAnalytics';
 import { RetentionAnalytics } from '@/pages/admin/RetentionAnalytics';
 import { RevenueAnalytics } from '@/pages/admin/RevenueAnalytics';
@@ -43,6 +44,7 @@ import FunnelManager from '@/pages/admin/FunnelManager';
 // Knowledge & Support
 import KnowledgeBaseAdmin from '@/pages/KnowledgeBaseAdmin';
 import SupportTickets from '@/pages/admin/SupportTickets';
+import SupportTicketsEnhanced from '@/pages/admin/SupportTicketsEnhanced';
 
 // Multi-Tenant & Enterprise (Phase 4)
 import { TenantManagement } from '@/pages/admin/TenantManagement';
@@ -91,6 +93,7 @@ export const adminRoutes = (
     <Route path="/upgrade" element={<Upgrade />} />
 
     {/* Admin - Analytics */}
+    <Route path="/admin/intelligence" element={<AdminIntelligenceDashboard />} />
     <Route path="/admin/analytics" element={<Analytics />} />
     <Route path="/admin/settings" element={<Settings />} />
     <Route path="/admin/conversion-analytics" element={<ConversionAnalytics />} />
@@ -113,7 +116,8 @@ export const adminRoutes = (
 
     {/* Admin - Knowledge & Support */}
     <Route path="/knowledge-base-admin" element={<KnowledgeBaseAdmin />} />
-    <Route path="/admin/support-tickets" element={<SupportTickets />} />
+    <Route path="/admin/support-tickets" element={<SupportTicketsEnhanced />} />
+    <Route path="/admin/support-tickets-legacy" element={<SupportTickets />} />
 
     {/* Admin - Multi-Tenant & Enterprise */}
     <Route path="/admin/tenants" element={<TenantManagement />} />

@@ -10,9 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import {
   Users,
   Search,
@@ -23,7 +25,8 @@ import {
   Building2,
   Mail,
   Phone,
-  Eye
+  Eye,
+  UserCog
 } from 'lucide-react';
 
 interface UserProfile {
@@ -45,7 +48,8 @@ interface UserProfile {
 const UsersPage = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
-  
+  const { startImpersonation, loading: impersonationLoading } = useImpersonation();
+
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
@@ -53,6 +57,8 @@ const UsersPage = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isImpersonateDialogOpen, setIsImpersonateDialogOpen] = useState(false);
+  const [impersonationReason, setImpersonationReason] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -168,7 +174,7 @@ const UsersPage = () => {
         title: "Success",
         description: `User ${!currentStatus ? 'activated' : 'deactivated'} successfully`
       });
-      
+
       loadUsers();
     } catch (error: any) {
       console.error('Error updating user status:', error);
@@ -177,6 +183,23 @@ const UsersPage = () => {
         title: "Error",
         description: "Failed to update user status"
       });
+    }
+  };
+
+  const handleImpersonateClick = (userItem: UserProfile) => {
+    setSelectedUser(userItem);
+    setImpersonationReason('');
+    setIsImpersonateDialogOpen(true);
+  };
+
+  const handleStartImpersonation = async () => {
+    if (!selectedUser) return;
+
+    const success = await startImpersonation(selectedUser.id, impersonationReason);
+
+    if (success) {
+      setIsImpersonateDialogOpen(false);
+      setImpersonationReason('');
     }
   };
 
@@ -298,6 +321,16 @@ const UsersPage = () => {
                     </Button>
                     <Button
                       size="sm"
+                      variant="secondary"
+                      onClick={() => handleImpersonateClick(userItem)}
+                      disabled={userItem.id === user?.id}
+                      title={userItem.id === user?.id ? "Cannot impersonate yourself" : "Impersonate this user"}
+                    >
+                      <UserCog className="h-3 w-3 mr-1" />
+                      Impersonate
+                    </Button>
+                    <Button
+                      size="sm"
                       variant={userItem.is_active ? "destructive" : "default"}
                       onClick={() => toggleUserStatus(userItem.id, userItem.is_active)}
                     >
@@ -399,6 +432,66 @@ const UsersPage = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Impersonation Dialog */}
+      <Dialog open={isImpersonateDialogOpen} onOpenChange={setIsImpersonateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Impersonate User</DialogTitle>
+            <DialogDescription>
+              Enter a detailed reason for impersonating {selectedUser?.first_name} {selectedUser?.last_name}. All actions will be logged for security.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="impersonation-reason">Reason for Impersonation</Label>
+              <Textarea
+                id="impersonation-reason"
+                placeholder="e.g., Investigating reported bug with project creation, reproducing error for support ticket #1234, etc."
+                value={impersonationReason}
+                onChange={(e) => setImpersonationReason(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Minimum 10 characters required. Be specific about why you need to impersonate this user.
+              </p>
+            </div>
+
+            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded p-3">
+              <div className="flex items-start space-x-2">
+                <UserCog className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5" />
+                <div className="text-xs text-orange-900 dark:text-orange-100">
+                  <p className="font-medium mb-1">Security Notice:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>You will see the platform exactly as this user sees it</li>
+                    <li>All actions will be logged with your admin account</li>
+                    <li>The user will be notified of this access</li>
+                    <li>Session can be ended at any time from the banner</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsImpersonateDialogOpen(false)}
+                disabled={impersonationLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleStartImpersonation}
+                disabled={impersonationLoading || impersonationReason.trim().length < 10}
+              >
+                {impersonationLoading ? 'Starting...' : 'Start Impersonation'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
