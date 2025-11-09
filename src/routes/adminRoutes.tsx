@@ -44,6 +44,7 @@ import FunnelManager from '@/pages/admin/FunnelManager';
 // Knowledge & Support
 import KnowledgeBaseAdmin from '@/pages/KnowledgeBaseAdmin';
 import SupportTickets from '@/pages/admin/SupportTickets';
+import SupportTicketsEnhanced from '@/pages/admin/SupportTicketsEnhanced';
 
 // Multi-Tenant & Enterprise (Phase 4)
 import { TenantManagement } from '@/pages/admin/TenantManagement';
@@ -115,7 +116,8 @@ export const adminRoutes = (
 
     {/* Admin - Knowledge & Support */}
     <Route path="/knowledge-base-admin" element={<KnowledgeBaseAdmin />} />
-    <Route path="/admin/support-tickets" element={<SupportTickets />} />
+    <Route path="/admin/support-tickets" element={<SupportTicketsEnhanced />} />
+    <Route path="/admin/support-tickets-legacy" element={<SupportTickets />} />
 
     {/* Admin - Multi-Tenant & Enterprise */}
     <Route path="/admin/tenants" element={<TenantManagement />} />
