@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TimeTrackingDashboard } from '@/components/time-tracking/TimeTrackingDashboard';
 import { QuickTimeEntry } from '@/components/time-tracking/QuickTimeEntry';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Clock, Plus, BarChart3 } from 'lucide-react';
+import { rememberCurrentRoute } from '@/lib/routeMemory';
 
 const TimeTracking = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [activeView, setActiveView] = useState<'dashboard' | 'quick-entry' | 'reports'>('dashboard');
+
+  // Remember route before redirecting for unauthorized access
+  useEffect(() => {
+    if (!user) {
+      rememberCurrentRoute(location);
+    }
+  }, [user, location]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;

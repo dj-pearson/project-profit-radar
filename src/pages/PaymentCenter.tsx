@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PaymentDashboard } from '@/components/payments/PaymentDashboard';
 import { PaymentMethodManager } from '@/components/payments/PaymentMethodManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { rememberCurrentRoute } from '@/lib/routeMemory';
 
 const PaymentCenter = () => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Remember route before redirecting for unauthorized access
+  useEffect(() => {
+    if (!user) {
+      rememberCurrentRoute(location);
+    }
+  }, [user, location]);
 
   if (!user) {
     return <Navigate to="/auth" replace />;

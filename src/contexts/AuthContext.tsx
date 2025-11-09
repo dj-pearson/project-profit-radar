@@ -11,6 +11,7 @@ import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
+import { clearRememberedRoute } from "@/lib/routeMemory";
 import type { ReactNode, FC } from "react";
 
 // Platform-safe window location helpers
@@ -89,7 +90,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Clear all session-related state and redirect to auth
   const handleSessionExpired = useCallback(async (reason: string = 'Session expired') => {
     console.log(`Auth session expired: ${reason}`);
-    
+
     // Clear timeouts
     if (sessionTimeoutRef.current) {
       clearTimeout(sessionTimeoutRef.current);
@@ -105,7 +106,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setSession(null);
     setUserProfile(null);
     successfulProfiles.current.clear();
-    
+
     // SECURITY: Clear both localStorage and sessionStorage
     try {
       // Clear localStorage auth tokens
@@ -123,6 +124,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           sessionStorage.removeItem(key);
         }
       });
+
+      // Clear route memory on session expiry
+      clearRememberedRoute();
     } catch (error) {
       console.error('Error clearing storage:', error);
     }
@@ -671,22 +675,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       console.log("AuthContext: Starting sign out...");
       setLoading(true);
-      
+
       // Sign out from Supabase first
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("AuthContext: Supabase signOut error:", error);
       }
-      
+
       // Clear all state
       setUser(null);
       setSession(null);
       setUserProfile(null);
       successfulProfiles.current.clear();
-      
+
+      // Clear route memory on sign out
+      clearRememberedRoute();
+
       gtag.trackAuth('logout');
       console.log("AuthContext: Sign out completed");
-      
+
     } catch (error) {
       console.error("AuthContext: Sign out error:", error);
       // Still clear state on error
@@ -694,6 +701,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setSession(null);
       setUserProfile(null);
       successfulProfiles.current.clear();
+      clearRememberedRoute();
     } finally {
       setLoading(false);
     }

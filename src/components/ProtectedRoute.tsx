@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { rememberCurrentRoute } from "@/lib/routeMemory";
 import type { ReactNode, FC } from "react";
 
 interface RouteGuardProps {
@@ -17,6 +18,7 @@ let isCircuitOpen = false;
 export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
   const authState = useAuth();
   const { user, userProfile, loading } = authState;
+  const location = useLocation();
   const [localRedirectCount, setLocalRedirectCount] = useState(0);
   const [forceLoading, setForceLoading] = useState(false);
   const [emergencyMode, setEmergencyMode] = useState(false);
@@ -127,6 +129,9 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
 
   // If no user, redirect with circuit breaker protection
   if (!user) {
+    // Remember current route before redirecting
+    rememberCurrentRoute(location);
+
     if (localRedirectCount >= 2) {
       console.error("Local redirect limit reached, forcing auth page");
       window.location.href = "/auth";
@@ -164,6 +169,8 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     }
 
     console.log("User exists but profile failed to load, redirecting to auth");
+    // Remember current route before redirecting
+    rememberCurrentRoute(location);
     incrementRedirectCount();
     setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
