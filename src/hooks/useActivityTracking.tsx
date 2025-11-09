@@ -3,7 +3,7 @@
  * Tracks user actions for debugging, analytics, and health score calculation
  */
 
-import { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
