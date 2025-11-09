@@ -396,8 +396,6 @@ export default function Materials() {
                           {material.quantity_available > (material.minimum_stock_level || 0) ? "In Stock" : "Low Stock"}
                         </Badge>
                       </div>
-                        </div>
-                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
