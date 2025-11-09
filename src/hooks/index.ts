@@ -2,6 +2,9 @@
  * Custom hooks export index
  */
 
+// State Management Hooks
+export { usePersistedState } from './usePersistedState';
+
 // Media Query Hooks
 export {
   useMediaQuery,

@@ -8,6 +8,8 @@ import { Plus, Search, Filter, FileText, DollarSign, Clock, AlertTriangle } from
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { usePersistedState } from '@/hooks/usePersistedState';
+import { TableSkeleton } from '@/components/ui/loading-skeleton';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceStats from '@/components/invoices/InvoiceStats';
@@ -15,10 +17,10 @@ import ProgressBillingManager from '@/components/invoices/ProgressBillingManager
 import RetentionManager from '@/components/invoices/RetentionManager';
 
 const Invoices: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = usePersistedState<string>('invoices-active-tab', 'overview');
   const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = usePersistedState<string>('invoices-search', '');
+  const [statusFilter, setStatusFilter] = usePersistedState<string>('invoices-status-filter', 'all');
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user, userProfile } = useAuth();
@@ -100,12 +102,15 @@ const Invoices: React.FC = () => {
           <h1 className="text-3xl font-bold text-foreground">Invoice Management</h1>
           <p className="text-muted-foreground">Manage invoices, progress billing, and retention</p>
         </div>
-        <Button 
+        <Button
           onClick={() => setShowInvoiceGenerator(true)}
           className="bg-construction-orange hover:bg-construction-orange/90"
         >
           <Plus className="mr-2 h-4 w-4" />
           Create Invoice
+          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/20 rounded border border-background/40">
+            Ctrl+I
+          </kbd>
         </Button>
       </div>
 
