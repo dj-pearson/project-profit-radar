@@ -3,8 +3,22 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { supabaseStorage } from '@/lib/supabaseStorage';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://ilhzuvemiuyfuxfegtlv.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHp1dmVtaXV5ZnV4ZmVndGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0OTU1NDQsImV4cCI6MjA2NzA3MTU0NH0.1JSYhiiJRohQnt8feFbTza9VnmKFprwsOxW0jBRcM2s";
+// SECURITY: Never hardcode credentials - use environment variables only
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+// Validate required environment variables
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  const errorMessage = 'Missing required Supabase environment variables. Please configure:\n' +
+    '- VITE_SUPABASE_URL\n' +
+    '- VITE_SUPABASE_PUBLISHABLE_KEY\n' +
+    'See .env.example for details.';
+
+  if (import.meta.env.DEV) {
+    console.error(errorMessage);
+  }
+  throw new Error('Supabase configuration error: Missing environment variables');
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

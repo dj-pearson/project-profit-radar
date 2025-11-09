@@ -61,7 +61,10 @@ export const sanitizeInput = (input: string): string => {
 export const sanitizeHtml = (html: string): string => {
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-    ALLOWED_ATTR: ['class']
+    ALLOWED_ATTR: [], // SECURITY: Removed 'class' to prevent CSS-based attacks
+    ALLOW_DATA_ATTR: false,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+    SAFE_FOR_TEMPLATES: true,
   });
 };
 
@@ -154,8 +157,79 @@ export const checkRateLimit = (key: string, maxRequests: number = 10, windowMs: 
   return true;
 };
 
-// File upload validation
-export const validateFileUpload = (file: File): { isValid: boolean; errors: string[] } => {
+// File upload validation with magic number verification
+export const validateFileUpload = async (file: File): Promise<{ isValid: boolean; errors: string[] }> => {
+  const errors: string[] = [];
+  const maxSizeInMB = 10;
+
+  // Magic numbers (file signatures) for content validation
+  const magicNumbers: { [key: string]: number[] } = {
+    'image/jpeg': [0xFF, 0xD8, 0xFF],
+    'image/png': [0x89, 0x50, 0x4E, 0x47],
+    'image/gif': [0x47, 0x49, 0x46],
+    'application/pdf': [0x25, 0x50, 0x44, 0x46],
+    'application/zip': [0x50, 0x4B, 0x03, 0x04], // Also used by .docx, .xlsx
+  };
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain'
+  ];
+
+  // Size check
+  if (file.size > maxSizeInMB * 1024 * 1024) {
+    errors.push(`File size must be less than ${maxSizeInMB}MB`);
+  }
+
+  // MIME type check
+  if (!allowedTypes.includes(file.type)) {
+    errors.push('File type not allowed');
+  }
+
+  // Filename validation - prevent malicious characters
+  if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
+    errors.push('Filename contains invalid characters');
+  }
+
+  // SECURITY: Magic number validation to prevent disguised malicious files
+  try {
+    const buffer = await file.slice(0, 8).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+
+    // Map Office Open XML formats to zip signature
+    let mimeTypeToCheck = file.type;
+    if (file.type.includes('officedocument')) {
+      mimeTypeToCheck = 'application/zip';
+    }
+
+    const expectedMagicNumbers = magicNumbers[mimeTypeToCheck];
+    if (expectedMagicNumbers) {
+      const matches = expectedMagicNumbers.every((byte, index) => bytes[index] === byte);
+      if (!matches) {
+        errors.push('File content does not match declared type. Possible file type mismatch or corruption.');
+      }
+    }
+    // Text files and some types don't have magic numbers, so we skip validation
+  } catch (error) {
+    errors.push('Failed to validate file content');
+    console.error('File content validation error:', error);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Synchronous version for backward compatibility (without magic number check)
+export const validateFileUploadSync = (file: File): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   const maxSizeInMB = 10;
   const allowedTypes = [
@@ -178,7 +252,6 @@ export const validateFileUpload = (file: File): { isValid: boolean; errors: stri
     errors.push('File type not allowed');
   }
 
-  // Check for potentially malicious filenames
   if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
     errors.push('Filename contains invalid characters');
   }
