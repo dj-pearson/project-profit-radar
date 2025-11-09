@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock } from "lucide-react";
+import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -35,6 +36,7 @@ const Auth = () => {
   const [pendingPlan, setPendingPlan] = useState<{tier: string, period: string} | null>(null);
   const { signIn, signInWithGoogle, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check for plan context from URL on mount
   useEffect(() => {
@@ -73,7 +75,7 @@ const Auth = () => {
     if (user) {
       // Don't redirect to dashboard if this is a password recovery session
       if (type !== 'recovery') {
-        console.log("User authenticated, navigating...");
+        console.log("User authenticated, determining redirect destination...");
 
         // Check if there's a pending checkout
         const pendingCheckout = localStorage.getItem('pendingCheckout');
@@ -85,6 +87,7 @@ const Auth = () => {
               console.log("Redirecting to checkout with pending plan...");
               // Clear the stored checkout
               localStorage.removeItem('pendingCheckout');
+              clearRememberedRoute();
               // Navigate to pricing which will auto-trigger checkout since user is now authenticated
               navigate('/pricing');
               return;
@@ -98,8 +101,15 @@ const Auth = () => {
           }
         }
 
-        // Default redirect to dashboard
-        navigate("/dashboard");
+        // Get return URL from query params or remembered route
+        const returnUrl = getReturnUrl(urlParams, '/dashboard');
+        console.log("Redirecting to:", returnUrl);
+
+        // Clear route memory after successful redirect
+        clearRememberedRoute();
+
+        // Navigate to the return URL
+        navigate(returnUrl);
       }
     }
   }, [user, navigate]);
