@@ -387,9 +387,10 @@ export default function Materials() {
                             <Package className="h-5 w-5" />
                             {material.name}
                           </CardTitle>
-                        <CardDescription>
-                          {material.material_code} • {material.category}
-                        </CardDescription>
+                          <CardDescription>
+                            {material.material_code} • {material.category}
+                          </CardDescription>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={material.quantity_available > (material.minimum_stock_level || 0) ? "default" : "secondary"}>
