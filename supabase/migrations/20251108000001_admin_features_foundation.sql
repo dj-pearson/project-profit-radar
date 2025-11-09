@@ -145,41 +145,33 @@ CREATE INDEX IF NOT EXISTS idx_performance_slow ON public.performance_metrics(du
 -- REVENUE METRICS
 -- ============================================
 
--- Revenue operations tracking
-CREATE TABLE IF NOT EXISTS public.revenue_metrics (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Drop existing table if schema doesn't match
+DROP TABLE IF EXISTS public.revenue_metrics CASCADE;
 
-  -- Time period
+-- Revenue operations tracking
+CREATE TABLE public.revenue_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   period_start DATE NOT NULL,
   period_end DATE NOT NULL,
-
-  -- Revenue metrics
-  mrr DECIMAL(12,2) NOT NULL DEFAULT 0, -- Monthly Recurring Revenue
-  arr DECIMAL(12,2) NOT NULL DEFAULT 0, -- Annual Recurring Revenue
+  mrr DECIMAL(12,2) NOT NULL DEFAULT 0,
+  arr DECIMAL(12,2) NOT NULL DEFAULT 0,
   new_revenue DECIMAL(12,2) DEFAULT 0,
-  expansion_revenue DECIMAL(12,2) DEFAULT 0, -- Upsells
-  contraction_revenue DECIMAL(12,2) DEFAULT 0, -- Downgrades
+  expansion_revenue DECIMAL(12,2) DEFAULT 0,
+  contraction_revenue DECIMAL(12,2) DEFAULT 0,
   churned_revenue DECIMAL(12,2) DEFAULT 0,
-
-  -- Metrics
-  net_revenue_retention DECIMAL(5,2), -- NRR percentage
-  logo_churn_rate DECIMAL(5,2), -- Customer churn rate
+  net_revenue_retention DECIMAL(5,2),
+  logo_churn_rate DECIMAL(5,2),
   revenue_churn_rate DECIMAL(5,2),
-
-  -- Customer counts
   total_customers INTEGER,
   new_customers INTEGER,
   churned_customers INTEGER,
-
-  -- Metadata
   calculated_at TIMESTAMPTZ DEFAULT now(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-
-  UNIQUE(period_start, period_end)
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Index for revenue queries
-CREATE INDEX IF NOT EXISTS idx_revenue_period ON public.revenue_metrics(period_start DESC);
+CREATE INDEX idx_revenue_period ON public.revenue_metrics(period_start DESC);
+CREATE UNIQUE INDEX idx_revenue_period_unique ON public.revenue_metrics(period_start, period_end);
 
 -- ============================================
 -- ADMIN INTERVENTIONS

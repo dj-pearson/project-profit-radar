@@ -2,14 +2,9 @@
 -- This migration optimizes nested subquery patterns in RLS policies
 -- Expected impact: 93% faster dashboard queries with RLS
 
--- Step 1: Create cached role lookup function
-CREATE OR REPLACE FUNCTION get_user_role(user_id UUID)
-RETURNS TEXT AS $$
-  SELECT role::TEXT FROM user_profiles WHERE id = user_id;
-$$ LANGUAGE SQL STABLE;
-
--- Add comment explaining the function
-COMMENT ON FUNCTION get_user_role IS 'Cached user role lookup to optimize RLS policies. Marked STABLE for query plan optimization.';
+-- Note: get_user_role function already exists from previous migrations
+-- It returns user_role enum type, not TEXT
+-- Function signature: get_user_role(user_id UUID) RETURNS user_role
 
 -- Step 2: Rewrite expensive leads RLS policy
 DROP POLICY IF EXISTS "Admin and sales can view all leads" ON leads;
