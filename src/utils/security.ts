@@ -95,16 +95,23 @@ export const addSecurityHeaders = (): void => {
   if (!existingCSP) {
     const cspMeta = document.createElement('meta');
     cspMeta.httpEquiv = 'Content-Security-Policy';
+
+    // SECURITY: Improved CSP - removed unsafe-inline and unsafe-eval
+    // Note: Some third-party libraries may require relaxed policies
+    // Use nonces or hashes for inline scripts in production
+    const isDevelopment = import.meta.env.DEV;
+
     cspMeta.content = `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.ipify.org;
+      script-src 'self' ${isDevelopment ? "'unsafe-inline' 'unsafe-eval'" : ''} https://api.ipify.org https://*.posthog.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: https: blob:;
-      connect-src 'self' https://api.ipify.org https://*.supabase.co;
+      connect-src 'self' https://api.ipify.org https://*.supabase.co https://*.posthog.com;
       frame-ancestors 'none';
       base-uri 'self';
       form-action 'self';
+      object-src 'none';
       upgrade-insecure-requests;
     `.replace(/\s+/g, ' ').trim();
     document.head.appendChild(cspMeta);
@@ -114,7 +121,9 @@ export const addSecurityHeaders = (): void => {
   const securityMetas = [
     { name: 'referrer', content: 'strict-origin-when-cross-origin' },
     { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-    { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' }
+    { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
+    { httpEquiv: 'X-Frame-Options', content: 'DENY' },
+    { httpEquiv: 'Permissions-Policy', content: 'geolocation=(), microphone=(), camera=()' }
   ];
 
   securityMetas.forEach(meta => {
