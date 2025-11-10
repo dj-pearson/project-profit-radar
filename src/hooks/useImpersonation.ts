@@ -3,7 +3,7 @@
  * Allows root admins to view the app as another user for debugging
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -30,12 +30,16 @@ export const useImpersonation = () => {
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [impersonatedUser, setImpersonatedUser] = useState<ImpersonatedUser | null>(null);
   const [session, setSession] = useState<ImpersonationSession | null>(null);
-  const [loading, setLoading] = useState(false);
+const [loading, setLoading] = useState(false);
+const hasChecked = useRef(false);
 
   // Check if there's an active impersonation session on mount
   useEffect(() => {
+    if (!currentUser || userProfile?.role !== 'root_admin') return;
+    if (hasChecked.current) return;
+    hasChecked.current = true;
     checkActiveSession();
-  }, [currentUser]);
+  }, [currentUser, userProfile]);
 
   const checkActiveSession = async () => {
     if (!currentUser) return;
@@ -46,7 +50,7 @@ export const useImpersonation = () => {
         .select('*')
         .eq('admin_id', currentUser.id)
         .is('ended_at', null)
-        .single();
+        .maybeSingle();
 
       // Silently fail if table doesn't exist (406) or other errors
       if (error) {

@@ -92,8 +92,8 @@ export const useTaskAutoDetection = (
         try {
           const { data: dailyReports, error } = await supabase
             .from('daily_reports')
-            .select('id')
-            .eq('company_id', userProfile.company_id)
+            .select('id, projects!inner(id)')
+            .eq('projects.company_id', userProfile.company_id)
             .limit(1);
 
           if (!error && dailyReports && dailyReports.length > 0) {
