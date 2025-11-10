@@ -9,6 +9,7 @@ import { lazy } from 'react';
 import {
   LazyFinancialDashboard,
   LazyEstimatesHub,
+  LazyInvoices,
   LazyReports,
   LazyPurchaseOrders,
   LazyVendors,
@@ -63,6 +64,7 @@ export const financialRoutes = (
 
     {/* Estimates & Invoices */}
     <Route path="/estimates" element={<LazyEstimatesHub />} />
+    <Route path="/invoices" element={<LazyInvoices />} />
 
     {/* Reports */}
     <Route path="/reports" element={<LazyReports />} />
