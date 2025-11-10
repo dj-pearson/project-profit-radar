@@ -34,6 +34,7 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedMobileCamera } from './EnhancedMobileCamera';
+import EquipmentQRScanner, { type ScanResult } from '@/components/equipment/EquipmentQRScanner';
 import { format } from 'date-fns';
 
 interface Equipment {
@@ -88,6 +89,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showCamera, setShowCamera] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
@@ -176,11 +178,49 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }));
   };
 
-  const scanQRCode = async () => {
-    toast({
-      title: "QR Scanner",
-      description: "QR code scanning feature coming soon",
-    });
+  const scanQRCode = () => {
+    setShowQRScanner(true);
+  };
+
+  const handleQRScanComplete = (result: ScanResult) => {
+    setShowQRScanner(false);
+
+    if (result.success && result.equipment) {
+      // Find the full equipment record
+      const foundEquipment = equipment.find(eq => eq.id === result.equipment!.equipment_id);
+
+      if (foundEquipment) {
+        selectEquipment(foundEquipment);
+
+        // Set action type based on scan type
+        const newActionType = result.scanType;
+        setActionType(newActionType);
+        setTransactionData(prev => ({
+          ...prev,
+          action_type: newActionType,
+          equipment_id: foundEquipment.id,
+          user_id: user?.id || '',
+          condition_before: foundEquipment.current_condition
+        }));
+
+        toast({
+          title: "Equipment Scanned",
+          description: `${foundEquipment.name} ready for ${result.scanType.replace('_', ' ')}`,
+        });
+      } else {
+        toast({
+          title: "Equipment Not Found",
+          description: "Scanned equipment not found in local database. Please refresh.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Scan Failed",
+        description: "Could not process QR code. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const selectEquipment = (item: any) => {
@@ -346,6 +386,17 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
         onCapture={handlePhotoCapture}
         onCancel={() => setShowCamera(false)}
         enableGeolocation={true}
+      />
+    );
+  }
+
+  if (showQRScanner) {
+    return (
+      <EquipmentQRScanner
+        scanType={actionType}
+        onScanComplete={handleQRScanComplete}
+        onCancel={() => setShowQRScanner(false)}
+        projectId={selectedProject || projectId}
       />
     );
   }

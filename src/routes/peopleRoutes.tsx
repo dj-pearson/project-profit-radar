@@ -8,7 +8,10 @@ import { Route } from 'react-router-dom';
 // Team Management
 import TeamManagement from '@/pages/TeamManagement';
 import CrewScheduling from '@/pages/CrewScheduling';
+import CrewCheckin from '@/pages/CrewCheckin';
+import CrewPresence from '@/pages/CrewPresence';
 import TimeTracking from '@/pages/TimeTracking';
+import Timesheets from '@/pages/Timesheets';
 import Support from '@/pages/Support';
 
 // CRM
@@ -30,7 +33,10 @@ export const peopleRoutes = (
     {/* Team Management */}
     <Route path="/team" element={<TeamManagement />} />
     <Route path="/crew-scheduling" element={<CrewScheduling />} />
+    <Route path="/crew-checkin" element={<CrewCheckin />} />
+    <Route path="/crew-presence" element={<CrewPresence />} />
     <Route path="/time-tracking" element={<TimeTracking />} />
+    <Route path="/timesheets" element={<Timesheets />} />
     <Route path="/support" element={<Support />} />
 
     {/* CRM */}
