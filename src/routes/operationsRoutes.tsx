@@ -21,6 +21,7 @@ import PublicProcurement from '@/pages/PublicProcurement';
 import ServiceDispatch from '@/pages/ServiceDispatch';
 import CalendarSync from '@/pages/CalendarSync';
 import EquipmentManagement from '@/pages/EquipmentManagement';
+import EquipmentQRLabels from '@/pages/EquipmentQRLabels';
 import AutomatedWorkflows from '@/pages/AutomatedWorkflows';
 
 // Advanced Features
@@ -48,6 +49,7 @@ export const operationsRoutes = (
     <Route path="/service-dispatch" element={<ServiceDispatch />} />
     <Route path="/calendar" element={<CalendarSync />} />
     <Route path="/equipment-management" element={<EquipmentManagement />} />
+    <Route path="/equipment-qr-labels" element={<EquipmentQRLabels />} />
     <Route path="/workflows" element={<AutomatedWorkflows />} />
 
     {/* Advanced Operations */}
