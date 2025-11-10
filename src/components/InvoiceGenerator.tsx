@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, FileText } from 'lucide-react';
+import { Plus, Trash2, FileText, Download, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { downloadInvoicePDF } from '@/utils/invoicePDFGenerator';
 
 interface LineItem {
   description: string;
@@ -26,6 +27,8 @@ interface InvoiceGeneratorProps {
 
 const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps) => {
   const [loading, setLoading] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [lastCreatedInvoice, setLastCreatedInvoice] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [costCodes, setCostCodes] = useState<any[]>([]);
   const { user } = useAuth();
@@ -147,11 +150,14 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
       if (data.success) {
         toast({
           title: "Invoice Generated",
-          description: `Invoice ${data.invoice.invoice_number} has been created successfully.`,
+          description: `Invoice ${data.invoice.invoice_number} has been created successfully. You can now download the PDF.`,
         });
-        
+
+        // Store the created invoice for PDF generation
+        setLastCreatedInvoice(data.invoice);
+
         onInvoiceCreated?.(data.invoice);
-        
+
         // Reset form
         setInvoiceData({
           client_name: '',
@@ -175,6 +181,55 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    if (!lastCreatedInvoice) return;
+
+    setGeneratingPDF(true);
+    try {
+      // Fetch complete invoice with line items and project info
+      const { data: invoiceWithDetails, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          line_items:invoice_line_items(*),
+          project:projects(name)
+        `)
+        .eq('id', lastCreatedInvoice.id)
+        .single();
+
+      if (error) throw error;
+
+      // Prepare data for PDF generator
+      const pdfData = {
+        ...invoiceWithDetails,
+        project_name: invoiceWithDetails.project?.name || null,
+        line_items: invoiceWithDetails.line_items.map((item: any) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          line_total: item.line_total || item.quantity * item.unit_price,
+        })),
+      };
+
+      // Generate and download PDF
+      downloadInvoicePDF(pdfData, undefined, `invoice-${invoiceWithDetails.invoice_number}.pdf`);
+
+      toast({
+        title: "PDF Downloaded",
+        description: `Invoice ${invoiceWithDetails.invoice_number} PDF has been downloaded successfully.`,
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: error.message || "Failed to generate PDF",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -385,8 +440,8 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
             </div>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={loading || calculateTotal() <= 0}
             className="w-full bg-construction-orange hover:bg-construction-orange/90"
             size="lg"
@@ -395,6 +450,45 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
             {loading ? 'Generating...' : 'Generate Invoice'}
           </Button>
         </form>
+
+        {/* PDF Download Section - Shows after invoice creation */}
+        {lastCreatedInvoice && (
+          <div className="mt-6 pt-6 border-t">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
+                    Invoice Created Successfully!
+                  </h4>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Invoice #{lastCreatedInvoice.invoice_number} has been created.
+                    Download the PDF or create a new invoice.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <Button
+                  onClick={handleGeneratePDF}
+                  disabled={generatingPDF}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {generatingPDF ? 'Generating PDF...' : 'Download PDF'}
+                </Button>
+
+                <Button
+                  onClick={() => setLastCreatedInvoice(null)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Another Invoice
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
