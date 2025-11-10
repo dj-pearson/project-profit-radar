@@ -52,6 +52,9 @@ import ConstructionMobileAppGuide from '@/pages/resources/ConstructionMobileAppG
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
 import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
 
+// Free Tools
+import ProfitabilityCalculator from '@/pages/ProfitabilityCalculator';
+
 export const marketingRoutes = (
   <>
     {/* Core Marketing Pages */}
@@ -100,5 +103,9 @@ export const marketingRoutes = (
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
     <Route path="/topics/safety-and-osha-compliance" element={<SafetyAndOSHACompliance />} />
+
+    {/* Free Tools */}
+    <Route path="/calculator" element={<ProfitabilityCalculator />} />
+    <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
   </>
 );
