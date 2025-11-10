@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -214,9 +214,21 @@ export const OnboardingChecklist = () => {
     loadProgress();
   }, [user]);
 
+  // Track recently completed tasks to prevent duplicate toasts (race condition fix)
+  const recentlyCompleted = useRef<Set<string>>(new Set());
+
   // Mark task as complete
   const completeTask = async (taskId: string, points: number) => {
     if (!user || progress.tasks_completed.includes(taskId)) return;
+    
+    // Prevent duplicate calls within a short time window (debounce)
+    if (recentlyCompleted.current.has(taskId)) return;
+    recentlyCompleted.current.add(taskId);
+    
+    // Clear from recently completed after 5 seconds
+    setTimeout(() => {
+      recentlyCompleted.current.delete(taskId);
+    }, 5000);
 
     const newTasksCompleted = [...progress.tasks_completed, taskId];
     const newTotalPoints = progress.total_points + points;
@@ -253,6 +265,8 @@ export const OnboardingChecklist = () => {
       }
     } catch (error) {
       console.error('Failed to update progress:', error);
+      // Remove from recently completed on error so retry is possible
+      recentlyCompleted.current.delete(taskId);
     }
   };
 
