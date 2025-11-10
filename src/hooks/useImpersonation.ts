@@ -48,8 +48,12 @@ export const useImpersonation = () => {
         .is('ended_at', null)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking session:', error);
+      // Silently fail if table doesn't exist (406) or other errors
+      if (error) {
+        // Only log if it's not a "table doesn't exist" or "no rows" error
+        if (error.code !== 'PGRST116' && error.code !== '42P01' && !error.message?.includes('does not exist')) {
+          console.error('Error checking session:', error);
+        }
         return;
       }
 
@@ -68,7 +72,7 @@ export const useImpersonation = () => {
         }
       }
     } catch (error) {
-      console.error('Error checking impersonation session:', error);
+      // Silently fail - impersonation is an optional feature
     }
   };
 

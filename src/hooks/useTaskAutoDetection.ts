@@ -89,56 +89,72 @@ export const useTaskAutoDetection = (
 
       // Check: Create Daily Report
       if (!progress.tasks_completed.includes('create_daily_report')) {
-        const { data: dailyReports } = await supabase
-          .from('daily_reports')
-          .select('id')
-          .eq('company_id', userProfile.company_id)
-          .limit(1);
+        try {
+          const { data: dailyReports, error } = await supabase
+            .from('daily_reports')
+            .select('id')
+            .eq('company_id', userProfile.company_id)
+            .limit(1);
 
-        if (dailyReports && dailyReports.length > 0) {
-          await onTaskComplete('create_daily_report', 15);
+          if (!error && dailyReports && dailyReports.length > 0) {
+            await onTaskComplete('create_daily_report', 15);
+          }
+        } catch (e) {
+          // Silently fail if table doesn't exist or has RLS issues
         }
       }
 
       // Check: Create Change Order
       if (!progress.tasks_completed.includes('create_change_order')) {
-        const { data: changeOrders } = await supabase
-          .from('change_orders')
-          .select('id')
-          .eq('company_id', userProfile.company_id)
-          .limit(1);
+        try {
+          const { data: changeOrders, error } = await supabase
+            .from('change_orders')
+            .select('id')
+            .eq('company_id', userProfile.company_id)
+            .limit(1);
 
-        if (changeOrders && changeOrders.length > 0) {
-          await onTaskComplete('create_change_order', 15);
+          if (!error && changeOrders && changeOrders.length > 0) {
+            await onTaskComplete('create_change_order', 15);
+          }
+        } catch (e) {
+          // Silently fail if table doesn't exist or has RLS issues
         }
       }
 
       // Check: Connect QuickBooks
       // This would require checking company settings or integrations table
       if (!progress.tasks_completed.includes('connect_quickbooks')) {
-        const { data: company } = await supabase
-          .from('companies')
-          .select('quickbooks_connected')
-          .eq('id', userProfile.company_id)
-          .single();
+        try {
+          const { data: company, error } = await supabase
+            .from('companies')
+            .select('quickbooks_connected')
+            .eq('id', userProfile.company_id)
+            .single();
 
-        if (company?.quickbooks_connected) {
-          await onTaskComplete('connect_quickbooks', 30);
+          if (!error && company?.quickbooks_connected) {
+            await onTaskComplete('connect_quickbooks', 30);
+          }
+        } catch (e) {
+          // Silently fail if column doesn't exist
         }
       }
 
       // Check: Generate Report
       // This is tricky - we can check if they have any saved reports or views
       if (!progress.tasks_completed.includes('generate_report')) {
-        const { data: reports } = await supabase
-          .from('financial_records')
-          .select('id')
-          .eq('company_id', userProfile.company_id)
-          .limit(1);
+        try {
+          const { data: reports, error } = await supabase
+            .from('financial_records')
+            .select('id')
+            .eq('company_id', userProfile.company_id)
+            .limit(1);
 
-        // If they have financial records, they've likely generated a report
-        if (reports && reports.length > 0) {
-          await onTaskComplete('generate_report', 20);
+          // If they have financial records, they've likely generated a report
+          if (!error && reports && reports.length > 0) {
+            await onTaskComplete('generate_report', 20);
+          }
+        } catch (e) {
+          // Silently fail if table doesn't exist
         }
       }
     } catch (error) {
