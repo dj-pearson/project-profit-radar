@@ -140,23 +140,11 @@ export const useTaskAutoDetection = (
       }
 
       // Check: Generate Report
-      // This is tricky - we can check if they have any saved reports or views
-      if (!progress.tasks_completed.includes('generate_report')) {
-        try {
-          const { data: reports, error } = await supabase
-            .from('financial_records')
-            .select('id')
-            .eq('company_id', userProfile.company_id)
-            .limit(1);
-
-          // If they have financial records, they've likely generated a report
-          if (!error && reports && reports.length > 0) {
-            await onTaskComplete('generate_report', 20);
-          }
-        } catch (e) {
-          // Silently fail if table doesn't exist
-        }
-      }
+      // NOTE: Disabled - financial_records table doesn't exist yet
+      // Re-enable when table is created
+      // if (!progress.tasks_completed.includes('generate_report')) {
+      //   // Check logic here
+      // }
     } catch (error) {
       console.error('Error checking task completion:', error);
       // Don't throw - this is background checking
