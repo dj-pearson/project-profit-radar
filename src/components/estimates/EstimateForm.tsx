@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Save, Send } from "lucide-react";
+import { Plus, Trash2, Save, Send, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { downloadEstimatePDF } from "@/utils/estimatePDFGenerator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
@@ -57,6 +58,8 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   const [projects, setProjects] = useState<any[]>([]);
   const [costCodes, setCostCodes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [createdEstimate, setCreatedEstimate] = useState<any>(null);
 
   const form = useForm<EstimateFormData>({
     resolver: zodResolver(estimateSchema),
@@ -259,12 +262,13 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
 
       toast({
         title: isDraft ? "Estimate Saved" : "Estimate Sent",
-        description: isDraft 
-          ? "Estimate has been saved as draft."
-          : "Estimate has been sent to client.",
+        description: isDraft
+          ? "Estimate has been saved as draft. You can now download the PDF."
+          : "Estimate has been sent to client. You can now download the PDF.",
       });
 
-      onSuccess();
+      // Store created estimate for PDF generation
+      setCreatedEstimate(estimate);
     } catch (error) {
       console.error("Error saving estimate:", error);
       toast({
@@ -275,6 +279,66 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGeneratePDF = async () => {
+    if (!createdEstimate) return;
+
+    setGeneratingPDF(true);
+    try {
+      // Fetch complete estimate with line items
+      const { data: estimateWithDetails, error } = await supabase
+        .from('estimates')
+        .select(`
+          *,
+          line_items:estimate_line_items(*),
+          project:projects(name)
+        `)
+        .eq('id', createdEstimate.id)
+        .single();
+
+      if (error) throw error;
+
+      // Prepare data for PDF generator
+      const pdfData = {
+        ...estimateWithDetails,
+        project_name: estimateWithDetails.project?.name || null,
+        line_items: estimateWithDetails.line_items.map((item: any) => ({
+          item_name: item.item_name,
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          unit_cost: item.unit_cost,
+          total_cost: item.total_cost || item.quantity * item.unit_cost,
+          category: item.category,
+          labor_cost: item.labor_cost,
+          material_cost: item.material_cost,
+          equipment_cost: item.equipment_cost,
+        })),
+      };
+
+      // Generate and download PDF
+      downloadEstimatePDF(pdfData, undefined, `estimate-${estimateWithDetails.estimate_number}.pdf`);
+
+      toast({
+        title: "PDF Downloaded",
+        description: `Estimate ${estimateWithDetails.estimate_number} PDF has been downloaded successfully.`,
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: error.message || "Failed to generate PDF",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
+  const handleClose = () => {
+    setCreatedEstimate(null);
+    onSuccess();
   };
 
   return (
@@ -711,6 +775,44 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           </Button>
         </div>
       </form>
+
+      {/* PDF Download Section - Shows after estimate creation */}
+      {createdEstimate && (
+        <div className="mt-6 pt-6 border-t">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
+                  Estimate Created Successfully!
+                </h4>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Estimate #{createdEstimate.estimate_number} has been created.
+                  Download the PDF or close this form.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <Button
+                onClick={handleGeneratePDF}
+                disabled={generatingPDF}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {generatingPDF ? 'Generating PDF...' : 'Download PDF'}
+              </Button>
+
+              <Button
+                onClick={handleClose}
+                variant="outline"
+                className="flex-1"
+              >
+                Close & View Estimates
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Form>
   );
 }
