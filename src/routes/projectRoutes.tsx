@@ -21,6 +21,7 @@ import {
   LazyMaterialTracking,
   LazyEquipment,
 } from '@/utils/lazyRoutes';
+import DailyReportTemplates from '@/pages/DailyReportTemplates';
 
 export const projectRoutes = (
   <>
@@ -38,6 +39,7 @@ export const projectRoutes = (
 
     {/* Daily Operations */}
     <Route path="/daily-reports" element={<LazyDailyReports />} />
+    <Route path="/daily-report-templates" element={<DailyReportTemplates />} />
 
     {/* Project Documentation */}
     <Route path="/rfis" element={<LazyRFIs />} />
