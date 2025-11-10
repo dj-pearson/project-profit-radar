@@ -9,6 +9,7 @@ import { Route } from 'react-router-dom';
 import TeamManagement from '@/pages/TeamManagement';
 import CrewScheduling from '@/pages/CrewScheduling';
 import TimeTracking from '@/pages/TimeTracking';
+import Timesheets from '@/pages/Timesheets';
 import Support from '@/pages/Support';
 
 // CRM
@@ -31,6 +32,7 @@ export const peopleRoutes = (
     <Route path="/team" element={<TeamManagement />} />
     <Route path="/crew-scheduling" element={<CrewScheduling />} />
     <Route path="/time-tracking" element={<TimeTracking />} />
+    <Route path="/timesheets" element={<Timesheets />} />
     <Route path="/support" element={<Support />} />
 
     {/* CRM */}
