@@ -3,14 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { supabaseStorage } from '@/lib/supabaseStorage';
 
-// SECURITY: Use environment variables for configuration
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-// Validate required environment variables
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('Missing Supabase environment variables');
-}
+// SECURITY: In Lovable, VITE_* env vars are not supported. Use explicit project config.
+const SUPABASE_URL = 'https://ilhzuvemiuyfuxfegtlv.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHp1dmVtaXV5ZnV4ZmVndGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0OTU1NDQsImV4cCI6MjA2NzA3MTU0NH0.1JSYhiiJRohQnt8feFbTza9VnmKFprwsOxW0jBRcM2s';
 
 
 // Import the supabase client like this:

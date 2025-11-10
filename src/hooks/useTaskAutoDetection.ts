@@ -241,45 +241,11 @@ export const useTaskAutoDetection = (
       subscriptions.push(documentsSub);
     }
 
-    // Subscribe to daily_reports table
-    if (!progress.tasks_completed.includes('create_daily_report')) {
-      const dailyReportsSub = supabase
-        .channel('daily-reports-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'daily_reports',
-            filter: `company_id=eq.${userProfile.company_id}`
-          },
-          () => {
-            onTaskComplete('create_daily_report', 15);
-          }
-        )
-        .subscribe();
-      subscriptions.push(dailyReportsSub);
-    }
+    // Realtime subscriptions for daily_reports and change_orders are disabled to avoid
+    // invalid filters (these tables may not have company_id columns). We'll rely on
+    // periodic checks above instead.
+    // If needed later, add proper subscriptions scoped by project_id or user context.
 
-    // Subscribe to change_orders table
-    if (!progress.tasks_completed.includes('create_change_order')) {
-      const changeOrdersSub = supabase
-        .channel('change-orders-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'change_orders',
-            filter: `company_id=eq.${userProfile.company_id}`
-          },
-          () => {
-            onTaskComplete('create_change_order', 15);
-          }
-        )
-        .subscribe();
-      subscriptions.push(changeOrdersSub);
-    }
 
     // Subscribe to user_profiles for team invites
     if (!progress.tasks_completed.includes('invite_team_member')) {
