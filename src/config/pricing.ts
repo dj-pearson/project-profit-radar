@@ -109,6 +109,8 @@ export const PRICING_PLANS: PricingPlan[] = [
       'Unlimited team members',
       'Unlimited projects',
       'Everything in Professional',
+      'Custom domain support',
+      'White-label branding',
       'Custom integrations',
       'Advanced automation',
       'White-label client portal',

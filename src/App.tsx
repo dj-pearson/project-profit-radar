@@ -3,6 +3,7 @@ import { BrowserRouter, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
@@ -61,23 +62,25 @@ const App = () => {
   return (
     <CriticalErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AccessibilityProvider>
-              <ContextMenuProvider>
-                <PlatformProvider>
-                  <ThemeProvider>
-                    <HelmetProvider>
-                      <BrowserRouter>
-                        <AppContent />
-                      </BrowserRouter>
-                    </HelmetProvider>
-                  </ThemeProvider>
-                </PlatformProvider>
-              </ContextMenuProvider>
-            </AccessibilityProvider>
-          </SubscriptionProvider>
-        </AuthProvider>
+        <TenantProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <AccessibilityProvider>
+                <ContextMenuProvider>
+                  <PlatformProvider>
+                    <ThemeProvider>
+                      <HelmetProvider>
+                        <BrowserRouter>
+                          <AppContent />
+                        </BrowserRouter>
+                      </HelmetProvider>
+                    </ThemeProvider>
+                  </PlatformProvider>
+                </ContextMenuProvider>
+              </AccessibilityProvider>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </TenantProvider>
       </QueryClientProvider>
     </CriticalErrorBoundary>
   );
