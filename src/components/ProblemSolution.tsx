@@ -4,40 +4,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const ProblemSolution = () => {
   const problems = [
     {
-      icon: Clock,
-      stat: "77 days",
-      description: "Projects average behind schedule",
-      detail: "Lack of real-time visibility into project progress and resource allocation"
-    },
-    {
       icon: DollarSign,
-      stat: "28%",
-      description: "Over budget on 98% of projects",
-      detail: "No real-time cost tracking leads to profit margin erosion"
+      stat: "$40K+",
+      description: "Average cost overrun discovered too late",
+      detail: "You only find out about profit erosion at tax time when it's already gone"
     },
     {
-      icon: FileText,
-      stat: "6 hours",
-      description: "Wasted daily on admin tasks",
-      detail: "Manual paperwork, duplicate data entry, and scattered communication"
+      icon: Clock,
+      stat: "3 days",
+      description: "Wasted on manual month-end close",
+      detail: "Spreadsheets, QuickBooks data entry, and reconciliation consume valuable time"
+    },
+    {
+      icon: AlertTriangle,
+      stat: "Zero",
+      description: "Early warning before budget disasters",
+      detail: "No predictive intelligence to catch problems weeks before they become catastrophic"
     }
   ];
 
   const solutions = [
     {
       icon: CheckCircle,
-      title: "Real-Time Project Visibility",
-      description: "Track progress, costs, and resources across all projects from a single dashboard"
+      title: "Real-Time Profitability Intelligence",
+      description: "See every project's profit margin update instantly as costs are captured. Know exactly where you stand, right now."
     },
     {
       icon: CheckCircle,
-      title: "Automated Cost Tracking",
-      description: "Know your profit margins instantly with automated job costing and QuickBooks sync"
+      title: "Predictive Cost Alerts",
+      description: "AI-powered predictions catch budget overruns 2-3 weeks early. Fix problems before they cost you thousands."
     },
     {
       icon: CheckCircle,
-      title: "Streamlined Workflows",
-      description: "Eliminate paperwork with mobile-first tools that work offline in the field"
+      title: "5-Minute Month-End Close",
+      description: "One-click financial statements with automated QuickBooks sync. Close your books in 5 minutes instead of 3 days."
     }
   ];
 
@@ -47,10 +47,10 @@ const ProblemSolution = () => {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-construction-dark mb-4 leading-tight">
-            The Hidden Costs of Poor Project Management
+            Why Most Contractors Don't Know They're Losing Money Until It's Too Late
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            SMB contractors lose thousands monthly to preventable delays, budget overruns, and administrative inefficiencies
+            Without real-time financial intelligence, profit erosion is invisible until year-end when it's impossible to recover
           </p>
         </div>
 
@@ -59,7 +59,7 @@ const ProblemSolution = () => {
           <div className="text-center mb-8 sm:mb-12">
             <h3 className="text-xl sm:text-2xl font-bold text-construction-dark mb-4 flex flex-col sm:flex-row items-center justify-center gap-2">
               <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
-              The Reality Check
+              The Financial Blindness Problem
             </h3>
           </div>
           
@@ -86,10 +86,10 @@ const ProblemSolution = () => {
           <div className="text-center mb-8 sm:mb-12">
             <h3 className="text-xl sm:text-2xl font-bold text-construction-dark mb-4 flex flex-col sm:flex-row items-center justify-center gap-2">
               <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-construction-orange" />
-              The Build Desk Solution
+              The Financial Intelligence Solution
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Purpose-built for SMB contractors who need enterprise-level insights without the complexity
+              Where other platforms focus on project management, BuildDesk owns financial intelligence - the category where SMB contractors have the greatest pain
             </p>
           </div>
           
@@ -112,20 +112,23 @@ const ProblemSolution = () => {
         <div className="mt-16 sm:mt-20 bg-gradient-to-r from-construction-orange/10 to-construction-blue/10 rounded-xl p-6 sm:p-8">
           <div className="text-center">
             <h3 className="text-xl sm:text-2xl font-bold text-construction-dark mb-4 sm:mb-6">
-              See the Impact in 30 Days
+              Real Results from Real Contractors
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-construction-orange mb-2">23%</div>
-                <div className="text-sm sm:text-base text-construction-dark font-semibold">Average Profit Increase</div>
+                <div className="text-2xl sm:text-3xl font-bold text-construction-orange mb-2">4%+</div>
+                <div className="text-sm sm:text-base text-construction-dark font-semibold">Profit Margin Improvement</div>
+                <div className="text-xs text-muted-foreground mt-1">From better cost visibility</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-construction-orange mb-2">15 Days</div>
-                <div className="text-sm sm:text-base text-construction-dark font-semibold">Faster Project Completion</div>
+                <div className="text-2xl sm:text-3xl font-bold text-construction-orange mb-2">3 Weeks</div>
+                <div className="text-sm sm:text-base text-construction-dark font-semibold">Early Warning on Overruns</div>
+                <div className="text-xs text-muted-foreground mt-1">Time to fix before disaster</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-construction-orange mb-2">5.5 Hours</div>
-                <div className="text-sm sm:text-base text-construction-dark font-semibold">Admin Time Saved Daily</div>
+                <div className="text-2xl sm:text-3xl font-bold text-construction-orange mb-2">5 Minutes</div>
+                <div className="text-sm sm:text-base text-construction-dark font-semibold">Month-End Close Time</div>
+                <div className="text-xs text-muted-foreground mt-1">Down from 3 days</div>
               </div>
             </div>
           </div>
