@@ -5,6 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
   Building2,
   Users,
   Settings,
@@ -17,6 +26,9 @@ import {
   Search,
   Crown,
   Shield,
+  Globe,
+  Copy,
+  RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +45,8 @@ interface Tenant {
   max_projects: number;
   is_active: boolean;
   created_at: string;
+  custom_domain: string | null;
+  domain_verified: boolean | null;
   user_count?: number;
   project_count?: number;
 }
@@ -52,6 +66,10 @@ export const TenantManagement = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [stats, setStats] = useState<TenantStats | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [domainDialogOpen, setDomainDialogOpen] = useState(false);
+  const [customDomainInput, setCustomDomainInput] = useState('');
+  const [verifyingDomain, setVerifyingDomain] = useState(false);
 
   useEffect(() => {
     loadTenantData();
@@ -138,6 +156,91 @@ export const TenantManagement = () => {
         {label}
       </Badge>
     );
+  };
+
+  const handleOpenDomainDialog = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setCustomDomainInput(tenant.custom_domain || '');
+    setDomainDialogOpen(true);
+  };
+
+  const handleSaveCustomDomain = async () => {
+    if (!selectedTenant) return;
+
+    try {
+      const { error } = await supabase
+        .from('tenants')
+        .update({
+          custom_domain: customDomainInput || null,
+          domain_verified: false, // Reset verification status when domain changes
+        })
+        .eq('id', selectedTenant.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Domain Updated',
+        description: 'Custom domain has been saved. Please verify DNS configuration.',
+      });
+
+      setDomainDialogOpen(false);
+      loadTenantData();
+    } catch (error) {
+      console.error('Failed to update domain:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update custom domain.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleVerifyDomain = async () => {
+    if (!selectedTenant?.custom_domain) return;
+
+    setVerifyingDomain(true);
+    try {
+      // Call edge function to verify DNS
+      const { data, error } = await supabase.functions.invoke('verify-domain', {
+        body: {
+          tenant_id: selectedTenant.id,
+          domain: selectedTenant.custom_domain,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.verified) {
+        toast({
+          title: 'Domain Verified',
+          description: 'Custom domain has been successfully verified!',
+        });
+        loadTenantData();
+      } else {
+        toast({
+          title: 'Verification Failed',
+          description: data?.message || 'Unable to verify domain. Please check DNS configuration.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Domain verification error:', error);
+      toast({
+        title: 'Verification Error',
+        description: 'Failed to verify domain. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setVerifyingDomain(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: 'Copied',
+      description: 'DNS record copied to clipboard',
+    });
   };
 
   const filteredTenants = tenants.filter(tenant =>
@@ -274,7 +377,7 @@ export const TenantManagement = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-5 gap-4 mb-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Users</p>
                       <p className="font-semibold">
@@ -292,6 +395,21 @@ export const TenantManagement = () => {
                       <p className="font-semibold capitalize">{tenant.plan_tier}</p>
                     </div>
                     <div>
+                      <p className="text-xs text-muted-foreground">Custom Domain</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-semibold text-xs truncate">
+                          {tenant.custom_domain || 'Not set'}
+                        </p>
+                        {tenant.custom_domain && (
+                          tenant.domain_verified ? (
+                            <CheckCircle className="w-3 h-3 text-green-600" title="Verified" />
+                          ) : (
+                            <AlertCircle className="w-3 h-3 text-yellow-600" title="Not verified" />
+                          )
+                        )}
+                      </div>
+                    </div>
+                    <div>
                       <p className="text-xs text-muted-foreground">Created</p>
                       <p className="font-semibold">
                         {new Date(tenant.created_at).toLocaleDateString()}
@@ -303,6 +421,14 @@ export const TenantManagement = () => {
                     <Button size="sm" variant="outline">
                       <Users className="w-4 h-4 mr-2" />
                       Manage Users
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleOpenDomainDialog(tenant)}
+                    >
+                      <Globe className="w-4 h-4 mr-2" />
+                      Domain
                     </Button>
                     <Button size="sm" variant="outline">
                       <Settings className="w-4 h-4 mr-2" />
@@ -322,6 +448,155 @@ export const TenantManagement = () => {
             ))
           )}
         </div>
+
+        {/* Domain Configuration Dialog */}
+        <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Custom Domain Configuration</DialogTitle>
+              <DialogDescription>
+                Configure a custom domain for {selectedTenant?.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Custom Domain Input */}
+              <div className="space-y-2">
+                <Label htmlFor="customDomain">Custom Domain</Label>
+                <Input
+                  id="customDomain"
+                  placeholder="app.yourcompany.com"
+                  value={customDomainInput}
+                  onChange={(e) => setCustomDomainInput(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the domain without http:// or https://
+                </p>
+              </div>
+
+              {/* DNS Configuration Instructions */}
+              {customDomainInput && (
+                <Card className="bg-muted/50">
+                  <CardHeader>
+                    <CardTitle className="text-sm">DNS Configuration</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Add the following DNS record to your domain registrar:
+                    </p>
+
+                    <div className="bg-background p-3 rounded border space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground">Type</p>
+                          <p className="font-mono text-sm">CNAME</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard('CNAME')}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground">Name</p>
+                          <p className="font-mono text-sm">{customDomainInput.split('.')[0]}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(customDomainInput.split('.')[0])}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-muted-foreground">Value</p>
+                          <p className="font-mono text-sm break-all">
+                            builddesk.pearsonperformance.workers.dev
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard('builddesk.pearsonperformance.workers.dev')}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>• DNS changes can take up to 24-48 hours to propagate</p>
+                      <p>• After adding the DNS record, click "Verify Domain" below</p>
+                      <p>• SSL certificate will be automatically provisioned via Cloudflare</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Current Status */}
+              {selectedTenant?.custom_domain && (
+                <div className="flex items-center gap-2 p-3 bg-muted rounded">
+                  {selectedTenant.domain_verified ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <div>
+                        <p className="font-semibold text-sm">Domain Verified</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedTenant.custom_domain} is active
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-yellow-600" />
+                      <div>
+                        <p className="font-semibold text-sm">Awaiting Verification</p>
+                        <p className="text-xs text-muted-foreground">
+                          DNS records not yet verified
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="flex gap-2">
+              {selectedTenant?.custom_domain && !selectedTenant.domain_verified && (
+                <Button
+                  variant="outline"
+                  onClick={handleVerifyDomain}
+                  disabled={verifyingDomain}
+                >
+                  {verifyingDomain ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Verify Domain
+                    </>
+                  )}
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setDomainDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveCustomDomain}>
+                Save Domain
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

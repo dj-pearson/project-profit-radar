@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HardHat, Building } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface SmartLogoProps {
   className?: string;
@@ -19,6 +20,7 @@ const SmartLogo = ({
   showText = false,
   priority = "remote",
 }: SmartLogoProps) => {
+  const { tenant } = useTenant();
   const [imageState, setImageState] = useState<
     "loading" | "remote" | "local" | "text"
   >("loading");
@@ -40,11 +42,20 @@ const SmartLogo = ({
   };
 
   // Image sources with fallback priority
+  // Use tenant logo if available and white-label is enabled
+  const useTenantLogo = tenant?.features?.white_label && tenant?.branding?.logo_url;
+
   const imageSources = {
-    remote:
-      "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+    remote: useTenantLogo
+      ? tenant.branding.logo_url!
+      : "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
     local: "/BuildDeskLogo.png",
   };
+
+  // Get tenant display name for text fallback
+  const brandName = useTenantLogo && tenant?.display_name
+    ? tenant.display_name
+    : "BuildDesk";
 
   // Force text mode if requested
   useEffect(() => {
@@ -102,6 +113,20 @@ const SmartLogo = ({
   const renderLogo = () => {
     // Text fallback version matching the brand design
     if (imageState === "text" || showText) {
+      // For white-label tenants, show simple text
+      if (useTenantLogo) {
+        return (
+          <div className={`flex items-center gap-2 ${textClassName}`}>
+            <div className={`font-bold tracking-tight ${textSizes[size]}`}>
+              <span style={{ color: tenant?.branding?.primary_color || '#F97316' }}>
+                {brandName}
+              </span>
+            </div>
+          </div>
+        );
+      }
+
+      // Default BuildDesk logo
       return (
         <div className={`flex items-center gap-2 ${textClassName}`}>
           {/* Icon representation */}
@@ -135,7 +160,7 @@ const SmartLogo = ({
     return (
       <img
         src={currentSrc}
-        alt="BuildDesk"
+        alt={brandName}
         className={`${sizeClasses[size]} ${className}`}
         onError={() => {
           if (imageState === "remote") {
