@@ -3,6 +3,9 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
+import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
+import TechnicalSuperioritySection from "@/components/TechnicalSuperioritySection";
+import NetworkEffectsSection from "@/components/NetworkEffectsSection";
 import Implementation from "@/components/Implementation";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
@@ -71,29 +74,30 @@ const Index = () => {
         <SiteSearchSchema />
       
       <PageSEO
-        title="BuildDesk - Construction Management Software for Small Contractors"
-        description="Complete construction management for small contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. $350/month unlimited users. 50% less than Procore. Set up in 1-2 days. Free trial."
+        title="BuildDesk - Predictive Financial Intelligence for Construction | Real-Time Job Costing & AI Cost Predictions"
+        description="The only construction platform with predictive financial intelligence. AI warns you 2-3 weeks before cost overruns. Real-time profitability tracking, automated month-end close in 5 minutes. Modern architecture gives contractors a 2-3 year competitive advantage. QuickBooks sync included."
         keywords={[
-          'construction management software',
-          'construction software for small business',
-          'construction project management software',
+          'construction financial intelligence software',
+          'predictive construction cost management',
+          'AI construction job costing',
+          'real-time construction profitability',
+          'construction cost prediction software',
+          'automated construction financial close',
+          'construction margin tracking software',
+          'predictive analytics construction',
+          'construction cash flow forecasting',
+          'construction benchmark intelligence',
           'job costing software construction',
-          'construction field management software',
-          'procore alternative small contractors',
-          'buildertrend alternative',
-          'construction time tracking app',
-          'OSHA safety reporting software',
-          'construction scheduling software',
-          'construction budget tracking',
+          'construction financial management software',
           'quickbooks construction integration',
-          'contractor management software',
-          'construction software for small contractors'
+          'procore alternative financial intelligence',
+          'construction budget prediction AI'
         ]}
         canonicalUrl="https://builddesk.com"
         schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([
           { name: "Home", url: "https://builddesk.com" }
         ])]}
-        lastModified="2025-11-07"
+        lastModified="2025-11-11"
       />
       <SkipLink href="#main-content">Skip to main content</SkipLink>
       <SkipLink href="#navigation">Skip to navigation</SkipLink>
@@ -103,19 +107,34 @@ const Index = () => {
       <main id="main-content" role="main">
         <Hero />
         <SocialProof />
-        
+
+        {/* Financial Intelligence - Core Differentiator */}
         <LazySection>
           <ProblemSolution />
         </LazySection>
-        
+
+        <LazySection>
+          <FinancialIntelligenceShowcase />
+        </LazySection>
+
+        {/* Technical Superiority */}
         <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
           <LazyFeatures />
         </PerformanceLazyWrapper>
-        
+
+        <LazySection>
+          <TechnicalSuperioritySection />
+        </LazySection>
+
+        {/* Network Effects */}
+        <LazySection>
+          <NetworkEffectsSection />
+        </LazySection>
+
         <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
           <LazyIndustries />
         </PerformanceLazyWrapper>
-        
+
         <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
           <LazyPricing />
         </PerformanceLazyWrapper>

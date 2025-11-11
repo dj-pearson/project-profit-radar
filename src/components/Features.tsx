@@ -17,18 +17,18 @@ import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/Respons
 const Features = () => {
   const features = [
     {
+      icon: DollarSign,
+      title: "Predictive Financial Intelligence",
+      description: "AI-powered profitability protection",
+      details: "Real-time job costing with predictive cost alerts 2-3 weeks before overruns. Live margin tracking, cash flow forecasting, and 5-minute month-end close with automated QuickBooks sync.",
+      benefits: ["Predictive cost alerts", "Live profit margins", "5-min financial close"]
+    },
+    {
       icon: Building2,
       title: "Complete Project Management",
       description: "End-to-end project lifecycle control",
       details: "From initial bid to final warranty, manage every aspect of your construction projects with comprehensive tracking and reporting.",
       benefits: ["Project phases & tasks", "Change order management", "Progress tracking"]
-    },
-    {
-      icon: DollarSign,
-      title: "Advanced Financial Management", 
-      description: "Real-time profitability & cash flow control",
-      details: "Live job costing, purchase order management, vendor tracking, and automated QuickBooks integration for complete financial visibility.",
-      benefits: ["Real-time job costing", "Purchase order system", "Automated invoicing"]
     },
     {
       icon: Smartphone,
@@ -79,11 +79,14 @@ const Features = () => {
       <ResponsiveContainer>
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-block px-4 py-2 bg-construction-orange/10 rounded-full mb-4">
+            <span className="text-sm font-semibold text-construction-orange">Technical Superiority</span>
+          </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
-            Complete Construction Management Platform
+            Modern Architecture. Predictive Intelligence.
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-            From project management to compliance, financial control to field operations - everything you need to run profitable construction projects
+            Built on real-time infrastructure that gives you a 2-3 year competitive advantage over legacy batch-processing systems
           </p>
         </div>
 

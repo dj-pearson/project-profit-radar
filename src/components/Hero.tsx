@@ -12,14 +12,17 @@ const Hero = () => {
           {/* Content */}
           <div className="space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1">
             <div className="space-y-4">
+              <div className="inline-block px-4 py-2 bg-construction-orange/10 rounded-full mb-4">
+                <span className="text-sm font-semibold text-construction-orange">Financial Intelligence Platform</span>
+              </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-construction-dark leading-tight">
-                Construction Management Built 
-                <span className="block text-construction-orange">for Growing Teams</span>
+                Know Your Profit on Every Job
+                <span className="block text-construction-orange">Before It's Too Late</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                Stop losing money on delays, change orders, and administrative overhead. Get real-time project visibility 
-                without enterprise complexity. Job costing, scheduling, daily logs, OSHA reporting, and time tracking in one simple tool for U.S. contractors.
-                <span className="block mt-2 font-semibold text-construction-orange">Join 500+ contractors saving $50K+ annually.</span>
+                The only construction platform with <strong className="text-construction-dark">predictive financial intelligence</strong> that warns you weeks before problems hit your bottom line.
+                Real-time job costing, AI-powered cost predictions, and automated month-end close in 5 minutes.
+                <span className="block mt-3 font-semibold text-construction-orange">Modern architecture. Predictive insights. 2-3 year competitive advantage.</span>
               </p>
             </div>
             
