@@ -37,6 +37,7 @@ import { AIInsights } from '@/pages/AIInsights';
 import MobileShowcase from '@/pages/MobileShowcase';
 import AdvancedMobileShowcase from '@/pages/AdvancedMobileShowcase';
 import { VisualProjectManagementPage } from '@/pages/VisualProjectManagementPage';
+import { CustomDomain } from '@/pages/settings/CustomDomain';
 
 export const appRoutes = (
   <>
@@ -59,6 +60,7 @@ export const appRoutes = (
     {/* Settings */}
     <Route path="/user-settings" element={<LazyUserSettings />} />
     <Route path="/subscription-settings" element={<LazySubscriptionSettings />} />
+    <Route path="/settings/custom-domain" element={<CustomDomain />} />
 
     {/* Features */}
     <Route path="/marketplace" element={<LazyAPIMarketplace />} />
