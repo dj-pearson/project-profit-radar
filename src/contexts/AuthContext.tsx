@@ -358,52 +358,65 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     console.log("Initializing authentication...");
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session:", session?.user?.id || "none");
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        // Check cache first for instant access
-        const cachedProfile = successfulProfiles.current.get(session.user.id);
-        if (cachedProfile) {
-          console.log("Initial session: Using cached profile");
-          setUserProfile(cachedProfile);
+    // Get initial session with error handling
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        // Handle auth service errors (503, network failures, etc.)
+        if (error) {
+          console.error("Auth initialization error:", error);
+          toast({
+            title: "Authentication Service Issue",
+            description: "Unable to connect to authentication service. Some features may be limited.",
+            variant: "destructive",
+          });
           setLoading(false);
           return;
         }
 
-        // SECURITY: Check sessionStorage profile cache (more secure than localStorage)
-        try {
-          const stored = sessionStorage.getItem(`bd.userProfile.${session.user.id}`);
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            console.log("Initial session: Using stored profile");
-            setUserProfile(parsed);
-            successfulProfiles.current.set(parsed.id, parsed);
+        console.log("Initial session:", session?.user?.id || "none");
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          // Check cache first for instant access
+          const cachedProfile = successfulProfiles.current.get(session.user.id);
+          if (cachedProfile) {
+            console.log("Initial session: Using cached profile");
+            setUserProfile(cachedProfile);
             setLoading(false);
             return;
           }
-        } catch {}
 
-        // Check current profile
-        if (userProfile?.id === session.user.id) {
-          console.log(
-            "Initial session: Profile already exists, skipping fetch"
-          );
-          setLoading(false);
-          return;
-        }
+          // SECURITY: Check sessionStorage profile cache (more secure than localStorage)
+          try {
+            const stored = sessionStorage.getItem(`bd.userProfile.${session.user.id}`);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              console.log("Initial session: Using stored profile");
+              setUserProfile(parsed);
+              successfulProfiles.current.set(parsed.id, parsed);
+              setLoading(false);
+              return;
+            }
+          } catch {}
 
-        // Fetch profile for initial session
-        console.log("Initial session: Fetching profile for user");
-        setIsProfileFetchInProgress(true);
-        fetchUserProfile(session.user.id)
-          .then((profile) => {
-            if (profile) {
-              setUserProfile(profile);
-              successfulProfiles.current.set(profile.id, profile);
+          // Check current profile
+          if (userProfile?.id === session.user.id) {
+            console.log(
+              "Initial session: Profile already exists, skipping fetch"
+            );
+            setLoading(false);
+            return;
+          }
+
+          // Fetch profile for initial session
+          console.log("Initial session: Fetching profile for user");
+          setIsProfileFetchInProgress(true);
+          fetchUserProfile(session.user.id)
+            .then((profile) => {
+              if (profile) {
+                setUserProfile(profile);
+                successfulProfiles.current.set(profile.id, profile);
               console.log("Initial profile loaded successfully");
             } else {
               setUserProfile(null);
@@ -423,6 +436,16 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         successfulProfiles.current.clear(); // Clear cache when signing out
         setLoading(false);
       }
+    })
+    .catch((error) => {
+      // Handle network errors (503, connection failures, etc.)
+      console.error("Auth initialization network error:", error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to reach authentication service. Please check your connection and try refreshing the page.",
+        variant: "destructive",
+      });
+      setLoading(false);
     });
 
     // Listen for auth changes

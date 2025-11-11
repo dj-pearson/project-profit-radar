@@ -15,7 +15,10 @@ interface KeyboardShortcut {
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const shortcut = shortcuts.find(s => 
+      // Guard against undefined event.key (can happen with browser extensions)
+      if (!event.key) return;
+
+      const shortcut = shortcuts.find(s =>
         s.key.toLowerCase() === event.key.toLowerCase() &&
         !!s.ctrlKey === event.ctrlKey &&
         !!s.altKey === event.altKey &&

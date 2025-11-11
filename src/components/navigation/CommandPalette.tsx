@@ -333,6 +333,9 @@ export function CommandPalette({
   // Handle keyboard shortcuts to open
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Guard against undefined event.key (can happen with browser extensions)
+      if (!e.key) return;
+
       if (e.ctrlKey && e.key === triggerKey) {
         e.preventDefault();
         setOpen(true);
@@ -348,6 +351,9 @@ export function CommandPalette({
     if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Guard against undefined event.key (can happen with browser extensions)
+      if (!e.key) return;
+
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();

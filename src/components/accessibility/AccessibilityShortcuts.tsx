@@ -17,6 +17,9 @@ export const AccessibilityShortcuts: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Guard against undefined event.key (can happen with browser extensions)
+      if (!event.key) return;
+
       // Only handle if Alt + Shift are pressed (accessibility shortcut pattern)
       if (!event.altKey || !event.shiftKey) return;
 
