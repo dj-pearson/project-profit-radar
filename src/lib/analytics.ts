@@ -307,6 +307,185 @@ export const trackExitIntentShown = (variant: string) =>
 export const trackExitIntentConverted = (variant: string, properties?: EventProperties) =>
   Analytics.track('exit_intent_converted', { variant, ...properties });
 
+// Financial Intelligence Content Tracking
+export const trackHealthCheckStarted = (properties?: EventProperties) =>
+  Analytics.trackConversion({
+    event_type: 'health_check_started',
+    event_step: 1,
+    funnel_name: 'health_check_funnel',
+    event_metadata: properties,
+  });
+
+export const trackHealthCheckQuestion = (questionNumber: number, totalQuestions: number, properties?: EventProperties) =>
+  Analytics.track('health_check_question_answered', {
+    question_number: questionNumber,
+    total_questions: totalQuestions,
+    progress_percentage: Math.round((questionNumber / totalQuestions) * 100),
+    ...properties,
+  });
+
+export const trackHealthCheckCompleted = (score: number, riskLevel: string, estimatedCost: number, properties?: EventProperties) =>
+  Analytics.trackConversion({
+    event_type: 'health_check_completed',
+    event_step: 2,
+    funnel_name: 'health_check_funnel',
+    event_value: estimatedCost,
+    event_metadata: {
+      score,
+      risk_level: riskLevel,
+      estimated_annual_cost: estimatedCost,
+      ...properties,
+    },
+  });
+
+export const trackHealthCheckEmailCaptured = (score: number, properties?: EventProperties) =>
+  Analytics.trackConversion({
+    event_type: 'health_check_email_captured',
+    event_step: 3,
+    funnel_name: 'health_check_funnel',
+    event_metadata: { score, ...properties },
+  });
+
+// Blog Engagement Tracking
+export const trackBlogPostViewed = (articleTitle: string, articleSlug: string, properties?: EventProperties) =>
+  Analytics.track('blog_post_viewed', {
+    article_title: articleTitle,
+    article_slug: articleSlug,
+    ...properties,
+  });
+
+export const trackBlogScrollDepth = (articleTitle: string, scrollDepth: number, properties?: EventProperties) =>
+  Analytics.track(`blog_post_read_${scrollDepth}`, {
+    article_title: articleTitle,
+    scroll_depth: scrollDepth,
+    ...properties,
+  });
+
+export const trackBlogCTAClicked = (articleTitle: string, ctaText: string, destination: string, properties?: EventProperties) =>
+  Analytics.track('blog_cta_clicked', {
+    article_title: articleTitle,
+    cta_text: ctaText,
+    destination,
+    ...properties,
+  });
+
+// ROI Calculator Tracking
+export const trackROICalculatorStarted = (properties?: EventProperties) =>
+  Analytics.trackConversion({
+    event_type: 'roi_calculator_started',
+    event_step: 1,
+    funnel_name: 'roi_calculator_funnel',
+    event_metadata: properties,
+  });
+
+export const trackROICalculatorCompleted = (projectedROI: number, annualSavings: number, properties?: EventProperties) =>
+  Analytics.trackConversion({
+    event_type: 'roi_calculator_completed',
+    event_step: 2,
+    funnel_name: 'roi_calculator_funnel',
+    event_value: annualSavings,
+    event_metadata: {
+      projected_roi: projectedROI,
+      annual_savings: annualSavings,
+      ...properties,
+    },
+  });
+
+// Demo and Video Tracking
+export const trackDemoVideoPlayed = (videoTitle: string, properties?: EventProperties) =>
+  Analytics.track('demo_video_played', {
+    video_title: videoTitle,
+    ...properties,
+  });
+
+export const trackDemoVideoProgress = (videoTitle: string, percentComplete: number, properties?: EventProperties) =>
+  Analytics.track('demo_video_progress', {
+    video_title: videoTitle,
+    percent_complete: percentComplete,
+    ...properties,
+  });
+
+export const trackDemoVideoCompleted = (videoTitle: string, watchDuration: number, properties?: EventProperties) =>
+  Analytics.track('demo_video_completed', {
+    video_title: videoTitle,
+    watch_duration_seconds: watchDuration,
+    ...properties,
+  });
+
+// CTA Click Tracking
+export const trackCTAClick = (ctaLocation: string, ctaText: string, destination: string, properties?: EventProperties) =>
+  Analytics.track('cta_clicked', {
+    cta_location: ctaLocation,
+    cta_text: ctaText,
+    destination,
+    ...properties,
+  });
+
+// Financial Intelligence Feature Tracking
+export const trackPredictiveAlertViewed = (alertType: string, severity: string, predictedImpact: number, properties?: EventProperties) =>
+  Analytics.track('predictive_alert_viewed', {
+    alert_type: alertType,
+    severity,
+    predicted_impact: predictedImpact,
+    ...properties,
+  });
+
+export const trackPredictiveAlertActioned = (alertType: string, action: string, timeToAction: number, properties?: EventProperties) =>
+  Analytics.track('predictive_alert_actioned', {
+    alert_type: alertType,
+    action_taken: action,
+    time_to_action_hours: timeToAction,
+    ...properties,
+  });
+
+export const trackDecisionImpactCalculated = (decisionType: string, currentMargin: number, projectedMargin: number, properties?: EventProperties) =>
+  Analytics.track('decision_impact_calculated', {
+    decision_type: decisionType,
+    current_margin: currentMargin,
+    projected_margin: projectedMargin,
+    margin_impact: currentMargin - projectedMargin,
+    ...properties,
+  });
+
+export const trackCashFlowForecastViewed = (runwayDays: number, projectedDeficit: number | null, properties?: EventProperties) =>
+  Analytics.track('cash_flow_forecast_viewed', {
+    runway_days: runwayDays,
+    projected_deficit: projectedDeficit,
+    ...properties,
+  });
+
+// Lead Magnet Tracking
+export const trackLeadMagnetViewed = (leadMagnetType: string, properties?: EventProperties) =>
+  Analytics.track('lead_magnet_viewed', {
+    lead_magnet_type: leadMagnetType,
+    ...properties,
+  });
+
+export const trackLeadMagnetDownloaded = (leadMagnetType: string, properties?: EventProperties) =>
+  Analytics.trackConversion({
+    event_type: 'lead_magnet_downloaded',
+    event_step: 2,
+    funnel_name: 'lead_magnet_funnel',
+    event_metadata: {
+      lead_magnet_type: leadMagnetType,
+      ...properties,
+    },
+  });
+
+// Comparison Page Tracking
+export const trackComparisonViewed = (competitor: string, properties?: EventProperties) =>
+  Analytics.track('comparison_viewed', {
+    competitor,
+    ...properties,
+  });
+
+export const trackComparisonCTAClicked = (competitor: string, ctaText: string, properties?: EventProperties) =>
+  Analytics.track('comparison_cta_clicked', {
+    competitor,
+    cta_text: ctaText,
+    ...properties,
+  });
+
 // Initialize on import
 if (typeof window !== 'undefined') {
   Analytics.init();
