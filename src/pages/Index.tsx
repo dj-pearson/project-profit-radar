@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
+import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
 import Implementation from "@/components/Implementation";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
@@ -71,29 +72,31 @@ const Index = () => {
         <SiteSearchSchema />
       
       <PageSEO
-        title="BuildDesk - Construction Management Software for Small Contractors"
-        description="Complete construction management for small contractors. Real-time job costing, mobile crew tracking, OSHA compliance, QuickBooks sync. $350/month unlimited users. 50% less than Procore. Set up in 1-2 days. Free trial."
+        title="BuildDesk - Real-Time Financial Intelligence for Construction Contractors"
+        description="Know your profitability in real-time, not at tax time. Real-time job costing shows profit margins instantly. Predictive AI catches cost overruns 3 weeks early. 5-minute month-end close vs 3 days. Financial command center for SMB contractors. Start free trial."
         keywords={[
-          'construction management software',
-          'construction software for small business',
-          'construction project management software',
-          'job costing software construction',
-          'construction field management software',
-          'procore alternative small contractors',
-          'buildertrend alternative',
-          'construction time tracking app',
-          'OSHA safety reporting software',
-          'construction scheduling software',
-          'construction budget tracking',
+          'construction financial intelligence',
+          'real-time construction job costing',
+          'construction profitability software',
+          'predictive construction cost tracking',
+          'construction profit margin tracker',
+          'automated construction accounting',
+          'construction financial dashboard',
           'quickbooks construction integration',
-          'contractor management software',
-          'construction software for small contractors'
+          'construction budget vs actual',
+          'construction cost overrun prediction',
+          'construction financial reporting software',
+          'contractor profit tracking',
+          'construction cash flow management',
+          'job costing software construction',
+          'construction management software small contractors',
+          'construction financial command center'
         ]}
         canonicalUrl="https://builddesk.com"
         schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([
           { name: "Home", url: "https://builddesk.com" }
         ])]}
-        lastModified="2025-11-07"
+        lastModified="2025-11-11"
       />
       <SkipLink href="#main-content">Skip to main content</SkipLink>
       <SkipLink href="#navigation">Skip to navigation</SkipLink>
@@ -107,7 +110,11 @@ const Index = () => {
         <LazySection>
           <ProblemSolution />
         </LazySection>
-        
+
+        <LazySection>
+          <FinancialIntelligenceShowcase />
+        </LazySection>
+
         <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
           <LazyFeatures />
         </PerformanceLazyWrapper>
@@ -142,7 +149,7 @@ const Index = () => {
         {/* AI Search Optimization Section */}
         <LazySection>
           <div className="container mx-auto px-4 py-16">
-            <AISearchOptimization page="homepage" primaryKeyword="construction management software" />
+            <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
           </div>
         </LazySection>
 

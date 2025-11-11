@@ -89,10 +89,13 @@ const Pricing = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-construction-dark mb-4">
-            Transparent Pricing, No Hidden Fees
+            Investment in Financial Intelligence, Not Just Software
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Choose the plan that fits your team size. All plans include unlimited users in their tier.
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
+            Average customers recoup their investment in under 30 days from prevented cost overruns alone
+          </p>
+          <p className="text-base text-construction-orange font-semibold mb-8">
+            Prevent a single $40K+ cost overrun and BuildDesk pays for itself for years
           </p>
           
           {/* Billing Toggle */}
@@ -266,19 +269,35 @@ const Pricing = () => {
         </div>
 
         {/* ROI Calculator CTA */}
-        <div className="mt-16 text-center">
-          <h3 className="text-2xl font-bold text-construction-dark mb-4">
-            Calculate Your Potential Savings
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            See how much you could save in administrative costs and project overruns with Build Desk
-          </p>
-          <Button variant="outline" className="text-construction-blue border-construction-blue hover:bg-construction-blue hover:text-white" asChild>
-            <Link to="/roi-calculator">
-              <Calculator className="mr-2 h-4 w-4" />
-              ROI Calculator
-            </Link>
-          </Button>
+        <div className="mt-16 bg-gradient-to-r from-construction-orange/10 to-construction-blue/10 rounded-xl p-8 sm:p-12">
+          <div className="text-center">
+            <h3 className="text-2xl sm:text-3xl font-bold text-construction-dark mb-4">
+              What's Early Cost Detection Worth to You?
+            </h3>
+            <p className="text-muted-foreground mb-4 max-w-2xl mx-auto">
+              If catching one $40K cost overrun 3 weeks early saves your project, BuildDesk pays for itself for the next 10 years.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6 max-w-3xl mx-auto">
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-construction-orange">$40K+</div>
+                <div className="text-sm text-muted-foreground">Average overrun prevented</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-construction-orange">3 Weeks</div>
+                <div className="text-sm text-muted-foreground">Early warning time</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-construction-orange">4%</div>
+                <div className="text-sm text-muted-foreground">Margin improvement</div>
+              </div>
+            </div>
+            <Button size="lg" variant="hero" asChild>
+              <Link to="/roi-calculator">
+                <Calculator className="mr-2 h-5 w-5" />
+                Calculate Your Financial Intelligence ROI
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </section>
