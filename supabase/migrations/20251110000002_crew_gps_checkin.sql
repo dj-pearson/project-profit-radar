@@ -67,23 +67,20 @@ SELECT
 
   -- User info
   up.id as user_id,
-  up.full_name as crew_member_name,
+  CONCAT(up.first_name, ' ', up.last_name) as crew_member_name,
   up.email as crew_member_email,
   up.phone as crew_member_phone,
   up.role as crew_member_role,
 
   -- Project info
   p.name as project_name,
-  p.location as project_location,
-  p.geofence_latitude,
-  p.geofence_longitude,
-  p.geofence_radius_meters,
+  p.site_address as project_location,
 
   -- Geofence info
   g.name as geofence_name,
   g.geofence_type,
-  g.center_latitude as geofence_center_lat,
-  g.center_longitude as geofence_center_lng,
+  g.center_lat as geofence_center_lat,
+  g.center_lng as geofence_center_lng,
   g.radius_meters as geofence_radius,
 
   -- Time on site calculation
@@ -103,7 +100,7 @@ SELECT
   END as presence_status
 
 FROM crew_assignments ca
-JOIN user_profiles up ON ca.user_id = up.id
+JOIN user_profiles up ON ca.crew_member_id = up.id
 JOIN projects p ON ca.project_id = p.id
 LEFT JOIN geofences g ON ca.geofence_id = g.id
 WHERE ca.assigned_date >= CURRENT_DATE - INTERVAL '7 days'
@@ -247,23 +244,24 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE VIEW crew_assignments_pending_checkin AS
 SELECT
   ca.id,
-  ca.user_id,
+  ca.crew_member_id,
   ca.project_id,
   ca.assigned_date,
   ca.status,
-  up.full_name as crew_member_name,
+  CONCAT(up.first_name, ' ', up.last_name) as crew_member_name,
   p.name as project_name,
-  p.location as project_location,
-  p.geofence_latitude,
-  p.geofence_longitude,
-  p.geofence_radius_meters
+  p.site_address as project_location,
+  g.center_lat as geofence_latitude,
+  g.center_lng as geofence_longitude,
+  g.radius_meters as geofence_radius_meters
 FROM crew_assignments ca
-JOIN user_profiles up ON ca.user_id = up.id
+JOIN user_profiles up ON ca.crew_member_id = up.id
 JOIN projects p ON ca.project_id = p.id
+LEFT JOIN geofences g ON ca.geofence_id = g.id
 WHERE ca.assigned_date = CURRENT_DATE
   AND ca.status IN ('scheduled', 'dispatched')
   AND ca.gps_checkin_verified IS NOT true
-ORDER BY ca.assigned_date, up.full_name;
+ORDER BY ca.assigned_date, CONCAT(up.first_name, ' ', up.last_name);
 
 -- Grant access
 GRANT SELECT ON crew_assignments_pending_checkin TO authenticated;
@@ -273,7 +271,8 @@ GRANT SELECT ON crew_assignments_pending_checkin TO authenticated;
 -- =====================================================
 
 -- Users can view crew presence for their company's projects
-CREATE POLICY IF NOT EXISTS "Users can view crew presence for company projects"
+DROP POLICY IF EXISTS "Users can view crew presence for company projects" ON crew_assignments;
+CREATE POLICY "Users can view crew presence for company projects"
   ON crew_assignments
   FOR SELECT
   USING (
@@ -287,11 +286,12 @@ CREATE POLICY IF NOT EXISTS "Users can view crew presence for company projects"
   );
 
 -- Users can update their own GPS check-in
-CREATE POLICY IF NOT EXISTS "Users can update their own GPS check-in"
+DROP POLICY IF EXISTS "Users can update their own GPS check-in" ON crew_assignments;
+CREATE POLICY "Users can update their own GPS check-in"
   ON crew_assignments
   FOR UPDATE
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+  USING (crew_member_id = auth.uid())
+  WITH CHECK (crew_member_id = auth.uid());
 
 -- =====================================================
 -- 8. Comments for Documentation

@@ -82,7 +82,7 @@ SELECT
   te.approval_status,
   te.submitted_at,
   te.created_at,
-  up.full_name as worker_name,
+  CONCAT(up.first_name, ' ', up.last_name) as worker_name,
   up.email as worker_email,
   p.name as project_name,
   p.site_address as project_location,
@@ -111,9 +111,9 @@ SELECT
   te.approved_by,
   te.approved_at,
   te.approval_notes,
-  up.full_name as worker_name,
+  CONCAT(up.first_name, ' ', up.last_name) as worker_name,
   up.email as worker_email,
-  approver.full_name as approver_name,
+  CONCAT(approver.first_name, ' ', approver.last_name) as approver_name,
   p.name as project_name,
   cc.code as cost_code
 FROM time_entries te

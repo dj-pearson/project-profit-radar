@@ -30,10 +30,13 @@ CREATE TABLE IF NOT EXISTS equipment_qr_codes (
   label_format TEXT, -- e.g., 'pdf', 'png'
 
   created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-
-  UNIQUE(equipment_id, is_active) WHERE is_active = true
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Create partial unique index to ensure only one active QR code per equipment
+CREATE UNIQUE INDEX IF NOT EXISTS idx_equipment_qr_codes_unique_active
+ON equipment_qr_codes(equipment_id, is_active)
+WHERE is_active = true;
 
 GRANT SELECT, INSERT, UPDATE ON equipment_qr_codes TO authenticated;
 
@@ -287,21 +290,13 @@ BEGIN
   -- Update equipment status based on scan type
   IF p_scan_type = 'check_out' THEN
     UPDATE equipment
-    SET status = 'checked_out',
-        checked_out_by = v_user_id,
-        checked_out_at = now(),
-        due_back_at = p_due_back_at,
-        current_location = COALESCE(p_location_description, current_location),
-        current_condition = COALESCE(p_condition_rating, current_condition)
+    SET status = 'in_use',
+        location = COALESCE(p_location_description, location)
     WHERE id = v_qr_code.equipment_id;
   ELSIF p_scan_type = 'check_in' THEN
     UPDATE equipment
     SET status = 'available',
-        checked_out_by = NULL,
-        checked_out_at = NULL,
-        due_back_at = NULL,
-        current_location = COALESCE(p_location_description, current_location),
-        current_condition = COALESCE(p_condition_rating, current_condition)
+        location = COALESCE(p_location_description, location)
     WHERE id = v_qr_code.equipment_id;
 
     -- Mark scan event as checked in
@@ -335,15 +330,10 @@ SELECT
   e.company_id,
   e.name,
   e.equipment_type,
-  e.make,
   e.model,
   e.serial_number,
   e.status,
-  e.current_condition,
-  e.current_location,
-  e.checked_out_by,
-  e.checked_out_at,
-  e.due_back_at,
+  e.location,
 
   -- QR Code info
   qr.id as qr_code_id,
@@ -355,21 +345,10 @@ SELECT
   qr.is_active as qr_is_active,
 
   -- Has QR flag
-  CASE WHEN qr.id IS NOT NULL THEN true ELSE false END as has_qr_code,
+  CASE WHEN qr.id IS NOT NULL THEN true ELSE false END as has_qr_code
 
-  -- Checked out by info
-  up.full_name as checked_out_by_name,
-
-  -- Overdue flag
-  CASE
-    WHEN e.status = 'checked_out' AND e.due_back_at < now()
-    THEN true
-    ELSE false
-  END as is_overdue
-
-FROM equipment e
-LEFT JOIN equipment_qr_codes qr ON e.id = qr.equipment_id AND qr.is_active = true
-LEFT JOIN user_profiles up ON e.checked_out_by = up.id;
+FROM public.equipment e
+LEFT JOIN equipment_qr_codes qr ON e.id = qr.equipment_id AND qr.is_active = true;
 
 GRANT SELECT ON equipment_with_qr TO authenticated;
 
@@ -397,7 +376,7 @@ SELECT
 
   -- User info
   up.id as scanned_by_id,
-  up.full_name as scanned_by_name,
+  CONCAT(up.first_name, ' ', up.last_name) as scanned_by_name,
   up.email as scanned_by_email,
 
   -- Project info

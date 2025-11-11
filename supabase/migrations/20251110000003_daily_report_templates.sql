@@ -247,12 +247,12 @@ BEGIN
     )
     SELECT
       p_daily_report_id,
-      ca.user_id,
-      up.full_name,
+      ca.crew_member_id,
+      CONCAT(up.first_name, ' ', up.last_name),
       up.role,
       8.0 -- Default 8 hours
     FROM crew_assignments ca
-    JOIN user_profiles up ON ca.user_id = up.id
+    JOIN user_profiles up ON ca.crew_member_id = up.id
     WHERE ca.project_id = p_project_id
       AND ca.assigned_date = p_date
       AND ca.status IN ('scheduled', 'dispatched', 'in_progress')
@@ -353,13 +353,13 @@ SELECT
 
   -- Project info
   p.name as project_name,
-  p.location as project_location,
+  p.site_address as project_location,
 
   -- Template info
   drt.name as template_name,
 
   -- Submitted by info
-  up.full_name as submitted_by_name,
+  CONCAT(up.first_name, ' ', up.last_name) as submitted_by_name,
 
   -- Crew count from normalized table
   (SELECT COUNT(*) FROM daily_report_crew_items WHERE daily_report_id = dr.id) as crew_count,
