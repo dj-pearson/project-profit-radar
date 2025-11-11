@@ -54,6 +54,7 @@ import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
 
 // Free Tools
 import ProfitabilityCalculator from '@/pages/ProfitabilityCalculator';
+import FinancialHealthCheckPage from '@/pages/FinancialHealthCheck';
 
 export const marketingRoutes = (
   <>
@@ -107,5 +108,7 @@ export const marketingRoutes = (
     {/* Free Tools */}
     <Route path="/calculator" element={<ProfitabilityCalculator />} />
     <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
+    <Route path="/financial-health-check" element={<FinancialHealthCheckPage />} />
+    <Route path="/health-check" element={<FinancialHealthCheckPage />} />
   </>
 );

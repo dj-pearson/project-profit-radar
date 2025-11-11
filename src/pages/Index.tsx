@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
 import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
+import FinancialHealthCheckBanner from "@/components/FinancialHealthCheckBanner";
 import Implementation from "@/components/Implementation";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
@@ -106,7 +107,10 @@ const Index = () => {
       <main id="main-content" role="main">
         <Hero />
         <SocialProof />
-        
+
+        {/* Financial Health Check CTA Banner */}
+        <FinancialHealthCheckBanner />
+
         <LazySection>
           <ProblemSolution />
         </LazySection>
