@@ -22,7 +22,6 @@ interface PaymentFailure {
 
 const PaymentFailureAlert = () => {
   const [paymentFailures, setPaymentFailures] = useState<PaymentFailure[]>([]);
-  const [loading, setLoading] = useState(false);
   const [retryingInvoice, setRetryingInvoice] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -33,18 +32,14 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
   ArrowRight,
-  Calendar,
   DollarSign,
   MapPin,
-  User,
   Building2,
   Clock,
   Plus,
   X,
   Home,
   Wrench,
-  Truck,
-  Factory,
   CheckCircle2,
 } from "lucide-react";
 

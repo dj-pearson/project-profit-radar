@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Clock, DollarSign, FileText } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, DollarSign } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ProblemSolution = () => {

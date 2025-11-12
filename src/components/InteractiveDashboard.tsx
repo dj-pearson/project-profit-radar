@@ -36,7 +36,7 @@ const InteractiveDashboard = () => {
   const [currentScenario, setCurrentScenario] = useState(0);
   const [realProjects, setRealProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
 
   // Fallback projects for demo when no real data
   const fallbackProjects: Project[] = [

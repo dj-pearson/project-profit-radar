@@ -58,7 +58,7 @@ const SubscriptionManager = () => {
   const refreshSubscriptionStatus = async () => {
     setRefreshing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      const { error } = await supabase.functions.invoke('check-subscription');
       if (error) throw error;
 
       await fetchSubscriptionData();

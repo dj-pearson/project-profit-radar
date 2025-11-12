@@ -7,14 +7,14 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePromotions } from "@/hooks/usePromotions";
-import { PRICING_PLANS, getPlanPrice, getAnnualSavings, type BillingPeriod, type SubscriptionTier } from "@/config/pricing";
+import { PRICING_PLANS, getPlanPrice, getAnnualSavings, type BillingPeriod } from "@/config/pricing";
 
 const Pricing = () => {
   const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { toast } = useToast();
-  const { promotions, getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('homepage');
+  const { getPromotionForPlan, calculateDiscountedPrice, getDiscountAmount } = usePromotions('homepage');
 
   const handleCheckout = async (tier: 'starter' | 'professional' | 'enterprise') => {
     try {

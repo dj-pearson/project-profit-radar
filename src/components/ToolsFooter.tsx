@@ -1,14 +1,11 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import SmartLogo from '@/components/ui/smart-logo';
 import { 
   Calendar, 
   Calculator, 
-  FileText, 
-  Users, 
-  Mail, 
-  Phone,
+  FileText,
+  Mail,
   MapPin,
   ExternalLink
 } from 'lucide-react';

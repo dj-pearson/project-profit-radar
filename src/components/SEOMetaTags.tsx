@@ -2,7 +2,7 @@
 // This ensures all existing pages continue to work without any code changes
 import { SEOMetaTags as CompatibleSEOMetaTags } from './seo/SEOCompatibilityLayer';
 
-interface SEOMetaTagsProps {
+export interface SEOMetaTagsProps {
   title?: string;
   description?: string;
   keywords?: string[];
