@@ -269,8 +269,36 @@ export type Database = {
             foreignKeyName: "admin_impersonation_sessions_admin_id_fkey"
             columns: ["admin_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_impersonation_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "admin_impersonation_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_impersonation_sessions_impersonated_user_id_fkey"
+            columns: ["impersonated_user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_impersonation_sessions_impersonated_user_id_fkey"
+            columns: ["impersonated_user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "admin_impersonation_sessions_impersonated_user_id_fkey"
@@ -349,6 +377,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_interventions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_interventions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "admin_interventions_user_id_fkey"
@@ -690,6 +732,20 @@ export type Database = {
             foreignKeyName: "agency_coordination_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -699,6 +755,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agency_coordination_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "agency_coordination_initiated_by_fkey"
@@ -1962,6 +2032,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "automated_communications_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       automated_social_content_library: {
@@ -2176,6 +2253,20 @@ export type Database = {
             foreignKeyName: "automation_rules_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "automation_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "automation_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -2192,6 +2283,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "fk_automation_rules_template"
@@ -2818,6 +2916,20 @@ export type Database = {
             foreignKeyName: "bid_documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "bid_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "bid_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -3046,6 +3158,20 @@ export type Database = {
             foreignKeyName: "bid_submissions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "bid_submissions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "bid_submissions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -3149,6 +3275,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_line_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "bill_line_items_tax_code_id_fkey"
@@ -3450,6 +3583,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "bills_vendor_id_fkey"
@@ -4083,6 +4223,20 @@ export type Database = {
             foreignKeyName: "bonds_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "bonds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "bonds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -4099,6 +4253,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bonds_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -4382,6 +4543,297 @@ export type Database = {
         }
         Relationships: []
       }
+      calculator_calculations: {
+        Row: {
+          break_even_amount: number | null
+          created_at: string
+          crew_size: number
+          hourly_rate: number | null
+          id: string
+          labor_hours: number
+          lead_id: string | null
+          material_cost: number
+          profit_margin: number | null
+          project_duration: number
+          project_type: string
+          recommended_bid: number | null
+          risk_score: number | null
+          saved_for_comparison: boolean | null
+          session_id: string | null
+        }
+        Insert: {
+          break_even_amount?: number | null
+          created_at?: string
+          crew_size: number
+          hourly_rate?: number | null
+          id?: string
+          labor_hours: number
+          lead_id?: string | null
+          material_cost: number
+          profit_margin?: number | null
+          project_duration: number
+          project_type: string
+          recommended_bid?: number | null
+          risk_score?: number | null
+          saved_for_comparison?: boolean | null
+          session_id?: string | null
+        }
+        Update: {
+          break_even_amount?: number | null
+          created_at?: string
+          crew_size?: number
+          hourly_rate?: number | null
+          id?: string
+          labor_hours?: number
+          lead_id?: string | null
+          material_cost?: number
+          profit_margin?: number | null
+          project_duration?: number
+          project_type?: string
+          recommended_bid?: number | null
+          risk_score?: number | null
+          saved_for_comparison?: boolean | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculator_calculations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "calculator_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calculator_calculations_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "calculator_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calculator_email_events: {
+        Row: {
+          created_at: string
+          email_provider: string | null
+          email_type: string
+          event_type: string
+          id: string
+          lead_id: string
+          link_clicked: string | null
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_provider?: string | null
+          email_type: string
+          event_type: string
+          id?: string
+          lead_id: string
+          link_clicked?: string | null
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_provider?: string | null
+          email_type?: string
+          event_type?: string
+          id?: string
+          lead_id?: string
+          link_clicked?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculator_email_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "calculator_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calculator_leads: {
+        Row: {
+          company_name: string | null
+          converted_at: string | null
+          converted_to_company_id: string | null
+          created_at: string
+          email: string
+          id: string
+          lead_score: number | null
+          phone: string | null
+          referral_count: number | null
+          referred_by_email: string | null
+          status: string | null
+          trial_started_at: string | null
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          converted_at?: string | null
+          converted_to_company_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          lead_score?: number | null
+          phone?: string | null
+          referral_count?: number | null
+          referred_by_email?: string | null
+          status?: string | null
+          trial_started_at?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          converted_at?: string | null
+          converted_to_company_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          lead_score?: number | null
+          phone?: string | null
+          referral_count?: number | null
+          referred_by_email?: string | null
+          status?: string | null
+          trial_started_at?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculator_leads_converted_to_company_id_fkey"
+            columns: ["converted_to_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calculator_referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          referee_email: string
+          referrer_email: string
+          reward_delivered: boolean | null
+          reward_type: string | null
+          rewarded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referee_email: string
+          referrer_email: string
+          reward_delivered?: boolean | null
+          reward_type?: string | null
+          rewarded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referee_email?: string
+          referrer_email?: string
+          reward_delivered?: boolean | null
+          reward_type?: string | null
+          rewarded_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      calculator_sessions: {
+        Row: {
+          browser: string | null
+          calculations_performed: number | null
+          created_at: string
+          device_type: string | null
+          email_captured: boolean | null
+          id: string
+          ip_address: unknown
+          lead_id: string | null
+          os: string | null
+          pdf_downloaded: boolean | null
+          referrer: string | null
+          session_id: string
+          social_shared: boolean | null
+          time_on_page: number | null
+          trial_clicked: boolean | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          browser?: string | null
+          calculations_performed?: number | null
+          created_at?: string
+          device_type?: string | null
+          email_captured?: boolean | null
+          id?: string
+          ip_address?: unknown
+          lead_id?: string | null
+          os?: string | null
+          pdf_downloaded?: boolean | null
+          referrer?: string | null
+          session_id: string
+          social_shared?: boolean | null
+          time_on_page?: number | null
+          trial_clicked?: boolean | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          browser?: string | null
+          calculations_performed?: number | null
+          created_at?: string
+          device_type?: string | null
+          email_captured?: boolean | null
+          id?: string
+          ip_address?: unknown
+          lead_id?: string | null
+          os?: string | null
+          pdf_downloaded?: boolean | null
+          referrer?: string | null
+          session_id?: string
+          social_shared?: boolean | null
+          time_on_page?: number | null
+          trial_clicked?: boolean | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculator_sessions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "calculator_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           calendar_provider: string
@@ -4453,6 +4905,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -4812,6 +5271,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "change_orders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       chargeback_fees: {
@@ -4855,6 +5321,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chargeback_fees_charged_by_fkey"
+            columns: ["charged_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "chargeback_fees_charged_by_fkey"
+            columns: ["charged_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "chargeback_fees_charged_by_fkey"
             columns: ["charged_by"]
@@ -5256,6 +5736,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_communications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -5835,8 +6322,36 @@ export type Database = {
             foreignKeyName: "company_admin_settings_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "company_admin_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "company_admin_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "company_admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "company_admin_settings_updated_by_fkey"
@@ -5897,6 +6412,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_custom_fields_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "company_custom_fields_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "company_custom_fields_created_by_fkey"
@@ -6082,6 +6611,20 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "company_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "company_settings_created_by_fkey"
@@ -6319,6 +6862,20 @@ export type Database = {
             foreignKeyName: "consent_records_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "consent_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "consent_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -6435,6 +6992,20 @@ export type Database = {
             foreignKeyName: "contacts_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "contacts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "contacts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -6444,6 +7015,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "contacts_created_by_fkey"
@@ -6534,6 +7119,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "fk_contractor_payments_company"
@@ -6838,6 +7430,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "credit_memo_line_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "credit_memo_line_items_revenue_account_id_fkey"
             columns: ["revenue_account_id"]
             isOneToOne: false
@@ -6947,13 +7546,26 @@ export type Database = {
       }
       crew_assignments: {
         Row: {
+          arrival_notification_sent: boolean | null
           assigned_date: string
+          checkin_notes: string | null
           company_id: string
           created_at: string
           created_by: string | null
           crew_member_id: string
+          distance_from_site: number | null
           end_time: string
+          geofence_id: string | null
+          gps_checkin_accuracy: number | null
+          gps_checkin_lat: number | null
+          gps_checkin_lng: number | null
+          gps_checkin_timestamp: string | null
+          gps_checkin_verified: boolean | null
+          gps_checkout_lat: number | null
+          gps_checkout_lng: number | null
+          gps_checkout_timestamp: string | null
           id: string
+          is_onsite: boolean | null
           location: string | null
           notes: string | null
           project_id: string
@@ -6962,13 +7574,26 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          arrival_notification_sent?: boolean | null
           assigned_date: string
+          checkin_notes?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
           crew_member_id: string
+          distance_from_site?: number | null
           end_time: string
+          geofence_id?: string | null
+          gps_checkin_accuracy?: number | null
+          gps_checkin_lat?: number | null
+          gps_checkin_lng?: number | null
+          gps_checkin_timestamp?: string | null
+          gps_checkin_verified?: boolean | null
+          gps_checkout_lat?: number | null
+          gps_checkout_lng?: number | null
+          gps_checkout_timestamp?: string | null
           id?: string
+          is_onsite?: boolean | null
           location?: string | null
           notes?: string | null
           project_id: string
@@ -6977,13 +7602,26 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          arrival_notification_sent?: boolean | null
           assigned_date?: string
+          checkin_notes?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
           crew_member_id?: string
+          distance_from_site?: number | null
           end_time?: string
+          geofence_id?: string | null
+          gps_checkin_accuracy?: number | null
+          gps_checkin_lat?: number | null
+          gps_checkin_lng?: number | null
+          gps_checkin_timestamp?: string | null
+          gps_checkin_verified?: boolean | null
+          gps_checkout_lat?: number | null
+          gps_checkout_lng?: number | null
+          gps_checkout_timestamp?: string | null
           id?: string
+          is_onsite?: boolean | null
           location?: string | null
           notes?: string | null
           project_id?: string
@@ -7003,6 +7641,20 @@ export type Database = {
             foreignKeyName: "crew_assignments_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -7010,7 +7662,28 @@ export type Database = {
             foreignKeyName: "crew_assignments_crew_member_id_fkey"
             columns: ["crew_member_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_geofence_id_fkey"
+            columns: ["geofence_id"]
+            isOneToOne: false
+            referencedRelation: "geofences"
             referencedColumns: ["id"]
           },
           {
@@ -7026,6 +7699,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -7076,6 +7756,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_skills_matrix_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "crew_skills_matrix_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "crew_skills_matrix_user_id_fkey"
@@ -7194,6 +7888,20 @@ export type Database = {
             foreignKeyName: "cross_module_relationships_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cross_module_relationships_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "cross_module_relationships_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -7276,6 +7984,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "custom_forms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "custom_forms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "custom_forms_created_by_fkey"
             columns: ["created_by"]
@@ -7432,6 +8154,20 @@ export type Database = {
             foreignKeyName: "customer_service_requests_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "customer_service_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "customer_service_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -7444,56 +8180,439 @@ export type Database = {
           },
         ]
       }
+      daily_report_crew_items: {
+        Row: {
+          created_at: string | null
+          crew_member_name: string
+          daily_report_id: string
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          overtime_hours: number | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          crew_member_name: string
+          daily_report_id: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          overtime_hours?: number | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          crew_member_name?: string
+          daily_report_id?: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          overtime_hours?: number | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_report_crew_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_crew_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_crew_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "daily_report_crew_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "daily_report_crew_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_report_equipment_items: {
+        Row: {
+          condition: string | null
+          created_at: string | null
+          daily_report_id: string
+          equipment_id: string | null
+          equipment_name: string
+          fuel_used: number | null
+          hours_used: number | null
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          condition?: string | null
+          created_at?: string | null
+          daily_report_id: string
+          equipment_id?: string | null
+          equipment_name: string
+          fuel_used?: number | null
+          hours_used?: number | null
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          condition?: string | null
+          created_at?: string | null
+          daily_report_id?: string
+          equipment_id?: string | null
+          equipment_name?: string
+          fuel_used?: number | null
+          hours_used?: number | null
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_report_equipment_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_equipment_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports_with_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_report_material_items: {
+        Row: {
+          cost: number | null
+          created_at: string | null
+          daily_report_id: string
+          id: string
+          material_name: string
+          notes: string | null
+          quantity: number | null
+          supplier: string | null
+          unit: string | null
+          waste_percentage: number | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string | null
+          daily_report_id: string
+          id?: string
+          material_name: string
+          notes?: string | null
+          quantity?: number | null
+          supplier?: string | null
+          unit?: string | null
+          waste_percentage?: number | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string | null
+          daily_report_id?: string
+          id?: string
+          material_name?: string
+          notes?: string | null
+          quantity?: number | null
+          supplier?: string | null
+          unit?: string | null
+          waste_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_report_material_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_material_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports_with_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_report_task_items: {
+        Row: {
+          completion_percentage: number | null
+          created_at: string | null
+          daily_report_id: string
+          id: string
+          notes: string | null
+          status: string | null
+          task_description: string | null
+          task_id: string | null
+          task_name: string
+        }
+        Insert: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          daily_report_id: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          task_description?: string | null
+          task_id?: string | null
+          task_name: string
+        }
+        Update: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          daily_report_id?: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          task_description?: string | null
+          task_id?: string | null
+          task_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_report_task_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_task_items_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports_with_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_task_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_task_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
+          },
+        ]
+      }
+      daily_report_templates: {
+        Row: {
+          auto_populate_crew: boolean | null
+          auto_populate_equipment: boolean | null
+          auto_populate_materials: boolean | null
+          auto_populate_tasks: boolean | null
+          auto_populate_weather: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          default_crew_count: number | null
+          default_safety_notes: string | null
+          default_weather_conditions: string | null
+          description: string | null
+          id: string
+          include_crew_section: boolean | null
+          include_equipment_section: boolean | null
+          include_materials_section: boolean | null
+          include_photos_section: boolean | null
+          include_safety_section: boolean | null
+          include_tasks_section: boolean | null
+          is_active: boolean | null
+          name: string
+          project_type: string | null
+          updated_at: string | null
+          use_count: number | null
+        }
+        Insert: {
+          auto_populate_crew?: boolean | null
+          auto_populate_equipment?: boolean | null
+          auto_populate_materials?: boolean | null
+          auto_populate_tasks?: boolean | null
+          auto_populate_weather?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          default_crew_count?: number | null
+          default_safety_notes?: string | null
+          default_weather_conditions?: string | null
+          description?: string | null
+          id?: string
+          include_crew_section?: boolean | null
+          include_equipment_section?: boolean | null
+          include_materials_section?: boolean | null
+          include_photos_section?: boolean | null
+          include_safety_section?: boolean | null
+          include_tasks_section?: boolean | null
+          is_active?: boolean | null
+          name: string
+          project_type?: string | null
+          updated_at?: string | null
+          use_count?: number | null
+        }
+        Update: {
+          auto_populate_crew?: boolean | null
+          auto_populate_equipment?: boolean | null
+          auto_populate_materials?: boolean | null
+          auto_populate_tasks?: boolean | null
+          auto_populate_weather?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          default_crew_count?: number | null
+          default_safety_notes?: string | null
+          default_weather_conditions?: string | null
+          description?: string | null
+          id?: string
+          include_crew_section?: boolean | null
+          include_equipment_section?: boolean | null
+          include_materials_section?: boolean | null
+          include_photos_section?: boolean | null
+          include_safety_section?: boolean | null
+          include_tasks_section?: boolean | null
+          is_active?: boolean | null
+          name?: string
+          project_type?: string | null
+          updated_at?: string | null
+          use_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_report_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_reports: {
         Row: {
+          client_visitors: string | null
+          company_id: string | null
+          completion_percentage: number | null
           created_at: string
           created_by: string | null
           crew_count: number | null
           date: string
           delays_issues: string | null
           equipment_used: string | null
+          gps_accuracy: number | null
+          gps_latitude: number | null
+          gps_longitude: number | null
           id: string
+          is_auto_populated: boolean | null
           materials_delivered: string | null
+          next_day_plan: string | null
           photos: string[] | null
           project_id: string
+          quality_issues: string | null
           safety_incidents: string | null
+          status: string | null
+          submission_timestamp: string | null
+          submitted_by: string | null
+          temperature: number | null
+          template_id: string | null
           updated_at: string
           weather_conditions: string | null
+          weather_source: string | null
           work_performed: string | null
         }
         Insert: {
+          client_visitors?: string | null
+          company_id?: string | null
+          completion_percentage?: number | null
           created_at?: string
           created_by?: string | null
           crew_count?: number | null
           date?: string
           delays_issues?: string | null
           equipment_used?: string | null
+          gps_accuracy?: number | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
+          is_auto_populated?: boolean | null
           materials_delivered?: string | null
+          next_day_plan?: string | null
           photos?: string[] | null
           project_id: string
+          quality_issues?: string | null
           safety_incidents?: string | null
+          status?: string | null
+          submission_timestamp?: string | null
+          submitted_by?: string | null
+          temperature?: number | null
+          template_id?: string | null
           updated_at?: string
           weather_conditions?: string | null
+          weather_source?: string | null
           work_performed?: string | null
         }
         Update: {
+          client_visitors?: string | null
+          company_id?: string | null
+          completion_percentage?: number | null
           created_at?: string
           created_by?: string | null
           crew_count?: number | null
           date?: string
           delays_issues?: string | null
           equipment_used?: string | null
+          gps_accuracy?: number | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
+          is_auto_populated?: boolean | null
           materials_delivered?: string | null
+          next_day_plan?: string | null
           photos?: string[] | null
           project_id?: string
+          quality_issues?: string | null
           safety_incidents?: string | null
+          status?: string | null
+          submission_timestamp?: string | null
+          submitted_by?: string | null
+          temperature?: number | null
+          template_id?: string | null
           updated_at?: string
           weather_conditions?: string | null
+          weather_source?: string | null
           work_performed?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "daily_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "daily_reports_project_id_fkey"
             columns: ["project_id"]
@@ -7506,6 +8625,20 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fk_daily_reports_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "daily_report_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -7569,6 +8702,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_access_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "data_access_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "data_access_logs_user_id_fkey"
@@ -7812,6 +8959,20 @@ export type Database = {
             foreignKeyName: "data_subject_requests_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -7826,8 +8987,36 @@ export type Database = {
             foreignKeyName: "data_subject_requests_subject_user_id_fkey"
             columns: ["subject_user_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_subject_user_id_fkey"
+            columns: ["subject_user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_subject_user_id_fkey"
+            columns: ["subject_user_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "data_subject_requests_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "data_subject_requests_verified_by_fkey"
@@ -8369,6 +9558,20 @@ export type Database = {
             foreignKeyName: "document_versions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "document_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "document_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -8462,6 +9665,20 @@ export type Database = {
             foreignKeyName: "documents_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "documents_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "documents_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -8499,6 +9716,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "documents_uploaded_by_fkey"
@@ -9659,6 +10897,20 @@ export type Database = {
             foreignKeyName: "environmental_assessments_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -9680,6 +10932,20 @@ export type Database = {
             foreignKeyName: "environmental_assessments_prepared_by_fkey"
             columns: ["prepared_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_prepared_by_fkey"
+            columns: ["prepared_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_prepared_by_fkey"
+            columns: ["prepared_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -9696,6 +10962,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "environmental_assessments_reviewed_by_fkey"
@@ -9823,6 +11110,20 @@ export type Database = {
             foreignKeyName: "environmental_monitoring_collected_by_fkey"
             columns: ["collected_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_collected_by_fkey"
+            columns: ["collected_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_collected_by_fkey"
+            columns: ["collected_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -9839,6 +11140,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "environmental_permits"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_monitoring_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "environmental_monitoring_verified_by_fkey"
@@ -10023,6 +11338,20 @@ export type Database = {
             foreignKeyName: "environmental_permits_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -10032,6 +11361,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "environmental_permits_created_by_fkey"
@@ -10053,6 +11396,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_permits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -10190,6 +11540,20 @@ export type Database = {
             foreignKeyName: "fk_equipment_assignments_assigned_by"
             columns: ["assigned_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_equipment_assignments_assigned_by"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "fk_equipment_assignments_assigned_by"
+            columns: ["assigned_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -10213,6 +11577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_equipment_assignments_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -10435,6 +11806,20 @@ export type Database = {
             foreignKeyName: "equipment_maintenance_records_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -10444,6 +11829,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "equipment_maintenance_records_created_by_fkey"
@@ -10460,6 +11859,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_maintenance_records_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_scan_analytics"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["equipment_id"]
+          },
+          {
             foreignKeyName: "equipment_maintenance_records_maintenance_schedule_id_fkey"
             columns: ["maintenance_schedule_id"]
             isOneToOne: false
@@ -10470,8 +11890,36 @@ export type Database = {
             foreignKeyName: "equipment_maintenance_records_performed_by_fkey"
             columns: ["performed_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_supervisor_fkey"
+            columns: ["supervisor"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_records_supervisor_fkey"
+            columns: ["supervisor"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "equipment_maintenance_records_supervisor_fkey"
@@ -10602,6 +12050,20 @@ export type Database = {
             foreignKeyName: "equipment_maintenance_schedule_assigned_technician_fkey"
             columns: ["assigned_technician"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_assigned_technician_fkey"
+            columns: ["assigned_technician"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_assigned_technician_fkey"
+            columns: ["assigned_technician"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -10616,6 +12078,20 @@ export type Database = {
             foreignKeyName: "equipment_maintenance_schedule_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -10625,6 +12101,272 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "equipment"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_scan_analytics"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_maintenance_schedule_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["equipment_id"]
+          },
+        ]
+      }
+      equipment_qr_codes: {
+        Row: {
+          barcode_value: string | null
+          company_id: string
+          created_at: string | null
+          equipment_id: string
+          generated_at: string | null
+          generated_by: string | null
+          id: string
+          is_active: boolean | null
+          label_format: string | null
+          label_size: string | null
+          last_scanned_at: string | null
+          printed_at: string | null
+          qr_code_format: string | null
+          qr_code_image: string | null
+          qr_code_value: string
+          scan_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          barcode_value?: string | null
+          company_id: string
+          created_at?: string | null
+          equipment_id: string
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          label_format?: string | null
+          label_size?: string | null
+          last_scanned_at?: string | null
+          printed_at?: string | null
+          qr_code_format?: string | null
+          qr_code_image?: string | null
+          qr_code_value: string
+          scan_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          barcode_value?: string | null
+          company_id?: string
+          created_at?: string | null
+          equipment_id?: string
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          label_format?: string | null
+          label_size?: string | null
+          last_scanned_at?: string | null
+          printed_at?: string | null
+          qr_code_format?: string | null
+          qr_code_image?: string | null
+          qr_code_value?: string
+          scan_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_qr_codes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_qr_codes_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_qr_codes_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_scan_analytics"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_qr_codes_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_qr_codes_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["equipment_id"]
+          },
+        ]
+      }
+      equipment_scan_events: {
+        Row: {
+          checked_in_at: string | null
+          company_id: string
+          condition_rating: string | null
+          created_at: string | null
+          due_back_at: string | null
+          equipment_id: string
+          fuel_level: number | null
+          gps_accuracy: number | null
+          gps_latitude: number | null
+          gps_longitude: number | null
+          hours_reading: number | null
+          id: string
+          location_description: string | null
+          notes: string | null
+          offline_timestamp: string | null
+          overdue_flag: boolean | null
+          photo_urls: string[] | null
+          project_id: string | null
+          qr_code_id: string | null
+          scan_type: string
+          scanned_at: string | null
+          scanned_by: string
+          synced_from_offline: boolean | null
+        }
+        Insert: {
+          checked_in_at?: string | null
+          company_id: string
+          condition_rating?: string | null
+          created_at?: string | null
+          due_back_at?: string | null
+          equipment_id: string
+          fuel_level?: number | null
+          gps_accuracy?: number | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
+          hours_reading?: number | null
+          id?: string
+          location_description?: string | null
+          notes?: string | null
+          offline_timestamp?: string | null
+          overdue_flag?: boolean | null
+          photo_urls?: string[] | null
+          project_id?: string | null
+          qr_code_id?: string | null
+          scan_type: string
+          scanned_at?: string | null
+          scanned_by: string
+          synced_from_offline?: boolean | null
+        }
+        Update: {
+          checked_in_at?: string | null
+          company_id?: string
+          condition_rating?: string | null
+          created_at?: string | null
+          due_back_at?: string | null
+          equipment_id?: string
+          fuel_level?: number | null
+          gps_accuracy?: number | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
+          hours_reading?: number | null
+          id?: string
+          location_description?: string | null
+          notes?: string | null
+          offline_timestamp?: string | null
+          overdue_flag?: boolean | null
+          photo_urls?: string[] | null
+          project_id?: string | null
+          qr_code_id?: string | null
+          scan_type?: string
+          scanned_at?: string | null
+          scanned_by?: string
+          synced_from_offline?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_scan_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_scan_analytics"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_scan_events_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["qr_code_id"]
           },
         ]
       }
@@ -10680,6 +12422,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_usage_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_scan_analytics"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["equipment_id"]
+          },
+          {
             foreignKeyName: "equipment_usage_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -10692,6 +12455,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -10835,6 +12605,41 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_utilization_detailed_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_scan_analytics"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_with_qr"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
             foreignKeyName: "equipment_utilization_detailed_operator_id_fkey"
             columns: ["operator_id"]
             isOneToOne: false
@@ -10856,11 +12661,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "equipment_utilization_detailed_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
             foreignKeyName: "equipment_utilization_detailed_recorded_by_fkey"
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "equipment_utilization_detailed_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "equipment_utilization_detailed_verified_by_fkey"
@@ -10944,8 +12784,36 @@ export type Database = {
             foreignKeyName: "error_logs_resolved_by_fkey"
             columns: ["resolved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "error_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "error_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "error_logs_user_id_fkey"
@@ -10997,6 +12865,20 @@ export type Database = {
           viewed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "estimate_communications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "estimate_communications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "estimate_communications_created_by_fkey"
             columns: ["created_by"]
@@ -11191,6 +13073,20 @@ export type Database = {
             foreignKeyName: "estimates_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "estimates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "estimates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -11214,6 +13110,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estimates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -11357,6 +13260,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_expenses_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -11727,8 +13637,36 @@ export type Database = {
             foreignKeyName: "forms_1099_filed_by_fkey"
             columns: ["filed_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forms_1099_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "forms_1099_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forms_1099_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "forms_1099_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "forms_1099_generated_by_fkey"
@@ -12254,6 +14192,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "geofences_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       gps_locations: {
@@ -12320,6 +14265,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_locations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -12451,6 +14403,27 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "gps_time_entries_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "approved_timesheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gps_time_entries_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "pending_timesheet_approvals"
             referencedColumns: ["id"]
           },
           {
@@ -12890,6 +14863,20 @@ export type Database = {
             foreignKeyName: "import_sessions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "import_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "import_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -13244,6 +15231,20 @@ export type Database = {
             foreignKeyName: "insurance_claims_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -13267,6 +15268,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -13395,6 +15403,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_policies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "insurance_policies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "insurance_policies_created_by_fkey"
@@ -13922,6 +15944,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       ip_access_control: {
@@ -13965,6 +15994,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ip_access_control_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ip_access_control_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "ip_access_control_created_by_fkey"
             columns: ["created_by"]
@@ -14108,6 +16151,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "job_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       journal_entries: {
@@ -14225,6 +16275,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "journal_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "journal_entries_reversed_entry_id_fkey"
             columns: ["reversed_entry_id"]
             isOneToOne: false
@@ -14333,6 +16390,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "journal_entry_lines_tax_code_id_fkey"
@@ -14485,6 +16549,20 @@ export type Database = {
             foreignKeyName: "knowledge_base_articles_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -14576,6 +16654,20 @@ export type Database = {
             foreignKeyName: "knowledge_base_feedback_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -14613,6 +16705,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "knowledge_base_articles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "knowledge_base_views_user_id_fkey"
@@ -14745,6 +16851,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "labor_burden_rates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "labor_burden_rates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "labor_burden_rates_employee_id_fkey"
@@ -15164,6 +17284,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "lead_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "lead_notes_created_by_fkey"
@@ -15860,6 +17994,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "location_history_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       maintenance_records: {
@@ -16385,6 +18526,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "material_usage_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       material_usage_predictions: {
@@ -16517,6 +18665,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -16834,6 +18989,20 @@ export type Database = {
             foreignKeyName: "opportunities_account_manager_fkey"
             columns: ["account_manager"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "opportunities_account_manager_fkey"
+            columns: ["account_manager"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "opportunities_account_manager_fkey"
+            columns: ["account_manager"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -16855,6 +19024,20 @@ export type Database = {
             foreignKeyName: "opportunities_estimator_fkey"
             columns: ["estimator"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "opportunities_estimator_fkey"
+            columns: ["estimator"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "opportunities_estimator_fkey"
+            columns: ["estimator"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -16871,6 +19054,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_manager_fkey"
+            columns: ["project_manager"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "opportunities_project_manager_fkey"
+            columns: ["project_manager"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "opportunities_project_manager_fkey"
@@ -17083,6 +19287,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "osha_300_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "osha_300_log_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -17167,8 +19378,36 @@ export type Database = {
             foreignKeyName: "osha_compliance_deadlines_completed_by_fkey"
             columns: ["completed_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "osha_compliance_deadlines_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "osha_compliance_deadlines_created_by_fkey"
@@ -17616,6 +19855,20 @@ export type Database = {
             foreignKeyName: "performance_metrics_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "performance_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "performance_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -17717,6 +19970,20 @@ export type Database = {
             foreignKeyName: "permit_compliance_events_assigned_to_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "permit_compliance_events_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "permit_compliance_events_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -17726,6 +19993,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "environmental_permits"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_compliance_events_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "permit_compliance_events_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "permit_compliance_events_reported_by_fkey"
@@ -17790,6 +20071,20 @@ export type Database = {
             foreignKeyName: "permit_inspections_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "permit_inspections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "permit_inspections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -17849,6 +20144,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "permit_renewals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "permit_renewals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "permit_renewals_created_by_fkey"
             columns: ["created_by"]
@@ -17974,6 +20283,20 @@ export type Database = {
             foreignKeyName: "permits_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "permits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "permits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -17990,6 +20313,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -18048,6 +20378,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "photo_attachments_daily_report_id_fkey"
+            columns: ["daily_report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports_with_details"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "photo_attachments_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -18059,6 +20396,27 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "photo_attachments_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "approved_timesheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_attachments_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "pending_timesheet_approvals"
             referencedColumns: ["id"]
           },
           {
@@ -18329,6 +20687,20 @@ export type Database = {
             foreignKeyName: "platform_costs_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "platform_costs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "platform_costs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -18440,6 +20812,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ppe_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ppe_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "ppe_tracking_user_id_fkey"
@@ -18662,6 +21048,20 @@ export type Database = {
             foreignKeyName: "privacy_impact_assessments_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -18676,6 +21076,20 @@ export type Database = {
             foreignKeyName: "privacy_impact_assessments_conducted_by_fkey"
             columns: ["conducted_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -18685,6 +21099,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "processing_activities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "privacy_impact_assessments_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "privacy_impact_assessments_reviewed_by_fkey"
@@ -18775,6 +21203,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processing_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "processing_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "processing_activities_created_by_fkey"
@@ -18915,6 +21357,20 @@ export type Database = {
             foreignKeyName: "procurement_opportunities_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "procurement_opportunities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "procurement_opportunities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -18997,6 +21453,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bid_submissions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "procurement_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "procurement_requirements_created_by_fkey"
@@ -19095,6 +21565,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       project_bond_requirements: {
@@ -19155,6 +21632,20 @@ export type Database = {
             foreignKeyName: "project_bond_requirements_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_bond_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "project_bond_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -19171,6 +21662,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_bond_requirements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -19242,6 +21740,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_budgets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       project_communication_participants: {
@@ -19286,6 +21791,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_communication_participants_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_communication_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_communication_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "project_communication_participants_user_id_fkey"
@@ -19342,6 +21868,20 @@ export type Database = {
             foreignKeyName: "project_contacts_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "project_contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -19365,6 +21905,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_contacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -19423,6 +21970,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_cost_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -19566,6 +22120,20 @@ export type Database = {
             foreignKeyName: "project_costs_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_costs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "project_costs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -19582,6 +22150,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -19750,6 +22325,20 @@ export type Database = {
             foreignKeyName: "project_insurance_requirements_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_insurance_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "project_insurance_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -19773,6 +22362,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_insurance_requirements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -19827,6 +22423,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "project_messages_sender_id_fkey"
@@ -19888,6 +22505,20 @@ export type Database = {
             foreignKeyName: "project_milestones_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_milestones_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "project_milestones_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -19904,6 +22535,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -19965,6 +22603,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_phases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       project_photos: {
@@ -20009,6 +22654,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -20148,6 +22800,20 @@ export type Database = {
             foreignKeyName: "project_revenue_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_revenue_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "project_revenue_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -20164,6 +22830,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_revenue_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -20259,6 +22932,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "project_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "project_templates_created_by_fkey"
@@ -20509,6 +23196,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "punch_list_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       purchase_order_line_items: {
@@ -20649,6 +23343,20 @@ export type Database = {
             foreignKeyName: "purchase_orders_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -20658,6 +23366,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "purchase_orders_created_by_fkey"
@@ -20679,6 +23401,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "purchase_orders_vendor_id_fkey"
@@ -20830,6 +23559,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -22191,6 +24927,20 @@ export type Database = {
             foreignKeyName: "rfi_responses_responded_by_fkey"
             columns: ["responded_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rfi_responses_responded_by_fkey"
+            columns: ["responded_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "rfi_responses_responded_by_fkey"
+            columns: ["responded_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -22274,6 +25024,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "rfis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       risk_alerts: {
@@ -22327,6 +25084,20 @@ export type Database = {
             foreignKeyName: "risk_alerts_acknowledged_by_fkey"
             columns: ["acknowledged_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "risk_alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "risk_alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -22343,6 +25114,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_alerts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "risk_alerts_risk_prediction_id_fkey"
@@ -22466,6 +25244,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "risk_history_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "risk_history_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -22546,6 +25331,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_predictions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "risk_predictions_tenant_id_fkey"
@@ -22677,6 +25469,20 @@ export type Database = {
             foreignKeyName: "safety_checklist_responses_completed_by_fkey"
             columns: ["completed_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_checklist_responses_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "safety_checklist_responses_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -22693,6 +25499,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_checklist_responses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -22743,6 +25556,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_checklists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_checklists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "safety_checklists_created_by_fkey"
@@ -22850,6 +25677,20 @@ export type Database = {
             foreignKeyName: "safety_incidents_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -22866,6 +25707,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_incidents_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "safety_incidents_reported_by_fkey"
@@ -22948,6 +25810,20 @@ export type Database = {
             foreignKeyName: "safety_inspections_inspector_id_fkey"
             columns: ["inspector_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -22964,6 +25840,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "safety_inspections_tenant_id_fkey"
@@ -23033,6 +25916,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_training_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_training_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "safety_training_user_id_fkey"
@@ -23119,6 +26016,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_violations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "safety_violations_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_violations_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "safety_violations_resolved_by_fkey"
@@ -23774,11 +26692,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "schedule_constraints_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "schedule_constraints_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_constraints_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "schedule_constraints_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "schedule_constraints_user_id_fkey"
@@ -27461,6 +30400,20 @@ export type Database = {
             foreignKeyName: "service_call_parts_added_by_fkey"
             columns: ["added_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_call_parts_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "service_call_parts_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -27511,6 +30464,20 @@ export type Database = {
           to_status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_call_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_call_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "service_call_status_history_changed_by_fkey"
             columns: ["changed_by"]
@@ -27598,6 +30565,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_call_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_call_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "service_call_templates_created_by_fkey"
@@ -27839,8 +30820,36 @@ export type Database = {
             foreignKeyName: "service_calls_assigned_technician_id_fkey"
             columns: ["assigned_technician_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_calls_assigned_technician_id_fkey"
+            columns: ["assigned_technician_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "service_calls_assigned_technician_id_fkey"
+            columns: ["assigned_technician_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_backup_technician_id_fkey"
+            columns: ["backup_technician_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_calls_backup_technician_id_fkey"
+            columns: ["backup_technician_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "service_calls_backup_technician_id_fkey"
@@ -27860,8 +30869,36 @@ export type Database = {
             foreignKeyName: "service_calls_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_calls_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "service_calls_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "service_calls_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "service_calls_dispatcher_id_fkey"
@@ -27883,6 +30920,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_calls_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -27933,6 +30977,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_replay_data_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "session_replay_data_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "session_replay_data_user_id_fkey"
@@ -28309,6 +31367,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "social_media_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       social_media_templates: {
@@ -28619,6 +31684,20 @@ export type Database = {
             foreignKeyName: "subcontractor_disclosures_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "subcontractor_disclosures_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "subcontractor_disclosures_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -28717,6 +31796,20 @@ export type Database = {
             foreignKeyName: "submittal_reviews_reviewer_id_fkey"
             columns: ["reviewer_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "submittal_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "submittal_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -28803,6 +31896,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "submittals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       subscribers: {
@@ -28864,6 +31964,20 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_subscribers_user_profiles"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_subscribers_user_profiles"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
           {
             foreignKeyName: "fk_subscribers_user_profiles"
             columns: ["user_id"]
@@ -29073,6 +32187,20 @@ export type Database = {
             foreignKeyName: "support_suggestions_accepted_by_fkey"
             columns: ["accepted_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "support_suggestions_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "support_suggestions_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -29142,6 +32270,20 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "support_tickets"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_context_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "support_ticket_context_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "support_ticket_context_user_id_fkey"
@@ -29259,8 +32401,36 @@ export type Database = {
             foreignKeyName: "system_admin_settings_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "system_admin_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "system_admin_settings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "system_admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "system_admin_settings_updated_by_fkey"
@@ -29328,8 +32498,36 @@ export type Database = {
             foreignKeyName: "system_config_changes_approved_by_fkey"
             columns: ["approved_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "system_config_changes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "system_config_changes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_config_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "system_config_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "system_config_changes_user_id_fkey"
@@ -29382,6 +32580,13 @@ export type Database = {
             referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "task_activity_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
+          },
         ]
       }
       task_attachments: {
@@ -29423,6 +32628,13 @@ export type Database = {
             referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "task_attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
+          },
         ]
       }
       task_comments: {
@@ -29457,6 +32669,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -29503,11 +32722,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "task_dependencies_predecessor_task_id_fkey"
+            columns: ["predecessor_task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
+          },
+          {
             foreignKeyName: "task_dependencies_successor_task_id_fkey"
             columns: ["successor_task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_successor_task_id_fkey"
+            columns: ["successor_task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -29543,6 +32776,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -29600,6 +32840,13 @@ export type Database = {
             referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "task_resource_allocations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
+          },
         ]
       }
       task_subtasks: {
@@ -29640,6 +32887,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_subtasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -29731,6 +32985,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -29856,6 +33117,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -30020,7 +33288,56 @@ export type Database = {
             foreignKeyName: "technician_locations_technician_id_fkey"
             columns: ["technician_id"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "technician_locations_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "technician_locations_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_task_presets: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          task_description: string | null
+          task_name: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          task_description?: string | null
+          task_name: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          task_description?: string | null
+          task_name?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_task_presets_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "daily_report_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -30344,18 +33661,28 @@ export type Database = {
       }
       time_entries: {
         Row: {
+          approval_notes: string | null
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           break_duration: number | null
           cost_code_id: string | null
           created_at: string
           description: string | null
           end_time: string | null
+          geofence_breach_detected: boolean | null
+          geofence_distance_meters: number | null
+          geofence_id: string | null
           gps_latitude: number | null
           gps_longitude: number | null
           id: string
+          is_geofence_verified: boolean | null
           location: string | null
           location_accuracy: number | null
           project_id: string
+          rejection_reason: string | null
           start_time: string
+          submitted_at: string | null
           task_id: string | null
           tenant_id: string | null
           total_hours: number | null
@@ -30363,18 +33690,28 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_notes?: string | null
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           break_duration?: number | null
           cost_code_id?: string | null
           created_at?: string
           description?: string | null
           end_time?: string | null
+          geofence_breach_detected?: boolean | null
+          geofence_distance_meters?: number | null
+          geofence_id?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
           id?: string
+          is_geofence_verified?: boolean | null
           location?: string | null
           location_accuracy?: number | null
           project_id: string
+          rejection_reason?: string | null
           start_time: string
+          submitted_at?: string | null
           task_id?: string | null
           tenant_id?: string | null
           total_hours?: number | null
@@ -30382,18 +33719,28 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_notes?: string | null
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           break_duration?: number | null
           cost_code_id?: string | null
           created_at?: string
           description?: string | null
           end_time?: string | null
+          geofence_breach_detected?: boolean | null
+          geofence_distance_meters?: number | null
+          geofence_id?: string | null
           gps_latitude?: number | null
           gps_longitude?: number | null
           id?: string
+          is_geofence_verified?: boolean | null
           location?: string | null
           location_accuracy?: number | null
           project_id?: string
+          rejection_reason?: string | null
           start_time?: string
+          submitted_at?: string | null
           task_id?: string | null
           tenant_id?: string | null
           total_hours?: number | null
@@ -30406,6 +33753,13 @@ export type Database = {
             columns: ["cost_code_id"]
             isOneToOne: false
             referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_geofence_id_fkey"
+            columns: ["geofence_id"]
+            isOneToOne: false
+            referencedRelation: "geofences"
             referencedColumns: ["id"]
           },
           {
@@ -30423,11 +33777,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "time_entries_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -30469,6 +33837,64 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      timesheet_approval_history: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          new_status: string | null
+          notes: string | null
+          performed_at: string | null
+          performed_by: string | null
+          previous_status: string | null
+          time_entry_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          performed_at?: string | null
+          performed_by?: string | null
+          previous_status?: string | null
+          time_entry_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          performed_at?: string | null
+          performed_by?: string | null
+          previous_status?: string | null
+          time_entry_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timesheet_approval_history_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "approved_timesheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheet_approval_history_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "pending_timesheet_approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timesheet_approval_history_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "time_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       toolbox_talks: {
         Row: {
@@ -30521,6 +33947,20 @@ export type Database = {
             foreignKeyName: "toolbox_talks_conducted_by_fkey"
             columns: ["conducted_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "toolbox_talks_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "toolbox_talks_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -30537,6 +33977,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "toolbox_talks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "toolbox_talks_tenant_id_fkey"
@@ -30856,8 +34303,36 @@ export type Database = {
             foreignKeyName: "training_certifications_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "training_certifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "training_certifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "training_certifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "training_certifications_user_id_fkey"
@@ -30978,6 +34453,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "travel_logs_from_project_id_fkey"
+            columns: ["from_project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "travel_logs_to_project_id_fkey"
             columns: ["to_project_id"]
             isOneToOne: false
@@ -30990,6 +34472,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_logs_to_project_id_fkey"
+            columns: ["to_project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
           },
         ]
       }
@@ -31432,6 +34921,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activity_timeline_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_activity_timeline_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "user_activity_timeline_user_id_fkey"
@@ -32398,6 +35901,20 @@ export type Database = {
             foreignKeyName: "vendors_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "vendors_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "vendors_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -32512,6 +36029,20 @@ export type Database = {
             foreignKeyName: "warranties_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "warranties_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "warranties_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -32530,11 +36061,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "warranties_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "warranties_purchase_order_id_fkey"
             columns: ["purchase_order_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranties_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "warranties_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "warranties_transferred_by_fkey"
@@ -32630,6 +36182,20 @@ export type Database = {
             foreignKeyName: "warranty_claims_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "warranty_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "warranty_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -32708,6 +36274,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warranty_transfers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "warranty_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "warranty_transfers_transferred_by_fkey"
+            columns: ["transferred_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
           },
           {
             foreignKeyName: "warranty_transfers_transferred_by_fkey"
@@ -32792,6 +36379,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "weather_forecasts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
         ]
       }
       weather_schedule_adjustments: {
@@ -32839,6 +36433,20 @@ export type Database = {
             foreignKeyName: "weather_schedule_adjustments_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
@@ -32857,11 +36465,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "weather_schedule_adjustments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "weather_schedule_adjustments_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weather_schedule_adjustments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "todays_scheduled_tasks"
+            referencedColumns: ["task_id"]
           },
         ]
       }
@@ -33929,6 +37551,160 @@ export type Database = {
           },
         ]
       }
+      approved_timesheets: {
+        Row: {
+          approval_notes: string | null
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          approver_name: string | null
+          break_duration: number | null
+          cost_code: string | null
+          description: string | null
+          end_time: string | null
+          id: string | null
+          location: string | null
+          project_id: string | null
+          project_name: string | null
+          start_time: string | null
+          total_hours: number | null
+          user_id: string | null
+          worker_email: string | null
+          worker_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      crew_assignments_pending_checkin: {
+        Row: {
+          assigned_date: string | null
+          crew_member_id: string | null
+          crew_member_name: string | null
+          geofence_latitude: number | null
+          geofence_longitude: number | null
+          geofence_radius_meters: number | null
+          id: string | null
+          project_id: string | null
+          project_location: string | null
+          project_name: string | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_assignments_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "crew_presence_dashboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["scanned_by_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      crew_presence_dashboard: {
+        Row: {
+          assigned_date: string | null
+          assignment_id: string | null
+          crew_member_email: string | null
+          crew_member_name: string | null
+          crew_member_phone: string | null
+          crew_member_role: Database["public"]["Enums"]["user_role"] | null
+          distance_from_site: number | null
+          geofence_center_lat: number | null
+          geofence_center_lng: number | null
+          geofence_name: string | null
+          geofence_radius: number | null
+          geofence_type: string | null
+          gps_checkin_timestamp: string | null
+          gps_checkin_verified: boolean | null
+          gps_checkout_timestamp: string | null
+          hours_onsite: number | null
+          is_onsite: boolean | null
+          presence_status: string | null
+          project_id: string | null
+          project_location: string | null
+          project_name: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       cwv_trends: {
         Row: {
           avg_cls: number | null
@@ -33940,6 +37716,73 @@ export type Database = {
           url: string | null
         }
         Relationships: []
+      }
+      daily_reports_with_details: {
+        Row: {
+          avg_task_completion: number | null
+          company_id: string | null
+          completion_percentage: number | null
+          created_at: string | null
+          crew_count: number | null
+          date: string | null
+          delays_issues: string | null
+          gps_latitude: number | null
+          gps_longitude: number | null
+          id: string | null
+          next_day_plan: string | null
+          project_id: string | null
+          project_location: string | null
+          project_name: string | null
+          quality_issues: string | null
+          safety_incidents: string | null
+          status: string | null
+          submission_timestamp: string | null
+          submitted_by: string | null
+          submitted_by_name: string | null
+          task_count: number | null
+          temperature: number | null
+          template_id: string | null
+          template_name: string | null
+          weather_conditions: string | null
+          work_performed: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "daily_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fk_daily_reports_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "daily_report_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_traffic_overview: {
         Row: {
@@ -33957,6 +37800,52 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "unified_traffic_metrics_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_scan_analytics: {
+        Row: {
+          average_condition_score: number | null
+          check_in_count: number | null
+          check_out_count: number | null
+          equipment_id: string | null
+          equipment_name: string | null
+          equipment_type: string | null
+          has_qr_code: boolean | null
+          inspection_count: number | null
+          last_scanned_at: string | null
+          latest_condition: string | null
+          total_scans: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
+      equipment_with_qr: {
+        Row: {
+          company_id: string | null
+          equipment_id: string | null
+          equipment_type: string | null
+          has_qr_code: boolean | null
+          last_scanned_at: string | null
+          location: string | null
+          model: string | null
+          name: string | null
+          qr_code_id: string | null
+          qr_code_image: string | null
+          qr_code_value: string | null
+          qr_generated_at: string | null
+          qr_is_active: boolean | null
+          scan_count: number | null
+          serial_number: string | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -34008,6 +37897,51 @@ export type Database = {
           },
         ]
       }
+      pending_timesheet_approvals: {
+        Row: {
+          approval_status: string | null
+          break_duration: number | null
+          cost_code: string | null
+          cost_code_description: string | null
+          created_at: string | null
+          description: string | null
+          end_time: string | null
+          id: string | null
+          location: string | null
+          project_id: string | null
+          project_location: string | null
+          project_name: string | null
+          start_time: string | null
+          submitted_at: string | null
+          total_hours: number | null
+          user_id: string | null
+          worker_email: string | null
+          worker_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       project_pl_summary: {
         Row: {
           company_id: string | null
@@ -34039,6 +37973,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recent_equipment_scans: {
+        Row: {
+          condition_rating: string | null
+          equipment_id: string | null
+          equipment_name: string | null
+          equipment_type: string | null
+          fuel_level: number | null
+          gps_latitude: number | null
+          gps_longitude: number | null
+          hours_reading: number | null
+          hours_since_scan: number | null
+          location_description: string | null
+          notes: string | null
+          overdue_flag: boolean | null
+          project_id: string | null
+          project_name: string | null
+          scan_id: string | null
+          scan_type: string | null
+          scanned_at: string | null
+          scanned_by_email: string | null
+          scanned_by_id: string | null
+          scanned_by_name: string | null
+          serial_number: string | null
+        }
+        Relationships: []
       }
       seo_alerts_dashboard: {
         Row: {
@@ -34401,6 +38361,41 @@ export type Database = {
           },
         ]
       }
+      todays_scheduled_tasks: {
+        Row: {
+          completion_percentage: number | null
+          due_date: string | null
+          project_id: string | null
+          project_name: string | null
+          status: string | null
+          task_description: string | null
+          task_id: string | null
+          task_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_pl_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "recent_equipment_scans"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       top_keywords_performance: {
         Row: {
           avg_ctr: number | null
@@ -34447,6 +38442,33 @@ export type Database = {
         Returns: string
       }
       apply_retention_policy: { Args: { p_policy_id: string }; Returns: number }
+      auto_populate_daily_report: {
+        Args: {
+          p_daily_report_id: string
+          p_date: string
+          p_project_id: string
+          p_template_id: string
+        }
+        Returns: Json
+      }
+      bulk_approve_timesheets: {
+        Args: { approver_id: string; notes?: string; timesheet_ids: string[] }
+        Returns: {
+          failed_count: number
+          success_count: number
+        }[]
+      }
+      bulk_reject_timesheets: {
+        Args: {
+          rejection_reason: string
+          rejector_id: string
+          timesheet_ids: string[]
+        }
+        Returns: {
+          failed_count: number
+          success_count: number
+        }[]
+      }
       calculate_cohort_retention: {
         Args: { p_cohort: string; p_cohort_type?: string }
         Returns: {
@@ -34635,6 +38657,10 @@ export type Database = {
         Args: { p_end_date: string; p_start_date: string; p_tenant_id: string }
         Returns: Json
       }
+      generate_equipment_qr_code: {
+        Args: { p_equipment_id: string }
+        Returns: Json
+      }
       generate_estimate_number: { Args: never; Returns: string }
       generate_po_number:
         | { Args: never; Returns: string }
@@ -34671,6 +38697,33 @@ export type Database = {
       get_active_user_count: {
         Args: { company_uuid: string; days?: number }
         Returns: number
+      }
+      get_calculator_funnel_metrics: {
+        Args: { end_date?: string; start_date?: string }
+        Returns: {
+          calculations_performed: number
+          conversion_rate: number
+          conversions: number
+          email_capture_rate: number
+          emails_captured: number
+          pdf_download_rate: number
+          pdfs_downloaded: number
+          total_sessions: number
+          trial_click_rate: number
+          trial_start_rate: number
+          trials_clicked: number
+          trials_started: number
+        }[]
+      }
+      get_calculator_project_type_stats: {
+        Args: never
+        Returns: {
+          avg_bid_amount: number
+          avg_profit_margin: number
+          calculation_count: number
+          email_capture_rate: number
+          project_type: string
+        }[]
       }
       get_distance_meters: {
         Args: { p_lat1: number; p_lat2: number; p_lng1: number; p_lng2: number }
@@ -35075,6 +39128,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_equipment_qr_scan: {
+        Args: {
+          p_accuracy?: number
+          p_condition_rating?: string
+          p_due_back_at?: string
+          p_fuel_level?: number
+          p_hours_reading?: number
+          p_latitude?: number
+          p_location_description?: string
+          p_longitude?: number
+          p_notes?: string
+          p_photo_urls?: string[]
+          p_project_id?: string
+          p_qr_code_value: string
+          p_scan_type: string
+        }
+        Returns: Json
+      }
       publish_scheduled_blog_posts: { Args: never; Returns: number }
       queue_next_blog_generation: {
         Args: { company_id_param: string }
@@ -35164,6 +39235,15 @@ export type Database = {
           total_logs: number
           verified_logs: number
         }[]
+      }
+      verify_crew_gps_checkin: {
+        Args: {
+          p_accuracy: number
+          p_assignment_id: string
+          p_latitude: number
+          p_longitude: number
+        }
+        Returns: Json
       }
       verify_mfa_code: {
         Args: { p_code: string; p_user_id: string }

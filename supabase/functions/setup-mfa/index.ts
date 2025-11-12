@@ -2,11 +2,18 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import QRCode from "https://esm.sh/qrcode@1.5.4";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateRequest, sanitizeError, createErrorResponse } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// SECURITY: Input validation schema
+const SetupMFASchema = z.object({
+  user_id: z.string().uuid('Invalid user ID format')
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,21 +29,29 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return createErrorResponse(401, "Authentication required", corsHeaders);
     }
 
     // Verify the user is authenticated
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !userData.user) {
-      throw new Error("Invalid authentication");
+      return createErrorResponse(401, "Authentication failed", corsHeaders);
     }
 
-    const { user_id } = await req.json();
+    // SECURITY: Validate request body
+    const requestBody = await req.json();
+    const validation = validateRequest(SetupMFASchema, requestBody);
+    
+    if (!validation.success) {
+      return createErrorResponse(400, validation.error, corsHeaders);
+    }
+    
+    const { user_id } = validation.data;
     
     // Verify the user can only set up MFA for themselves
     if (userData.user.id !== user_id) {
-      throw new Error("Unauthorized");
+      return createErrorResponse(403, "Unauthorized access", corsHeaders);
     }
 
     // Generate a secret for TOTP
@@ -90,14 +105,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("MFA setup error:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      }
-    );
+    const safeMessage = sanitizeError(error);
+    return createErrorResponse(500, safeMessage, corsHeaders);
   }
 });
