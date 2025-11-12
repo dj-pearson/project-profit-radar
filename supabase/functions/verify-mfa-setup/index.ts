@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateRequest, uuidSchema, createErrorResponse } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// SECURITY: Input validation schema
+const VerifyMFASchema = z.object({
+  user_id: uuidSchema,
+  verification_code: z.string().length(6, 'Code must be exactly 6 digits').regex(/^\d{6}$/, 'Code must contain only digits')
+});
 
 function generateBackupCodes(count: number = 8): string[] {
   const codes: string[] = [];
@@ -31,21 +39,37 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return createErrorResponse(401, "Authentication required", corsHeaders);
     }
 
     // Verify the user is authenticated
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !userData.user) {
-      throw new Error("Invalid authentication");
+      console.error("[MFA] Auth verification failed:", userError);
+      return createErrorResponse(401, "Authentication failed", corsHeaders);
     }
 
-    const { user_id, verification_code } = await req.json();
+    // SECURITY: Validate request body with Zod schema
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return createErrorResponse(400, "Invalid request body", corsHeaders);
+    }
+
+    const validation = validateRequest(VerifyMFASchema, requestBody);
+    if (!validation.success) {
+      console.error("[MFA] Validation failed:", validation.error);
+      return createErrorResponse(400, "Invalid request parameters", corsHeaders);
+    }
+
+    const { user_id, verification_code } = validation.data;
     
     // Verify the user can only set up MFA for themselves
     if (userData.user.id !== user_id) {
-      throw new Error("Unauthorized");
+      console.warn("[MFA] Unauthorized access attempt:", { requester: userData.user.id, target: user_id });
+      return createErrorResponse(403, "Insufficient permissions", corsHeaders);
     }
 
     // Get the stored secret
@@ -56,7 +80,8 @@ serve(async (req) => {
       .single();
 
     if (fetchError || !securityData?.two_factor_secret) {
-      throw new Error("MFA setup not found. Please restart the setup process.");
+      console.error("[MFA] Failed to fetch security data:", fetchError);
+      return createErrorResponse(400, "MFA verification failed. Please try again.", corsHeaders);
     }
 
     // Verify the TOTP code
@@ -80,11 +105,11 @@ serve(async (req) => {
         user_agent: req.headers.get("user-agent"),
         details: {
           timestamp: new Date().toISOString(),
-          code_provided: verification_code,
         },
       });
       
-      throw new Error("Invalid verification code");
+      console.warn("[MFA] Invalid verification code provided");
+      return createErrorResponse(400, "MFA verification failed. Please try again.", corsHeaders);
     }
 
     // Generate backup codes
@@ -101,8 +126,8 @@ serve(async (req) => {
       .eq("user_id", user_id);
 
     if (updateError) {
-      console.error("Error enabling MFA:", updateError);
-      throw new Error("Failed to enable MFA");
+      console.error("[MFA] Database update failed:", updateError);
+      return createErrorResponse(500, "Failed to enable MFA", corsHeaders);
     }
 
     // Log successful MFA enablement
@@ -128,14 +153,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    const errorObj = error as Error;
-    console.error("MFA verification error:", error);
-    return new Response(
-      JSON.stringify({ error: errorObj.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      }
-    );
+    // SECURITY: Never expose internal errors to clients
+    console.error("[MFA] Unexpected error:", error);
+    return createErrorResponse(500, "An unexpected error occurred", corsHeaders);
   }
 });
