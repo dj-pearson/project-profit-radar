@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Bug,
-  Activity,
-  Database,
   Zap,
   AlertCircle,
   CheckCircle,
@@ -66,7 +64,7 @@ export const DebugConsole: React.FC<DebugConsoleProps> = ({
     loadData();
 
     // Auto-refresh every 10 seconds if enabled
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (autoRefresh) {
       interval = setInterval(loadData, 10000);
     }

@@ -3,24 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { 
   Eye, 
   EyeOff, 
   Sun, 
-  Moon, 
-  Type, 
   Minus, 
   Plus, 
   Volume2, 
-  VolumeX,
-  Keyboard,
-  Focus,
   RotateCcw,
   Accessibility,
-  Monitor,
-  Smartphone
+  Monitor
 } from 'lucide-react';
 import { useAccessibility } from '@/hooks/useAccessibility';
 

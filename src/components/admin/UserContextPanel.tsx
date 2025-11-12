@@ -12,15 +12,11 @@ import { Separator } from '@/components/ui/separator';
 import {
   User,
   Building2,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
-  Calendar,
   Zap,
   FileText,
   Activity,
-  CreditCard,
   Eye,
   Bug,
 } from 'lucide-react';
@@ -92,7 +88,12 @@ export const UserContextPanel: React.FC<UserContextPanelProps> = ({
         console.error('Error loading context:', contextError);
       }
 
-      setContext(contextData);
+      if (contextData) {
+        setContext({
+          ...contextData,
+          recent_actions: Array.isArray(contextData.recent_actions) ? contextData.recent_actions : []
+        });
+      }
 
       // Get user profile
       const { data: userData, error: userError } = await supabase

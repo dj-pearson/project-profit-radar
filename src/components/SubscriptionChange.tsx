@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ArrowUp, ArrowDown, CreditCard, CheckCircle, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface SubscriptionChangeProps {
   currentSubscription: {

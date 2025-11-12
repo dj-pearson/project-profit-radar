@@ -30,7 +30,7 @@ const InvoiceGenerator = ({ projectId, onInvoiceCreated }: InvoiceGeneratorProps
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [lastCreatedInvoice, setLastCreatedInvoice] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
-  const [costCodes, setCostCodes] = useState<any[]>([]);
+  const [_costCodes, setCostCodes] = useState<any[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
