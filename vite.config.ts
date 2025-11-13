@@ -85,9 +85,15 @@ export default defineConfig(({ mode }) => ({
     target: "esnext",
     minify: "esbuild",
     sourcemap: false,
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 400, // More aggressive warning
     reportCompressedSize: true,
     emptyOutDir: true,
+
+    // Improve compilation performance
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
 
     // Advanced compression and optimization
     cssCodeSplit: true,
@@ -130,6 +136,10 @@ export default defineConfig(({ mode }) => ({
           'charts': ['recharts'],
           'documents': ['jspdf', 'jspdf-autotable', 'xlsx'],
           'query': ['@tanstack/react-query'],
+          'three': ['three', '@react-three/fiber', '@react-three/drei'],
+          'dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities', '@hello-pangea/dnd'],
+          'media': ['qr-scanner', 'qrcode', 'signature_pad', 'tesseract.js'],
+          'markdown': ['react-markdown'],
           
           // Performance and monitoring
           'performance': [
