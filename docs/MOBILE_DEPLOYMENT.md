@@ -103,6 +103,63 @@ npx cap sync android
 
 ---
 
+## Platform Permissions Configuration
+
+After initializing the iOS and Android platforms, you need to configure the required permissions for app features. These permissions are required for Camera, Geolocation, and other native features.
+
+### iOS Permissions (Info.plist)
+
+Add the following keys to `ios/App/App/Info.plist` after initialization:
+
+```xml
+<!-- Camera and Photo Library -->
+<key>NSCameraUsageDescription</key>
+<string>BuildDesk needs access to your camera to capture photos of work sites, materials, and documents.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>BuildDesk needs access to your photo library to attach images to daily reports and documents.</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>BuildDesk needs permission to save photos to your library.</string>
+
+<!-- Location Services -->
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>BuildDesk needs your location to track time entries at job sites and provide location-based features.</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>BuildDesk needs continuous location access for geofencing and automatic check-in/out at job sites.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>BuildDesk uses your location to track work hours at job sites and enable automatic time tracking.</string>
+```
+
+### Android Permissions (AndroidManifest.xml)
+
+Add the following permissions to `android/app/src/main/AndroidManifest.xml` after initialization:
+
+```xml
+<!-- Camera permissions -->
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-feature android:name="android.hardware.camera" android:required="false" />
+
+<!-- Storage permissions -->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="32" />
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+<!-- Location permissions -->
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+<!-- Notification permissions -->
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+<!-- Network state for offline detection -->
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+```
+
+**Note:** These permissions are automatically requested at runtime when the user first uses features that require them. The app follows best practices for permission handling.
+
+---
+
 ## iOS Deployment
 
 ### Step 1: Initialize iOS Project (First Time Only)
