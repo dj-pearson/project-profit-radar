@@ -63,11 +63,13 @@
     "mobile:run:android": "npx cap run android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
     "@capacitor/camera": "^7.0.2",
     "@capacitor/core": "^7.4.4",
     "@capacitor/device": "^7.0.2",
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/geolocation": "^7.1.5",
+    "@capacitor/ios": "^7.4.4",
     "@capacitor/local-notifications": "^7.0.3",
     "@capacitor/network": "^7.0.2",
     "@capacitor/preferences": "^7.0.2",
@@ -160,6 +162,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.4.4",
     "@eslint/js": "^9.9.0",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.56.1",
