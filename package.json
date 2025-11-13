@@ -24,6 +24,10 @@
     "performance:budget": "node scripts/check-performance-budget.js",
     "images:optimize": "node scripts/convert-images-to-webp.js",
     "performance:ci": "npm run build && npm run performance:budget && npm run performance:audit",
+    "lighthouse": "lhci autorun",
+    "lighthouse:collect": "lhci collect",
+    "lighthouse:assert": "lhci assert",
+    "lighthouse:full": "npm run build && lhci autorun",
     "generate-sitemap": "node scripts/generate-sitemap.js",
     "mcp:puppeteer": "npx @modelcontextprotocol/server-puppeteer",
     "mcp:context7": "npx @upstash/context7-mcp",
@@ -140,6 +144,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",
     "@types/react": "^19.1.10",
