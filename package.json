@@ -53,7 +53,14 @@
     "expo:build:android": "eas build --platform android",
     "expo:build:ios": "eas build --platform ios",
     "expo:submit:android": "eas submit --platform android",
-    "expo:submit:ios": "eas submit --platform ios"
+    "expo:submit:ios": "eas submit --platform ios",
+    "mobile:build": "./scripts/mobile/build-mobile.sh",
+    "mobile:version": "./scripts/mobile/bump-version.sh",
+    "mobile:sync": "npx cap sync",
+    "mobile:open:ios": "npx cap open ios",
+    "mobile:open:android": "npx cap open android",
+    "mobile:run:ios": "npx cap run ios",
+    "mobile:run:android": "npx cap run android"
   },
   "dependencies": {
     "@capacitor/camera": "^7.0.2",
