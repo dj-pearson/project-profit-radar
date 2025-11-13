@@ -1,1 +1,435 @@
 project_id = "ilhzuvemiuyfuxfegtlv"
+
+[api]
+enabled = true
+schemas = ["public"]
+
+# CRITICAL EDGE FUNCTIONS (Public - No JWT)
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.blog-ai]
+verify_jwt = false
+
+[functions.gsc-oauth-callback]
+verify_jwt = false
+
+[functions.google-calendar-callback]
+verify_jwt = false
+
+[functions.outlook-calendar-callback]
+verify_jwt = false
+
+[functions.webhook-verify]
+verify_jwt = false
+
+[functions.api-auth]
+verify_jwt = false
+
+[functions.create-root-admin]
+verify_jwt = false
+
+[functions.dos-protection]
+verify_jwt = false
+
+# SCHEDULED/CRON FUNCTIONS (No JWT)
+[functions.process-blog-generation-queue]
+verify_jwt = false
+
+[functions.cron-social-scheduler]
+verify_jwt = false
+
+[functions.schedule-custom-reports]
+verify_jwt = false
+
+[functions.payment-reminders]
+verify_jwt = false
+
+[functions.trial-management]
+verify_jwt = false
+
+[functions.schedule-trial-emails]
+verify_jwt = false
+
+[functions.send-renewal-notification]
+verify_jwt = false
+
+[functions.check-renewal-notifications]
+verify_jwt = false
+
+[functions.process-dunning]
+verify_jwt = false
+
+[functions.process-expiring-complimentary]
+verify_jwt = false
+
+[functions.calculate-health-scores]
+verify_jwt = false
+
+[functions.process-behavioral-triggers]
+verify_jwt = false
+
+[functions.send-intervention-email]
+verify_jwt = false
+
+[functions.process-referral-signup]
+verify_jwt = false
+
+[functions.process-funnel-queue]
+verify_jwt = false
+
+[functions.send-scheduled-emails]
+verify_jwt = false
+
+[functions.run-scheduled-audit]
+verify_jwt = false
+
+# PUBLIC LEAD CAPTURE (No JWT)
+[functions.capture-lead]
+verify_jwt = false
+
+[functions.handle-demo-request]
+verify_jwt = false
+
+[functions.handle-sales-contact]
+verify_jwt = false
+
+[functions.track-referral]
+verify_jwt = false
+
+# AUTHENTICATED FUNCTIONS (Require JWT)
+[functions.enhanced-blog-ai]
+verify_jwt = true
+
+[functions.create-stripe-checkout]
+verify_jwt = true
+
+[functions.change-subscription]
+verify_jwt = true
+
+[functions.manage-subscription]
+verify_jwt = true
+
+[functions.customer-portal]
+verify_jwt = true
+
+[functions.setup-mfa]
+verify_jwt = true
+
+[functions.verify-mfa-setup]
+verify_jwt = true
+
+[functions.disable-mfa]
+verify_jwt = true
+
+[functions.google-analytics-api]
+verify_jwt = true
+
+[functions.google-search-console-api]
+verify_jwt = true
+
+[functions.seo-analytics]
+verify_jwt = true
+
+[functions.blog-social-integration]
+verify_jwt = true
+
+[functions.social-post-scheduler]
+verify_jwt = true
+
+[functions.ai-content-generator]
+verify_jwt = true
+
+[functions.generate-blog-content]
+verify_jwt = true
+
+[functions.gsc-oauth-init]
+verify_jwt = true
+
+[functions.gsc-sync-data]
+verify_jwt = true
+
+[functions.quickbooks-connect]
+verify_jwt = true
+
+[functions.quickbooks-sync]
+verify_jwt = true
+
+[functions.quickbooks-route-transactions]
+verify_jwt = true
+
+[functions.google-calendar-auth]
+verify_jwt = true
+
+[functions.outlook-calendar-auth]
+verify_jwt = true
+
+[functions.sync-calendar]
+verify_jwt = true
+
+[functions.twilio-calling]
+verify_jwt = true
+
+[functions.voice-to-text]
+verify_jwt = true
+
+[functions.process-voice-command]
+verify_jwt = true
+
+[functions.time-tracking]
+verify_jwt = true
+
+[functions.validate-time-entry]
+verify_jwt = true
+
+[functions.geofencing]
+verify_jwt = true
+
+[functions.generate-invoice]
+verify_jwt = true
+
+[functions.generate-1099s]
+verify_jwt = true
+
+[functions.daily-reports]
+verify_jwt = true
+
+[functions.document-classifier]
+verify_jwt = true
+
+[functions.analyze-images]
+verify_jwt = true
+
+[functions.smart-data-analyzer]
+verify_jwt = true
+
+[functions.ai-estimating]
+verify_jwt = true
+
+[functions.risk-prediction]
+verify_jwt = true
+
+[functions.auto-scheduling]
+verify_jwt = true
+
+[functions.projects]
+verify_jwt = true
+
+[functions.change-orders]
+verify_jwt = true
+
+[functions.send-notification]
+verify_jwt = true
+
+[functions.send-safety-notification]
+verify_jwt = true
+
+[functions.send-booking-confirmation]
+verify_jwt = true
+
+[functions.webhook-trigger]
+verify_jwt = true
+
+[functions.webhook-delivery]
+verify_jwt = true
+
+[functions.execute-workflow]
+verify_jwt = true
+
+[functions.workflow-execution]
+verify_jwt = true
+
+[functions.api-management]
+verify_jwt = true
+
+[functions.generate-custom-report]
+verify_jwt = true
+
+[functions.manage-complimentary-subscription]
+verify_jwt = true
+
+[functions.calculate-lead-score]
+verify_jwt = true
+
+[functions.track-usage]
+verify_jwt = true
+
+[functions.analyze-support-ticket]
+verify_jwt = true
+
+[functions.send-support-notification]
+verify_jwt = true
+
+[functions.seo-audit]
+verify_jwt = true
+
+[functions.crawl-site]
+verify_jwt = true
+
+[functions.check-broken-links]
+verify_jwt = true
+
+[functions.check-mobile-first]
+verify_jwt = true
+
+[functions.check-core-web-vitals]
+verify_jwt = true
+
+[functions.check-security-headers]
+verify_jwt = true
+
+[functions.validate-structured-data]
+verify_jwt = true
+
+[functions.detect-duplicate-content]
+verify_jwt = true
+
+[functions.detect-redirect-chains]
+verify_jwt = true
+
+[functions.analyze-content]
+verify_jwt = true
+
+[functions.analyze-semantic-keywords]
+verify_jwt = true
+
+[functions.analyze-internal-links]
+verify_jwt = true
+
+[functions.create-missing-content]
+verify_jwt = true
+
+[functions.optimize-page-content]
+verify_jwt = true
+
+[functions.optimize-resources]
+verify_jwt = true
+
+[functions.apply-seo-fixes]
+verify_jwt = true
+
+[functions.generate-sitemap]
+verify_jwt = true
+
+[functions.generate-sitemap-file]
+verify_jwt = true
+
+[functions.save-robots-txt]
+verify_jwt = true
+
+[functions.save-llms-txt]
+verify_jwt = true
+
+[functions.save-meta-settings]
+verify_jwt = true
+
+[functions.export-seo-report]
+verify_jwt = true
+
+[functions.send-seo-notification]
+verify_jwt = true
+
+[functions.check-keyword-positions]
+verify_jwt = true
+
+[functions.track-serp-features]
+verify_jwt = true
+
+[functions.sync-backlinks]
+verify_jwt = true
+
+[functions.monitor-performance-budget]
+verify_jwt = true
+
+[functions.verify-domain]
+verify_jwt = true
+
+[functions.bing-search-api]
+verify_jwt = true
+
+[functions.bing-webmaster-api]
+verify_jwt = true
+
+[functions.get-crawl-results]
+verify_jwt = true
+
+[functions.get-keyword-history]
+verify_jwt = true
+
+[functions.sitemap-generator]
+verify_jwt = true
+
+[functions.seo-file-generator]
+verify_jwt = true
+
+[functions.seo-backend-integration]
+verify_jwt = true
+
+[functions.store-stripe-keys]
+verify_jwt = true
+
+[functions.check-subscription]
+verify_jwt = true
+
+[functions.convert-trial-to-paid]
+verify_jwt = true
+
+[functions.enhanced-create-checkout]
+verify_jwt = true
+
+[functions.process-invoice-payment]
+verify_jwt = true
+
+[functions.manage-schedules]
+verify_jwt = true
+
+[functions.manage-alert-rules]
+verify_jwt = true
+
+[functions.get-audit-history]
+verify_jwt = true
+
+[functions.calculate-bid-analytics]
+verify_jwt = true
+
+[functions.calculate-revenue-metrics]
+verify_jwt = true
+
+[functions.generate-performance-benchmarks]
+verify_jwt = true
+
+[functions.generate-predictive-analytics]
+verify_jwt = true
+
+[functions.generate-risk-assessment]
+verify_jwt = true
+
+[functions.generate-timeline-optimization]
+verify_jwt = true
+
+[functions.generate-scaling-plan]
+verify_jwt = true
+
+[functions.apply-timeline-optimization]
+verify_jwt = true
+
+[functions.smart-procurement]
+verify_jwt = true
+
+[functions.auto-intervention-scheduler]
+verify_jwt = true
+
+[functions.analytics-oauth-google]
+verify_jwt = true
+
+[functions.gsc-fetch-properties]
+verify_jwt = true
+
+[functions.blog-ai-automation]
+verify_jwt = true
+
+[functions.social-content-generator]
+verify_jwt = true
+
+[functions.trigger-expo-build]
+verify_jwt = true
