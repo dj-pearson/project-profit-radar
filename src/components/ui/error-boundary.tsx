@@ -3,6 +3,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { captureException } from "@/lib/sentry";
 
 interface Props {
   children: ReactNode;
@@ -13,6 +14,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -26,6 +28,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // Send error to Sentry with component stack
+    captureException(error, {
+      errorInfo,
+      componentStack: errorInfo.componentStack,
+    });
+
+    // Store error info in state for display
+    this.setState({ errorInfo });
+
+    // Call custom error handler if provided
     this.props.onError?.(error, errorInfo);
   }
 

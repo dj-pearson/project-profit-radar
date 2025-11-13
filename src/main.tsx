@@ -9,8 +9,14 @@ import { initializeRUM } from "./utils/realUserMonitoring";
 import { registerServiceWorker } from "./utils/serviceWorkerManager";
 import { logger } from "./lib/logger";
 import { validateEnvironment } from "./lib/envValidation";
+import { initSentry } from "./lib/sentry";
 
-// Validate environment variables first
+// Initialize Sentry for error tracking (must be first!)
+if (typeof window !== 'undefined') {
+  initSentry();
+}
+
+// Validate environment variables
 if (typeof window !== 'undefined') {
   validateEnvironment();
 }

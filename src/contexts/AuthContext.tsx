@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
+import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import type { ReactNode, FC } from "react";
 
 // Platform-safe window location helpers
@@ -106,6 +107,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setSession(null);
     setUserProfile(null);
     successfulProfiles.current.clear();
+
+    // Clear Sentry user context
+    clearSentryUser();
 
     // SECURITY: Clear both localStorage and sessionStorage
     try {
@@ -589,15 +593,23 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     profileFetching ||
     (user && !userProfile && isProfileFetchInProgress);
 
-  // Log authentication state changes
+  // Log authentication state changes and update Sentry user context
   useEffect(() => {
     if (user && userProfile) {
       console.log("Authentication complete:", {
         userId: user.id,
         role: userProfile.role,
       });
+
+      // Set Sentry user context for error tracking
+      setSentryUser({
+        id: user.id,
+        email: userProfile.email,
+        role: userProfile.role,
+        company_id: userProfile.company_id,
+      });
     }
-  }, [user?.id, userProfile?.role]);
+  }, [user?.id, userProfile?.role, userProfile?.email, userProfile?.company_id]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
@@ -711,6 +723,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setUserProfile(null);
       successfulProfiles.current.clear();
 
+      // Clear Sentry user context
+      clearSentryUser();
+
       // Clear route memory on sign out
       clearRememberedRoute();
 
@@ -724,6 +739,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setSession(null);
       setUserProfile(null);
       successfulProfiles.current.clear();
+      clearSentryUser();
       clearRememberedRoute();
     } finally {
       setLoading(false);
