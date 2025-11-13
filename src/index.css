@@ -121,7 +121,8 @@ All colors MUST be HSL.
   }
   
   /* Animation utilities */
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-duration: 0.3s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Font Loading Optimization */
   .fonts-loading * {
@@ -137,7 +138,8 @@ All colors MUST be HSL.
   }
   
   /* Accessibility variables */
-  --focus-ring: 2px solid hsl(var(--ring));
+  --focus-ring-width: 2px;
+  --focus-ring-color: hsl(var(--ring));
   --focus-ring-offset: 2px;
   --touch-target-min: 44px;
 }
@@ -227,7 +229,7 @@ All colors MUST be HSL.
 
 /* Enhanced Focus Indicators */
 .enhanced-focus *:focus-visible {
-  outline: var(--focus-ring);
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
   border-radius: 4px;
 }
@@ -238,7 +240,7 @@ All colors MUST be HSL.
 .enhanced-focus textarea:focus-visible,
 .enhanced-focus select:focus-visible {
   box-shadow: 0 0 0 var(--focus-ring-offset) hsl(var(--background)), 
-              0 0 0 calc(var(--focus-ring-offset) + 2px) hsl(var(--ring));
+              0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) var(--focus-ring-color);
 }
 
 /* Screen Reader Optimizations */
