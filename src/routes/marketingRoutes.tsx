@@ -74,6 +74,7 @@ import BuildertrendAlternativeGEO from '@/pages/resources/BuildertrendAlternativ
 
 // Phase 4: Ultimate Guides
 import CompleteGuideConstructionJobCosting from '@/pages/resources/CompleteGuideConstructionJobCosting';
+import ConstructionFinancialManagementGuide from '@/pages/resources/ConstructionFinancialManagementGuide';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -155,6 +156,7 @@ export const marketingRoutes = (
 
     {/* Phase 4: Ultimate Guides */}
     <Route path="/resources/complete-guide-construction-job-costing" element={<CompleteGuideConstructionJobCosting />} />
+    <Route path="/resources/construction-financial-management-ultimate-guide" element={<ConstructionFinancialManagementGuide />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />

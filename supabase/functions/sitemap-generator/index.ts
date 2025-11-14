@@ -145,6 +145,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
 
     // Phase 4: Ultimate Guides
     { path: '/resources/complete-guide-construction-job-costing', priority: '1.0', changefreq: 'monthly' },
+    { path: '/resources/construction-financial-management-ultimate-guide', priority: '1.0', changefreq: 'monthly' },
   ]
 
   const allPages = [
