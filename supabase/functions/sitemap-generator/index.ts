@@ -81,7 +81,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/tutorials', priority: '0.7', changefreq: 'weekly' },
     { path: '/resources', priority: '0.8', changefreq: 'weekly' },
     { path: '/tools', priority: '0.7', changefreq: 'monthly' },
-    { path: '/roi-calculator', priority: '0.8', changefreq: 'monthly' },
+    { path: '/roi-calculator', priority: '0.9', changefreq: 'monthly' },
     { path: '/tools/schedule-builder', priority: '0.8', changefreq: 'monthly' },
     
     // Authentication & onboarding
@@ -107,6 +107,11 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/hvac-contractor-software', priority: '0.7', changefreq: 'monthly' },
     { path: '/plumbing-contractor-software', priority: '0.7', changefreq: 'monthly' },
 
+    // SEO-optimized feature pages (high priority for search)
+    { path: '/features/job-costing', priority: '0.9', changefreq: 'weekly' },
+    { path: '/features/real-time-budgeting', priority: '0.9', changefreq: 'weekly' },
+    { path: '/features/financial-management', priority: '0.9', changefreq: 'weekly' },
+
     // Blog/Resource articles with /resources prefix
     { path: '/resources/procore-alternatives-smb-contractors-guide', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/top-10-construction-platforms-august-2025', priority: '0.8', changefreq: 'monthly' },
@@ -118,6 +123,29 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/resources/construction-cost-estimation-methods', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-compliance-checklist', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-crm-implementation-guide', priority: '0.7', changefreq: 'monthly' },
+
+    // Financial Intelligence Pillar (Phase 2 SEO - high priority content)
+    { path: '/resources/financial-intelligence-guide', priority: '0.9', changefreq: 'weekly' },
+    { path: '/resources/real-cost-delayed-job-costing', priority: '0.8', changefreq: 'monthly' },
+
+    // Financial Intelligence Supporting Articles (Phase 3 - Content Velocity)
+    { path: '/resources/budget-vs-actual-tracking-guide', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/quickbooks-limitations-construction', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/cash-flow-management-guide', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/calculate-true-project-profitability', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/reading-financial-statements-guide', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/construction-roi-calculator-guide', priority: '0.8', changefreq: 'monthly' },
+
+    // Phase 4: Comparison & Competitive Content
+    { path: '/resources/best-construction-software-small-business-2025', priority: '0.9', changefreq: 'monthly' },
+    { path: '/resources/quickbooks-vs-construction-software', priority: '0.9', changefreq: 'monthly' },
+    { path: '/resources/job-costing-software-comparison', priority: '0.9', changefreq: 'monthly' },
+    { path: '/resources/procore-alternative-complete-guide', priority: '0.9', changefreq: 'monthly' },
+    { path: '/resources/buildertrend-alternative-complete-guide', priority: '0.9', changefreq: 'monthly' },
+
+    // Phase 4: Ultimate Guides
+    { path: '/resources/complete-guide-construction-job-costing', priority: '1.0', changefreq: 'monthly' },
+    { path: '/resources/construction-financial-management-ultimate-guide', priority: '1.0', changefreq: 'monthly' },
   ]
 
   const allPages = [

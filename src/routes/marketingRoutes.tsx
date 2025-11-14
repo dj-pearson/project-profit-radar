@@ -30,6 +30,11 @@ import ConstructionFieldManagement from '@/pages/ConstructionFieldManagement';
 import ConstructionSchedulingSoftware from '@/pages/ConstructionSchedulingSoftware';
 import ConstructionProjectManagementSoftware from '@/pages/ConstructionProjectManagementSoftware';
 
+// New SEO-optimized feature pages
+import JobCostingPage from '@/pages/features/JobCosting';
+import RealTimeBudgetingPage from '@/pages/features/RealTimeBudgeting';
+import FinancialManagementPage from '@/pages/features/FinancialManagement';
+
 // Comparison pages
 import ProcoreAlternative from '@/pages/ProcoreAlternative';
 import ProcoreAlternativeDetailed from '@/pages/ProcoreAlternativeDetailed';
@@ -48,6 +53,29 @@ import ProcoreVsBuildDeskComparison from '@/pages/resources/ProcoreVsBuildDeskCo
 import QuickBooksIntegrationGuide from '@/pages/resources/QuickBooksIntegrationGuide';
 import ConstructionMobileAppGuide from '@/pages/resources/ConstructionMobileAppGuide';
 
+// Phase 2: Financial Intelligence content pillar
+import FinancialIntelligenceGuide from '@/pages/resources/FinancialIntelligenceGuide';
+import RealCostDelayedJobCosting from '@/pages/resources/RealCostDelayedJobCosting';
+
+// Phase 3: Financial Intelligence supporting articles
+import BudgetVsActualTrackingGuide from '@/pages/resources/BudgetVsActualTrackingGuide';
+import QuickBooksLimitationsConstruction from '@/pages/resources/QuickBooksLimitationsConstruction';
+import CashFlowManagementGuide from '@/pages/resources/CashFlowManagementGuide';
+import CalculateTrueProjectProfitability from '@/pages/resources/CalculateTrueProjectProfitability';
+import ReadingFinancialStatementsGuide from '@/pages/resources/ReadingFinancialStatementsGuide';
+import ConstructionROICalculatorGuide from '@/pages/resources/ConstructionROICalculatorGuide';
+
+// Phase 4: Comparison and competitive content
+import BestConstructionSoftwareSmallBusiness2025 from '@/pages/resources/BestConstructionSoftwareSmallBusiness2025';
+import QuickBooksVsConstructionSoftware from '@/pages/resources/QuickBooksVsConstructionSoftware';
+import JobCostingSoftwareComparison from '@/pages/resources/JobCostingSoftwareComparison';
+import ProcoreAlternativeGEO from '@/pages/resources/ProcoreAlternativeGEO';
+import BuildertrendAlternativeGEO from '@/pages/resources/BuildertrendAlternativeGEO';
+
+// Phase 4: Ultimate Guides
+import CompleteGuideConstructionJobCosting from '@/pages/resources/CompleteGuideConstructionJobCosting';
+import ConstructionFinancialManagementGuide from '@/pages/resources/ConstructionFinancialManagementGuide';
+
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
 import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
@@ -55,6 +83,7 @@ import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
 // Free Tools
 import ProfitabilityCalculator from '@/pages/ProfitabilityCalculator';
 import FinancialHealthCheckPage from '@/pages/FinancialHealthCheck';
+import ROICalculatorLanding from '@/pages/ROICalculatorLanding';
 
 export const marketingRoutes = (
   <>
@@ -82,6 +111,11 @@ export const marketingRoutes = (
     <Route path="/construction-scheduling-software" element={<ConstructionSchedulingSoftware />} />
     <Route path="/construction-project-management-software" element={<ConstructionProjectManagementSoftware />} />
 
+    {/* New SEO-optimized feature pages (/features/*) */}
+    <Route path="/features/job-costing" element={<JobCostingPage />} />
+    <Route path="/features/real-time-budgeting" element={<RealTimeBudgetingPage />} />
+    <Route path="/features/financial-management" element={<FinancialManagementPage />} />
+
     {/* Comparison Pages */}
     <Route path="/procore-alternative" element={<ProcoreAlternativeDetailed />} />
     <Route path="/procore-alternative-simple" element={<ProcoreAlternative />} />
@@ -101,11 +135,35 @@ export const marketingRoutes = (
     <Route path="/resources/quickbooks-integration-guide" element={<QuickBooksIntegrationGuide />} />
     <Route path="/resources/construction-mobile-app-guide" element={<ConstructionMobileAppGuide />} />
 
+    {/* Financial Intelligence Pillar (Phase 2 SEO Strategy) */}
+    <Route path="/resources/financial-intelligence-guide" element={<FinancialIntelligenceGuide />} />
+    <Route path="/resources/real-cost-delayed-job-costing" element={<RealCostDelayedJobCosting />} />
+
+    {/* Financial Intelligence Supporting Articles (Phase 3) */}
+    <Route path="/resources/budget-vs-actual-tracking-guide" element={<BudgetVsActualTrackingGuide />} />
+    <Route path="/resources/quickbooks-limitations-construction" element={<QuickBooksLimitationsConstruction />} />
+    <Route path="/resources/cash-flow-management-guide" element={<CashFlowManagementGuide />} />
+    <Route path="/resources/calculate-true-project-profitability" element={<CalculateTrueProjectProfitability />} />
+    <Route path="/resources/reading-financial-statements-guide" element={<ReadingFinancialStatementsGuide />} />
+    <Route path="/resources/construction-roi-calculator-guide" element={<ConstructionROICalculatorGuide />} />
+
+    {/* Phase 4: Comparison & Competitive Content */}
+    <Route path="/resources/best-construction-software-small-business-2025" element={<BestConstructionSoftwareSmallBusiness2025 />} />
+    <Route path="/resources/quickbooks-vs-construction-software" element={<QuickBooksVsConstructionSoftware />} />
+    <Route path="/resources/job-costing-software-comparison" element={<JobCostingSoftwareComparison />} />
+    <Route path="/resources/procore-alternative-complete-guide" element={<ProcoreAlternativeGEO />} />
+    <Route path="/resources/buildertrend-alternative-complete-guide" element={<BuildertrendAlternativeGEO />} />
+
+    {/* Phase 4: Ultimate Guides */}
+    <Route path="/resources/complete-guide-construction-job-costing" element={<CompleteGuideConstructionJobCosting />} />
+    <Route path="/resources/construction-financial-management-ultimate-guide" element={<ConstructionFinancialManagementGuide />} />
+
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
     <Route path="/topics/safety-and-osha-compliance" element={<SafetyAndOSHACompliance />} />
 
     {/* Free Tools */}
+    <Route path="/roi-calculator" element={<ROICalculatorLanding />} />
     <Route path="/calculator" element={<ProfitabilityCalculator />} />
     <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
     <Route path="/financial-health-check" element={<FinancialHealthCheckPage />} />
