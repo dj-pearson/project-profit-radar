@@ -138,6 +138,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
 
     // Phase 4: Comparison & Competitive Content
     { path: '/resources/best-construction-software-small-business-2025', priority: '0.9', changefreq: 'monthly' },
+    { path: '/resources/quickbooks-vs-construction-software', priority: '0.9', changefreq: 'monthly' },
   ]
 
   const allPages = [
