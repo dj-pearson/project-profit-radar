@@ -141,6 +141,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/resources/quickbooks-vs-construction-software', priority: '0.9', changefreq: 'monthly' },
     { path: '/resources/job-costing-software-comparison', priority: '0.9', changefreq: 'monthly' },
     { path: '/resources/procore-alternative-complete-guide', priority: '0.9', changefreq: 'monthly' },
+    { path: '/resources/buildertrend-alternative-complete-guide', priority: '0.9', changefreq: 'monthly' },
   ]
 
   const allPages = [

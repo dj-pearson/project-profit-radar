@@ -70,6 +70,7 @@ import BestConstructionSoftwareSmallBusiness2025 from '@/pages/resources/BestCon
 import QuickBooksVsConstructionSoftware from '@/pages/resources/QuickBooksVsConstructionSoftware';
 import JobCostingSoftwareComparison from '@/pages/resources/JobCostingSoftwareComparison';
 import ProcoreAlternativeGEO from '@/pages/resources/ProcoreAlternativeGEO';
+import BuildertrendAlternativeGEO from '@/pages/resources/BuildertrendAlternativeGEO';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -146,6 +147,7 @@ export const marketingRoutes = (
     <Route path="/resources/quickbooks-vs-construction-software" element={<QuickBooksVsConstructionSoftware />} />
     <Route path="/resources/job-costing-software-comparison" element={<JobCostingSoftwareComparison />} />
     <Route path="/resources/procore-alternative-complete-guide" element={<ProcoreAlternativeGEO />} />
+    <Route path="/resources/buildertrend-alternative-complete-guide" element={<BuildertrendAlternativeGEO />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
