@@ -68,6 +68,7 @@ import ConstructionROICalculatorGuide from '@/pages/resources/ConstructionROICal
 // Phase 4: Comparison and competitive content
 import BestConstructionSoftwareSmallBusiness2025 from '@/pages/resources/BestConstructionSoftwareSmallBusiness2025';
 import QuickBooksVsConstructionSoftware from '@/pages/resources/QuickBooksVsConstructionSoftware';
+import JobCostingSoftwareComparison from '@/pages/resources/JobCostingSoftwareComparison';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -142,6 +143,7 @@ export const marketingRoutes = (
     {/* Phase 4: Comparison & Competitive Content */}
     <Route path="/resources/best-construction-software-small-business-2025" element={<BestConstructionSoftwareSmallBusiness2025 />} />
     <Route path="/resources/quickbooks-vs-construction-software" element={<QuickBooksVsConstructionSoftware />} />
+    <Route path="/resources/job-costing-software-comparison" element={<JobCostingSoftwareComparison />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
