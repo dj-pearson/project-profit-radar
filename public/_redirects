@@ -1,10 +1,7 @@
-# Force HTTPS redirect for HTTP requests
-http://build-desk.com/*  https://build-desk.com/:splat  301
-
 # Handle auth recovery redirects properly
 /auth?error_recovery*  /auth  302
 
-# SPA fallback - serve index.html for all routes (200 rewrite, not redirect)
+# SPA fallback - serve index.html only when file doesn't exist (404)
+# Using 404 ensures static assets are served first before falling back to index.html
 # This preserves the URL and lets the client-side router handle it
-# Static files are served automatically by the CDN before hitting this rule
-/:path*    /index.html   200
+/*    /index.html   404
