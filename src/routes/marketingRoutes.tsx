@@ -62,6 +62,7 @@ import BudgetVsActualTrackingGuide from '@/pages/resources/BudgetVsActualTrackin
 import QuickBooksLimitationsConstruction from '@/pages/resources/QuickBooksLimitationsConstruction';
 import CashFlowManagementGuide from '@/pages/resources/CashFlowManagementGuide';
 import CalculateTrueProjectProfitability from '@/pages/resources/CalculateTrueProjectProfitability';
+import ReadingFinancialStatementsGuide from '@/pages/resources/ReadingFinancialStatementsGuide';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -130,6 +131,7 @@ export const marketingRoutes = (
     <Route path="/resources/quickbooks-limitations-construction" element={<QuickBooksLimitationsConstruction />} />
     <Route path="/resources/cash-flow-management-guide" element={<CashFlowManagementGuide />} />
     <Route path="/resources/calculate-true-project-profitability" element={<CalculateTrueProjectProfitability />} />
+    <Route path="/resources/reading-financial-statements-guide" element={<ReadingFinancialStatementsGuide />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
