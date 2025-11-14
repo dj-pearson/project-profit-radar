@@ -1,7 +1,5 @@
 # Handle auth recovery redirects properly
 /auth?error_recovery*  /auth  302
 
-# SPA fallback - serve index.html only when file doesn't exist (404)
-# Using 404 ensures static assets are served first before falling back to index.html
-# This preserves the URL and lets the client-side router handle it
-/*    /index.html   404
+# SPA routing is handled by 404.html (automatically served by Cloudflare Pages)
+# See scripts/copy-404.js which creates 404.html from index.html during build
