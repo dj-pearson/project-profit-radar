@@ -61,6 +61,7 @@ import RealCostDelayedJobCosting from '@/pages/resources/RealCostDelayedJobCosti
 import BudgetVsActualTrackingGuide from '@/pages/resources/BudgetVsActualTrackingGuide';
 import QuickBooksLimitationsConstruction from '@/pages/resources/QuickBooksLimitationsConstruction';
 import CashFlowManagementGuide from '@/pages/resources/CashFlowManagementGuide';
+import CalculateTrueProjectProfitability from '@/pages/resources/CalculateTrueProjectProfitability';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -128,6 +129,7 @@ export const marketingRoutes = (
     <Route path="/resources/budget-vs-actual-tracking-guide" element={<BudgetVsActualTrackingGuide />} />
     <Route path="/resources/quickbooks-limitations-construction" element={<QuickBooksLimitationsConstruction />} />
     <Route path="/resources/cash-flow-management-guide" element={<CashFlowManagementGuide />} />
+    <Route path="/resources/calculate-true-project-profitability" element={<CalculateTrueProjectProfitability />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
