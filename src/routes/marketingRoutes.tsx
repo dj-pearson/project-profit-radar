@@ -65,6 +65,9 @@ import CalculateTrueProjectProfitability from '@/pages/resources/CalculateTruePr
 import ReadingFinancialStatementsGuide from '@/pages/resources/ReadingFinancialStatementsGuide';
 import ConstructionROICalculatorGuide from '@/pages/resources/ConstructionROICalculatorGuide';
 
+// Phase 4: Comparison and competitive content
+import BestConstructionSoftwareSmallBusiness2025 from '@/pages/resources/BestConstructionSoftwareSmallBusiness2025';
+
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
 import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
@@ -134,6 +137,9 @@ export const marketingRoutes = (
     <Route path="/resources/calculate-true-project-profitability" element={<CalculateTrueProjectProfitability />} />
     <Route path="/resources/reading-financial-statements-guide" element={<ReadingFinancialStatementsGuide />} />
     <Route path="/resources/construction-roi-calculator-guide" element={<ConstructionROICalculatorGuide />} />
+
+    {/* Phase 4: Comparison & Competitive Content */}
+    <Route path="/resources/best-construction-software-small-business-2025" element={<BestConstructionSoftwareSmallBusiness2025 />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />

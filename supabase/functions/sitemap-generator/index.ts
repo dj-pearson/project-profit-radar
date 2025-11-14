@@ -135,6 +135,9 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/resources/calculate-true-project-profitability', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/reading-financial-statements-guide', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/construction-roi-calculator-guide', priority: '0.8', changefreq: 'monthly' },
+
+    // Phase 4: Comparison & Competitive Content
+    { path: '/resources/best-construction-software-small-business-2025', priority: '0.9', changefreq: 'monthly' },
   ]
 
   const allPages = [
