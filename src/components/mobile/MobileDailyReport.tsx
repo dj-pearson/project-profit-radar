@@ -3,11 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Mic, 
-  MicOff, 
-  Camera, 
-  MapPin, 
+import {
+  Mic,
+  MicOff,
+  Camera,
+  MapPin,
   Clock,
   Save,
   Upload,
@@ -22,6 +22,8 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { supabase } from '@/integrations/supabase/client';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
+import { useGeofencing } from '@/hooks/useGeofencing';
+import { LocationStatusIndicator } from './LocationStatusIndicator';
 
 interface DailyReportData {
   project_id: string;
@@ -75,9 +77,68 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
   const { user } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
 
+  // Enhanced geofencing
+  const {
+    currentLocation: browserLocation,
+    isTracking: isGpsTracking,
+    permissionStatus,
+    addGeofence,
+    isInsideGeofence,
+    getDistanceFromGeofence,
+    startTracking: startGpsTracking
+  } = useGeofencing({ autoStart: false });
+
+  const [project, setProject] = useState<any>(null);
+  const [isInGeofence, setIsInGeofence] = useState<boolean | null>(null);
+
   useEffect(() => {
     getCurrentLocation();
+    loadProjectData();
   }, []);
+
+  // Start GPS tracking when component mounts
+  useEffect(() => {
+    startGpsTracking();
+  }, []);
+
+  // Add geofence for project if available
+  useEffect(() => {
+    if (project && project.site_latitude && project.site_longitude) {
+      addGeofence({
+        id: project.id,
+        name: project.name,
+        centerLatitude: project.site_latitude,
+        centerLongitude: project.site_longitude,
+        radiusMeters: project.geofence_radius_meters || 100,
+        type: 'project'
+      });
+    }
+  }, [project]);
+
+  // Update geofence status
+  useEffect(() => {
+    if (projectId && browserLocation) {
+      const isInside = isInsideGeofence(projectId);
+      setIsInGeofence(isInside);
+    }
+  }, [browserLocation, projectId]);
+
+  const loadProjectData = async () => {
+    if (!projectId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, site_latitude, site_longitude, geofence_radius_meters')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+      setProject(data);
+    } catch (error) {
+      console.error('Error loading project:', error);
+    }
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -245,12 +306,23 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
     try {
       setIsSaving(true);
 
+      // Use browser location if available, otherwise fall back to Capacitor
+      const currentLoc = browserLocation || location;
+      const distance = projectId ? getDistanceFromGeofence(projectId) : null;
+
       const reportPayload = {
         ...reportData,
         user_id: user?.id,
         report_date: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString(),
-        company_id: (await supabase.from('user_profiles').select('company_id').eq('id', user?.id).single()).data?.company_id
+        company_id: (await supabase.from('user_profiles').select('company_id').eq('id', user?.id).single()).data?.company_id,
+        // Enhanced GPS verification
+        gps_latitude: currentLoc?.latitude,
+        gps_longitude: currentLoc?.longitude,
+        gps_accuracy: currentLoc?.accuracy,
+        is_geofence_verified: isInGeofence === true,
+        geofence_distance_meters: distance,
+        location: currentLoc || reportData.location
       };
 
       if (isOnline) {
@@ -313,14 +385,21 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
           {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
           {isOnline ? "Online" : "Offline"}
         </Badge>
-        
-        {location && (
-          <Badge variant="outline" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            GPS: {location.accuracy < 10 ? "High" : "Low"} Accuracy
-          </Badge>
-        )}
       </div>
+
+      {/* GPS and Geofence Status */}
+      {project && (
+        <LocationStatusIndicator
+          location={browserLocation || location}
+          isTracking={isGpsTracking}
+          permissionStatus={permissionStatus}
+          isInsideGeofence={isInGeofence ?? undefined}
+          distanceFromGeofence={projectId ? getDistanceFromGeofence(projectId) : undefined}
+          geofenceName={project.name}
+          geofenceRadius={project.geofence_radius_meters || 100}
+          showDetails={false}
+        />
+      )}
 
       {/* Weather & Crew Info */}
       <Card>
