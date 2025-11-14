@@ -72,6 +72,9 @@ import JobCostingSoftwareComparison from '@/pages/resources/JobCostingSoftwareCo
 import ProcoreAlternativeGEO from '@/pages/resources/ProcoreAlternativeGEO';
 import BuildertrendAlternativeGEO from '@/pages/resources/BuildertrendAlternativeGEO';
 
+// Phase 4: Ultimate Guides
+import CompleteGuideConstructionJobCosting from '@/pages/resources/CompleteGuideConstructionJobCosting';
+
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
 import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
@@ -149,6 +152,9 @@ export const marketingRoutes = (
     <Route path="/resources/job-costing-software-comparison" element={<JobCostingSoftwareComparison />} />
     <Route path="/resources/procore-alternative-complete-guide" element={<ProcoreAlternativeGEO />} />
     <Route path="/resources/buildertrend-alternative-complete-guide" element={<BuildertrendAlternativeGEO />} />
+
+    {/* Phase 4: Ultimate Guides */}
+    <Route path="/resources/complete-guide-construction-job-costing" element={<CompleteGuideConstructionJobCosting />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />

@@ -142,6 +142,9 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/resources/job-costing-software-comparison', priority: '0.9', changefreq: 'monthly' },
     { path: '/resources/procore-alternative-complete-guide', priority: '0.9', changefreq: 'monthly' },
     { path: '/resources/buildertrend-alternative-complete-guide', priority: '0.9', changefreq: 'monthly' },
+
+    // Phase 4: Ultimate Guides
+    { path: '/resources/complete-guide-construction-job-costing', priority: '1.0', changefreq: 'monthly' },
   ]
 
   const allPages = [
