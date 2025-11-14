@@ -79,6 +79,7 @@ import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
 // Free Tools
 import ProfitabilityCalculator from '@/pages/ProfitabilityCalculator';
 import FinancialHealthCheckPage from '@/pages/FinancialHealthCheck';
+import ROICalculatorLanding from '@/pages/ROICalculatorLanding';
 
 export const marketingRoutes = (
   <>
@@ -154,6 +155,7 @@ export const marketingRoutes = (
     <Route path="/topics/safety-and-osha-compliance" element={<SafetyAndOSHACompliance />} />
 
     {/* Free Tools */}
+    <Route path="/roi-calculator" element={<ROICalculatorLanding />} />
     <Route path="/calculator" element={<ProfitabilityCalculator />} />
     <Route path="/profitability-calculator" element={<ProfitabilityCalculator />} />
     <Route path="/financial-health-check" element={<FinancialHealthCheckPage />} />

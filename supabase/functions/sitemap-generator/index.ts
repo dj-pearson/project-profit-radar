@@ -81,7 +81,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/tutorials', priority: '0.7', changefreq: 'weekly' },
     { path: '/resources', priority: '0.8', changefreq: 'weekly' },
     { path: '/tools', priority: '0.7', changefreq: 'monthly' },
-    { path: '/roi-calculator', priority: '0.8', changefreq: 'monthly' },
+    { path: '/roi-calculator', priority: '0.9', changefreq: 'monthly' },
     { path: '/tools/schedule-builder', priority: '0.8', changefreq: 'monthly' },
     
     // Authentication & onboarding
