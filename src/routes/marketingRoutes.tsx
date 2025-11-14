@@ -53,6 +53,10 @@ import ProcoreVsBuildDeskComparison from '@/pages/resources/ProcoreVsBuildDeskCo
 import QuickBooksIntegrationGuide from '@/pages/resources/QuickBooksIntegrationGuide';
 import ConstructionMobileAppGuide from '@/pages/resources/ConstructionMobileAppGuide';
 
+// Phase 2: Financial Intelligence content pillar
+import FinancialIntelligenceGuide from '@/pages/resources/FinancialIntelligenceGuide';
+import RealCostDelayedJobCosting from '@/pages/resources/RealCostDelayedJobCosting';
+
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
 import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
@@ -110,6 +114,10 @@ export const marketingRoutes = (
     <Route path="/resources/procore-vs-builddesk-small-contractors" element={<ProcoreVsBuildDeskComparison />} />
     <Route path="/resources/quickbooks-integration-guide" element={<QuickBooksIntegrationGuide />} />
     <Route path="/resources/construction-mobile-app-guide" element={<ConstructionMobileAppGuide />} />
+
+    {/* Financial Intelligence Pillar (Phase 2 SEO Strategy) */}
+    <Route path="/resources/financial-intelligence-guide" element={<FinancialIntelligenceGuide />} />
+    <Route path="/resources/real-cost-delayed-job-costing" element={<RealCostDelayedJobCosting />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />

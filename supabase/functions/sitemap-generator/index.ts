@@ -123,6 +123,10 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/resources/construction-cost-estimation-methods', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-compliance-checklist', priority: '0.7', changefreq: 'monthly' },
     { path: '/resources/construction-crm-implementation-guide', priority: '0.7', changefreq: 'monthly' },
+
+    // Financial Intelligence Pillar (Phase 2 SEO - high priority content)
+    { path: '/resources/financial-intelligence-guide', priority: '0.9', changefreq: 'weekly' },
+    { path: '/resources/real-cost-delayed-job-costing', priority: '0.8', changefreq: 'monthly' },
   ]
 
   const allPages = [
