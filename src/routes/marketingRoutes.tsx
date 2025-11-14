@@ -60,6 +60,7 @@ import RealCostDelayedJobCosting from '@/pages/resources/RealCostDelayedJobCosti
 // Phase 3: Financial Intelligence supporting articles
 import BudgetVsActualTrackingGuide from '@/pages/resources/BudgetVsActualTrackingGuide';
 import QuickBooksLimitationsConstruction from '@/pages/resources/QuickBooksLimitationsConstruction';
+import CashFlowManagementGuide from '@/pages/resources/CashFlowManagementGuide';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -126,6 +127,7 @@ export const marketingRoutes = (
     {/* Financial Intelligence Supporting Articles (Phase 3) */}
     <Route path="/resources/budget-vs-actual-tracking-guide" element={<BudgetVsActualTrackingGuide />} />
     <Route path="/resources/quickbooks-limitations-construction" element={<QuickBooksLimitationsConstruction />} />
+    <Route path="/resources/cash-flow-management-guide" element={<CashFlowManagementGuide />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />

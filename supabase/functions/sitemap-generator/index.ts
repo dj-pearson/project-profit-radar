@@ -131,6 +131,7 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     // Financial Intelligence Supporting Articles (Phase 3 - Content Velocity)
     { path: '/resources/budget-vs-actual-tracking-guide', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/quickbooks-limitations-construction', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/cash-flow-management-guide', priority: '0.8', changefreq: 'monthly' },
   ]
 
   const allPages = [
