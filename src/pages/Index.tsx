@@ -73,25 +73,24 @@ const Index = () => {
         <SiteSearchSchema />
       
       <PageSEO
-        title="BuildDesk - Real-Time Financial Intelligence for Construction Contractors"
-        description="Know your profitability in real-time, not at tax time. Real-time job costing shows profit margins instantly. Predictive AI catches cost overruns 3 weeks early. 5-minute month-end close vs 3 days. Financial command center for SMB contractors. Start free trial."
+        title="Real-Time Job Costing for Contractors"
+        description="Construction job costing software with real-time budget tracking. Know your project profitability today, not 30 days later. Unlimited users, $350/month."
         keywords={[
-          'construction financial intelligence',
-          'real-time construction job costing',
-          'construction profitability software',
-          'predictive construction cost tracking',
-          'construction profit margin tracker',
-          'automated construction accounting',
-          'construction financial dashboard',
-          'quickbooks construction integration',
-          'construction budget vs actual',
-          'construction cost overrun prediction',
-          'construction financial reporting software',
-          'contractor profit tracking',
-          'construction cash flow management',
-          'job costing software construction',
-          'construction management software small contractors',
-          'construction financial command center'
+          'construction job costing software',
+          'real-time construction budgeting',
+          'construction financial management',
+          'job cost accounting for contractors',
+          'construction profit tracking',
+          'contractor expense tracking software',
+          'real-time budget alerts construction',
+          'construction financial dashboard software',
+          'quickbooks alternative for contractors',
+          'contractor cash flow forecasting',
+          'construction budget vs actual tracking',
+          'construction project profitability',
+          'small contractor software',
+          'construction cost tracking',
+          'real-time job costing'
         ]}
         canonicalUrl="https://builddesk.com"
         schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([

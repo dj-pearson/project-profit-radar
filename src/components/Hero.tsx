@@ -13,17 +13,16 @@ const Hero = () => {
           <div className="space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1">
             <div className="space-y-4">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-construction-dark leading-tight">
-                Know Your Profitability
-                <span className="block text-construction-orange">in Real-Time, Not at Tax Time</span>
+                Real-Time Job Costing Software
+                <span className="block text-construction-orange">for Small Construction Contractors</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                Financial command center for construction companies. See every project's profit margin instantly,
-                predict cost overruns weeks early, and close your books in 5 minutes instead of 3 days.
+                Stop waiting 30 days for job cost reports. Track every dollar in real-time and know if your project is profitable today, not next month.
                 <span className="block mt-3 font-semibold text-construction-orange">
-                  ✓ Real-time job costing • ✓ Predictive cost alerts • ✓ 5-minute month-end close
+                  ✓ Real-time job costing • ✓ Unlimited users • ✓ Financial-first approach
                 </span>
                 <span className="block mt-2 text-base">
-                  Join 500+ contractors who eliminated financial surprises and improved margins by 4%+
+                  Built for small contractors, not enterprise giants. $350/month, unlimited users.
                 </span>
               </p>
             </div>

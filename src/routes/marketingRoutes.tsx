@@ -30,6 +30,11 @@ import ConstructionFieldManagement from '@/pages/ConstructionFieldManagement';
 import ConstructionSchedulingSoftware from '@/pages/ConstructionSchedulingSoftware';
 import ConstructionProjectManagementSoftware from '@/pages/ConstructionProjectManagementSoftware';
 
+// New SEO-optimized feature pages
+import JobCostingPage from '@/pages/features/JobCosting';
+import RealTimeBudgetingPage from '@/pages/features/RealTimeBudgeting';
+import FinancialManagementPage from '@/pages/features/FinancialManagement';
+
 // Comparison pages
 import ProcoreAlternative from '@/pages/ProcoreAlternative';
 import ProcoreAlternativeDetailed from '@/pages/ProcoreAlternativeDetailed';
@@ -81,6 +86,11 @@ export const marketingRoutes = (
     <Route path="/construction-field-management" element={<ConstructionFieldManagement />} />
     <Route path="/construction-scheduling-software" element={<ConstructionSchedulingSoftware />} />
     <Route path="/construction-project-management-software" element={<ConstructionProjectManagementSoftware />} />
+
+    {/* New SEO-optimized feature pages (/features/*) */}
+    <Route path="/features/job-costing" element={<JobCostingPage />} />
+    <Route path="/features/real-time-budgeting" element={<RealTimeBudgetingPage />} />
+    <Route path="/features/financial-management" element={<FinancialManagementPage />} />
 
     {/* Comparison Pages */}
     <Route path="/procore-alternative" element={<ProcoreAlternativeDetailed />} />

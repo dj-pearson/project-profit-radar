@@ -42,7 +42,7 @@ export const SoftwareSchema = () => (
         "description": "Construction management software for small and mid-size contractors in the U.S. with job costing, scheduling, safety logs, and time tracking.",
         "offers": {
           "@type": "Offer",
-          "price": "149",
+          "price": "350",
           "priceCurrency": "USD",
           "priceValidUntil": "2025-12-31"
         },

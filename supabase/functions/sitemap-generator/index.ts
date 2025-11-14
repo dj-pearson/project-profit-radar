@@ -107,6 +107,11 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     { path: '/hvac-contractor-software', priority: '0.7', changefreq: 'monthly' },
     { path: '/plumbing-contractor-software', priority: '0.7', changefreq: 'monthly' },
 
+    // SEO-optimized feature pages (high priority for search)
+    { path: '/features/job-costing', priority: '0.9', changefreq: 'weekly' },
+    { path: '/features/real-time-budgeting', priority: '0.9', changefreq: 'weekly' },
+    { path: '/features/financial-management', priority: '0.9', changefreq: 'weekly' },
+
     // Blog/Resource articles with /resources prefix
     { path: '/resources/procore-alternatives-smb-contractors-guide', priority: '0.8', changefreq: 'monthly' },
     { path: '/resources/top-10-construction-platforms-august-2025', priority: '0.8', changefreq: 'monthly' },
