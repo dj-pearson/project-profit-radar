@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Clock, 
+import {
+  Clock,
   Play,
   Pause,
   Square,
@@ -12,13 +12,15 @@ import {
   WifiOff,
   Timer,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Navigation
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { supabase } from '@/integrations/supabase/client';
 import { Geolocation } from '@capacitor/geolocation';
+import { useGeofencing } from '@/hooks/useGeofencing';
 
 interface MobileTimeClockProps {
   projectId?: string;
@@ -43,6 +45,20 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
   const { user, userProfile } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
 
+  // Enhanced geofencing with browser-based GPS
+  const {
+    currentLocation: browserLocation,
+    isTracking: isGpsTracking,
+    permissionStatus,
+    addGeofence,
+    removeGeofence,
+    isInsideGeofence: checkInsideGeofence,
+    getDistanceFromGeofence,
+    formatDistance,
+    startTracking: startGpsTracking,
+    stopTracking: stopGpsTracking
+  } = useGeofencing({ autoStart: false });
+
   useEffect(() => {
     loadProjects();
     getCurrentLocation();
@@ -58,6 +74,40 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
     }
     return () => interval && clearInterval(interval);
   }, [isTracking, onBreak]);
+
+  // Add geofence monitoring when project is selected
+  useEffect(() => {
+    if (!selectedProject) return;
+
+    const project = projects.find(p => p.id === selectedProject);
+    if (!project || !project.site_latitude || !project.site_longitude) return;
+
+    // Start GPS tracking
+    startGpsTracking();
+
+    // Add geofence for the selected project
+    addGeofence({
+      id: project.id,
+      name: project.name,
+      centerLatitude: project.site_latitude,
+      centerLongitude: project.site_longitude,
+      radiusMeters: project.geofence_radius_meters || 100,
+      type: 'project'
+    });
+
+    return () => {
+      removeGeofence(project.id);
+      stopGpsTracking();
+    };
+  }, [selectedProject, projects]);
+
+  // Update geofence status when browser location changes
+  useEffect(() => {
+    if (!browserLocation || !selectedProject) return;
+
+    const isInside = checkInsideGeofence(selectedProject);
+    setIsInGeofence(isInside);
+  }, [browserLocation, selectedProject]);
 
   const loadProjects = async () => {
     try {
@@ -193,15 +243,23 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
     }
 
     try {
+      // Use browser location if available, otherwise fall back to Capacitor
+      const currentLoc = browserLocation || location;
+      const distance = selectedProject ? getDistanceFromGeofence(selectedProject) : null;
+
       const entryData = {
         user_id: user?.id,
         project_id: selectedProject,
         start_time: new Date().toISOString(),
-        gps_latitude: location.latitude,
-        gps_longitude: location.longitude,
-        location_accuracy: location.accuracy,
+        gps_latitude: currentLoc.latitude,
+        gps_longitude: currentLoc.longitude,
+        location_accuracy: currentLoc.accuracy,
         break_duration: 0,
-        company_id: userProfile?.company_id
+        company_id: userProfile?.company_id,
+        // Enhanced geofence verification fields
+        is_geofence_verified: isInGeofence === true,
+        geofence_distance_meters: distance,
+        geofence_breach_detected: isInGeofence === false
       };
 
       if (isOnline) {
@@ -337,25 +395,66 @@ const MobileTimeClock: React.FC<MobileTimeClockProps> = ({
   };
 
   const getLocationStatus = () => {
-    if (!location) return { text: 'No GPS', variant: 'destructive' as const };
-    if (isInGeofence === null) return { text: 'GPS Available', variant: 'secondary' as const };
-    if (isInGeofence === false) return { text: 'Outside Site', variant: 'destructive' as const };
-    return { text: 'On Site', variant: 'default' as const };
+    if (!location && !browserLocation) {
+      return { text: 'No GPS', variant: 'destructive' as const, distance: null };
+    }
+
+    if (permissionStatus === 'denied') {
+      return { text: 'GPS Denied', variant: 'destructive' as const, distance: null };
+    }
+
+    if (isInGeofence === null) {
+      return { text: 'GPS Available', variant: 'secondary' as const, distance: null };
+    }
+
+    // Get distance from geofence if available
+    const distance = selectedProject ? getDistanceFromGeofence(selectedProject) : null;
+
+    if (isInGeofence === false) {
+      const distanceText = distance ? ` (${formatDistance(distance)} away)` : '';
+      return {
+        text: `Outside Site${distanceText}`,
+        variant: 'destructive' as const,
+        distance
+      };
+    }
+
+    const distanceText = distance ? ` (${formatDistance(distance)} from center)` : '';
+    return {
+      text: `On Site${distanceText}`,
+      variant: 'default' as const,
+      distance
+    };
   };
 
   return (
     <div className="space-y-4 p-4">
       {/* Status Bar */}
-      <div className="flex items-center justify-between">
-        <Badge variant={isOnline ? "default" : "destructive"} className="flex items-center gap-2">
-          {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-          {isOnline ? "Online" : "Offline"}
-        </Badge>
-        
-        <Badge variant={getLocationStatus().variant} className="flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          {getLocationStatus().text}
-        </Badge>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Badge variant={isOnline ? "default" : "destructive"} className="flex items-center gap-2">
+            {isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+            {isOnline ? "Online" : "Offline"}
+          </Badge>
+
+          <Badge variant={getLocationStatus().variant} className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            {getLocationStatus().text}
+          </Badge>
+        </div>
+
+        {/* GPS Accuracy Indicator */}
+        {(browserLocation || location) && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Navigation className="h-3 w-3" />
+            <span>
+              Accuracy: {browserLocation?.accuracy ? `±${Math.round(browserLocation.accuracy)}m` : location?.accuracy ? `±${Math.round(location.accuracy)}m` : 'Unknown'}
+            </span>
+            {permissionStatus === 'granted' && isGpsTracking && (
+              <CheckCircle className="h-3 w-3 text-green-500" />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Time Display */}
