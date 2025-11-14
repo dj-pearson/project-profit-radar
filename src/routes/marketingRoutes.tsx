@@ -69,6 +69,7 @@ import ConstructionROICalculatorGuide from '@/pages/resources/ConstructionROICal
 import BestConstructionSoftwareSmallBusiness2025 from '@/pages/resources/BestConstructionSoftwareSmallBusiness2025';
 import QuickBooksVsConstructionSoftware from '@/pages/resources/QuickBooksVsConstructionSoftware';
 import JobCostingSoftwareComparison from '@/pages/resources/JobCostingSoftwareComparison';
+import ProcoreAlternativeGEO from '@/pages/resources/ProcoreAlternativeGEO';
 
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
@@ -144,6 +145,7 @@ export const marketingRoutes = (
     <Route path="/resources/best-construction-software-small-business-2025" element={<BestConstructionSoftwareSmallBusiness2025 />} />
     <Route path="/resources/quickbooks-vs-construction-software" element={<QuickBooksVsConstructionSoftware />} />
     <Route path="/resources/job-costing-software-comparison" element={<JobCostingSoftwareComparison />} />
+    <Route path="/resources/procore-alternative-complete-guide" element={<ProcoreAlternativeGEO />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
