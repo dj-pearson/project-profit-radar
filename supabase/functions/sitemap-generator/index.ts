@@ -127,6 +127,10 @@ function generateSitemapXML(canonicalDomain: string, metaTags: any[], blogPosts:
     // Financial Intelligence Pillar (Phase 2 SEO - high priority content)
     { path: '/resources/financial-intelligence-guide', priority: '0.9', changefreq: 'weekly' },
     { path: '/resources/real-cost-delayed-job-costing', priority: '0.8', changefreq: 'monthly' },
+
+    // Financial Intelligence Supporting Articles (Phase 3 - Content Velocity)
+    { path: '/resources/budget-vs-actual-tracking-guide', priority: '0.8', changefreq: 'monthly' },
+    { path: '/resources/quickbooks-limitations-construction', priority: '0.8', changefreq: 'monthly' },
   ]
 
   const allPages = [

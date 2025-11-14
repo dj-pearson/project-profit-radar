@@ -57,6 +57,10 @@ import ConstructionMobileAppGuide from '@/pages/resources/ConstructionMobileAppG
 import FinancialIntelligenceGuide from '@/pages/resources/FinancialIntelligenceGuide';
 import RealCostDelayedJobCosting from '@/pages/resources/RealCostDelayedJobCosting';
 
+// Phase 3: Financial Intelligence supporting articles
+import BudgetVsActualTrackingGuide from '@/pages/resources/BudgetVsActualTrackingGuide';
+import QuickBooksLimitationsConstruction from '@/pages/resources/QuickBooksLimitationsConstruction';
+
 // Topic pages
 import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
 import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
@@ -118,6 +122,10 @@ export const marketingRoutes = (
     {/* Financial Intelligence Pillar (Phase 2 SEO Strategy) */}
     <Route path="/resources/financial-intelligence-guide" element={<FinancialIntelligenceGuide />} />
     <Route path="/resources/real-cost-delayed-job-costing" element={<RealCostDelayedJobCosting />} />
+
+    {/* Financial Intelligence Supporting Articles (Phase 3) */}
+    <Route path="/resources/budget-vs-actual-tracking-guide" element={<BudgetVsActualTrackingGuide />} />
+    <Route path="/resources/quickbooks-limitations-construction" element={<QuickBooksLimitationsConstruction />} />
 
     {/* Topic Pages */}
     <Route path="/topics/construction-management-basics" element={<ConstructionManagementBasics />} />
