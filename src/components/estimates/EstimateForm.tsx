@@ -412,6 +412,44 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   return (
     <Form {...form}>
       <form className="space-y-6">
+        {/* Template Selector */}
+        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="font-semibold text-base mb-1 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Start with a Template
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {appliedTemplate
+                    ? `Using template: ${appliedTemplate}`
+                    : 'Pre-fill estimate with template including line items and terms'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={appliedTemplate ? "outline" : "default"}
+                onClick={() => setShowTemplates(true)}
+                size="sm"
+                className="shrink-0"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {appliedTemplate ? 'Change Template' : 'Choose Template'}
+              </Button>
+            </div>
+            {appliedTemplate && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <Badge variant="secondary" className="gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Template Applied
+                </Badge>
+                <span className="text-muted-foreground">All fields can still be customized</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -544,10 +582,16 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Line Items</CardTitle>
-            <Button type="button" onClick={addLineItem} size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" onClick={() => setShowLineItemLibrary(true)} size="sm" variant="outline" className="gap-2">
+                <Package className="h-4 w-4" />
+                Browse Library
+              </Button>
+              <Button type="button" onClick={addLineItem} size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -881,6 +925,22 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           </div>
         </div>
       )}
+
+      {/* Template Library Modal */}
+      <EstimateTemplatesLibrary
+        open={showTemplates}
+        onOpenChange={setShowTemplates}
+        onSelectTemplate={handleTemplateSelect}
+        companyId={companyId}
+      />
+
+      {/* Line Item Library Modal */}
+      <LineItemLibraryBrowser
+        open={showLineItemLibrary}
+        onOpenChange={setShowLineItemLibrary}
+        onAddItems={handleAddLibraryItems}
+        companyId={companyId}
+      />
     </Form>
   );
 }
