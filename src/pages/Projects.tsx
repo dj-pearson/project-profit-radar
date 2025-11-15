@@ -81,6 +81,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
+import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog";
 
 interface Project {
   id: string;
@@ -115,6 +116,8 @@ const Projects = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [saveTemplateProject, setSaveTemplateProject] = useState<ProjectWithRelations | null>(null);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
 
   // Advanced filter states with persistence
   const [budgetMin, setBudgetMin] = usePersistedState<string>("projects-budget-min", "");
@@ -397,6 +400,17 @@ const Projects = () => {
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Project
                 </DropdownMenuItem>
+                {['admin', 'root_admin'].includes(userProfile?.role || '') && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSaveTemplateProject(project);
+                      setSaveTemplateDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Save as Template
+                  </DropdownMenuItem>
+                )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -969,6 +983,16 @@ const Projects = () => {
         currentUsage={usage.projects}
         currentLimit={checkLimit('projects').limit}
       />
+
+      {/* Save as Template Dialog */}
+      {saveTemplateProject && (
+        <SaveAsTemplateDialog
+          open={saveTemplateDialogOpen}
+          onOpenChange={setSaveTemplateDialogOpen}
+          project={saveTemplateProject}
+          companyId={userProfile?.company_id}
+        />
+      )}
     </DashboardLayout>
   );
 };

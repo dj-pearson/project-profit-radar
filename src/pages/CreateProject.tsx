@@ -13,18 +13,20 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { projectService } from '@/services/projectService';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  DollarSign, 
-  MapPin, 
-  User, 
+import {
+  ArrowLeft,
+  Calendar,
+  DollarSign,
+  MapPin,
+  User,
   Building2,
   Clock,
   Plus,
-  X
+  X,
+  CheckCircle2
 } from 'lucide-react';
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
+import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
 
 const CreateProject = () => {
   const { user, userProfile, loading } = useAuth();
@@ -32,28 +34,30 @@ const CreateProject = () => {
   const location = useLocation();
   const [createLoading, setCreateLoading] = useState(false);
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
-  
+  const [showTemplates, setShowTemplates] = useState(false);
+
   // Project basic info
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
   const [projectType, setProjectType] = useState('');
   const [status, setStatus] = useState('planning');
   const [projectManagerId, setProjectManagerId] = useState('');
-  
+
   // Client info
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [siteAddress, setSiteAddress] = useState('');
-  
+
   // Timeline and budget
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
   const [estimatedHours, setEstimatedHours] = useState('');
-  
+
   // Permits
   const [permitNumbers, setPermitNumbers] = useState<string[]>([]);
   const [newPermit, setNewPermit] = useState('');
+  const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -115,6 +119,34 @@ const CreateProject = () => {
     setPermitNumbers(permitNumbers.filter(p => p !== permit));
   };
 
+  const handleTemplateSelect = (template: any) => {
+    // Auto-fill form from template
+    setProjectType(template.project_type || '');
+    setDescription(template.description || '');
+    setBudget(template.default_budget?.toString() || '');
+    setAppliedTemplate(template.name);
+
+    // Calculate dates from duration
+    if (template.default_duration_days) {
+      const today = new Date();
+      setStartDate(today.toISOString().split('T')[0]);
+
+      const endDateCalc = new Date(today);
+      endDateCalc.setDate(endDateCalc.getDate() + template.default_duration_days);
+      setEndDate(endDateCalc.toISOString().split('T')[0]);
+    }
+
+    // Add permits from template
+    if (template.permit_checklist && Array.isArray(template.permit_checklist)) {
+      setPermitNumbers(template.permit_checklist);
+    }
+
+    toast({
+      title: 'Template Applied',
+      description: `Form pre-filled with ${template.name} template defaults`,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
@@ -161,6 +193,43 @@ const CreateProject = () => {
   return (
     <DashboardLayout title="Create New Project">
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Template Selector Button */}
+        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1 flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Start with a Template
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {appliedTemplate
+                    ? `Using template: ${appliedTemplate}`
+                    : 'Save time by starting with a pre-configured project template'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={appliedTemplate ? "outline" : "default"}
+                onClick={() => setShowTemplates(true)}
+                className="shrink-0"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {appliedTemplate ? 'Change Template' : 'Choose Template'}
+              </Button>
+            </div>
+            {appliedTemplate && (
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Template Applied
+                </Badge>
+                <span className="text-muted-foreground">You can still customize all fields below</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <Card>
@@ -404,6 +473,14 @@ const CreateProject = () => {
             </Button>
           </div>
         </form>
+
+        {/* Project Templates Library Modal */}
+        <ProjectTemplatesLibrary
+          open={showTemplates}
+          onOpenChange={setShowTemplates}
+          onSelectTemplate={handleTemplateSelect}
+          companyId={userProfile?.company_id}
+        />
       </div>
     </DashboardLayout>
   );
