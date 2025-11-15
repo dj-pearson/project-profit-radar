@@ -81,6 +81,10 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
+import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog";
+import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
 
 interface Project {
   id: string;
@@ -115,6 +119,9 @@ const Projects = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [saveTemplateProject, setSaveTemplateProject] = useState<ProjectWithRelations | null>(null);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
 
   // Advanced filter states with persistence
   const [budgetMin, setBudgetMin] = usePersistedState<string>("projects-budget-min", "");
@@ -268,6 +275,50 @@ const Projects = () => {
     setDocumentFilter("");
   };
 
+  const getCurrentFilters = () => {
+    return {
+      searchTerm,
+      statusFilter,
+      budgetMin,
+      budgetMax,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      materialFilter,
+      taskFilter,
+      documentFilter
+    };
+  };
+
+  const handleLoadPreset = (filters: any) => {
+    setSearchTerm(filters.searchTerm || "");
+    setStatusFilter(filters.statusFilter || "all");
+    setBudgetMin(filters.budgetMin || "");
+    setBudgetMax(filters.budgetMax || "");
+    setStartDate(filters.startDate ? new Date(filters.startDate) : undefined);
+    setEndDate(filters.endDate ? new Date(filters.endDate) : undefined);
+    setMaterialFilter(filters.materialFilter || "");
+    setTaskFilter(filters.taskFilter || "");
+    setDocumentFilter(filters.documentFilter || "");
+  };
+
+  const toggleProjectSelection = (projectId: string) => {
+    const newSelected = new Set(selectedProjects);
+    if (newSelected.has(projectId)) {
+      newSelected.delete(projectId);
+    } else {
+      newSelected.add(projectId);
+    }
+    setSelectedProjects(newSelected);
+  };
+
+  const selectAllProjects = () => {
+    setSelectedProjects(new Set(filteredProjects.map(p => p.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedProjects(new Set());
+  };
+
   const filteredProjects = projects.filter((project) => {
     // Basic search
     const matchesSearch =
@@ -353,11 +404,24 @@ const Projects = () => {
   const onHoldProjects = getProjectsByStatus("on_hold");
   const planningProjects = getProjectsByStatus("planning");
 
-  const ProjectCard = ({ project }: { project: ProjectWithRelations }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3 px-3 sm:px-6">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1 min-w-0 flex-1">
+  const ProjectCard = ({ project }: { project: ProjectWithRelations }) => {
+    const isSelected = selectedProjects.has(project.id);
+
+    return (
+      <Card className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}>
+        <CardHeader className="pb-3 px-3 sm:px-6">
+          <div className="flex items-start gap-3">
+            {/* Checkbox */}
+            <div className="pt-1">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => toggleProjectSelection(project.id)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-2 flex-1 min-w-0">
+              <div className="space-y-1 min-w-0 flex-1">
             <CardTitle className="text-base sm:text-lg leading-tight break-words">
               {project.name}
             </CardTitle>
@@ -397,6 +461,17 @@ const Projects = () => {
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Project
                 </DropdownMenuItem>
+                {['admin', 'root_admin'].includes(userProfile?.role || '') && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSaveTemplateProject(project);
+                      setSaveTemplateDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Save as Template
+                  </DropdownMenuItem>
+                )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -472,7 +547,8 @@ const Projects = () => {
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -535,6 +611,13 @@ const Projects = () => {
                 <SelectItem value="planning">Planning</SelectItem>
               </SelectContent>
             </Select>
+            <FilterPresetsManager
+              context="projects"
+              currentFilters={getCurrentFilters()}
+              onLoadPreset={handleLoadPreset}
+              userId={userProfile?.id}
+              companyId={userProfile?.company_id}
+            />
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -698,6 +781,17 @@ const Projects = () => {
           )}
         </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedCount={selectedProjects.size}
+        totalCount={filteredProjects.length}
+        onSelectAll={selectAllProjects}
+        onClearSelection={clearSelection}
+        selectedProjectIds={Array.from(selectedProjects)}
+        onActionComplete={loadProjects}
+        allSelected={selectedProjects.size === filteredProjects.length && filteredProjects.length > 0}
+      />
 
       {/* Projects Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -969,6 +1063,16 @@ const Projects = () => {
         currentUsage={usage.projects}
         currentLimit={checkLimit('projects').limit}
       />
+
+      {/* Save as Template Dialog */}
+      {saveTemplateProject && (
+        <SaveAsTemplateDialog
+          open={saveTemplateDialogOpen}
+          onOpenChange={setSaveTemplateDialogOpen}
+          project={saveTemplateProject}
+          companyId={userProfile?.company_id}
+        />
+      )}
     </DashboardLayout>
   );
 };

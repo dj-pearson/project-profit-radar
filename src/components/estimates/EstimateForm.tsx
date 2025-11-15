@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Save, Send, Download, FileText } from "lucide-react";
+import { Plus, Trash2, Save, Send, Download, FileText, Sparkles, Package, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { downloadEstimatePDF } from "@/utils/estimatePDFGenerator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +18,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { EstimateTemplatesLibrary } from "./EstimateTemplatesLibrary";
+import { LineItemLibraryBrowser } from "./LineItemLibraryBrowser";
 
 const estimateSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -60,6 +63,10 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   const [isLoading, setIsLoading] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [createdEstimate, setCreatedEstimate] = useState<any>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showLineItemLibrary, setShowLineItemLibrary] = useState(false);
+  const [appliedTemplate, setAppliedTemplate] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string | undefined>();
 
   const form = useForm<EstimateFormData>({
     resolver: zodResolver(estimateSchema),
@@ -73,10 +80,23 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   useEffect(() => {
     fetchProjects();
     fetchCostCodes();
+    fetchCompanyId();
     if (estimateId) {
       fetchEstimate();
     }
   }, [estimateId]);
+
+  const fetchCompanyId = async () => {
+    const { data: userProfile } = await supabase
+      .from("user_profiles")
+      .select("company_id")
+      .eq("id", (await supabase.auth.getUser()).data.user?.id)
+      .single();
+
+    if (userProfile?.company_id) {
+      setCompanyId(userProfile.company_id);
+    }
+  };
 
   const fetchProjects = async () => {
     const { data } = await supabase
@@ -159,6 +179,54 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
 
   const removeLineItem = (index: number) => {
     setLineItems(lineItems.filter((_, i) => i !== index));
+  };
+
+  const handleTemplateSelect = (template: any) => {
+    // Apply template to form
+    form.setValue('title', template.default_title || '');
+    form.setValue('markup_percentage', template.default_markup_percentage || 20);
+    form.setValue('tax_percentage', template.default_tax_percentage || 0);
+    form.setValue('terms_and_conditions', template.default_terms_and_conditions || '');
+
+    // Set valid_until date based on template valid_days
+    if (template.valid_days) {
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + template.valid_days);
+      form.setValue('valid_until', validUntil);
+    }
+
+    // Add template line items
+    if (template.line_items && template.line_items.length > 0) {
+      const newItems = template.line_items.map((item: any) => ({
+        id: `template-${Date.now()}-${Math.random()}`,
+        item_name: item.item_name,
+        description: item.description || '',
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_cost: item.unit_cost,
+        category: item.category || '',
+      }));
+      setLineItems(newItems);
+    }
+
+    setAppliedTemplate(template.name);
+    toast({
+      title: 'Template Applied',
+      description: `${template.name} with ${template.line_items?.length || 0} line items`
+    });
+  };
+
+  const handleAddLibraryItems = (items: any[]) => {
+    const newItems = items.map(item => ({
+      id: `library-${Date.now()}-${Math.random()}`,
+      item_name: item.item_name,
+      description: item.description || '',
+      quantity: item.default_quantity,
+      unit: item.default_unit,
+      unit_cost: item.default_unit_cost,
+      category: item.category || '',
+    }));
+    setLineItems([...lineItems, ...newItems]);
   };
 
   const calculateSubtotal = () => {
@@ -344,6 +412,44 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
   return (
     <Form {...form}>
       <form className="space-y-6">
+        {/* Template Selector */}
+        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="font-semibold text-base mb-1 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Start with a Template
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {appliedTemplate
+                    ? `Using template: ${appliedTemplate}`
+                    : 'Pre-fill estimate with template including line items and terms'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={appliedTemplate ? "outline" : "default"}
+                onClick={() => setShowTemplates(true)}
+                size="sm"
+                className="shrink-0"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {appliedTemplate ? 'Change Template' : 'Choose Template'}
+              </Button>
+            </div>
+            {appliedTemplate && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <Badge variant="secondary" className="gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Template Applied
+                </Badge>
+                <span className="text-muted-foreground">All fields can still be customized</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -476,10 +582,16 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Line Items</CardTitle>
-            <Button type="button" onClick={addLineItem} size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" onClick={() => setShowLineItemLibrary(true)} size="sm" variant="outline" className="gap-2">
+                <Package className="h-4 w-4" />
+                Browse Library
+              </Button>
+              <Button type="button" onClick={addLineItem} size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -813,6 +925,22 @@ export function EstimateForm({ onSuccess, onCancel, estimateId }: EstimateFormPr
           </div>
         </div>
       )}
+
+      {/* Template Library Modal */}
+      <EstimateTemplatesLibrary
+        open={showTemplates}
+        onOpenChange={setShowTemplates}
+        onSelectTemplate={handleTemplateSelect}
+        companyId={companyId}
+      />
+
+      {/* Line Item Library Modal */}
+      <LineItemLibraryBrowser
+        open={showLineItemLibrary}
+        onOpenChange={setShowLineItemLibrary}
+        onAddItems={handleAddLibraryItems}
+        companyId={companyId}
+      />
     </Form>
   );
 }
