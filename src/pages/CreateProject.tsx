@@ -23,10 +23,26 @@ import {
   Clock,
   Plus,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Zap,
+  ChevronDown,
+  History
 } from 'lucide-react';
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 import { ProjectTemplatesLibrary } from '@/components/projects/ProjectTemplatesLibrary';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const CreateProject = () => {
   const { user, userProfile, loading } = useAuth();
@@ -35,6 +51,12 @@ const CreateProject = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
+
+  // Quick Mode
+  const [quickMode, setQuickMode] = useState(true);
+  const [recentClients, setRecentClients] = useState<Array<{ name: string; email?: string }>>([]);
+  const [recentProjectTypes, setRecentProjectTypes] = useState<string[]>([]);
+  const [clientComboOpen, setClientComboOpen] = useState(false);
 
   // Project basic info
   const [projectName, setProjectName] = useState('');
@@ -63,11 +85,62 @@ const CreateProject = () => {
     if (!loading && !user) {
       navigate('/auth');
     }
-    
+
     if (!loading && user && userProfile && !userProfile.company_id) {
       navigate('/setup');
     }
   }, [user, userProfile, loading, navigate]);
+
+  // Load recent clients and project types for quick suggestions
+  useEffect(() => {
+    if (userProfile?.company_id) {
+      loadRecentData();
+    }
+  }, [userProfile?.company_id]);
+
+  // Auto-populate dates in quick mode
+  useEffect(() => {
+    if (quickMode && !startDate && !endDate) {
+      const today = new Date();
+      setStartDate(today.toISOString().split('T')[0]);
+
+      const defaultEndDate = new Date(today);
+      defaultEndDate.setDate(defaultEndDate.getDate() + 30); // Default 30 days
+      setEndDate(defaultEndDate.toISOString().split('T')[0]);
+    }
+  }, [quickMode]);
+
+  const loadRecentData = async () => {
+    try {
+      // Get recent unique clients (last 10 projects)
+      const { data: recentProjects } = await supabase
+        .from('projects')
+        .select('client_name, client_email, project_type')
+        .eq('company_id', userProfile?.company_id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (recentProjects) {
+        // Extract unique clients
+        const uniqueClients = Array.from(
+          new Map(
+            recentProjects
+              .filter(p => p.client_name)
+              .map(p => [p.client_name, { name: p.client_name, email: p.client_email }])
+          ).values()
+        ).slice(0, 10);
+        setRecentClients(uniqueClients);
+
+        // Extract unique project types
+        const uniqueTypes = Array.from(
+          new Set(recentProjects.filter(p => p.project_type).map(p => p.project_type))
+        ).slice(0, 5);
+        setRecentProjectTypes(uniqueTypes);
+      }
+    } catch (error) {
+      console.error('Error loading recent data:', error);
+    }
+  };
 
   // LEAN Navigation: Pre-fill form from URL parameters (from CRM conversion)
   useEffect(() => {
@@ -107,6 +180,14 @@ const CreateProject = () => {
   }
 
   if (!user || !userProfile?.company_id) return null;
+
+  const selectRecentClient = (client: { name: string; email?: string }) => {
+    setClientName(client.name);
+    if (client.email) {
+      setClientEmail(client.email);
+    }
+    setClientComboOpen(false);
+  };
 
   const addPermit = () => {
     if (newPermit.trim() && !permitNumbers.includes(newPermit.trim())) {
@@ -193,40 +274,58 @@ const CreateProject = () => {
   return (
     <DashboardLayout title="Create New Project">
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* Template Selector Button */}
+        {/* Quick Mode Toggle & Template Selector */}
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            {/* Quick Mode Toggle */}
+            <div className="flex items-center justify-between pb-3 border-b border-primary/20">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${quickMode ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                  <Zap className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Quick Entry Mode</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {quickMode
+                      ? 'Essential fields only - Create projects faster'
+                      : 'All fields visible - Full customization'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant={quickMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setQuickMode(!quickMode)}
+              >
+                {quickMode ? 'Switch to Detailed' : 'Switch to Quick'}
+              </Button>
+            </div>
+
+            {/* Template Selector */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg mb-1 flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
                   Start with a Template
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-1">
                   {appliedTemplate
                     ? `Using template: ${appliedTemplate}`
-                    : 'Save time by starting with a pre-configured project template'}
+                    : 'Pre-fill form with a project template'}
                 </p>
               </div>
               <Button
                 type="button"
-                variant={appliedTemplate ? "outline" : "default"}
+                variant={appliedTemplate ? "outline" : "secondary"}
+                size="sm"
                 onClick={() => setShowTemplates(true)}
                 className="shrink-0"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                {appliedTemplate ? 'Change Template' : 'Choose Template'}
+                {appliedTemplate ? 'Change' : 'Choose Template'}
               </Button>
             </div>
-            {appliedTemplate && (
-              <div className="mt-3 flex items-center gap-2 text-sm">
-                <Badge variant="secondary" className="gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Template Applied
-                </Badge>
-                <span className="text-muted-foreground">You can still customize all fields below</span>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -243,7 +342,7 @@ const CreateProject = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className={mobileFilterClasses.container}>
+              <div className={quickMode ? "space-y-2" : mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="projectName">Project Name *</Label>
                   <Input
@@ -254,49 +353,55 @@ const CreateProject = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="projectType">Project Type</Label>
-                  <Select value={projectType} onValueChange={setProjectType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="residential_new">Residential - New Construction</SelectItem>
-                      <SelectItem value="residential_renovation">Residential - Renovation</SelectItem>
-                      <SelectItem value="commercial_new">Commercial - New Construction</SelectItem>
-                      <SelectItem value="commercial_renovation">Commercial - Renovation</SelectItem>
-                      <SelectItem value="infrastructure">Infrastructure</SelectItem>
-                      <SelectItem value="specialty">Specialty Trade</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {!quickMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="projectType">Project Type</Label>
+                    <Select value={projectType} onValueChange={setProjectType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="residential_new">Residential - New Construction</SelectItem>
+                        <SelectItem value="residential_renovation">Residential - Renovation</SelectItem>
+                        <SelectItem value="commercial_new">Commercial - New Construction</SelectItem>
+                        <SelectItem value="commercial_renovation">Commercial - Renovation</SelectItem>
+                        <SelectItem value="infrastructure">Infrastructure</SelectItem>
+                        <SelectItem value="specialty">Specialty Trade</SelectItem>
+                        <SelectItem value="custom">Custom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Project Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe the scope of work, key objectives, and any special requirements..."
-                  rows={3}
-                />
-              </div>
+              {!quickMode && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Project Description</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Describe the scope of work, key objectives, and any special requirements..."
+                      rows={3}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Initial Status</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="on_hold">On Hold</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Initial Status</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -314,7 +419,44 @@ const CreateProject = () => {
             <CardContent className="space-y-6">
               <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
-                  <Label htmlFor="clientName">Client Name</Label>
+                  <Label htmlFor="clientName" className="flex items-center justify-between">
+                    <span>Client Name</span>
+                    {recentClients.length > 0 && (
+                      <Popover open={clientComboOpen} onOpenChange={setClientComboOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs gap-1">
+                            <History className="h-3 w-3" />
+                            Recent
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0" align="end">
+                          <Command>
+                            <CommandInput placeholder="Search recent clients..." />
+                            <CommandList>
+                              <CommandEmpty>No recent clients found.</CommandEmpty>
+                              <CommandGroup heading="Recently Used">
+                                {recentClients.map((client, idx) => (
+                                  <CommandItem
+                                    key={idx}
+                                    onSelect={() => selectRecentClient(client)}
+                                    className="cursor-pointer"
+                                  >
+                                    <User className="h-4 w-4 mr-2" />
+                                    <div>
+                                      <div className="font-medium">{client.name}</div>
+                                      {client.email && (
+                                        <div className="text-xs text-muted-foreground">{client.email}</div>
+                                      )}
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </Label>
                   <Input
                     id="clientName"
                     value={clientName}
@@ -322,30 +464,34 @@ const CreateProject = () => {
                     placeholder="John & Jane Smith"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="clientEmail">Client Email</Label>
-                  <Input
-                    id="clientEmail"
-                    type="email"
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                    placeholder="client@example.com"
-                  />
-                </div>
+                {!quickMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="clientEmail">Client Email</Label>
+                    <Input
+                      id="clientEmail"
+                      type="email"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      placeholder="client@example.com"
+                    />
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="siteAddress">
-                  <MapPin className="h-4 w-4 inline mr-1" />
-                  Project Site Address
-                </Label>
-                <Input
-                  id="siteAddress"
-                  value={siteAddress}
-                  onChange={(e) => setSiteAddress(e.target.value)}
-                  placeholder="123 Main Street, City, State, ZIP"
-                />
-              </div>
+              {!quickMode && (
+                <div className="space-y-2">
+                  <Label htmlFor="siteAddress">
+                    <MapPin className="h-4 w-4 inline mr-1" />
+                    Project Site Address
+                  </Label>
+                  <Input
+                    id="siteAddress"
+                    value={siteAddress}
+                    onChange={(e) => setSiteAddress(e.target.value)}
+                    placeholder="123 Main Street, City, State, ZIP"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -382,7 +528,7 @@ const CreateProject = () => {
                 </div>
               </div>
 
-              <div className={mobileFilterClasses.container}>
+              <div className={quickMode ? "space-y-2" : mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="budget">
                     <DollarSign className="h-4 w-4 inline mr-1" />
@@ -398,25 +544,28 @@ const CreateProject = () => {
                     placeholder="50000.00"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedHours">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    Estimated Hours
-                  </Label>
-                  <Input
-                    id="estimatedHours"
-                    type="number"
-                    min="0"
-                    value={estimatedHours}
-                    onChange={(e) => setEstimatedHours(e.target.value)}
-                    placeholder="200"
-                  />
-                </div>
+                {!quickMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="estimatedHours">
+                      <Clock className="h-4 w-4 inline mr-1" />
+                      Estimated Hours
+                    </Label>
+                    <Input
+                      id="estimatedHours"
+                      type="number"
+                      min="0"
+                      value={estimatedHours}
+                      onChange={(e) => setEstimatedHours(e.target.value)}
+                      placeholder="200"
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* Permits */}
+          {!quickMode && (
           <Card>
             <CardHeader>
               <CardTitle>Permits & Documentation</CardTitle>
@@ -455,6 +604,7 @@ const CreateProject = () => {
               )}
             </CardContent>
           </Card>
+          )}
 
           {/* Submit */}
           <div className={mobileFilterClasses.buttonGroup}>
