@@ -84,6 +84,7 @@ import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog";
 import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
 
 interface Project {
   id: string;
@@ -272,6 +273,32 @@ const Projects = () => {
     setMaterialFilter("");
     setTaskFilter("");
     setDocumentFilter("");
+  };
+
+  const getCurrentFilters = () => {
+    return {
+      searchTerm,
+      statusFilter,
+      budgetMin,
+      budgetMax,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      materialFilter,
+      taskFilter,
+      documentFilter
+    };
+  };
+
+  const handleLoadPreset = (filters: any) => {
+    setSearchTerm(filters.searchTerm || "");
+    setStatusFilter(filters.statusFilter || "all");
+    setBudgetMin(filters.budgetMin || "");
+    setBudgetMax(filters.budgetMax || "");
+    setStartDate(filters.startDate ? new Date(filters.startDate) : undefined);
+    setEndDate(filters.endDate ? new Date(filters.endDate) : undefined);
+    setMaterialFilter(filters.materialFilter || "");
+    setTaskFilter(filters.taskFilter || "");
+    setDocumentFilter(filters.documentFilter || "");
   };
 
   const toggleProjectSelection = (projectId: string) => {
@@ -584,6 +611,13 @@ const Projects = () => {
                 <SelectItem value="planning">Planning</SelectItem>
               </SelectContent>
             </Select>
+            <FilterPresetsManager
+              context="projects"
+              currentFilters={getCurrentFilters()}
+              onLoadPreset={handleLoadPreset}
+              userId={userProfile?.id}
+              companyId={userProfile?.company_id}
+            />
             <div className="flex gap-2">
               <Button
                 variant="outline"
