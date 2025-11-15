@@ -82,6 +82,8 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog";
+import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Project {
   id: string;
@@ -118,6 +120,7 @@ const Projects = () => {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [saveTemplateProject, setSaveTemplateProject] = useState<ProjectWithRelations | null>(null);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
 
   // Advanced filter states with persistence
   const [budgetMin, setBudgetMin] = usePersistedState<string>("projects-budget-min", "");
@@ -271,6 +274,24 @@ const Projects = () => {
     setDocumentFilter("");
   };
 
+  const toggleProjectSelection = (projectId: string) => {
+    const newSelected = new Set(selectedProjects);
+    if (newSelected.has(projectId)) {
+      newSelected.delete(projectId);
+    } else {
+      newSelected.add(projectId);
+    }
+    setSelectedProjects(newSelected);
+  };
+
+  const selectAllProjects = () => {
+    setSelectedProjects(new Set(filteredProjects.map(p => p.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedProjects(new Set());
+  };
+
   const filteredProjects = projects.filter((project) => {
     // Basic search
     const matchesSearch =
@@ -356,11 +377,24 @@ const Projects = () => {
   const onHoldProjects = getProjectsByStatus("on_hold");
   const planningProjects = getProjectsByStatus("planning");
 
-  const ProjectCard = ({ project }: { project: ProjectWithRelations }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3 px-3 sm:px-6">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1 min-w-0 flex-1">
+  const ProjectCard = ({ project }: { project: ProjectWithRelations }) => {
+    const isSelected = selectedProjects.has(project.id);
+
+    return (
+      <Card className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}>
+        <CardHeader className="pb-3 px-3 sm:px-6">
+          <div className="flex items-start gap-3">
+            {/* Checkbox */}
+            <div className="pt-1">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => toggleProjectSelection(project.id)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-2 flex-1 min-w-0">
+              <div className="space-y-1 min-w-0 flex-1">
             <CardTitle className="text-base sm:text-lg leading-tight break-words">
               {project.name}
             </CardTitle>
@@ -486,7 +520,8 @@ const Projects = () => {
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -712,6 +747,17 @@ const Projects = () => {
           )}
         </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedCount={selectedProjects.size}
+        totalCount={filteredProjects.length}
+        onSelectAll={selectAllProjects}
+        onClearSelection={clearSelection}
+        selectedProjectIds={Array.from(selectedProjects)}
+        onActionComplete={loadProjects}
+        allSelected={selectedProjects.size === filteredProjects.length && filteredProjects.length > 0}
+      />
 
       {/* Projects Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
