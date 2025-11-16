@@ -422,26 +422,26 @@ const Projects = () => {
 
             <div className="flex items-start justify-between gap-2 flex-1 min-w-0">
               <div className="space-y-1 min-w-0 flex-1">
-            <CardTitle className="text-base sm:text-lg leading-tight break-words">
-              {project.name}
-            </CardTitle>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <User className="h-3 w-3 mr-1 shrink-0" />
-              <span className="break-words">{project.client_name}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <Badge
-              variant={getStatusColor(project.status)}
-              className="text-xs px-1.5 py-0.5"
-            >
-              <span className="hidden sm:inline">
-                {project.status.replace("_", " ")}
-              </span>
-              <span className="sm:hidden">
-                {project.status.charAt(0).toUpperCase()}
-              </span>
-            </Badge>
+                <CardTitle className="text-base sm:text-lg leading-tight break-words">
+                  {project.name}
+                </CardTitle>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <User className="h-3 w-3 mr-1 shrink-0" />
+                  <span className="break-words">{project.client_name}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <Badge
+                  variant={getStatusColor(project.status)}
+                  className="text-xs px-1.5 py-0.5"
+                >
+                  <span className="hidden sm:inline">
+                    {project.status.replace("_", " ")}
+                  </span>
+                  <span className="sm:hidden">
+                    {project.status.charAt(0).toUpperCase()}
+                  </span>
+                </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Project actions menu">
@@ -499,10 +499,11 @@ const Projects = () => {
                 </AlertDialog>
               </DropdownMenuContent>
             </DropdownMenu>
+              </div>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3 px-3 sm:px-6">
+        </CardHeader>
+        <CardContent className="space-y-3 px-3 sm:px-6">
         {project.site_address && (
           <div className="flex items-start text-sm text-muted-foreground">
             <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
