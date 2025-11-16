@@ -107,40 +107,16 @@
     }
     </script>
 
-    <!-- Google tag (gtag.js) - Optimized for performance -->
+    <!-- Google tag (gtag.js) - Async loading -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-LNDT7H4SJR');
-      
-      // Optimized analytics loading: defer until user interaction or idle time
-      (function() {
-        var loaded = false;
-        
-        function loadAnalytics() {
-          if (loaded) return;
-          loaded = true;
-          
-          var script = document.createElement('script');
-          script.async = true;
-          script.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
-          document.head.appendChild(script);
-        }
-        
-        // Load on first user interaction for best performance
-        var interactionEvents = ['mousedown', 'touchstart', 'keydown', 'scroll'];
-        interactionEvents.forEach(function(event) {
-          window.addEventListener(event, loadAnalytics, { once: true, passive: true });
-        });
-        
-        // Fallback: Load after 3 seconds if no interaction
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(loadAnalytics, { timeout: 3000 });
-        } else {
-          setTimeout(loadAnalytics, 3000);
-        }
-      })();
+      gtag('config', 'G-LNDT7H4SJR', {
+        'anonymize_ip': true,
+        'cookie_flags': 'SameSite=None;Secure'
+      });
     </script>
 
     <!-- Cache Management & Loop Protection -->

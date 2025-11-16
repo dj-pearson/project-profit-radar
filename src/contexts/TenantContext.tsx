@@ -101,6 +101,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         hostname === 'localhost' ||
         hostname.includes('127.0.0.1') ||
         hostname.includes('builddesk.com') ||
+        hostname.includes('build-desk.com') ||
         hostname.includes('builddesk.pearsonperformance.workers.dev') ||
         hostname.includes('.pages.dev');
 
