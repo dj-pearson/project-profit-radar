@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertTriangle, Bot, Settings, Plus, Trash2, Edit, RefreshCw, Save, Eye, EyeOff, ArrowUpDown, Link, Zap } from 'lucide-react';
+import { AlertTriangle, Bot, Plus, Trash2, Edit, RefreshCw, Save, Link } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,7 +45,7 @@ interface AIModel {
 const AIModelManager = () => {
   const { userProfile } = useAuth();
   const [models, setModels] = useState<AIModel[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [editingModel, setEditingModel] = useState<AIModel | null>(null);
   const [isNewModel, setIsNewModel] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
