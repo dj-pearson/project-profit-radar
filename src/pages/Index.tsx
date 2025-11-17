@@ -1,6 +1,6 @@
 import React from "react";
 import Header from "@/components/Header";
-import Hero from "@/components/Hero3D";
+import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
 import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
