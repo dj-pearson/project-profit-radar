@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -18,7 +18,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Bot, 
   Clock, 
-  Settings, 
   Zap, 
   Brain, 
   Target, 
@@ -29,9 +28,6 @@ import {
   AlertTriangle,
   CheckCircle,
   PlayCircle,
-  Pause,
-  RotateCcw,
-  Eye,
   Save,
   TestTube
 } from 'lucide-react';
@@ -153,7 +149,7 @@ const BlogAutoGeneration = () => {
       setLoading(true);
 
       // Load auto-generation settings
-      const { data: settingsData, error: settingsError } = await supabase
+      const { data: settingsData } = await supabase
         .from('blog_auto_generation_settings')
         .select('*')
         .eq('company_id', userProfile.company_id)
@@ -164,7 +160,7 @@ const BlogAutoGeneration = () => {
       }
 
       // Load available AI models
-      const { data: modelsData, error: modelsError } = await supabase
+      const { data: modelsData } = await supabase
         .from('ai_model_configurations')
         .select('*')
         .eq('is_active', true)
@@ -175,7 +171,7 @@ const BlogAutoGeneration = () => {
       }
 
       // Load generation queue
-      const { data: queueData, error: queueError } = await supabase
+      const { data: queueData } = await supabase
         .from('blog_generation_queue')
         .select('*')
         .eq('company_id', userProfile.company_id)
@@ -187,7 +183,7 @@ const BlogAutoGeneration = () => {
       }
 
       // Load diversity analysis
-      const { data, error } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
+      const { data } = await supabase.functions.invoke('enhanced-blog-ai-fixed', {
         body: {
           action: 'analyze-content-diversity'
         }
