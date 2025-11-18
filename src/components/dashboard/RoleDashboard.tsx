@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useToast } from "@/hooks/use-toast";
 import { KPICard } from "./KPICard";
 import { ProjectHealthIndicator } from "./ProjectHealthIndicator";
 import { QuickActions } from "./QuickActions";
@@ -29,11 +31,83 @@ export const RoleDashboard = () => {
   const { userProfile } = useAuth();
   const { data: dashboardData, loading, error, refetch } = useDashboardData();
   const [activeTab, setActiveTab] = useState("overview");
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleQuickAction = (action: string) => {
-    console.log('Quick action:', action);
-    // Navigate to appropriate page based on action
-    // TODO: Add navigation logic based on action type
+    const actionMap: Record<string, { route: string; message: string }> = {
+      'companies': {
+        route: '/admin/companies',
+        message: 'Opening company management'
+      },
+      'users': {
+        route: '/admin/users',
+        message: 'Opening system users'
+      },
+      'analytics': {
+        route: '/admin/analytics',
+        message: 'Loading platform analytics'
+      },
+      'settings': {
+        route: '/admin/settings',
+        message: 'Opening system settings'
+      },
+      'create_project': {
+        route: '/projects/new',
+        message: 'Creating new project'
+      },
+      'manage_team': {
+        route: '/team-management',
+        message: 'Opening team management'
+      },
+      'job_costing': {
+        route: '/financial/job-costing',
+        message: 'Loading job costing'
+      },
+      'documents': {
+        route: '/documents',
+        message: 'Opening document management'
+      },
+      'reports': {
+        route: '/reports',
+        message: 'Loading reports'
+      },
+      'daily_report': {
+        route: '/daily-reports/create',
+        message: 'Creating daily report'
+      },
+      'time_tracking': {
+        route: '/time-tracking',
+        message: 'Opening time tracking'
+      },
+      'crew_management': {
+        route: '/crew-management',
+        message: 'Managing crew assignments'
+      },
+      'invoicing': {
+        route: '/invoicing',
+        message: 'Opening invoicing'
+      },
+      'financial_reports': {
+        route: '/reports/financial',
+        message: 'Loading financial reports'
+      }
+    };
+
+    const actionConfig = actionMap[action];
+    if (actionConfig) {
+      navigate(actionConfig.route);
+      toast({
+        title: "Quick Action",
+        description: actionConfig.message,
+      });
+    } else {
+      toast({
+        title: "Navigation",
+        description: `Opening ${action}...`,
+        variant: "default",
+      });
+    }
   };
 
   const handleRefresh = () => {
