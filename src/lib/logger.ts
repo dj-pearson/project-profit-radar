@@ -29,6 +29,10 @@ class Logger {
       prefix: '[BuildDesk]',
       ...config,
     };
+    // Enable error tracking in production
+    if (import.meta.env.PROD) {
+      this.enableErrorTracking();
+    }
   }
 
   /**
@@ -75,11 +79,27 @@ class Logger {
   private trackError(error: Error | string, context?: Record<string, any>) {
     if (!this.errorTrackingEnabled) return;
 
-    // TODO: Integrate with error tracking service (e.g., Sentry, LogRocket)
-    // Example:
-    // if (typeof Sentry !== 'undefined') {
-    //   Sentry.captureException(error, { extra: context });
-    // }
+    // Integrate with Sentry error tracking
+    try {
+      // Dynamic import to avoid issues if Sentry is not available
+      import('@sentry/react').then((Sentry) => {
+        if (error instanceof Error) {
+          Sentry.captureException(error, {
+            extra: context,
+            level: 'error',
+          });
+        } else {
+          Sentry.captureMessage(String(error), {
+            extra: context,
+            level: 'error',
+          });
+        }
+      }).catch(() => {
+        // Sentry not available, silently ignore
+      });
+    } catch (e) {
+      // Fail silently if Sentry is not available
+    }
   }
 
   /**
