@@ -89,6 +89,9 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: true,
     emptyOutDir: true,
 
+    // Exclude mobile-app directory from web builds
+    exclude: ['mobile-app/**/*'],
+
     // Improve compilation performance
     commonjsOptions: {
       include: [/node_modules/],
