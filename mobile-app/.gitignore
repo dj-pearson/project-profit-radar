@@ -1,0 +1,50 @@
+# Node modules
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.expo/
+
+# macOS
+.DS_Store
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Local env files
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Android
+android/.gradle
+android/build
+android/app/build
+android/.idea
+android/*.iml
+android/local.properties
+
+# iOS
+ios/Pods
+ios/*.xcworkspace
+ios/build
+ios/.xcode.env.local
+
+# Google Services
+google-services.json
+GoogleService-Info.plist
+service-account.json

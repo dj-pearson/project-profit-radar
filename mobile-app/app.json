@@ -1,0 +1,122 @@
+{
+  "expo": {
+    "name": "BuildDesk",
+    "slug": "builddesk-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "builddesk",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4A90E2"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.builddesk.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "BuildDesk needs camera access to capture photos of job sites, equipment, and documentation.",
+        "NSPhotoLibraryUsageDescription": "BuildDesk needs photo library access to attach photos to projects and reports.",
+        "NSPhotoLibraryAddUsageDescription": "BuildDesk needs permission to save photos to your library.",
+        "NSLocationWhenInUseUsageDescription": "BuildDesk needs location access to track time at job sites and provide GPS-based features.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "BuildDesk needs location access for geofencing and time tracking even when the app is in the background.",
+        "NSLocationAlwaysUsageDescription": "BuildDesk needs location access for geofencing and time tracking.",
+        "NSMicrophoneUsageDescription": "BuildDesk needs microphone access for voice notes and documentation.",
+        "NSContactsUsageDescription": "BuildDesk needs contacts access to help you manage your team and client information.",
+        "NSCalendarsUsageDescription": "BuildDesk needs calendar access to sync your project schedules.",
+        "NSRemindersUsageDescription": "BuildDesk needs reminders access to create project tasks.",
+        "NSFaceIDUsageDescription": "BuildDesk uses Face ID for secure and quick authentication.",
+        "NSMotionUsageDescription": "BuildDesk uses motion data to detect activity for safety features.",
+        "NSAppleMusicUsageDescription": "BuildDesk does not access your music library.",
+        "NSSpeechRecognitionUsageDescription": "BuildDesk uses speech recognition for voice commands and notes."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.builddesk.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4A90E2"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "RECEIVE_BOOT_COMPLETED",
+        "FOREGROUND_SERVICE",
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ],
+      "blockedPermissions": [
+        "CALL_PHONE",
+        "READ_SMS",
+        "SEND_SMS",
+        "RECEIVE_SMS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "BuildDesk needs camera access to capture photos of job sites, equipment, and documentation."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "BuildDesk needs location access for geofencing and time tracking.",
+          "locationAlwaysPermission": "BuildDesk needs location access for background time tracking.",
+          "locationWhenInUsePermission": "BuildDesk needs location access to track time at job sites."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "BuildDesk uses Face ID for secure and quick authentication."
+        }
+      ],
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e9733a8e-5df1-4d6e-9c1f-c13774542b16"
+      }
+    },
+    "owner": "djpearson",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e9733a8e-5df1-4d6e-9c1f-c13774542b16"
+    }
+  }
+}
