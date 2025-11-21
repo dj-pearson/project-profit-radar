@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(), 
-    mode === "development" && componentTagger(),
+    // mode === "development" && componentTagger(),
     mode === "production" && visualizer({
       filename: 'dist/stats.html',
       open: false,

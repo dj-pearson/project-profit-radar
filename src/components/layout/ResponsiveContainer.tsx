@@ -16,7 +16,7 @@ export const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
 }) => {
   const maxWidthClasses = {
     sm: "max-w-sm",
-    md: "max-w-md", 
+    md: "max-w-md",
     lg: "max-w-lg",
     xl: "max-w-xl",
     "2xl": "max-w-2xl",
@@ -27,7 +27,7 @@ export const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
   const paddingClasses = {
     none: "",
     sm: "px-2 sm:px-4",
-    md: "px-4 sm:px-6 lg:px-8", 
+    md: "px-4 sm:px-6 lg:px-8",
     lg: "px-6 sm:px-8 lg:px-12"
   };
 
@@ -53,38 +53,39 @@ export const ResponsiveGrid: React.FC<{
     lg?: number;
     xl?: number;
   };
-  gap?: "sm" | "md" | "lg";
+  gap?: "sm" | "md" | "lg" | "xl";
   className?: string;
-}> = ({ 
-  children, 
-  cols = { default: 1, md: 2, lg: 3 }, 
+}> = ({
+  children,
+  cols = { default: 1, md: 2, lg: 3 },
   gap = "md",
-  className 
+  className
 }) => {
-  const gapClasses = {
-    sm: "gap-2 sm:gap-3",
-    md: "gap-4 sm:gap-6", 
-    lg: "gap-6 sm:gap-8"
+    const gapClasses = {
+      sm: "gap-2 sm:gap-3",
+      md: "gap-4 sm:gap-6",
+      lg: "gap-6 sm:gap-8",
+      xl: "gap-8 sm:gap-10 lg:gap-12"
+    };
+
+    const gridCols = Object.entries(cols)
+      .map(([breakpoint, colCount]) => {
+        if (breakpoint === 'default') return `grid-cols-${colCount}`;
+        return `${breakpoint}:grid-cols-${colCount}`;
+      })
+      .join(' ');
+
+    return (
+      <div className={cn(
+        "grid",
+        gridCols,
+        gapClasses[gap],
+        className
+      )}>
+        {children}
+      </div>
+    );
   };
-
-  const gridCols = Object.entries(cols)
-    .map(([breakpoint, colCount]) => {
-      if (breakpoint === 'default') return `grid-cols-${colCount}`;
-      return `${breakpoint}:grid-cols-${colCount}`;
-    })
-    .join(' ');
-
-  return (
-    <div className={cn(
-      "grid",
-      gridCols,
-      gapClasses[gap],
-      className
-    )}>
-      {children}
-    </div>
-  );
-};
 
 // Responsive layout wrapper
 export const ResponsiveLayout: React.FC<{
@@ -94,45 +95,45 @@ export const ResponsiveLayout: React.FC<{
   footer?: React.ReactNode;
   sidebarPosition?: "left" | "right";
   className?: string;
-}> = ({ 
-  children, 
-  sidebar, 
-  header, 
-  footer, 
+}> = ({
+  children,
+  sidebar,
+  header,
+  footer,
   sidebarPosition = "left",
-  className 
+  className
 }) => {
-  return (
-    <div className={cn("min-h-screen flex flex-col", className)}>
-      {header && (
-        <header className="shrink-0">
-          {header}
-        </header>
-      )}
-      
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {sidebar && sidebarPosition === "left" && (
-          <aside className="lg:w-64 lg:shrink-0 order-2 lg:order-1">
-            {sidebar}
-          </aside>
+    return (
+      <div className={cn("min-h-screen flex flex-col", className)}>
+        {header && (
+          <header className="shrink-0">
+            {header}
+          </header>
         )}
-        
-        <main className="flex-1 order-1 lg:order-2">
-          {children}
-        </main>
-        
-        {sidebar && sidebarPosition === "right" && (
-          <aside className="lg:w-64 lg:shrink-0 order-3">
-            {sidebar}
-          </aside>
+
+        <div className="flex-1 flex flex-col lg:flex-row">
+          {sidebar && sidebarPosition === "left" && (
+            <aside className="lg:w-64 lg:shrink-0 order-2 lg:order-1">
+              {sidebar}
+            </aside>
+          )}
+
+          <main className="flex-1 order-1 lg:order-2">
+            {children}
+          </main>
+
+          {sidebar && sidebarPosition === "right" && (
+            <aside className="lg:w-64 lg:shrink-0 order-3">
+              {sidebar}
+            </aside>
+          )}
+        </div>
+
+        {footer && (
+          <footer className="shrink-0">
+            {footer}
+          </footer>
         )}
       </div>
-      
-      {footer && (
-        <footer className="shrink-0">
-          {footer}
-        </footer>
-      )}
-    </div>
-  );
-};
+    );
+  };
