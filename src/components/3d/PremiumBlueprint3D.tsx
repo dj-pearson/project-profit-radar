@@ -512,7 +512,7 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
     return (
         <div
             ref={containerRef}
-            className="w-full h-full min-h-[600px] relative rounded-[2rem] overflow-hidden transition-all duration-700 shadow-2xl border border-white/10"
+            className="w-full h-full relative rounded-[2rem] overflow-hidden transition-all duration-700 shadow-2xl border border-white/10"
         >
             {/* Dynamic Background */}
             <div className={`absolute inset-0 transition-colors duration-1000 ${isBuildMode
@@ -531,21 +531,21 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
             </Canvas>
 
             {/* Interactive Overlay UI */}
-            <div className="absolute bottom-8 right-8 z-20 flex flex-col gap-4 items-end">
+            <div className="absolute bottom-4 sm:bottom-8 right-4 sm:right-8 z-20 flex flex-col gap-2 sm:gap-4 items-end">
                 {/* Scroll Indicator */}
                 <div className={`
-          transition-opacity duration-500 flex items-center gap-3 text-white/50 text-xs font-mono
+          transition-opacity duration-500 flex items-center gap-2 sm:gap-3 text-white/50 text-xs font-mono
           ${scrollProgress > 0.1 ? 'opacity-0' : 'opacity-100'}
         `}>
                     <span className="animate-bounce">↓</span>
-                    SCROLL TO DISMANTLE
+                    <span className="hidden sm:inline">SCROLL TO DISMANTLE</span>
                 </div>
 
                 <button
                     onClick={onToggleMode}
                     className={`
-            group relative px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg border
-            flex items-center gap-3 overflow-hidden
+            group relative px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 shadow-lg border
+            flex items-center gap-2 sm:gap-3 overflow-hidden
             ${isBuildMode
                             ? 'bg-cyan-950/80 border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/90'
                             : 'bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-md'
@@ -558,41 +558,43 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
                     {isBuildMode ? (
                         <>
                             <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse" />
-                            EXIT BLUEPRINT
+                            <span className="hidden sm:inline">EXIT BLUEPRINT</span>
+                            <span className="sm:hidden">EXIT</span>
                         </>
                     ) : (
                         <>
                             <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)]" />
-                            VIEW BLUEPRINT
+                            <span className="hidden sm:inline">VIEW BLUEPRINT</span>
+                            <span className="sm:hidden">BLUEPRINT</span>
                         </>
                     )}
                 </button>
             </div>
 
             {/* System Status HUD */}
-            <div className="absolute top-8 left-8 z-20 pointer-events-none">
+            <div className="absolute top-4 sm:top-8 left-4 sm:left-8 z-20 pointer-events-none">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <div className="h-[1px] w-8 bg-white/30" />
-                        <span className="text-[10px] font-mono tracking-[0.2em] text-white/50 uppercase">
+                        <div className="h-[1px] w-6 sm:w-8 bg-white/30" />
+                        <span className="text-[8px] sm:text-[10px] font-mono tracking-[0.2em] text-white/50 uppercase">
                             Project: Profit Radar
                         </span>
                     </div>
-                    <h3 className="text-2xl font-bold text-white tracking-tight">
+                    <h3 className="text-lg sm:text-2xl font-bold text-white tracking-tight">
                         Modern Office <span className="text-white/30">v2.0</span>
                     </h3>
 
                     {/* Live Cost Ticker Simulation */}
                     <div className={`
-            mt-4 p-4 rounded-lg border backdrop-blur-md transition-all duration-500 w-64
+            mt-2 sm:mt-4 p-3 sm:p-4 rounded-lg border backdrop-blur-md transition-all duration-500 w-52 sm:w-64
             ${isBuildMode
                             ? 'bg-cyan-950/50 border-cyan-500/30'
                             : 'bg-black/30 border-white/10'
                         }
           `}>
                         <div className="flex justify-between items-end mb-2">
-                            <span className="text-xs text-white/60 font-mono">ESTIMATED COST</span>
-                            <span className={`text-lg font-bold font-mono ${isBuildMode ? 'text-cyan-400' : 'text-orange-400'}`}>
+                            <span className="text-[10px] sm:text-xs text-white/60 font-mono">ESTIMATED COST</span>
+                            <span className={`text-base sm:text-lg font-bold font-mono ${isBuildMode ? 'text-cyan-400' : 'text-orange-400'}`}>
                                 ${(500000 - scrollProgress * 500000).toLocaleString()}
                             </span>
                         </div>
@@ -602,7 +604,7 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
                                 style={{ width: `${45 + scrollProgress * 30}%` }}
                             />
                         </div>
-                        <div className="mt-2 text-[10px] text-white/40 font-mono flex justify-between">
+                        <div className="mt-2 text-[9px] sm:text-[10px] text-white/40 font-mono flex justify-between">
                             <span>MATERIALS: 45%</span>
                             <span>LABOR: 30%</span>
                         </div>
