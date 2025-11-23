@@ -290,8 +290,12 @@ export const OnboardingChecklist = () => {
     }
   };
 
-  // Auto-detect task completion
-  useTaskAutoDetection(progress, completeTask);
+  // Auto-detect task completion (only after progress is loaded)
+  useTaskAutoDetection(
+    progress, 
+    completeTask,
+    isLoading // Pass loading state to prevent premature detection
+  );
 
   // Auto-expand sections when they unlock (with celebration)
   useEffect(() => {
