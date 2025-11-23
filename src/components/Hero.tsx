@@ -84,7 +84,7 @@ const Hero = () => {
           </div>
 
           {/* Interactive 3D Experience */}
-          <div className="relative order-1 lg:order-2 h-[500px] lg:h-[700px] w-full">
+          <div className="relative order-1 lg:order-2 h-[400px] sm:h-[500px] lg:h-[700px] w-full">
             <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/10 to-blue-500/10 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
             <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
           </div>
