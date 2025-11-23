@@ -13,7 +13,8 @@ interface OnboardingProgress {
  */
 export const useTaskAutoDetection = (
   progress: OnboardingProgress,
-  onTaskComplete: (taskId: string, points: number) => Promise<void>
+  onTaskComplete: (taskId: string, points: number) => Promise<void>,
+  isLoading: boolean = false
 ) => {
   const { user, userProfile } = useAuth();
   const processingTasks = useRef<Set<string>>(new Set());
@@ -169,20 +170,20 @@ export const useTaskAutoDetection = (
   }, [user, userProfile, progress.tasks_completed, onTaskComplete]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isLoading) return;
 
-    // Initial check on mount
+    // Initial check on mount (only after progress is loaded)
     checkTaskCompletion();
 
     // Set up interval to check every 30 seconds
     const interval = setInterval(checkTaskCompletion, 30000);
 
     return () => clearInterval(interval);
-  }, [user, checkTaskCompletion]);
+  }, [user, isLoading, checkTaskCompletion]);
 
   // Also set up real-time subscriptions for instant detection
   useEffect(() => {
-    if (!user || !userProfile?.company_id) return;
+    if (!user || !userProfile?.company_id || isLoading) return;
 
     const subscriptions: any[] = [];
 
@@ -288,5 +289,5 @@ export const useTaskAutoDetection = (
     return () => {
       subscriptions.forEach(sub => sub.unsubscribe());
     };
-  }, [user, userProfile, progress.tasks_completed, onTaskComplete]);
+  }, [user, userProfile, progress.tasks_completed, onTaskComplete, isLoading]);
 };
