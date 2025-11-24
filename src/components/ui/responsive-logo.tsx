@@ -48,12 +48,12 @@ const ResponsiveLogo = ({
   const shouldShowText =
     showText || (isMobile ? mobileShowText : desktopShowText);
 
-  // Size configurations
+  // Size configurations with max-width constraints
   const sizeClasses = {
-    sm: "h-6 w-auto",
-    md: "h-8 w-auto",
-    lg: "h-10 w-auto",
-    xl: "h-12 w-auto",
+    sm: "h-6 w-auto max-w-[120px]",
+    md: "h-8 w-auto max-w-[160px]",
+    lg: "h-10 w-auto max-w-[200px]",
+    xl: "h-12 w-auto max-w-[240px]",
   };
 
   const textSizes = {
@@ -181,6 +181,10 @@ const ResponsiveLogo = ({
         src={currentSrc}
         alt="BuildDesk"
         className={`${sizeClasses[currentSize]} ${className}`}
+        style={{ 
+          objectFit: "contain",
+          display: "block"
+        }}
         onError={() => {
           if (imageState === "remote") {
             setImageState("local");

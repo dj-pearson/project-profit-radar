@@ -26,12 +26,20 @@ const SmartLogo = ({
   >("loading");
   const [imageError, setImageError] = useState(false);
 
-  // Size configurations
+  // Size configurations with max-width constraints
   const sizeClasses = {
-    sm: "h-6 w-auto",
-    md: "h-8 w-auto",
-    lg: "h-10 w-auto",
-    xl: "h-12 w-auto",
+    sm: "h-6 w-auto max-w-[120px]",
+    md: "h-8 w-auto max-w-[160px]",
+    lg: "h-10 w-auto max-w-[200px]",
+    xl: "h-12 w-auto max-w-[240px]",
+  };
+
+  // Explicit pixel heights for layout stability
+  const heightValues = {
+    sm: 24,
+    md: 32,
+    lg: 40,
+    xl: 48,
   };
 
   const textSizes = {
@@ -161,7 +169,15 @@ const SmartLogo = ({
       <img
         src={currentSrc}
         alt={brandName}
+        height={heightValues[size]}
+        width="auto"
         className={`${sizeClasses[size]} ${className}`}
+        style={{ 
+          maxHeight: `${heightValues[size]}px`, 
+          height: `${heightValues[size]}px`,
+          objectFit: "contain",
+          display: "block"
+        }}
         onError={() => {
           if (imageState === "remote") {
             setImageState("local");
