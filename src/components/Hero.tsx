@@ -1,19 +1,71 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Ruler } from "lucide-react";
 import { Link } from "react-router-dom";
 import PremiumBlueprint3D from "@/components/3d/PremiumBlueprint3D";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 
 const Hero = () => {
   const [isBuildMode, setIsBuildMode] = useState(false);
+  const containerRef = useRef<HTMLElement>(null);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    tl.from(badgeRef.current, {
+      y: -20,
+      opacity: 0,
+      duration: 0.6,
+    })
+    .from(headlineRef.current, {
+      y: 30,
+      opacity: 0,
+      duration: 0.8,
+    }, "-=0.4")
+    .from(textRef.current, {
+      y: 20,
+      opacity: 0,
+      duration: 0.6,
+    }, "-=0.6")
+    .from(ctaRef.current, {
+      y: 20,
+      opacity: 0,
+      duration: 0.6,
+    }, "-=0.4");
+
+    // Parallax effect on mouse move
+    const handleMouseMove = (e: MouseEvent) => {
+        const { clientX, clientY } = e;
+        const x = (clientX / window.innerWidth - 0.5) * 20;
+        const y = (clientY / window.innerHeight - 0.5) * 20;
+
+        gsap.to(".hero-blob", {
+            x: x,
+            y: y,
+            duration: 2,
+            ease: "power2.out",
+        });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+
+  }, { scope: containerRef });
 
   return (
-    <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-background via-background to-secondary/30 overflow-hidden">
-      {/* Background decorative elements */}
+    <section ref={containerRef} className="relative min-h-[90vh] flex items-center bg-background overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.4] pointer-events-none" />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-construction-orange/5 rounded-full blur-3xl" />
-        <div className="absolute top-[20%] right-[0%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="hero-blob absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-construction-orange-light/10 rounded-full blur-[100px] mix-blend-multiply filter dark:mix-blend-normal dark:opacity-20" />
+        <div className="hero-blob absolute top-[10%] -right-[10%] w-[50%] h-[50%] bg-construction-blue-light/10 rounded-full blur-[100px] mix-blend-multiply filter dark:mix-blend-normal dark:opacity-20" />
+        <div className="hero-blob absolute -bottom-[20%] left-[20%] w-[40%] h-[40%] bg-gray-200/20 rounded-full blur-[100px] mix-blend-multiply filter dark:mix-blend-normal dark:opacity-10" />
       </div>
 
       <ResponsiveContainer className="relative z-10 py-12 sm:py-20 lg:py-0">
@@ -21,7 +73,7 @@ const Hero = () => {
           {/* Content */}
           <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm">
+              <div ref={badgeRef} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-construction-orange opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-construction-orange"></span>
@@ -29,21 +81,21 @@ const Hero = () => {
                 <span className="text-sm font-medium text-muted-foreground">New: AI-Powered Estimation</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-construction-dark leading-[1.1] tracking-tight">
+              <h1 ref={headlineRef} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-construction-dark dark:text-white leading-[1.1] tracking-tight">
                 Build Smarter. <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-construction-orange to-orange-600">
                   Profit Faster.
                 </span>
               </h1>
 
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              <p ref={textRef} className="text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 Stop guessing your margins. Track every dollar in real-time with the only financial-first platform built for modern contractors.
               </p>
             </div>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="xl" className="group text-lg px-8" asChild>
+            <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Button size="xl" className="group text-lg px-8 shadow-construction hover:shadow-lg transition-all duration-300" asChild>
                 <Link to="/auth">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -53,7 +105,7 @@ const Hero = () => {
               <Button
                 variant="outline"
                 size="xl"
-                className="group text-lg px-8"
+                className="group text-lg px-8 bg-white/50 backdrop-blur-sm border-border/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40"
                 onClick={() => setIsBuildMode(!isBuildMode)}
               >
                 {isBuildMode ? (
@@ -84,8 +136,8 @@ const Hero = () => {
           </div>
 
           {/* Interactive 3D Experience */}
-          <div className="relative order-1 lg:order-2 h-[400px] sm:h-[500px] lg:h-[700px] w-full">
-            <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/10 to-blue-500/10 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
+          <div className="relative order-1 lg:order-2 h-[500px] lg:h-[700px] w-full">
+            <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/5 to-blue-500/5 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
             <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
           </div>
         </ResponsiveGrid>
