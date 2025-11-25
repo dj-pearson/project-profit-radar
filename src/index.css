@@ -31,9 +31,17 @@ All colors MUST be HSL.
 
     /* Construction-themed colors */
     --construction-orange: 24 100% 38%;
+    --construction-orange-light: 24 100% 48%;
+    --construction-orange-dark: 24 100% 28%;
+    
     --construction-blue: 210 100% 20%;
+    --construction-blue-light: 210 100% 30%;
+    --construction-blue-dark: 210 100% 10%;
+    
     --construction-steel: 210 11% 71%;
     --construction-dark: 215 25% 27%;
+    
+    --background-depth: 210 20% 98%;
 
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(var(--construction-orange)), hsl(24 100% 32%));
@@ -64,6 +72,7 @@ All colors MUST be HSL.
 
   .dark {
     --background: 222.2 84% 4.9%;
+    --background-depth: 222.2 84% 7%;
     --foreground: 210 40% 98%;
 
     --card: 222.2 84% 4.9%;
@@ -314,5 +323,50 @@ All colors MUST be HSL.
   100% {
     transform: scale(2);
     opacity: 0;
+  }
+}
+
+/* Glass morphism utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+/* Grid Pattern Utility */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* Smooth animations */
+@media (prefers-reduced-motion: no-preference) {
+  .smooth-appear {
+    animation: appear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

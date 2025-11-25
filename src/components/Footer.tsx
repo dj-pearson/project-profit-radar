@@ -32,16 +32,16 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-construction-dark text-white">
+    <footer className="bg-construction-blue">
       <div className="container mx-auto px-4">
         {/* Main Footer Content */}
         <div className="py-16">
           {/* Top Section - CTA */}
           <div className="text-center mb-16 pb-16 border-b border-white/20">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
               Ready to Transform Your Construction Business?
             </h2>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
               Join 500+ contractors who've increased their profit margins by 23%
               in the first year
             </p>
@@ -69,16 +69,16 @@ const Footer = () => {
                 className="mb-4"
                 textClassName="text-white"
               />
-              <p className="text-white/70 mb-6">
+              <p className="text-white/80 mb-6">
                 Construction management software built specifically for growing
                 SMB contractors.
               </p>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2 text-white/70">
+                <div className="flex items-center gap-2 text-white/80">
                   <Mail className="h-4 w-4" />
                   support@build-desk.com
                 </div>
-                <div className="flex items-center gap-2 text-white/70">
+                <div className="flex items-center gap-2 text-white/80">
                   <MapPin className="h-4 w-4" />
                   West Des Moines, IA
                 </div>
@@ -87,13 +87,13 @@ const Footer = () => {
 
             {/* Company Links */}
             <div>
-              <h3 className="font-semibold mb-4">Company</h3>
+              <h3 className="font-semibold mb-4 text-white">Company</h3>
               <ul className="space-y-2">
                 {companyLinks.map((link) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-white/70 hover:text-construction-orange transition-colors"
+                      className="text-white/80 hover:text-construction-orange transition-colors"
                     >
                       {link.name}
                     </a>
@@ -104,13 +104,13 @@ const Footer = () => {
 
             {/* Product Links */}
             <div>
-              <h3 className="font-semibold mb-4">Product</h3>
+              <h3 className="font-semibold mb-4 text-white">Product</h3>
               <ul className="space-y-2">
                 {productLinks.map((link) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-white/70 hover:text-construction-orange transition-colors"
+                      className="text-white/80 hover:text-construction-orange transition-colors"
                     >
                       {link.name}
                     </a>
@@ -121,13 +121,13 @@ const Footer = () => {
 
             {/* Resources Links */}
             <div>
-              <h3 className="font-semibold mb-4">Resources</h3>
+              <h3 className="font-semibold mb-4 text-white">Resources</h3>
               <ul className="space-y-2">
                 {resourceLinks.map((link) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-white/70 hover:text-construction-orange transition-colors"
+                      className="text-white/80 hover:text-construction-orange transition-colors"
                     >
                       {link.name}
                     </a>
@@ -138,13 +138,13 @@ const Footer = () => {
 
             {/* Legal Links */}
             <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
+              <h3 className="font-semibold mb-4 text-white">Legal</h3>
               <ul className="space-y-2">
                 {legalLinks.map((link) => (
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-white/70 hover:text-construction-orange transition-colors"
+                      className="text-white/80 hover:text-construction-orange transition-colors"
                     >
                       {link.name}
                     </a>
@@ -158,10 +158,10 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="py-8 border-t border-white/20">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-white/70 text-sm">
+              <div className="text-white/80 text-sm">
                 © 2024 Build Desk. All rights reserved. | <a href="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</a>
               </div>
-              <div className="flex items-center gap-6 text-sm text-white/70">
+              <div className="flex items-center gap-6 text-sm text-white/80">
                 <span>SOC 2 Certified</span>
                 <span>GDPR Compliant</span>
                 <span>QuickBooks Certified</span>

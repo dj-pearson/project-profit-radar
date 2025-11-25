@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,6 @@ import {
   Database,
   Zap,
   Key,
-  Settings,
   Brain
 } from 'lucide-react';
 
@@ -38,7 +37,7 @@ const BlogAIDebugger = () => {
     try {
       // Test 1: Check if tables exist
       try {
-        const { data: settingsData, error: settingsError } = await supabase
+        const { error: settingsError } = await supabase
           .from('blog_auto_generation_settings')
           .select('count()', { count: 'exact' })
           .limit(1);

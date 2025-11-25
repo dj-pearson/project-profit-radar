@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(), 
-    mode === "development" && componentTagger(),
+    // mode === "development" && componentTagger(),
     mode === "production" && visualizer({
       filename: 'dist/stats.html',
       open: false,
@@ -88,6 +88,9 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 400, // More aggressive warning
     reportCompressedSize: true,
     emptyOutDir: true,
+
+    // Exclude mobile-app directory from web builds
+    exclude: ['mobile-app/**/*'],
 
     // Improve compilation performance
     commonjsOptions: {

@@ -83,6 +83,73 @@ export const LazyIntegrations = createLazyRoute(() => import('@/pages/Integratio
 export const LazyAuditLogs = createLazyRoute(() => import('@/pages/AuditLogs'));
 export const LazyBackupRestore = createLazyRoute(() => import('@/pages/BackupRestore'));
 
+// Admin - Company & Security
+export const LazySecuritySettings = createLazyRoute(() => import('@/pages/SecuritySettings'));
+export const LazySystemAdminSettings = createLazyRoute(() => import('@/pages/SystemAdminSettings'));
+export const LazySecurityMonitoring = createLazyRoute(() => import('@/pages/SecurityMonitoring'));
+export const LazyRateLimitingDashboard = createLazyRoute(() => import('@/pages/RateLimitingDashboard'));
+
+// Admin - User & Company Management
+export const LazyCompanies = createLazyRoute(() => import('@/pages/admin/Companies'));
+export const LazyUsers = createLazyRoute(() => import('@/pages/admin/Users'));
+export const LazyPermissionManagement = createLazyRoute(() => import('@/pages/admin/PermissionManagement'));
+
+// Admin - Billing & Revenue
+export const LazyBilling = createLazyRoute(() => import('@/pages/admin/Billing'));
+export const LazyPromotions = createLazyRoute(() => import('@/pages/admin/Promotions'));
+export const LazyUpgrade = createLazyRoute(() => import('@/pages/Upgrade'));
+
+// Admin - Analytics & Business Intelligence
+export const LazyAnalytics = createLazyRoute(() => import('@/pages/Analytics'));
+export const LazySettings = createLazyRoute(() => import('@/pages/admin/Settings'));
+export const LazyAdminIntelligenceDashboard = createLazyRoute(() => import('@/pages/admin/AdminIntelligenceDashboard'));
+export const LazyConversionAnalytics = createLazyRoute(() => import('@/pages/admin/ConversionAnalytics'));
+export const LazyRetentionAnalytics = createLazyRoute(() => import('@/pages/admin/RetentionAnalytics'));
+export const LazyRevenueAnalytics = createLazyRoute(() => import('@/pages/admin/RevenueAnalytics'));
+export const LazyChurnPrediction = createLazyRoute(() => import('@/pages/admin/ChurnPrediction'));
+
+// Admin - SEO & Marketing
+export const LazyUnifiedSEODashboard = createLazyRoute(() => import('@/pages/UnifiedSEODashboard'));
+export const LazySEODashboard = createLazyRoute(() => import('@/pages/SEODashboard'));
+export const LazySearchTrafficDashboard = createLazyRoute(() => import('@/pages/admin/SearchTrafficDashboard'));
+export const LazyBlogManager = createLazyRoute(() => import('@/pages/BlogManager'));
+export const LazySocialMediaManager = createLazyRoute(() => import('@/pages/admin/SocialMediaManager'));
+export const LazyLeadManagementAdmin = createLazyRoute(() => import('@/pages/admin/LeadManagement'));
+export const LazyDemoManagement = createLazyRoute(() => import('@/pages/admin/DemoManagement'));
+export const LazyFunnelManager = createLazyRoute(() => import('@/pages/admin/FunnelManager'));
+
+// Admin - Knowledge & Support
+export const LazyKnowledgeBaseAdmin = createLazyRoute(() => import('@/pages/KnowledgeBaseAdmin'));
+export const LazySupportTickets = createLazyRoute(() => import('@/pages/admin/SupportTickets'));
+export const LazySupportTicketsEnhanced = createLazyRoute(() => import('@/pages/admin/SupportTicketsEnhanced'));
+
+// Admin - Multi-Tenant & Enterprise
+export const LazyTenantManagement = createLazyRoute(() => import('@/pages/admin/TenantManagement'));
+export const LazySSOManagement = createLazyRoute(() => import('@/pages/admin/SSOManagement'));
+export const LazyAuditLoggingCompliance = createLazyRoute(() => import('@/pages/admin/AuditLoggingCompliance'));
+export const LazyGPSTimeTracking = createLazyRoute(() => import('@/pages/admin/GPSTimeTracking'));
+
+// Admin - API & Developer
+export const LazyAPIKeyManagement = createLazyRoute(() => import('@/pages/admin/APIKeyManagement'));
+export const LazyWebhookManagement = createLazyRoute(() => import('@/pages/admin/WebhookManagement'));
+export const LazyDeveloperPortal = createLazyRoute(() => import('@/pages/admin/DeveloperPortal'));
+
+// Admin - AI & Intelligence
+export const LazyAIEstimating = createLazyRoute(() => import('@/pages/admin/AIEstimating'));
+export const LazyRiskPrediction = createLazyRoute(() => import('@/pages/admin/RiskPrediction'));
+export const LazyAutoScheduling = createLazyRoute(() => import('@/pages/admin/AutoScheduling'));
+export const LazySafetyAutomation = createLazyRoute(() => import('@/pages/admin/SafetyAutomation'));
+export const LazySmartProcurement = createLazyRoute(() => import('@/pages/admin/SmartProcurement'));
+export const LazyAdvancedDashboards = createLazyRoute(() => import('@/pages/admin/AdvancedDashboards'));
+export const LazyClientPortalPro = createLazyRoute(() => import('@/pages/admin/ClientPortalPro'));
+export const LazyBillingAutomation = createLazyRoute(() => import('@/pages/admin/BillingAutomation'));
+export const LazyReportingEngine = createLazyRoute(() => import('@/pages/admin/ReportingEngine'));
+export const LazyAIModelManagerPage = createLazyRoute(() => import('@/pages/admin/AIModelManager'));
+
+// Admin - Tools
+export const LazyScheduleBuilder = createLazyRoute(() => import('@/pages/tools/ScheduleBuilder'));
+export const LazyAccessibilityPage = createLazyRoute(() => import('@/pages/AccessibilityPage'));
+
 // Utility and settings pages
 export const LazyMyTasks = createLazyRoute(() => import('@/pages/MyTasks'));
 export const LazyUserSettings = createLazyRoute(() => import('@/pages/UserSettings'));

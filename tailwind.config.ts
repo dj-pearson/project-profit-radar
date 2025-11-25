@@ -66,10 +66,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				'construction-orange': 'hsl(var(--construction-orange))',
-				'construction-blue': 'hsl(var(--construction-blue))',
+				'construction-orange': {
+					DEFAULT: 'hsl(var(--construction-orange))',
+					light: 'hsl(var(--construction-orange-light))',
+					dark: 'hsl(var(--construction-orange-dark))',
+				},
+				'construction-blue': {
+					DEFAULT: 'hsl(var(--construction-blue))',
+					light: 'hsl(var(--construction-blue-light))',
+					dark: 'hsl(var(--construction-blue-dark))',
+				},
 				'construction-steel': 'hsl(var(--construction-steel))',
 				'construction-dark': 'hsl(var(--construction-dark))',
+				'background-depth': 'hsl(var(--background-depth))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -80,6 +89,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			backdropBlur: {
+				xs: '2px',
+			},
+			boxShadow: {
+				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+				'glass-hover': '0 12px 48px 0 rgba(31, 38, 135, 0.47)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

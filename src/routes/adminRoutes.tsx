@@ -1,149 +1,154 @@
 /**
  * Admin & System Routes
  * Company settings, user management, billing, analytics, and system administration
+ *
+ * ⚡ Performance: All admin routes are lazy-loaded to reduce initial bundle size
+ * Most users are field workers/contractors and don't access admin features,
+ * so we load this code only when needed.
  */
 
 import { Route, Navigate } from 'react-router-dom';
+import {
+  // Company & Security
+  LazyCompanySettings,
+  LazySecuritySettings,
+  LazySystemAdminSettings,
+  LazySecurityMonitoring,
+  LazyRateLimitingDashboard,
 
-// Company & Security
-import CompanySettings from '@/pages/CompanySettings';
-import SecuritySettings from '@/pages/SecuritySettings';
-import SystemAdminSettings from '@/pages/SystemAdminSettings';
-import SecurityMonitoring from '@/pages/SecurityMonitoring';
-import RateLimitingDashboard from '@/pages/RateLimitingDashboard';
+  // User & Company Management
+  LazyCompanies,
+  LazyUsers,
+  LazyPermissionManagement,
 
-// User & Company Management
-import Companies from '@/pages/admin/Companies';
-import Users from '@/pages/admin/Users';
-import { PermissionManagement } from '@/pages/admin/PermissionManagement';
+  // Billing & Revenue
+  LazyBilling,
+  LazyPromotions,
+  LazyUpgrade,
 
-// Billing & Revenue
-import Billing from '@/pages/admin/Billing';
-import Promotions from '@/pages/admin/Promotions';
-import Upgrade from '@/pages/Upgrade';
+  // Analytics & Business Intelligence
+  LazyAnalytics,
+  LazySettings,
+  LazyAdminIntelligenceDashboard,
+  LazyConversionAnalytics,
+  LazyRetentionAnalytics,
+  LazyRevenueAnalytics,
+  LazyChurnPrediction,
 
-// Analytics & Business Intelligence
-import Analytics from '@/pages/Analytics';
-import Settings from '@/pages/admin/Settings';
-import AdminIntelligenceDashboard from '@/pages/admin/AdminIntelligenceDashboard';
-import { ConversionAnalytics } from '@/pages/admin/ConversionAnalytics';
-import { RetentionAnalytics } from '@/pages/admin/RetentionAnalytics';
-import { RevenueAnalytics } from '@/pages/admin/RevenueAnalytics';
-import { ChurnPrediction } from '@/pages/admin/ChurnPrediction';
+  // SEO & Marketing
+  LazyUnifiedSEODashboard,
+  LazySEODashboard,
+  LazySearchTrafficDashboard,
+  LazyBlogManager,
+  LazySocialMediaManager,
+  LazyLeadManagementAdmin,
+  LazyDemoManagement,
+  LazyFunnelManager,
 
-// SEO & Marketing
-import UnifiedSEODashboard from '@/pages/UnifiedSEODashboard';
-import SEODashboard from '@/pages/SEODashboard';
-import SearchTrafficDashboard from '@/pages/admin/SearchTrafficDashboard';
-import BlogManager from '@/pages/BlogManager';
-import { SocialMediaManager } from '@/pages/admin/SocialMediaManager';
-import { LeadManagement } from '@/pages/admin/LeadManagement';
-import { DemoManagement } from '@/pages/admin/DemoManagement';
-import FunnelManager from '@/pages/admin/FunnelManager';
+  // Knowledge & Support
+  LazyKnowledgeBaseAdmin,
+  LazySupportTickets,
+  LazySupportTicketsEnhanced,
 
-// Knowledge & Support
-import KnowledgeBaseAdmin from '@/pages/KnowledgeBaseAdmin';
-import SupportTickets from '@/pages/admin/SupportTickets';
-import SupportTicketsEnhanced from '@/pages/admin/SupportTicketsEnhanced';
+  // Multi-Tenant & Enterprise
+  LazyTenantManagement,
+  LazySSOManagement,
+  LazyAuditLoggingCompliance,
+  LazyGPSTimeTracking,
 
-// Multi-Tenant & Enterprise (Phase 4)
-import { TenantManagement } from '@/pages/admin/TenantManagement';
-import { SSOManagement } from '@/pages/admin/SSOManagement';
-import { AuditLoggingCompliance } from '@/pages/admin/AuditLoggingCompliance';
-import { GPSTimeTracking } from '@/pages/admin/GPSTimeTracking';
+  // API & Developer
+  LazyAPIKeyManagement,
+  LazyWebhookManagement,
+  LazyDeveloperPortal,
 
-// API & Developer
-import { APIKeyManagement } from '@/pages/admin/APIKeyManagement';
-import { WebhookManagement } from '@/pages/admin/WebhookManagement';
-import { DeveloperPortal } from '@/pages/admin/DeveloperPortal';
+  // AI & Intelligence
+  LazyAIEstimating,
+  LazyRiskPrediction,
+  LazyAutoScheduling,
+  LazySafetyAutomation,
+  LazySmartProcurement,
+  LazyAdvancedDashboards,
+  LazyClientPortalPro,
+  LazyBillingAutomation,
+  LazyReportingEngine,
+  LazyAIModelManagerPage,
 
-// AI & Intelligence (Phase 5)
-import { AIEstimating } from '@/pages/admin/AIEstimating';
-import { RiskPrediction } from '@/pages/admin/RiskPrediction';
-import { AutoScheduling } from '@/pages/admin/AutoScheduling';
-import { SafetyAutomation } from '@/pages/admin/SafetyAutomation';
-import { SmartProcurement } from '@/pages/admin/SmartProcurement';
-import { AdvancedDashboards } from '@/pages/admin/AdvancedDashboards';
-import { ClientPortalPro } from '@/pages/admin/ClientPortalPro';
-import { BillingAutomation } from '@/pages/admin/BillingAutomation';
-import { ReportingEngine } from '@/pages/admin/ReportingEngine';
-import AIModelManagerPage from '@/pages/admin/AIModelManager';
-
-// Tools
-import ScheduleBuilder from '@/pages/tools/ScheduleBuilder';
-import AccessibilityPage from '@/pages/AccessibilityPage';
+  // Tools
+  LazyScheduleBuilder,
+  LazyAccessibilityPage,
+} from '@/utils/lazyRoutes';
 
 export const adminRoutes = (
   <>
     {/* Company Settings */}
-    <Route path="/company-settings" element={<CompanySettings />} />
-    <Route path="/security-settings" element={<SecuritySettings />} />
-    <Route path="/system-admin/settings" element={<SystemAdminSettings />} />
-    <Route path="/security-monitoring" element={<SecurityMonitoring />} />
-    <Route path="/rate-limiting" element={<RateLimitingDashboard />} />
+    <Route path="/company-settings" element={<LazyCompanySettings />} />
+    <Route path="/security-settings" element={<LazySecuritySettings />} />
+    <Route path="/system-admin/settings" element={<LazySystemAdminSettings />} />
+    <Route path="/security-monitoring" element={<LazySecurityMonitoring />} />
+    <Route path="/rate-limiting" element={<LazyRateLimitingDashboard />} />
 
     {/* Admin - Users & Companies */}
-    <Route path="/admin/companies" element={<Companies />} />
-    <Route path="/admin/users" element={<Users />} />
-    <Route path="/admin/permissions" element={<PermissionManagement />} />
+    <Route path="/admin/companies" element={<LazyCompanies />} />
+    <Route path="/admin/users" element={<LazyUsers />} />
+    <Route path="/admin/permissions" element={<LazyPermissionManagement />} />
 
     {/* Admin - Billing & Revenue */}
-    <Route path="/admin/billing" element={<Billing />} />
-    <Route path="/admin/promotions" element={<Promotions />} />
-    <Route path="/upgrade" element={<Upgrade />} />
+    <Route path="/admin/billing" element={<LazyBilling />} />
+    <Route path="/admin/promotions" element={<LazyPromotions />} />
+    <Route path="/upgrade" element={<LazyUpgrade />} />
 
     {/* Admin - Analytics */}
-    <Route path="/admin/intelligence" element={<AdminIntelligenceDashboard />} />
-    <Route path="/admin/analytics" element={<Analytics />} />
-    <Route path="/admin/settings" element={<Settings />} />
-    <Route path="/admin/conversion-analytics" element={<ConversionAnalytics />} />
-    <Route path="/admin/retention-analytics" element={<RetentionAnalytics />} />
-    <Route path="/admin/revenue-analytics" element={<RevenueAnalytics />} />
-    <Route path="/admin/churn-prediction" element={<ChurnPrediction />} />
+    <Route path="/admin/intelligence" element={<LazyAdminIntelligenceDashboard />} />
+    <Route path="/admin/analytics" element={<LazyAnalytics />} />
+    <Route path="/admin/settings" element={<LazySettings />} />
+    <Route path="/admin/conversion-analytics" element={<LazyConversionAnalytics />} />
+    <Route path="/admin/retention-analytics" element={<LazyRetentionAnalytics />} />
+    <Route path="/admin/revenue-analytics" element={<LazyRevenueAnalytics />} />
+    <Route path="/admin/churn-prediction" element={<LazyChurnPrediction />} />
 
     {/* Admin - Marketing & SEO */}
-    <Route path="/admin/seo" element={<SEODashboard />} />
-    <Route path="/admin/seo-management" element={<UnifiedSEODashboard />} />
-    <Route path="/admin/search-traffic-dashboard" element={<SearchTrafficDashboard />} />
+    <Route path="/admin/seo" element={<LazySEODashboard />} />
+    <Route path="/admin/seo-management" element={<LazyUnifiedSEODashboard />} />
+    <Route path="/admin/search-traffic-dashboard" element={<LazySearchTrafficDashboard />} />
     <Route path="/admin/seo-analytics" element={<Navigate to="/admin/seo-management" replace />} />
     <Route path="/admin/seo-analytics-legacy" element={<Navigate to="/admin/seo-management" replace />} />
     <Route path="/seo-management" element={<Navigate to="/admin/seo-management" replace />} />
-    <Route path="/blog-manager" element={<BlogManager />} />
-    <Route path="/admin/social-media" element={<SocialMediaManager />} />
-    <Route path="/admin/leads" element={<LeadManagement />} />
-    <Route path="/admin/demos" element={<DemoManagement />} />
-    <Route path="/admin/funnels" element={<FunnelManager />} />
+    <Route path="/blog-manager" element={<LazyBlogManager />} />
+    <Route path="/admin/social-media" element={<LazySocialMediaManager />} />
+    <Route path="/admin/leads" element={<LazyLeadManagementAdmin />} />
+    <Route path="/admin/demos" element={<LazyDemoManagement />} />
+    <Route path="/admin/funnels" element={<LazyFunnelManager />} />
 
     {/* Admin - Knowledge & Support */}
-    <Route path="/knowledge-base-admin" element={<KnowledgeBaseAdmin />} />
-    <Route path="/admin/support-tickets" element={<SupportTicketsEnhanced />} />
-    <Route path="/admin/support-tickets-legacy" element={<SupportTickets />} />
+    <Route path="/knowledge-base-admin" element={<LazyKnowledgeBaseAdmin />} />
+    <Route path="/admin/support-tickets" element={<LazySupportTicketsEnhanced />} />
+    <Route path="/admin/support-tickets-legacy" element={<LazySupportTickets />} />
 
     {/* Admin - Multi-Tenant & Enterprise */}
-    <Route path="/admin/tenants" element={<TenantManagement />} />
-    <Route path="/admin/sso" element={<SSOManagement />} />
-    <Route path="/admin/audit" element={<AuditLoggingCompliance />} />
-    <Route path="/admin/gps-tracking" element={<GPSTimeTracking />} />
+    <Route path="/admin/tenants" element={<LazyTenantManagement />} />
+    <Route path="/admin/sso" element={<LazySSOManagement />} />
+    <Route path="/admin/audit" element={<LazyAuditLoggingCompliance />} />
+    <Route path="/admin/gps-tracking" element={<LazyGPSTimeTracking />} />
 
     {/* Admin - API & Developer */}
-    <Route path="/admin/api-keys" element={<APIKeyManagement />} />
-    <Route path="/admin/webhooks" element={<WebhookManagement />} />
-    <Route path="/admin/developer-portal" element={<DeveloperPortal />} />
+    <Route path="/admin/api-keys" element={<LazyAPIKeyManagement />} />
+    <Route path="/admin/webhooks" element={<LazyWebhookManagement />} />
+    <Route path="/admin/developer-portal" element={<LazyDeveloperPortal />} />
 
     {/* Admin - AI & Intelligence */}
-    <Route path="/admin/ai-estimating" element={<AIEstimating />} />
-    <Route path="/admin/risk-prediction" element={<RiskPrediction />} />
-    <Route path="/admin/auto-scheduling" element={<AutoScheduling />} />
-    <Route path="/admin/safety-automation" element={<SafetyAutomation />} />
-    <Route path="/admin/smart-procurement" element={<SmartProcurement />} />
-    <Route path="/admin/advanced-dashboards" element={<AdvancedDashboards />} />
-    <Route path="/admin/client-portal-pro" element={<ClientPortalPro />} />
-    <Route path="/admin/billing-automation" element={<BillingAutomation />} />
-    <Route path="/admin/reporting-engine" element={<ReportingEngine />} />
-    <Route path="/admin/ai-models" element={<AIModelManagerPage />} />
+    <Route path="/admin/ai-estimating" element={<LazyAIEstimating />} />
+    <Route path="/admin/risk-prediction" element={<LazyRiskPrediction />} />
+    <Route path="/admin/auto-scheduling" element={<LazyAutoScheduling />} />
+    <Route path="/admin/safety-automation" element={<LazySafetyAutomation />} />
+    <Route path="/admin/smart-procurement" element={<LazySmartProcurement />} />
+    <Route path="/admin/advanced-dashboards" element={<LazyAdvancedDashboards />} />
+    <Route path="/admin/client-portal-pro" element={<LazyClientPortalPro />} />
+    <Route path="/admin/billing-automation" element={<LazyBillingAutomation />} />
+    <Route path="/admin/reporting-engine" element={<LazyReportingEngine />} />
+    <Route path="/admin/ai-models" element={<LazyAIModelManagerPage />} />
 
     {/* Tools & Utilities */}
-    <Route path="/schedule-builder" element={<ScheduleBuilder />} />
-    <Route path="/accessibility" element={<AccessibilityPage />} />
+    <Route path="/schedule-builder" element={<LazyScheduleBuilder />} />
+    <Route path="/accessibility" element={<LazyAccessibilityPage />} />
   </>
 );

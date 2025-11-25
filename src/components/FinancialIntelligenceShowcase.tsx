@@ -133,9 +133,9 @@ const FinancialIntelligenceShowcase = () => {
         </div>
 
         {/* Competitive Differentiation */}
-        <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8 border-2 border-construction-orange/20">
+        <div className="bg-white dark:bg-card rounded-xl shadow-xl p-6 sm:p-8 border-2 border-construction-orange/20">
           <div className="text-center mb-8">
-            <h3 className="text-2xl sm:text-3xl font-bold text-construction-dark mb-3">
+            <h3 className="text-2xl sm:text-3xl font-bold text-construction-dark dark:text-foreground mb-3">
               Why BuildDesk vs. Procore, Buildertrend, CoConstruct?
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -146,20 +146,20 @@ const FinancialIntelligenceShowcase = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b-2 border-construction-dark">
-                  <th className="text-left py-4 px-4 font-bold text-construction-dark">Capability</th>
+                <tr className="border-b-2 border-construction-dark dark:border-border">
+                  <th className="text-left py-4 px-4 font-bold text-construction-dark dark:text-foreground">Capability</th>
                   <th className="text-center py-4 px-4 font-bold text-construction-orange">BuildDesk</th>
                   <th className="text-center py-4 px-4 font-bold text-muted-foreground">Competitors</th>
-                  <th className="text-left py-4 px-4 font-bold text-construction-dark">The Difference</th>
+                  <th className="text-left py-4 px-4 font-bold text-construction-dark dark:text-foreground">The Difference</th>
                 </tr>
               </thead>
               <tbody>
                 {competitorComparison.map((item, index) => (
-                  <tr key={index} className="border-b hover:bg-secondary/30 transition-colors">
-                    <td className="py-4 px-4 font-medium">{item.feature}</td>
+                  <tr key={index} className="border-b hover:bg-secondary/30 transition-colors dark:border-border">
+                    <td className="py-4 px-4 font-medium text-foreground">{item.feature}</td>
                     <td className="text-center py-4 px-4">
                       {item.builddesk ? (
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-success text-white font-bold">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white font-bold">
                           ✓
                         </span>
                       ) : (
@@ -170,7 +170,7 @@ const FinancialIntelligenceShowcase = () => {
                     </td>
                     <td className="text-center py-4 px-4">
                       {item.competitors ? (
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-success text-white font-bold">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white font-bold">
                           ✓
                         </span>
                       ) : (
@@ -187,7 +187,7 @@ const FinancialIntelligenceShowcase = () => {
           </div>
 
           <div className="mt-8 p-6 bg-gradient-to-r from-construction-orange/10 to-construction-blue/10 rounded-lg text-center">
-            <h4 className="text-xl font-bold text-construction-dark mb-2">
+            <h4 className="text-xl font-bold text-construction-dark dark:text-foreground mb-2">
               The Bottom Line
             </h4>
             <p className="text-muted-foreground mb-4">
