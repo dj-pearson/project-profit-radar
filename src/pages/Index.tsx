@@ -27,6 +27,8 @@ import { initializeFontOptimizations, monitorFontPerformance } from "@/utils/fon
 // import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
 import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
+import ScrollSection from "@/components/ScrollSection";
+import ParallaxBackground from "@/components/ParallaxBackground";
 
 import { FontOptimization, useFontOptimization } from "@/components/performance/FontOptimization";
 import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
@@ -45,7 +47,7 @@ const Index = () => {
       { family: 'Inter', preload: true, display: 'swap' }
     ]);
     monitorFontPerformance();
-    
+
     // Then initialize SEO backend integration only when authenticated
     (async () => {
       const { data } = await supabase.auth.getSession();
@@ -63,7 +65,7 @@ const Index = () => {
 
   return (
     <MobilePerformanceProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Performance Optimizations */}
         <CoreWebVitalsOptimizer pageType="homepage" />
         <AdvancedCoreWebVitals enableReporting={true} enableOptimization={true} />
@@ -71,110 +73,126 @@ const Index = () => {
         <FontOptimization />
         <PageResourcePreloader pageType="homepage" />
         <SiteSearchSchema />
-      
-      <PageSEO
-        title="Real-Time Job Costing for Contractors"
-        description="Construction job costing software with real-time budget tracking. Know your project profitability today, not 30 days later. Unlimited users, $350/month."
-        keywords={[
-          'construction job costing software',
-          'real-time construction budgeting',
-          'construction financial management',
-          'job cost accounting for contractors',
-          'construction profit tracking',
-          'contractor expense tracking software',
-          'real-time budget alerts construction',
-          'construction financial dashboard software',
-          'quickbooks alternative for contractors',
-          'contractor cash flow forecasting',
-          'construction budget vs actual tracking',
-          'construction project profitability',
-          'small contractor software',
-          'construction cost tracking',
-          'real-time job costing'
-        ]}
-        canonicalUrl="https://builddesk.com"
-        schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([
-          { name: "Home", url: "https://builddesk.com" }
-        ])]}
-        lastModified="2025-11-11"
-      />
-      <SkipLink href="#main-content">Skip to main content</SkipLink>
-      <SkipLink href="#navigation">Skip to navigation</SkipLink>
-      
-      <Header />
-      
-      <main id="main-content" role="main">
-        <Hero />
-        <SocialProof />
 
-        {/* Financial Health Check CTA Banner */}
-        <FinancialHealthCheckBanner />
+        {/* Parallax Background */}
+        <ParallaxBackground />
 
-        <LazySection>
-          <ProblemSolution />
-        </LazySection>
+        <PageSEO
+          title="Real-Time Job Costing for Contractors"
+          description="Construction job costing software with real-time budget tracking. Know your project profitability today, not 30 days later. Unlimited users, $350/month."
+          keywords={[
+            'construction job costing software',
+            'real-time construction budgeting',
+            'construction financial management',
+            'job cost accounting for contractors',
+            'construction profit tracking',
+            'contractor expense tracking software',
+            'real-time budget alerts construction',
+            'construction financial dashboard software',
+            'quickbooks alternative for contractors',
+            'contractor cash flow forecasting',
+            'construction budget vs actual tracking',
+            'construction project profitability',
+            'small contractor software',
+            'construction cost tracking',
+            'real-time job costing'
+          ]}
+          canonicalUrl="https://builddesk.com"
+          schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([
+            { name: "Home", url: "https://builddesk.com" }
+          ])]}
+          lastModified="2025-11-11"
+        />
+        <SkipLink href="#main-content">Skip to main content</SkipLink>
+        <SkipLink href="#navigation">Skip to navigation</SkipLink>
 
-        <LazySection>
-          <FinancialIntelligenceShowcase />
-        </LazySection>
+        <Header />
 
-        <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-          <LazyFeatures />
-        </PerformanceLazyWrapper>
-        
-        <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
-          <LazyIndustries />
-        </PerformanceLazyWrapper>
-        
-        <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-          <LazyPricing />
-        </PerformanceLazyWrapper>
-        
-        {/* Trust Signals */}
-        <LazySection>
-          <TestimonialsSection />
-        </LazySection>
-        
-        <LazySection>
-          <CaseStudiesSection />
-        </LazySection>
-        
-        <ClientLogosSection />
-        
-        <LazySection>
-          <Implementation />
-        </LazySection>
-        
-        <LazySection>
-          <FAQ />
-        </LazySection>
-        
-        {/* AI Search Optimization Section */}
-        <LazySection>
-          <div className="container mx-auto px-4 py-16">
-            <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
-          </div>
-        </LazySection>
+        <main id="main-content" role="main" className="relative z-10">
+          <Hero />
 
-        {/* GEO-Optimized FAQ Section */}
-        <LazySection>
-          <div className="container mx-auto px-4 py-16">
-            <GEOOptimizedFAQ
-              faqs={homepageFAQs}
-              title="Construction Management Software FAQs"
-              description="Get answers to common questions about BuildDesk and construction management software"
-            />
-          </div>
-        </LazySection>
-      </main>
-      
-      <OrganizationSchema />
-      <SoftwareSchema />
-      <Footer />
-      
-      {/* Sticky Demo CTA */}
-      <StickyDemoCTA />
-    </div>
+          <ScrollSection delay={0.2}>
+            <SocialProof />
+          </ScrollSection>
+
+          {/* Financial Health Check CTA Banner */}
+          <ScrollSection direction="left">
+            <FinancialHealthCheckBanner />
+          </ScrollSection>
+
+          <ScrollSection direction="right">
+            <ProblemSolution />
+          </ScrollSection>
+
+          <ScrollSection>
+            <FinancialIntelligenceShowcase />
+          </ScrollSection>
+
+          <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+            <ScrollSection>
+              <LazyFeatures />
+            </ScrollSection>
+          </PerformanceLazyWrapper>
+
+          <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+            <ScrollSection direction="left">
+              <LazyIndustries />
+            </ScrollSection>
+          </PerformanceLazyWrapper>
+
+          <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+            <ScrollSection direction="right">
+              <LazyPricing />
+            </ScrollSection>
+          </PerformanceLazyWrapper>
+
+          {/* Trust Signals */}
+          <ScrollSection>
+            <TestimonialsSection />
+          </ScrollSection>
+
+          <ScrollSection>
+            <CaseStudiesSection />
+          </ScrollSection>
+
+          <ScrollSection>
+            <ClientLogosSection />
+          </ScrollSection>
+
+          <ScrollSection>
+            <Implementation />
+          </ScrollSection>
+
+          <ScrollSection>
+            <FAQ />
+          </ScrollSection>
+
+          {/* AI Search Optimization Section */}
+          <ScrollSection>
+            <div className="container mx-auto px-4 py-16">
+              <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
+            </div>
+          </ScrollSection>
+
+          {/* GEO-Optimized FAQ Section */}
+          <ScrollSection>
+            <div className="container mx-auto px-4 py-16">
+              <GEOOptimizedFAQ
+                faqs={homepageFAQs}
+                title="Construction Management Software FAQs"
+                description="Get answers to common questions about BuildDesk and construction management software"
+              />
+            </div>
+          </ScrollSection>
+        </main>
+
+        <OrganizationSchema />
+        <SoftwareSchema />
+        <Footer />
+
+        {/* Sticky Demo CTA */}
+        <StickyDemoCTA />
+      </div>
     </MobilePerformanceProvider>
   );
 };
