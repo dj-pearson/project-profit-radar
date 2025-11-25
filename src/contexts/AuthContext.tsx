@@ -50,6 +50,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
+  signInWithApple: () => Promise<{ error?: string }>;
   signUp: (
     email: string,
     password: string,
@@ -671,6 +672,38 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, []);
 
+  const signInWithApple = useCallback(async () => {
+    try {
+      logger.debug("Signing in with Apple...");
+      setLoading(true);
+
+      const location = getWindowLocation();
+      const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        logger.error("Apple sign in error:", error);
+        setLoading(false);
+        return { error: error.message };
+      }
+
+      logger.debug("Apple sign in successful");
+      gtag.trackAuth('login', 'apple');
+      // User will be redirected, loading will be handled by redirect
+      return {};
+    } catch (error) {
+      logger.error("Apple sign in exception:", error);
+      setLoading(false);
+      return { error: "An unexpected error occurred" };
+    }
+  }, []);
+
   const signUp = useCallback(
     async (email: string, password: string, userData?: any) => {
       try {
@@ -809,6 +842,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       loading: effectiveLoading,
       signIn,
       signInWithGoogle,
+      signInWithApple,
       signUp,
       signOut,
       resetPassword,
@@ -822,6 +856,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       effectiveLoading,
       signIn,
       signInWithGoogle,
+      signInWithApple,
       signUp,
       signOut,
       resetPassword,
