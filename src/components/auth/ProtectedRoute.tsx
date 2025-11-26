@@ -13,7 +13,7 @@ export function ProtectedRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return <Outlet />;
@@ -34,7 +34,7 @@ export function RoleProtectedRoute({ allowedRoles }: RoleProtectedRouteProps) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   if (role && !allowedRoles.includes(role)) {

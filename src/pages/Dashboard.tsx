@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -11,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const { data, loading: dataLoading } = useDashboardData();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -19,8 +20,27 @@ const Dashboard = () => {
   // Inject critical CSS for dashboard
   useCriticalCSS('dashboard');
 
+  // Redirect unauthenticated users to auth page
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Redirect users without company to setup
+  useEffect(() => {
+    if (!authLoading && user && userProfile && !userProfile.company_id) {
+      navigate('/setup');
+    }
+  }, [user, userProfile, authLoading, navigate]);
+
   // Show loading state while auth or data is loading
   if (authLoading || dataLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  // Don't render dashboard for unauthenticated users
+  if (!user) {
     return <DashboardSkeleton />;
   }
 
