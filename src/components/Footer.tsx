@@ -1,34 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import SmartLogo from "@/components/ui/smart-logo";
 
 const Footer = () => {
   const companyLinks = [
-    { name: "About Us", href: "#" },
-    { name: "Careers", href: "#" },
-    { name: "Press", href: "#" },
-    { name: "Contact", href: "#" },
+    { name: "About Us", href: "/about" },
+    { name: "Solutions", href: "/solutions" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Contact", href: "mailto:support@build-desk.com" },
   ];
 
   const productLinks = [
-    { name: "Features", href: "#" },
-    { name: "Pricing", href: "#" },
-    { name: "Integrations", href: "#" },
-    { name: "API", href: "#" },
+    { name: "Features", href: "/#features" },
+    { name: "Pricing", href: "/#pricing" },
+    { name: "Integrations", href: "/integrations" },
+    { name: "Mobile App", href: "/mobile-showcase" },
   ];
 
   const resourceLinks = [
-    { name: "Help Center", href: "#" },
-    { name: "Webinars", href: "#" },
-    { name: "Case Studies", href: "#" },
-    { name: "Blog", href: "#" },
+    { name: "Resources", href: "/resources" },
+    { name: "Blog", href: "/blog" },
+    { name: "Tools", href: "/tools" },
+    { name: "API Docs", href: "/admin/developer-portal" },
   ];
 
   const legalLinks = [
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Terms of Service", href: "/terms-of-service" },
-    { name: "Security", href: "#" },
-    { name: "GDPR", href: "#" },
+    { name: "Security", href: "/security" },
+    { name: "GDPR", href: "/gdpr" },
   ];
 
   return (
@@ -46,15 +47,20 @@ const Footer = () => {
               in the first year
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button variant="hero" asChild>
+                <Link to="/auth?tab=signup">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
               <Button
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-construction-dark"
+                asChild
               >
-                Schedule Demo
+                <a href="/#pricing">
+                  View Pricing
+                </a>
               </Button>
             </div>
           </div>
@@ -91,12 +97,21 @@ const Footer = () => {
               <ul className="space-y-2">
                 {companyLinks.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
-                      className="text-white/80 hover:text-construction-orange transition-colors"
-                    >
-                      {link.name}
-                    </a>
+                    {link.href.startsWith('mailto:') || link.href.startsWith('http') ? (
+                      <a
+                        href={link.href}
+                        className="text-white/80 hover:text-construction-orange transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-white/80 hover:text-construction-orange transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -108,12 +123,21 @@ const Footer = () => {
               <ul className="space-y-2">
                 {productLinks.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
-                      className="text-white/80 hover:text-construction-orange transition-colors"
-                    >
-                      {link.name}
-                    </a>
+                    {link.href.startsWith('/#') ? (
+                      <a
+                        href={link.href}
+                        className="text-white/80 hover:text-construction-orange transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-white/80 hover:text-construction-orange transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -125,12 +149,12 @@ const Footer = () => {
               <ul className="space-y-2">
                 {resourceLinks.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
+                    <Link
+                      to={link.href}
                       className="text-white/80 hover:text-construction-orange transition-colors"
                     >
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -142,12 +166,12 @@ const Footer = () => {
               <ul className="space-y-2">
                 {legalLinks.map((link) => (
                   <li key={link.name}>
-                    <a
-                      href={link.href}
+                    <Link
+                      to={link.href}
                       className="text-white/80 hover:text-construction-orange transition-colors"
                     >
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -159,7 +183,7 @@ const Footer = () => {
         <div className="py-8 border-t border-white/20">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-white/80 text-sm">
-                © 2024 Build Desk. All rights reserved. | <a href="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</a>
+                © 2025 Build Desk. All rights reserved. | <Link to="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</Link>
               </div>
               <div className="flex items-center gap-6 text-sm text-white/80">
                 <span>SOC 2 Certified</span>

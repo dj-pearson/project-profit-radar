@@ -115,11 +115,6 @@ const Index = () => {
             <SocialProof />
           </ScrollSection>
 
-          {/* Financial Health Check CTA Banner */}
-          <ScrollSection direction="left">
-            <FinancialHealthCheckBanner />
-          </ScrollSection>
-
           <ScrollSection direction="right">
             <ProblemSolution />
           </ScrollSection>
@@ -134,19 +129,7 @@ const Index = () => {
             </ScrollSection>
           </PerformanceLazyWrapper>
 
-          <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
-            <ScrollSection direction="left">
-              <LazyIndustries />
-            </ScrollSection>
-          </PerformanceLazyWrapper>
-
-          <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-            <ScrollSection direction="right">
-              <LazyPricing />
-            </ScrollSection>
-          </PerformanceLazyWrapper>
-
-          {/* Trust Signals */}
+          {/* Trust Signals - BEFORE pricing for better conversion */}
           <ScrollSection>
             <TestimonialsSection />
           </ScrollSection>
@@ -155,8 +138,26 @@ const Index = () => {
             <CaseStudiesSection />
           </ScrollSection>
 
+          {/* Pricing - Main conversion point */}
+          <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+            <ScrollSection direction="right">
+              <LazyPricing />
+            </ScrollSection>
+          </PerformanceLazyWrapper>
+
+          <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+            <ScrollSection direction="left">
+              <LazyIndustries />
+            </ScrollSection>
+          </PerformanceLazyWrapper>
+
           <ScrollSection>
             <ClientLogosSection />
+          </ScrollSection>
+
+          {/* Financial Health Check CTA Banner - Secondary conversion */}
+          <ScrollSection direction="left">
+            <FinancialHealthCheckBanner />
           </ScrollSection>
 
           <ScrollSection>
@@ -167,23 +168,15 @@ const Index = () => {
             <FAQ />
           </ScrollSection>
 
-          {/* AI Search Optimization Section */}
-          <ScrollSection>
-            <div className="container mx-auto px-4 py-16">
-              <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
-            </div>
-          </ScrollSection>
-
-          {/* GEO-Optimized FAQ Section */}
-          <ScrollSection>
-            <div className="container mx-auto px-4 py-16">
-              <GEOOptimizedFAQ
-                faqs={homepageFAQs}
-                title="Construction Management Software FAQs"
-                description="Get answers to common questions about BuildDesk and construction management software"
-              />
-            </div>
-          </ScrollSection>
+          {/* SEO-only sections - hidden from users but visible to search engines */}
+          <div className="sr-only" aria-hidden="true">
+            <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
+            <GEOOptimizedFAQ
+              faqs={homepageFAQs}
+              title="Construction Management Software FAQs"
+              description="Get answers to common questions about BuildDesk and construction management software"
+            />
+          </div>
         </main>
 
         <OrganizationSchema />
