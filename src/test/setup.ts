@@ -1,9 +1,15 @@
-import { expect, afterEach, vi } from 'vitest';
+import { expect, afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
+
+// Reset fixture counters between tests
+beforeEach(() => {
+  // Reset ID counter for fixtures
+  vi.stubGlobal('__fixtureIdCounter', 0);
+});
 
 // Cleanup after each test
 afterEach(() => {
@@ -95,7 +101,67 @@ Object.defineProperty(window, 'sessionStorage', {
 process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
 process.env.VITE_SUPABASE_PUBLISHABLE_KEY = 'test-key';
 
-// Suppress console errors in tests (optional)
+// Mock navigator.geolocation
+const mockGeolocation = {
+  getCurrentPosition: vi.fn().mockImplementation((success) => {
+    success({
+      coords: {
+        latitude: 34.0522,
+        longitude: -118.2437,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    });
+  }),
+  watchPosition: vi.fn().mockReturnValue(1),
+  clearWatch: vi.fn(),
+};
+
+Object.defineProperty(navigator, 'geolocation', {
+  value: mockGeolocation,
+  writable: true,
+});
+
+// Mock navigator.permissions
+Object.defineProperty(navigator, 'permissions', {
+  value: {
+    query: vi.fn().mockResolvedValue({ state: 'granted' }),
+  },
+  writable: true,
+});
+
+// Mock fetch for API calls
+global.fetch = vi.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob()),
+  })
+);
+
+// Mock crypto.randomUUID
+Object.defineProperty(globalThis, 'crypto', {
+  value: {
+    randomUUID: () => 'test-uuid-' + Math.random().toString(36).substring(7),
+    getRandomValues: (arr: Uint8Array) => {
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = Math.floor(Math.random() * 256);
+      }
+      return arr;
+    },
+  },
+});
+
+// Mock URL.createObjectURL
+global.URL.createObjectURL = vi.fn(() => 'blob:test-url');
+global.URL.revokeObjectURL = vi.fn();
+
+// Suppress console errors in tests (optional - uncomment to reduce noise)
 // global.console = {
 //   ...console,
 //   error: vi.fn(),

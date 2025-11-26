@@ -12,6 +12,84 @@ interface QuickBooksAPIResponse {
   }
 }
 
+interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  x_refresh_token_expires_in?: number;
+}
+
+// Check if token needs refresh and refresh if necessary
+async function ensureValidToken(supabaseClient: any, integration: any): Promise<string> {
+  const expiresAt = new Date(integration.access_token_expires_at)
+  const now = new Date()
+  const bufferTime = 5 * 60 * 1000 // 5 minute buffer
+
+  // If token is still valid (with buffer), return it
+  if (expiresAt.getTime() - now.getTime() > bufferTime) {
+    return integration.access_token
+  }
+
+  console.log('Access token expired or expiring soon, refreshing...')
+
+  // Refresh the token
+  const clientId = Deno.env.get('QUICKBOOKS_CLIENT_ID')
+  const clientSecret = Deno.env.get('QUICKBOOKS_CLIENT_SECRET')
+
+  if (!clientId || !clientSecret) {
+    throw new Error('QuickBooks credentials not configured for token refresh')
+  }
+
+  if (!integration.refresh_token) {
+    throw new Error('No refresh token available. Please reconnect to QuickBooks.')
+  }
+
+  const credentials = btoa(`${clientId}:${clientSecret}`)
+
+  const tokenResponse = await fetch('https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: integration.refresh_token,
+    }).toString(),
+  })
+
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text()
+    console.error('Token refresh failed:', errorText)
+    throw new Error(`Token refresh failed: ${tokenResponse.status}. Please reconnect to QuickBooks.`)
+  }
+
+  const tokens: TokenResponse = await tokenResponse.json()
+
+  // Calculate new expiration times
+  const accessTokenExpires = new Date(now.getTime() + (tokens.expires_in * 1000))
+  const refreshTokenExpires = tokens.x_refresh_token_expires_in
+    ? new Date(now.getTime() + (tokens.x_refresh_token_expires_in * 1000))
+    : new Date(integration.refresh_token_expires_at) // Keep existing if not provided
+
+  // Update tokens in database
+  await supabaseClient
+    .from('quickbooks_integrations')
+    .update({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      access_token_expires_at: accessTokenExpires.toISOString(),
+      refresh_token_expires_at: refreshTokenExpires.toISOString(),
+      updated_at: now.toISOString(),
+    })
+    .eq('id', integration.id)
+
+  console.log('Token refreshed successfully')
+  return tokens.access_token
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -57,12 +135,17 @@ serve(async (req) => {
     let recordsProcessed = {
       invoices: 0,
       customers: 0,
-      items: 0
+      items: 0,
+      expenses: 0,
+      payments: 0
     }
     let errorsCount = 0
     const errors: string[] = []
 
     try {
+      // Ensure we have a valid access token (refresh if needed)
+      const accessToken = await ensureValidToken(supabaseClient, integration)
+
       // Create sync log entry
       const { data: syncLog } = await supabaseClient
         .from('quickbooks_sync_logs')
@@ -77,9 +160,14 @@ serve(async (req) => {
 
       const syncLogId = syncLog?.id
 
+      // Determine base URL based on environment
+      const baseUrl = Deno.env.get('QUICKBOOKS_ENVIRONMENT') === 'production'
+        ? 'https://quickbooks.api.intuit.com'
+        : 'https://sandbox-quickbooks.api.intuit.com'
+
       // Sync Customers from QuickBooks to our system
       try {
-        const customers = await fetchQuickBooksData(integration, 'customers')
+        const customers = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
         for (const customer of customers) {
           await syncCustomer(supabaseClient, company_id, customer)
           recordsProcessed.customers++
@@ -93,7 +181,7 @@ serve(async (req) => {
 
       // Sync Items from QuickBooks to our system
       try {
-        const items = await fetchQuickBooksData(integration, 'items')
+        const items = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Item')
         for (const item of items) {
           await syncItem(supabaseClient, company_id, item)
           recordsProcessed.items++
@@ -105,11 +193,39 @@ serve(async (req) => {
         errorsCount++
       }
 
+      // Sync Expenses (Purchases) from QuickBooks to our system
+      try {
+        const purchases = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Purchase')
+        for (const purchase of purchases) {
+          await syncExpense(supabaseClient, company_id, purchase)
+          recordsProcessed.expenses++
+        }
+      } catch (error) {
+        console.error('Error syncing expenses:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`Expense sync: ${errorMessage}`)
+        errorsCount++
+      }
+
+      // Sync Payments from QuickBooks to our system
+      try {
+        const payments = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Payment')
+        for (const payment of payments) {
+          await syncPayment(supabaseClient, company_id, payment)
+          recordsProcessed.payments++
+        }
+      } catch (error) {
+        console.error('Error syncing payments:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`Payment sync: ${errorMessage}`)
+        errorsCount++
+      }
+
       // Sync Invoices from our system to QuickBooks
       try {
         const localInvoices = await getLocalInvoicesForSync(supabaseClient, company_id, sync_type)
         for (const invoice of localInvoices) {
-          await syncInvoiceToQuickBooks(integration, invoice)
+          await syncInvoiceToQuickBooks(supabaseClient, baseUrl, integration.realm_id, accessToken, invoice)
           recordsProcessed.invoices++
         }
       } catch (error) {
@@ -186,23 +302,21 @@ serve(async (req) => {
   }
 })
 
-async function fetchQuickBooksData(integration: any, entityType: string): Promise<any[]> {
-  const baseUrl = integration.sandbox_mode 
-    ? 'https://sandbox-quickbooks.api.intuit.com'
-    : 'https://quickbooks.api.intuit.com'
-  
+async function fetchQuickBooksData(baseUrl: string, realmId: string, accessToken: string, entityType: string): Promise<any[]> {
   const response = await fetch(
-    `${baseUrl}/v3/company/${integration.qb_company_id}/query?query=SELECT * FROM ${entityType}`,
+    `${baseUrl}/v3/company/${realmId}/query?query=SELECT * FROM ${entityType}&minorversion=65`,
     {
       headers: {
-        'Authorization': `Bearer ${integration.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json'
       }
     }
   )
 
   if (!response.ok) {
-    throw new Error(`QuickBooks API error: ${response.statusText}`)
+    const errorText = await response.text()
+    console.error(`QuickBooks API error for ${entityType}:`, errorText)
+    throw new Error(`QuickBooks API error: ${response.status} - ${response.statusText}`)
   }
 
   const data: QuickBooksAPIResponse = await response.json()
@@ -265,33 +379,101 @@ async function getLocalInvoicesForSync(supabaseClient: any, companyId: string, s
   return data || []
 }
 
-async function syncInvoiceToQuickBooks(integration: any, invoice: any) {
-  // Create invoice in QuickBooks
-  const baseUrl = integration.sandbox_mode 
-    ? 'https://sandbox-quickbooks.api.intuit.com'
-    : 'https://quickbooks.api.intuit.com'
+async function syncExpense(supabaseClient: any, companyId: string, qbPurchase: any) {
+  // Sync expense/purchase data from QuickBooks to our system
+  const expenseData = {
+    qb_expense_id: qbPurchase.Id,
+    company_id: companyId,
+    vendor_name: qbPurchase.EntityRef?.name || 'Unknown Vendor',
+    amount: qbPurchase.TotalAmt || 0,
+    date: qbPurchase.TxnDate,
+    payment_type: qbPurchase.PaymentType || 'other',
+    account_name: qbPurchase.AccountRef?.name,
+    memo: qbPurchase.PrivateNote,
+    category: qbPurchase.Line?.[0]?.AccountBasedExpenseLineDetail?.AccountRef?.name || 'Uncategorized',
+    qb_sync_token: qbPurchase.SyncToken,
+    last_synced_at: new Date().toISOString()
+  }
 
-  const invoiceData = {
-    CustomerRef: {
-      value: "1" // Default customer - should be mapped properly
-    },
-    Line: [{
-      Amount: invoice.total_amount,
-      DetailType: "SalesItemLineDetail",
-      SalesItemLineDetail: {
-        ItemRef: {
-          value: "1" // Default item - should be mapped properly
+  await supabaseClient
+    .from('quickbooks_expenses')
+    .upsert(expenseData, { onConflict: 'qb_expense_id,company_id' })
+}
+
+async function syncPayment(supabaseClient: any, companyId: string, qbPayment: any) {
+  // Sync payment data from QuickBooks to our system
+  const paymentData = {
+    qb_payment_id: qbPayment.Id,
+    company_id: companyId,
+    customer_name: qbPayment.CustomerRef?.name || 'Unknown Customer',
+    amount: qbPayment.TotalAmt || 0,
+    date: qbPayment.TxnDate,
+    payment_method: qbPayment.PaymentMethodRef?.name || 'other',
+    reference_number: qbPayment.PaymentRefNum,
+    memo: qbPayment.PrivateNote,
+    deposit_to_account: qbPayment.DepositToAccountRef?.name,
+    qb_sync_token: qbPayment.SyncToken,
+    last_synced_at: new Date().toISOString()
+  }
+
+  await supabaseClient
+    .from('quickbooks_payments')
+    .upsert(paymentData, { onConflict: 'qb_payment_id,company_id' })
+}
+
+async function syncInvoiceToQuickBooks(supabaseClient: any, baseUrl: string, realmId: string, accessToken: string, invoice: any) {
+  // First, try to find the customer in QuickBooks
+  let customerRef = { value: "1" } // Default fallback
+
+  // Try to find customer by name or use default
+  if (invoice.client_name) {
+    try {
+      const customerQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${invoice.client_name}'`)
+      const customerResponse = await fetch(
+        `${baseUrl}/v3/company/${realmId}/query?query=${customerQuery}&minorversion=65`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json'
+          }
         }
+      )
+
+      if (customerResponse.ok) {
+        const customerData = await customerResponse.json()
+        if (customerData.QueryResponse?.Customer?.[0]) {
+          customerRef = { value: customerData.QueryResponse.Customer[0].Id }
+        }
+      }
+    } catch (e) {
+      console.log('Could not find customer, using default')
+    }
+  }
+
+  // Build invoice data
+  const invoiceData = {
+    CustomerRef: customerRef,
+    TxnDate: invoice.issue_date,
+    DueDate: invoice.due_date,
+    PrivateNote: invoice.notes || `BuildDesk Invoice ${invoice.invoice_number}`,
+    Line: [{
+      Amount: invoice.subtotal || invoice.total,
+      DetailType: "SalesItemLineDetail",
+      Description: `Invoice ${invoice.invoice_number}`,
+      SalesItemLineDetail: {
+        ItemRef: { value: "1" }, // Default service item
+        Qty: 1,
+        UnitPrice: invoice.subtotal || invoice.total
       }
     }]
   }
 
   const response = await fetch(
-    `${baseUrl}/v3/company/${integration.qb_company_id}/invoice`,
+    `${baseUrl}/v3/company/${realmId}/invoice?minorversion=65`,
     {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${integration.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
@@ -300,9 +482,25 @@ async function syncInvoiceToQuickBooks(integration: any, invoice: any) {
   )
 
   if (!response.ok) {
-    throw new Error(`Failed to create invoice in QuickBooks: ${response.statusText}`)
+    const errorText = await response.text()
+    console.error('Failed to create invoice in QuickBooks:', errorText)
+    throw new Error(`Failed to create invoice in QuickBooks: ${response.status}`)
   }
 
   const result = await response.json()
-  return result.QueryResponse?.Invoice?.[0]
+  const qbInvoice = result.Invoice
+
+  // Update local invoice with QuickBooks ID
+  if (qbInvoice?.Id) {
+    await supabaseClient
+      .from('invoices')
+      .update({
+        qb_invoice_id: qbInvoice.Id,
+        qb_sync_token: qbInvoice.SyncToken,
+        last_synced_to_qb: new Date().toISOString()
+      })
+      .eq('id', invoice.id)
+  }
+
+  return qbInvoice
 }

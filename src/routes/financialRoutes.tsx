@@ -14,6 +14,7 @@ import {
   LazyPurchaseOrders,
   LazyVendors,
   LazyQuickBooksRouting,
+  LazyQuickBooksCallback,
 } from '@/utils/lazyRoutes';
 
 // Enterprise Finance Module - Lazy loaded
@@ -75,5 +76,6 @@ export const financialRoutes = (
 
     {/* Integrations */}
     <Route path="/quickbooks-routing" element={<LazyQuickBooksRouting />} />
+    <Route path="/quickbooks/callback" element={<LazyQuickBooksCallback />} />
   </>
 );
