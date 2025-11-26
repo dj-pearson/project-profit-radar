@@ -5,9 +5,9 @@ import SmartLogo from "@/components/ui/smart-logo";
 
 const Footer = () => {
   const companyLinks = [
-    { name: "About Us", href: "/about" },
     { name: "Solutions", href: "/solutions" },
     { name: "FAQ", href: "/faq" },
+    { name: "Blog", href: "/blog" },
     { name: "Contact", href: "mailto:support@build-desk.com" },
   ];
 
@@ -20,16 +20,16 @@ const Footer = () => {
 
   const resourceLinks = [
     { name: "Resources", href: "/resources" },
-    { name: "Blog", href: "/blog" },
     { name: "Tools", href: "/tools" },
+    { name: "Case Studies", href: "/#case-studies" },
     { name: "API Docs", href: "/admin/developer-portal" },
   ];
 
   const legalLinks = [
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Terms of Service", href: "/terms-of-service" },
-    { name: "Security", href: "/security" },
-    { name: "GDPR", href: "/gdpr" },
+    { name: "Security", href: "/security-settings" },
+    { name: "GDPR", href: "/gdpr-compliance" },
   ];
 
   return (
