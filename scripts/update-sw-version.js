@@ -1,12 +1,12 @@
 /**
  * Update Service Worker Version
- * 
+ *
  * Injects a unique build version into the service worker file
  * This ensures cache invalidation on each deployment
  */
 
-const { readFileSync, writeFileSync } = require('fs');
-const { join } = require('path');
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 const BUILD_VERSION = Date.now().toString(); // Unix timestamp
 const SW_PATH = join(process.cwd(), 'dist', 'sw.js');
