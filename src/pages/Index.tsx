@@ -1,81 +1,127 @@
-import React from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
 import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
-import FinancialHealthCheckBanner from "@/components/FinancialHealthCheckBanner";
-import Implementation from "@/components/Implementation";
-import FAQ from "@/components/FAQ";
-import Footer from "@/components/Footer";
-import LazySection from "@/components/LazySection";
-import { TestimonialsSection, ClientLogosSection } from "@/components/TestimonialsSection";
-import { CaseStudiesSection } from "@/components/CaseStudiesSection";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
 import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
-import { GEOOptimizedFAQ, homepageFAQs } from "@/components/seo/GEOOptimizedFAQ";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
-import AISearchOptimization from "@/components/AISearchOptimization";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
-import CoreWebVitalsOptimizer from "@/components/performance/CoreWebVitalsOptimizer";
-import { AdvancedSEOAnalytics } from "@/components/analytics/AdvancedSEOAnalytics";
-import { AdvancedCoreWebVitals } from "@/components/performance/AdvancedCoreWebVitals";
-import { SiteSearchSchema } from "@/components/seo/SiteSearchSchema";
 import { initializeSEOBackendIntegration } from "@/utils/seoBackendSync";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeFontOptimizations, monitorFontPerformance } from "@/utils/fontOptimization";
-// import { initializePerformanceOptimizations } from "@/utils/performanceOptimization";
-import { CriticalResourceLoader, useCriticalResources, PageResourcePreloader } from "@/components/performance/CriticalResourceLoader";
-import StickyDemoCTA from "@/components/StickyDemoCTA";
+import { useCriticalResources } from "@/components/performance/CriticalResourceLoader";
 import ScrollSection from "@/components/ScrollSection";
-import ParallaxBackground from "@/components/ParallaxBackground";
-
-import { FontOptimization, useFontOptimization } from "@/components/performance/FontOptimization";
 import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 
+// Lazy load below-the-fold components for better mobile performance
+const FinancialHealthCheckBanner = lazy(() => import("@/components/FinancialHealthCheckBanner"));
+const Implementation = lazy(() => import("@/components/Implementation"));
+const FAQ = lazy(() => import("@/components/FAQ"));
+const Footer = lazy(() => import("@/components/Footer"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection").then(m => ({ default: m.TestimonialsSection })));
+const ClientLogosSection = lazy(() => import("@/components/TestimonialsSection").then(m => ({ default: m.ClientLogosSection })));
+const CaseStudiesSection = lazy(() => import("@/components/CaseStudiesSection").then(m => ({ default: m.CaseStudiesSection })));
+const StickyDemoCTA = lazy(() => import("@/components/StickyDemoCTA"));
+const ParallaxBackground = lazy(() => import("@/components/ParallaxBackground"));
+
+// Defer non-critical performance monitoring - load after first paint
+const CoreWebVitalsOptimizer = lazy(() => import("@/components/performance/CoreWebVitalsOptimizer"));
+const AdvancedSEOAnalytics = lazy(() => import("@/components/analytics/AdvancedSEOAnalytics").then(m => ({ default: m.AdvancedSEOAnalytics })));
+const AdvancedCoreWebVitals = lazy(() => import("@/components/performance/AdvancedCoreWebVitals").then(m => ({ default: m.AdvancedCoreWebVitals })));
+const SiteSearchSchema = lazy(() => import("@/components/seo/SiteSearchSchema").then(m => ({ default: m.SiteSearchSchema })));
+const FontOptimization = lazy(() => import("@/components/performance/FontOptimization").then(m => ({ default: m.FontOptimization })));
+const PageResourcePreloader = lazy(() => import("@/components/performance/CriticalResourceLoader").then(m => ({ default: m.PageResourcePreloader })));
+const AISearchOptimization = lazy(() => import("@/components/AISearchOptimization"));
+const GEOOptimizedFAQ = lazy(() => import("@/components/seo/GEOOptimizedFAQ").then(m => ({ default: m.GEOOptimizedFAQ })));
+
+// Import FAQ data statically since it's just data
+import { homepageFAQs } from "@/components/seo/GEOOptimizedFAQ";
+
+// Hook to detect mobile - SSR safe
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || 'ontouchstart' in window);
+    };
+    checkMobile();
+  }, []);
+
+  return isMobile;
+};
+
+// Minimal loading fallback
+const SectionFallback = ({ height = "h-64" }: { height?: string }) => (
+  <div className={`${height} bg-muted/30 animate-pulse rounded-lg`} />
+);
+
 const Index = () => {
-  // Initialize all performance optimizations
+  // Initialize critical resources only
   useCriticalResources();
-  useFontOptimization();
   useCriticalCSS('homepage');
 
-  // Initialize SEO backend integration on app start
-  React.useEffect(() => {
-    // Initialize font optimization first for better performance
-    initializeFontOptimizations([
-      { family: 'Inter', preload: true, display: 'swap' }
-    ]);
-    monitorFontPerformance();
+  const isMobile = useIsMobile();
+  const [deferredLoaded, setDeferredLoaded] = useState(false);
 
-    // Then initialize SEO backend integration only when authenticated
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session?.user) {
-        initializeSEOBackendIntegration().then(result => {
-          if (result.success) {
-            console.log('✅ SEO backend integration successful');
-          } else {
-            console.warn('⚠️ SEO backend integration warning:', result.message);
-          }
-        });
-      }
-    })();
+  // Defer non-critical initializations until after first paint
+  useEffect(() => {
+    // Use requestIdleCallback to defer non-critical work
+    const initDeferred = () => {
+      // Initialize font optimization after first paint
+      initializeFontOptimizations([
+        { family: 'Inter', preload: true, display: 'swap' }
+      ]);
+      monitorFontPerformance();
+      setDeferredLoaded(true);
+
+      // Then initialize SEO backend integration only when authenticated
+      (async () => {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          initializeSEOBackendIntegration().then(result => {
+            if (result.success) {
+              console.log('✅ SEO backend integration successful');
+            } else {
+              console.warn('⚠️ SEO backend integration warning:', result.message);
+            }
+          });
+        }
+      })();
+    };
+
+    // Defer initialization until browser is idle
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(initDeferred, { timeout: 2000 });
+    } else {
+      setTimeout(initDeferred, 100);
+    }
   }, []);
 
   return (
     <MobilePerformanceProvider>
       <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Performance Optimizations */}
-        <CoreWebVitalsOptimizer pageType="homepage" />
-        <AdvancedCoreWebVitals enableReporting={true} enableOptimization={true} />
-        <AdvancedSEOAnalytics />
-        <FontOptimization />
-        <PageResourcePreloader pageType="homepage" />
-        <SiteSearchSchema />
+        {/* Deferred Performance Optimizations - only load after first paint */}
+        {deferredLoaded && (
+          <Suspense fallback={null}>
+            <CoreWebVitalsOptimizer pageType="homepage" />
+            <AdvancedCoreWebVitals enableReporting={true} enableOptimization={true} />
+            <AdvancedSEOAnalytics />
+            <FontOptimization />
+            <PageResourcePreloader pageType="homepage" />
+            <SiteSearchSchema />
+          </Suspense>
+        )}
 
-        {/* Parallax Background */}
-        <ParallaxBackground />
+        {/* Parallax Background - skip on mobile for better performance */}
+        {!isMobile && (
+          <Suspense fallback={null}>
+            <ParallaxBackground />
+          </Suspense>
+        )}
 
         <PageSEO
           title="Real-Time Job Costing for Contractors"
@@ -131,60 +177,82 @@ const Index = () => {
 
           {/* Trust Signals - BEFORE pricing for better conversion */}
           <ScrollSection>
-            <TestimonialsSection />
+            <Suspense fallback={<SectionFallback height="h-96" />}>
+              <TestimonialsSection />
+            </Suspense>
           </ScrollSection>
 
           <ScrollSection>
-            <CaseStudiesSection />
+            <Suspense fallback={<SectionFallback height="h-64" />}>
+              <CaseStudiesSection />
+            </Suspense>
           </ScrollSection>
 
           {/* Pricing - Main conversion point */}
-          <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
+          <PerformanceLazyWrapper fallback={<SectionFallback height="h-96" />}>
             <ScrollSection direction="right">
               <LazyPricing />
             </ScrollSection>
           </PerformanceLazyWrapper>
 
-          <PerformanceLazyWrapper fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+          <PerformanceLazyWrapper fallback={<SectionFallback height="h-64" />}>
             <ScrollSection direction="left">
               <LazyIndustries />
             </ScrollSection>
           </PerformanceLazyWrapper>
 
           <ScrollSection>
-            <ClientLogosSection />
+            <Suspense fallback={<SectionFallback height="h-32" />}>
+              <ClientLogosSection />
+            </Suspense>
           </ScrollSection>
 
           {/* Financial Health Check CTA Banner - Secondary conversion */}
           <ScrollSection direction="left">
-            <FinancialHealthCheckBanner />
+            <Suspense fallback={<SectionFallback height="h-48" />}>
+              <FinancialHealthCheckBanner />
+            </Suspense>
           </ScrollSection>
 
           <ScrollSection>
-            <Implementation />
+            <Suspense fallback={<SectionFallback height="h-64" />}>
+              <Implementation />
+            </Suspense>
           </ScrollSection>
 
           <ScrollSection>
-            <FAQ />
+            <Suspense fallback={<SectionFallback height="h-96" />}>
+              <FAQ />
+            </Suspense>
           </ScrollSection>
 
-          {/* SEO-only sections - hidden from users but visible to search engines */}
-          <div className="sr-only" aria-hidden="true">
-            <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
-            <GEOOptimizedFAQ
-              faqs={homepageFAQs}
-              title="Construction Management Software FAQs"
-              description="Get answers to common questions about BuildDesk and construction management software"
-            />
-          </div>
+          {/* SEO-only sections - deferred loading, hidden from users */}
+          {deferredLoaded && (
+            <div className="sr-only" aria-hidden="true">
+              <Suspense fallback={null}>
+                <AISearchOptimization page="homepage" primaryKeyword="construction financial intelligence software" />
+                <GEOOptimizedFAQ
+                  faqs={homepageFAQs}
+                  title="Construction Management Software FAQs"
+                  description="Get answers to common questions about BuildDesk and construction management software"
+                />
+              </Suspense>
+            </div>
+          )}
         </main>
 
         <OrganizationSchema />
         <SoftwareSchema />
-        <Footer />
+        <Suspense fallback={<SectionFallback height="h-64" />}>
+          <Footer />
+        </Suspense>
 
-        {/* Sticky Demo CTA */}
-        <StickyDemoCTA />
+        {/* Sticky Demo CTA - defer on mobile */}
+        {!isMobile && (
+          <Suspense fallback={null}>
+            <StickyDemoCTA />
+          </Suspense>
+        )}
       </div>
     </MobilePerformanceProvider>
   );

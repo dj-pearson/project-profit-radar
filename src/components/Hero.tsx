@@ -1,62 +1,124 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Ruler } from "lucide-react";
 import { Link } from "react-router-dom";
-import PremiumBlueprint3D from "@/components/3d/PremiumBlueprint3D";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
+
+// Lazy load 3D component - only loads on desktop when needed
+const PremiumBlueprint3D = lazy(() => import("@/components/3d/PremiumBlueprint3D"));
+
+// Static fallback for mobile - lightweight placeholder
+const Hero3DFallback = () => (
+  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-construction-orange/10 to-blue-500/10 rounded-2xl">
+    <div className="text-center space-y-4 p-8">
+      <div className="w-24 h-24 mx-auto bg-construction-orange/20 rounded-2xl flex items-center justify-center">
+        <Ruler className="w-12 h-12 text-construction-orange" />
+      </div>
+      <p className="text-muted-foreground text-sm">Interactive 3D on desktop</p>
+    </div>
+  </div>
+);
+
+// Hook to detect mobile - SSR safe
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || 'ontouchstart' in window);
+    };
+    checkMobile();
+    // Only listen on resize if not touch device
+    if (!('ontouchstart' in window)) {
+      window.addEventListener('resize', checkMobile, { passive: true });
+      return () => window.removeEventListener('resize', checkMobile);
+    }
+  }, []);
+
+  return isMobile;
+};
 
 const Hero = () => {
   const [isBuildMode, setIsBuildMode] = useState(false);
+  const [animationsLoaded, setAnimationsLoaded] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  const isMobile = useIsMobile();
 
-    tl.from(badgeRef.current, {
-      y: -20,
-      opacity: 0,
-      duration: 0.6,
-    })
-    .from(headlineRef.current, {
-      y: 30,
-      opacity: 0,
-      duration: 0.8,
-    }, "-=0.4")
-    .from(textRef.current, {
-      y: 20,
-      opacity: 0,
-      duration: 0.6,
-    }, "-=0.6")
-    .from(ctaRef.current, {
-      y: 20,
-      opacity: 0,
-      duration: 0.6,
-    }, "-=0.4");
+  // Defer GSAP loading - only load on desktop after first paint
+  useEffect(() => {
+    // Skip animations entirely on mobile for better performance
+    if (isMobile) {
+      // Make elements visible immediately on mobile
+      [badgeRef, headlineRef, textRef, ctaRef].forEach(ref => {
+        if (ref.current) {
+          ref.current.style.opacity = '1';
+          ref.current.style.transform = 'none';
+        }
+      });
+      return;
+    }
 
-    // Parallax effect on mouse move
-    const handleMouseMove = (e: MouseEvent) => {
-        const { clientX, clientY } = e;
-        const x = (clientX / window.innerWidth - 0.5) * 20;
-        const y = (clientY / window.innerHeight - 0.5) * 20;
+    // Defer GSAP loading until after first paint on desktop
+    const loadGSAP = async () => {
+      // Wait for idle time or next frame
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(async () => {
+          const [{ useGSAP }, gsapModule] = await Promise.all([
+            import("@gsap/react"),
+            import("gsap")
+          ]);
+          const gsap = gsapModule.default;
 
-        gsap.to(".hero-blob", {
-            x: x,
-            y: y,
-            duration: 2,
-            ease: "power2.out",
+          // Run animations
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+          if (badgeRef.current) {
+            tl.from(badgeRef.current, { y: -20, opacity: 0, duration: 0.6 });
+          }
+          if (headlineRef.current) {
+            tl.from(headlineRef.current, { y: 30, opacity: 0, duration: 0.8 }, "-=0.4");
+          }
+          if (textRef.current) {
+            tl.from(textRef.current, { y: 20, opacity: 0, duration: 0.6 }, "-=0.6");
+          }
+          if (ctaRef.current) {
+            tl.from(ctaRef.current, { y: 20, opacity: 0, duration: 0.6 }, "-=0.4");
+          }
+
+          // Parallax effect - desktop only with passive listener
+          const handleMouseMove = (e: MouseEvent) => {
+            const { clientX, clientY } = e;
+            const x = (clientX / window.innerWidth - 0.5) * 20;
+            const y = (clientY / window.innerHeight - 0.5) * 20;
+            gsap.to(".hero-blob", { x, y, duration: 2, ease: "power2.out" });
+          };
+
+          window.addEventListener("mousemove", handleMouseMove, { passive: true });
+          setAnimationsLoaded(true);
         });
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(async () => {
+          const gsapModule = await import("gsap");
+          const gsap = gsapModule.default;
+
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+          if (badgeRef.current) tl.from(badgeRef.current, { y: -20, opacity: 0, duration: 0.6 });
+          if (headlineRef.current) tl.from(headlineRef.current, { y: 30, opacity: 0, duration: 0.8 }, "-=0.4");
+          if (textRef.current) tl.from(textRef.current, { y: 20, opacity: 0, duration: 0.6 }, "-=0.6");
+          if (ctaRef.current) tl.from(ctaRef.current, { y: 20, opacity: 0, duration: 0.6 }, "-=0.4");
+          setAnimationsLoaded(true);
+        }, 100);
+      }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-
-  }, { scope: containerRef });
+    loadGSAP();
+  }, [isMobile]);
 
   return (
     <section ref={containerRef} className="relative min-h-[90vh] flex items-center bg-background overflow-hidden">
@@ -135,10 +197,16 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Interactive 3D Experience */}
-          <div className="relative order-1 lg:order-2 h-[500px] lg:h-[700px] w-full">
+          {/* Interactive 3D Experience - Lazy loaded on desktop, static fallback on mobile */}
+          <div className="relative order-1 lg:order-2 h-[400px] sm:h-[500px] lg:h-[700px] w-full">
             <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/5 to-blue-500/5 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
-            <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
+            {isMobile ? (
+              <Hero3DFallback />
+            ) : (
+              <Suspense fallback={<Hero3DFallback />}>
+                <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
+              </Suspense>
+            )}
           </div>
         </ResponsiveGrid>
       </ResponsiveContainer>
