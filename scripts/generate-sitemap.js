@@ -4,7 +4,7 @@ import path from 'path';
 // Generate sitemap during build process
 function generateSitemap() {
   const currentDate = new Date().toISOString().split('T')[0];
-  const domain = 'https://build-desk.com';
+  const domain = 'https://builddesk.com';
   
   const pages = [
     // Core pages

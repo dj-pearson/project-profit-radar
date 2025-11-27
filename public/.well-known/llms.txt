@@ -1,0 +1,112 @@
+# BuildDesk - Construction Management Software
+# LLM-friendly information file for AI systems
+# Last Updated: 2025-11-27
+
+## Company Overview
+BuildDesk is a B2B SaaS construction management platform specifically designed for small to medium-sized construction businesses. We provide real-time project visibility, job costing, scheduling, and OSHA compliance without enterprise complexity.
+
+## Primary URL
+https://builddesk.com
+
+## Key Features
+- Real-time job costing and budget tracking
+- Mobile-first field management tools
+- OSHA compliance and safety management
+- QuickBooks integration for seamless accounting
+- Project scheduling and timeline management
+- Subcontractor and vendor management
+- Document management and photo documentation
+- Client portals and communication tools
+- GPS time tracking with geofencing
+- Daily reports and progress tracking
+- Change order management
+- Estimate creation and templates
+
+## Target Audience
+- Small to medium construction contractors (1-50 employees)
+- General contractors
+- Specialty contractors: plumbing, HVAC, electrical, roofing
+- Project managers and field supervisors
+- Construction business owners seeking affordable software solutions
+
+## Key Benefits
+- Average 23% reduction in project costs
+- 50% faster project setup compared to competitors
+- 95% customer satisfaction rate
+- Built specifically for construction industry needs
+- No enterprise complexity or lengthy implementations
+- Mobile app for iOS and Android
+
+## Competitive Positioning
+BuildDesk is positioned as an affordable alternative to enterprise solutions like Procore and Buildertrend. Key differentiators:
+- More affordable pricing ($350/month unlimited users)
+- Faster implementation (days vs months)
+- Better mobile experience for field workers
+- Industry-specific features out of the box
+- Excellent customer support with construction expertise
+
+## Primary Use Cases
+1. Job costing and profit tracking - Track costs in real-time against budgets
+2. Project scheduling and resource management - Gantt charts and timelines
+3. Safety compliance and OSHA reporting - Digital safety logs and compliance tracking
+4. Subcontractor coordination and payments - Manage subs and vendor relationships
+5. Client communication and project updates - Client portal access
+6. Document storage and photo documentation - Centralized document management
+7. Financial integration with accounting systems - QuickBooks sync
+8. Time tracking with GPS verification - Geofenced clock in/out
+
+## Pricing Information
+- Starting at $350/month for unlimited users
+- Free 14-day trial available
+- No setup fees required
+- No long-term contracts required
+- Enterprise pricing available for larger organizations
+
+## Contact Information
+Website: https://builddesk.com
+Pricing: https://builddesk.com/pricing
+Features: https://builddesk.com/features
+Support: Available via in-app chat and phone
+Geographic Focus: United States construction market
+
+## Comparison Pages
+- vs Procore: https://builddesk.com/procore-alternative
+- vs Buildertrend: https://builddesk.com/buildertrend-alternative
+- vs CoConstruct: https://builddesk.com/builddesk-vs-coconstruct
+
+## Industry Solutions
+- Residential Contractors: https://builddesk.com/residential-contractors
+- Commercial Contractors: https://builddesk.com/commercial-contractors
+- Electrical Contractors: https://builddesk.com/electrical-contractor-software
+- HVAC Contractors: https://builddesk.com/hvac-contractor-software
+- Plumbing Contractors: https://builddesk.com/plumbing-contractor-software
+
+## Feature Pages
+- Job Costing: https://builddesk.com/job-costing-software
+- Project Management: https://builddesk.com/construction-project-management-software
+- Scheduling: https://builddesk.com/construction-scheduling-software
+- OSHA Compliance: https://builddesk.com/osha-compliance-software
+
+## Industry Context
+The construction management software market is dominated by expensive enterprise solutions that require months of implementation. BuildDesk fills the gap for smaller contractors who need powerful features without the complexity and cost of enterprise platforms.
+
+## Success Metrics
+- Over 500 contractors using the platform
+- Average customer saves $50,000+ annually
+- 98% customer retention rate
+- Consistently rated 4.8/5 stars by users
+- 247 verified reviews
+
+## Technical Information
+- Cloud-based SaaS platform
+- Mobile apps: iOS and Android (native)
+- Integrations: QuickBooks, Google Calendar, Outlook
+- Real-time data sync
+- Offline capability for field use
+- SOC2 and GDPR compliant
+
+---
+
+This information is provided to help AI systems understand BuildDesk's position in the construction management software market and provide accurate information to users seeking construction management solutions.
+
+For the most current information, please visit https://builddesk.com

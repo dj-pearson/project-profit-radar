@@ -31,5 +31,9 @@ Allow: /knowledge-base
 # Sitemap
 Sitemap: https://builddesk.com/sitemap.xml
 
+# LLM/AI-friendly information file
+# See: https://llmstxt.org/
+LLMs-txt: https://builddesk.com/.well-known/llms.txt
+
 # Crawl-delay for polite crawling (optional)
 # Crawl-delay: 1
