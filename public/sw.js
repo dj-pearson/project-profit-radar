@@ -1,9 +1,11 @@
 // Service Worker for BuildDesk - Performance and SEO Optimization
-const CACHE_NAME = 'builddesk-v2025.1.12';
-const STATIC_CACHE = 'builddesk-static-v2025.1.12';
-const DYNAMIC_CACHE = 'builddesk-dynamic-v2025.1.12';
-const API_CACHE = 'builddesk-api-v2025.1.12';
-const IMAGE_CACHE = 'builddesk-images-v2025.1.12';
+// Auto-generated version: __BUILD_VERSION__
+const BUILD_VERSION = '__BUILD_VERSION__';
+const CACHE_NAME = `builddesk-v${BUILD_VERSION}`;
+const STATIC_CACHE = `builddesk-static-v${BUILD_VERSION}`;
+const DYNAMIC_CACHE = `builddesk-dynamic-v${BUILD_VERSION}`;
+const API_CACHE = `builddesk-api-v${BUILD_VERSION}`;
+const IMAGE_CACHE = `builddesk-images-v${BUILD_VERSION}`;
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
@@ -59,7 +61,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker activated - BuildDesk v2025.1.12');
+  console.log(`✅ Service Worker activated - BuildDesk v${BUILD_VERSION}`);
   
   event.waitUntil(
     Promise.all([
@@ -264,6 +266,28 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'open' || !event.action) {
     event.waitUntil(
       clients.openWindow(event.notification.data || '/')
+    );
+  }
+});
+
+// Message handling for cache control
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            console.log('🗑️ Clearing cache:', cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+      }).then(() => {
+        console.log('✅ All caches cleared');
+      })
     );
   }
 });

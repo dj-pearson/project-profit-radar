@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run generate-sitemap && vite build && node scripts/copy-404.js",
+    "build": "npm run generate-sitemap && vite build && node scripts/copy-404.js && node scripts/update-sw-version.js",
     "build:dev": "npm run generate-sitemap && vite build --mode development && node scripts/copy-404.js",
     "lint": "eslint .",
     "test": "vitest",
