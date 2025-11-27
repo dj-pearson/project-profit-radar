@@ -3,14 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Self-Hosted Fonts for Optimal Performance -->
-    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/fonts/inter.css">
-    
-    <!-- Supabase API Preconnect for faster initial requests -->
+    <!-- Critical: Preconnect to external domains -->
     <link rel="preconnect" href="https://ilhzuvemiuyfuxfegtlv.supabase.co" crossorigin>
-    <link rel="dns-prefetch" href="https://ilhzuvemiuyfuxfegtlv.supabase.co">
+
+    <!-- Self-Hosted Fonts - Only preload critical weight (400), load stylesheet async -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/fonts/inter.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/fonts/inter.css"></noscript>
     
     <!-- Favicon and PWA meta tags -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -107,126 +106,93 @@
     }
     </script>
 
-    <!-- Google tag (gtag.js) - Async loading -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR"></script>
+    <!-- Google Analytics - Deferred loading for better FCP -->
     <script>
+      // Defer GA loading until after first paint
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-LNDT7H4SJR', {
-        'anonymize_ip': true,
-        'cookie_flags': 'SameSite=None;Secure'
-      });
+
+      // Load GA script after page becomes interactive
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(function() {
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
+          s.async = true;
+          document.head.appendChild(s);
+          gtag('js', new Date());
+          gtag('config', 'G-LNDT7H4SJR', {'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure'});
+        }, {timeout: 3000});
+      } else {
+        setTimeout(function() {
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
+          s.async = true;
+          document.head.appendChild(s);
+          gtag('js', new Date());
+          gtag('config', 'G-LNDT7H4SJR', {'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure'});
+        }, 2000);
+      }
     </script>
 
-    <!-- Cache Management & Loop Protection -->
+    <!-- Critical: URL cleanup only (minimal blocking) -->
     <script>
+      // Minimal critical script - URL cleanup only
+      (function(){var p=new URLSearchParams(location.search);if(p.has("refreshed")||p.has("v")){history.replaceState({},'',location.origin+location.pathname)}})();
+    </script>
+    <!-- Deferred: Cache management & error protection (non-blocking) -->
+    <script defer>
       (function () {
-        const CURRENT_VERSION = "2025.08.08.006";
-        const lastCacheClear = localStorage.getItem("last_cache_clear");
-        const now = Date.now();
+        // Run after DOM is ready to avoid blocking first paint
+        var CURRENT_VERSION = "2025.08.08.007";
 
-        // Clean up URL parameters immediately to avoid redirect detection
-        const params = new URLSearchParams(window.location.search);
-        if (params.has("refreshed") || params.has("v")) {
-          const cleanURL = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, '', cleanURL);
-        }
-
-        // Periodic cache refresh (once per hour)
-        const shouldRefreshCache =
-          !lastCacheClear ||
-          now - parseInt(lastCacheClear) > 3600000 ||
-          localStorage.getItem("app_version") !== CURRENT_VERSION;
-
-        if (shouldRefreshCache) {
+        // Defer cache management until idle
+        function initCacheManagement() {
           try {
-            localStorage.setItem("last_cache_clear", now.toString());
-            localStorage.setItem("app_version", CURRENT_VERSION);
+            var lastCacheClear = localStorage.getItem("last_cache_clear");
+            var now = Date.now();
+            var shouldRefreshCache = !lastCacheClear || now - parseInt(lastCacheClear) > 3600000 || localStorage.getItem("app_version") !== CURRENT_VERSION;
 
-            if ("serviceWorker" in navigator) {
-              navigator.serviceWorker.getRegistrations().then((regs) => {
-                regs.forEach((reg) => reg.unregister());
-              });
-            }
+            if (shouldRefreshCache) {
+              localStorage.setItem("last_cache_clear", now.toString());
+              localStorage.setItem("app_version", CURRENT_VERSION);
 
-            if ("caches" in window) {
-              caches.keys().then((names) => {
-                names.forEach((name) => caches.delete(name));
-              });
-            }
-
-            // Clear storage without URL redirect
-            localStorage.clear();
-            sessionStorage.clear();
-            localStorage.setItem("last_cache_clear", now.toString());
-            localStorage.setItem("app_version", CURRENT_VERSION);
-          } catch (e) {
-            console.error("Cache refresh error:", e);
-          }
-        }
-
-        // Silent protection against infinite renders
-        let accessGrantedCount = 0;
-        let lastAccessGranted = 0;
-        let protectionActive = false;
-
-        const originalLog = console.log;
-        console.log = function (...args) {
-          const logStr = args.join(" ");
-
-          // Detect infinite access granted messages
-          if (logStr.includes("Access granted for role:")) {
-            accessGrantedCount++;
-            const now = Date.now();
-
-            if (now - lastAccessGranted < 2000 && accessGrantedCount > 5) {
-              if (!protectionActive) {
-                protectionActive = true;
-
-                // Silent cache clear and reload
-                setTimeout(() => {
-                  try {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = window.location.origin + "/auth";
-                  } catch (e) {
-                    window.location.reload(true);
-                  }
-                }, 500);
-
-                return;
+              // Async cache clearing - doesn't block
+              if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  regs.forEach(function(reg) { reg.unregister(); });
+                });
+              }
+              if ("caches" in window) {
+                caches.keys().then(function(names) {
+                  names.forEach(function(name) { caches.delete(name); });
+                });
               }
             }
+          } catch (e) {}
+        }
 
-            if (now - lastAccessGranted > 2000) {
-              accessGrantedCount = 1;
-            }
-            lastAccessGranted = now;
-          }
-
-          originalLog.apply(console, args);
-        };
-
-        // Silent React error handling
-        const originalError = console.error;
-        console.error = function (...args) {
-          const errorStr = args.join(" ");
-
-          if (
-            errorStr.includes("Minified React error #301") &&
-            !protectionActive
-          ) {
+        // Error protection - lightweight version
+        var protectionActive = false;
+        var originalError = console.error;
+        console.error = function () {
+          var args = Array.prototype.slice.call(arguments);
+          var errorStr = args.join(" ");
+          if (errorStr.indexOf("Minified React error #301") !== -1 && !protectionActive) {
             protectionActive = true;
-            setTimeout(() => {
-              localStorage.clear();
-              sessionStorage.clear();
-              window.location.href = window.location.origin + "/auth";
+            setTimeout(function() {
+              try { localStorage.clear(); sessionStorage.clear(); } catch(e) {}
+              location.href = location.origin + "/auth";
             }, 300);
           }
-
           originalError.apply(console, args);
         };
+
+        // Use requestIdleCallback for non-critical work
+        if ("requestIdleCallback" in window) {
+          requestIdleCallback(initCacheManagement, { timeout: 2000 });
+        } else {
+          setTimeout(initCacheManagement, 100);
+        }
       })();
     </script>
   </head>
