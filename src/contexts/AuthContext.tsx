@@ -346,10 +346,24 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
-        logger.debug("Profile fetched successfully:", {
-          role: data.role,
+        // SECURITY: Get authoritative role from user_roles via RPC
+        try {
+          const { data: secureRole, error: roleError } = await supabase
+            .rpc('get_user_primary_role', { _user_id: userId });
+
+          if (roleError) {
+            logger.error('Error fetching user role from user_roles:', roleError);
+          } else if (secureRole) {
+            (data as any).role = secureRole;
+          }
+        } catch (roleErr) {
+          logger.error('Exception fetching user role from user_roles:', roleErr);
+        }
+
+        logger.debug('Profile fetched successfully:', {
+          role: (data as any).role,
           site_id: data.site_id,
-          tenant_id: data.tenant_id
+          tenant_id: data.tenant_id,
         });
         
         // Update site context if needed
@@ -362,9 +376,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         setSentryUser({
           id: data.id,
           email: data.email,
-          role: data.role,
+          role: (data as any).role,
           site_id: data.site_id,
-          tenant_id: data.tenant_id
+          tenant_id: data.tenant_id,
         });
         
         // SECURITY: Use sessionStorage instead of localStorage for PII
