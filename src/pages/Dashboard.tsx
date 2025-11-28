@@ -29,7 +29,13 @@ const Dashboard = () => {
 
   // Redirect users without company to setup
   useEffect(() => {
-    if (!authLoading && user && userProfile && !userProfile.company_id) {
+    if (
+      !authLoading &&
+      user &&
+      userProfile &&
+      !userProfile.company_id &&
+      userProfile.role !== 'root_admin'
+    ) {
       navigate('/setup');
     }
   }, [user, userProfile, authLoading, navigate]);
