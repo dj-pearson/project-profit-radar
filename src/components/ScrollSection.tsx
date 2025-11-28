@@ -7,7 +7,7 @@ interface ScrollSectionProps {
   className?: string;
   delay?: number;
   direction?: 'up' | 'down' | 'left' | 'right' | 'none';
-  viewport?: { once?: boolean; margin?: string };
+  viewport?: Parameters<typeof useInView>[1];
 }
 
 const ScrollSection: React.FC<ScrollSectionProps> = ({
