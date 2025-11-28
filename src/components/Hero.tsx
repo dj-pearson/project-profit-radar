@@ -40,7 +40,6 @@ const useIsMobile = () => {
 
 const Hero = () => {
   const [isBuildMode, setIsBuildMode] = useState(false);
-  const [animationsLoaded, setAnimationsLoaded] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -99,7 +98,6 @@ const Hero = () => {
           };
 
           window.addEventListener("mousemove", handleMouseMove, { passive: true });
-          setAnimationsLoaded(true);
         });
       } else {
         // Fallback for browsers without requestIdleCallback
@@ -112,7 +110,6 @@ const Hero = () => {
           if (headlineRef.current) tl.from(headlineRef.current, { y: 30, opacity: 0, duration: 0.8 }, "-=0.4");
           if (textRef.current) tl.from(textRef.current, { y: 20, opacity: 0, duration: 0.6 }, "-=0.6");
           if (ctaRef.current) tl.from(ctaRef.current, { y: 20, opacity: 0, duration: 0.6 }, "-=0.4");
-          setAnimationsLoaded(true);
         }, 100);
       }
     };
@@ -197,16 +194,12 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Interactive 3D Experience - Lazy loaded on desktop, static fallback on mobile */}
+          {/* Interactive 3D Experience - Now enabled on all devices with mobile optimizations */}
           <div className="relative order-1 lg:order-2 h-[400px] sm:h-[500px] lg:h-[700px] w-full">
             <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/5 to-blue-500/5 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
-            {isMobile ? (
-              <Hero3DFallback />
-            ) : (
-              <Suspense fallback={<Hero3DFallback />}>
-                <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
-              </Suspense>
-            )}
+            <Suspense fallback={<Hero3DFallback />}>
+              <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
+            </Suspense>
           </div>
         </ResponsiveGrid>
       </ResponsiveContainer>
