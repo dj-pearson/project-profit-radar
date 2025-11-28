@@ -11,6 +11,64 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Comprehensive database schema for AI analysis
+const DATABASE_SCHEMA = `
+Our database schema includes these tables and their key fields:
+
+PROJECTS (projects):
+- name (required), description, client_name, client_email, client_phone
+- site_address, start_date, end_date, budget, status (planning/active/on_hold/completed/cancelled)
+- project_type, profit_margin, estimated_hours, completion_percentage
+
+CONTACTS/LEADS (leads):
+- email (required), first_name, last_name, company_name, phone
+- job_title, industry, lead_source, lead_status (new/contacted/qualified/proposal/won/lost)
+- priority (low/medium/high), project_name, estimated_budget, notes
+
+ESTIMATES (estimates):
+- estimate_number (required), title (required), client_name, client_email, client_phone
+- description, site_address, estimate_date, valid_until
+- total_amount, tax_percentage, markup_percentage, status (draft/sent/accepted/rejected/expired)
+
+TIME_ENTRIES (time_entries):
+- start_time (required), end_time, total_hours, break_duration
+- description, location, project_name (for lookup), worker_email (for lookup)
+- approval_status (pending/approved/rejected)
+
+EXPENSES (expenses):
+- description (required), amount (required), expense_date, vendor_name
+- category, project_name (for lookup), payment_method, payment_status
+- tax_amount, is_billable
+
+EQUIPMENT (equipment):
+- name (required), equipment_type (required), model, serial_number
+- description, purchase_date, purchase_cost, current_value
+- location, status (available/in_use/maintenance/retired)
+- last_maintenance_date, next_maintenance_date
+
+INVOICES (invoices):
+- invoice_number (required), issue_date (required), due_date (required)
+- client_name, client_email, client_address, project_name (for lookup)
+- subtotal (required), tax_rate, tax_amount, total_amount (required)
+- status (draft/sent/viewed/paid/overdue/cancelled), po_number
+
+MATERIALS (materials):
+- name (required), unit (required, e.g., ea/ft/yd/sqft)
+- description, category, material_code, unit_cost
+- quantity_available, minimum_stock_level, supplier_name, location
+
+SUBCONTRACTORS (subcontractors):
+- business_name (required), contact_name, email, phone, address
+- specialty (trade), license_number, tax_id, insurance_expiry
+- hourly_rate, rating (1-5)
+
+CHANGE_ORDERS (change_orders):
+- change_order_number (required), project_name (required, for lookup)
+- title (required), description, amount
+- status (draft/pending/approved/rejected), request_date, approval_date
+- days_impact, reason
+`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -29,47 +87,47 @@ serve(async (req) => {
     // Parse CSV data sample for analysis
     const lines = csvData.split('\n').filter((line: string) => line.trim());
     const headers = lines[0]?.split(',').map((h: string) => h.trim().replace(/"/g, ''));
-    const sampleRows = lines.slice(1, 6).map((line: string) => 
+    const sampleRows = lines.slice(1, 11).map((line: string) =>
       line.split(',').map((cell: string) => cell.trim().replace(/"/g, ''))
     );
 
     // Prepare data for AI analysis
     const analysisPrompt = `
-Analyze this data file and determine:
-1. What type of construction data this represents (projects, equipment, materials, permits, warranties, contacts, etc.)
-2. The likely source platform (Procore, Buildertrend, CoConstruct, QuickBooks, Excel, etc.)
+Analyze this construction management data file and determine:
+1. What type of data this represents
+2. The likely source platform
 3. Confidence level (0-100)
 4. Field mapping suggestions to our database schema
 
 File: ${fileName}
 Headers: ${JSON.stringify(headers)}
-Sample Data (first 5 rows): ${JSON.stringify(sampleRows)}
+Sample Data (first 10 rows): ${JSON.stringify(sampleRows)}
 
-Our database schema includes these main tables and fields:
-- projects: name, description, client_name, client_email, client_phone, address, start_date, end_date, budget, status
-- equipment: name, model, manufacturer, serial_number, purchase_date, purchase_price, current_value, status
-- materials: name, description, unit, supplier, cost_per_unit, category
-- permits: permit_name, permit_type, permit_number, issuing_authority, application_date, approval_date, expiry_date
-- warranties: warranty_name, provider, start_date, end_date, coverage_details, claim_instructions
-- contacts: first_name, last_name, company_name, email, phone, address, contact_type
-- bonds: bond_name, bond_type, bond_number, surety_company, bond_amount, effective_date, expiry_date
-- contractors: business_name, contact_person, email, phone, address, tax_id
+${DATABASE_SCHEMA}
+
+IMPORTANT: Consider these common patterns from competitor platforms:
+- Procore: Often uses "Job Name", "Project #", "Cost Code"
+- Buildertrend: Uses "Estimate #", "Job", "To-Do Category"
+- CoConstruct: Uses "Spec Category", "Selection", "Client Name"
+- QuickBooks: Uses "Customer", "Invoice #", "Amount Due", "Due Date"
+- Generic exports: May use "Name", "Description", "Date", "Amount"
 
 Respond in this exact JSON format:
 {
-  "dataType": "projects|equipment|materials|permits|warranties|contacts|bonds|contractors|unknown",
+  "dataType": "projects|contacts|estimates|time_entries|expenses|equipment|invoices|materials|subcontractors|change_orders|unknown",
   "confidence": 85,
-  "sourcePlatform": "detected platform or unknown",
+  "sourcePlatform": "Procore|Buildertrend|CoConstruct|QuickBooks|Excel|Generic|Unknown",
   "fieldMappings": [
     {
-      "sourceField": "Project Name",
-      "targetField": "name",
+      "sourceField": "Original Column Name",
+      "targetField": "database_field_name",
       "confidence": 90,
-      "reasoning": "Clear project name field"
+      "reasoning": "Brief explanation"
     }
   ],
   "totalRecords": ${lines.length - 1},
-  "previewData": [first 3 rows as objects using suggested field mappings]
+  "previewData": [first 5 rows as objects using suggested field mappings],
+  "warnings": ["Any potential issues or ambiguities detected"]
 }`;
 
     // Call OpenAI for analysis
@@ -84,7 +142,10 @@ Respond in this exact JSON format:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert in construction management software and data migration. Analyze the provided data and respond only with valid JSON.'
+            content: `You are an expert in construction management software and data migration.
+You specialize in analyzing CSV exports from construction platforms like Procore, Buildertrend, CoConstruct, and QuickBooks.
+Your job is to accurately identify data types and map fields to the target database schema.
+Always respond with valid JSON only - no markdown, no explanations outside JSON.`
           },
           {
             role: 'user',
@@ -92,13 +153,32 @@ Respond in this exact JSON format:
           }
         ],
         temperature: 0.1,
+        max_tokens: 4000,
       }),
     });
 
-    const aiResult = await response.json();
-    const analysis = JSON.parse(aiResult.choices[0].message.content);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
 
-    console.log('AI Analysis result:', analysis);
+    const aiResult = await response.json();
+
+    // Extract and parse the JSON response
+    let analysisText = aiResult.choices[0].message.content;
+
+    // Clean up any markdown code blocks
+    analysisText = analysisText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    const analysis = JSON.parse(analysisText);
+
+    console.log('AI Analysis result:', {
+      dataType: analysis.dataType,
+      confidence: analysis.confidence,
+      sourcePlatform: analysis.sourcePlatform,
+      fieldMappingsCount: analysis.fieldMappings?.length,
+    });
 
     // Update import session with analysis results
     const { error: updateError } = await supabase
@@ -114,33 +194,43 @@ Respond in this exact JSON format:
       .eq('id', sessionId);
 
     if (updateError) {
+      console.error('Error updating session:', updateError);
       throw updateError;
     }
 
     // Store field mapping suggestions
-    for (const mapping of analysis.fieldMappings) {
-      const sampleData = sampleRows
-        .map((row: any) => {
-          const headerIndex = headers.indexOf(mapping.sourceField);
-          return headerIndex >= 0 ? row[headerIndex] : null;
-        })
-        .filter((val: any) => val !== null)
-        .slice(0, 5);
+    if (analysis.fieldMappings && analysis.fieldMappings.length > 0) {
+      for (const mapping of analysis.fieldMappings) {
+        const sampleData = sampleRows
+          .map((row: any) => {
+            const headerIndex = headers.indexOf(mapping.sourceField);
+            return headerIndex >= 0 ? row[headerIndex] : null;
+          })
+          .filter((val: any) => val !== null && val !== '')
+          .slice(0, 5);
 
-      await supabase
-        .from('import_field_suggestions')
-        .insert({
-          import_session_id: sessionId,
-          source_field: mapping.sourceField,
-          suggested_target_field: mapping.targetField,
-          confidence_score: mapping.confidence,
-          data_sample: sampleData
-        });
+        await supabase
+          .from('import_field_suggestions')
+          .insert({
+            import_session_id: sessionId,
+            source_field: mapping.sourceField,
+            suggested_target_field: mapping.targetField,
+            confidence_score: mapping.confidence,
+            data_sample: sampleData
+          });
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
-      analysis: analysis
+      analysis: {
+        dataType: analysis.dataType,
+        confidence: analysis.confidence,
+        sourcePlatform: analysis.sourcePlatform,
+        totalRecords: analysis.totalRecords,
+        fieldMappingsCount: analysis.fieldMappings?.length || 0,
+        warnings: analysis.warnings || [],
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
