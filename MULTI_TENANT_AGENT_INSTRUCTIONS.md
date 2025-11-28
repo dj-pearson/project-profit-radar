@@ -6,7 +6,11 @@
 
 ## Critical Context
 
-This project uses a **multi-tenant architecture** where multiple Pearson Media products (Build-Desk, RealEstate Bio, SalonPros Bio, etc.) share a single Supabase database. All tenant data is isolated using a `site_id` column.
+This project uses a **multi-tenant architecture** where multiple Pearson Media products share a single Supabase database (Project: ilhzuvemiuyfuxfegtlv). All tenant data is isolated using a `site_id` column.
+
+**Current Tenants:**
+- **builddesk** - Build-Desk construction management platform
+- **stylist** - Stylist Bio link-in-bio platform for salon professionals (stylbio.com)
 
 **Every query, mutation, and new table MUST respect site isolation.**
 
