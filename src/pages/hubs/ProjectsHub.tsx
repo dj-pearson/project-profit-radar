@@ -90,7 +90,14 @@ const ProjectsHub = () => {
       <div>
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/projects')}>
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            onClick={() => navigate('/projects')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/projects'); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Active Projects: ${metrics.activeProjects}. Click to view projects.`}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -98,13 +105,20 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.activeProjects}</p>
                 </div>
                 <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors">
-                  <ArrowRight className="h-4 w-4 text-blue-600" />
+                  <ArrowRight className="h-4 w-4 text-blue-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/projects')}>
+
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            onClick={() => navigate('/projects')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/projects'); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Total Projects: ${metrics.totalProjects}. Click to view all projects.`}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -112,13 +126,20 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.totalProjects}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors">
-                  <ArrowRight className="h-4 w-4 text-green-600" />
+                  <ArrowRight className="h-4 w-4 text-green-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/change-orders')}>
+
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            onClick={() => navigate('/change-orders')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/change-orders'); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Change Orders: ${metrics.changeOrders}. Click to view change orders.`}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -126,13 +147,20 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.changeOrders}</p>
                 </div>
                 <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center hover:bg-yellow-200 transition-colors">
-                  <ArrowRight className="h-4 w-4 text-yellow-600" />
+                  <ArrowRight className="h-4 w-4 text-yellow-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/daily-reports')}>
+
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            onClick={() => navigate('/daily-reports')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/daily-reports'); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Daily Reports: ${metrics.dailyReports}. Click to view daily reports.`}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -140,7 +168,7 @@ const ProjectsHub = () => {
                   <p className="text-2xl font-bold">{metrics.dailyReports}</p>
                 </div>
                 <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
-                  <ArrowRight className="h-4 w-4 text-red-600" />
+                  <ArrowRight className="h-4 w-4 text-red-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
