@@ -14,6 +14,7 @@ import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
+import { getSiteConfig, getCurrentSiteId, clearSiteCache, type SiteConfig } from "@/lib/site-resolver";
 import type { ReactNode, FC } from "react";
 
 // Platform-safe window location helpers
@@ -47,6 +48,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
+  siteId: string | null;
+  siteConfig: SiteConfig | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
@@ -76,6 +79,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [siteId, setSiteId] = useState<string | null>(null);
+  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
   const [isProfileFetchInProgress, setIsProfileFetchInProgress] = useState(false);
@@ -89,6 +94,22 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Session monitoring constants
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+  // Initialize site config on mount
+  useEffect(() => {
+    const initializeSite = async () => {
+      const config = await getSiteConfig();
+      if (config) {
+        setSiteConfig(config);
+        setSiteId(config.id);
+        logger.debug(`Site initialized: ${config.key} (${config.id})`);
+      } else {
+        logger.error('Failed to initialize site config');
+      }
+    };
+    
+    initializeSite();
+  }, []);
 
   // Clear all session-related state and redirect to auth
   const handleSessionExpired = useCallback(async (reason: string = 'Session expired') => {
@@ -618,6 +639,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in...");
       setLoading(true);
 
+      // Get current site ID before authentication
+      const currentSiteId = await getCurrentSiteId();
+      if (!currentSiteId) {
+        logger.error("Unable to determine site_id");
+        setLoading(false);
+        return { error: "Unable to determine site. Please try again." };
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -627,6 +656,16 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.error("Sign in error:", error);
         setLoading(false);
         return { error: error.message };
+      }
+
+      // Update user metadata to include site_id
+      if (data.user && !data.user.app_metadata?.site_id) {
+        logger.debug(`Setting site_id ${currentSiteId} for user ${data.user.id}`);
+        await supabase.auth.updateUser({
+          data: {
+            site_id: currentSiteId,
+          },
+        });
       }
 
       logger.debug("Sign in successful");
@@ -755,7 +794,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setSiteId(null);
       successfulProfiles.current.clear();
+
+      // Clear site cache
+      clearSiteCache();
 
       // Clear Sentry user context
       clearSentryUser();
@@ -853,6 +896,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       user,
       session,
       userProfile,
+      siteId,
+      siteConfig,
       effectiveLoading,
       signIn,
       signInWithGoogle,
