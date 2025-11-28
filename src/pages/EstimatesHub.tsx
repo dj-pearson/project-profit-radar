@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { estimateService, EstimateStats } from "@/services/estimateService";
 import { useAuth } from "@/contexts/AuthContext";
+import { CSVImportButton } from "@/components/smart-import";
 
 export default function EstimatesHub() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,13 +96,20 @@ export default function EstimatesHub() {
           </p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleCreateEstimate} className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Estimate
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <CSVImportButton
+            dataType="estimates"
+            onImportComplete={loadStats}
+            variant="outline"
+          />
+
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleCreateEstimate} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Estimate
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Estimate</DialogTitle>
@@ -111,7 +119,8 @@ export default function EstimatesHub() {
               onCancel={() => setIsCreateDialogOpen(false)}
             />
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
         {/* Stats Cards */}

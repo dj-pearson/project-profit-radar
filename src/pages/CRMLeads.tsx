@@ -39,6 +39,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { LeadDetailView } from '@/components/crm/LeadDetailView';
+import { CSVImportButton } from '@/components/smart-import';
 
 interface Lead {
   id: string;
@@ -399,6 +400,12 @@ const CRMLeads = () => {
                       </SelectContent>
                     </Select>
                     
+                    <CSVImportButton
+                      dataType="contacts"
+                      onImportComplete={() => loadLeads(loadLeadsData)}
+                      variant="outline"
+                    />
+
                     <Dialog open={showNewLeadDialog} onOpenChange={setShowNewLeadDialog}>
                       <DialogTrigger asChild>
                         <Button>

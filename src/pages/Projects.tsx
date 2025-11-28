@@ -85,6 +85,7 @@ import { SaveAsTemplateDialog } from "@/components/projects/SaveAsTemplateDialog
 import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
+import { CSVImportButton } from "@/components/smart-import";
 
 interface Project {
   id: string;
@@ -570,7 +571,13 @@ const Projects = () => {
 
   return (
     <DashboardLayout title="Projects" showTrialBanner={false}>
-      <div className="flex justify-end mb-4 sm:mb-6">
+      <div className="flex justify-end gap-2 mb-4 sm:mb-6">
+        <CSVImportButton
+          dataType="projects"
+          onImportComplete={loadProjects}
+          variant="outline"
+          size="sm"
+        />
         <Button
           onClick={handleCreateProject}
           size="sm"
