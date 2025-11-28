@@ -706,6 +706,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in with Google...");
       setLoading(true);
 
+      // Resolve current site so OAuth users are scoped to the correct tenant/site
+      const currentSiteId = await getCurrentSiteId();
+      if (!currentSiteId) {
+        logger.error("Unable to determine site_id during Google sign in");
+        setLoading(false);
+        return { error: "Unable to determine site. Please try again." };
+      }
+
       const location = getWindowLocation();
       const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
 
@@ -713,6 +721,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
+          data: {
+            site_id: currentSiteId,
+          },
         },
       });
 
@@ -738,6 +749,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in with Apple...");
       setLoading(true);
 
+      // Resolve current site so OAuth users are scoped to the correct tenant/site
+      const currentSiteId = await getCurrentSiteId();
+      if (!currentSiteId) {
+        logger.error("Unable to determine site_id during Apple sign in");
+        setLoading(false);
+        return { error: "Unable to determine site. Please try again." };
+      }
+
       const location = getWindowLocation();
       const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
 
@@ -745,6 +764,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         provider: 'apple',
         options: {
           redirectTo: redirectUrl,
+          data: {
+            site_id: currentSiteId,
+          },
         },
       });
 
