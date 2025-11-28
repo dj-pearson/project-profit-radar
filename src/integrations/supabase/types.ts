@@ -1691,6 +1691,7 @@ export type Database = {
           last_used_at: string | null
           permissions: Json
           rate_limit_per_hour: number
+          site_id: string
           updated_at: string
           usage_count: number
         }
@@ -1707,6 +1708,7 @@ export type Database = {
           last_used_at?: string | null
           permissions?: Json
           rate_limit_per_hour?: number
+          site_id: string
           updated_at?: string
           usage_count?: number
         }
@@ -1723,10 +1725,19 @@ export type Database = {
           last_used_at?: string | null
           permissions?: Json
           rate_limit_per_hour?: number
+          site_id?: string
           updated_at?: string
           usage_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       api_request_logs: {
         Row: {
@@ -1811,6 +1822,7 @@ export type Database = {
           resource_type: string
           retention_date: string | null
           session_id: string | null
+          site_id: string
           status: string | null
           tenant_id: string | null
           user_agent: string | null
@@ -1844,6 +1856,7 @@ export type Database = {
           resource_type: string
           retention_date?: string | null
           session_id?: string | null
+          site_id: string
           status?: string | null
           tenant_id?: string | null
           user_agent?: string | null
@@ -1877,12 +1890,20 @@ export type Database = {
           resource_type?: string
           retention_date?: string | null
           session_id?: string | null
+          site_id?: string
           status?: string | null
           tenant_id?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "audit_logs_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "audit_logs_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -3988,6 +4009,7 @@ export type Database = {
           scheduled_at: string | null
           seo_description: string | null
           seo_title: string | null
+          site_id: string
           slug: string
           status: string
           title: string
@@ -4004,6 +4026,7 @@ export type Database = {
           scheduled_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
+          site_id: string
           slug: string
           status?: string
           title: string
@@ -4020,12 +4043,21 @@ export type Database = {
           scheduled_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
+          site_id?: string
           slug?: string
           status?: string
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blog_topic_history: {
         Row: {
@@ -5201,6 +5233,7 @@ export type Database = {
           internal_approved_date: string | null
           project_id: string
           reason: string | null
+          site_id: string
           status: string | null
           title: string
           updated_at: string
@@ -5223,6 +5256,7 @@ export type Database = {
           internal_approved_date?: string | null
           project_id: string
           reason?: string | null
+          site_id: string
           status?: string | null
           title: string
           updated_at?: string
@@ -5245,6 +5279,7 @@ export type Database = {
           internal_approved_date?: string | null
           project_id?: string
           reason?: string | null
+          site_id?: string
           status?: string | null
           title?: string
           updated_at?: string
@@ -5277,6 +5312,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "change_orders_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -6197,6 +6239,7 @@ export type Database = {
           license_numbers: string[] | null
           name: string
           quickbooks_connected: boolean
+          site_id: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
@@ -6217,6 +6260,7 @@ export type Database = {
           license_numbers?: string[] | null
           name: string
           quickbooks_connected?: boolean
+          site_id: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
@@ -6237,6 +6281,7 @@ export type Database = {
           license_numbers?: string[] | null
           name?: string
           quickbooks_connected?: boolean
+          site_id?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
@@ -6247,7 +6292,15 @@ export type Database = {
           trial_end_date?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_admin_settings: {
         Row: {
@@ -8446,6 +8499,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           project_type: string | null
+          site_id: string
           updated_at: string | null
           use_count: number | null
         }
@@ -8472,6 +8526,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           project_type?: string | null
+          site_id: string
           updated_at?: string | null
           use_count?: number | null
         }
@@ -8498,6 +8553,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           project_type?: string | null
+          site_id?: string
           updated_at?: string | null
           use_count?: number | null
         }
@@ -8507,6 +8563,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_report_templates_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -8533,6 +8596,7 @@ export type Database = {
           project_id: string
           quality_issues: string | null
           safety_incidents: string | null
+          site_id: string
           status: string | null
           submission_timestamp: string | null
           submitted_by: string | null
@@ -8564,6 +8628,7 @@ export type Database = {
           project_id: string
           quality_issues?: string | null
           safety_incidents?: string | null
+          site_id: string
           status?: string | null
           submission_timestamp?: string | null
           submitted_by?: string | null
@@ -8595,6 +8660,7 @@ export type Database = {
           project_id?: string
           quality_issues?: string | null
           safety_incidents?: string | null
+          site_id?: string
           status?: string | null
           submission_timestamp?: string | null
           submitted_by?: string | null
@@ -8633,6 +8699,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "daily_reports_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_daily_reports_template"
@@ -9605,6 +9678,7 @@ export type Database = {
           parent_document_id: string | null
           project_id: string | null
           routing_confidence: string | null
+          site_id: string
           updated_at: string
           uploaded_by: string | null
           version: number | null
@@ -9630,6 +9704,7 @@ export type Database = {
           parent_document_id?: string | null
           project_id?: string | null
           routing_confidence?: string | null
+          site_id: string
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
@@ -9655,6 +9730,7 @@ export type Database = {
           parent_document_id?: string | null
           project_id?: string | null
           routing_confidence?: string | null
+          site_id?: string
           updated_at?: string
           uploaded_by?: string | null
           version?: number | null
@@ -9723,6 +9799,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "documents_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "documents_uploaded_by_fkey"
@@ -9909,6 +9992,7 @@ export type Database = {
           send_on_days: number[] | null
           sequence_name: string | null
           sequence_order: number | null
+          site_id: string
           subject_line: string
           template_id: string | null
           template_variables: Json | null
@@ -9947,6 +10031,7 @@ export type Database = {
           send_on_days?: number[] | null
           sequence_name?: string | null
           sequence_order?: number | null
+          site_id: string
           subject_line: string
           template_id?: string | null
           template_variables?: Json | null
@@ -9985,6 +10070,7 @@ export type Database = {
           send_on_days?: number[] | null
           sequence_name?: string | null
           sequence_order?: number | null
+          site_id?: string
           subject_line?: string
           template_id?: string | null
           template_variables?: Json | null
@@ -10001,7 +10087,15 @@ export type Database = {
           trigger_type?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_clicks: {
         Row: {
@@ -12143,6 +12237,7 @@ export type Database = {
           qr_code_image: string | null
           qr_code_value: string
           scan_count: number | null
+          site_id: string
           updated_at: string | null
         }
         Insert: {
@@ -12162,6 +12257,7 @@ export type Database = {
           qr_code_image?: string | null
           qr_code_value: string
           scan_count?: number | null
+          site_id: string
           updated_at?: string | null
         }
         Update: {
@@ -12181,6 +12277,7 @@ export type Database = {
           qr_code_image?: string | null
           qr_code_value?: string
           scan_count?: number | null
+          site_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -12218,6 +12315,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["equipment_id"]
+          },
+          {
+            foreignKeyName: "equipment_qr_codes_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -12994,6 +13098,7 @@ export type Database = {
           project_id: string | null
           sent_date: string | null
           site_address: string | null
+          site_id: string
           status: string
           tax_percentage: number | null
           terms_and_conditions: string | null
@@ -13023,6 +13128,7 @@ export type Database = {
           project_id?: string | null
           sent_date?: string | null
           site_address?: string | null
+          site_id: string
           status?: string
           tax_percentage?: number | null
           terms_and_conditions?: string | null
@@ -13052,6 +13158,7 @@ export type Database = {
           project_id?: string | null
           sent_date?: string | null
           site_address?: string | null
+          site_id?: string
           status?: string
           tax_percentage?: number | null
           terms_and_conditions?: string | null
@@ -13118,6 +13225,13 @@ export type Database = {
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
           },
+          {
+            foreignKeyName: "estimates_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       expense_categories: {
@@ -13176,6 +13290,7 @@ export type Database = {
           payment_status: string | null
           project_id: string | null
           receipt_file_path: string | null
+          site_id: string
           tax_amount: number | null
           updated_at: string
           vendor_contact: string | null
@@ -13198,6 +13313,7 @@ export type Database = {
           payment_status?: string | null
           project_id?: string | null
           receipt_file_path?: string | null
+          site_id: string
           tax_amount?: number | null
           updated_at?: string
           vendor_contact?: string | null
@@ -13220,6 +13336,7 @@ export type Database = {
           payment_status?: string | null
           project_id?: string | null
           receipt_file_path?: string | null
+          site_id?: string
           tax_amount?: number | null
           updated_at?: string
           vendor_contact?: string | null
@@ -13238,6 +13355,13 @@ export type Database = {
             columns: ["cost_code_id"]
             isOneToOne: false
             referencedRelation: "cost_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
           {
@@ -15825,6 +15949,7 @@ export type Database = {
           retention_due_date: string | null
           retention_percentage: number | null
           sent_at: string | null
+          site_id: string
           status: string
           stripe_invoice_id: string | null
           stripe_payment_intent_id: string | null
@@ -15868,6 +15993,7 @@ export type Database = {
           retention_due_date?: string | null
           retention_percentage?: number | null
           sent_at?: string | null
+          site_id: string
           status?: string
           stripe_invoice_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -15911,6 +16037,7 @@ export type Database = {
           retention_due_date?: string | null
           retention_percentage?: number | null
           sent_at?: string | null
+          site_id?: string
           status?: string
           stripe_invoice_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -15950,6 +16077,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "invoices_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -21491,6 +21625,7 @@ export type Database = {
           email: string | null
           id: string
           role: string | null
+          site_id: string
           updated_at: string | null
           user_id: string | null
         }
@@ -21500,6 +21635,7 @@ export type Database = {
           email?: string | null
           id: string
           role?: string | null
+          site_id: string
           updated_at?: string | null
           user_id?: string | null
         }
@@ -21509,6 +21645,7 @@ export type Database = {
           email?: string | null
           id?: string
           role?: string | null
+          site_id?: string
           updated_at?: string | null
           user_id?: string | null
         }
@@ -21518,6 +21655,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -22901,6 +23045,7 @@ export type Database = {
           industry_type: string | null
           name: string
           project_type: string | null
+          site_id: string
           updated_at: string | null
         }
         Insert: {
@@ -22912,6 +23057,7 @@ export type Database = {
           industry_type?: string | null
           name: string
           project_type?: string | null
+          site_id: string
           updated_at?: string | null
         }
         Update: {
@@ -22923,6 +23069,7 @@ export type Database = {
           industry_type?: string | null
           name?: string
           project_type?: string | null
+          site_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -22954,6 +23101,13 @@ export type Database = {
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_templates_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       projects: {
@@ -22979,6 +23133,7 @@ export type Database = {
           project_manager_id: string | null
           project_type: string | null
           site_address: string | null
+          site_id: string
           site_latitude: number | null
           site_longitude: number | null
           start_date: string | null
@@ -23009,6 +23164,7 @@ export type Database = {
           project_manager_id?: string | null
           project_type?: string | null
           site_address?: string | null
+          site_id: string
           site_latitude?: number | null
           site_longitude?: number | null
           start_date?: string | null
@@ -23039,6 +23195,7 @@ export type Database = {
           project_manager_id?: string | null
           project_type?: string | null
           site_address?: string | null
+          site_id?: string
           site_latitude?: number | null
           site_longitude?: number | null
           start_date?: string | null
@@ -23060,6 +23217,13 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
           {
@@ -28841,6 +29005,7 @@ export type Database = {
           notes: string | null
           priority: string | null
           search_volume: number | null
+          site_id: string
           target_position: number | null
           target_url: string | null
           updated_at: string
@@ -28866,6 +29031,7 @@ export type Database = {
           notes?: string | null
           priority?: string | null
           search_volume?: number | null
+          site_id: string
           target_position?: number | null
           target_url?: string | null
           updated_at?: string
@@ -28891,6 +29057,7 @@ export type Database = {
           notes?: string | null
           priority?: string | null
           search_volume?: number | null
+          site_id?: string
           target_position?: number | null
           target_url?: string | null
           updated_at?: string
@@ -28901,6 +29068,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_keywords_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -31001,6 +31175,51 @@ export type Database = {
           },
         ]
       }
+      sites: {
+        Row: {
+          additional_domains: string[] | null
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          domain: string
+          id: string
+          industry: string | null
+          is_active: boolean | null
+          is_production: boolean | null
+          key: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          additional_domains?: string[] | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          domain: string
+          id?: string
+          industry?: string | null
+          is_active?: boolean | null
+          is_production?: boolean | null
+          key: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          additional_domains?: string[] | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          domain?: string
+          id?: string
+          industry?: string | null
+          is_active?: boolean | null
+          is_production?: boolean | null
+          key?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       social_media_accounts: {
         Row: {
           access_token: string | null
@@ -33019,6 +33238,7 @@ export type Database = {
           priority: string | null
           project_id: string
           resource_requirements: Json | null
+          site_id: string
           start_date: string | null
           status: string | null
           tags: string[] | null
@@ -33050,6 +33270,7 @@ export type Database = {
           priority?: string | null
           project_id: string
           resource_requirements?: Json | null
+          site_id: string
           start_date?: string | null
           status?: string | null
           tags?: string[] | null
@@ -33081,6 +33302,7 @@ export type Database = {
           priority?: string | null
           project_id?: string
           resource_requirements?: Json | null
+          site_id?: string
           start_date?: string | null
           status?: string | null
           tags?: string[] | null
@@ -33124,6 +33346,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "tasks_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -33681,6 +33910,7 @@ export type Database = {
           location_accuracy: number | null
           project_id: string
           rejection_reason: string | null
+          site_id: string
           start_time: string
           submitted_at: string | null
           task_id: string | null
@@ -33710,6 +33940,7 @@ export type Database = {
           location_accuracy?: number | null
           project_id: string
           rejection_reason?: string | null
+          site_id: string
           start_time: string
           submitted_at?: string | null
           task_id?: string | null
@@ -33739,6 +33970,7 @@ export type Database = {
           location_accuracy?: number | null
           project_id?: string
           rejection_reason?: string | null
+          site_id?: string
           start_time?: string
           submitted_at?: string | null
           task_id?: string | null
@@ -33782,6 +34014,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "time_entries_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "time_entries_task_id_fkey"
@@ -35577,6 +35816,7 @@ export type Database = {
           last_name: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          site_id: string
           tenant_id: string | null
           updated_at: string
         }
@@ -35592,6 +35832,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          site_id: string
           tenant_id?: string | null
           updated_at?: string
         }
@@ -35607,6 +35848,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          site_id?: string
           tenant_id?: string | null
           updated_at?: string
         }
@@ -35616,6 +35858,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
           {
@@ -38648,6 +38897,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_site_id: { Args: never; Returns: string }
       days_since_last_login: { Args: { user_uuid: string }; Returns: number }
       decrypt_stripe_key: { Args: { encrypted_key: string }; Returns: string }
       generate_affiliate_code: { Args: never; Returns: string }
@@ -38846,6 +39096,8 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.get_role_permissions(p_role => text), public.get_role_permissions(p_role => user_role). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
+      get_site_by_domain: { Args: { p_domain: string }; Returns: string }
+      get_site_by_key: { Args: { p_key: string }; Returns: string }
       get_smtp_config: { Args: never; Returns: Json }
       get_task_completion_stats: {
         Args: never

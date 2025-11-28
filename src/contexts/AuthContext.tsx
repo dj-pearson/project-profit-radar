@@ -33,6 +33,8 @@ interface UserProfile {
   last_name?: string;
   phone?: string;
   company_id?: string;
+  site_id?: string;
+  tenant_id?: string;
   role:
     | "root_admin"
     | "admin"
@@ -297,7 +299,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         const fetchPromise = supabase
           .from("user_profiles")
-          .select("*")
+          .select("id, email, first_name, last_name, phone, company_id, site_id, tenant_id, role, is_active")
           .eq("id", userId)
           .maybeSingle(); // Use maybeSingle() to handle cases where user doesn't exist
 
@@ -344,7 +346,27 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
-        logger.debug("Profile fetched successfully:", data.role);
+        logger.debug("Profile fetched successfully:", {
+          role: data.role,
+          site_id: data.site_id,
+          tenant_id: data.tenant_id
+        });
+        
+        // Update site context if needed
+        if (data.site_id && data.site_id !== siteId) {
+          logger.debug(`Updating site context to: ${data.site_id}`);
+          setSiteId(data.site_id);
+        }
+        
+        // Set Sentry user context for error tracking
+        setSentryUser({
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          site_id: data.site_id,
+          tenant_id: data.tenant_id
+        });
+        
         // SECURITY: Use sessionStorage instead of localStorage for PII
         // sessionStorage is cleared when browser/tab closes, reducing exposure
         try {
