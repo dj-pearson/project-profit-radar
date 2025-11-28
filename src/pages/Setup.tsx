@@ -52,30 +52,33 @@ const Setup = () => {
     e.preventDefault();
     setSetupLoading(true);
 
-    try {
-      // Create company
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .insert([
-          {
-            name: companyName,
-            address,
-            industry_type: industryType as 'residential' | 'commercial' | 'civil_infrastructure' | 'specialty_trades',
-            company_size: companySize,
-            annual_revenue_range: annualRevenue,
-            license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
-          }
-        ])
-        .select()
-        .single();
+      try {
+        // Create company scoped to current site/tenant
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .insert([
+            {
+              name: companyName,
+              address,
+              industry_type: industryType as 'residential' | 'commercial' | 'civil_infrastructure' | 'specialty_trades',
+              company_size: companySize,
+              annual_revenue_range: annualRevenue,
+              license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
+              // Multi-tenant scoping
+              site_id: userProfile?.site_id || null,
+              tenant_id: userProfile?.tenant_id || null,
+            }
+          ])
+          .select()
+          .single();
 
-      if (companyError) throw companyError;
+        if (companyError) throw companyError;
 
-      // Update user profile with company_id
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({ company_id: company.id })
-        .eq('id', user.id);
+        // Update user profile with company_id
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .update({ company_id: company.id })
+          .eq('id', user.id);
 
       if (profileError) throw profileError;
 
