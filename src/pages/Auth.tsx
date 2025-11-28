@@ -81,10 +81,15 @@ const Auth = () => {
         // Check if user has a company set up
         const checkCompanyAndRedirect = async () => {
           try {
+            // Get current site_id for multi-tenant filtering
+            const { getCurrentSiteId } = await import('@/lib/site-resolver');
+            const currentSiteId = await getCurrentSiteId();
+
             const { data: profile } = await supabase
               .from('user_profiles')
-              .select('company_id')
+              .select('company_id, site_id')
               .eq('id', user.id)
+              .eq('site_id', currentSiteId) // Filter by site for multi-tenant
               .single();
 
             // Check if there's a pending checkout
