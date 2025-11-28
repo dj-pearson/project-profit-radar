@@ -749,7 +749,20 @@ const CRMLeads = () => {
                   ) : (
                     <div className="space-y-4">
                       {filteredLeads.map((lead) => (
-                        <div key={lead.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead.id)}>
+                        <div
+                          key={lead.id}
+                          className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                          onClick={() => setSelectedLead(lead.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedLead(lead.id);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`View lead ${lead.first_name} ${lead.last_name}`}
+                        >
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center space-x-3 mb-2">
