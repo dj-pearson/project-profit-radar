@@ -455,9 +455,30 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             const stored = sessionStorage.getItem(`bd.userProfile.${session.user.id}`);
             if (stored) {
               const parsed = JSON.parse(stored);
-              logger.debug("Initial session: Using stored profile");
+              logger.debug("Initial session: Using stored profile (will refresh in background)");
               setUserProfile(parsed);
               successfulProfiles.current.set(parsed.id, parsed);
+
+              // Always refresh profile from DB once per session to avoid stale company/role data
+              setIsProfileFetchInProgress(true);
+              fetchUserProfile(session.user.id)
+                .then((fresh) => {
+                  if (fresh) {
+                    logger.debug("Background profile refresh completed", {
+                      role: fresh.role,
+                      company_id: fresh.company_id,
+                    });
+                    setUserProfile(fresh);
+                    successfulProfiles.current.set(fresh.id, fresh);
+                  }
+                })
+                .catch((err) => {
+                  logger.error("Background profile refresh failed:", err);
+                })
+                .finally(() => {
+                  setIsProfileFetchInProgress(false);
+                });
+
               setLoading(false);
               return;
             }
