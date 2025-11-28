@@ -771,14 +771,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.debug("FIXED AuthContext: Signing up...");
         setLoading(true);
 
+        // Resolve current site so new users are scoped to the correct tenant/site
+        const currentSiteId = await getCurrentSiteId();
+        if (!currentSiteId) {
+          logger.error("Unable to determine site_id during sign up");
+          setLoading(false);
+          return { error: "Unable to determine site. Please try again." };
+        }
+
         const location = getWindowLocation();
-        const redirectUrl = location ? `${location.origin}/` : 'builddesk://';
-        const { data, error} = await supabase.auth.signUp({
+        const redirectUrl = location ? `${location.origin}/` : "builddesk://";
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: redirectUrl,
-            data: userData,
+            data: {
+              ...(userData || {}),
+              site_id: currentSiteId,
+            },
           },
         });
 
@@ -789,7 +800,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         }
 
         logger.debug("FIXED AuthContext: Sign up successful");
-        gtag.trackAuth('signup', 'email');
+        gtag.trackAuth("signup", "email");
         setLoading(false);
         return {};
       } catch (error) {
@@ -904,6 +915,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       user,
       session,
       userProfile,
+      siteId,
+      siteConfig,
       loading: effectiveLoading,
       signIn,
       signInWithGoogle,
