@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock } from "lucide-react";
 import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
-import { supabase } from "@/integrations/supabase/client";
+
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -35,7 +35,7 @@ const Auth = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [emailSentType, setEmailSentType] = useState<'signup' | 'reset' | null>(null);
   const [pendingPlan, setPendingPlan] = useState<{tier: string, period: string} | null>(null);
-  const { signIn, signInWithGoogle, signInWithApple, signUp, resetPassword, user } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple, signUp, resetPassword, user, userProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -73,77 +73,58 @@ const Auth = () => {
       return;
     }
 
-    if (user) {
-      // Don't redirect to dashboard if this is a password recovery session
-      if (type !== 'recovery') {
-        console.log("User authenticated, determining redirect destination...");
+    // Wait until auth profile has finished loading
+    if (!user || authLoading) return;
 
-        // Check if user has a company set up
-        const checkCompanyAndRedirect = async () => {
-          try {
-            // Get current site_id for multi-tenant filtering
-            const { getCurrentSiteId } = await import('@/lib/site-resolver');
-            const currentSiteId = await getCurrentSiteId();
+    // Don't redirect to dashboard if this is a password recovery session
+    if (type === 'recovery') {
+      return;
+    }
 
-            const { data: profile } = await supabase
-              .from('user_profiles')
-              .select('company_id, site_id')
-              .eq('id', user.id)
-              .eq('site_id', currentSiteId) // Filter by site for multi-tenant
-              .single();
+    console.log("User authenticated, determining redirect destination...");
 
-            // Check if there's a pending checkout
-            const pendingCheckout = localStorage.getItem('pendingCheckout');
-            if (pendingCheckout && redirect === 'checkout') {
-              try {
-                const checkout = JSON.parse(pendingCheckout);
-                // Check if checkout is not expired (1 hour)
-                if (Date.now() - checkout.timestamp < 3600000) {
-                  console.log("Redirecting to checkout with pending plan...");
-                  // Clear the stored checkout
-                  localStorage.removeItem('pendingCheckout');
-                  clearRememberedRoute();
-                  // Navigate to pricing which will auto-trigger checkout since user is now authenticated
-                  navigate('/pricing');
-                  return;
-                } else {
-                  // Expired, clear it
-                  localStorage.removeItem('pendingCheckout');
-                }
-              } catch (e) {
-                console.error('Error parsing pending checkout:', e);
-                localStorage.removeItem('pendingCheckout');
-              }
-            }
-
-            // If user doesn't have a company, redirect to setup
-            if (!profile?.company_id) {
-              console.log("User has no company, redirecting to setup...");
-              clearRememberedRoute();
-              navigate('/setup');
-              return;
-            }
-
-            // Get return URL from query params or remembered route
-            const returnUrl = getReturnUrl(urlParams, '/dashboard');
-            console.log("Redirecting to:", returnUrl);
-
-            // Clear route memory after successful redirect
-            clearRememberedRoute();
-
-            // Navigate to the return URL
-            navigate(returnUrl);
-          } catch (error) {
-            console.error('Error checking company:', error);
-            // On error, default to dashboard
-            navigate('/dashboard');
-          }
-        };
-
-        checkCompanyAndRedirect();
+    // Check if there's a pending checkout
+    const pendingCheckout = localStorage.getItem('pendingCheckout');
+    if (pendingCheckout && redirect === 'checkout') {
+      try {
+        const checkout = JSON.parse(pendingCheckout);
+        // Check if checkout is not expired (1 hour)
+        if (Date.now() - checkout.timestamp < 3600000) {
+          console.log("Redirecting to checkout with pending plan...");
+          // Clear the stored checkout
+          localStorage.removeItem('pendingCheckout');
+          clearRememberedRoute();
+          // Navigate to pricing which will auto-trigger checkout since user is now authenticated
+          navigate('/pricing');
+          return;
+        } else {
+          // Expired, clear it
+          localStorage.removeItem('pendingCheckout');
+        }
+      } catch (e) {
+        console.error('Error parsing pending checkout:', e);
+        localStorage.removeItem('pendingCheckout');
       }
     }
-  }, [user, navigate]);
+
+    // If user doesn't have a company in their profile (and isn't root_admin), redirect to setup
+    if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
+      console.log("User has no company in profile (non-root admin), redirecting to setup...");
+      clearRememberedRoute();
+      navigate('/setup');
+      return;
+    }
+
+    // Get return URL from query params or remembered route
+    const returnUrl = getReturnUrl(urlParams, '/dashboard');
+    console.log("Redirecting to:", returnUrl);
+
+    // Clear route memory after successful redirect
+    clearRememberedRoute();
+
+    // Navigate to the return URL
+    navigate(returnUrl);
+  }, [user, userProfile, authLoading, navigate]);
 
   const validatePasswordInput = (pwd: string) => {
     const errors: string[] = [];
