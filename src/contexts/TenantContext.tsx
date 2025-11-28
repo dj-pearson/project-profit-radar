@@ -123,8 +123,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (queryError || !data) {
-        console.warn('No verified tenant found for domain:', hostname);
-        // Fall back to default tenant
+        console.warn('No verified tenant found for domain (or query failed):', hostname, queryError?.message);
+        // Fall back to default tenant - don't block auth if tenant query fails
         setTenant(DEFAULT_TENANT as Tenant);
         applyBranding(DEFAULT_TENANT.branding!);
         setLoading(false);

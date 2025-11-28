@@ -38823,6 +38823,14 @@ export type Database = {
             }
             Returns: Json
           }
+      check_tenant_membership: {
+        Args: {
+          p_required_roles?: string[]
+          p_tenant_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       check_type_exists: { Args: { type_name: string }; Returns: boolean }
       clock_in_with_gps: {
         Args: {
