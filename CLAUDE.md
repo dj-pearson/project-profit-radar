@@ -6,7 +6,7 @@ BuildDesk is a comprehensive construction management platform designed for small
 
 ### Key Business Context
 - **Target Market**: SMB construction companies ($199-799/month segment)
-- **Platform Status**: ~90% complete for target SMB market (Phase 4 complete)
+- **Platform Status**: ~95% complete for target SMB market (Phase 4 complete, Phase 5 in progress)
 - **Business Model**: SaaS subscription platform with Stripe integration
 - **Current Pricing**: $350/month unlimited users
 - **Differentiator**: Real-time job costing and financial control without enterprise complexity
@@ -77,7 +77,7 @@ BuildDesk is a comprehensive construction management platform designed for small
 ```
 /home/user/project-profit-radar/
 ├── src/
-│   ├── components/              # 100+ domain-specific component directories
+│   ├── components/              # 115+ domain-specific component directories
 │   │   ├── ui/                  # shadcn/ui components
 │   │   ├── financial/           # Financial management
 │   │   ├── dashboard/           # Dashboard components
@@ -98,7 +98,7 @@ BuildDesk is a comprehensive construction management platform designed for small
 │   │   ├── seo/                 # SEO components
 │   │   ├── testing/             # Test utilities
 │   │   └── [90+ more domains]   # See full list below
-│   ├── pages/                   # Route pages (150+ pages)
+│   ├── pages/                   # Route pages (260+ pages)
 │   │   ├── admin/               # Admin pages
 │   │   ├── features/            # Feature showcase pages
 │   │   ├── settings/            # Settings pages
@@ -133,21 +133,24 @@ BuildDesk is a comprehensive construction management platform designed for small
 │   ├── templates/               # Email templates
 │   └── test/                    # Test setup files
 ├── supabase/
-│   ├── functions/               # 150+ Edge functions
+│   ├── functions/               # 154+ Edge functions
 │   │   ├── stripe-webhooks/     # Payment processing
 │   │   ├── ai-*/                # AI-powered features
 │   │   ├── analytics-*/         # Analytics APIs
 │   │   ├── blog-*/              # Blog automation
 │   │   └── [140+ more]          # API endpoints
-│   ├── migrations/              # Database migrations (400+)
+│   ├── migrations/              # Database migrations (339+)
 │   └── config.toml              # Supabase configuration
 ├── tests/
 │   └── e2e/                     # Playwright E2E tests
 ├── scripts/                     # Build & automation scripts
 │   ├── generate-sitemap.js      # SEO sitemap generation
 │   ├── copy-404.js              # SPA routing setup
+│   ├── update-sw-version.js     # Service worker versioning
 │   ├── performance-audit.js     # Performance monitoring
 │   ├── check-performance-budget.js
+│   ├── purge-cloudflare-cache.js # CDN cache management
+│   ├── convert-images-to-webp.js # Image optimization
 │   ├── mobile/                  # Mobile build scripts
 │   └── [more utilities]
 ├── public/                      # Static assets
@@ -160,7 +163,7 @@ BuildDesk is a comprehensive construction management platform designed for small
 └── [config files]               # Various configuration files
 ```
 
-### Component Domains (100+ directories)
+### Component Domains (115+ directories)
 The codebase is organized into domain-specific component directories for better maintainability:
 
 **Core UI**: ui, layout, layouts, navigation, common, shared
@@ -297,7 +300,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 
 ## Database Architecture
 
-### Core Tables (400+ migrations)
+### Core Tables (339+ migrations)
 **Company & Users**:
 - `companies`: Company profiles, subscription info, multi-tenant data
 - `user_profiles`: User accounts with role-based access
@@ -374,6 +377,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 ### Authentication Features
 - **Supabase Auth**: Core authentication
 - **SSO Support**: SAML 2.0, OAuth 2.0, LDAP
+- **Apple Sign-In**: Native Apple authentication support
 - **Multi-Factor Auth**: TOTP, SMS, Email
 - **JWT tokens**: Secure API access
 - **Session management**: Device tracking, trusted devices
@@ -389,9 +393,10 @@ npm run mcp:supabase           # Run Supabase MCP server
 - **Budget vs actual**: Variance analysis and alerts
 - **Cash flow forecasting**: Financial projections
 - **Stripe integration**: Automated billing and payments
-- **QuickBooks sync**: 2-way accounting integration
+- **QuickBooks sync**: Enhanced 2-way accounting integration with automatic reconciliation
 - **Estimate templates**: Reusable estimate templates
 - **Line item library**: Standard line items across estimates
+- **Financial health checks**: Automated project profitability analysis
 
 ### Project Management
 - **Project scheduling**: Gantt charts and timelines
@@ -404,6 +409,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 
 ### Time Tracking & GPS
 - **GPS time tracking**: Geofencing for clock in/out
+- **Advanced geofencing**: Configurable job site boundaries with automatic alerts
 - **Crew check-ins**: Location-based attendance
 - **Timesheet approvals**: Multi-level approval workflow
 - **Mobile time tracking**: Native mobile app support
@@ -428,6 +434,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 - **Image analysis**: Photo classification and insights
 - **Quality control**: AI-powered inspection
 - **Support tickets**: Automated ticket analysis
+- **AI search optimization**: Enhanced discoverability for AI-powered search engines
 
 ### Compliance & Security
 - **Audit logging**: Complete activity tracking
@@ -473,6 +480,7 @@ BuildDesk uses a hybrid mobile strategy:
 - **Local storage**: Offline data persistence
 - **Native performance**: Hardware-accelerated UI
 - **Biometric auth**: Fingerprint/Face ID support (planned)
+- **Service worker versioning**: Automatic cache management and updates
 
 ### Mobile Development Workflow
 ```bash
@@ -493,7 +501,7 @@ npm run expo:build:android       # Cloud build
 
 ## API Architecture
 
-### Supabase Edge Functions (150+)
+### Supabase Edge Functions (154+)
 Located in `/supabase/functions/`, categorized by domain:
 
 **Payments & Billing**:
@@ -704,7 +712,7 @@ test('user can log in', async ({ page }) => {
 - **Real-time updates**: Efficient WebSocket usage with Supabase
 - **Progressive loading**: Skeleton states and loading indicators
 - **Virtual scrolling**: For long lists (planned)
-- **Service Workers**: PWA support (planned)
+- **Service Workers**: PWA support with automatic versioning
 
 ### Mobile Performance
 - **Native APIs**: Capacitor for hardware acceleration
@@ -1083,10 +1091,9 @@ npm run expo:submit:android
 ## Known Issues & Technical Debt
 
 ### High Priority
-1. **Test coverage**: Increase from current ~5% to 60%+
+1. **Test coverage**: Increase from current ~10% to 60%+
 2. **Offline sync**: More robust offline queue for mobile
 3. **Performance**: Virtual scrolling for large lists
-4. **Documentation**: Component storybook
 
 ### Medium Priority
 1. **Bundle size**: Further optimization needed (target: <800KB)
@@ -1095,27 +1102,27 @@ npm run expo:submit:android
 4. **Dark mode**: Full dark mode parity
 
 ### Low Priority
-1. **Service workers**: Full PWA support
-2. **Desktop app**: Electron wrapper
-3. **Browser extensions**: Chrome/Firefox extensions
+1. **Desktop app**: Electron wrapper
+2. **Browser extensions**: Chrome/Firefox extensions
+3. **Component storybook**: Interactive documentation
 
 ---
 
 ## Future Roadmap
 
-### Immediate Priorities (30 days)
+### Immediate Priorities
 1. **Testing**: Increase test coverage to 60%+
-2. **Performance**: Achieve Lighthouse 95+ score
+2. **Performance**: Maintain Lighthouse 90+ score
 3. **Mobile polish**: iOS/Android app store submission
 4. **Documentation**: Complete API documentation
 
-### Medium-term Goals (3-6 months)
+### Medium-term Goals
 1. **Advanced analytics**: AI/ML-powered insights
 2. **Integration marketplace**: Third-party connector ecosystem
 3. **Public API**: Developer platform launch
 4. **White-label**: Multi-tenant production deployment
 
-### Long-term Vision (6-12 months)
+### Long-term Vision
 1. **Industry specialization**: Vertical-specific features (residential, commercial, industrial)
 2. **Global expansion**: Multi-region deployment, i18n
 3. **Enterprise features**: Advanced compliance, custom integrations
@@ -1228,10 +1235,10 @@ const { data, error } = await supabase
 
 ---
 
-**Last Updated**: 2025-11-16
-**Version**: 2.0
-**Platform Status**: ~90% Complete (Phase 4)
-**Next Milestone**: Phase 5 - Polish, Performance & Production Launch
+**Last Updated**: 2025-11-28
+**Version**: 2.1
+**Platform Status**: ~95% Complete (Phase 5 in progress)
+**Next Milestone**: Production Launch & App Store Submissions
 
 ---
 
