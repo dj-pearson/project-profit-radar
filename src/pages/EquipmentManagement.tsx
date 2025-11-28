@@ -115,7 +115,7 @@ export default function EquipmentManagement() {
       navigate('/auth');
     }
     
-    if (!loading && user && userProfile && !userProfile.company_id) {
+    if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
     }
   }, [user, userProfile, loading, navigate]);
