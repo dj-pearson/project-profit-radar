@@ -19,7 +19,12 @@ import {
   ArrowLeft,
   User,
   Edit,
-  Menu
+  Menu,
+  Home,
+  Building2,
+  DollarSign,
+  Users,
+  Settings
 } from 'lucide-react';
 
 const ProjectDetail = () => {
@@ -117,98 +122,105 @@ const ProjectDetail = () => {
 
   if (isMobile && project) {
     return (
-      <DashboardLayout title={project.name}>
-        <div className="min-h-screen bg-background">
-          {/* Mobile Header with Menu - Fixed at top */}
-          <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-            <div className="flex items-center justify-between px-4 py-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/projects-hub')}
-                className="h-10 w-10 p-0"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              
-              <div className="flex-1 mx-3 min-w-0">
-                <h1 className="text-base font-bold truncate">{project.name}</h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground truncate flex-shrink">{project.client_name}</span>
-                  <Badge variant={getStatusColor(project.status)} className="text-xs h-5 flex-shrink-0">
-                    {project.status.replace('_', ' ')}
-                  </Badge>
-                </div>
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Mobile Header with Menu - Fixed at top */}
+        <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="flex items-center justify-between px-4 py-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/projects-hub')}
+              className="h-10 w-10 p-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            
+            <div className="flex-1 mx-3 min-w-0">
+              <h1 className="text-base font-bold truncate">{project.name}</h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-muted-foreground truncate flex-shrink">{project.client_name}</span>
+                <Badge variant={getStatusColor(project.status)} className="text-xs h-5 flex-shrink-0">
+                  {project.status.replace('_', ' ')}
+                </Badge>
               </div>
+            </div>
 
-              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetTrigger asChild>
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-10 w-10 p-0"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full p-0 bg-background">
+                {/* Sheet Header with Back Button */}
+                <div className="flex items-center gap-3 p-4 border-b bg-muted/20">
                   <Button 
-                    variant="outline" 
-                    size="sm"
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSidebarOpen(false)}
                     className="h-10 w-10 p-0"
                   >
-                    <Menu className="h-5 w-5" />
+                    <ArrowLeft className="h-5 w-5" />
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-full p-0 bg-background">
-                  {/* Sheet Header with Back Button */}
-                  <div className="flex items-center gap-3 p-4 border-b bg-muted/20">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setSidebarOpen(false)}
-                      className="h-10 w-10 p-0"
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                    <div className="flex-1 min-w-0">
-                      <h2 className="font-semibold text-base">Project Sections</h2>
-                      <p className="text-xs text-muted-foreground truncate">{project.name}</p>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-semibold text-base">Project Sections</h2>
+                    <p className="text-xs text-muted-foreground truncate">{project.name}</p>
                   </div>
-                  
-                  {/* Sub-Sidebar Navigation */}
-                  <ProjectSubSidebar 
-                    activeTab={activeTab} 
-                    onTabChange={(tab) => {
-                      setActiveTab(tab);
-                      setSidebarOpen(false);
-                    }}
-                  />
-                </SheetContent>
-              </Sheet>
+                </div>
+                
+                {/* Sub-Sidebar Navigation */}
+                <ProjectSubSidebar 
+                  activeTab={activeTab} 
+                  onTabChange={(tab) => {
+                    setActiveTab(tab);
+                    setSidebarOpen(false);
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
+          </div>
+        </header>
+
+        <main className="flex-1 px-4 py-4 space-y-4 pb-20">
+          {/* Contextual Actions - Mobile */}
+          <ContextualActions
+            context={{
+              module: 'projects',
+              entityType: 'project',
+              entityId: project.id,
+              entityData: project
+            }}
+            className="mb-4"
+          />
+
+          {/* AI Insights - Mobile */}
+          {activeTab === 'overview' && (
+            <div className="mb-4">
+              <AIProjectInsights projectId={project.id} />
             </div>
-          </div>
+          )}
 
-          <div className="px-4 py-4 space-y-4 pb-20">
-            {/* Contextual Actions - Mobile */}
-            <ContextualActions
-              context={{
-                module: 'projects',
-                entityType: 'project',
-                entityId: project.id,
-                entityData: project
-              }}
-              className="mb-4"
-            />
+          {/* Dynamic Content - Mobile */}
+          <ProjectContent 
+            project={project}
+            activeTab={activeTab}
+            onNavigate={navigate}
+          />
+        </main>
 
-            {/* AI Insights - Mobile */}
-            {activeTab === 'overview' && (
-              <div className="mb-4">
-                <AIProjectInsights projectId={project.id} />
-              </div>
-            )}
-
-            {/* Dynamic Content - Mobile */}
-            <ProjectContent 
-              project={project}
-              activeTab={activeTab}
-              onNavigate={navigate}
-            />
-          </div>
-        </div>
-      </DashboardLayout>
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav items={[
+          { icon: Home, label: 'Home', href: '/dashboard' },
+          { icon: Building2, label: 'Projects', href: '/projects-hub' },
+          { icon: DollarSign, label: 'Financial', href: '/financial-hub' },
+          { icon: Users, label: 'People', href: '/people-hub' },
+          { icon: Settings, label: 'Admin', href: '/admin-hub' },
+        ]} />
+      </div>
     );
   }
 
