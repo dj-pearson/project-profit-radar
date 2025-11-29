@@ -1,5 +1,7 @@
+// QuickBooks Route Transactions Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,32 +43,30 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId, supabase } = authContext;
+    console.log("[QUICKBOOKS-ROUTE] User authenticated", { userId: user.id, siteId });
 
     const { action, company_id, transaction_id, manual_assignment } = await req.json();
 
     switch (action) {
       case 'process_single':
-        return await processSingleTransaction(supabase, company_id, transaction_id);
-      
+        return await processSingleTransaction(supabase, siteId, company_id, transaction_id);
+
       case 'process_batch':
-        return await processBatchTransactions(supabase, company_id);
-      
+        return await processBatchTransactions(supabase, siteId, company_id);
+
       case 'manual_assign':
-        return await manualAssignment(supabase, transaction_id, manual_assignment);
-      
+        return await manualAssignment(supabase, siteId, transaction_id, manual_assignment);
+
       case 'import_qb_transactions':
-        return await importQuickBooksTransactions(supabase, company_id);
-      
+        return await importQuickBooksTransactions(supabase, siteId, company_id);
+
       default:
         throw new Error("Invalid action specified");
     }
@@ -75,7 +75,7 @@ serve(async (req) => {
     console.error("Error in QuickBooks routing:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: errorMessage,
         success: false
       }),
@@ -87,11 +87,12 @@ serve(async (req) => {
   }
 });
 
-async function processSingleTransaction(supabase: any, companyId: string, transactionId: string) {
-  // Get transaction details
+async function processSingleTransaction(supabase: any, siteId: string, companyId: string, transactionId: string) {
+  // Get transaction details with site isolation
   const { data: transaction, error: transactionError } = await supabase
     .from('quickbooks_unrouted_transactions')
     .select('*')
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('id', transactionId)
     .eq('company_id', companyId)
     .single();
@@ -100,10 +101,11 @@ async function processSingleTransaction(supabase: any, companyId: string, transa
     throw new Error('Transaction not found');
   }
 
-  // Get active routing rules
+  // Get active routing rules with site isolation
   const { data: rules, error: rulesError } = await supabase
     .from('quickbooks_routing_rules')
     .select('*')
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .eq('is_active', true)
     .order('priority', { ascending: false });
@@ -116,7 +118,7 @@ async function processSingleTransaction(supabase: any, companyId: string, transa
   const bestMatch = await findBestMatch(transaction, rules || []);
 
   if (bestMatch) {
-    // Update transaction with suggestion
+    // Update transaction with suggestion (site_id already set on record)
     const { error: updateError } = await supabase
       .from('quickbooks_unrouted_transactions')
       .update({
@@ -129,14 +131,15 @@ async function processSingleTransaction(supabase: any, companyId: string, transa
         suggestion_reason: bestMatch.reason,
         updated_at: new Date().toISOString()
       })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', transactionId);
 
     if (updateError) {
       throw new Error('Failed to update transaction');
     }
 
-    // Log the routing event
-    await logRoutingEvent(supabase, {
+    // Log the routing event with site isolation
+    await logRoutingEvent(supabase, siteId, {
       company_id: companyId,
       transaction_id: transactionId,
       qb_transaction_id: transaction.qb_transaction_id,
@@ -174,16 +177,17 @@ async function processSingleTransaction(supabase: any, companyId: string, transa
   );
 }
 
-async function processBatchTransactions(supabase: any, companyId: string) {
+async function processBatchTransactions(supabase: any, siteId: string, companyId: string) {
   let processedCount = 0;
   let autoAssignedCount = 0;
   let reviewRequiredCount = 0;
   let errorCount = 0;
 
-  // Get all unrouted transactions
+  // Get all unrouted transactions with site isolation
   const { data: transactions, error: transactionsError } = await supabase
     .from('quickbooks_unrouted_transactions')
     .select('*')
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .eq('routing_status', 'unrouted');
 
@@ -191,10 +195,11 @@ async function processBatchTransactions(supabase: any, companyId: string) {
     throw new Error('Failed to load unrouted transactions');
   }
 
-  // Get active routing rules
+  // Get active routing rules with site isolation
   const { data: rules, error: rulesError } = await supabase
     .from('quickbooks_routing_rules')
     .select('*')
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .eq('is_active', true)
     .order('priority', { ascending: false });
@@ -207,11 +212,11 @@ async function processBatchTransactions(supabase: any, companyId: string) {
   for (const transaction of transactions || []) {
     try {
       processedCount++;
-      
+
       const bestMatch = await findBestMatch(transaction, rules || []);
-      
+
       if (bestMatch) {
-        // Update transaction
+        // Update transaction with site isolation
         await supabase
           .from('quickbooks_unrouted_transactions')
           .update({
@@ -224,19 +229,21 @@ async function processBatchTransactions(supabase: any, companyId: string) {
             suggestion_reason: bestMatch.reason,
             updated_at: new Date().toISOString()
           })
+          .eq('site_id', siteId)  // CRITICAL: Site isolation
           .eq('id', transaction.id);
 
-        // Update rule statistics
+        // Update rule statistics with site isolation
         await supabase
           .from('quickbooks_routing_rules')
           .update({
             matches_count: supabase.raw('matches_count + 1'),
             last_matched_at: new Date().toISOString()
           })
+          .eq('site_id', siteId)  // CRITICAL: Site isolation
           .eq('id', bestMatch.rule_id);
 
-        // Log the event
-        await logRoutingEvent(supabase, {
+        // Log the event with site isolation
+        await logRoutingEvent(supabase, siteId, {
           company_id: companyId,
           transaction_id: transaction.id,
           qb_transaction_id: transaction.qb_transaction_id,
@@ -277,10 +284,10 @@ async function processBatchTransactions(supabase: any, companyId: string) {
   );
 }
 
-async function manualAssignment(supabase: any, transactionId: string, assignment: any) {
+async function manualAssignment(supabase: any, siteId: string, transactionId: string, assignment: any) {
   const { project_id, cost_code_id, notes, assigned_by } = assignment;
 
-  // Update transaction with manual assignment
+  // Update transaction with manual assignment and site isolation
   const { error: updateError } = await supabase
     .from('quickbooks_unrouted_transactions')
     .update({
@@ -292,22 +299,24 @@ async function manualAssignment(supabase: any, transactionId: string, assignment
       routing_status: 'manually_assigned',
       updated_at: new Date().toISOString()
     })
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('id', transactionId);
 
   if (updateError) {
     throw new Error('Failed to update transaction assignment');
   }
 
-  // Get transaction details for logging
+  // Get transaction details for logging with site isolation
   const { data: transaction } = await supabase
     .from('quickbooks_unrouted_transactions')
     .select('company_id, qb_transaction_id')
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('id', transactionId)
     .single();
 
-  // Log the manual assignment
+  // Log the manual assignment with site isolation
   if (transaction) {
-    await logRoutingEvent(supabase, {
+    await logRoutingEvent(supabase, siteId, {
       company_id: transaction.company_id,
       transaction_id: transactionId,
       qb_transaction_id: transaction.qb_transaction_id,
@@ -331,10 +340,11 @@ async function manualAssignment(supabase: any, transactionId: string, assignment
   );
 }
 
-async function importQuickBooksTransactions(supabase: any, companyId: string) {
+async function importQuickBooksTransactions(supabase: any, siteId: string, companyId: string) {
   // This function would integrate with existing QB sync to import new transactions
+  // siteId would be used when inserting imported transactions
   // For now, we'll return a placeholder response
-  
+
   return new Response(
     JSON.stringify({
       success: true,
@@ -454,12 +464,13 @@ function getFieldValue(transaction: UnroutedTransaction, fieldType: string): str
   }
 }
 
-async function logRoutingEvent(supabase: any, event: any) {
+async function logRoutingEvent(supabase: any, siteId: string, event: any) {
   try {
     await supabase
       .from('quickbooks_routing_history')
       .insert({
         ...event,
+        site_id: siteId,  // CRITICAL: Site isolation
         event_timestamp: new Date().toISOString()
       });
   } catch (error) {
