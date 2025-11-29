@@ -1,8 +1,11 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
+// Calculate Lead Score Edge Function
+// Updated with multi-tenant site_id isolation
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 interface ScoringRule {
@@ -37,58 +40,46 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401);
+    }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log(`[CALCULATE-LEAD-SCORE] User authenticated: ${user.id}, siteId: ${siteId}`);
 
     const { leadId, companyId } = await req.json();
 
     if (!leadId || !companyId) {
-      return new Response(
-        JSON.stringify({ error: 'Lead ID and Company ID are required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return errorResponse('Lead ID and Company ID are required', 400);
     }
 
-    // Get the lead data
+    // Get the lead data with site isolation
     const { data: lead, error: leadError } = await supabaseClient
       .from('leads')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', leadId)
       .eq('company_id', companyId)
       .single();
 
     if (leadError || !lead) {
       console.error('Error fetching lead:', leadError);
-      return new Response(
-        JSON.stringify({ error: 'Lead not found' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return errorResponse('Lead not found or access denied', 404);
     }
 
-    // Get scoring rules for the company (system rules + company-specific rules)
+    // Get scoring rules for the company with site isolation (system rules + company-specific rules)
     const { data: scoringRules, error: rulesError } = await supabaseClient
       .from('lead_scoring_rules')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .or(`is_system_rule.eq.true,company_id.eq.${companyId}`)
       .eq('is_active', true);
 
     if (rulesError) {
       console.error('Error fetching scoring rules:', rulesError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch scoring rules' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return errorResponse('Failed to fetch scoring rules', 500);
     }
 
     // Calculate the lead score
@@ -153,24 +144,19 @@ Deno.serve(async (req) => {
     // Ensure score doesn't go below 0
     totalScore = Math.max(0, totalScore);
 
-    // Update the lead with the new score
+    // Update the lead with the new score (with site isolation)
     const { error: updateError } = await supabaseClient
       .from('leads')
-      .update({ 
+      .update({
         lead_score: totalScore,
         updated_at: new Date().toISOString()
       })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation on update
       .eq('id', leadId);
 
     if (updateError) {
       console.error('Error updating lead score:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to update lead score' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      return errorResponse('Failed to update lead score', 500);
     }
 
     // Determine lead quality based on score
@@ -183,39 +169,29 @@ Deno.serve(async (req) => {
       leadQuality = 'marketing_qualified';
     }
 
-    // Update lead quality if it has changed
+    // Update lead quality if it has changed (with site isolation)
     if (lead.lead_quality !== leadQuality) {
       await supabaseClient
         .from('leads')
         .update({ lead_quality: leadQuality })
+        .eq('site_id', siteId)  // CRITICAL: Site isolation on update
         .eq('id', leadId);
     }
 
-    console.log(`Calculated score for lead ${leadId}: ${totalScore} points`);
+    console.log(`Calculated score for lead ${leadId}: ${totalScore} points (site: ${siteId})`);
 
-    return new Response(
-      JSON.stringify({
-        leadId,
-        score: totalScore,
-        previousScore: lead.lead_score || 0,
-        quality: leadQuality,
-        appliedRules,
-        rulesCount: scoringRules?.length || 0
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    return successResponse({
+      leadId,
+      score: totalScore,
+      previousScore: lead.lead_score || 0,
+      quality: leadQuality,
+      appliedRules,
+      rulesCount: scoringRules?.length || 0
+    });
 
   } catch (error) {
     console.error('Error in calculate-lead-score function:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return errorResponse(errorMessage, 500);
   }
 });
