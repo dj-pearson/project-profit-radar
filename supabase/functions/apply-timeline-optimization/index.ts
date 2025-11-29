@@ -1,5 +1,7 @@
+// Apply Timeline Optimization Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,20 +14,25 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log("[APPLY-TIMELINE-OPT] User authenticated", { userId: user.id, siteId });
 
     const { optimization_id, company_id } = await req.json();
-    
-    // Update the optimization status to "applied"
+
+    // Update the optimization status to "applied" with site isolation
     const { error: updateError } = await supabaseClient
       .from('timeline_optimizations')
-      .update({ 
+      .update({
         status: 'applied',
         applied_at: new Date().toISOString()
       })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', optimization_id)
       .eq('company_id', company_id);
 

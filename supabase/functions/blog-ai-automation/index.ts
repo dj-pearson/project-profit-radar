@@ -1,3 +1,5 @@
+// Blog AI Automation Edge Function
+// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
@@ -39,10 +41,10 @@ serve(async (req) => {
     // Check for API key authentication (for Make.com and other automation tools)
     const apiKey = req.headers.get("x-api-key");
     const authHeader = req.headers.get("Authorization");
-    
+
     // Allow authentication via either service role bearer token or custom API key
     const allowedApiKey = Deno.env.get("BLOG_AUTOMATION_API_KEY");
-    
+
     let isAuthorized = false;
     let authMethod = "";
 
@@ -52,7 +54,7 @@ serve(async (req) => {
       authMethod = "API_KEY";
       logStep("Authenticated via API key");
     }
-    
+
     // Method 2: Check for service role token
     if (!isAuthorized && authHeader) {
       const token = authHeader.replace("Bearer ", "");
@@ -65,7 +67,7 @@ serve(async (req) => {
     }
 
     if (!isAuthorized) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: "Unauthorized. Provide either 'x-api-key' header or valid Bearer token.",
         methods: ["x-api-key: YOUR_API_KEY", "Authorization: Bearer SERVICE_ROLE_KEY"]
       }), {
@@ -76,15 +78,48 @@ serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { action, topic, customSettings } = body;
-    logStep("Request parsed", { action, topic, authMethod });
+    const { action, topic, customSettings, site_id, site_key } = body;
+    logStep("Request parsed", { action, topic, authMethod, site_id, site_key });
+
+    // Resolve site_id - can be passed directly or resolved from site_key
+    let siteId = site_id;
+    if (!siteId && site_key) {
+      const { data: siteData } = await supabaseClient
+        .from('sites')
+        .select('id')
+        .eq('key', site_key)
+        .eq('is_active', true)
+        .single();
+      siteId = siteData?.id;
+    }
+
+    // Fall back to default BuildDesk site if no site specified
+    if (!siteId) {
+      const { data: defaultSite } = await supabaseClient
+        .from('sites')
+        .select('id')
+        .eq('key', 'builddesk')
+        .single();
+      siteId = defaultSite?.id;
+    }
+
+    if (!siteId) {
+      return new Response(JSON.stringify({
+        error: "Site not found. Provide either 'site_id' or 'site_key' in the request body."
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    logStep("Site resolved", { siteId });
 
     // Handle different actions
     if (action === 'generate-auto-content' || action === 'test-generation') {
-      return await generateBlogContent(supabaseClient, topic, customSettings);
+      return await generateBlogContent(supabaseClient, siteId, topic, customSettings);
     }
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: "Invalid action",
       availableActions: ['generate-auto-content', 'test-generation']
     }), {
@@ -95,8 +130,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
-    
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       error: errorMessage,
       timestamp: new Date().toISOString(),
       function: "blog-ai-automation"
@@ -109,10 +144,11 @@ serve(async (req) => {
 
 async function generateBlogContent(
   supabaseClient: any,
+  siteId: string,
   topic?: string,
   customSettings?: any
 ): Promise<Response> {
-  logStep("Starting content generation", { topic });
+  logStep("Starting content generation", { siteId, topic });
 
   // Check Claude API key
   const claudeKey = Deno.env.get('CLAUDE_API_KEY');
@@ -189,18 +225,19 @@ Make the content authoritative, actionable, and valuable for construction profes
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    // Check if slug exists and make it unique
+    // Check if slug exists and make it unique (within this site)
     let uniqueSlug = slug;
     let counter = 1;
     let slugExists = true;
-    
+
     while (slugExists) {
       const { data: existingPost } = await supabaseClient
         .from('blog_posts')
         .select('id')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('slug', uniqueSlug)
         .maybeSingle();
-      
+
       if (!existingPost) {
         slugExists = false;
       } else {
@@ -209,10 +246,11 @@ Make the content authoritative, actionable, and valuable for construction profes
       }
     }
 
-    // Create the blog post in database
+    // Create the blog post in database with site isolation
     const { data: blogPost, error: postError } = await supabaseClient
       .from('blog_posts')
       .insert([{
+        site_id: siteId,  // CRITICAL: Site isolation
         title: parsed.title,
         slug: uniqueSlug,
         body: parsed.body,
