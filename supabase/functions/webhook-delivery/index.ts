@@ -1,5 +1,7 @@
 // Webhook Delivery Worker Edge Function
+// Updated with multi-tenant site_id isolation
 // Delivers webhook events to registered endpoints with retry logic
+// Runs as cron job - processes all sites
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
@@ -11,6 +13,7 @@ const corsHeaders = {
 
 interface WebhookEndpoint {
   id: string
+  site_id: string
   url: string
   secret: string
   is_active: boolean
@@ -22,6 +25,7 @@ interface WebhookEndpoint {
 
 interface WebhookDelivery {
   id: string
+  site_id: string
   endpoint_id: string
   event_type: string
   payload: any
@@ -43,6 +47,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log('[WEBHOOK-DELIVERY] Starting webhook delivery processing')
+
     // This can be called in two ways:
     // 1. POST with a specific delivery_id to process
     // 2. GET to process all pending deliveries (cron job)
@@ -51,20 +57,27 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       const body = await req.json()
-      const { delivery_id } = body
+      const { delivery_id, site_id } = body
 
       if (delivery_id) {
-        const { data, error } = await supabaseClient
+        let query = supabaseClient
           .from('webhook_deliveries')
           .select('*')
           .eq('id', delivery_id)
-          .single()
+
+        // Apply site isolation if site_id provided
+        if (site_id) {
+          query = query.eq('site_id', site_id)  // CRITICAL: Site isolation
+        }
+
+        const { data, error } = await query.single()
 
         if (error) throw error
         if (data) deliveriesToProcess = [data]
       }
     } else {
-      // GET request - process all pending deliveries
+      // GET request - process all pending deliveries across all sites
+      // Note: This is a cron job that processes deliveries for all sites
       const { data, error } = await supabaseClient
         .from('webhook_deliveries')
         .select('*')
@@ -75,20 +88,27 @@ serve(async (req) => {
 
       if (error) throw error
       if (data) deliveriesToProcess = data
+      console.log(`[WEBHOOK-DELIVERY] Found ${deliveriesToProcess.length} deliveries to process`)
     }
 
     const results = []
 
     for (const delivery of deliveriesToProcess) {
-      // Get the webhook endpoint details
-      const { data: endpoint, error: endpointError } = await supabaseClient
+      // Get the webhook endpoint details with site isolation
+      let endpointQuery = supabaseClient
         .from('webhook_endpoints')
         .select('*')
         .eq('id', delivery.endpoint_id)
-        .single()
+
+      // Use delivery's site_id for isolation
+      if (delivery.site_id) {
+        endpointQuery = endpointQuery.eq('site_id', delivery.site_id)  // CRITICAL: Site isolation
+      }
+
+      const { data: endpoint, error: endpointError } = await endpointQuery.single()
 
       if (endpointError || !endpoint) {
-        console.error('Endpoint not found:', delivery.endpoint_id)
+        console.error('[WEBHOOK-DELIVERY] Endpoint not found:', delivery.endpoint_id)
         continue
       }
 
@@ -108,11 +128,11 @@ serve(async (req) => {
       const deliveryResult = await deliverWebhook(delivery, endpoint)
       results.push(deliveryResult)
 
-      // Update delivery record
-      await updateDeliveryRecord(supabaseClient, delivery.id, deliveryResult)
+      // Update delivery record with site isolation
+      await updateDeliveryRecord(supabaseClient, delivery.id, delivery.site_id, deliveryResult)
 
-      // Update endpoint statistics
-      await updateEndpointStats(supabaseClient, endpoint.id, deliveryResult.success)
+      // Update endpoint statistics with site isolation
+      await updateEndpointStats(supabaseClient, endpoint.id, endpoint.site_id, deliveryResult.success)
     }
 
     return new Response(
@@ -259,10 +279,11 @@ async function generateHMACSignature(payload: string, secret: string): Promise<s
   return `sha256=${signatureHex}`
 }
 
-// Update delivery record with result
+// Update delivery record with result and site isolation
 async function updateDeliveryRecord(
   supabaseClient: any,
   deliveryId: string,
+  siteId: string | null,
   result: any
 ): Promise<void> {
   const newAttemptCount = result.attempt_count || 1
@@ -278,7 +299,7 @@ async function updateDeliveryRecord(
     status = 'failed_permanent'
   }
 
-  await supabaseClient
+  let updateQuery = supabaseClient
     .from('webhook_deliveries')
     .update({
       status,
@@ -291,19 +312,31 @@ async function updateDeliveryRecord(
       delivered_at: result.success ? new Date().toISOString() : null
     })
     .eq('id', deliveryId)
+
+  if (siteId) {
+    updateQuery = updateQuery.eq('site_id', siteId)  // CRITICAL: Site isolation on update
+  }
+
+  await updateQuery
 }
 
-// Update endpoint statistics
+// Update endpoint statistics with site isolation
 async function updateEndpointStats(
   supabaseClient: any,
   endpointId: string,
+  siteId: string | null,
   success: boolean
 ): Promise<void> {
-  const { data: endpoint } = await supabaseClient
+  let selectQuery = supabaseClient
     .from('webhook_endpoints')
     .select('success_count, failure_count')
     .eq('id', endpointId)
-    .single()
+
+  if (siteId) {
+    selectQuery = selectQuery.eq('site_id', siteId)  // CRITICAL: Site isolation
+  }
+
+  const { data: endpoint } = await selectQuery.single()
 
   if (!endpoint) return
 
@@ -321,12 +354,18 @@ async function updateEndpointStats(
     // Auto-disable endpoint after 10 consecutive failures
     if (updates.failure_count >= 10) {
       updates.is_active = false
-      console.log(`Auto-disabled endpoint after 10 failures: ${endpointId}`)
+      console.log(`[WEBHOOK-DELIVERY] Auto-disabled endpoint after 10 failures: ${endpointId}`)
     }
   }
 
-  await supabaseClient
+  let updateQuery = supabaseClient
     .from('webhook_endpoints')
     .update(updates)
     .eq('id', endpointId)
+
+  if (siteId) {
+    updateQuery = updateQuery.eq('site_id', siteId)  // CRITICAL: Site isolation on update
+  }
+
+  await updateQuery
 }
