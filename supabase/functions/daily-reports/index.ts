@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -12,51 +13,50 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
     logStep("Function started", { method: req.method });
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401);
+    }
 
-    // Get user from auth header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user?.id) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    const { user, siteId, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
-    // Get user profile to check role
-    const { data: userProfile, error: profileError } = await supabaseClient
+    // Get user profile to check role with site isolation
+    const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role, company_id')
       .eq('id', user.id)
+      .eq('site_id', siteId)
       .single();
 
-    if (profileError) throw new Error(`Profile error: ${profileError.message}`);
+    if (profileError) {
+      logStep("Profile lookup error", { error: profileError.message });
+      return errorResponse(`Profile error: ${profileError.message}`, 400);
+    }
 
     const url = new URL(req.url);
     const method = req.method;
-    
+
     // Handle different request types
     if (method === "GET") {
       const projectId = url.searchParams.get('project_id');
-      
-      let query = supabaseClient
+
+      // Query with site isolation
+      let query = supabase
         .from('daily_reports')
         .select(`
           *,
-          projects(name)
+          projects!inner(name, company_id, site_id)
         `)
+        .eq('site_id', siteId)
+        .eq('projects.company_id', userProfile.company_id)
         .order('date', { ascending: false });
 
       if (projectId) {
@@ -65,13 +65,13 @@ serve(async (req) => {
 
       const { data: dailyReports, error: reportsError } = await query;
 
-      if (reportsError) throw new Error(`Daily reports fetch error: ${reportsError.message}`);
-      
-      logStep("Daily reports retrieved", { count: dailyReports?.length });
-      return new Response(JSON.stringify({ dailyReports }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      if (reportsError) {
+        logStep("Daily reports fetch error", { error: reportsError.message });
+        return errorResponse(`Daily reports fetch error: ${reportsError.message}`, 500);
+      }
+
+      logStep("Daily reports retrieved", { count: dailyReports?.length, siteId });
+      return successResponse({ dailyReports });
     }
 
     if (method === "POST") {
@@ -79,15 +79,17 @@ serve(async (req) => {
       const { action } = body;
 
       if (action === "list") {
-        // POST request for listing daily reports
+        // POST request for listing daily reports with site isolation
         const projectId = body.project_id;
-        
-        let query = supabaseClient
+
+        let query = supabase
           .from('daily_reports')
           .select(`
             *,
-            projects(name)
+            projects!inner(name, company_id, site_id)
           `)
+          .eq('site_id', siteId)
+          .eq('projects.company_id', userProfile.company_id)
           .order('date', { ascending: false });
 
         if (projectId) {
@@ -96,25 +98,25 @@ serve(async (req) => {
 
         const { data: dailyReports, error: reportsError } = await query;
 
-        if (reportsError) throw new Error(`Daily reports fetch error: ${reportsError.message}`);
-        
-        logStep("Daily reports retrieved", { count: dailyReports?.length });
-        return new Response(JSON.stringify({ dailyReports }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+        if (reportsError) {
+          logStep("Daily reports fetch error", { error: reportsError.message });
+          return errorResponse(`Daily reports fetch error: ${reportsError.message}`, 500);
+        }
+
+        logStep("Daily reports retrieved", { count: dailyReports?.length, siteId });
+        return successResponse({ dailyReports });
       }
 
       if (action === "create") {
-        logStep("Creating daily report", body);
+        logStep("Creating daily report", { body, siteId });
 
         // Verify user can create daily reports
         if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
-          throw new Error("Insufficient permissions to create daily reports");
+          return errorResponse("Insufficient permissions to create daily reports", 403);
         }
 
         const reportDate = body.date || new Date().toISOString().split('T')[0];
-        
+
         const reportData = {
           project_id: body.project_id,
           work_performed: body.work_performed,
@@ -125,10 +127,11 @@ serve(async (req) => {
           delays_issues: body.delays_issues,
           safety_incidents: body.safety_incidents,
           date: reportDate,
-          created_by: user.id
+          created_by: user.id,
+          site_id: siteId  // CRITICAL: Include site_id
         };
 
-        const { data: newReport, error: createError } = await supabaseClient
+        const { data: newReport, error: createError } = await supabase
           .from('daily_reports')
           .insert([reportData])
           .select(`
@@ -137,28 +140,84 @@ serve(async (req) => {
           `)
           .single();
 
-        if (createError) throw new Error(`Daily report creation error: ${createError.message}`);
+        if (createError) {
+          logStep("Daily report creation error", { error: createError.message });
+          return errorResponse(`Daily report creation error: ${createError.message}`, 500);
+        }
 
-        logStep("Daily report created", { reportId: newReport.id, date: reportDate });
-        return new Response(JSON.stringify({ dailyReport: newReport }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 201,
-        });
+        logStep("Daily report created", { reportId: newReport.id, date: reportDate, siteId });
+        return successResponse({ dailyReport: newReport });
+      }
+
+      if (action === "update") {
+        const { reportId, ...updateFields } = body;
+        logStep("Updating daily report", { reportId, siteId });
+
+        // Verify user can update daily reports
+        if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
+          return errorResponse("Insufficient permissions to update daily reports", 403);
+        }
+
+        const { data: updatedReport, error: updateError } = await supabase
+          .from('daily_reports')
+          .update({
+            work_performed: updateFields.work_performed,
+            crew_count: updateFields.crew_count,
+            weather_conditions: updateFields.weather_conditions,
+            materials_delivered: updateFields.materials_delivered,
+            equipment_used: updateFields.equipment_used,
+            delays_issues: updateFields.delays_issues,
+            safety_incidents: updateFields.safety_incidents,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', reportId)
+          .eq('site_id', siteId)  // CRITICAL: Site isolation on update
+          .select(`
+            *,
+            projects(name)
+          `)
+          .single();
+
+        if (updateError) {
+          logStep("Daily report update error", { error: updateError.message });
+          return errorResponse(`Daily report update error: ${updateError.message}`, 500);
+        }
+
+        logStep("Daily report updated", { reportId, siteId });
+        return successResponse({ dailyReport: updatedReport });
+      }
+
+      if (action === "delete") {
+        const { reportId } = body;
+        logStep("Deleting daily report", { reportId, siteId });
+
+        // Verify user can delete daily reports
+        if (!['admin', 'root_admin'].includes(userProfile.role)) {
+          return errorResponse("Insufficient permissions to delete daily reports", 403);
+        }
+
+        const { error: deleteError } = await supabase
+          .from('daily_reports')
+          .delete()
+          .eq('id', reportId)
+          .eq('site_id', siteId);  // CRITICAL: Site isolation on delete
+
+        if (deleteError) {
+          logStep("Daily report deletion error", { error: deleteError.message });
+          return errorResponse(`Daily report deletion error: ${deleteError.message}`, 500);
+        }
+
+        logStep("Daily report deleted", { reportId, siteId });
+        return successResponse({ success: true });
       }
     }
 
     // If no route matched
-    return new Response(JSON.stringify({ error: "Route not found" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 404,
-    });
+    return errorResponse("Route not found", 404);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return errorResponse(errorMessage, 500);
   }
 });

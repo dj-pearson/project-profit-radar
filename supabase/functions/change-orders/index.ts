@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -12,62 +13,56 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
     logStep("Function started", { method: req.method });
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401);
+    }
 
-    // Get user from auth header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user?.id) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    const { user, siteId, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
-    // Get user profile to check role
-    logStep("Looking up user profile", { userId: user.id });
-    const { data: userProfile, error: profileError } = await supabaseClient
+    // Get user profile to check role and company with site isolation
+    const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role, company_id')
       .eq('id', user.id)
+      .eq('site_id', siteId)
       .single();
 
     if (profileError) {
       logStep("Profile lookup error", { error: profileError.message, code: profileError.code });
-      throw new Error(`Profile error: ${profileError.message}`);
+      return errorResponse(`Profile error: ${profileError.message}`, 400);
     }
     if (!userProfile) {
-      logStep("No user profile found", { userId: user.id });
-      throw new Error(`User profile not found for user ${user.id}`);
+      logStep("No user profile found", { userId: user.id, siteId });
+      return errorResponse(`User profile not found for user ${user.id}`, 404);
     }
-    
-    logStep("User profile found", { userId: user.id, role: userProfile.role, companyId: userProfile.company_id });
+
+    logStep("User profile found", { userId: user.id, role: userProfile.role, companyId: userProfile.company_id, siteId });
 
     const url = new URL(req.url);
     const method = req.method;
-    
+
     // Handle different request types
     if (method === "GET") {
-      // GET requests for listing change orders
+      // GET requests for listing change orders with site isolation
       const projectId = url.searchParams.get('project_id');
-      
-      let query = supabaseClient
+
+      let query = supabase
         .from('change_orders')
         .select(`
           *,
-          projects(name, client_name)
+          projects!inner(name, client_name, company_id, site_id)
         `)
+        .eq('site_id', siteId)
+        .eq('projects.company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
       if (projectId) {
@@ -76,13 +71,13 @@ serve(async (req) => {
 
       const { data: changeOrders, error: ordersError } = await query;
 
-      if (ordersError) throw new Error(`Change orders fetch error: ${ordersError.message}`);
-      
-      logStep("Change orders retrieved", { count: changeOrders?.length });
-      return new Response(JSON.stringify({ changeOrders }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      if (ordersError) {
+        logStep("Change orders fetch error", { error: ordersError.message });
+        return errorResponse(`Change orders fetch error: ${ordersError.message}`, 500);
+      }
+
+      logStep("Change orders retrieved", { count: changeOrders?.length, siteId });
+      return successResponse({ changeOrders });
     }
 
     if (method === "POST") {
@@ -90,17 +85,18 @@ serve(async (req) => {
       const { action } = body;
 
       if (action === "list") {
-        // POST request for listing change orders
+        // POST request for listing change orders with site isolation
         const projectId = body.project_id;
-        
-        logStep("Listing change orders", { projectId, companyId: userProfile.company_id });
-        
-        let query = supabaseClient
+
+        logStep("Listing change orders", { projectId, companyId: userProfile.company_id, siteId });
+
+        let query = supabase
           .from('change_orders')
           .select(`
             *,
-            projects!inner(name, client_name, company_id)
+            projects!inner(name, client_name, company_id, site_id)
           `)
+          .eq('site_id', siteId)
           .eq('projects.company_id', userProfile.company_id)
           .order('created_at', { ascending: false });
 
@@ -112,30 +108,28 @@ serve(async (req) => {
 
         if (ordersError) {
           logStep("Change orders fetch error", { error: ordersError.message });
-          throw new Error(`Change orders fetch error: ${ordersError.message}`);
+          return errorResponse(`Change orders fetch error: ${ordersError.message}`, 500);
         }
-        
-        logStep("Change orders retrieved successfully", { count: changeOrders?.length, orders: changeOrders });
-        return new Response(JSON.stringify({ changeOrders }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+
+        logStep("Change orders retrieved successfully", { count: changeOrders?.length, siteId });
+        return successResponse({ changeOrders });
       }
 
       if (action === "create") {
-        logStep("Creating change order", { body, userRole: userProfile.role });
+        logStep("Creating change order", { body, userRole: userProfile.role, siteId });
 
         // Verify user can create change orders
         if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
           logStep("Permission denied", { role: userProfile.role });
-          throw new Error("Insufficient permissions to create change orders");
+          return errorResponse("Insufficient permissions to create change orders", 403);
         }
 
-        // Generate change order number
-        const { data: existingOrders } = await supabaseClient
+        // Generate change order number with site isolation
+        const { data: existingOrders } = await supabase
           .from('change_orders')
           .select('change_order_number')
           .eq('project_id', body.project_id)
+          .eq('site_id', siteId)
           .order('change_order_number', { ascending: false })
           .limit(1);
 
@@ -157,10 +151,11 @@ serve(async (req) => {
           status: 'pending',
           assigned_approvers: body.assigned_approvers || [],
           approval_due_date: body.approval_due_date || null,
-          approval_notes: body.approval_notes || null
+          approval_notes: body.approval_notes || null,
+          site_id: siteId  // CRITICAL: Include site_id
         };
 
-        const { data: newOrder, error: createError } = await supabaseClient
+        const { data: newOrder, error: createError } = await supabase
           .from('change_orders')
           .insert([changeOrderData])
           .select(`
@@ -169,12 +164,15 @@ serve(async (req) => {
           `)
           .single();
 
-        if (createError) throw new Error(`Change order creation error: ${createError.message}`);
+        if (createError) {
+          logStep("Change order creation error", { error: createError.message });
+          return errorResponse(`Change order creation error: ${createError.message}`, 500);
+        }
 
-        // Create approval tasks for assigned approvers
+        // Create approval tasks for assigned approvers with site isolation
         if (body.assigned_approvers && body.assigned_approvers.length > 0) {
-          logStep("Creating approval tasks", { approvers: body.assigned_approvers });
-          
+          logStep("Creating approval tasks", { approvers: body.assigned_approvers, siteId });
+
           const approvalTasks = body.assigned_approvers.map((approverId: string) => ({
             name: `Approve Change Order ${changeOrderNumber}`,
             description: `Review and approve change order: ${body.title}`,
@@ -185,10 +183,11 @@ serve(async (req) => {
             due_date: body.approval_due_date || null,
             company_id: userProfile.company_id,
             created_by: user.id,
-            category: 'approval'
+            category: 'approval',
+            site_id: siteId  // CRITICAL: Include site_id
           }));
 
-          const { error: tasksError } = await supabaseClient
+          const { error: tasksError } = await supabase
             .from('tasks')
             .insert(approvalTasks);
 
@@ -196,25 +195,22 @@ serve(async (req) => {
             logStep("Task creation error", { error: tasksError.message });
             // Don't fail the change order creation, just log the error
           } else {
-            logStep("Approval tasks created", { count: approvalTasks.length });
+            logStep("Approval tasks created", { count: approvalTasks.length, siteId });
           }
         }
 
-        logStep("Change order created", { orderId: newOrder.id, changeOrderNumber });
-        return new Response(JSON.stringify({ changeOrder: newOrder }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 201,
-        });
+        logStep("Change order created", { orderId: newOrder.id, changeOrderNumber, siteId });
+        return successResponse({ changeOrder: newOrder });
       }
 
       if (action === "update") {
         const { orderId, title, description, amount, reason, assigned_approvers, approval_due_date, approval_notes } = body;
-        logStep("Updating change order", { orderId, title, userRole: userProfile.role });
+        logStep("Updating change order", { orderId, title, userRole: userProfile.role, siteId });
 
         // Verify user can update change orders
         if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
           logStep("Permission denied", { role: userProfile.role });
-          throw new Error("Insufficient permissions to update change orders");
+          return errorResponse("Insufficient permissions to update change orders", 403);
         }
 
         const updateData = {
@@ -228,44 +224,45 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         };
 
-        const { data: updatedOrder, error: updateError } = await supabaseClient
+        // Update with site isolation
+        const { data: updatedOrder, error: updateError } = await supabase
           .from('change_orders')
           .update(updateData)
           .eq('id', orderId)
+          .eq('site_id', siteId)
           .select(`
             *,
             projects(name, client_name)
           `)
           .single();
 
-        if (updateError) throw new Error(`Change order update error: ${updateError.message}`);
+        if (updateError) {
+          logStep("Change order update error", { error: updateError.message });
+          return errorResponse(`Change order update error: ${updateError.message}`, 500);
+        }
 
-        logStep("Change order updated", { orderId });
-        return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+        logStep("Change order updated", { orderId, siteId });
+        return successResponse({ changeOrder: updatedOrder });
       }
 
       if (action === "approve") {
         const { orderId, approvalType, approved, rejectionReason } = body;
-        logStep("Processing approval", { orderId, approvalType, approved });
+        logStep("Processing approval", { orderId, approvalType, approved, siteId });
 
         // Verify user can approve change orders
         if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
-          throw new Error("Insufficient permissions to approve change orders");
+          return errorResponse("Insufficient permissions to approve change orders", 403);
         }
 
         let updateData: any = {};
-        
+
         if (approvalType === 'internal') {
           updateData = {
             internal_approved: approved,
             internal_approved_by: approved ? user.id : null,
             internal_approved_date: approved ? new Date().toISOString() : null
           };
-          
-          // If rejected, also update the overall status and add rejection reason
+
           if (!approved) {
             updateData.status = 'rejected';
             updateData.approval_notes = rejectionReason || 'Internal rejection';
@@ -275,60 +272,60 @@ serve(async (req) => {
             client_approved: approved,
             client_approved_date: approved ? new Date().toISOString() : null
           };
-          
-          // If rejected by client, update status
+
           if (!approved) {
             updateData.status = 'rejected';
             updateData.approval_notes = rejectionReason || 'Client rejection';
           }
         }
 
-        // Update the change order with approval/rejection
-        const { data: updatedOrder, error: updateError } = await supabaseClient
+        // Update the change order with site isolation
+        const { data: updatedOrder, error: updateError } = await supabase
           .from('change_orders')
           .update(updateData)
           .eq('id', orderId)
+          .eq('site_id', siteId)
           .select(`
             *,
             projects(name, client_name)
           `)
           .single();
 
-        if (updateError) throw new Error(`Change order approval error: ${updateError.message}`);
+        if (updateError) {
+          logStep("Change order approval error", { error: updateError.message });
+          return errorResponse(`Change order approval error: ${updateError.message}`, 500);
+        }
 
-        // Update related approval tasks to completed
+        // Update related approval tasks with site isolation
         if (approved || !approved) {
-          const { error: taskUpdateError } = await supabaseClient
+          const { error: taskUpdateError } = await supabase
             .from('tasks')
-            .update({ 
+            .update({
               status: approved ? 'completed' : 'cancelled',
               completion_percentage: approved ? 100 : 0,
               updated_at: new Date().toISOString()
             })
             .eq('project_id', updatedOrder.project_id)
+            .eq('site_id', siteId)
             .eq('category', 'approval')
             .ilike('name', `%${updatedOrder.change_order_number}%`);
 
           if (taskUpdateError) {
             logStep("Task update error", { error: taskUpdateError.message });
-            // Don't fail the main operation, just log
           }
         }
 
-        logStep("Change order approval processed", { orderId, approvalType, approved });
-        return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+        logStep("Change order approval processed", { orderId, approvalType, approved, siteId });
+        return successResponse({ changeOrder: updatedOrder });
       }
 
       if (action === "reject") {
         const { orderId, rejectionReason, rejectedBy } = body;
-        logStep("Processing rejection", { orderId, rejectionReason, rejectedBy });
+        logStep("Processing rejection", { orderId, rejectionReason, rejectedBy, siteId });
 
         // Verify user can reject change orders
         if (!['admin', 'project_manager', 'root_admin'].includes(userProfile.role)) {
-          throw new Error("Insufficient permissions to reject change orders");
+          return errorResponse("Insufficient permissions to reject change orders", 403);
         }
 
         const updateData = {
@@ -342,55 +339,51 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         };
 
-        const { data: updatedOrder, error: updateError } = await supabaseClient
+        // Update with site isolation
+        const { data: updatedOrder, error: updateError } = await supabase
           .from('change_orders')
           .update(updateData)
           .eq('id', orderId)
+          .eq('site_id', siteId)
           .select(`
             *,
             projects(name, client_name)
           `)
           .single();
 
-        if (updateError) throw new Error(`Change order rejection error: ${updateError.message}`);
+        if (updateError) {
+          logStep("Change order rejection error", { error: updateError.message });
+          return errorResponse(`Change order rejection error: ${updateError.message}`, 500);
+        }
 
-        // Cancel related approval tasks
-        const { error: taskUpdateError } = await supabaseClient
+        // Cancel related approval tasks with site isolation
+        const { error: taskUpdateError } = await supabase
           .from('tasks')
-          .update({ 
+          .update({
             status: 'cancelled',
             completion_percentage: 0,
             updated_at: new Date().toISOString()
           })
           .eq('project_id', updatedOrder.project_id)
+          .eq('site_id', siteId)
           .eq('category', 'approval')
           .ilike('name', `%${updatedOrder.change_order_number}%`);
 
         if (taskUpdateError) {
           logStep("Task update error", { error: taskUpdateError.message });
-          // Don't fail the main operation, just log
         }
 
-        logStep("Change order rejected", { orderId, reason: rejectionReason });
-        return new Response(JSON.stringify({ changeOrder: updatedOrder }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+        logStep("Change order rejected", { orderId, reason: rejectionReason, siteId });
+        return successResponse({ changeOrder: updatedOrder });
       }
     }
 
     // If no route matched
-    return new Response(JSON.stringify({ error: "Route not found" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 404,
-    });
+    return errorResponse("Route not found", 404);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return errorResponse(errorMessage, 500);
   }
 });
