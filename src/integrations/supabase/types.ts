@@ -1793,6 +1793,81 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          cancelled_at: string | null
+          client_email: string
+          client_name: string
+          client_phone: string | null
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          duration_minutes: number
+          id: string
+          notes: string | null
+          profile_id: string
+          service_id: string | null
+          site_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          cancelled_at?: string | null
+          client_email: string
+          client_name: string
+          client_phone?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          duration_minutes: number
+          id?: string
+          notes?: string | null
+          profile_id: string
+          service_id?: string | null
+          site_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          cancelled_at?: string | null
+          client_email?: string
+          client_name?: string
+          client_phone?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          profile_id?: string
+          service_id?: string | null
+          site_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -17905,6 +17980,7 @@ export type Database = {
           referrer: string | null
           requested_demo: boolean | null
           requested_sales_contact: boolean | null
+          site_id: string
           started_signup: boolean | null
           status: string | null
           tags: string[] | null
@@ -17956,6 +18032,7 @@ export type Database = {
           referrer?: string | null
           requested_demo?: boolean | null
           requested_sales_contact?: boolean | null
+          site_id: string
           started_signup?: boolean | null
           status?: string | null
           tags?: string[] | null
@@ -18007,6 +18084,7 @@ export type Database = {
           referrer?: string | null
           requested_demo?: boolean | null
           requested_sales_contact?: boolean | null
+          site_id?: string
           started_signup?: boolean | null
           status?: string | null
           tags?: string[] | null
@@ -18018,7 +18096,15 @@ export type Database = {
           utm_term?: string | null
           viewed_pricing?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       location_history: {
         Row: {
@@ -27244,6 +27330,7 @@ export type Database = {
           id: string
           insights: Json
           recommendations: Json
+          site_id: string
           traffic_analysis: Json | null
           updated_at: string
         }
@@ -27256,6 +27343,7 @@ export type Database = {
           id?: string
           insights: Json
           recommendations: Json
+          site_id: string
           traffic_analysis?: Json | null
           updated_at?: string
         }
@@ -27268,10 +27356,19 @@ export type Database = {
           id?: string
           insights?: Json
           recommendations?: Json
+          site_id?: string
           traffic_analysis?: Json | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_ai_insights_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_alert_rules: {
         Row: {
@@ -27291,6 +27388,7 @@ export type Database = {
           rule_type: string
           run_auto_fix: boolean | null
           severity: string | null
+          site_id: string
           target_keywords: string[] | null
           target_urls: string[] | null
           threshold_value: number
@@ -27315,6 +27413,7 @@ export type Database = {
           rule_type: string
           run_auto_fix?: boolean | null
           severity?: string | null
+          site_id: string
           target_keywords?: string[] | null
           target_urls?: string[] | null
           threshold_value: number
@@ -27339,6 +27438,7 @@ export type Database = {
           rule_type?: string
           run_auto_fix?: boolean | null
           severity?: string | null
+          site_id?: string
           target_keywords?: string[] | null
           target_urls?: string[] | null
           threshold_value?: number
@@ -27352,6 +27452,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_alert_rules_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -27382,6 +27489,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           severity: string
+          site_id: string
           status: string | null
           title: string
           updated_at: string
@@ -27411,6 +27519,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity: string
+          site_id: string
           status?: string | null
           title: string
           updated_at?: string
@@ -27440,6 +27549,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string
+          site_id?: string
           status?: string | null
           title?: string
           updated_at?: string
@@ -27466,6 +27576,13 @@ export type Database = {
             referencedRelation: "seo_audit_history"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_alerts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seo_analytics: {
@@ -27478,6 +27595,7 @@ export type Database = {
           id: string
           impressions: number | null
           search_engine: string
+          site_id: string
           top_pages: Json | null
           top_queries: Json | null
         }
@@ -27490,6 +27608,7 @@ export type Database = {
           id?: string
           impressions?: number | null
           search_engine: string
+          site_id: string
           top_pages?: Json | null
           top_queries?: Json | null
         }
@@ -27502,10 +27621,19 @@ export type Database = {
           id?: string
           impressions?: number | null
           search_engine?: string
+          site_id?: string
           top_pages?: Json | null
           top_queries?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_analytics_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_audit_history: {
         Row: {
@@ -27528,6 +27656,7 @@ export type Database = {
           performance_score: number | null
           recommendations: Json | null
           seo_score: number | null
+          site_id: string
           status: string | null
           url: string
           warnings: number | null
@@ -27552,6 +27681,7 @@ export type Database = {
           performance_score?: number | null
           recommendations?: Json | null
           seo_score?: number | null
+          site_id: string
           status?: string | null
           url: string
           warnings?: number | null
@@ -27576,6 +27706,7 @@ export type Database = {
           performance_score?: number | null
           recommendations?: Json | null
           seo_score?: number | null
+          site_id?: string
           status?: string | null
           url?: string
           warnings?: number | null
@@ -27586,6 +27717,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_audit_history_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -27609,6 +27747,7 @@ export type Database = {
           link_status: string | null
           link_type: string | null
           rel_attributes: string[] | null
+          site_id: string
           source_domain: string
           source_domain_authority: number | null
           source_page_authority: number | null
@@ -27637,6 +27776,7 @@ export type Database = {
           link_status?: string | null
           link_type?: string | null
           rel_attributes?: string[] | null
+          site_id: string
           source_domain: string
           source_domain_authority?: number | null
           source_page_authority?: number | null
@@ -27665,6 +27805,7 @@ export type Database = {
           link_status?: string | null
           link_type?: string | null
           rel_attributes?: string[] | null
+          site_id?: string
           source_domain?: string
           source_domain_authority?: number | null
           source_page_authority?: number | null
@@ -27681,6 +27822,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_backlinks_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -27706,6 +27854,7 @@ export type Database = {
           organic_traffic_estimate: number | null
           page_authority: number | null
           referring_domains: number | null
+          site_id: string
           strengths: string[] | null
           threats: string[] | null
           updated_at: string
@@ -27731,6 +27880,7 @@ export type Database = {
           organic_traffic_estimate?: number | null
           page_authority?: number | null
           referring_domains?: number | null
+          site_id: string
           strengths?: string[] | null
           threats?: string[] | null
           updated_at?: string
@@ -27756,6 +27906,7 @@ export type Database = {
           organic_traffic_estimate?: number | null
           page_authority?: number | null
           referring_domains?: number | null
+          site_id?: string
           strengths?: string[] | null
           threats?: string[] | null
           updated_at?: string
@@ -27767,6 +27918,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_competitor_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -27785,6 +27943,7 @@ export type Database = {
           robots_txt: string | null
           schema_org_enabled: boolean | null
           site_description: string | null
+          site_id: string
           site_keywords: string[] | null
           site_name: string
           sitemap_enabled: boolean | null
@@ -27805,6 +27964,7 @@ export type Database = {
           robots_txt?: string | null
           schema_org_enabled?: boolean | null
           site_description?: string | null
+          site_id: string
           site_keywords?: string[] | null
           site_name: string
           sitemap_enabled?: boolean | null
@@ -27825,6 +27985,7 @@ export type Database = {
           robots_txt?: string | null
           schema_org_enabled?: boolean | null
           site_description?: string | null
+          site_id?: string
           site_keywords?: string[] | null
           site_name?: string
           sitemap_enabled?: boolean | null
@@ -27832,7 +27993,15 @@ export type Database = {
           updated_at?: string
           yandex_webmaster_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_configurations_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_content_briefs: {
         Row: {
@@ -27863,6 +28032,7 @@ export type Database = {
           search_intent: string | null
           search_volume: number | null
           semantic_keywords: string[] | null
+          site_id: string
           status: string | null
           target_keyword: string
           target_url: string | null
@@ -27899,6 +28069,7 @@ export type Database = {
           search_intent?: string | null
           search_volume?: number | null
           semantic_keywords?: string[] | null
+          site_id: string
           status?: string | null
           target_keyword: string
           target_url?: string | null
@@ -27935,6 +28106,7 @@ export type Database = {
           search_intent?: string | null
           search_volume?: number | null
           semantic_keywords?: string[] | null
+          site_id?: string
           status?: string | null
           target_keyword?: string
           target_url?: string | null
@@ -27949,6 +28121,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_content_briefs_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28004,6 +28183,7 @@ export type Database = {
           recommendations: Json | null
           secondary_keywords: string[] | null
           sentence_count: number | null
+          site_id: string
           smog_index: number | null
           thin_content: boolean | null
           title_length: number | null
@@ -28063,6 +28243,7 @@ export type Database = {
           recommendations?: Json | null
           secondary_keywords?: string[] | null
           sentence_count?: number | null
+          site_id: string
           smog_index?: number | null
           thin_content?: boolean | null
           title_length?: number | null
@@ -28122,6 +28303,7 @@ export type Database = {
           recommendations?: Json | null
           secondary_keywords?: string[] | null
           sentence_count?: number | null
+          site_id?: string
           smog_index?: number | null
           thin_content?: boolean | null
           title_length?: number | null
@@ -28137,6 +28319,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_content_optimization_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28166,6 +28355,7 @@ export type Database = {
           revenue: number | null
           scroll_depth_avg: number | null
           sessions_change_percentage: number | null
+          site_id: string
           social_shares: number | null
           title: string | null
           total_clicks: number | null
@@ -28197,6 +28387,7 @@ export type Database = {
           revenue?: number | null
           scroll_depth_avg?: number | null
           sessions_change_percentage?: number | null
+          site_id: string
           social_shares?: number | null
           title?: string | null
           total_clicks?: number | null
@@ -28228,6 +28419,7 @@ export type Database = {
           revenue?: number | null
           scroll_depth_avg?: number | null
           sessions_change_percentage?: number | null
+          site_id?: string
           social_shares?: number | null
           title?: string | null
           total_clicks?: number | null
@@ -28257,6 +28449,13 @@ export type Database = {
             referencedRelation: "seo_content_optimization"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_content_performance_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seo_content_templates: {
@@ -28276,6 +28475,7 @@ export type Database = {
           recommended_word_count: number | null
           required_sections: string[] | null
           schema_template: Json | null
+          site_id: string
           target_audience: string | null
           template_name: string
           template_structure: Json
@@ -28300,6 +28500,7 @@ export type Database = {
           recommended_word_count?: number | null
           required_sections?: string[] | null
           schema_template?: Json | null
+          site_id: string
           target_audience?: string | null
           template_name: string
           template_structure: Json
@@ -28324,6 +28525,7 @@ export type Database = {
           recommended_word_count?: number | null
           required_sections?: string[] | null
           schema_template?: Json | null
+          site_id?: string
           target_audience?: string | null
           template_name?: string
           template_structure?: Json
@@ -28338,6 +28540,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_content_templates_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28369,6 +28578,7 @@ export type Database = {
           overall_status: string | null
           performance_score: number | null
           si: number | null
+          site_id: string
           tbt: number | null
           ttfb: number | null
           tti: number | null
@@ -28401,6 +28611,7 @@ export type Database = {
           overall_status?: string | null
           performance_score?: number | null
           si?: number | null
+          site_id: string
           tbt?: number | null
           ttfb?: number | null
           tti?: number | null
@@ -28433,6 +28644,7 @@ export type Database = {
           overall_status?: string | null
           performance_score?: number | null
           si?: number | null
+          site_id?: string
           tbt?: number | null
           ttfb?: number | null
           tti?: number | null
@@ -28445,6 +28657,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_core_web_vitals_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28484,6 +28703,7 @@ export type Database = {
           resource_count: number | null
           robots_directives: string[] | null
           scripts_count: number | null
+          site_id: string
           status_code: number | null
           stylesheets_count: number | null
           url: string
@@ -28523,6 +28743,7 @@ export type Database = {
           resource_count?: number | null
           robots_directives?: string[] | null
           scripts_count?: number | null
+          site_id: string
           status_code?: number | null
           stylesheets_count?: number | null
           url: string
@@ -28562,6 +28783,7 @@ export type Database = {
           resource_count?: number | null
           robots_directives?: string[] | null
           scripts_count?: number | null
+          site_id?: string
           status_code?: number | null
           stylesheets_count?: number | null
           url?: string
@@ -28580,6 +28802,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_crawl_results_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28607,6 +28836,7 @@ export type Database = {
           resolved_at: string | null
           severity: string | null
           similarity_score: number | null
+          site_id: string
           url_1: string
           url_2: string
         }
@@ -28632,6 +28862,7 @@ export type Database = {
           resolved_at?: string | null
           severity?: string | null
           similarity_score?: number | null
+          site_id: string
           url_1: string
           url_2: string
         }
@@ -28657,6 +28888,7 @@ export type Database = {
           resolved_at?: string | null
           severity?: string | null
           similarity_score?: number | null
+          site_id?: string
           url_1?: string
           url_2?: string
         }
@@ -28666,6 +28898,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_duplicate_content_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28686,6 +28925,7 @@ export type Database = {
           issue_severity: string | null
           issue_type: string
           notes: string | null
+          site_id: string
           status: string | null
           updated_at: string
           url: string | null
@@ -28706,6 +28946,7 @@ export type Database = {
           issue_severity?: string | null
           issue_type: string
           notes?: string | null
+          site_id: string
           status?: string | null
           updated_at?: string
           url?: string | null
@@ -28726,6 +28967,7 @@ export type Database = {
           issue_severity?: string | null
           issue_type?: string
           notes?: string | null
+          site_id?: string
           status?: string | null
           updated_at?: string
           url?: string | null
@@ -28744,6 +28986,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_fixes_applied_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28772,6 +29021,7 @@ export type Database = {
           load_time_ms: number | null
           potential_savings_bytes: number | null
           recommended_format: string | null
+          site_id: string
           source_page_url: string
         }
         Insert: {
@@ -28797,6 +29047,7 @@ export type Database = {
           load_time_ms?: number | null
           potential_savings_bytes?: number | null
           recommended_format?: string | null
+          site_id: string
           source_page_url: string
         }
         Update: {
@@ -28822,6 +29073,7 @@ export type Database = {
           load_time_ms?: number | null
           potential_savings_bytes?: number | null
           recommended_format?: string | null
+          site_id?: string
           source_page_url?: string
         }
         Relationships: [
@@ -28837,6 +29089,13 @@ export type Database = {
             columns: ["crawl_id"]
             isOneToOne: false
             referencedRelation: "seo_crawl_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_image_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28863,6 +29122,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           severity: string | null
+          site_id: string
           status: string | null
           title: string
           updated_at: string
@@ -28888,6 +29148,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string | null
+          site_id: string
           status?: string | null
           title: string
           updated_at?: string
@@ -28913,6 +29174,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string | null
+          site_id?: string
           status?: string | null
           title?: string
           updated_at?: string
@@ -28923,6 +29185,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_insights_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -28941,6 +29210,7 @@ export type Database = {
           position: number | null
           search_engine: string | null
           search_volume: number | null
+          site_id: string
           visibility_score: number | null
         }
         Insert: {
@@ -28956,6 +29226,7 @@ export type Database = {
           position?: number | null
           search_engine?: string | null
           search_volume?: number | null
+          site_id: string
           visibility_score?: number | null
         }
         Update: {
@@ -28971,6 +29242,7 @@ export type Database = {
           position?: number | null
           search_engine?: string | null
           search_volume?: number | null
+          site_id?: string
           visibility_score?: number | null
         }
         Relationships: [
@@ -28979,6 +29251,13 @@ export type Database = {
             columns: ["keyword_id"]
             isOneToOne: false
             referencedRelation: "seo_keywords"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_keyword_history_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29097,6 +29376,7 @@ export type Database = {
           page_authority: number | null
           redirect_chain: string[] | null
           rel_attributes: string[] | null
+          site_id: string
           source_url: string
           surrounding_text: string | null
           target_status_code: number | null
@@ -29119,6 +29399,7 @@ export type Database = {
           page_authority?: number | null
           redirect_chain?: string[] | null
           rel_attributes?: string[] | null
+          site_id: string
           source_url: string
           surrounding_text?: string | null
           target_status_code?: number | null
@@ -29141,6 +29422,7 @@ export type Database = {
           page_authority?: number | null
           redirect_chain?: string[] | null
           rel_attributes?: string[] | null
+          site_id?: string
           source_url?: string
           surrounding_text?: string | null
           target_status_code?: number | null
@@ -29161,6 +29443,13 @@ export type Database = {
             referencedRelation: "seo_crawl_results"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_link_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seo_meta_tags: {
@@ -29178,6 +29467,7 @@ export type Database = {
           og_type: string | null
           page_path: string
           schema_markup: Json | null
+          site_id: string
           title: string | null
           twitter_description: string | null
           twitter_image: string | null
@@ -29198,6 +29488,7 @@ export type Database = {
           og_type?: string | null
           page_path: string
           schema_markup?: Json | null
+          site_id: string
           title?: string | null
           twitter_description?: string | null
           twitter_image?: string | null
@@ -29218,13 +29509,22 @@ export type Database = {
           og_type?: string | null
           page_path?: string
           schema_markup?: Json | null
+          site_id?: string
           title?: string | null
           twitter_description?: string | null
           twitter_image?: string | null
           twitter_title?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_meta_tags_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_mobile_analysis: {
         Row: {
@@ -29253,6 +29553,7 @@ export type Database = {
           mobile_usability_score: number | null
           priority_fixes: string[] | null
           recommendations: Json | null
+          site_id: string
           tap_targets_appropriately_sized: boolean | null
           text_too_small: boolean | null
           url: string
@@ -29285,6 +29586,7 @@ export type Database = {
           mobile_usability_score?: number | null
           priority_fixes?: string[] | null
           recommendations?: Json | null
+          site_id: string
           tap_targets_appropriately_sized?: boolean | null
           text_too_small?: boolean | null
           url: string
@@ -29317,6 +29619,7 @@ export type Database = {
           mobile_usability_score?: number | null
           priority_fixes?: string[] | null
           recommendations?: Json | null
+          site_id?: string
           tap_targets_appropriately_sized?: boolean | null
           text_too_small?: boolean | null
           url?: string
@@ -29329,6 +29632,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_mobile_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29348,6 +29658,7 @@ export type Database = {
           id: string
           result_data: Json | null
           result_summary: string | null
+          site_id: string
           status: string | null
         }
         Insert: {
@@ -29364,6 +29675,7 @@ export type Database = {
           id?: string
           result_data?: Json | null
           result_summary?: string | null
+          site_id: string
           status?: string | null
         }
         Update: {
@@ -29380,6 +29692,7 @@ export type Database = {
           id?: string
           result_data?: Json | null
           result_summary?: string | null
+          site_id?: string
           status?: string | null
         }
         Relationships: [
@@ -29388,6 +29701,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_monitoring_log_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29417,6 +29737,7 @@ export type Database = {
           schedule_type: string
           send_notification_on_completion: boolean | null
           send_notification_on_error: boolean | null
+          site_id: string
           status: string | null
           target_keywords: string[] | null
           target_urls: string[] | null
@@ -29446,6 +29767,7 @@ export type Database = {
           schedule_type: string
           send_notification_on_completion?: boolean | null
           send_notification_on_error?: boolean | null
+          site_id: string
           status?: string | null
           target_keywords?: string[] | null
           target_urls?: string[] | null
@@ -29475,6 +29797,7 @@ export type Database = {
           schedule_type?: string
           send_notification_on_completion?: boolean | null
           send_notification_on_error?: boolean | null
+          site_id?: string
           status?: string | null
           target_keywords?: string[] | null
           target_urls?: string[] | null
@@ -29486,6 +29809,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_monitoring_schedules_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29512,6 +29842,7 @@ export type Database = {
           quiet_hours_start: string | null
           quiet_hours_timezone: string | null
           rank_change_threshold: number | null
+          site_id: string
           slack_channel: string | null
           slack_webhook_url: string | null
           sms_recipients: string[] | null
@@ -29539,6 +29870,7 @@ export type Database = {
           quiet_hours_start?: string | null
           quiet_hours_timezone?: string | null
           rank_change_threshold?: number | null
+          site_id: string
           slack_channel?: string | null
           slack_webhook_url?: string | null
           sms_recipients?: string[] | null
@@ -29566,6 +29898,7 @@ export type Database = {
           quiet_hours_start?: string | null
           quiet_hours_timezone?: string | null
           rank_change_threshold?: number | null
+          site_id?: string
           slack_channel?: string | null
           slack_webhook_url?: string | null
           sms_recipients?: string[] | null
@@ -29580,6 +29913,13 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_notification_preferences_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seo_oauth_tokens: {
@@ -29590,6 +29930,7 @@ export type Database = {
           id: string
           provider: string
           refresh_token: string | null
+          site_id: string
           updated_at: string
         }
         Insert: {
@@ -29599,6 +29940,7 @@ export type Database = {
           id?: string
           provider: string
           refresh_token?: string | null
+          site_id: string
           updated_at?: string
         }
         Update: {
@@ -29608,9 +29950,18 @@ export type Database = {
           id?: string
           provider?: string
           refresh_token?: string | null
+          site_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_oauth_tokens_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_page_scores: {
         Row: {
@@ -29634,6 +29985,7 @@ export type Database = {
           page_type: string | null
           readability_score: number | null
           recommendations: Json | null
+          site_id: string
           technical_score: number | null
           title: string | null
           updated_at: string
@@ -29662,6 +30014,7 @@ export type Database = {
           page_type?: string | null
           readability_score?: number | null
           recommendations?: Json | null
+          site_id: string
           technical_score?: number | null
           title?: string | null
           updated_at?: string
@@ -29690,6 +30043,7 @@ export type Database = {
           page_type?: string | null
           readability_score?: number | null
           recommendations?: Json | null
+          site_id?: string
           technical_score?: number | null
           title?: string | null
           updated_at?: string
@@ -29703,6 +30057,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_page_scores_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29740,6 +30101,7 @@ export type Database = {
           max_total_page_size: number | null
           next_check_at: string | null
           page_pattern: string | null
+          site_id: string
           updated_at: string
         }
         Insert: {
@@ -29774,6 +30136,7 @@ export type Database = {
           max_total_page_size?: number | null
           next_check_at?: string | null
           page_pattern?: string | null
+          site_id: string
           updated_at?: string
         }
         Update: {
@@ -29808,6 +30171,7 @@ export type Database = {
           max_total_page_size?: number | null
           next_check_at?: string | null
           page_pattern?: string | null
+          site_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -29816,6 +30180,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_performance_budget_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29837,6 +30208,7 @@ export type Database = {
           metric_category: string | null
           metric_name: string
           severity: string | null
+          site_id: string
           status: string | null
           url: string
           user_impact_score: number | null
@@ -29857,6 +30229,7 @@ export type Database = {
           metric_category?: string | null
           metric_name: string
           severity?: string | null
+          site_id: string
           status?: string | null
           url: string
           user_impact_score?: number | null
@@ -29877,6 +30250,7 @@ export type Database = {
           metric_category?: string | null
           metric_name?: string
           severity?: string | null
+          site_id?: string
           status?: string | null
           url?: string
           user_impact_score?: number | null
@@ -29894,6 +30268,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_performance_budget_violations_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29917,6 +30298,7 @@ export type Database = {
           redirect_time_ms: number | null
           redirect_type: number | null
           resolved_at: string | null
+          site_id: string
           source_url: string
           total_time_ms: number | null
         }
@@ -29938,6 +30320,7 @@ export type Database = {
           redirect_time_ms?: number | null
           redirect_type?: number | null
           resolved_at?: string | null
+          site_id: string
           source_url: string
           total_time_ms?: number | null
         }
@@ -29959,6 +30342,7 @@ export type Database = {
           redirect_time_ms?: number | null
           redirect_type?: number | null
           resolved_at?: string | null
+          site_id?: string
           source_url?: string
           total_time_ms?: number | null
         }
@@ -29968,6 +30352,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_redirect_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -29995,6 +30386,7 @@ export type Database = {
           security_issues: Json | null
           security_score: number | null
           seo_impact_description: string | null
+          site_id: string
           ssl_certificate_valid: boolean | null
           ssl_expiry_date: string | null
           ssl_issuer: string | null
@@ -30024,6 +30416,7 @@ export type Database = {
           security_issues?: Json | null
           security_score?: number | null
           seo_impact_description?: string | null
+          site_id: string
           ssl_certificate_valid?: boolean | null
           ssl_expiry_date?: string | null
           ssl_issuer?: string | null
@@ -30053,6 +30446,7 @@ export type Database = {
           security_issues?: Json | null
           security_score?: number | null
           seo_impact_description?: string | null
+          site_id?: string
           ssl_certificate_valid?: boolean | null
           ssl_expiry_date?: string | null
           ssl_issuer?: string | null
@@ -30066,6 +30460,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_security_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -30092,6 +30493,7 @@ export type Database = {
           semantic_keywords_missing: string[] | null
           semantic_recommendations: string[] | null
           semantic_relevance_score: number | null
+          site_id: string
           suggested_semantic_keywords: string[] | null
           suggested_topics_to_cover: string[] | null
           target_keyword: string
@@ -30122,6 +30524,7 @@ export type Database = {
           semantic_keywords_missing?: string[] | null
           semantic_recommendations?: string[] | null
           semantic_relevance_score?: number | null
+          site_id: string
           suggested_semantic_keywords?: string[] | null
           suggested_topics_to_cover?: string[] | null
           target_keyword: string
@@ -30152,6 +30555,7 @@ export type Database = {
           semantic_keywords_missing?: string[] | null
           semantic_recommendations?: string[] | null
           semantic_relevance_score?: number | null
+          site_id?: string
           suggested_semantic_keywords?: string[] | null
           suggested_topics_to_cover?: string[] | null
           target_keyword?: string
@@ -30183,6 +30587,13 @@ export type Database = {
             referencedRelation: "seo_content_optimization"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_semantic_analysis_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seo_serp_positions: {
@@ -30209,6 +30620,7 @@ export type Database = {
           location: string | null
           position: number | null
           search_engine: string | null
+          site_id: string
           title: string | null
           url: string | null
         }
@@ -30235,6 +30647,7 @@ export type Database = {
           location?: string | null
           position?: number | null
           search_engine?: string | null
+          site_id: string
           title?: string | null
           url?: string | null
         }
@@ -30261,6 +30674,7 @@ export type Database = {
           location?: string | null
           position?: number | null
           search_engine?: string | null
+          site_id?: string
           title?: string | null
           url?: string | null
         }
@@ -30277,6 +30691,13 @@ export type Database = {
             columns: ["keyword_id"]
             isOneToOne: false
             referencedRelation: "seo_keywords"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_serp_positions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -30304,6 +30725,7 @@ export type Database = {
           monitor_core_web_vitals: boolean | null
           monitor_keywords: boolean | null
           robots_txt: string | null
+          site_id: string
           site_name: string | null
           site_url: string
           sitemap_url: string | null
@@ -30332,6 +30754,7 @@ export type Database = {
           monitor_core_web_vitals?: boolean | null
           monitor_keywords?: boolean | null
           robots_txt?: string | null
+          site_id: string
           site_name?: string | null
           site_url: string
           sitemap_url?: string | null
@@ -30360,6 +30783,7 @@ export type Database = {
           monitor_core_web_vitals?: boolean | null
           monitor_keywords?: boolean | null
           robots_txt?: string | null
+          site_id?: string
           site_name?: string | null
           site_url?: string
           sitemap_url?: string | null
@@ -30372,6 +30796,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_settings_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -30397,6 +30828,7 @@ export type Database = {
           schema_raw: string | null
           schema_type: string
           seo_impact_score: number | null
+          site_id: string
           test_results: Json | null
           tested_at: string | null
           url: string
@@ -30423,6 +30855,7 @@ export type Database = {
           schema_raw?: string | null
           schema_type: string
           seo_impact_score?: number | null
+          site_id: string
           test_results?: Json | null
           tested_at?: string | null
           url: string
@@ -30449,6 +30882,7 @@ export type Database = {
           schema_raw?: string | null
           schema_type?: string
           seo_impact_score?: number | null
+          site_id?: string
           test_results?: Json | null
           tested_at?: string | null
           url?: string
@@ -30470,6 +30904,13 @@ export type Database = {
             referencedRelation: "seo_crawl_results"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_structured_data_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
         ]
       }
       seo_submissions: {
@@ -30479,6 +30920,7 @@ export type Database = {
           last_checked: string | null
           response_data: Json | null
           search_engine: string
+          site_id: string
           status: string
           submission_type: string
           submitted_at: string | null
@@ -30491,6 +30933,7 @@ export type Database = {
           last_checked?: string | null
           response_data?: Json | null
           search_engine: string
+          site_id: string
           status?: string
           submission_type: string
           submitted_at?: string | null
@@ -30503,13 +30946,22 @@ export type Database = {
           last_checked?: string | null
           response_data?: Json | null
           search_engine?: string
+          site_id?: string
           status?: string
           submission_type?: string
           submitted_at?: string | null
           updated_at?: string
           url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_submissions_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_call_parts: {
         Row: {
@@ -31101,6 +31553,125 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recent_equipment_scans"
             referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      service_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          profile_id: string
+          site_id: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          profile_id: string
+          site_id: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          profile_id?: string
+          site_id?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_categories_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          name: string
+          photos: string[] | null
+          price: number | null
+          price_max: number | null
+          primary_photo: string | null
+          profile_id: string
+          site_id: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name: string
+          photos?: string[] | null
+          price?: number | null
+          price_max?: number | null
+          primary_photo?: string | null
+          profile_id: string
+          site_id: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name?: string
+          photos?: string[] | null
+          price?: number | null
+          price_max?: number | null
+          primary_photo?: string | null
+          profile_id?: string
+          site_id?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
           },
         ]
       }
