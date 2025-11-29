@@ -129,7 +129,7 @@ class TaskService {
     const task = data as Task;
 
     const projectPromise = task.project_id
-      ? supabase.from('projects').select('id, name').eq('id', task.project_id).maybeSingle()
+      ? supabase.from('projects').select('id, name, site_id').eq('id', task.project_id).maybeSingle()
       : Promise.resolve({ data: null, error: null } as { data: any; error: null });
 
     const userIds = [task.assigned_to, task.created_by].filter((v): v is string => !!v);
@@ -296,10 +296,10 @@ class TaskService {
 
     const [projectsRes, profilesRes] = await Promise.all([
       projectIds.length
-        ? supabase.from('projects').select('id, name').in('id', projectIds)
+        ? supabase.from('projects').select('id, name, site_id').in('id', projectIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
       userIds.length
-        ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
+        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
     ]);
 

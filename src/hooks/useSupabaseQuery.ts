@@ -94,7 +94,7 @@ export function usePaginatedQuery<T>({
         .select(select, { count: 'exact' })
         .range(from, to);
 
-      // Apply filters
+      // Apply filters (including site_id for tenant isolation)
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           query = query.eq(key, value);
