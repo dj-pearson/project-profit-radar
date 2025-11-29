@@ -1,10 +1,15 @@
+// Schedule Trial Emails Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-site-key",
 };
+
+// Default site key for BuildDesk
+const DEFAULT_SITE_KEY = 'builddesk';
 
 interface TrialEmailSchedule {
   day: number;
@@ -48,24 +53,39 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { userId, email, firstName, companyName } = await req.json();
+    const { userId, email, firstName, companyName, site_id, site_key } = await req.json();
 
     if (!userId || !email) {
       throw new Error("Missing required fields: userId and email");
     }
 
-    logStep("Scheduling emails for user", { userId, email });
+    // Resolve site_id from request or header or default
+    let siteId = site_id;
+    const siteKey = site_key || req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
+    if (!siteId) {
+      const { data: siteData } = await supabaseClient
+        .from('sites')
+        .select('id')
+        .eq('key', siteKey)
+        .single();
+      siteId = siteData?.id;
+    }
 
-    // Get user's company and trial end date
+    logStep("Site resolved", { siteKey, siteId });
+    logStep("Scheduling emails for user", { userId, email, siteId });
+
+    // Get user's company and trial end date with site isolation
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('company_id')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', userId)
       .single();
 
     const { data: company } = await supabaseClient
       .from('companies')
       .select('trial_end_date, subscription_status')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', profile?.company_id)
       .single();
 
@@ -76,10 +96,11 @@ serve(async (req) => {
     const trialStartDate = new Date();
     const trialEndDate = new Date(company.trial_end_date);
 
-    // Check if campaigns already exist (prevent duplicates)
+    // Check if campaigns already exist (prevent duplicates) with site isolation
     const { data: existingCampaigns } = await supabaseClient
       .from('email_campaigns')
       .select('campaign_name')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .in('campaign_name', EMAIL_SCHEDULE.map(s => `trial_${s.emailType}`))
       .eq('is_active', true);
 
@@ -93,10 +114,11 @@ serve(async (req) => {
         continue;
       }
 
-      // Create campaign
+      // Create campaign with site isolation
       await supabaseClient
         .from('email_campaigns')
         .insert({
+          site_id: siteId,  // CRITICAL: Site isolation
           campaign_name: campaignName,
           campaign_description: schedule.campaignName,
           campaign_type: 'trial_nurture',
@@ -126,10 +148,11 @@ serve(async (req) => {
         continue;
       }
 
-      // Get campaign ID
+      // Get campaign ID with site isolation
       const { data: campaign } = await supabaseClient
         .from('email_campaigns')
         .select('id')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('campaign_name', `trial_${schedule.emailType}`)
         .single();
 
@@ -138,10 +161,11 @@ serve(async (req) => {
         continue;
       }
 
-      // Add to email queue
+      // Add to email queue with site isolation
       const { data: queuedEmail, error: queueError } = await supabaseClient
         .from('email_queue')
         .insert({
+          site_id: siteId,  // CRITICAL: Site isolation
           campaign_id: campaign.id,
           user_id: userId,
           recipient_email: email,
@@ -174,17 +198,18 @@ serve(async (req) => {
       });
     }
 
-    // Create user email preferences
+    // Create user email preferences with site isolation
     await supabaseClient
       .from('email_preferences')
       .upsert({
+        site_id: siteId,  // CRITICAL: Site isolation
         user_id: userId,
         marketing_emails: true,
         product_updates: true,
         trial_nurture: true,
         billing_notifications: true,
         email_frequency: 'normal',
-      }, { onConflict: 'user_id' });
+      }, { onConflict: 'site_id,user_id' });
 
     logStep("Email scheduling complete", {
       userId,
