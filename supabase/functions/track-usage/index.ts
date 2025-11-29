@@ -1,5 +1,7 @@
+// Track Usage Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,22 +28,14 @@ serve(async (req) => {
   try {
     logStep("Usage tracking request received");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header provided");
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const { metric_type, metric_value, company_id, user_id }: UsageTrackingRequest = await req.json();
     
@@ -49,7 +43,7 @@ serve(async (req) => {
       throw new Error("metric_type and metric_value are required");
     }
 
-    logStep("Tracking usage", { metric_type, metric_value, company_id, user_id });
+    logStep("Tracking usage", { siteId, metric_type, metric_value, company_id, user_id });
 
     // Get current billing period (start of month to end of month)
     const now = new Date();
@@ -61,13 +55,14 @@ serve(async (req) => {
     let targetUserId = user_id || user.id;
 
     if (!targetCompanyId) {
-      // Get user's company from profile
+      // Get user's company from profile with site isolation
       const { data: profile } = await supabaseClient
         .from("user_profiles")
         .select("company_id")
+        .eq("site_id", siteId)  // CRITICAL: Site isolation
         .eq("id", user.id)
         .single();
-      
+
       if (profile?.company_id) {
         targetCompanyId = profile.company_id;
       }
@@ -77,10 +72,11 @@ serve(async (req) => {
       throw new Error("Could not determine company_id for usage tracking");
     }
 
-    // Check if usage record exists for this period
+    // Check if usage record exists for this period with site isolation
     const { data: existingUsage } = await supabaseClient
       .from("usage_metrics")
       .select("*")
+      .eq("site_id", siteId)  // CRITICAL: Site isolation
       .eq("company_id", targetCompanyId)
       .eq("user_id", targetUserId)
       .eq("metric_type", metric_type)
@@ -89,23 +85,25 @@ serve(async (req) => {
       .single();
 
     if (existingUsage) {
-      // Update existing record
+      // Update existing record with site isolation
       const newValue = parseFloat(existingUsage.metric_value) + metric_value;
-      
+
       await supabaseClient
         .from("usage_metrics")
         .update({
           metric_value: newValue,
           updated_at: new Date().toISOString()
         })
+        .eq("site_id", siteId)  // CRITICAL: Site isolation
         .eq("id", existingUsage.id);
 
       logStep("Updated existing usage record", { id: existingUsage.id, newValue });
     } else {
-      // Create new record
+      // Create new record with site isolation
       const { data: newUsage } = await supabaseClient
         .from("usage_metrics")
         .insert({
+          site_id: siteId,  // CRITICAL: Site isolation
           company_id: targetCompanyId,
           user_id: targetUserId,
           metric_type,
@@ -119,8 +117,8 @@ serve(async (req) => {
       logStep("Created new usage record", { id: newUsage?.id });
     }
 
-    // Check for usage alerts/limits
-    await checkUsageAlerts(targetCompanyId, metric_type, supabaseClient);
+    // Check for usage alerts/limits with site isolation
+    await checkUsageAlerts(targetCompanyId, metric_type, supabaseClient, siteId);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -137,11 +135,12 @@ serve(async (req) => {
   }
 });
 
-async function checkUsageAlerts(companyId: string, metricType: string, supabaseClient: any) {
-  // Get company subscription tier to determine limits
+async function checkUsageAlerts(companyId: string, metricType: string, supabaseClient: any, siteId: string) {
+  // Get company subscription tier to determine limits with site isolation
   const { data: company } = await supabaseClient
     .from("companies")
     .select("subscription_tier")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("id", companyId)
     .single();
 
@@ -174,7 +173,7 @@ async function checkUsageAlerts(companyId: string, metricType: string, supabaseC
 
   if (!limit) return;
 
-  // Get current period usage
+  // Get current period usage with site isolation
   const now = new Date();
   const billingPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const billingPeriodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -182,6 +181,7 @@ async function checkUsageAlerts(companyId: string, metricType: string, supabaseC
   const { data: usage } = await supabaseClient
     .from("usage_metrics")
     .select("metric_value")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", companyId)
     .eq("metric_type", metricType)
     .eq("billing_period_start", billingPeriodStart.toISOString().split('T')[0])
