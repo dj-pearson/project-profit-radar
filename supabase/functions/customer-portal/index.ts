@@ -1,6 +1,8 @@
+// Customer Portal Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,26 +22,22 @@ serve(async (req) => {
   try {
     logStep("Customer portal request started");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
+    const { user, siteId, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated");
 
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
 
-    // Get user's subscription info
+    // Get user's subscription info with site isolation
     const { data: subscriber } = await supabaseClient
       .from('subscribers')
       .select('stripe_customer_id')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('user_id', user.id)
       .single();
 
