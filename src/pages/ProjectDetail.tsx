@@ -15,7 +15,6 @@ import { ProjectContent } from '@/components/project/ProjectContent';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobilePageWrapper } from '@/utils/mobileHelpers';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { MobileNavigationFAB } from '@/components/mobile/MobileNavigationFAB';
 import {
   ArrowLeft,
   User,
@@ -119,28 +118,71 @@ const ProjectDetail = () => {
   if (isMobile) {
     return (
       <DashboardLayout title={project.name}>
-        <MobilePageWrapper title={project.name} className="p-4 space-y-4">
-          {/* Mobile Header - Simplified */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold truncate">{project.name}</h1>
-            <Button size="sm" onClick={() => navigate(`/projects/${project.id}/edit`)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-          </div>
+        <MobilePageWrapper>
+          {/* Mobile Header with Menu */}
+          <div className="sticky top-0 z-40 bg-background border-b mb-4 -mx-4 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/projects')}
+                className="h-9 w-9 p-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              
+              <div className="flex-1 mx-3">
+                <h1 className="text-base font-bold line-clamp-1">{project.name}</h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-muted-foreground line-clamp-1">{project.client_name}</span>
+                  <Badge variant={getStatusColor(project.status)} className="text-xs h-5">
+                    {project.status.replace('_', ' ')}
+                  </Badge>
+                </div>
+              </div>
 
-          {/* Project Info */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              <span className="truncate">{project.client_name}</span>
-              <Badge variant={getStatusColor(project.status)} className="text-xs">
-                {project.status.replace('_', ' ')}
-              </Badge>
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-full p-0">
+                  {/* Sheet Header with Back Button */}
+                  <div className="flex items-center gap-3 p-4 border-b">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setSidebarOpen(false)}
+                      className="h-9 w-9 p-0"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                      <h2 className="font-semibold">Project Sections</h2>
+                      <p className="text-xs text-muted-foreground">{project.name}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Sub-Sidebar Navigation */}
+                  <ProjectSubSidebar 
+                    activeTab={activeTab} 
+                    onTabChange={(tab) => {
+                      setActiveTab(tab);
+                      setSidebarOpen(false); // Close after selection
+                    }}
+                  />
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
 
-          {/* Contextual Actions - Mobile */}
-          <div className="w-full">
+          <div className="space-y-4">
+            {/* Contextual Actions - Mobile */}
             <ContextualActions
               context={{
                 module: 'projects',
@@ -150,32 +192,21 @@ const ProjectDetail = () => {
               }}
               className="mb-4"
             />
-          </div>
 
-          {/* AI Insights - Mobile */}
-          {activeTab === 'overview' && (
-            <div className="mb-4">
-              <AIProjectInsights projectId={project.id} />
-            </div>
-          )}
+            {/* AI Insights - Mobile */}
+            {activeTab === 'overview' && (
+              <div className="mb-4">
+                <AIProjectInsights projectId={project.id} />
+              </div>
+            )}
 
-          {/* Dynamic Content - Mobile */}
-          <ProjectContent 
-            project={project}
-            activeTab={activeTab}
-            onNavigate={navigate}
-          />
-
-          {/* Persistent Mobile Navigation FAB */}
-          <MobileNavigationFAB
-            onBack={() => navigate('/projects')}
-            showBackButton={true}
-          >
-            <ProjectSubSidebar 
-              activeTab={activeTab} 
-              onTabChange={setActiveTab}
+            {/* Dynamic Content - Mobile */}
+            <ProjectContent 
+              project={project}
+              activeTab={activeTab}
+              onNavigate={navigate}
             />
-          </MobileNavigationFAB>
+          </div>
         </MobilePageWrapper>
       </DashboardLayout>
     );
