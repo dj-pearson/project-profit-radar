@@ -1,12 +1,15 @@
+// Process Invoice Payment Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, uuidSchema } from "../_shared/validation.ts";
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
 // SECURITY: Input validation schema
@@ -26,75 +29,73 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
     logStep("Payment processing started");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401);
+    }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
+    const { user, siteId, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
     // SECURITY: Validate request body
     const requestBody = await req.json();
     const validation = validateRequest(PaymentRequestSchema, requestBody);
-    
+
     if (!validation.success) {
       logStep("Validation failed", { error: validation.error });
-      throw new Error(validation.error);
+      return errorResponse(validation.error || 'Validation failed', 400);
     }
-    
+
     const paymentData = validation.data;
-    logStep("Payment request validated", { 
-      invoiceId: paymentData.invoice_id, 
-      method: paymentData.payment_method 
+    logStep("Payment request validated", {
+      invoiceId: paymentData.invoice_id,
+      method: paymentData.payment_method,
+      siteId
     });
 
-    // Get invoice details
-    const { data: invoice, error: invoiceError } = await supabaseClient
+    // Get invoice details with site isolation
+    const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
         *,
         companies(name, stripe_customer_id)
       `)
       .eq('id', paymentData.invoice_id)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .single();
 
     if (invoiceError || !invoice) {
-      throw new Error("Invoice not found");
+      return errorResponse("Invoice not found or access denied", 404);
     }
 
-    // Verify user has access to this invoice
-    const { data: profile } = await supabaseClient
+    // Verify user has access to this invoice with site isolation
+    const { data: profile } = await supabase
       .from('user_profiles')
       .select('company_id, role')
       .eq('id', user.id)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .single();
 
     if (profile?.company_id !== invoice.company_id && profile?.role !== 'root_admin') {
-      throw new Error("Unauthorized to process payment for this invoice");
+      return errorResponse("Unauthorized to process payment for this invoice", 403);
     }
 
-    logStep("Invoice found", { 
-      invoiceNumber: invoice.invoice_number, 
+    logStep("Invoice found", {
+      invoiceNumber: invoice.invoice_number,
       totalAmount: invoice.total_amount,
-      amountDue: invoice.amount_due
+      amountDue: invoice.amount_due,
+      siteId
     });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
-      apiVersion: "2023-10-16" 
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+      apiVersion: "2023-10-16"
     });
 
     let result;
@@ -103,43 +104,35 @@ serve(async (req) => {
       case 'stripe_checkout':
         result = await createStripeCheckout(stripe, invoice, req);
         break;
-      
+
       case 'stripe_payment_intent':
         result = await createPaymentIntent(stripe, invoice);
         break;
-      
+
       case 'manual':
         result = await processManualPayment(
-          supabaseClient, 
-          invoice, 
+          supabase,
+          invoice,
           paymentData.manual_payment_amount || 0,
           paymentData.manual_payment_notes,
-          user.id
+          user.id,
+          siteId  // Pass siteId for isolation
         );
         break;
-      
+
       default:
         // Default to Stripe checkout
         result = await createStripeCheckout(stripe, invoice, req);
     }
 
-    logStep("Payment processed", { method: paymentData.payment_method, success: result.success });
+    logStep("Payment processed", { method: paymentData.payment_method, success: result.success, siteId });
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return successResponse(result);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in process-payment", { message: errorMessage });
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: errorMessage 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return errorResponse(errorMessage, 500);
   }
 });
 
@@ -196,11 +189,12 @@ async function createPaymentIntent(stripe: any, invoice: any) {
 }
 
 async function processManualPayment(
-  supabaseClient: any, 
-  invoice: any, 
+  supabaseClient: any,
+  invoice: any,
   paymentAmount: number,
   notes: string | undefined,
-  userId: string
+  userId: string,
+  siteId: string  // Added for site isolation
 ) {
   if (paymentAmount <= 0 || paymentAmount > invoice.amount_due) {
     throw new Error("Invalid payment amount");
@@ -209,7 +203,7 @@ async function processManualPayment(
   const newAmountPaid = invoice.amount_paid + paymentAmount;
   const isFullyPaid = newAmountPaid >= invoice.total_amount;
 
-  // Update invoice
+  // Update invoice with site isolation
   const { error: updateError } = await supabaseClient
     .from('invoices')
     .update({
@@ -218,15 +212,17 @@ async function processManualPayment(
       paid_at: isFullyPaid ? new Date().toISOString() : null,
       updated_at: new Date().toISOString()
     })
-    .eq('id', invoice.id);
+    .eq('id', invoice.id)
+    .eq('site_id', siteId);  // CRITICAL: Site isolation on update
 
   if (updateError) {
     throw new Error(`Error updating invoice: ${updateError.message}`);
   }
 
-  // Log the manual payment (you could create a payments table for this)
+  // Log the manual payment with site isolation
   const paymentRecord = {
     invoice_id: invoice.id,
+    site_id: siteId,  // CRITICAL: Include site_id
     amount: paymentAmount,
     method: 'manual',
     notes: notes || 'Manual payment recorded',

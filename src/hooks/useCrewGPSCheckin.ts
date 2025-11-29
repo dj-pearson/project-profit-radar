@@ -1,9 +1,10 @@
 /**
  * Crew GPS Check-in Hook
  * Handles GPS-verified crew arrival and departure from job sites
+ * Updated with multi-tenant site_id isolation
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,41 +66,46 @@ interface GPSCheckInResult {
 }
 
 export const useCrewGPSCheckin = () => {
-  const { user } = useAuth();
+  const { user, siteId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { location, error: gpsError, requestLocation } = useGPSLocation();
 
-  // Get my pending check-ins (assigned to me today)
+  // Get my pending check-ins (assigned to me today) with site isolation
   const { data: myPendingCheckins, isLoading: loadingPending } = useQuery({
-    queryKey: ['crew-pending-checkin', user?.id],
+    queryKey: ['crew-pending-checkin', user?.id, siteId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id || !siteId) return [];
 
       const { data, error } = await supabase
         .from('crew_assignments_pending_checkin')
         .select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('user_id', user.id);
 
       if (error) throw error;
       return data as CrewAssignment[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!siteId,
   });
 
-  // Get all crew presence (for dashboard - project managers/supervisors)
+  // Get all crew presence (for dashboard - project managers/supervisors) with site isolation
   const { data: crewPresence, isLoading: loadingPresence } = useQuery({
-    queryKey: ['crew-presence'],
+    queryKey: ['crew-presence', siteId],
     queryFn: async () => {
+      if (!siteId) return [];
+
       const { data, error } = await supabase
         .from('crew_presence_dashboard')
         .select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .order('is_onsite', { ascending: false })
         .order('gps_checkin_timestamp', { ascending: false });
 
       if (error) throw error;
       return data as CrewPresence[];
     },
+    enabled: !!siteId,
     refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
   });
 
@@ -155,11 +161,14 @@ export const useCrewGPSCheckin = () => {
     },
   });
 
-  // GPS Check-out mutation
+  // GPS Check-out mutation with site isolation
   const checkoutMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
       if (!location) {
         throw new Error('GPS location not available. Please enable location services.');
+      }
+      if (!siteId) {
+        throw new Error('No site ID - multi-tenant isolation required');
       }
 
       const { data, error } = await supabase
@@ -172,6 +181,7 @@ export const useCrewGPSCheckin = () => {
           status: 'completed',
         })
         .eq('id', assignmentId)
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .select()
         .single();
 
