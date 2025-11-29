@@ -411,7 +411,7 @@ CREATE POLICY "Users can view projects in their site and company"
   ON projects FOR SELECT
   USING (
     -- Layer 1: Site isolation (ALWAYS REQUIRED)
-    site_id = auth.current_site_id()
+    site_id = public.current_site_id()
 
     -- Layer 2: Company isolation
     AND company_id IN (
@@ -536,7 +536,7 @@ When creating new migrations:
 - [ ] Backfill existing data: `UPDATE table SET site_id = (SELECT id FROM sites WHERE key = 'builddesk')`
 - [ ] Create index: `CREATE INDEX idx_table_site_id ON table(site_id)`
 - [ ] Create composite index: `CREATE INDEX idx_table_site_company ON table(site_id, company_id)`
-- [ ] Update RLS policies to include `site_id = auth.current_site_id()`
+- [ ] Update RLS policies to include `site_id = public.current_site_id()`
 
 ### Global/Public Functions (Exceptions)
 
@@ -588,7 +588,7 @@ isRootAdmin(supabase, userId): Promise<boolean>
 getSiteByDomain(supabase, domain): Promise<any | null>
 
 // SQL helper function
-auth.current_site_id(): UUID  -- Extract site_id from JWT
+public.current_site_id(): UUID  -- Extract site_id from JWT (SQL helper function)
 ```
 
 ---
