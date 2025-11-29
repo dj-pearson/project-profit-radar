@@ -13,7 +13,7 @@ import { AIProjectInsights } from '@/components/ai/AIProjectInsights';
 import { ProjectSubSidebar } from '@/components/project/ProjectSubSidebar';
 import { ProjectContent } from '@/components/project/ProjectContent';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobilePageWrapper } from '@/utils/mobileHelpers';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   ArrowLeft,
