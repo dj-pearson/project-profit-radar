@@ -1,5 +1,7 @@
+// Auto-Scheduling Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,15 +50,14 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req)
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401)
+    }
+
+    const { user, siteId, supabase: supabaseClient } = authContext
+    console.log('[AUTO-SCHEDULING] User authenticated', { userId: user.id, siteId })
 
     const {
       tenant_id,
@@ -78,7 +79,7 @@ serve(async (req) => {
 
     const startTime = Date.now()
 
-    // 1. Get crew members with skills
+    // 1. Get crew members with skills with site isolation
     const { data: crewMembers, error: crewError } = await supabaseClient
       .from('user_profiles')
       .select(`
@@ -91,24 +92,27 @@ serve(async (req) => {
           proficiency_level
         )
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('tenant_id', tenant_id)
       .in('role', ['field_supervisor', 'crew_member'])
 
     if (crewError) throw crewError
 
-    // 2. Get projects
+    // 2. Get projects with site isolation
     const { data: projects, error: projectsError } = await supabaseClient
       .from('projects')
       .select('id, name, location_zip, status')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .in('id', project_ids)
       .eq('tenant_id', tenant_id)
 
     if (projectsError) throw projectsError
 
-    // 3. Get schedule constraints
+    // 3. Get schedule constraints with site isolation
     const { data: constraints, error: constraintsError } = await supabaseClient
       .from('schedule_constraints')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('tenant_id', tenant_id)
       .eq('is_active', true)
 
@@ -123,6 +127,7 @@ serve(async (req) => {
     const { data: timeEntries } = await supabaseClient
       .from('time_entries')
       .select('user_id, hours_worked')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .gte('created_at', weekStart.toISOString())
       .lte('created_at', weekEnd.toISOString())
 
@@ -189,10 +194,11 @@ serve(async (req) => {
 
     const computationTime = Date.now() - startTime
 
-    // 9. Save schedule to database
+    // 9. Save schedule to database with site isolation
     const { data: savedSchedule, error: saveError } = await supabaseClient
       .from('auto_schedules')
       .insert({
+        site_id: siteId,  // CRITICAL: Site isolation
         tenant_id,
         schedule_name,
         schedule_date,
