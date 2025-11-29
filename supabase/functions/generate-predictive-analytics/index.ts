@@ -1,6 +1,8 @@
+// Generate Predictive Analytics Edge Function
+// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,25 +24,22 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    if (!user?.email) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const { company_id } = await req.json();
     if (!company_id) throw new Error("Company ID is required");
 
-    logStep("Loading company data", { company_id });
+    logStep("Loading company data", { siteId, company_id });
 
-    // Load company projects
+    // Load company projects with site isolation
     const { data: projects, error: projectsError } = await supabaseClient
       .from('projects')
       .select(`
@@ -49,14 +48,16 @@ serve(async (req) => {
         daily_reports(*),
         change_orders(*)
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     if (projectsError) throw projectsError;
 
-    // Load historical data for analysis
+    // Load historical data for analysis with site isolation
     const { data: expenses, error: expensesError } = await supabaseClient
       .from('expenses')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     if (expensesError) throw expensesError;

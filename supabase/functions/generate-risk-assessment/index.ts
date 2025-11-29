@@ -1,6 +1,8 @@
+// Generate Risk Assessment Edge Function
+// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,42 +11,62 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[GENERATE-RISK-ASSESSMENT] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    logStep("Risk assessment started");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    if (!user?.email) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const { company_id } = await req.json();
     if (!company_id) throw new Error("Company ID is required");
 
-    // Load comprehensive company data for risk analysis
+    logStep("Loading company data for risk analysis", { siteId, company_id });
+
+    // First get project IDs with site isolation
+    const { data: projectIds } = await supabaseClient
+      .from('projects')
+      .select('id')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
+      .eq('company_id', company_id);
+
+    const projectIdList = projectIds?.map(p => p.id) || [];
+
+    // Load comprehensive company data for risk analysis with site isolation
     const [
       { data: projects },
       { data: expenses },
       { data: changeOrders },
       { data: dailyReports }
     ] = await Promise.all([
-      supabaseClient.from('projects').select('*').eq('company_id', company_id),
-      supabaseClient.from('expenses').select('*').eq('company_id', company_id),
-      supabaseClient.from('change_orders').select('*').in('project_id', 
-        (await supabaseClient.from('projects').select('id').eq('company_id', company_id)).data?.map(p => p.id) || []
-      ),
-      supabaseClient.from('daily_reports').select('*').in('project_id',
-        (await supabaseClient.from('projects').select('id').eq('company_id', company_id)).data?.map(p => p.id) || []
-      )
+      supabaseClient.from('projects').select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
+        .eq('company_id', company_id),
+      supabaseClient.from('expenses').select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
+        .eq('company_id', company_id),
+      supabaseClient.from('change_orders').select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
+        .in('project_id', projectIdList.length > 0 ? projectIdList : ['00000000-0000-0000-0000-000000000000']),
+      supabaseClient.from('daily_reports').select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
+        .in('project_id', projectIdList.length > 0 ? projectIdList : ['00000000-0000-0000-0000-000000000000'])
     ]);
 
     const riskAnalysisPrompt = `
@@ -130,14 +152,21 @@ serve(async (req) => {
     // Enhance with real project data
     const enhancedRiskData = enhanceRiskDataWithProjects(riskData, projects || []);
 
+    logStep("Risk assessment completed", {
+      projectsAnalyzed: projects?.length || 0,
+      riskCategories: enhancedRiskData.riskCategories?.length || 0
+    });
+
     return new Response(JSON.stringify(enhancedRiskData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
-    console.error('Risk assessment error:', error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in risk assessment", { message: errorMessage });
+    return new Response(JSON.stringify({
+      success: false,
+      error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
