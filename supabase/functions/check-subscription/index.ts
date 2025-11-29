@@ -1,6 +1,9 @@
+// Check Subscription Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,25 +35,27 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    const token = authHeader.replace("Bearer ", "");
-    logStep("Authenticating user with token");
-    
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
+    const { user, siteId } = authContext;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
 
-    // Check for complimentary subscription first
-    const { data: existingSubscriber } = await supabaseClient
+    // Check for complimentary subscription first with site isolation
+    let subscriberQuery = supabaseClient
       .from('subscribers')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', user.id);
+
+    if (siteId) {
+      subscriberQuery = subscriberQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+    }
+
+    const { data: existingSubscriber } = await subscriberQuery.single();
 
     if (existingSubscriber?.is_complimentary) {
       logStep("Found complimentary subscription", { 
@@ -66,7 +71,7 @@ serve(async (req) => {
       if (isExpired) {
         logStep("Complimentary subscription expired, checking regular subscription");
         // Complimentary expired, remove complimentary status and check regular subscription
-        await supabaseClient
+        let updateQuery = supabaseClient
           .from('subscribers')
           .update({
             is_complimentary: false,
@@ -79,12 +84,24 @@ serve(async (req) => {
           })
           .eq('id', existingSubscriber.id);
 
-        // Update history
-        await supabaseClient
+        if (siteId) {
+          updateQuery = updateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+        }
+
+        await updateQuery;
+
+        // Update history with site isolation
+        let historyQuery = supabaseClient
           .from('complimentary_subscription_history')
           .update({ status: 'expired' })
           .eq('subscriber_id', existingSubscriber.id)
           .eq('status', 'active');
+
+        if (siteId) {
+          historyQuery = historyQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+        }
+
+        await historyQuery;
       } else {
         // Active complimentary subscription
         const tier = existingSubscriber.subscription_tier || 'professional';
@@ -112,7 +129,7 @@ serve(async (req) => {
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
-      await supabaseClient.from("subscribers").upsert({
+      const upsertData: any = {
         email: user.email,
         user_id: user.id,
         stripe_customer_id: null,
@@ -120,7 +137,15 @@ serve(async (req) => {
         subscription_tier: null,
         subscription_end: null,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
+      };
+
+      if (siteId) {
+        upsertData.site_id = siteId;  // CRITICAL: Site isolation
+      }
+
+      await supabaseClient.from("subscribers").upsert(upsertData, {
+        onConflict: siteId ? 'email,site_id' : 'email'
+      });
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -171,7 +196,7 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
-    await supabaseClient.from("subscribers").upsert({
+    const subscriptionUpsertData: any = {
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
@@ -180,9 +205,17 @@ serve(async (req) => {
       subscription_end: subscriptionEnd,
       billing_period: billingPeriod,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
+    };
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
+    if (siteId) {
+      subscriptionUpsertData.site_id = siteId;  // CRITICAL: Site isolation
+    }
+
+    await supabaseClient.from("subscribers").upsert(subscriptionUpsertData, {
+      onConflict: siteId ? 'email,site_id' : 'email'
+    });
+
+    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, siteId });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
