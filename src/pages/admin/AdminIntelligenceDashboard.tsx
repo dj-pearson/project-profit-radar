@@ -209,7 +209,11 @@ const AdminIntelligenceDashboard = () => {
   };
 
   const calculateCurrentRevenue = async (): Promise<RevenueMetrics> => {
-    const { data: companies } = await supabase.from('companies').select('*');
+    // Root admin can see all companies, others see their own site
+    const { data: companies } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('site_id', userProfile?.site_id || '');
 
     const pricingMap: Record<string, number> = {
       starter: 149,

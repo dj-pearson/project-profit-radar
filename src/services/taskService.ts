@@ -134,7 +134,7 @@ class TaskService {
 
     const userIds = [task.assigned_to, task.created_by].filter((v): v is string => !!v);
     const profilesPromise = userIds.length
-      ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
+      ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
       : Promise.resolve({ data: [], error: null } as { data: any[]; error: null });
 
     const [projectRes, profilesRes] = await Promise.all([projectPromise, profilesPromise]);

@@ -74,7 +74,7 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
   const [isSaving, setIsSaving] = useState(false);
 
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userProfile, siteId } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
 
   // Enhanced geofencing
@@ -315,7 +315,8 @@ const MobileDailyReport: React.FC<MobileDailyReportProps> = ({
         user_id: user?.id,
         report_date: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString(),
-        company_id: (await supabase.from('user_profiles').select('company_id').eq('id', user?.id).single()).data?.company_id,
+        company_id: userProfile?.company_id,
+        site_id: siteId,
         // Enhanced GPS verification
         gps_latitude: currentLoc?.latitude,
         gps_longitude: currentLoc?.longitude,
