@@ -1,7 +1,9 @@
+// Blog AI Edge Function
+// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { aiService } from "../_shared/ai-service.ts";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,26 +22,21 @@ serve(async (req) => {
   try {
     logStep("Function started", { method: req.method });
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    // Get user from auth header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
+    const { user, siteId, supabase: supabaseClient } = authContext;
     if (!user?.id) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id, siteId });
 
-    // Check if user is root admin
+    // Check if user is root admin with site isolation
     const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('role')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 

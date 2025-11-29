@@ -1,8 +1,11 @@
+// Create Stripe Checkout Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse } from "../_shared/validation.ts";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,34 +43,27 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    // Create Supabase client using the anon key for user authentication
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    // Get user from auth header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
+    const { user, siteId, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
 
     // SECURITY: Validate request body
     const requestBody = await req.json();
     const validation = validateRequest(CheckoutRequestSchema, requestBody);
-    
+
     if (!validation.success) {
       logStep("Validation failed", { error: validation.error });
       return createErrorResponse(400, validation.error, corsHeaders);
     }
-    
+
     const { subscription_tier, billing_period, company_id } = validation.data;
-    logStep("Request validated", { subscription_tier, billing_period, company_id });
+    logStep("Request validated", { subscription_tier, billing_period, company_id, siteId });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -125,14 +121,14 @@ serve(async (req) => {
 
     logStep("Stripe checkout session created", { sessionId: session.id, url: session.url });
 
-    // Update company subscription status to 'pending' if company_id provided
+    // Update company subscription status to 'pending' if company_id provided with site isolation
     if (company_id) {
       const supabaseService = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
-      await supabaseService
+      let updateQuery = supabaseService
         .from("companies")
         .update({
           subscription_tier,
@@ -141,7 +137,13 @@ serve(async (req) => {
         })
         .eq("id", company_id);
 
-      logStep("Updated company subscription status", { company_id, status: "pending" });
+      if (siteId) {
+        updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
+      }
+
+      await updateQuery;
+
+      logStep("Updated company subscription status", { company_id, siteId, status: "pending" });
     }
 
     return new Response(
