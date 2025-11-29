@@ -1,3 +1,5 @@
+// Send Scheduled Emails Edge Function
+// Updated with multi-tenant site_id isolation (cron job pattern)
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -14,6 +16,7 @@ const logStep = (step: string, details?: any) => {
 /**
  * Process email queue and send emails
  * Should be called by a cron job (e.g., every 5-15 minutes)
+ * Iterates through all active sites for multi-tenant support
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -29,48 +32,67 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get pending emails that are ready to send
-    const { data: pendingEmails, error: queueError } = await supabaseClient
-      .from('email_queue')
-      .select(`
-        *,
-        email_campaigns (*)
-      `)
-      .eq('status', 'pending')
-      .lte('scheduled_for', new Date().toISOString())
-      .order('priority', { ascending: true })
-      .order('scheduled_for', { ascending: true })
-      .limit(50); // Process max 50 emails per run
+    // Get all active sites
+    const { data: sites } = await supabaseClient
+      .from("sites")
+      .select("id, key, name")
+      .eq("is_active", true);
 
-    if (queueError) throw queueError;
-
-    if (!pendingEmails || pendingEmails.length === 0) {
-      logStep("No pending emails to send");
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'No pending emails',
-        sent: 0,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+    if (!sites || sites.length === 0) {
+      logStep("No active sites found");
+      return new Response(JSON.stringify({ message: "No active sites", sent: 0 }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    logStep("Found pending emails", { count: pendingEmails.length });
+    let totalSentCount = 0;
+    let totalFailedCount = 0;
+    const allResults: any[] = [];
 
-    let sentCount = 0;
-    let failedCount = 0;
-    const results = [];
+    // Process each site
+    for (const site of sites) {
+      logStep(`Processing site: ${site.key}`);
 
-    for (const queuedEmail of pendingEmails) {
-      try {
-        // Check if user has unsubscribed
-        const { data: unsubscribed } = await supabaseClient
-          .from('email_unsubscribes')
-          .select('id')
-          .eq('email', queuedEmail.recipient_email)
-          .eq('is_active', true)
-          .single();
+      // Get pending emails that are ready to send for this site
+      const { data: pendingEmails, error: queueError } = await supabaseClient
+        .from('email_queue')
+        .select(`
+          *,
+          email_campaigns (*)
+        `)
+        .eq('site_id', site.id)  // CRITICAL: Site isolation
+        .eq('status', 'pending')
+        .lte('scheduled_for', new Date().toISOString())
+        .order('priority', { ascending: true })
+        .order('scheduled_for', { ascending: true })
+        .limit(50); // Process max 50 emails per site per run
+
+      if (queueError) {
+        logStep(`Error fetching emails for site ${site.key}:`, queueError);
+        continue;
+      }
+
+      if (!pendingEmails || pendingEmails.length === 0) {
+        logStep(`No pending emails for site ${site.key}`);
+        continue;
+      }
+
+      logStep(`Found ${pendingEmails.length} pending emails for site ${site.key}`);
+
+      let sentCount = 0;
+      let failedCount = 0;
+      const results: any[] = [];
+
+      for (const queuedEmail of pendingEmails) {
+        try {
+          // Check if user has unsubscribed with site isolation
+          const { data: unsubscribed } = await supabaseClient
+            .from('email_unsubscribes')
+            .select('id')
+            .eq('site_id', site.id)  // CRITICAL: Site isolation
+            .eq('email', queuedEmail.recipient_email)
+            .eq('is_active', true)
+            .single();
 
         if (unsubscribed) {
           // Mark as cancelled
@@ -83,12 +105,13 @@ serve(async (req) => {
           continue;
         }
 
-        // Check user preferences
-        const { data: preferences } = await supabaseClient
-          .from('email_preferences')
-          .select('*')
-          .eq('user_id', queuedEmail.user_id)
-          .single();
+        // Check user preferences with site isolation
+          const { data: preferences } = await supabaseClient
+            .from('email_preferences')
+            .select('*')
+            .eq('site_id', site.id)  // CRITICAL: Site isolation
+            .eq('user_id', queuedEmail.user_id)
+            .single();
 
         // Skip if user disabled trial nurture emails
         if (preferences && !preferences.trial_nurture) {
@@ -119,23 +142,24 @@ serve(async (req) => {
           replyTo: queuedEmail.email_campaigns.reply_to,
         });
 
-        if (sendResult.success) {
-          // Create email send record
-          const { data: emailSend } = await supabaseClient
-            .from('email_sends')
-            .insert({
-              campaign_id: queuedEmail.campaign_id,
-              user_id: queuedEmail.user_id,
-              recipient_email: queuedEmail.recipient_email,
-              subject: queuedEmail.email_campaigns.subject_line,
-              from_email: queuedEmail.email_campaigns.from_email,
-              email_provider: 'sendgrid', // or 'postmark', etc.
-              email_provider_id: sendResult.messageId,
-              status: 'sent',
-              sent_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
+          if (sendResult.success) {
+            // Create email send record with site isolation
+            const { data: emailSend } = await supabaseClient
+              .from('email_sends')
+              .insert({
+                site_id: site.id,  // CRITICAL: Site isolation
+                campaign_id: queuedEmail.campaign_id,
+                user_id: queuedEmail.user_id,
+                recipient_email: queuedEmail.recipient_email,
+                subject: queuedEmail.email_campaigns.subject_line,
+                from_email: queuedEmail.email_campaigns.from_email,
+                email_provider: 'sendgrid', // or 'postmark', etc.
+                email_provider_id: sendResult.messageId,
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+              })
+              .select()
+              .single();
 
           // Update queue status
           await supabaseClient
@@ -182,35 +206,42 @@ serve(async (req) => {
           })
           .eq('id', queuedEmail.id);
 
-        // Create failed email send record
-        await supabaseClient
-          .from('email_sends')
-          .insert({
-            campaign_id: queuedEmail.campaign_id,
-            user_id: queuedEmail.user_id,
-            recipient_email: queuedEmail.recipient_email,
-            subject: queuedEmail.email_campaigns.subject_line,
-            status: 'failed',
-            error_message: errorMessage,
-            retry_count: queuedEmail.attempts + 1,
-          });
+          // Create failed email send record with site isolation
+          await supabaseClient
+            .from('email_sends')
+            .insert({
+              site_id: site.id,  // CRITICAL: Site isolation
+              campaign_id: queuedEmail.campaign_id,
+              user_id: queuedEmail.user_id,
+              recipient_email: queuedEmail.recipient_email,
+              subject: queuedEmail.email_campaigns.subject_line,
+              status: 'failed',
+              error_message: errorMessage,
+              retry_count: queuedEmail.attempts + 1,
+            });
 
-        results.push({
-          email: queuedEmail.recipient_email,
-          campaign: queuedEmail.email_campaigns.campaign_name,
-          status: 'failed',
-          error: errorMessage,
-        });
+          results.push({
+            email: queuedEmail.recipient_email,
+            campaign: queuedEmail.email_campaigns.campaign_name,
+            status: 'failed',
+            error: errorMessage,
+          });
+        }
       }
+
+      totalSentCount += sentCount;
+      totalFailedCount += failedCount;
+      allResults.push(...results);
+      logStep(`Site ${site.key} complete`, { sent: sentCount, failed: failedCount });
     }
 
-    logStep("Email processing complete", { sent: sentCount, failed: failedCount });
+    logStep("Email processing complete across all sites", { sent: totalSentCount, failed: totalFailedCount });
 
     return new Response(JSON.stringify({
       success: true,
-      sent: sentCount,
-      failed: failedCount,
-      results,
+      sent: totalSentCount,
+      failed: totalFailedCount,
+      results: allResults,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
