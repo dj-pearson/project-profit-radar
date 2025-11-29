@@ -1,17 +1,17 @@
 // AI Estimating Engine Edge Function
 // Generates project cost estimates using ML predictions and historical data
+// Updated with multi-tenant site_id isolation
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 interface EstimateRequest {
-  tenant_id: string
-  user_id: string
   project_name: string
   project_type: string
   square_footage: number
@@ -27,22 +27,28 @@ interface SimilarProject {
   won: boolean
 }
 
+const logStep = (step: string, details?: any) => {
+  console.log(`[AI-ESTIMATING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`)
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { status: 204, headers: corsHeaders })
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req)
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401)
+    }
+
+    const { user, siteId, supabase } = authContext
+    logStep('User authenticated', { userId: user.id, siteId })
 
     const requestData: EstimateRequest = await req.json()
 
     const {
-      tenant_id,
-      user_id,
       project_name,
       project_type,
       square_footage,
@@ -50,10 +56,12 @@ serve(async (req) => {
       estimated_duration_days = 30
     } = requestData
 
-    // Step 1: Find similar historical projects
-    const { data: similarProjects, error: similarError } = await supabaseClient
+    logStep('Estimate request received', { project_name, project_type, square_footage, siteId })
+
+    // Step 1: Find similar historical projects (with site isolation)
+    const { data: similarProjects, error: similarError } = await supabase
       .rpc('get_similar_projects', {
-        p_tenant_id: tenant_id,
+        p_site_id: siteId,  // CRITICAL: Site isolation
         p_project_type: project_type,
         p_square_footage: square_footage,
         p_location_zip: location_zip
@@ -65,10 +73,11 @@ serve(async (req) => {
 
     const similar = (similarProjects || []) as SimilarProject[]
 
-    // Step 2: Get market pricing data
-    const { data: marketData, error: marketError } = await supabaseClient
+    // Step 2: Get market pricing data (with site isolation)
+    const { data: marketData, error: marketError } = await supabase
       .from('market_pricing_data')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('project_type', project_type)
       .or(`location_zip.eq.${location_zip},location_region.eq.nationwide`)
       .order('valid_from', { ascending: false })
@@ -88,10 +97,10 @@ serve(async (req) => {
       marketData
     )
 
-    // Step 4: Get win rate for this project type
-    const { data: winRateData } = await supabaseClient
+    // Step 4: Get win rate for this project type (with site isolation)
+    const { data: winRateData } = await supabase
       .rpc('get_win_rate_by_project_type', {
-        p_tenant_id: tenant_id,
+        p_site_id: siteId,  // CRITICAL: Site isolation
         p_project_type: project_type
       })
 
@@ -107,12 +116,12 @@ serve(async (req) => {
 
     const recommendedBidAmount = predictions.totalCost * (1 + recommendedMarkup / 100)
 
-    // Step 6: Create AI estimate record
-    const { data: estimate, error: estimateError } = await supabaseClient
+    // Step 6: Create AI estimate record (with site isolation)
+    const { data: estimate, error: estimateError } = await supabase
       .from('ai_estimates')
       .insert({
-        tenant_id,
-        user_id,
+        site_id: siteId,  // CRITICAL: Include site_id
+        user_id: user.id,
         estimate_name: project_name,
         project_type,
         square_footage,
@@ -136,6 +145,8 @@ serve(async (req) => {
       .select()
       .single()
 
+    logStep('Estimate created', { estimateId: estimate?.id, siteId })
+
     if (estimateError) throw estimateError
 
     // Step 7: Create detailed line item predictions
@@ -146,61 +157,53 @@ serve(async (req) => {
       marketData
     )
 
-    const { error: lineItemError } = await supabaseClient
+    // Insert line items with site isolation
+    const { error: lineItemError } = await supabase
       .from('estimate_predictions')
       .insert(
         lineItems.map(item => ({
           ai_estimate_id: estimate.id,
+          site_id: siteId,  // CRITICAL: Include site_id
           ...item
         }))
       )
 
     if (lineItemError) {
-      console.error('Error creating line items:', lineItemError)
+      logStep('Error creating line items', { error: lineItemError.message })
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        estimate: {
-          id: estimate.id,
-          estimate_name: project_name,
-          predictions: {
-            labor_hours: predictions.laborHours,
-            labor_cost: predictions.laborCost,
-            material_cost: predictions.materialCost,
-            equipment_cost: predictions.equipmentCost,
-            subcontractor_cost: predictions.subcontractorCost,
-            total_cost: predictions.totalCost
-          },
-          recommendations: {
-            markup_percentage: recommendedMarkup,
-            bid_amount: recommendedBidAmount,
-            win_probability: winProbability
-          },
-          confidence: {
-            score: predictions.confidenceScore,
-            similar_projects: similar.length,
-            data_quality: determineDataQuality(similar.length)
-          },
-          line_items: lineItems
-        }
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    logStep('Line items created', { count: lineItems.length, siteId })
+
+    return successResponse({
+      estimate: {
+        id: estimate.id,
+        estimate_name: project_name,
+        predictions: {
+          labor_hours: predictions.laborHours,
+          labor_cost: predictions.laborCost,
+          material_cost: predictions.materialCost,
+          equipment_cost: predictions.equipmentCost,
+          subcontractor_cost: predictions.subcontractorCost,
+          total_cost: predictions.totalCost
+        },
+        recommendations: {
+          markup_percentage: recommendedMarkup,
+          bid_amount: recommendedBidAmount,
+          win_probability: winProbability
+        },
+        confidence: {
+          score: predictions.confidenceScore,
+          similar_projects: similar.length,
+          data_quality: determineDataQuality(similar.length)
+        },
+        line_items: lineItems
       }
-    )
+    })
 
   } catch (error) {
-    console.error('AI Estimating Error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logStep('ERROR', { message: errorMessage })
+    return errorResponse(errorMessage, 500)
   }
 })
 

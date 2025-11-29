@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
 interface InvoiceRequest {
@@ -31,64 +32,63 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
     logStep("Invoice generation started");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401);
+    }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
+    const { user, siteId, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const invoiceData: InvoiceRequest = await req.json();
-    logStep("Invoice data received", { 
-      client: invoiceData.client_name, 
-      itemCount: invoiceData.line_items.length 
+    logStep("Invoice data received", {
+      client: invoiceData.client_name,
+      itemCount: invoiceData.line_items.length,
+      siteId
     });
 
-    // Get user's company
-    const { data: profile } = await supabaseClient
+    // Get user's company with site isolation
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('company_id, role')
       .eq('id', user.id)
+      .eq('site_id', siteId)
       .single();
 
-    if (!profile?.company_id) {
-      throw new Error("User company not found");
+    if (profileError || !profile?.company_id) {
+      logStep("Profile error", { error: profileError?.message });
+      return errorResponse("User company not found", 404);
     }
 
     if (!['admin', 'accounting', 'project_manager', 'root_admin'].includes(profile.role)) {
-      throw new Error("Insufficient permissions to create invoices");
+      return errorResponse("Insufficient permissions to create invoices", 403);
     }
 
     // Calculate totals
-    const subtotal = invoiceData.line_items.reduce((sum, item) => 
+    const subtotal = invoiceData.line_items.reduce((sum, item) =>
       sum + (item.quantity * item.unit_price), 0
     );
-    
+
     const taxRate = invoiceData.tax_rate || 0;
     const taxAmount = subtotal * (taxRate / 100);
     const discountAmount = invoiceData.discount_amount || 0;
     const totalAmount = subtotal + taxAmount - discountAmount;
 
-    logStep("Calculated totals", { subtotal, taxAmount, totalAmount });
+    logStep("Calculated totals", { subtotal, taxAmount, totalAmount, siteId });
 
-    // Create invoice
-    const { data: invoice, error: invoiceError } = await supabaseClient
+    // Create invoice with site isolation
+    const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert({
         company_id: profile.company_id,
+        site_id: siteId,  // CRITICAL: Include site_id
         client_name: invoiceData.client_name,
         client_email: invoiceData.client_email,
         project_id: invoiceData.project_id || null,
@@ -107,14 +107,16 @@ serve(async (req) => {
       .single();
 
     if (invoiceError) {
-      throw new Error(`Error creating invoice: ${invoiceError.message}`);
+      logStep("Invoice creation error", { error: invoiceError.message });
+      return errorResponse(`Error creating invoice: ${invoiceError.message}`, 500);
     }
 
-    logStep("Invoice created", { invoiceId: invoice.id, invoiceNumber: invoice.invoice_number });
+    logStep("Invoice created", { invoiceId: invoice.id, invoiceNumber: invoice.invoice_number, siteId });
 
-    // Create line items
+    // Create line items with site isolation
     const lineItemsToInsert = invoiceData.line_items.map(item => ({
       invoice_id: invoice.id,
+      site_id: siteId,  // CRITICAL: Include site_id
       description: item.description,
       quantity: item.quantity,
       unit_price: item.unit_price,
@@ -122,18 +124,19 @@ serve(async (req) => {
       project_phase_id: item.project_phase_id || null
     }));
 
-    const { error: lineItemsError } = await supabaseClient
+    const { error: lineItemsError } = await supabase
       .from('invoice_line_items')
       .insert(lineItemsToInsert);
 
     if (lineItemsError) {
-      throw new Error(`Error creating line items: ${lineItemsError.message}`);
+      logStep("Line items error", { error: lineItemsError.message });
+      return errorResponse(`Error creating line items: ${lineItemsError.message}`, 500);
     }
 
-    logStep("Line items created", { count: lineItemsToInsert.length });
+    logStep("Line items created", { count: lineItemsToInsert.length, siteId });
 
-    // Return complete invoice data
-    const { data: completeInvoice } = await supabaseClient
+    // Return complete invoice data with site isolation
+    const { data: completeInvoice } = await supabase
       .from('invoices')
       .select(`
         *,
@@ -142,25 +145,17 @@ serve(async (req) => {
         companies(name)
       `)
       .eq('id', invoice.id)
+      .eq('site_id', siteId)
       .single();
 
-    return new Response(JSON.stringify({
+    return successResponse({
       success: true,
       invoice: completeInvoice
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
     });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in generate-invoice", { message: errorMessage });
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: errorMessage 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return errorResponse(errorMessage, 500);
   }
 });
