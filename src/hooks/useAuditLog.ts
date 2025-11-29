@@ -1,3 +1,7 @@
+/**
+ * Audit Log Hook
+ * Updated with multi-tenant site_id isolation
+ */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +31,7 @@ interface DataAccessParams {
 }
 
 export const useAuditLog = () => {
-  const { user } = useAuth();
+  const { user, userProfile, siteId } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const getClientIP = async (): Promise<string | null> => {
@@ -42,26 +46,32 @@ export const useAuditLog = () => {
   };
 
   const logAuditEvent = async (params: AuditLogParams) => {
-    if (!user) return null;
+    if (!user || !siteId) return null;
 
     try {
       setLoading(true);
       const ip = await getClientIP();
-      
-      // Get user's company ID
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
 
-      if (!userProfile?.company_id) {
+      // Use userProfile from context if available, otherwise fetch with site isolation
+      let companyId = userProfile?.company_id;
+      if (!companyId) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('company_id')
+          .eq('site_id', siteId)  // CRITICAL: Site isolation
+          .eq('id', user.id)
+          .single();
+        companyId = profile?.company_id;
+      }
+
+      if (!companyId) {
         console.error('User company not found for audit logging');
         return null;
       }
 
       const { data, error } = await supabase.rpc('log_audit_event', {
-        p_company_id: userProfile.company_id,
+        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
+        p_company_id: companyId,
         p_user_id: user.id,
         p_action_type: params.actionType,
         p_resource_type: params.resourceType,
@@ -89,26 +99,32 @@ export const useAuditLog = () => {
   };
 
   const logDataAccess = async (params: DataAccessParams) => {
-    if (!user) return null;
+    if (!user || !siteId) return null;
 
     try {
       setLoading(true);
       const ip = await getClientIP();
-      
-      // Get user's company ID
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
 
-      if (!userProfile?.company_id) {
+      // Use userProfile from context if available, otherwise fetch with site isolation
+      let companyId = userProfile?.company_id;
+      if (!companyId) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('company_id')
+          .eq('site_id', siteId)  // CRITICAL: Site isolation
+          .eq('id', user.id)
+          .single();
+        companyId = profile?.company_id;
+      }
+
+      if (!companyId) {
         console.error('User company not found for data access logging');
         return null;
       }
 
       const { data, error } = await supabase.rpc('log_data_access', {
-        p_company_id: userProfile.company_id,
+        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
+        p_company_id: companyId,
         p_user_id: user.id,
         p_data_type: params.dataType,
         p_data_classification: params.dataClassification,
