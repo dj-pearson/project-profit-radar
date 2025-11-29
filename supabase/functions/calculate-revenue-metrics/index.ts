@@ -1,5 +1,7 @@
 // Calculate revenue metrics from Stripe data
+// Updated with multi-tenant site_id isolation
 // Runs daily to update MRR, ARR, churn, and other revenue operations metrics
+// Runs as cron job - processes all sites
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -40,77 +42,114 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get Stripe key from database
-    const { data: stripeData, error: stripeError } = await supabase
-      .from("stripe_keys")
-      .select("secret_key")
-      .single();
+    console.log("[CALCULATE-REVENUE-METRICS] Starting revenue metrics calculation...");
 
-    if (stripeError || !stripeData?.secret_key) {
-      throw new Error("Stripe API key not configured");
+    // Get all active sites for multi-tenant processing
+    const { data: sites, error: sitesError } = await supabase
+      .from("sites")
+      .select("id, key, name")
+      .eq("is_active", true);
+
+    if (sitesError) {
+      throw new Error(`Error fetching sites: ${sitesError.message}`);
     }
 
-    const stripe = new Stripe(stripeData.secret_key, {
-      apiVersion: "2023-10-16",
-    });
+    console.log("[CALCULATE-REVENUE-METRICS] Processing all active sites", { siteCount: sites?.length || 0 });
 
-    console.log("Calculating revenue metrics...");
+    const allResults = {
+      sites_processed: 0,
+      total_mrr: 0,
+      total_arr: 0
+    };
 
-    // Calculate metrics for current month
-    const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    for (const site of sites || []) {
+      console.log(`[CALCULATE-REVENUE-METRICS] Processing site`, { siteId: site.id, siteKey: site.key });
 
-    // Calculate metrics for previous month (for comparison)
-    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      // Get Stripe key from database for this site
+      const { data: stripeData, error: stripeError } = await supabase
+        .from("stripe_keys")
+        .select("secret_key")
+        .eq("site_id", site.id)  // CRITICAL: Site isolation
+        .single();
 
-    const currentMetrics = await calculateMetricsForPeriod(
-      stripe,
-      supabase,
-      currentMonthStart,
-      currentMonthEnd
-    );
+      if (stripeError || !stripeData?.secret_key) {
+        console.log(`[CALCULATE-REVENUE-METRICS] No Stripe key for site ${site.id}, skipping`);
+        continue;
+      }
 
-    const previousMetrics = await calculateMetricsForPeriod(
-      stripe,
-      supabase,
-      previousMonthStart,
-      previousMonthEnd
-    );
-
-    // Calculate NRR (Net Revenue Retention)
-    const nrr = calculateNRR(currentMetrics, previousMetrics);
-
-    // Save to database
-    const { error: insertError } = await supabase
-      .from("revenue_metrics")
-      .upsert({
-        period_start: currentMonthStart.toISOString().split("T")[0],
-        period_end: currentMonthEnd.toISOString().split("T")[0],
-        mrr: currentMetrics.mrr,
-        arr: currentMetrics.arr,
-        new_revenue: currentMetrics.newRevenue,
-        expansion_revenue: currentMetrics.expansionRevenue,
-        contraction_revenue: currentMetrics.contractionRevenue,
-        churned_revenue: currentMetrics.churnedRevenue,
-        net_revenue_retention: nrr,
-        logo_churn_rate: currentMetrics.logoChurnRate,
-        revenue_churn_rate: currentMetrics.revenueChurnRate,
-        total_customers: currentMetrics.totalCustomers,
-        new_customers: currentMetrics.newCustomers,
-        churned_customers: currentMetrics.churnedCustomers,
+      const stripe = new Stripe(stripeData.secret_key, {
+        apiVersion: "2023-10-16",
       });
 
-    if (insertError) throw insertError;
+      // Calculate metrics for current month
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    console.log("Revenue metrics calculated successfully:", currentMetrics);
+      // Calculate metrics for previous month (for comparison)
+      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+      const currentMetrics = await calculateMetricsForPeriod(
+        stripe,
+        supabase,
+        site.id,
+        currentMonthStart,
+        currentMonthEnd
+      );
+
+      const previousMetrics = await calculateMetricsForPeriod(
+        stripe,
+        supabase,
+        site.id,
+        previousMonthStart,
+        previousMonthEnd
+      );
+
+      // Calculate NRR (Net Revenue Retention)
+      const nrr = calculateNRR(currentMetrics, previousMetrics);
+
+      // Save to database with site isolation
+      const { error: insertError } = await supabase
+        .from("revenue_metrics")
+        .upsert({
+          site_id: site.id,  // CRITICAL: Site isolation
+          period_start: currentMonthStart.toISOString().split("T")[0],
+          period_end: currentMonthEnd.toISOString().split("T")[0],
+          mrr: currentMetrics.mrr,
+          arr: currentMetrics.arr,
+          new_revenue: currentMetrics.newRevenue,
+          expansion_revenue: currentMetrics.expansionRevenue,
+          contraction_revenue: currentMetrics.contractionRevenue,
+          churned_revenue: currentMetrics.churnedRevenue,
+          net_revenue_retention: nrr,
+          logo_churn_rate: currentMetrics.logoChurnRate,
+          revenue_churn_rate: currentMetrics.revenueChurnRate,
+          total_customers: currentMetrics.totalCustomers,
+          new_customers: currentMetrics.newCustomers,
+          churned_customers: currentMetrics.churnedCustomers,
+        }, {
+          onConflict: 'site_id,period_start,period_end'
+        });
+
+      if (insertError) {
+        console.error(`[CALCULATE-REVENUE-METRICS] Error saving metrics for site ${site.id}:`, insertError);
+        continue;
+      }
+
+      allResults.sites_processed++;
+      allResults.total_mrr += currentMetrics.mrr;
+      allResults.total_arr += currentMetrics.arr;
+
+      console.log(`[CALCULATE-REVENUE-METRICS] Site ${site.key} metrics calculated:`, { mrr: currentMetrics.mrr, arr: currentMetrics.arr });
+    }
+
+    console.log("[CALCULATE-REVENUE-METRICS] All sites processed", allResults);
 
     return new Response(
       JSON.stringify({
         success: true,
-        metrics: currentMetrics,
-        nrr,
+        results: allResults,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -118,7 +157,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error calculating revenue metrics:", error);
+    console.error("[CALCULATE-REVENUE-METRICS] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -132,13 +171,15 @@ serve(async (req) => {
 async function calculateMetricsForPeriod(
   stripe: Stripe,
   supabase: any,
+  siteId: string,
   periodStart: Date,
   periodEnd: Date
 ): Promise<RevenueMetrics> {
-  // Get all subscriptions from database
+  // Get all subscriptions from database with site isolation
   const { data: companies, error: companiesError } = await supabase
     .from("companies")
-    .select("*");
+    .select("*")
+    .eq("site_id", siteId);  // CRITICAL: Site isolation
 
   if (companiesError) throw companiesError;
 
