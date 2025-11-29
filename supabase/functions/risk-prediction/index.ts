@@ -1,5 +1,7 @@
+// Risk Prediction Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,15 +45,14 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req)
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401)
+    }
+
+    const { user, siteId, supabase: supabaseClient } = authContext
+    console.log('[RISK-PREDICTION] User authenticated', { userId: user.id, siteId })
 
     const { tenant_id, project_id, user_id } = await req.json() as RiskPredictionRequest
 
@@ -59,12 +60,13 @@ serve(async (req) => {
       throw new Error('Missing required fields: tenant_id, project_id, user_id')
     }
 
-    console.log(`Generating risk prediction for project ${project_id}`)
+    console.log(`[RISK-PREDICTION] Generating risk prediction for project ${project_id}`)
 
-    // 1. Get current project data
+    // 1. Get current project data with site isolation
     const { data: project, error: projectError } = await supabaseClient
       .from('projects')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', project_id)
       .single()
 
@@ -72,30 +74,34 @@ serve(async (req) => {
       throw new Error('Project not found')
     }
 
-    // 2. Get historical projects for comparison
+    // 2. Get historical projects for comparison with site isolation
     const { data: historicalProjects, error: histError } = await supabaseClient
       .from('projects')
       .select('id, budget, actual_cost, start_date, end_date, status')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('tenant_id', tenant_id)
       .eq('status', 'completed')
       .limit(50)
 
-    // 3. Get current project's time entries for labor analysis
+    // 3. Get current project's time entries for labor analysis with site isolation
     const { data: timeEntries } = await supabaseClient
       .from('time_entries')
       .select('hours_worked, created_at')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('project_id', project_id)
 
-    // 4. Get safety incidents
+    // 4. Get safety incidents with site isolation
     const { data: safetyIncidents } = await supabaseClient
       .from('osha_300_log')
       .select('severity, incident_date')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('project_id', project_id)
 
-    // 5. Get change orders
+    // 5. Get change orders with site isolation
     const { data: changeOrders } = await supabaseClient
       .from('change_orders')
       .select('amount, status')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('project_id', project_id)
 
     // 6. Calculate risk scores
@@ -126,10 +132,11 @@ serve(async (req) => {
       historicalProjects || []
     )
 
-    // 10. Save risk prediction to database
+    // 10. Save risk prediction to database with site isolation
     const { data: riskPrediction, error: insertError } = await supabaseClient
       .from('risk_predictions')
       .insert({
+        site_id: siteId,  // CRITICAL: Site isolation
         tenant_id,
         project_id,
         overall_risk_score: riskScores.overall,
@@ -153,8 +160,9 @@ serve(async (req) => {
       throw insertError
     }
 
-    // 11. Save risk factors
+    // 11. Save risk factors with site isolation
     const factorsToInsert = riskFactors.map(factor => ({
+      site_id: siteId,  // CRITICAL: Site isolation
       risk_prediction_id: riskPrediction.id,
       ...factor
     }))
@@ -167,8 +175,9 @@ serve(async (req) => {
       console.error('Error inserting risk factors:', factorsError)
     }
 
-    // 12. Save recommendations
+    // 12. Save recommendations with site isolation
     const recsToInsert = recommendations.map(rec => ({
+      site_id: siteId,  // CRITICAL: Site isolation
       risk_prediction_id: riskPrediction.id,
       ...rec
     }))
@@ -181,8 +190,8 @@ serve(async (req) => {
       console.error('Error inserting recommendations:', recsError)
     }
 
-    // 13. Create alerts for high-risk areas
-    const alerts = generateAlerts(project as ProjectData, riskScores, tenant_id, project_id, riskPrediction.id)
+    // 13. Create alerts for high-risk areas with site isolation
+    const alerts = generateAlerts(project as ProjectData, riskScores, siteId, tenant_id, project_id, riskPrediction.id)
 
     if (alerts.length > 0) {
       const { error: alertsError } = await supabaseClient
@@ -511,6 +520,7 @@ function getRiskLevel(score: number): string {
 function generateAlerts(
   project: ProjectData,
   riskScores: any,
+  site_id: string,
   tenant_id: string,
   project_id: string,
   risk_prediction_id: string
@@ -520,6 +530,7 @@ function generateAlerts(
   // Budget alert
   if (riskScores.budget > 70) {
     alerts.push({
+      site_id,  // CRITICAL: Site isolation
       tenant_id,
       project_id,
       risk_prediction_id,
@@ -531,6 +542,7 @@ function generateAlerts(
     })
   } else if (riskScores.budget > 50) {
     alerts.push({
+      site_id,  // CRITICAL: Site isolation
       tenant_id,
       project_id,
       risk_prediction_id,
@@ -545,6 +557,7 @@ function generateAlerts(
   // Delay alert
   if (riskScores.delay > 60) {
     alerts.push({
+      site_id,  // CRITICAL: Site isolation
       tenant_id,
       project_id,
       risk_prediction_id,
@@ -559,6 +572,7 @@ function generateAlerts(
   // Safety alert
   if (riskScores.safety > 60) {
     alerts.push({
+      site_id,  // CRITICAL: Site isolation
       tenant_id,
       project_id,
       risk_prediction_id,
