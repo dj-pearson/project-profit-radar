@@ -22,7 +22,7 @@ declare global {
 }
 
 export const ChangeOrderManagement: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const { toast } = useToast();
   const [changeOrders, setChangeOrders] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
@@ -63,6 +63,7 @@ export const ChangeOrderManagement: React.FC = () => {
         .from('change_orders')
         .select('*, projects:project_id(name)')
         .eq('company_id', userProfile.company_id)
+        .eq('site_id', siteId)
         .order('created_at', { ascending: false });
       
       if (ordersResult.error) throw ordersResult.error;
@@ -72,6 +73,7 @@ export const ChangeOrderManagement: React.FC = () => {
         .from('projects')
         .select('id, name')
         .eq('company_id', userProfile.company_id)
+        .eq('site_id', siteId)
         .order('name');
 
       if (projectsResult.error) throw projectsResult.error;
@@ -97,6 +99,7 @@ export const ChangeOrderManagement: React.FC = () => {
       const supabase = getSupabaseClient();
       const changeOrderData = {
         company_id: userProfile.company_id,
+        site_id: siteId,
         change_order_number: `CO-${Date.now().toString().slice(-8)}`,
         requested_by: userProfile.id,
         status: 'pending',
