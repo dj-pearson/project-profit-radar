@@ -115,27 +115,27 @@ const ProjectDetail = () => {
     );
   }
 
-  if (isMobile) {
+  if (isMobile && project) {
     return (
       <DashboardLayout title={project.name}>
-        <MobilePageWrapper>
-          {/* Mobile Header with Menu */}
-          <div className="sticky top-0 z-40 bg-background border-b mb-4 -mx-4 px-4 py-3">
-            <div className="flex items-center justify-between">
+        <div className="min-h-screen bg-background">
+          {/* Mobile Header with Menu - Fixed at top */}
+          <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+            <div className="flex items-center justify-between px-4 py-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => navigate('/projects')}
-                className="h-9 w-9 p-0"
+                onClick={() => navigate('/projects-hub')}
+                className="h-10 w-10 p-0"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               
-              <div className="flex-1 mx-3">
-                <h1 className="text-base font-bold line-clamp-1">{project.name}</h1>
+              <div className="flex-1 mx-3 min-w-0">
+                <h1 className="text-base font-bold truncate">{project.name}</h1>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground line-clamp-1">{project.client_name}</span>
-                  <Badge variant={getStatusColor(project.status)} className="text-xs h-5">
+                  <span className="text-xs text-muted-foreground truncate flex-shrink">{project.client_name}</span>
+                  <Badge variant={getStatusColor(project.status)} className="text-xs h-5 flex-shrink-0">
                     {project.status.replace('_', ' ')}
                   </Badge>
                 </div>
@@ -144,27 +144,27 @@ const ProjectDetail = () => {
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm"
-                    className="h-9 w-9 p-0"
+                    className="h-10 w-10 p-0"
                   >
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-full p-0">
+                <SheetContent side="left" className="w-full p-0 bg-background">
                   {/* Sheet Header with Back Button */}
-                  <div className="flex items-center gap-3 p-4 border-b">
+                  <div className="flex items-center gap-3 p-4 border-b bg-muted/20">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => setSidebarOpen(false)}
-                      className="h-9 w-9 p-0"
+                      className="h-10 w-10 p-0"
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <div>
-                      <h2 className="font-semibold">Project Sections</h2>
-                      <p className="text-xs text-muted-foreground">{project.name}</p>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-semibold text-base">Project Sections</h2>
+                      <p className="text-xs text-muted-foreground truncate">{project.name}</p>
                     </div>
                   </div>
                   
@@ -173,7 +173,7 @@ const ProjectDetail = () => {
                     activeTab={activeTab} 
                     onTabChange={(tab) => {
                       setActiveTab(tab);
-                      setSidebarOpen(false); // Close after selection
+                      setSidebarOpen(false);
                     }}
                   />
                 </SheetContent>
@@ -181,7 +181,7 @@ const ProjectDetail = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="px-4 py-4 space-y-4 pb-20">
             {/* Contextual Actions - Mobile */}
             <ContextualActions
               context={{
@@ -207,7 +207,7 @@ const ProjectDetail = () => {
               onNavigate={navigate}
             />
           </div>
-        </MobilePageWrapper>
+        </div>
       </DashboardLayout>
     );
   }
