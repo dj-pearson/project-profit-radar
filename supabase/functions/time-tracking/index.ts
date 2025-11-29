@@ -1,10 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const logStep = (step: string, details?: any) => {
   console.log(`[TIME-TRACKING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -12,28 +7,27 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      }
+    });
   }
 
   try {
     logStep("Function started", { method: req.method });
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401);
+    }
 
-    // Get user from auth header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user?.id) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+    const { user, siteId, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const url = new URL(req.url);
     const method = req.method;
@@ -42,8 +36,8 @@ serve(async (req) => {
     switch (method) {
       case "GET":
         if (path === "entries") {
-          // Get time entries for the user
-          const { data: timeEntries, error: entriesError } = await supabaseClient
+          // Get time entries for the user with site isolation
+          const { data: timeEntries, error: entriesError } = await supabase
             .from('time_entries')
             .select(`
               *,
@@ -51,20 +45,19 @@ serve(async (req) => {
               tasks(name),
               cost_codes(code, name)
             `)
+            .eq('site_id', siteId)
+            .eq('user_id', user.id)
             .order('start_time', { ascending: false });
 
           if (entriesError) throw new Error(`Time entries fetch error: ${entriesError.message}`);
           
-          logStep("Time entries retrieved", { count: timeEntries?.length });
-          return new Response(JSON.stringify({ timeEntries }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
+          logStep("Time entries retrieved", { count: timeEntries?.length, siteId });
+          return successResponse({ timeEntries });
         }
 
         if (path === "active") {
-          // Get current active time entry for the user
-          const { data: activeEntry, error: activeError } = await supabaseClient
+          // Get current active time entry for the user with site isolation
+          const { data: activeEntry, error: activeError } = await supabase
             .from('time_entries')
             .select(`
               *,
@@ -72,15 +65,13 @@ serve(async (req) => {
               tasks(name),
               cost_codes(code, name)
             `)
+            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .is('end_time', null)
             .maybeSingle();
 
-          logStep("Active entry retrieved", { hasActive: !!activeEntry });
-          return new Response(JSON.stringify({ activeEntry }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
+          logStep("Active entry retrieved", { hasActive: !!activeEntry, siteId });
+          return successResponse({ activeEntry });
         }
 
         break;
@@ -90,10 +81,11 @@ serve(async (req) => {
           const body = await req.json();
           logStep("Starting time entry", body);
 
-          // Check if user already has an active entry
-          const { data: existingEntry } = await supabaseClient
+          // Check if user already has an active entry with site isolation
+          const { data: existingEntry } = await supabase
             .from('time_entries')
             .select('id')
+            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .is('end_time', null)
             .maybeSingle();
@@ -104,11 +96,12 @@ serve(async (req) => {
 
           const timeEntryData = {
             ...body,
+            site_id: siteId,
             user_id: user.id,
             start_time: new Date().toISOString()
           };
 
-          const { data: newEntry, error: createError } = await supabaseClient
+          const { data: newEntry, error: createError } = await supabase
             .from('time_entries')
             .insert([timeEntryData])
             .select(`
@@ -121,11 +114,8 @@ serve(async (req) => {
 
           if (createError) throw new Error(`Time entry creation error: ${createError.message}`);
 
-          logStep("Time entry started", { entryId: newEntry.id });
-          return new Response(JSON.stringify({ timeEntry: newEntry }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 201,
-          });
+          logStep("Time entry started", { entryId: newEntry.id, siteId });
+          return successResponse({ timeEntry: newEntry });
         }
 
         if (path === "stop") {
@@ -133,11 +123,12 @@ serve(async (req) => {
           const { entryId } = body;
           logStep("Stopping time entry", { entryId });
 
-          // Calculate total hours
-          const { data: entry, error: fetchError } = await supabaseClient
+          // Calculate total hours with site isolation
+          const { data: entry, error: fetchError } = await supabase
             .from('time_entries')
             .select('start_time, break_duration')
             .eq('id', entryId)
+            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .single();
 
@@ -149,13 +140,14 @@ serve(async (req) => {
           const breakMinutes = entry.break_duration || 0;
           const totalHours = Math.max(0, totalMinutes - breakMinutes) / 60;
 
-          const { data: updatedEntry, error: updateError } = await supabaseClient
+          const { data: updatedEntry, error: updateError } = await supabase
             .from('time_entries')
             .update({
               end_time: endTime.toISOString(),
               total_hours: Number(totalHours.toFixed(2))
             })
             .eq('id', entryId)
+            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .select(`
               *,
@@ -167,28 +159,19 @@ serve(async (req) => {
 
           if (updateError) throw new Error(`Time entry update error: ${updateError.message}`);
 
-          logStep("Time entry stopped", { entryId, totalHours });
-          return new Response(JSON.stringify({ timeEntry: updatedEntry }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
+          logStep("Time entry stopped", { entryId, totalHours, siteId });
+          return successResponse({ timeEntry: updatedEntry });
         }
 
         break;
     }
 
     // If no route matched
-    return new Response(JSON.stringify({ error: "Route not found" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 404,
-    });
+    return errorResponse("Route not found", 404);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return errorResponse(errorMessage, 500);
   }
 });
