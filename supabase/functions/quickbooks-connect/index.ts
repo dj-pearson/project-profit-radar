@@ -1,5 +1,7 @@
+// QuickBooks Connect Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,30 +14,20 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    )
-
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user } } = await supabaseClient.auth.getUser(token)
-
-    if (!user) {
-      throw new Error('Unauthorized')
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log("[QUICKBOOKS-CONNECT] User authenticated", { userId: user.id, siteId });
 
     const { company_id, redirect_uri } = await req.json()
 
     const clientId = Deno.env.get('QUICKBOOKS_CLIENT_ID')
     const clientSecret = Deno.env.get('QUICKBOOKS_CLIENT_SECRET')
-    
+
     if (!clientId || !clientSecret) {
       throw new Error('QuickBooks credentials not configured')
     }
@@ -43,10 +35,11 @@ serve(async (req) => {
     // Generate state parameter for security
     const state = crypto.randomUUID()
 
-    // Store the connection attempt
+    // Store the connection attempt with site isolation
     await supabaseClient
       .from('quickbooks_integrations')
       .upsert({
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id,
         oauth_state: state,
         connection_status: 'pending',
