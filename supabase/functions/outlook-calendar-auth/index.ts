@@ -1,4 +1,7 @@
+// Outlook Calendar Auth Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +19,15 @@ serve(async (req) => {
 
   try {
     logStep("Function started", { method: req.method });
+
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const clientId = Deno.env.get("MICROSOFT_CLIENT_ID");
     const clientSecret = Deno.env.get("MICROSOFT_CLIENT_SECRET");
@@ -35,10 +47,10 @@ serve(async (req) => {
         throw new Error("Company ID is required");
       }
 
-      // Generate OAuth URL
+      // Generate OAuth URL with site_id in state
       const redirectUri = `${url.origin}/functions/v1/outlook-calendar-callback`;
       const scope = "https://graph.microsoft.com/calendars.read";
-      const state = btoa(JSON.stringify({ company_id }));
+      const state = btoa(JSON.stringify({ company_id, site_id: siteId }));  // CRITICAL: Include site_id
 
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
         `client_id=${clientId}&` +

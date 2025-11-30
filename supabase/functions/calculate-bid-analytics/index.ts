@@ -1,5 +1,7 @@
+// Calculate Bid Analytics Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,19 +14,24 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log('[CALCULATE-BID-ANALYTICS] User authenticated', { userId: user.id, siteId });
 
     const { company_id, period = 'monthly', start_date, end_date } = await req.json();
 
-    console.log('Calculating bid analytics for:', { company_id, period, start_date, end_date });
+    console.log('Calculating bid analytics for:', { siteId, company_id, period, start_date, end_date });
 
-    // Get bid submissions for the period
+    // Get bid submissions for the period with site isolation
     const { data: bids, error: bidsError } = await supabaseClient
       .from('bid_submissions')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .gte('submitted_at', start_date)
       .lte('submitted_at', end_date);
@@ -90,8 +97,9 @@ serve(async (req) => {
       bid_cost_efficiency: totalBidCosts > 0 ? totalWonValue / totalBidCosts : 0
     };
 
-    // Create analytics record
+    // Create analytics record with site isolation
     const analyticsData = {
+      site_id: siteId,  // CRITICAL: Site isolation
       company_id,
       analysis_period: period,
       period_start: start_date,
@@ -111,11 +119,11 @@ serve(async (req) => {
       performance_trends: performanceTrends
     };
 
-    // Insert or update analytics record
+    // Insert or update analytics record with site isolation
     const { data: analytics, error: analyticsError } = await supabaseClient
       .from('bid_analytics')
       .upsert(analyticsData, {
-        onConflict: 'company_id,analysis_period,period_start,period_end'
+        onConflict: 'site_id,company_id,analysis_period,period_start,period_end'
       })
       .select()
       .single();

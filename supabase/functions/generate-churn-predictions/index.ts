@@ -1,9 +1,17 @@
+// Generate Churn Predictions Edge Function
+// Updated with multi-tenant site_id isolation
+// Runs as cron job - processes all sites
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CHURN-PREDICTIONS] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -17,17 +25,36 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get all users with health scores
-    const { data: healthScores, error: healthError } = await supabaseClient
-      .from("user_health_scores")
-      .select(`
-        *,
-        user_profiles!inner(id, email, first_name, last_name)
-      `);
+    // Get all active sites for multi-tenant processing
+    const { data: sites, error: sitesError } = await supabaseClient
+      .from("sites")
+      .select("id, key, name")
+      .eq("is_active", true);
 
-    if (healthError) throw healthError;
+    if (sitesError) throw sitesError;
+
+    logStep("Processing churn predictions for sites", { siteCount: sites?.length || 0 });
 
     let predictionsGenerated = 0;
+    let sitesProcessed = 0;
+
+    // Process each site
+    for (const site of sites || []) {
+      logStep(`Processing site: ${site.key}`, { siteId: site.id });
+
+      // Get all users with health scores for this site
+      const { data: healthScores, error: healthError } = await supabaseClient
+        .from("user_health_scores")
+        .select(`
+          *,
+          user_profiles!inner(id, email, first_name, last_name)
+        `)
+        .eq("site_id", site.id);  // CRITICAL: Site isolation
+
+      if (healthError) {
+        logStep(`Error fetching health scores for site ${site.key}`, { error: healthError.message });
+        continue;
+      }
 
     for (const score of healthScores || []) {
       // Calculate churn probability based on multiple factors
@@ -89,14 +116,16 @@ serve(async (req) => {
 
       // Only create/update predictions for users with meaningful churn risk
       if (churnProbability >= 30 || contributingFactors.length > 0) {
-        // Check if prediction already exists
+        // Check if prediction already exists with site isolation
         const { data: existingPrediction } = await supabaseClient
           .from("churn_predictions")
           .select("id")
+          .eq("site_id", site.id)  // CRITICAL: Site isolation
           .eq("user_id", score.user_id)
           .single();
 
         const predictionData = {
+          site_id: site.id,  // CRITICAL: Site isolation
           user_id: score.user_id,
           churn_probability: Math.round(churnProbability),
           predicted_churn_date: predictedChurnDate.toISOString().split('T')[0],
@@ -108,10 +137,11 @@ serve(async (req) => {
         };
 
         if (existingPrediction) {
-          // Update existing prediction
+          // Update existing prediction with site isolation
           await supabaseClient
             .from("churn_predictions")
             .update(predictionData)
+            .eq("site_id", site.id)  // CRITICAL: Site isolation
             .eq("id", existingPrediction.id);
         } else {
           // Insert new prediction
@@ -124,11 +154,17 @@ serve(async (req) => {
       }
     }
 
+      sitesProcessed++;
+    }  // End of sites loop
+
+    logStep("Churn predictions completed", { predictionsGenerated, sitesProcessed });
+
     return new Response(
       JSON.stringify({
         success: true,
         count: predictionsGenerated,
-        message: `Generated ${predictionsGenerated} churn predictions`,
+        sites_processed: sitesProcessed,
+        message: `Generated ${predictionsGenerated} churn predictions across ${sitesProcessed} sites`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

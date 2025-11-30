@@ -1,6 +1,8 @@
+// Smart Data Analyzer Edge Function
+// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,8 +10,6 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // Comprehensive database schema for AI analysis
 const DATABASE_SCHEMA = `
@@ -69,14 +69,28 @@ CHANGE_ORDERS (change_orders):
 - days_impact, reason
 `;
 
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[SMART-DATA-ANALYZER] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id, siteId });
+
     const { sessionId, csvData, fileName } = await req.json();
+    logStep("Analyzing data", { siteId, sessionId, fileName });
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -180,7 +194,7 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
       fieldMappingsCount: analysis.fieldMappings?.length,
     });
 
-    // Update import session with analysis results
+    // Update import session with analysis results (with site isolation)
     const { error: updateError } = await supabase
       .from('import_sessions')
       .update({
@@ -191,6 +205,7 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
         preview_data: analysis.previewData,
         status: 'analyzed'
       })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', sessionId);
 
     if (updateError) {
@@ -198,7 +213,7 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
       throw updateError;
     }
 
-    // Store field mapping suggestions
+    // Store field mapping suggestions with site isolation
     if (analysis.fieldMappings && analysis.fieldMappings.length > 0) {
       for (const mapping of analysis.fieldMappings) {
         const sampleData = sampleRows
@@ -212,6 +227,7 @@ Always respond with valid JSON only - no markdown, no explanations outside JSON.
         await supabase
           .from('import_field_suggestions')
           .insert({
+            site_id: siteId,  // CRITICAL: Site isolation
             import_session_id: sessionId,
             source_field: mapping.sourceField,
             suggested_target_field: mapping.targetField,

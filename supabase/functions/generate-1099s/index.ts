@@ -1,5 +1,7 @@
+// Generate 1099s Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,30 +38,28 @@ serve(async (req) => {
   try {
     logStep("1099 generation started");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
+    const { user, siteId, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated");
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const requestData: Generate1099Request = await req.json();
-    logStep("Request data received", { 
+    logStep("Request data received", {
+      siteId,
       tax_year: requestData.tax_year,
-      contractor_count: requestData.contractor_ids?.length 
+      contractor_count: requestData.contractor_ids?.length
     });
 
-    // Get user's company
+    // Get user's company with site isolation
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('company_id, role')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -71,10 +71,11 @@ serve(async (req) => {
       throw new Error("Insufficient permissions to generate 1099s");
     }
 
-    // Build contractor filter
+    // Build contractor filter with site isolation
     let contractorFilter = supabaseClient
       .from('contractors')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', profile.company_id)
       .eq('is_active', true);
 
@@ -91,10 +92,11 @@ serve(async (req) => {
     const contractorSummaries: ContractorPaymentSummary[] = [];
 
     for (const contractor of contractors || []) {
-      // Get payments for this contractor in the tax year
+      // Get payments for this contractor in the tax year with site isolation
       const { data: payments, error: paymentsError } = await supabaseClient
         .from('contractor_payments')
         .select('amount, payment_date')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('contractor_id', contractor.id)
         .eq('company_id', profile.company_id)
         .eq('is_1099_reportable', true)
@@ -124,8 +126,9 @@ serve(async (req) => {
 
     logStep("Payment summaries calculated", { summaries_count: contractorSummaries.length });
 
-    // Generate 1099-NEC forms data
+    // Generate 1099-NEC forms data with site isolation
     const forms1099Data = contractorSummaries.map(summary => ({
+      site_id: siteId,  // CRITICAL: Site isolation
       contractor_id: summary.contractor_id,
       contractor_name: summary.contractor_name,
       contractor_tax_id: summary.tax_id,
@@ -142,11 +145,11 @@ serve(async (req) => {
       status: 'draft'
     }));
 
-    // Store 1099 records (would need to create this table)
+    // Store 1099 records with site isolation
     const { error: formsError } = await supabaseClient
       .from('forms_1099')
       .upsert(forms1099Data, {
-        onConflict: 'contractor_id,tax_year',
+        onConflict: 'site_id,contractor_id,tax_year',
         ignoreDuplicates: false
       });
 

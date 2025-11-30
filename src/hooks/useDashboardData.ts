@@ -1,3 +1,7 @@
+/**
+ * Dashboard Data Hook
+ * Updated with multi-tenant site_id isolation
+ */
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,7 +67,7 @@ interface DashboardData {
 }
 
 export function useDashboardData() {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const [data, setData] = useState<DashboardData>({
     kpis: {
       activeProjects: 0,
@@ -82,7 +86,7 @@ export function useDashboardData() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!userProfile?.company_id) {
+    if (!userProfile?.company_id || !siteId) {
       setLoading(false);
       return;
     }
@@ -91,10 +95,11 @@ export function useDashboardData() {
       try {
         setLoading(true);
 
-        // Load projects
+        // Load projects with site isolation
         const { data: projects, error: projectsError } = await supabase
           .from('projects')
           .select('id, name, status, completion_percentage')
+          .eq('site_id', siteId)  // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .in('status', ['active', 'in_progress'])
           .order('created_at', { ascending: false })
@@ -102,10 +107,11 @@ export function useDashboardData() {
 
         if (projectsError) throw projectsError;
 
-        // Load team members count
+        // Load team members count with site isolation
         const { count: teamCount, error: teamError } = await supabase
           .from('user_profiles')
           .select('*', { count: 'exact', head: true })
+          .eq('site_id', siteId)  // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .eq('is_active', true);
 
@@ -132,18 +138,18 @@ export function useDashboardData() {
             status: p.status || 'active',
             completion: p.completion_percentage || 0,
             overallHealth: 'good' as const,
-            budget: { 
-              spent: 0, 
-              total: 100000, 
-              variance: 0 
+            budget: {
+              spent: 0,
+              total: 100000,
+              variance: 0
             },
-            schedule: { 
+            schedule: {
               completion: p.completion_percentage || 0,
               daysRemaining: 30,
-              daysToDeadline: 30, 
-              onTrack: true 
+              daysToDeadline: 30,
+              onTrack: true
             },
-            safety: { 
+            safety: {
               incidents: 0,
               score: 100
             }
@@ -162,10 +168,10 @@ export function useDashboardData() {
     };
 
     loadDashboardData();
-  }, [userProfile?.company_id]);
+  }, [userProfile?.company_id, siteId]);
 
   const refetch = () => {
-    if (userProfile?.company_id) {
+    if (userProfile?.company_id && siteId) {
       setLoading(true);
       setError(null);
     }

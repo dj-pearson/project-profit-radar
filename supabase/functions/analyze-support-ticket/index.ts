@@ -1,4 +1,5 @@
 // AI-powered ticket analyzer
+// Updated with multi-tenant site_id isolation
 // Categorizes tickets, suggests responses, and identifies relevant KB articles
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -55,34 +56,38 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log(`Analyzing ticket ${ticketId}...`);
+    console.log(`[ANALYZE-TICKET] Analyzing ticket ${ticketId}...`);
 
-    // Get ticket details
+    // Get ticket details with site_id
     const { data: ticket, error: ticketError } = await supabase
       .from("support_tickets")
-      .select("*")
+      .select("*, site_id")
       .eq("id", ticketId)
       .single();
 
     if (ticketError) throw ticketError;
 
+    // Get site_id from ticket for isolation
+    const siteId = ticket.site_id;
+    console.log(`[ANALYZE-TICKET] Processing for site:`, siteId);
+
     // Analyze ticket content
     const analysis = await analyzeTicket(ticket);
 
-    // Get user context
-    const context = await getUserContext(supabase, ticket);
+    // Get user context with site isolation
+    const context = await getUserContext(supabase, ticket, siteId);
 
     // Generate response suggestions
     const suggestions = await generateSuggestions(supabase, ticket, analysis, context);
 
-    // Find relevant KB articles
-    const kbArticles = await findRelevantKBArticles(supabase, ticket, analysis);
+    // Find relevant KB articles with site isolation
+    const kbArticles = await findRelevantKBArticles(supabase, ticket, analysis, siteId);
 
-    // Save analysis results
-    await saveAnalysisResults(supabase, ticketId, analysis, suggestions, kbArticles);
+    // Save analysis results with site isolation
+    await saveAnalysisResults(supabase, ticketId, siteId, analysis, suggestions, kbArticles);
 
-    // Update ticket context
-    await saveTicketContext(supabase, ticketId, context);
+    // Update ticket context with site isolation
+    await saveTicketContext(supabase, ticketId, siteId, context);
 
     console.log(`Ticket ${ticketId} analyzed successfully`);
 
@@ -316,13 +321,18 @@ function calculateConfidence(category: string, priority: string, sentiment: stri
   return Math.min(confidence, 1.0);
 }
 
-async function getUserContext(supabase: any, ticket: any) {
-  // Get user profile
-  const { data: user } = await supabase
+async function getUserContext(supabase: any, ticket: any, siteId: string | null) {
+  // Get user profile with site isolation
+  let userQuery = supabase
     .from("user_profiles")
     .select("*")
-    .eq("email", ticket.customer_email)
-    .single();
+    .eq("email", ticket.customer_email);
+
+  if (siteId) {
+    userQuery = userQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: user } = await userQuery.single();
 
   if (!user) {
     return {
@@ -336,44 +346,71 @@ async function getUserContext(supabase: any, ticket: any) {
     };
   }
 
-  // Get company info
-  const { data: company } = await supabase
+  // Get company info with site isolation
+  let companyQuery = supabase
     .from("companies")
     .select("*")
-    .eq("id", user.company_id)
-    .single();
+    .eq("id", user.company_id);
 
-  // Get health score
-  const { data: health } = await supabase
+  if (siteId) {
+    companyQuery = companyQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: company } = await companyQuery.single();
+
+  // Get health score with site isolation
+  let healthQuery = supabase
     .from("account_health_scores")
     .select("*")
     .eq("company_id", user.company_id)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    .limit(1);
 
-  // Get recent activity (last 10 actions)
-  const { data: recentActions } = await supabase
+  if (siteId) {
+    healthQuery = healthQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: health } = await healthQuery.single();
+
+  // Get recent activity (last 10 actions) with site isolation
+  let activityQuery = supabase
     .from("user_activity_timeline")
     .select("*")
     .eq("user_id", user.id)
     .order("timestamp", { ascending: false })
     .limit(10);
 
-  // Get integration status
-  const { data: settings } = await supabase
+  if (siteId) {
+    activityQuery = activityQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: recentActions } = await activityQuery;
+
+  // Get integration status with site isolation
+  let settingsQuery = supabase
     .from("company_settings")
     .select("*")
-    .eq("company_id", user.company_id)
-    .single();
+    .eq("company_id", user.company_id);
 
-  // Get support history
-  const { data: pastTickets } = await supabase
+  if (siteId) {
+    settingsQuery = settingsQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: settings } = await settingsQuery.single();
+
+  // Get support history with site isolation
+  let pastTicketsQuery = supabase
     .from("support_tickets")
     .select("id, status, created_at")
     .eq("customer_email", ticket.customer_email)
     .order("created_at", { ascending: false })
     .limit(5);
+
+  if (siteId) {
+    pastTicketsQuery = pastTicketsQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: pastTickets } = await pastTicketsQuery;
 
   const accountAge = company
     ? Math.floor((new Date().getTime() - new Date(company.created_at).getTime()) / (1000 * 60 * 60 * 24))
@@ -468,16 +505,22 @@ function generateAutoResponse(ticket: any, analysis: any, context: any): string 
   return response;
 }
 
-async function findRelevantKBArticles(supabase: any, ticket: any, analysis: any) {
-  // Search knowledge base articles
+async function findRelevantKBArticles(supabase: any, ticket: any, analysis: any, siteId: string | null) {
+  // Search knowledge base articles with site isolation
   const searchTerms = `${ticket.subject} ${ticket.description}`.toLowerCase();
 
-  const { data: articles } = await supabase
+  let articlesQuery = supabase
     .from("knowledge_base_articles")
     .select("id, title, category, helpful_count, not_helpful_count")
     .or(`title.ilike.%${analysis.category}%,content.ilike.%${analysis.category}%`)
     .order("helpful_count", { ascending: false })
     .limit(3);
+
+  if (siteId) {
+    articlesQuery = articlesQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+  }
+
+  const { data: articles } = await articlesQuery;
 
   return (articles || []).map((article) => ({
     articleId: article.id,
@@ -491,13 +534,14 @@ async function findRelevantKBArticles(supabase: any, ticket: any, analysis: any)
 async function saveAnalysisResults(
   supabase: any,
   ticketId: string,
+  siteId: string | null,
   analysis: any,
   suggestions: any[],
   kbArticles: any[]
 ) {
-  // Save each suggestion
+  // Save each suggestion with site isolation
   for (const suggestion of suggestions) {
-    await supabase.from("support_suggestions").insert({
+    const insertData: any = {
       ticket_id: ticketId,
       suggestion_type: suggestion.suggestion_type,
       confidence_score: suggestion.confidence_score,
@@ -505,21 +549,33 @@ async function saveAnalysisResults(
       suggested_priority: suggestion.suggested_priority,
       suggested_content: suggestion.suggested_content,
       kb_article_id: suggestion.kb_article_id,
-    });
+    };
+
+    if (siteId) {
+      insertData.site_id = siteId;  // CRITICAL: Site isolation
+    }
+
+    await supabase.from("support_suggestions").insert(insertData);
   }
 
-  // Update ticket with suggested category and priority
-  await supabase
+  // Update ticket with suggested category and priority (already site-isolated by ticketId)
+  let updateQuery = supabase
     .from("support_tickets")
     .update({
       category: analysis.category,
       priority: analysis.priority,
     })
     .eq("id", ticketId);
+
+  if (siteId) {
+    updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
+  }
+
+  await updateQuery;
 }
 
-async function saveTicketContext(supabase: any, ticketId: string, context: any) {
-  await supabase.from("support_ticket_context").upsert({
+async function saveTicketContext(supabase: any, ticketId: string, siteId: string | null, context: any) {
+  const upsertData: any = {
     ticket_id: ticketId,
     user_id: context.userId,
     company_id: context.companyId,
@@ -528,5 +584,13 @@ async function saveTicketContext(supabase: any, ticketId: string, context: any) 
     recent_actions: context.recentActions,
     integration_status: context.integrationStatus,
     support_history_summary: context.supportHistory,
+  };
+
+  if (siteId) {
+    upsertData.site_id = siteId;  // CRITICAL: Site isolation
+  }
+
+  await supabase.from("support_ticket_context").upsert(upsertData, {
+    onConflict: siteId ? 'ticket_id,site_id' : 'ticket_id'
   });
 }

@@ -1,11 +1,12 @@
 /**
  * QuickBooks OAuth Callback Handler
+ * Updated with multi-tenant site_id isolation
  *
  * Exchanges authorization code for access/refresh tokens
  * and stores them in the database.
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,25 +40,14 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Use service role for updates
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    )
-
-    // Verify user authentication
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user } } = await supabaseClient.auth.getUser(token)
-
-    if (!user) {
-      throw new Error('Unauthorized')
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log("[QUICKBOOKS-CALLBACK] User authenticated", { userId: user.id, siteId });
 
     const { code, state, realm_id, company_id, redirect_uri } = await req.json()
 
@@ -74,10 +64,11 @@ serve(async (req) => {
       throw new Error('QuickBooks credentials not configured')
     }
 
-    // Verify state parameter matches stored state
+    // Verify state parameter matches stored state with site isolation
     const { data: integration, error: stateError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('oauth_state')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .single()
 
@@ -151,7 +142,7 @@ serve(async (req) => {
       }
     }
 
-    // Update integration record with tokens
+    // Update integration record with tokens with site isolation
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
@@ -167,6 +158,7 @@ serve(async (req) => {
         last_sync_status: 'never',
         updated_at: now.toISOString(),
       })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id)
 
     if (updateError) {
@@ -174,10 +166,11 @@ serve(async (req) => {
       throw new Error('Failed to save connection. Please try again.')
     }
 
-    // Log the successful connection
+    // Log the successful connection with site isolation
     await supabaseClient
       .from('quickbooks_sync_logs')
       .insert({
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id: company_id,
         sync_type: 'connection',
         status: 'success',

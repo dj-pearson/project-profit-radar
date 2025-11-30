@@ -351,7 +351,8 @@ npm run mcp:supabase           # Run Supabase MCP server
 - `webhooks`: Webhook subscriptions
 
 ### Key Database Features
-- **Multi-tenant architecture**: Complete tenant isolation with RLS
+- **Multi-site architecture**: Complete site isolation with `site_id` on all tables
+- **Two-layer isolation**: Site-level + Company-level data separation
 - **Role-based access control**: 7+ user roles with granular permissions
 - **Real-time collaboration**: Supabase Realtime for live updates
 - **Audit logging**: Tamper-proof blockchain-style audit trails
@@ -360,6 +361,235 @@ npm run mcp:supabase           # Run Supabase MCP server
 - **Template systems**: Projects, estimates, reports
 - **SSO/MFA support**: Enterprise authentication
 - **Compliance automation**: GDPR, SOC2, HIPAA workflows
+
+---
+
+## Multi-Tenant Architecture (CRITICAL)
+
+> **IMPORTANT FOR AI ASSISTANTS**: This section is critical for maintaining data isolation. All database operations, edge functions, and migrations MUST include proper `site_id` handling.
+
+### Overview
+
+BuildDesk uses a **unified multi-site architecture** where multiple Pearson Media products share a single Supabase database with complete data isolation. Each site (BuildDesk, RealEstate Bio, SalonPros Bio, etc.) is identified by a unique `site_id`.
+
+### Site Identification
+
+**BuildDesk Site ID**: When writing migrations or edge functions for BuildDesk, use the BuildDesk site record. For migrating external projects, each project gets its own `site_id`.
+
+```sql
+-- Get BuildDesk site_id
+SELECT id FROM sites WHERE key = 'builddesk';
+
+-- Sites table structure
+CREATE TABLE sites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,           -- 'builddesk', 'realestate', 'salonpros'
+  name TEXT NOT NULL,                 -- Display name
+  domain TEXT NOT NULL,               -- Primary domain: 'build-desk.com'
+  additional_domains TEXT[],          -- Staging & custom domains
+  config JSONB DEFAULT '{}',          -- Branding, features, limits
+  is_active BOOLEAN DEFAULT TRUE,
+  is_production BOOLEAN DEFAULT FALSE
+);
+```
+
+### Two-Layer Data Isolation
+
+All data access is controlled by two layers of isolation:
+
+**Layer 1: Site Isolation** (Required for ALL queries)
+- Every tenant-visible table has `site_id UUID NOT NULL REFERENCES sites(id)`
+- Prevents cross-site data access between products (BuildDesk vs RealEstate Bio)
+
+**Layer 2: Company Isolation** (Within a site)
+- `company_id` filters data within a site
+- Prevents one BuildDesk customer from seeing another's data
+
+```sql
+-- Example RLS policy with two-layer isolation
+CREATE POLICY "Users can view projects in their site and company"
+  ON projects FOR SELECT
+  USING (
+    -- Layer 1: Site isolation (ALWAYS REQUIRED)
+    site_id = public.current_site_id()
+
+    -- Layer 2: Company isolation
+    AND company_id IN (
+      SELECT company_id FROM user_profiles
+      WHERE user_id = auth.uid()
+    )
+  );
+```
+
+### Tables with site_id (30+ tables)
+
+**Core Tables**: `companies`, `user_profiles`, `projects`, `time_entries`, `financial_records`, `documents`, `expenses`, `invoices`, `estimates`, `tasks`, `crm_contacts`, `crm_leads`, `notifications`, `audit_logs`, `crew_gps_checkins`, `daily_reports`, `change_orders`
+
+**Extended Tables**: `project_templates`, `estimate_templates`, `daily_report_templates`, `timesheet_approvals`, `equipment_qr_codes`, `saved_filter_presets`, `payments`, `api_keys`, `webhooks`, `blog_posts`, `email_campaigns`, `seo_keywords`
+
+### Critical Rules for Database Operations
+
+#### ✅ ALWAYS DO:
+```sql
+-- Include site_id in new tables
+ALTER TABLE new_table ADD COLUMN site_id UUID NOT NULL REFERENCES sites(id);
+
+-- Filter by site_id in all queries
+SELECT * FROM projects WHERE site_id = :site_id AND company_id = :company_id;
+
+-- Create composite indexes
+CREATE INDEX idx_table_site_company ON table_name(site_id, company_id);
+
+-- Backfill existing data with correct site_id
+UPDATE table_name SET site_id = (SELECT id FROM sites WHERE key = 'builddesk');
+```
+
+#### ❌ NEVER DO:
+```sql
+-- WRONG: Query without site_id filter
+SELECT * FROM projects WHERE company_id = :company_id;  -- MISSING site_id!
+
+-- WRONG: Insert without site_id
+INSERT INTO projects (name, company_id) VALUES ('Test', :company_id);  -- MISSING site_id!
+
+-- WRONG: Allow NULL site_id
+ALTER TABLE new_table ADD COLUMN site_id UUID REFERENCES sites(id);  -- Missing NOT NULL!
+```
+
+### Edge Function Pattern (CRITICAL)
+
+All edge functions MUST use the shared auth helpers to extract and validate `site_id`:
+
+```typescript
+// supabase/functions/your-function/index.ts
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  // Initialize auth context - extracts user AND site_id from JWT
+  const authContext = await initializeAuthContext(req);
+  if (!authContext) {
+    return errorResponse('Unauthorized', 401);
+  }
+
+  const { user, siteId, supabase } = authContext;
+
+  try {
+    // ALWAYS include site_id in queries
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('site_id', siteId)      // ← REQUIRED for every query
+      .eq('company_id', companyId);
+
+    if (error) throw error;
+    return successResponse({ projects: data });
+  } catch (error) {
+    return errorResponse(error.message, 500);
+  }
+});
+```
+
+### Frontend Query Pattern
+
+Use the `useSiteQuery` hook for all data fetching:
+
+```typescript
+// src/hooks/useSiteQuery.ts - Always use this for queries
+import { useAuth } from '@/contexts/AuthContext';
+
+export function useSiteQuery(queryKey, queryFn, options) {
+  const { siteId } = useAuth();
+
+  return useQuery({
+    queryKey: [...queryKey, siteId],  // Include siteId in cache key
+    queryFn: async () => {
+      if (!siteId) throw new Error('No site_id available');
+      return queryFn(siteId);
+    },
+    enabled: !!siteId,
+    ...options,
+  });
+}
+
+// Usage example
+export function useProjects() {
+  return useSiteQuery(['projects'], async (siteId) => {
+    return supabase
+      .from('projects')
+      .select('*')
+      .eq('site_id', siteId)  // ← ALWAYS filter by site_id
+      .order('created_at', { ascending: false });
+  });
+}
+```
+
+### Migration Checklist
+
+When creating new migrations:
+
+- [ ] Add `site_id UUID NOT NULL REFERENCES sites(id)` to new tables
+- [ ] Backfill existing data: `UPDATE table SET site_id = (SELECT id FROM sites WHERE key = 'builddesk')`
+- [ ] Create index: `CREATE INDEX idx_table_site_id ON table(site_id)`
+- [ ] Create composite index: `CREATE INDEX idx_table_site_company ON table(site_id, company_id)`
+- [ ] Update RLS policies to include `site_id = public.current_site_id()`
+
+### Global/Public Functions (Exceptions)
+
+Some functions are intentionally site-agnostic:
+
+- **Public-facing**: Landing pages, marketing content, public blog posts
+- **Cross-site admin**: Root admin functions that manage all sites
+- **Platform-wide**: Site resolution, domain routing
+
+For these functions, document clearly why site_id filtering is not applied.
+
+### Multi-Tenant Documentation
+
+For detailed implementation guides, see:
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| Agent Instructions | `MULTI_TENANT_AGENT_INSTRUCTIONS.md` | Critical rules for AI agents |
+| Migration Guide | `TENANT_MIGRATION_GUIDE.md` | Comprehensive migration procedures |
+| Implementation Summary | `MULTI_SITE_MIGRATION_SUMMARY.md` | What was implemented |
+| Master Guide | `docs/MULTI_SITE_MIGRATION_README.md` | Complete overview |
+| Edge Functions | `docs/EDGE_FUNCTION_MULTI_SITE_MIGRATION.md` | Edge function patterns |
+| Frontend Guide | `docs/FRONTEND_MULTI_SITE_MIGRATION.md` | Frontend integration |
+| New Site Onboarding | `docs/NEW_WEBSITE_ONBOARDING_GUIDE.md` | Adding new sites |
+| Testing Guide | `docs/MULTI_SITE_TESTING_GUIDE.md` | Testing procedures |
+| Quick Reference | `docs/MULTI_SITE_QUICK_REFERENCE.md` | Quick commands |
+
+### Helper Functions Reference
+
+```typescript
+// supabase/functions/_shared/auth-helpers.ts
+
+// Initialize auth context from request
+initializeAuthContext(req: Request): Promise<AuthContext | null>
+
+// Verify user has access to company within site
+verifyCompanyAccess(supabase, userId, companyId, siteId): Promise<boolean>
+
+// Get user's role within site
+getUserRole(supabase, userId, siteId): Promise<string | null>
+
+// Check if user is admin within site
+isAdmin(supabase, userId, siteId): Promise<boolean>
+
+// Check if user is root admin (cross-site)
+isRootAdmin(supabase, userId): Promise<boolean>
+
+// Resolve site from domain
+getSiteByDomain(supabase, domain): Promise<any | null>
+
+// SQL helper function
+public.current_site_id(): UUID  -- Extract site_id from JWT (SQL helper function)
+```
 
 ---
 
@@ -807,31 +1037,36 @@ types/
 
 ### API Integration Pattern
 ```typescript
-// Use TanStack Query for all API calls
+// Use TanStack Query with site_id isolation for all API calls
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+// PREFERRED: Use useSiteQuery hook for automatic site_id handling
+import { useSiteQuery } from '@/hooks/useSiteQuery';
 
 export const useProjects = () => {
-  return useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
+  return useSiteQuery(['projects'], async (siteId) => {
+    return supabase
+      .from('projects')
+      .select('*')
+      .eq('site_id', siteId)  // ← REQUIRED: Always filter by site_id
+      .order('created_at', { ascending: false });
   });
 };
 
+// For mutations, include site_id from AuthContext
 export const useCreateProject = () => {
+  const { siteId } = useAuth();
+
   return useMutation({
     mutationFn: async (project: NewProject) => {
       const { data, error } = await supabase
         .from('projects')
-        .insert(project)
+        .insert({
+          ...project,
+          site_id: siteId,  // ← REQUIRED: Always include site_id
+        })
         .select()
         .single();
 
@@ -1137,6 +1372,8 @@ npm run expo:submit:android
 - **Supabase types**: `src/integrations/supabase/types.ts`
 - **Auth context**: `src/contexts/AuthContext.tsx`
 - **Theme context**: `src/contexts/ThemeContext.tsx`
+- **Site query hook**: `src/hooks/useSiteQuery.ts` (multi-tenant queries)
+- **Auth helpers**: `supabase/functions/_shared/auth-helpers.ts` (edge function auth + site_id)
 - **UI components**: `src/components/ui/`
 - **Utils**: `src/lib/`, `src/utils/`
 - **Types**: `src/types/`
@@ -1180,24 +1417,33 @@ import type { Project } from '@/types/project';
 
 ### Database Query Pattern
 ```typescript
-// Select with RLS
+// CRITICAL: Always include site_id in queries for multi-tenant isolation
+
+// Select with site_id + RLS
 const { data, error } = await supabase
   .from('projects')
   .select('*, company:companies(*)')
+  .eq('site_id', siteId)           // ← REQUIRED: Site isolation
   .eq('status', 'active')
   .order('created_at', { ascending: false });
 
-// Insert with RLS
+// Insert with site_id + RLS
 const { data, error } = await supabase
   .from('projects')
-  .insert({ name, budget, company_id })
+  .insert({
+    name,
+    budget,
+    company_id,
+    site_id: siteId,               // ← REQUIRED: Include site_id
+  })
   .select()
   .single();
 
-// Update with RLS
+// Update with site_id + RLS
 const { data, error } = await supabase
   .from('projects')
   .update({ status: 'completed' })
+  .eq('site_id', siteId)           // ← REQUIRED: Site isolation
   .eq('id', projectId)
   .select();
 ```
@@ -1209,6 +1455,13 @@ const { data, error } = await supabase
 ### Documentation
 - **This file**: `CLAUDE.md` - Main reference for AI assistants
 - **README.md**: Quick start guide
+- **Multi-tenant (CRITICAL)**:
+  - `MULTI_TENANT_AGENT_INSTRUCTIONS.md` - Critical rules for AI agents
+  - `TENANT_MIGRATION_GUIDE.md` - Comprehensive migration guide
+  - `MULTI_SITE_MIGRATION_SUMMARY.md` - Implementation summary
+  - `docs/MULTI_SITE_MIGRATION_README.md` - Master guide
+  - `docs/EDGE_FUNCTION_MULTI_SITE_MIGRATION.md` - Edge function patterns
+  - `docs/FRONTEND_MULTI_SITE_MIGRATION.md` - Frontend integration
 - **Phase documentation**: `PHASE4_COMPLETE_SUMMARY.md` and similar
 - **API docs**: `/docs` directory
 - **Expo docs**: Multiple `EXPO_*.md` files
@@ -1235,9 +1488,10 @@ const { data, error } = await supabase
 
 ---
 
-**Last Updated**: 2025-11-28
-**Version**: 2.1
+**Last Updated**: 2025-11-29
+**Version**: 2.2
 **Platform Status**: ~95% Complete (Phase 5 in progress)
+**Architecture**: Multi-tenant with site_id isolation (see Multi-Tenant Architecture section)
 **Next Milestone**: Production Launch & App Store Submissions
 
 ---

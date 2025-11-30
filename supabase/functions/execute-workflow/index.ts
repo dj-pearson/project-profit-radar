@@ -1,3 +1,5 @@
+// Execute Workflow Edge Function
+// Updated with multi-tenant site_id isolation
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 
 const corsHeaders = {
@@ -59,10 +61,10 @@ Deno.serve(async (req) => {
 })
 
 async function startExecution(supabase: any, workflowId: string, triggerData: Record<string, any>) {
-  // Get workflow definition
+  // Get workflow definition with site_id
   const { data: workflow, error: workflowError } = await supabase
     .from('workflow_definitions')
-    .select('*')
+    .select('*, site_id')  // Include site_id
     .eq('id', workflowId)
     .single()
 
@@ -70,11 +72,15 @@ async function startExecution(supabase: any, workflowId: string, triggerData: Re
   if (!workflow.is_active) throw new Error('Workflow is not active')
 
   const steps = workflow.workflow_steps as WorkflowStep[]
+  const siteId = workflow.site_id
 
-  // Create execution record
+  console.log('[EXECUTE-WORKFLOW] Starting execution', { workflowId, siteId, companyId: workflow.company_id })
+
+  // Create execution record with site isolation
   const { data: execution, error: executionError } = await supabase
     .from('workflow_executions')
     .insert({
+      site_id: siteId,  // CRITICAL: Site isolation
       company_id: workflow.company_id,
       workflow_id: workflowId,
       trigger_data: triggerData,
@@ -90,8 +96,8 @@ async function startExecution(supabase: any, workflowId: string, triggerData: Re
 
   if (executionError) throw executionError
 
-  // Execute steps
-  await executeSteps(supabase, execution, steps)
+  // Execute steps (pass siteId)
+  await executeSteps(supabase, execution, steps, 0, siteId)
 
   return execution
 }
@@ -99,35 +105,45 @@ async function startExecution(supabase: any, workflowId: string, triggerData: Re
 async function continueExecution(supabase: any, executionId: string) {
   const { data: execution, error } = await supabase
     .from('workflow_executions')
-    .select('*, workflow_definitions(*)')
+    .select('*, site_id, workflow_definitions(*)')
     .eq('id', executionId)
     .single()
 
   if (error) throw error
 
   const steps = execution.workflow_definitions.workflow_steps as WorkflowStep[]
-  await executeSteps(supabase, execution, steps, execution.completed_steps)
+  const siteId = execution.site_id
+
+  console.log('[EXECUTE-WORKFLOW] Continuing execution', { executionId, siteId })
+
+  await executeSteps(supabase, execution, steps, execution.completed_steps, siteId)
 
   return execution
 }
 
-async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[], startIndex: number = 0) {
+async function executeSteps(supabase: any, execution: any, steps: WorkflowStep[], startIndex: number = 0, siteId?: string) {
   for (let i = startIndex; i < steps.length; i++) {
     const step = steps[i]
-    
+
     try {
-      // Create step execution record
+      // Create step execution record with site isolation
+      const stepInsertData: any = {
+        company_id: execution.company_id,
+        execution_id: execution.id,
+        step_index: i,
+        step_name: step.name,
+        step_type: step.type,
+        step_config: step.config,
+        started_at: new Date().toISOString()
+      }
+
+      if (siteId) {
+        stepInsertData.site_id = siteId  // CRITICAL: Site isolation
+      }
+
       const { data: stepExecution, error: stepError } = await supabase
         .from('workflow_step_executions')
-        .insert({
-          company_id: execution.company_id,
-          execution_id: execution.id,
-          step_index: i,
-          step_name: step.name,
-          step_type: step.type,
-          step_config: step.config,
-          started_at: new Date().toISOString()
-        })
+        .insert(stepInsertData)
         .select()
         .single()
 

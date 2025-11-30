@@ -1,8 +1,9 @@
 // Google Analytics & Search Console OAuth Flow
 // Handles OAuth 2.0 authentication for Google platforms
+// Updated with multi-tenant site_id isolation
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET') || '';
@@ -31,24 +32,14 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Get the authenticated user
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
-    if (!user) {
-      throw new Error('Unauthorized');
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log("[ANALYTICS-OAUTH-GOOGLE] User authenticated", { userId: user.id, siteId });
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -128,10 +119,11 @@ serve(async (req) => {
       });
       const profile = await profileResponse.json();
 
-      // Get user's company_id
+      // Get user's company_id with site isolation
       const { data: userProfile } = await supabaseClient
         .from('user_profiles')
         .select('company_id')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', user.id)
         .single();
 
@@ -141,10 +133,11 @@ serve(async (req) => {
 
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
-      // Store connection in database
+      // Store connection in database with site isolation
       const { data: connection, error: dbError } = await supabaseClient
         .from('analytics_platform_connections')
         .upsert({
+          site_id: siteId,  // CRITICAL: Site isolation
           company_id: userProfile.company_id,
           platform_name: platform,
           platform_display_name: platform === 'google_analytics' ? 'Google Analytics 4' : 'Google Search Console',
@@ -192,6 +185,7 @@ serve(async (req) => {
           for (const account of propertiesData.accountSummaries) {
             for (const propertySummary of account.propertySummaries || []) {
               await supabaseClient.from('ga4_properties').upsert({
+                site_id: siteId,  // CRITICAL: Site isolation
                 connection_id: connection.id,
                 company_id: userProfile.company_id,
                 property_id: propertySummary.property.split('/').pop(),
@@ -229,8 +223,9 @@ serve(async (req) => {
               })
               .eq('id', connection.id);
 
-            // Also create in gsc_properties if exists
+            // Also create in gsc_properties if exists with site isolation
             await supabaseClient.from('gsc_properties').upsert({
+              site_id: siteId,  // CRITICAL: Site isolation
               company_id: userProfile.company_id,
               credentials_id: connection.id,
               property_url: site.siteUrl,

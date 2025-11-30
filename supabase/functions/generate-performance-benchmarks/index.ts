@@ -1,4 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
+// Generate Performance Benchmarks Edge Function
+// Updated with multi-tenant site_id isolation
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,50 +14,46 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
 
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authError || !user) {
-      throw new Error('Invalid authorization');
-    }
+    const { user, siteId, supabase } = authContext;
+    console.log('[GENERATE-PERFORMANCE-BENCHMARKS] User authenticated', { userId: user.id, siteId });
 
     const { company_id } = await req.json();
     if (!company_id) {
       throw new Error('Company ID is required');
     }
 
-    console.log('Generating performance benchmarks for company:', company_id);
+    console.log('Generating performance benchmarks for company:', { siteId, company_id });
 
-    // Get company and project data
+    // Get company and project data with site isolation
     const { data: company } = await supabase
       .from('companies')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', company_id)
       .single();
 
     const { data: projects } = await supabase
       .from('projects')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     const { data: expenses } = await supabase
       .from('expenses')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     // Calculate company metrics
@@ -174,10 +172,11 @@ Ensure all numbers are realistic for the construction industry and consistent wi
     // Enhance with actual company metrics
     const enhancedBenchmarks = enhanceBenchmarkData(benchmarkData, metrics, company);
 
-    // Store in database
+    // Store in database with site isolation
     const { data: savedBenchmark, error: saveError } = await supabase
       .from('performance_benchmarks')
       .insert({
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id,
         benchmark_period: 'quarterly',
         period_start: new Date(new Date().getFullYear(), Math.floor(new Date().getMonth() / 3) * 3, 1).toISOString().split('T')[0],

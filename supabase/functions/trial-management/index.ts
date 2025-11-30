@@ -1,3 +1,6 @@
+// Trial Management Edge Function
+// Updated with multi-tenant site_id isolation
+// Runs as cron job - processes all sites
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
@@ -37,29 +40,48 @@ serve(async (req) => {
     const threeDaysFromNow = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
     const oneDayFromNow = new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000);
 
-    // Get companies with trials ending soon or expired
-    const { data: companiesData, error: companiesError } = await supabaseClient
-      .from("companies")
-      .select(`
-        id, name, trial_end_date, subscription_status,
-        user_profiles!inner(id, email, first_name, last_name, role)
-      `)
-      .eq("subscription_status", "trial")
-      .lte("trial_end_date", threeDaysFromNow.toISOString())
-      .eq("user_profiles.role", "admin");
+    // Get all active sites for multi-tenant processing
+    const { data: sites, error: sitesError } = await supabaseClient
+      .from("sites")
+      .select("id, key, name")
+      .eq("is_active", true);
 
-    if (companiesError) {
-      throw new Error(`Error fetching companies: ${companiesError.message}`);
+    if (sitesError) {
+      throw new Error(`Error fetching sites: ${sitesError.message}`);
     }
 
-    logStep("Found companies with trials ending soon", { count: companiesData?.length || 0 });
+    logStep("Processing trial management for sites", { siteCount: sites?.length || 0 });
 
     const results = {
       warnings_sent: 0,
       conversions_attempted: 0,
       expired_trials: 0,
-      grace_periods_activated: 0
+      grace_periods_activated: 0,
+      sites_processed: 0
     };
+
+    // Process each site
+    for (const site of sites || []) {
+      logStep(`Processing site: ${site.key}`, { siteId: site.id });
+
+      // Get companies with trials ending soon or expired for this site
+      const { data: companiesData, error: companiesError } = await supabaseClient
+        .from("companies")
+        .select(`
+          id, name, trial_end_date, subscription_status, site_id,
+          user_profiles!inner(id, email, first_name, last_name, role)
+        `)
+        .eq("site_id", site.id)  // CRITICAL: Site isolation
+        .eq("subscription_status", "trial")
+        .lte("trial_end_date", threeDaysFromNow.toISOString())
+        .eq("user_profiles.role", "admin");
+
+      if (companiesError) {
+        logStep(`Error fetching companies for site ${site.key}`, { error: companiesError.message });
+        continue;
+      }
+
+      logStep(`Found companies with trials ending soon for ${site.key}`, { count: companiesData?.length || 0 });
 
     for (const company of companiesData || []) {
       try {
@@ -75,36 +97,38 @@ serve(async (req) => {
         if (trialEndDate <= today) {
           // Trial has expired - activate grace period or suspend
           const gracePeriodEnd = new Date(trialEndDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-          
+
           if (today <= gracePeriodEnd) {
-            // Still in grace period
+            // Still in grace period - with site isolation
             await supabaseClient
               .from("companies")
               .update({
                 subscription_status: "grace_period",
                 updated_at: new Date().toISOString()
               })
+              .eq("site_id", site.id)  // CRITICAL: Site isolation
               .eq("id", company.id);
 
             // Send grace period email
             await sendGracePeriodEmail(resend, admin, company, gracePeriodEnd);
             results.grace_periods_activated++;
-            
-            logStep("Activated grace period", { companyId: company.id });
+
+            logStep("Activated grace period", { companyId: company.id, siteId: site.id });
           } else {
-            // Grace period expired - suspend account
+            // Grace period expired - suspend account - with site isolation
             await supabaseClient
               .from("companies")
               .update({
                 subscription_status: "suspended",
                 updated_at: new Date().toISOString()
               })
+              .eq("site_id", site.id)  // CRITICAL: Site isolation
               .eq("id", company.id);
 
             await sendTrialExpiredEmail(resend, admin, company);
             results.expired_trials++;
-            
-            logStep("Trial expired and suspended", { companyId: company.id });
+
+            logStep("Trial expired and suspended", { companyId: company.id, siteId: site.id });
           }
         } else if (trialEndDate <= oneDayFromNow) {
           // Send 1-day warning
@@ -122,12 +146,15 @@ serve(async (req) => {
 
       } catch (error) {
         const errorObj = error as Error;
-        logStep("Error processing company", { 
-          companyId: company.id, 
-          error: errorObj.message 
+        logStep("Error processing company", {
+          companyId: company.id,
+          error: errorObj.message
         });
       }
     }
+
+      results.sites_processed++;
+    }  // End of sites loop
 
     logStep("Trial management completed", results);
 

@@ -1,5 +1,7 @@
+// Blog Social Integration Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { aiService } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
@@ -13,21 +15,26 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId, supabase } = authContext;
+    console.log("[BLOG-SOCIAL] User authenticated", { userId: user.id, siteId });
 
     const { blogContent, companyId } = await req.json();
-    
+
     console.log("Generating social media content from blog post");
 
     // Generate social media posts using AI service
     const socialContent = await generateSocialContent(blogContent);
-    
-    // Save to database
+
+    // Save to database with site isolation
     for (const post of socialContent) {
       await supabase.from('social_media_posts').insert({
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id: companyId,
         platform: post.platform,
         content: post.content,
@@ -36,9 +43,9 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      posts_generated: socialContent.length 
+    return new Response(JSON.stringify({
+      success: true,
+      posts_generated: socialContent.length
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

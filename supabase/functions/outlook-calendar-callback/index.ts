@@ -1,3 +1,5 @@
+// Outlook Calendar Callback Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -14,6 +16,7 @@ serve(async (req) => {
   try {
     logStep("Function started", { method: req.method });
 
+    // Use service role for callback (no user JWT available)
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -51,9 +54,10 @@ serve(async (req) => {
       throw new Error("Missing code or state parameter");
     }
 
-    // Decode state to get company_id
+    // Decode state to get company_id and site_id
     const stateData = JSON.parse(atob(state));
-    const { company_id } = stateData;
+    const { company_id, site_id: siteId } = stateData;
+    logStep("State decoded", { company_id, siteId });
 
     // Exchange code for tokens
     const redirectUri = `${url.origin}/functions/v1/outlook-calendar-callback`;
@@ -92,10 +96,11 @@ serve(async (req) => {
     const userInfo = await userInfoResponse.json();
     logStep("User info received", { email: userInfo.mail || userInfo.userPrincipalName });
 
-    // Store integration in database
+    // Store integration in database with site isolation
     const { error: dbError } = await supabaseClient
       .from('calendar_integrations')
       .upsert({
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id,
         provider: 'outlook',
         account_email: userInfo.mail || userInfo.userPrincipalName,
@@ -105,7 +110,7 @@ serve(async (req) => {
         is_active: true,
         sync_enabled: true,
       }, {
-        onConflict: 'company_id,provider,account_email'
+        onConflict: 'site_id,company_id,provider,account_email'  // Updated conflict resolution
       });
 
     if (dbError) {

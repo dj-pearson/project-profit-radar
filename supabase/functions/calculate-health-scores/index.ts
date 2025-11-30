@@ -1,5 +1,6 @@
-// Calculate health scores for all companies
-// Runs daily via cron job
+// Calculate Health Scores Edge Function
+// Updated with multi-tenant site_id isolation
+// Runs daily via cron job - processes all companies within each site
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -12,6 +13,7 @@ const corsHeaders = {
 
 interface Company {
   id: string;
+  site_id: string;
   created_at: string;
   subscription_status: string;
 }
@@ -43,38 +45,56 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log("Starting health score calculation...");
+    console.log("[CALCULATE-HEALTH] Starting health score calculation...");
 
-    // Get all companies
-    const { data: companies, error: companiesError } = await supabase
-      .from("companies")
-      .select("*");
+    // Get all active sites
+    const { data: sites, error: sitesError } = await supabase
+      .from("sites")
+      .select("id, key, name")
+      .eq("is_active", true);
 
-    if (companiesError) throw companiesError;
+    if (sitesError) throw sitesError;
 
-    console.log(`Processing ${companies.length} companies`);
+    console.log(`[CALCULATE-HEALTH] Processing ${sites?.length || 0} sites`);
 
-    const results = [];
+    const allResults = [];
 
-    for (const company of companies) {
-      try {
-        const healthScore = await calculateCompanyHealthScore(supabase, company);
-        results.push({ companyId: company.id, success: true, score: healthScore.score });
-      } catch (error) {
-        console.error(`Error calculating health for company ${company.id}:`, error);
-        results.push({ companyId: company.id, success: false, error: error.message });
+    for (const site of sites || []) {
+      console.log(`[CALCULATE-HEALTH] Processing site: ${site.key}`);
+
+      // Get all companies for this site with site isolation
+      const { data: companies, error: companiesError } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("site_id", site.id);  // CRITICAL: Site isolation
+
+      if (companiesError) {
+        console.error(`[CALCULATE-HEALTH] Error fetching companies for site ${site.key}:`, companiesError);
+        continue;
+      }
+
+      console.log(`[CALCULATE-HEALTH] Processing ${companies?.length || 0} companies for site ${site.key}`);
+
+      for (const company of companies || []) {
+        try {
+          const healthScore = await calculateCompanyHealthScore(supabase, company, site.id);
+          allResults.push({ siteId: site.id, companyId: company.id, success: true, score: healthScore.score });
+        } catch (error) {
+          console.error(`[CALCULATE-HEALTH] Error calculating health for company ${company.id}:`, error);
+          allResults.push({ siteId: site.id, companyId: company.id, success: false, error: error.message });
+        }
       }
     }
 
-    const successCount = results.filter((r) => r.success).length;
-    console.log(`Completed: ${successCount}/${companies.length} successful`);
+    const successCount = allResults.filter((r) => r.success).length;
+    console.log(`[CALCULATE-HEALTH] Completed: ${successCount}/${allResults.length} successful`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        processed: companies.length,
+        processed: allResults.length,
         successful: successCount,
-        results,
+        results: allResults,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -82,7 +102,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error in calculate-health-scores:", error);
+    console.error("[CALCULATE-HEALTH] Error in calculate-health-scores:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -93,42 +113,47 @@ serve(async (req) => {
   }
 });
 
-async function calculateCompanyHealthScore(supabase: any, company: Company) {
-  // Get all users for this company
+async function calculateCompanyHealthScore(supabase: any, company: Company, siteId: string) {
+  // Get all users for this company with site isolation
   const { data: users, error: usersError } = await supabase
     .from("user_profiles")
     .select("id, last_login, is_active")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", company.id);
 
   if (usersError) throw usersError;
 
-  // Get company settings to check enabled features
+  // Get company settings with site isolation
   const { data: settings } = await supabase
     .from("company_settings")
     .select("*")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .single();
 
-  // Get projects
+  // Get projects with site isolation
   const { data: projects } = await supabase
     .from("projects")
     .select("id, status, updated_at")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", company.id);
 
-  // Get recent activity (last 30 days)
+  // Get recent activity (last 30 days) with site isolation
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const { data: recentActivity } = await supabase
     .from("user_activity_timeline")
     .select("user_id")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .gte("timestamp", thirtyDaysAgo.toISOString());
 
-  // Get support tickets (last 30 days)
+  // Get support tickets (last 30 days) with site isolation
   const { data: supportTickets } = await supabase
     .from("support_tickets")
     .select("id, status")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .gte("created_at", thirtyDaysAgo.toISOString());
 
@@ -152,10 +177,11 @@ async function calculateCompanyHealthScore(supabase: any, company: Company) {
     components.paymentHealth * 0.10
   );
 
-  // Determine trend (compare with previous score)
+  // Determine trend (compare with previous score) with site isolation
   const { data: previousScore } = await supabase
     .from("account_health_scores")
     .select("score")
+    .eq("site_id", siteId)  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -174,10 +200,11 @@ async function calculateCompanyHealthScore(supabase: any, company: Company) {
   else if (overallScore < 50) riskLevel = 'high';
   else if (overallScore < 70) riskLevel = 'medium';
 
-  // Insert new health score
+  // Insert new health score with site isolation
   const { error: insertError } = await supabase
     .from("account_health_scores")
     .insert({
+      site_id: siteId,  // CRITICAL: Include site_id
       company_id: company.id,
       score: overallScore,
       login_frequency_score: components.loginFrequency,

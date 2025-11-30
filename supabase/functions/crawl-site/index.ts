@@ -1,5 +1,7 @@
+// Crawl Site Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,31 +21,20 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
 
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log("[CRAWL-SITE] User authenticated", { userId: user.id, siteId });
+
+    // Check for root_admin role with site isolation
     const { data: userProfile } = await supabaseClient
       .from('user_profiles')
       .select('role')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -140,6 +131,7 @@ serve(async (req) => {
         const stylesMatches = html.match(/<link[^>]*rel=["']stylesheet["']/gi);
 
         const pageData = {
+          site_id: siteId,  // CRITICAL: Site isolation
           url: current.url,
           canonical_url: canonicalMatch ? canonicalMatch[1] : null,
           status_code: statusCode,
@@ -188,6 +180,7 @@ serve(async (req) => {
       } catch (error) {
         console.error(`Error crawling ${current.url}:`, error);
         crawledPages.push({
+          site_id: siteId,  // CRITICAL: Site isolation
           url: current.url,
           status_code: 0,
           has_errors: true,

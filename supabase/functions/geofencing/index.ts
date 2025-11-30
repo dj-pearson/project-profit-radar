@@ -1,12 +1,14 @@
 // Geofencing Calculation Service Edge Function
 // Calculates distances, checks geofence breaches, and triggers alerts
+// Updated with multi-tenant site_id isolation
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 interface Point {
@@ -26,60 +28,57 @@ interface Geofence {
   is_active: boolean
 }
 
+const logStep = (step: string, details?: any) => {
+  console.log(`[GEOFENCING] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`)
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { status: 204, headers: corsHeaders })
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Initialize auth context with site isolation
+    const authContext = await initializeAuthContext(req)
+    if (!authContext) {
+      return errorResponse('Unauthorized - Missing or invalid authentication', 401)
+    }
+
+    const { user, siteId, supabase } = authContext
+    logStep('User authenticated', { userId: user.id, siteId })
 
     const { action, ...params } = await req.json()
 
     switch (action) {
       case 'check_location':
-        return await checkLocation(supabaseClient, params)
+        return await checkLocation(supabase, siteId, params)
 
       case 'calculate_distance':
         return calculateDistance(params)
 
       case 'check_geofence_breach':
-        return await checkGeofenceBreach(supabaseClient, params)
+        return await checkGeofenceBreach(supabase, siteId, params)
 
       case 'process_gps_entry':
-        return await processGPSEntry(supabaseClient, params)
+        return await processGPSEntry(supabase, siteId, params)
 
       case 'calculate_travel_distance':
         return calculateTravelDistance(params)
 
       default:
-        return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
+        return errorResponse('Invalid action', 400)
     }
 
   } catch (error) {
-    console.error('Geofencing Error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logStep('ERROR', { message: errorMessage })
+    return errorResponse(errorMessage, 500)
   }
 })
 
-// Check if a location is within any active geofences
-async function checkLocation(supabaseClient: any, params: {
+// Check if a location is within any active geofences (with site isolation)
+async function checkLocation(supabase: any, siteId: string, params: {
   lat: number
   lng: number
   user_id?: string
@@ -87,10 +86,11 @@ async function checkLocation(supabaseClient: any, params: {
 }) {
   const { lat, lng, user_id, project_id } = params
 
-  // Get active geofences
-  let query = supabaseClient
+  // Get active geofences with site isolation
+  let query = supabase
     .from('geofences')
     .select('*')
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .eq('is_active', true)
 
   if (project_id) {
@@ -124,20 +124,13 @@ async function checkLocation(supabaseClient: any, params: {
     })
   }
 
-  return new Response(
-    JSON.stringify({
-      success: true,
-      location: { lat, lng },
-      geofences: results
-    }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  )
+  return successResponse({
+    location: { lat, lng },
+    geofences: results
+  })
 }
 
-// Calculate distance between two points
+// Calculate distance between two points (no DB access needed)
 function calculateDistance(params: {
   point1: Point
   point2: Point
@@ -146,22 +139,15 @@ function calculateDistance(params: {
 
   const distanceMeters = calculateHaversineDistance(point1, point2)
 
-  return new Response(
-    JSON.stringify({
-      success: true,
-      distance_meters: distanceMeters,
-      distance_km: distanceMeters / 1000,
-      distance_miles: distanceMeters / 1609.34
-    }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  )
+  return successResponse({
+    distance_meters: distanceMeters,
+    distance_km: distanceMeters / 1000,
+    distance_miles: distanceMeters / 1609.34
+  })
 }
 
-// Check for geofence breaches
-async function checkGeofenceBreach(supabaseClient: any, params: {
+// Check for geofence breaches (with site isolation)
+async function checkGeofenceBreach(supabase: any, siteId: string, params: {
   entry_id: string
   geofence_id: string
   lat: number
@@ -169,11 +155,12 @@ async function checkGeofenceBreach(supabaseClient: any, params: {
 }) {
   const { entry_id, geofence_id, lat, lng } = params
 
-  // Get geofence details
-  const { data: geofence, error: geoError } = await supabaseClient
+  // Get geofence details with site isolation
+  const { data: geofence, error: geoError } = await supabase
     .from('geofences')
     .select('*')
     .eq('id', geofence_id)
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .single()
 
   if (geoError) throw geoError
@@ -187,62 +174,50 @@ async function checkGeofenceBreach(supabaseClient: any, params: {
     : isPointInPolygon({ lat, lng }, geofence.polygon_coords || [])
 
   if (!isInside) {
-    // Create breach alert
+    // Create breach alert with site isolation
     const distance = calculateHaversineDistance(
       { lat, lng },
       { lat: geofence.center_lat, lng: geofence.center_lng }
     )
 
-    await supabaseClient
+    await supabase
       .from('geofence_breach_alerts')
       .insert({
         geofence_id,
         time_entry_id: entry_id,
+        site_id: siteId,  // CRITICAL: Include site_id
         breach_type: 'outside',
         distance_from_boundary_meters: distance - geofence.radius_meters,
         breach_timestamp: new Date().toISOString()
       })
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        breach_detected: true,
-        geofence_name: geofence.name,
-        distance_from_center: distance,
-        distance_from_boundary: distance - geofence.radius_meters
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
+    return successResponse({
+      breach_detected: true,
+      geofence_name: geofence.name,
+      distance_from_center: distance,
+      distance_from_boundary: distance - geofence.radius_meters
+    })
   }
 
-  return new Response(
-    JSON.stringify({
-      success: true,
-      breach_detected: false
-    }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  )
+  return successResponse({
+    breach_detected: false
+  })
 }
 
-// Process GPS entry and calculate distances
-async function processGPSEntry(supabaseClient: any, params: {
+// Process GPS entry and calculate distances (with site isolation)
+async function processGPSEntry(supabase: any, siteId: string, params: {
   entry_id: string
   user_id: string
   project_id?: string
 }) {
   const { entry_id, user_id, project_id } = params
 
-  // Get the GPS entry
-  const { data: entry, error: entryError } = await supabaseClient
+  // Get the GPS entry with site isolation
+  const { data: entry, error: entryError } = await supabase
     .from('gps_time_entries')
     .select('*')
     .eq('id', entry_id)
+    .eq('site_id', siteId)  // CRITICAL: Site isolation
     .single()
 
   if (entryError) throw entryError
@@ -254,21 +229,23 @@ async function processGPSEntry(supabaseClient: any, params: {
       { lat: entry.clock_out_lat, lng: entry.clock_out_lng }
     )
 
-    // Update entry with calculated distance
-    await supabaseClient
+    // Update entry with calculated distance (with site isolation)
+    await supabase
       .from('gps_time_entries')
       .update({
         distance_traveled_meters: travelDistance
       })
       .eq('id', entry_id)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
   }
 
-  // Check geofence compliance if project is specified
+  // Check geofence compliance if project is specified (with site isolation)
   if (project_id) {
-    const { data: geofences } = await supabaseClient
+    const { data: geofences } = await supabase
       .from('geofences')
       .select('*')
       .eq('project_id', project_id)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('is_active', true)
 
     if (geofences && geofences.length > 0) {
@@ -280,12 +257,13 @@ async function processGPSEntry(supabaseClient: any, params: {
         )
 
         if (!isInGeofence) {
-          // Create breach alert
-          await supabaseClient
+          // Create breach alert with site isolation
+          await supabase
             .from('geofence_breach_alerts')
             .insert({
               geofence_id: geofence.id,
               time_entry_id: entry_id,
+              site_id: siteId,  // CRITICAL: Include site_id
               breach_type: 'clock_in_outside',
               breach_timestamp: entry.clock_in_time
             })
@@ -294,37 +272,23 @@ async function processGPSEntry(supabaseClient: any, params: {
     }
   }
 
-  return new Response(
-    JSON.stringify({
-      success: true,
-      entry_processed: true
-    }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  )
+  return successResponse({
+    entry_processed: true
+  })
 }
 
-// Calculate total travel distance from location history
+// Calculate total travel distance from location history (no DB access)
 function calculateTravelDistance(params: {
   locations: Point[]
 }) {
   const { locations } = params
 
   if (locations.length < 2) {
-    return new Response(
-      JSON.stringify({
-        success: true,
-        total_distance_meters: 0,
-        total_distance_km: 0,
-        total_distance_miles: 0
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
+    return successResponse({
+      total_distance_meters: 0,
+      total_distance_km: 0,
+      total_distance_miles: 0
+    })
   }
 
   let totalDistance = 0
@@ -334,19 +298,12 @@ function calculateTravelDistance(params: {
     totalDistance += distance
   }
 
-  return new Response(
-    JSON.stringify({
-      success: true,
-      total_distance_meters: totalDistance,
-      total_distance_km: totalDistance / 1000,
-      total_distance_miles: totalDistance / 1609.34,
-      points_processed: locations.length
-    }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  )
+  return successResponse({
+    total_distance_meters: totalDistance,
+    total_distance_km: totalDistance / 1000,
+    total_distance_miles: totalDistance / 1609.34,
+    points_processed: locations.length
+  })
 }
 
 // Haversine formula to calculate distance between two points on Earth

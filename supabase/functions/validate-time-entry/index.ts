@@ -1,5 +1,7 @@
+// Validate Time Entry Edge Function
+// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -141,69 +143,55 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
-
-    if (authError || !user) {
-      console.error('Authentication error:', authError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
     }
+
+    const { user, siteId, supabase: supabaseClient } = authContext;
+    console.log('[VALIDATE-TIME-ENTRY] User authenticated', { userId: user.id, siteId });
 
     // Parse request body
     const body = await req.json();
-    console.log('Validating time entry:', { user_id: user.id });
+    console.log('[VALIDATE-TIME-ENTRY] Validating time entry:', { siteId, user_id: user.id });
 
     // Validate input
     const validation = validateTimeEntry(body);
     if (!validation.valid) {
-      console.error('Validation failed:', validation.errors);
+      console.error('[VALIDATE-TIME-ENTRY] Validation failed:', validation.errors);
       return new Response(
         JSON.stringify({ error: 'Validation failed', details: validation.errors }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // Insert time entry with validated data
+    // Insert time entry with validated data and site isolation
     const { data, error } = await supabaseClient
       .from('time_entries')
       .insert({
         ...validation.data,
+        site_id: siteId,  // CRITICAL: Site isolation
         user_id: user.id,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Database error:', error);
+      console.error('[VALIDATE-TIME-ENTRY] Database error:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to create time entry', details: error.message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    console.log('Time entry created successfully:', data.id);
+    console.log('[VALIDATE-TIME-ENTRY] Time entry created successfully:', data.id);
     return new Response(
       JSON.stringify({ success: true, data }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('[VALIDATE-TIME-ENTRY] Unexpected error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
