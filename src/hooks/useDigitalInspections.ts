@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export interface QualityInspection {
   id: string;
+  site_id: string;
   company_id: string;
   project_id: string;
   inspection_number: string;
@@ -25,16 +27,21 @@ export interface QualityInspection {
 }
 
 export const useDigitalInspections = (projectId?: string) => {
+  const { userProfile, siteId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch inspections
+  // Fetch inspections with site_id and company_id isolation
   const { data: inspections, isLoading } = useQuery({
-    queryKey: ['quality-inspections', projectId],
+    queryKey: ['quality-inspections', projectId, siteId, userProfile?.company_id],
     queryFn: async () => {
+      if (!siteId || !userProfile?.company_id) return [];
+
       let query = supabase
         .from('quality_inspections')
         .select('*')
+        .eq('site_id', siteId)
+        .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
       if (projectId) {
@@ -45,17 +52,26 @@ export const useDigitalInspections = (projectId?: string) => {
       if (error) throw error;
       return data as QualityInspection[];
     },
+    enabled: !!siteId && !!userProfile?.company_id,
   });
 
-  // Create inspection
+  // Create inspection with site_id and company_id isolation
   const createInspection = useMutation({
     mutationFn: async (inspection: any) => {
+      if (!siteId || !userProfile?.company_id) {
+        throw new Error('Site ID and Company ID required');
+      }
+
       const { data, error } = await supabase
         .from('quality_inspections')
-        .insert([inspection])
+        .insert([{
+          ...inspection,
+          site_id: siteId,
+          company_id: userProfile.company_id,
+        }])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -64,24 +80,27 @@ export const useDigitalInspections = (projectId?: string) => {
       toast({ title: 'Inspection created successfully' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Failed to create inspection', 
+      toast({
+        title: 'Failed to create inspection',
         description: error.message,
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     },
   });
 
-  // Update inspection
+  // Update inspection with site_id isolation
   const updateInspection = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      if (!siteId) throw new Error('Site ID required');
+
       const { data, error } = await supabase
         .from('quality_inspections')
         .update(updates)
+        .eq('site_id', siteId)
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -90,22 +109,25 @@ export const useDigitalInspections = (projectId?: string) => {
       toast({ title: 'Inspection updated successfully' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Failed to update inspection', 
+      toast({
+        title: 'Failed to update inspection',
         description: error.message,
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     },
   });
 
-  // Delete inspection
+  // Delete inspection with site_id isolation
   const deleteInspection = useMutation({
     mutationFn: async (id: string) => {
+      if (!siteId) throw new Error('Site ID required');
+
       const { error } = await supabase
         .from('quality_inspections')
         .delete()
+        .eq('site_id', siteId)
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -113,10 +135,10 @@ export const useDigitalInspections = (projectId?: string) => {
       toast({ title: 'Inspection deleted successfully' });
     },
     onError: (error) => {
-      toast({ 
-        title: 'Failed to delete inspection', 
+      toast({
+        title: 'Failed to delete inspection',
         description: error.message,
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     },
   });

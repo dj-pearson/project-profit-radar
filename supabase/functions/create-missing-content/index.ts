@@ -12,6 +12,27 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get site_id from request body or default to BuildDesk site for seeding
+    const body = await req.json().catch(() => ({}));
+    let siteId = body.site_id;
+
+    if (!siteId) {
+      // Get BuildDesk site_id for default content seeding
+      const { data: site } = await supabase
+        .from('sites')
+        .select('id')
+        .eq('key', 'builddesk')
+        .single();
+
+      if (!site?.id) {
+        return new Response(
+          JSON.stringify({ error: 'BuildDesk site not found. Please provide site_id.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      siteId = site.id;
+    }
+
     const blogPosts = [
       {
         title: "Construction CRM Implementation Guide",
@@ -334,23 +355,24 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     let skipped = 0;
 
     for (const post of blogPosts) {
-      // Check if post already exists
+      // Check if post already exists for this site (multi-tenant isolation)
       const { data: existing } = await supabase
         .from('blog_posts')
         .select('id')
+        .eq('site_id', siteId)
         .eq('slug', post.slug)
         .maybeSingle();
-      
+
       if (existing) {
-        console.log(`Post ${post.slug} already exists, skipping...`);
+        console.log(`Post ${post.slug} already exists for site ${siteId}, skipping...`);
         skipped++;
         continue;
       }
-      
-      // Create the blog post
+
+      // Create the blog post with site_id for multi-tenant isolation
       const { data, error } = await supabase
         .from('blog_posts')
-        .insert([post])
+        .insert([{ ...post, site_id: siteId }])
         .select();
       
       if (error) {
@@ -363,11 +385,12 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Content creation complete! Created: ${created}, Skipped: ${skipped}`,
+      JSON.stringify({
+        success: true,
+        message: `Content creation complete for site ${siteId}! Created: ${created}, Skipped: ${skipped}`,
+        site_id: siteId,
         created,
-        skipped 
+        skipped
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

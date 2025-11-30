@@ -37,7 +37,7 @@ interface ChatChannel {
 }
 
 export const useRealtimeChat = (channelId?: string) => {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [channels, setChannels] = useState<ChatChannel[]>([]);
@@ -45,15 +45,16 @@ export const useRealtimeChat = (channelId?: string) => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  // Load channels for the company
+  // Load channels for the company with site_id isolation
   const loadChannels = useCallback(async () => {
-    if (!userProfile?.company_id) return;
+    if (!userProfile?.company_id || !siteId) return;
 
     try {
-      // Get channels user is member of
+      // Get channels user is member of with site_id isolation
       const { data: memberChannels, error: memberError } = await supabase
         .from('chat_channel_members')
         .select('channel_id')
+        .eq('site_id', siteId)
         .eq('user_id', userProfile.id);
 
       if (memberError) throw memberError;
@@ -68,6 +69,7 @@ export const useRealtimeChat = (channelId?: string) => {
       const { data, error } = await supabase
         .from('chat_channels')
         .select('*')
+        .eq('site_id', siteId)
         .in('id', channelIds)
         .eq('company_id', userProfile.company_id)
         .is('archived_at', null)
@@ -83,11 +85,11 @@ export const useRealtimeChat = (channelId?: string) => {
         variant: "destructive"
       });
     }
-  }, [userProfile, toast]);
+  }, [userProfile, siteId, toast]);
 
-  // Load messages for a specific channel
+  // Load messages for a specific channel with site_id isolation
   const loadMessages = useCallback(async (channelId: string) => {
-    if (!userProfile) return;
+    if (!userProfile || !siteId) return;
 
     try {
       setLoading(true);
@@ -101,6 +103,7 @@ export const useRealtimeChat = (channelId?: string) => {
             email
           )
         `)
+        .eq('site_id', siteId)
         .eq('channel_id', channelId)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -108,10 +111,11 @@ export const useRealtimeChat = (channelId?: string) => {
       if (error) throw error;
       setMessages(data as any || []);
 
-      // Mark messages as read
+      // Mark messages as read with site_id isolation
       await supabase
         .from('chat_channel_members')
         .update({ last_read_at: new Date().toISOString() })
+        .eq('site_id', siteId)
         .eq('channel_id', channelId)
         .eq('user_id', userProfile.id);
 
@@ -125,17 +129,18 @@ export const useRealtimeChat = (channelId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile, toast]);
+  }, [userProfile, siteId, toast]);
 
-  // Send a message
+  // Send a message with site_id isolation
   const sendMessage = useCallback(async (content: string, replyTo?: string) => {
-    if (!userProfile || !activeChannel || !content.trim()) return;
+    if (!userProfile || !activeChannel || !content.trim() || !siteId) return;
 
     try {
       setSending(true);
       const { error } = await supabase
         .from('chat_messages')
         .insert({
+          site_id: siteId,
           channel_id: activeChannel.id,
           user_id: userProfile.id,
           company_id: userProfile.company_id,
@@ -155,15 +160,15 @@ export const useRealtimeChat = (channelId?: string) => {
     } finally {
       setSending(false);
     }
-  }, [userProfile, activeChannel, toast]);
+  }, [userProfile, activeChannel, siteId, toast]);
 
-  // Send a file message
+  // Send a file message with site_id isolation
   const sendFile = useCallback(async (file: File) => {
-    if (!userProfile || !activeChannel) return;
+    if (!userProfile || !activeChannel || !siteId) return;
 
     try {
       setSending(true);
-      
+
       // Upload file to Supabase storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
@@ -180,10 +185,11 @@ export const useRealtimeChat = (channelId?: string) => {
         .from('documents')
         .getPublicUrl(filePath);
 
-      // Create message with file
+      // Create message with file and site_id
       const { error } = await supabase
         .from('chat_messages')
         .insert({
+          site_id: siteId,
           channel_id: activeChannel.id,
           user_id: userProfile.id,
           company_id: userProfile.company_id,
@@ -205,16 +211,17 @@ export const useRealtimeChat = (channelId?: string) => {
     } finally {
       setSending(false);
     }
-  }, [userProfile, activeChannel, toast]);
+  }, [userProfile, activeChannel, siteId, toast]);
 
-  // Create a new channel
+  // Create a new channel with site_id isolation
   const createChannel = useCallback(async (name: string, description?: string, projectId?: string, isPrivate = false) => {
-    if (!userProfile) return;
+    if (!userProfile || !siteId) return;
 
     try {
       const { data, error } = await supabase
         .from('chat_channels')
         .insert({
+          site_id: siteId,
           company_id: userProfile.company_id,
           project_id: projectId,
           name,
@@ -228,10 +235,11 @@ export const useRealtimeChat = (channelId?: string) => {
 
       if (error) throw error;
 
-      // Add creator as admin member
+      // Add creator as admin member with site_id
       await supabase
         .from('chat_channel_members')
         .insert({
+          site_id: siteId,
           channel_id: data.id,
           user_id: userProfile.id,
           company_id: userProfile.company_id,
@@ -248,13 +256,13 @@ export const useRealtimeChat = (channelId?: string) => {
         variant: "destructive"
       });
     }
-  }, [userProfile, loadChannels, toast]);
+  }, [userProfile, siteId, loadChannels, toast]);
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions with site_id isolation
   useEffect(() => {
-    if (!userProfile) return;
+    if (!userProfile || !siteId) return;
 
-    // Subscribe to new messages
+    // Subscribe to new messages - filter by site_id and company_id
     const messageChannel = supabase
       .channel('chat-messages')
       .on(
@@ -263,11 +271,14 @@ export const useRealtimeChat = (channelId?: string) => {
           event: 'INSERT',
           schema: 'public',
           table: 'chat_messages',
-          filter: `company_id=eq.${userProfile.company_id}`
+          filter: `site_id=eq.${siteId}`
         },
         async (payload) => {
           const newMessage = payload.new as ChatMessage;
-          
+
+          // Verify message belongs to our company
+          if ((newMessage as any).company_id !== userProfile.company_id) return;
+
           // Get user profile for the message
           const { data: profile } = await supabase
             .from('user_profiles')
@@ -291,7 +302,7 @@ export const useRealtimeChat = (channelId?: string) => {
       )
       .subscribe();
 
-    // Subscribe to channel updates
+    // Subscribe to channel updates - filter by site_id
     const channelUpdateChannel = supabase
       .channel('chat-channels')
       .on(
@@ -300,7 +311,7 @@ export const useRealtimeChat = (channelId?: string) => {
           event: '*',
           schema: 'public',
           table: 'chat_channels',
-          filter: `company_id=eq.${userProfile.company_id}`
+          filter: `site_id=eq.${siteId}`
         },
         () => {
           loadChannels();
@@ -312,7 +323,7 @@ export const useRealtimeChat = (channelId?: string) => {
       supabase.removeChannel(messageChannel);
       supabase.removeChannel(channelUpdateChannel);
     };
-  }, [userProfile, activeChannel, loadChannels]);
+  }, [userProfile, siteId, activeChannel, loadChannels]);
 
   // Load channels on mount
   useEffect(() => {
