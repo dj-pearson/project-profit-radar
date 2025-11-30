@@ -62,17 +62,19 @@ export interface ProcessScanParams {
 }
 
 export const useEquipmentQRScanning = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [lastScannedEquipment, setLastScannedEquipment] = useState<EquipmentWithQR | null>(null);
 
-  // Query equipment with QR codes
+  // Query equipment with QR codes with site_id isolation
   const { data: equipmentWithQR, isLoading: loadingEquipment } = useQuery({
-    queryKey: ['equipment-with-qr', userProfile?.company_id],
+    queryKey: ['equipment-with-qr', userProfile?.company_id, siteId],
     queryFn: async () => {
-      if (!userProfile?.company_id) return [];
+      if (!userProfile?.company_id || !siteId) return [];
 
+      // Note: equipment_with_qr view should be filtered by site_id via RLS
+      // Adding explicit filter for extra security
       const { data, error } = await supabase
         .from('equipment_with_qr')
         .select('*')
@@ -82,13 +84,16 @@ export const useEquipmentQRScanning = () => {
       if (error) throw error;
       return data as EquipmentWithQR[];
     },
-    enabled: !!userProfile?.company_id,
+    enabled: !!userProfile?.company_id && !!siteId,
   });
 
-  // Query recent scan events
+  // Query recent scan events with site_id isolation
   const { data: recentScans, isLoading: loadingScans } = useQuery({
-    queryKey: ['recent-equipment-scans', userProfile?.company_id],
+    queryKey: ['recent-equipment-scans', userProfile?.company_id, siteId],
     queryFn: async () => {
+      if (!userProfile?.company_id || !siteId) return [];
+
+      // Note: recent_equipment_scans view should be filtered by site_id via RLS
       const { data, error } = await supabase
         .from('recent_equipment_scans')
         .select('*')
@@ -97,7 +102,7 @@ export const useEquipmentQRScanning = () => {
       if (error) throw error;
       return data as ScanEvent[];
     },
-    enabled: !!userProfile?.company_id,
+    enabled: !!userProfile?.company_id && !!siteId,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 

@@ -10,6 +10,7 @@ const corsHeaders = {
 
 interface ApiKeyValidation {
   isValid: boolean;
+  site_id?: string;
   company_id?: string;
   permissions?: string[];
   rate_limit?: number;
@@ -62,7 +63,7 @@ serve(async (req) => {
 
 async function validateApiKey(req: Request, supabase: any): Promise<Response> {
   const apiKey = req.headers.get('x-api-key');
-  
+
   if (!apiKey) {
     return new Response(
       JSON.stringify({ error: 'API key required' }),
@@ -71,10 +72,11 @@ async function validateApiKey(req: Request, supabase: any): Promise<Response> {
   }
 
   const keyHash = await hashApiKey(apiKey);
-  
+
+  // Include site_id in the query for multi-tenant isolation
   const { data: keyData, error } = await supabase
     .from('api_keys')
-    .select('company_id, permissions, rate_limit_per_hour, is_active, expires_at')
+    .select('site_id, company_id, permissions, rate_limit_per_hour, is_active, expires_at')
     .eq('api_key_hash', keyHash)
     .single();
 
@@ -96,6 +98,7 @@ async function validateApiKey(req: Request, supabase: any): Promise<Response> {
   return new Response(
     JSON.stringify({
       valid: true,
+      site_id: keyData.site_id,
       company_id: keyData.company_id,
       permissions: keyData.permissions,
       rate_limit: keyData.rate_limit_per_hour
@@ -107,7 +110,7 @@ async function validateApiKey(req: Request, supabase: any): Promise<Response> {
 async function createApiKey(req: Request, supabase: any): Promise<Response> {
   const { key_name, permissions, expires_at, rate_limit_per_hour } = await req.json();
   const authHeader = req.headers.get('Authorization');
-  
+
   if (!authHeader) {
     return new Response(
       JSON.stringify({ error: 'Authorization required' }),
@@ -127,10 +130,20 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
     );
   }
 
-  // Get user profile to check company and role
+  // Extract site_id from JWT metadata for multi-tenant isolation
+  const siteId = userData.user.app_metadata?.site_id || userData.user.user_metadata?.site_id;
+  if (!siteId) {
+    return new Response(
+      JSON.stringify({ error: 'Site ID not found in user context' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Get user profile to check company and role with site_id isolation
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
     .select('company_id, role')
+    .eq('site_id', siteId)
     .eq('id', userData.user.id)
     .single();
 
@@ -155,10 +168,11 @@ async function createApiKey(req: Request, supabase: any): Promise<Response> {
   const keyHash = await hashApiKey(newKey);
   const keyPrefix = newKey.substring(0, 12) + '...';
 
-  // Store the API key
+  // Store the API key with site_id for multi-tenant isolation
   const { data: keyRecord, error: storeError } = await supabase
     .from('api_keys')
     .insert({
+      site_id: siteId,
       company_id: profile.company_id,
       key_name,
       api_key_hash: keyHash,
@@ -334,7 +348,7 @@ async function testWebhook(req: Request, supabase: any): Promise<Response> {
   );
 }
 
-// API endpoint handlers
+// API endpoint handlers with site_id isolation
 async function handleProjectsApi(req: Request, supabase: any): Promise<Response> {
   const validation = await validateApiRequest(req, supabase, 'projects:read');
   if (!validation.isValid) {
@@ -346,9 +360,11 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
 
   try {
     if (method === 'GET') {
+      // Include site_id in query for multi-tenant isolation
       const { data: projects, error } = await supabase
         .from('projects')
         .select('id, name, status, budget, start_date, end_date, completion_percentage, created_at')
+        .eq('site_id', validation.site_id)
         .eq('company_id', validation.company_id);
 
       if (error) throw error;
@@ -368,11 +384,13 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
       }
 
       const projectData = await req.json();
-      
+
+      // Include site_id in insert for multi-tenant isolation
       const { data: newProject, error } = await supabase
         .from('projects')
         .insert({
           ...projectData,
+          site_id: validation.site_id,
           company_id: validation.company_id
         })
         .select()
@@ -396,7 +414,7 @@ async function handleProjectsApi(req: Request, supabase: any): Promise<Response>
   } catch (error) {
     console.error('Projects API error:', error);
     await logApiUsage(supabase, validation.keyHash!, '/api/projects', method, null, null, 500);
-    
+
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -411,9 +429,11 @@ async function handleEstimatesApi(req: Request, supabase: any): Promise<Response
   }
 
   try {
+    // Include site_id in query for multi-tenant isolation
     const { data: estimates, error } = await supabase
       .from('estimates')
       .select('id, estimate_number, client_name, total_amount, status, created_at')
+      .eq('site_id', validation.site_id)
       .eq('company_id', validation.company_id);
 
     if (error) throw error;
@@ -428,7 +448,7 @@ async function handleEstimatesApi(req: Request, supabase: any): Promise<Response
   } catch (error) {
     console.error('Estimates API error:', error);
     await logApiUsage(supabase, validation.keyHash!, '/api/estimates', 'GET', null, null, 500);
-    
+
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -443,9 +463,11 @@ async function handleInvoicesApi(req: Request, supabase: any): Promise<Response>
   }
 
   try {
+    // Include site_id in query for multi-tenant isolation
     const { data: invoices, error } = await supabase
       .from('invoices')
       .select('id, invoice_number, client_name, total_amount, status, due_date, created_at')
+      .eq('site_id', validation.site_id)
       .eq('company_id', validation.company_id);
 
     if (error) throw error;
@@ -460,7 +482,7 @@ async function handleInvoicesApi(req: Request, supabase: any): Promise<Response>
   } catch (error) {
     console.error('Invoices API error:', error);
     await logApiUsage(supabase, validation.keyHash!, '/api/invoices', 'GET', null, null, 500);
-    
+
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -468,15 +490,16 @@ async function handleInvoicesApi(req: Request, supabase: any): Promise<Response>
   }
 }
 
-// Helper functions
+// Helper functions with site_id isolation
 async function validateApiRequest(req: Request, supabase: any, permission: string): Promise<{
   isValid: boolean;
+  site_id?: string;
   company_id?: string;
   keyHash?: string;
   response?: Response;
 }> {
   const apiKey = req.headers.get('x-api-key');
-  
+
   if (!apiKey) {
     return {
       isValid: false,
@@ -488,10 +511,11 @@ async function validateApiRequest(req: Request, supabase: any, permission: strin
   }
 
   const keyHash = await hashApiKey(apiKey);
-  
+
+  // Include site_id in query for multi-tenant isolation
   const { data: keyData, error } = await supabase
     .from('api_keys')
-    .select('company_id, permissions, is_active, expires_at')
+    .select('site_id, company_id, permissions, is_active, expires_at')
     .eq('api_key_hash', keyHash)
     .single();
 
@@ -529,6 +553,7 @@ async function validateApiRequest(req: Request, supabase: any, permission: strin
 
   return {
     isValid: true,
+    site_id: keyData.site_id,
     company_id: keyData.company_id,
     keyHash
   };

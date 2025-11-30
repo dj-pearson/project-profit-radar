@@ -22,18 +22,26 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Extract site_id from JWT metadata for multi-tenant isolation
+    const siteId = user.app_metadata?.site_id || user.user_metadata?.site_id;
+    if (!siteId) {
+      return new Response(JSON.stringify({ error: 'Site ID not found in user context' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const { data: userProfile } = await supabaseClient
-      .from('user_profiles').select('role').eq('id', user.id).single();
+      .from('user_profiles').select('role').eq('site_id', siteId).eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
       return new Response(JSON.stringify({ error: 'Access denied' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Get OAuth credentials
+    // Get OAuth credentials with site_id isolation
     const { data: credentials, error: credError } = await supabaseClient
       .from('gsc_oauth_credentials')
       .select('*')
+      .eq('site_id', siteId)
       .eq('user_id', user.id)
       .eq('status', 'active')
       .single();
@@ -83,6 +91,7 @@ serve(async (req) => {
           access_token: accessToken,
           token_expires_at: expiresAt.toISOString(),
         })
+        .eq('site_id', siteId)
         .eq('id', credentials.id);
     }
 
@@ -103,8 +112,9 @@ serve(async (req) => {
     const gscData = await gscResponse.json();
     const properties = gscData.siteEntry || [];
 
-    // Save properties to database
+    // Save properties to database with site_id for multi-tenant isolation
     const propertyRecords = properties.map((site: any) => ({
+      site_id: siteId,
       credential_id: credentials.id,
       property_url: site.siteUrl,
       property_type: site.siteUrl.startsWith('sc-domain:') ? 'domain' : 'url_prefix',

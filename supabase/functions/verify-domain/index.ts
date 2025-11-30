@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 interface VerifyDomainRequest {
+  site_id?: string;  // For multi-tenant isolation
   tenant_id: string;
   domain: string;
 }
@@ -78,7 +79,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request body
-    const { tenant_id, domain }: VerifyDomainRequest = await req.json();
+    const { site_id, tenant_id, domain }: VerifyDomainRequest = await req.json();
 
     if (!tenant_id || !domain) {
       return new Response(
@@ -90,12 +91,41 @@ serve(async (req) => {
       );
     }
 
-    // Verify the tenant exists
-    const { data: tenant, error: tenantError } = await supabase
+    // Resolve site_id if not provided - try to get from tenant or default to BuildDesk
+    let siteId = site_id;
+    if (!siteId) {
+      // Try to get site_id from tenant record first
+      const { data: tenantForSite } = await supabase
+        .from('tenants')
+        .select('site_id')
+        .eq('id', tenant_id)
+        .single();
+
+      siteId = tenantForSite?.site_id;
+
+      // Fall back to BuildDesk site if tenant doesn't have site_id
+      if (!siteId) {
+        const { data: defaultSite } = await supabase
+          .from('sites')
+          .select('id')
+          .eq('key', 'builddesk')
+          .single();
+        siteId = defaultSite?.id;
+      }
+    }
+
+    // Verify the tenant exists with site_id isolation
+    let tenantQuery = supabase
       .from('tenants')
       .select('id, custom_domain')
-      .eq('id', tenant_id)
-      .single();
+      .eq('id', tenant_id);
+
+    // Add site_id filter if available for multi-tenant isolation
+    if (siteId) {
+      tenantQuery = tenantQuery.eq('site_id', siteId);
+    }
+
+    const { data: tenant, error: tenantError } = await tenantQuery.single();
 
     if (tenantError || !tenant) {
       return new Response(
@@ -112,13 +142,21 @@ serve(async (req) => {
 
     // Update tenant record if verified
     if (dnsResult.verified) {
-      const { error: updateError } = await supabase
+      // Build update query with site_id isolation
+      let updateQuery = supabase
         .from('tenants')
         .update({
           custom_domain: domain,
           domain_verified: true,
         })
         .eq('id', tenant_id);
+
+      // Add site_id filter for multi-tenant isolation
+      if (siteId) {
+        updateQuery = updateQuery.eq('site_id', siteId);
+      }
+
+      const { error: updateError } = await updateQuery;
 
       if (updateError) {
         console.error('Failed to update tenant:', updateError);
@@ -134,14 +172,21 @@ serve(async (req) => {
         );
       }
 
-      // Log the verification event
-      await supabase.from('audit_logs').insert({
+      // Log the verification event with site_id for multi-tenant isolation
+      const auditLogEntry: Record<string, any> = {
         tenant_id,
         action: 'domain_verified',
         resource_type: 'tenant',
         resource_id: tenant_id,
         details: { domain, verified: true },
-      });
+      };
+
+      // Include site_id in audit log if available
+      if (siteId) {
+        auditLogEntry.site_id = siteId;
+      }
+
+      await supabase.from('audit_logs').insert(auditLogEntry);
     }
 
     return new Response(
