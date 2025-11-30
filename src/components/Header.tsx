@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer } from "@/components/layout/ResponsiveContainer";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -9,7 +9,16 @@ import SmartLogo from "@/components/ui/smart-logo";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   useGlobalShortcuts();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems = [
     { name: "Features", href: "/#features", isSection: true },
@@ -22,7 +31,11 @@ const Header = () => {
 
 
   return (
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+    <header className={`backdrop-blur-sm border-b sticky top-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-background/98 border-border shadow-lg' 
+        : 'bg-background/95 border-border'
+    }`}>
       <ResponsiveContainer>
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
