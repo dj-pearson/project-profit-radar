@@ -356,21 +356,8 @@ All colors MUST be HSL.
 /* Smooth animations */
 @media (prefers-reduced-motion: no-preference) {
   .smooth-appear {
-  --popover: 0 0% 5%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 0 0% 100%;
-  --primary-foreground: 0 0% 0%;
-  --secondary: 0 0% 20%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 90%;
-  --accent: 0 0% 15%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 100% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 30%;
-  --input: 0 0% 20%;
-  --ring: 0 0% 100%;
+    animation: appear 0.3s ease-out;
+  }
 }
 
 /* Outdoor Mode - Maximum contrast for bright conditions */
