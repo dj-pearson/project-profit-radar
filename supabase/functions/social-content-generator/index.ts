@@ -30,7 +30,134 @@ interface ContentTemplate {
   cta_focus: string;
 }
 
-// Content templates for different topics
+// ============================================================================
+// POST FORMAT SYSTEM - Creates diverse, non-repetitive content
+// ============================================================================
+
+// Different post FORMATS that change the structure entirely
+interface PostFormat {
+  id: string;
+  name: string;
+  structure: string;
+  hook_style: string;
+  tone: string;
+  example_opening: string;
+}
+
+const POST_FORMATS: PostFormat[] = [
+  {
+    id: "story",
+    name: "Customer Story",
+    structure: "Open with a specific contractor's situation → Their challenge → How they solved it → Results achieved → Invitation to try",
+    hook_style: "narrative",
+    tone: "warm, relatable, conversational",
+    example_opening: "Last month, a framing contractor in Phoenix called me frustrated. His crew was working 60-hour weeks but profits kept shrinking...",
+  },
+  {
+    id: "myth_buster",
+    name: "Myth Buster",
+    structure: "State a common belief → Reveal why it's wrong → Share the truth with evidence → Offer better approach",
+    hook_style: "contrarian",
+    tone: "confident, slightly provocative, educational",
+    example_opening: "Unpopular opinion: Spreadsheets aren't killing your construction business. Your attachment to them is.",
+  },
+  {
+    id: "quick_tip",
+    name: "Quick Tip",
+    structure: "Single actionable tip → Why it works → How to implement it today → Optional: how tools help",
+    hook_style: "helpful, direct",
+    tone: "practical, no-nonsense, peer-to-peer",
+    example_opening: "Quick tip that saved one of our users $12K last quarter: Review your material orders against actuals every Friday at 2pm.",
+  },
+  {
+    id: "behind_scenes",
+    name: "Behind the Scenes",
+    structure: "Share an insider look at successful operations → Reveal what they do differently → Connect to broader principle",
+    hook_style: "exclusive, insider knowledge",
+    tone: "candid, transparent, peer sharing",
+    example_opening: "I spent last week visiting 3 of the most profitable GCs in Texas. Here's the one thing they all had in common...",
+  },
+  {
+    id: "data_insight",
+    name: "Data-Driven Insight",
+    structure: "Lead with surprising statistic → Explain what it means → Share implications → Offer path forward",
+    hook_style: "surprising fact",
+    tone: "analytical, authoritative, thought-provoking",
+    example_opening: "We analyzed 847 construction projects last quarter. The contractors who reviewed costs weekly were 3.2x more likely to hit margin targets.",
+  },
+  {
+    id: "problem_solution",
+    name: "Problem/Solution",
+    structure: "Identify specific pain point → Agitate with consequences → Present solution → Show results",
+    hook_style: "empathetic question",
+    tone: "understanding, helpful, solution-oriented",
+    example_opening: "That sinking feeling when you realize a project went from profitable to break-even? It usually happens slowly, then all at once.",
+  },
+  {
+    id: "listicle",
+    name: "Quick List",
+    structure: "Promise value in headline → Deliver 3-5 actionable points → Each point is self-contained → Wrap with invitation",
+    hook_style: "numbered promise",
+    tone: "scannable, value-packed, efficient",
+    example_opening: "5 signs your job costing process is costing you money (and what to do about each one):",
+  },
+  {
+    id: "day_in_life",
+    name: "Day in the Life",
+    structure: "Describe a typical day scenario → Show the before struggle → Contrast with after → Highlight transformation",
+    hook_style: "relatable scenario",
+    tone: "vivid, descriptive, aspirational",
+    example_opening: "6:30 AM: Your phone buzzes with a text from your foreman. Before you even grab coffee, you already know today's schedule just changed.",
+  },
+  {
+    id: "contrarian",
+    name: "Contrarian Take",
+    structure: "Challenge conventional wisdom → Present alternative view with reasoning → Support with evidence or logic",
+    hook_style: "provocative statement",
+    tone: "bold, thought-provoking, confident",
+    example_opening: "Hot take: The construction companies struggling most right now aren't the ones with bad crews. They're the ones with great crews and terrible systems.",
+  },
+  {
+    id: "celebration",
+    name: "Win Celebration",
+    structure: "Celebrate a specific achievement → Share what made it possible → Connect to universal lesson → Invite others to join",
+    hook_style: "positive announcement",
+    tone: "enthusiastic, inspiring, community-focused",
+    example_opening: "Just got off the phone with a GC who closed his books for Q3. His words: 'First time in 12 years I finished a quarter knowing exactly where I stood.'",
+  },
+  {
+    id: "how_to",
+    name: "How-To Guide",
+    structure: "Promise to teach something specific → Break into clear steps → Each step actionable → End with encouragement",
+    hook_style: "educational promise",
+    tone: "instructional, clear, supportive",
+    example_opening: "How to know if a project is profitable BEFORE you finish it (not 60 days after when your accountant tells you):",
+  },
+  {
+    id: "comparison",
+    name: "Then vs Now",
+    structure: "Describe old way of doing something → Contrast with new approach → Highlight specific improvements → Invite to experience the difference",
+    hook_style: "before/after contrast",
+    tone: "progressive, forward-looking, practical",
+    example_opening: "2015: Spending Sunday nights reconciling timesheets. 2024: Spending Sunday nights actually relaxing because your time tracking runs itself.",
+  },
+];
+
+// Different HOOK STYLES for variety in openings
+const HOOK_VARIATIONS = [
+  { style: "question", example: "What if you could see exactly where every dollar goes on every project?" },
+  { style: "statistic", example: "73% of construction projects go over budget. But here's what the other 27% know..." },
+  { style: "story_start", example: "Last Tuesday, a contractor showed me his spreadsheet. 47 tabs. Color-coded. Beautiful. Completely useless." },
+  { style: "bold_statement", example: "Your project management spreadsheet is a liability, not an asset." },
+  { style: "scenario", example: "Picture this: It's 4 PM Friday. A client asks for a project cost update. You have the answer in 30 seconds." },
+  { style: "confession", example: "I used to think construction companies that 'went digital' were just throwing money at shiny tools..." },
+  { style: "direct_address", example: "If you're still doing manual job costing, this is for you." },
+  { style: "curiosity_gap", example: "The most profitable GC I know uses a 15-minute Friday routine that changed everything." },
+  { style: "counterintuitive", example: "The best construction software isn't the one with the most features. It's the one your team actually uses." },
+  { style: "time_hook", example: "In the next 3 minutes, I'll show you why top contractors check their numbers daily, not monthly." },
+];
+
+// Content templates for different topics (expanded)
 const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     category: "feature",
@@ -128,7 +255,195 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
     target_audience: "small business owners",
     cta_focus: "scaling your business efficiently",
   },
+  // NEW TEMPLATES for more variety
+  {
+    category: "knowledge",
+    topic: "Cash Flow Management",
+    key_points: [
+      "Late payments are the #1 killer of profitable contractors",
+      "Faster invoicing means faster payment cycles",
+      "Real-time AR tracking prevents cash flow surprises",
+      "Automated payment reminders without awkward calls",
+    ],
+    target_audience: "business owners and office managers",
+    cta_focus: "healthy cash flow",
+  },
+  {
+    category: "feature",
+    topic: "Mobile Field Access",
+    key_points: [
+      "Access project info anywhere, even without cell service",
+      "Crew can log hours and photos from the job site",
+      "No more driving back to the office for paperwork",
+      "Sync automatically when connection returns",
+    ],
+    target_audience: "field supervisors and crews",
+    cta_focus: "staying connected in the field",
+  },
+  {
+    category: "benefit",
+    topic: "Work-Life Balance",
+    key_points: [
+      "Stop spending weekends on paperwork and reconciliation",
+      "Automated reports mean less manual data entry",
+      "Know your numbers without living in spreadsheets",
+      "Build a business that doesn't require you 24/7",
+    ],
+    target_audience: "owner-operators and family businesses",
+    cta_focus: "getting your time back",
+  },
+  {
+    category: "knowledge",
+    topic: "Scaling Your Business",
+    key_points: [
+      "Systems that work for 3 projects work for 30",
+      "Visibility across multiple jobs simultaneously",
+      "Onboard new PMs without losing tribal knowledge",
+      "Data-driven decisions replace gut feelings at scale",
+    ],
+    target_audience: "growing contractors",
+    cta_focus: "scaling without chaos",
+  },
+  {
+    category: "feature",
+    topic: "Change Order Management",
+    key_points: [
+      "Capture scope changes before work starts",
+      "Automatic cost impact calculations",
+      "Client approval workflows built-in",
+      "Never lose money on undocumented changes again",
+    ],
+    target_audience: "project managers and estimators",
+    cta_focus: "profitable change orders",
+  },
+  {
+    category: "benefit",
+    topic: "Competitive Advantage",
+    key_points: [
+      "Win more bids with accurate historical cost data",
+      "Impress clients with professional progress updates",
+      "Stand out from spreadsheet-dependent competitors",
+      "Build reputation for on-budget, on-time delivery",
+    ],
+    target_audience: "business development and owners",
+    cta_focus: "winning more work",
+  },
 ];
+
+// ============================================================================
+// FORMAT ROTATION SYSTEM - Prevents repetitive content
+// ============================================================================
+
+interface RecentPostInfo {
+  format_id: string;
+  topic: string;
+  hook_style: string;
+  created_at: string;
+}
+
+// Get recently used formats to avoid repetition
+async function getRecentFormats(
+  supabaseClient: any,
+  companyId: string,
+  limit: number = 10
+): Promise<RecentPostInfo[]> {
+  try {
+    const { data, error } = await supabaseClient
+      .from("social_media_posts")
+      .select("title, content, created_at")
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error || !data) {
+      logStep("Could not fetch recent posts for format analysis", error);
+      return [];
+    }
+
+    // Analyze recent posts to extract patterns
+    return data.map((post: any) => {
+      // Try to identify the format from content patterns
+      let format_id = "unknown";
+      let hook_style = "unknown";
+      const content = post.content?.toLowerCase() || "";
+
+      // Detect format from content patterns
+      if (content.includes("unpopular opinion") || content.includes("hot take")) {
+        format_id = "contrarian";
+        hook_style = "provocative";
+      } else if (content.includes("quick tip") || content.includes("pro tip")) {
+        format_id = "quick_tip";
+        hook_style = "helpful";
+      } else if (content.match(/^\d+\.\s|^•\s|^→\s/m)) {
+        format_id = "listicle";
+        hook_style = "numbered";
+      } else if (content.includes("last month") || content.includes("last week") || content.includes("just got off the phone")) {
+        format_id = "story";
+        hook_style = "narrative";
+      } else if (content.includes("picture this") || content.includes("imagine")) {
+        format_id = "day_in_life";
+        hook_style = "scenario";
+      } else if (content.includes("how to")) {
+        format_id = "how_to";
+        hook_style = "educational";
+      } else if (content.includes("still ") && content.includes("?")) {
+        format_id = "problem_solution";
+        hook_style = "question";
+      } else if (content.match(/\d+%|\d+x/)) {
+        format_id = "data_insight";
+        hook_style = "statistic";
+      }
+
+      // Extract topic from title
+      const topic = post.title?.split(" - ")[0] || "Unknown";
+
+      return {
+        format_id,
+        topic,
+        hook_style,
+        created_at: post.created_at,
+      };
+    });
+  } catch (error) {
+    logStep("Error analyzing recent formats", error);
+    return [];
+  }
+}
+
+// Select a format that hasn't been used recently
+function selectDiverseFormat(recentFormats: RecentPostInfo[]): PostFormat {
+  // Count recent format usage
+  const formatUsage: Record<string, number> = {};
+  for (const recent of recentFormats.slice(0, 5)) {
+    formatUsage[recent.format_id] = (formatUsage[recent.format_id] || 0) + 1;
+  }
+
+  // Find formats that haven't been used or used least
+  const availableFormats = POST_FORMATS.filter((format) => {
+    const usage = formatUsage[format.id] || 0;
+    // Exclude formats used more than once in last 5 posts
+    return usage < 2;
+  });
+
+  // If all formats are heavily used, just pick randomly from all
+  const formatPool = availableFormats.length > 0 ? availableFormats : POST_FORMATS;
+
+  // Random selection from available pool
+  return formatPool[Math.floor(Math.random() * formatPool.length)];
+}
+
+// Select a hook style that varies from recent posts
+function selectDiverseHookStyle(recentFormats: RecentPostInfo[]): typeof HOOK_VARIATIONS[0] {
+  const recentHooks = recentFormats.slice(0, 3).map((r) => r.hook_style);
+
+  // Filter out recently used hook styles
+  const availableHooks = HOOK_VARIATIONS.filter(
+    (hook) => !recentHooks.includes(hook.style)
+  );
+
+  const hookPool = availableHooks.length > 0 ? availableHooks : HOOK_VARIATIONS;
+  return hookPool[Math.floor(Math.random() * hookPool.length)];
+}
 
 // Dynamic Instagram media selection from Supabase storage
 async function getInstagramMediaFromStorage(
@@ -221,12 +536,16 @@ async function generateAIContent({
   maxLength,
   tone,
   requirements,
+  selectedFormat,
+  hookVariation,
 }: {
   platform: string;
   template: ContentTemplate;
   maxLength: number;
   tone: string;
   requirements: string[];
+  selectedFormat: PostFormat;
+  hookVariation: typeof HOOK_VARIATIONS[0];
 }) {
   const claudeKey = Deno.env.get("CLAUDE_API_KEY");
 
@@ -234,71 +553,67 @@ async function generateAIContent({
     throw new Error("CLAUDE_API_KEY environment variable is required");
   }
 
-  const prompt = `You are a senior social media director for a successful B2B SaaS company. Create a compelling ${platform} post about "${
-    template.topic
-  }" that will engage ${template.target_audience} and drive trial signups.
+  const prompt = `You are an expert social media copywriter for BuildDesk, a construction management SaaS. Create a ${platform} post that feels COMPLETELY DIFFERENT from typical SaaS marketing.
 
-Your post should:
-- Hook readers with a compelling opening that addresses a real pain point
-- Use industry-specific language that resonates with construction professionals
-- Include concrete benefits and value propositions
-- Sound authoritative yet approachable
-- Drive action with a strong, specific call-to-action
+═══════════════════════════════════════════════════════════════
+POST FORMAT: ${selectedFormat.name}
+═══════════════════════════════════════════════════════════════
 
-Key Value Points to Weave In:
+Structure to follow:
+${selectedFormat.structure}
+
+Tone: ${selectedFormat.tone}
+Hook Style: ${selectedFormat.hook_style}
+
+Example opening for inspiration (DO NOT copy, create something fresh):
+"${selectedFormat.example_opening}"
+
+═══════════════════════════════════════════════════════════════
+HOOK APPROACH: ${hookVariation.style}
+═══════════════════════════════════════════════════════════════
+
+Example of this hook style (for reference only):
+"${hookVariation.example}"
+
+═══════════════════════════════════════════════════════════════
+TOPIC & CONTENT
+═══════════════════════════════════════════════════════════════
+
+Topic: ${template.topic}
+Target Audience: ${template.target_audience}
+Business Goal: ${template.cta_focus}
+
+Key points to naturally weave in (don't list them all, pick 1-2 that fit the format):
 ${template.key_points.map((point) => `• ${point}`).join("\n")}
 
-Platform Requirements:
+═══════════════════════════════════════════════════════════════
+CRITICAL RULES
+═══════════════════════════════════════════════════════════════
+
+1. NEVER start with "Still losing money..." or any variation of that question
+2. NEVER use the "pain point → statistics → solution → CTA" formula
+3. Follow the ${selectedFormat.name} structure EXACTLY
+4. Make it feel like a peer sharing knowledge, not a salesperson pitching
+5. Be specific with examples (use realistic contractor names, cities, numbers)
+6. Only mention BuildDesk once, naturally, not as a hard sell
+7. The CTA should feel like a helpful suggestion, not pushy
+
+Platform: ${platform}
+Character Limit: ${maxLength} characters (excluding hashtags)
+Writing Style: ${tone}
+
+Platform-Specific Requirements:
 ${requirements.map((req) => `• ${req}`).join("\n")}
 
-Writing Style: ${tone}, but authoritative and results-focused
-Character Limit: ${maxLength} characters (excluding hashtags)
-Business Outcome Focus: ${template.cta_focus}
+═══════════════════════════════════════════════════════════════
 
-Your CTA should specifically mention BuildDesk's 14-day free trial and build-desk.com.
+Write as if you're a respected voice in the construction industry sharing genuine insights. The post should make readers think, smile, or nod in recognition—not feel marketed to.
 
-Examples of diverse pain points to address (rotate through these - don't reuse the same ones):
-Budget & Financials:
-- "Still losing money on projects that go over budget?"
-- "What if I told you there's a way to increase project profitability by 25%?"
-- "The #1 mistake contractors make when managing project costs..."
-
-Document Management:
-- "Still spending hours hunting down the latest project drawings while your crew waits on-site?"
-- "Lost a change order request because it was buried in email?"
-- "How much time does your team waste searching for the right documents?"
-
-Communication & Coordination:
-- "Tired of playing phone tag with subcontractors about schedule changes?"
-- "Ever had a crew show up to a job without knowing about last-minute changes?"
-- "What's the real cost of miscommunication on your construction projects?"
-
-Time Management:
-- "Still tracking crew hours on paper timesheets in 2025?"
-- "How many hours per week do you spend on administrative tasks instead of managing projects?"
-- "What if you could cut your weekly admin time in half?"
-
-Safety & Compliance:
-- "Worried about staying compliant with the latest safety regulations?"
-- "How confident are you in your current safety documentation?"
-- "One missed safety inspection could cost you everything..."
-
-Client Relations:
-- "Ever had a client blindsided by project delays?"
-- "What if clients could see real-time project progress without calling you?"
-- "The secret to winning repeat business? Communication."
-
-Material & Equipment:
-- "Ever had work stop because materials didn't show up when expected?"
-- "How much money are you losing to equipment sitting idle?"
-- "Know exactly where every piece of equipment is, every time."
-
-Choose ONE unique pain point per post. Never repeat the same opening in consecutive posts.
-Write like a seasoned marketing professional who understands both construction and technology.
+End with a natural mention of BuildDesk's 14-day free trial at build-desk.com, but make it flow naturally from the content.
 
 Format your response as:
-CONTENT: [your professional post content here]
-HASHTAGS: [strategic hashtags separated by spaces]`;
+CONTENT: [your ${selectedFormat.name.toLowerCase()} post here]
+HASHTAGS: [3-5 strategic hashtags separated by spaces]`;
 
   try {
     logStep(`Attempting ${platform} AI generation`, {
@@ -507,10 +822,28 @@ Ready to level up your business? 💪`,
 
 async function generatePlatformContent(
   template: ContentTemplate,
-  supabaseClient: any
+  supabaseClient: any,
+  companyId?: string
 ): Promise<SocialPlatformContent[]> {
   const platformContents: SocialPlatformContent[] = [];
   const claudeKey = Deno.env.get("CLAUDE_API_KEY");
+
+  // Get recent post history to avoid repetition
+  const recentFormats = companyId
+    ? await getRecentFormats(supabaseClient, companyId)
+    : [];
+
+  // Select diverse format and hook that differ from recent posts
+  const selectedFormat = selectDiverseFormat(recentFormats);
+  const selectedHook = selectDiverseHookStyle(recentFormats);
+
+  logStep("Selected diverse format for content generation", {
+    format: selectedFormat.name,
+    format_id: selectedFormat.id,
+    hook_style: selectedHook.style,
+    recent_formats_analyzed: recentFormats.length,
+    avoided_formats: recentFormats.slice(0, 3).map(r => r.format_id),
+  });
 
   // Generate Twitter content (short)
   try {
@@ -528,6 +861,8 @@ async function generatePlatformContent(
             "Must fit Twitter's 280 character limit with URL",
             "Keep it simple and direct",
           ],
+          selectedFormat,
+          hookVariation: selectedHook,
         })
       : generateFallbackContent("twitter", template);
 
@@ -572,6 +907,8 @@ async function generatePlatformContent(
             "Use professional hashtags",
             "Encourage engagement with questions",
           ],
+          selectedFormat,
+          hookVariation: selectedHook,
         })
       : generateFallbackContent("linkedin", template);
 
@@ -616,6 +953,8 @@ async function generatePlatformContent(
             "Use engaging hashtags",
             "Share value and benefits clearly",
           ],
+          selectedFormat,
+          hookVariation: selectedHook,
         })
       : generateFallbackContent("facebook", template);
 
@@ -660,6 +999,8 @@ async function generatePlatformContent(
             "More hashtags for discoverability",
             "Mention 'link in bio' for URL",
           ],
+          selectedFormat,
+          hookVariation: selectedHook,
         })
       : generateFallbackContent("instagram", template);
 
@@ -815,10 +1156,11 @@ serve(async (req) => {
 
     logStep("Selected content template", selectedTemplate);
 
-    // Generate platform-specific content
+    // Generate platform-specific content with format diversity
     const platformContents = await generatePlatformContent(
       selectedTemplate,
-      supabaseClient
+      supabaseClient,
+      company_id // Pass company_id for format diversity tracking
     );
 
     // Create social media posts in database
