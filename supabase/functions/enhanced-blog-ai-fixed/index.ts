@@ -20,15 +20,48 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { topic, company_id, queue_id, action, customSettings } = body;
-    
+    const { topic, company_id, queue_id, action, customSettings, site_id, site_key } = body;
+
     // Handle both payload formats:
-    // 1. Direct format: { topic, company_id, queue_id }
-    // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...} }
-    
+    // 1. Direct format: { topic, company_id, queue_id, site_id }
+    // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...}, site_key }
+
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
     let finalQueueId = queue_id || customSettings?.queue_id;
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Resolve site_id for multi-tenant isolation
+    let siteId = site_id || customSettings?.site_id;
+    if (!siteId && site_key) {
+      const { data: siteData } = await supabaseClient
+        .from('sites')
+        .select('id')
+        .eq('key', site_key)
+        .eq('is_active', true)
+        .single();
+      siteId = siteData?.id;
+    }
+
+    // Fall back to default BuildDesk site if no site specified
+    if (!siteId) {
+      const { data: defaultSite } = await supabaseClient
+        .from('sites')
+        .select('id')
+        .eq('key', 'builddesk')
+        .single();
+      siteId = defaultSite?.id;
+    }
+
+    if (!siteId) {
+      throw new Error('Site not found. Provide site_id or site_key in the request body.');
+    }
+
+    logStep("Site context resolved", { siteId });
     
     // If no topic provided, generate a random one
     if (!finalTopic || finalTopic.trim() === '') {
@@ -45,32 +78,29 @@ serve(async (req) => {
       logStep("Generated random topic", { topic: finalTopic });
     }
 
-    logStep("Starting blog generation", { 
-      topic: finalTopic, 
-      company_id: finalCompanyId, 
+    logStep("Starting blog generation", {
+      topic: finalTopic,
+      company_id: finalCompanyId,
       queue_id: finalQueueId,
+      site_id: siteId,
       action: action || 'direct'
     });
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // If no company_id, fetch the first available company (for auto-generation mode)
+    // If no company_id, fetch the first available company within this site (for auto-generation mode)
     if (!finalCompanyId) {
-      logStep("No company_id provided, fetching default company");
+      logStep("No company_id provided, fetching default company for site");
       const { data: companies } = await supabaseClient
         .from('companies')
         .select('id')
+        .eq('site_id', siteId)
         .limit(1)
         .single();
-      
+
       if (companies) {
         finalCompanyId = companies.id;
-        logStep("Using default company", { company_id: finalCompanyId });
+        logStep("Using default company", { company_id: finalCompanyId, site_id: siteId });
       } else {
-        throw new Error('No company found. Please provide a company_id.');
+        throw new Error('No company found for this site. Please provide a company_id.');
       }
     }
 
@@ -86,8 +116,9 @@ serve(async (req) => {
       contentLength: blogContent.content?.length || 0
     });
 
-    // Store the generated content in database
+    // Store the generated content in database with site_id for multi-tenant isolation
     const insertData = {
+      site_id: siteId,
       company_id: finalCompanyId,
       queue_id: finalQueueId,
       title: blogContent.title,
@@ -117,15 +148,16 @@ serve(async (req) => {
     
     logStep("Blog post created successfully", { id: blogPost.id, title: blogPost.title });
 
-    // Update queue item status to completed (only if queue_id was provided)
+    // Update queue item status to completed with site_id isolation (only if queue_id was provided)
     if (finalQueueId) {
       const { error: updateError } = await supabaseClient
         .from('blog_generation_queue')
-        .update({ 
+        .update({
           status: 'completed',
           completed_at: new Date().toISOString(),
           error_message: null
         })
+        .eq('site_id', siteId)
         .eq('id', finalQueueId);
 
       if (updateError) {

@@ -48,10 +48,12 @@ serve(async (req) => {
     const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
     const sevenDaysFromNow = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
 
+    // Include site_id for multi-tenant isolation in all downstream operations
     let query = supabaseClient
       .from('subscribers')
       .select(`
         id,
+        site_id,
         email,
         user_id,
         subscription_tier,
@@ -95,10 +97,11 @@ serve(async (req) => {
 
       if (!notificationType) continue;
 
-      // Check if we already sent this type of notification
+      // Check if we already sent this type of notification with site_id isolation
       const { data: existingNotifications } = await supabaseClient
         .from('renewal_notifications')
         .select('notification_type')
+        .eq('site_id', subscriber.site_id)
         .eq('subscriber_id', subscriber.id)
         .eq('notification_type', notificationType);
 
@@ -110,10 +113,11 @@ serve(async (req) => {
         continue;
       }
 
-      // Get user profile for name
+      // Get user profile for name with site_id isolation
       const { data: profile } = await supabaseClient
         .from('user_profiles')
         .select('first_name, last_name')
+        .eq('site_id', subscriber.site_id)
         .eq('id', subscriber.user_id)
         .single();
 
@@ -194,19 +198,21 @@ serve(async (req) => {
         continue;
       }
 
-      // Record the notification
+      // Record the notification with site_id for multi-tenant isolation
       await supabaseClient
         .from('renewal_notifications')
         .insert({
+          site_id: subscriber.site_id,
           subscriber_id: subscriber.id,
           notification_type: notificationType,
           subscription_end_date: subscriber.subscription_end
         });
 
-      // Update the last notification timestamp
+      // Update the last notification timestamp with site_id isolation
       await supabaseClient
         .from('subscribers')
         .update({ renewal_notification_sent_at: new Date().toISOString() })
+        .eq('site_id', subscriber.site_id)
         .eq('id', subscriber.id);
 
       notificationsSent++;
