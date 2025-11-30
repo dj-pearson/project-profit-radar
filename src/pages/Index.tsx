@@ -12,7 +12,7 @@ import { initializeSEOBackendIntegration } from "@/utils/seoBackendSync";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeFontOptimizations, monitorFontPerformance } from "@/utils/fontOptimization";
 import { useCriticalResources } from "@/components/performance/CriticalResourceLoader";
-import ScrollSection from "@/components/ScrollSection";
+import ModernSection from "@/components/ui/ModernSection";
 import { MobilePerformanceProvider } from "@/components/performance/MobileOptimizations";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 
@@ -157,74 +157,74 @@ const Index = () => {
         <main id="main-content" role="main" className="relative z-10">
           <Hero />
 
-          <ScrollSection delay={0.2}>
+          <ModernSection delay={0.2} background="glass" className="border-b border-border/40">
             <SocialProof />
-          </ScrollSection>
+          </ModernSection>
 
-          <ScrollSection direction="right">
+          <ModernSection direction="up" background="mesh" className="py-24">
             <ProblemSolution />
-          </ScrollSection>
+          </ModernSection>
 
-          <ScrollSection>
+          <ModernSection background="grid" className="bg-secondary/20">
             <FinancialIntelligenceShowcase />
-          </ScrollSection>
+          </ModernSection>
 
           <PerformanceLazyWrapper fallback={<div className="h-96 bg-muted animate-pulse rounded-lg" />}>
-            <ScrollSection>
+            <ModernSection>
               <LazyFeatures />
-            </ScrollSection>
+            </ModernSection>
           </PerformanceLazyWrapper>
 
           {/* Trust Signals - BEFORE pricing for better conversion */}
-          <ScrollSection>
+          <ModernSection background="glass">
             <Suspense fallback={<SectionFallback height="h-96" />}>
               <TestimonialsSection />
             </Suspense>
-          </ScrollSection>
+          </ModernSection>
 
-          <ScrollSection>
+          <ModernSection>
             <Suspense fallback={<SectionFallback height="h-64" />}>
               <CaseStudiesSection />
             </Suspense>
-          </ScrollSection>
+          </ModernSection>
 
           {/* Pricing - Main conversion point */}
           <PerformanceLazyWrapper fallback={<SectionFallback height="h-96" />}>
-            <ScrollSection direction="right">
+            <ModernSection direction="up" background="mesh" id="pricing">
               <LazyPricing />
-            </ScrollSection>
+            </ModernSection>
           </PerformanceLazyWrapper>
 
           <PerformanceLazyWrapper fallback={<SectionFallback height="h-64" />}>
-            <ScrollSection direction="left">
+            <ModernSection direction="left">
               <LazyIndustries />
-            </ScrollSection>
+            </ModernSection>
           </PerformanceLazyWrapper>
 
-          <ScrollSection>
+          <ModernSection>
             <Suspense fallback={<SectionFallback height="h-32" />}>
               <ClientLogosSection />
             </Suspense>
-          </ScrollSection>
+          </ModernSection>
 
           {/* Financial Health Check CTA Banner - Secondary conversion */}
-          <ScrollSection direction="left">
+          <ModernSection direction="left" className="py-12">
             <Suspense fallback={<SectionFallback height="h-48" />}>
               <FinancialHealthCheckBanner />
             </Suspense>
-          </ScrollSection>
+          </ModernSection>
 
-          <ScrollSection>
+          <ModernSection>
             <Suspense fallback={<SectionFallback height="h-64" />}>
               <Implementation />
             </Suspense>
-          </ScrollSection>
+          </ModernSection>
 
-          <ScrollSection>
+          <ModernSection className="mb-20">
             <Suspense fallback={<SectionFallback height="h-96" />}>
               <FAQ />
             </Suspense>
-          </ScrollSection>
+          </ModernSection>
 
           {/* SEO-only sections - deferred loading, hidden from users */}
           {deferredLoaded && (
@@ -259,4 +259,3 @@ const Index = () => {
 };
 
 export default Index;
-
