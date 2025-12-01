@@ -1,7 +1,7 @@
 /**
  * Tasks Hook
- * Updated with multi-tenant site_id isolation (query key caching)
- * Note: taskService needs separate update for full site_id filtering
+ * Updated with multi-tenant site_id isolation
+ * Now passes siteId to taskService for complete isolation
  */
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -18,8 +18,11 @@ export const useTasks = (filters?: {
   const { siteId } = useAuth();
 
   return useQuery({
-    queryKey: ['tasks', filters, siteId],  // Include siteId for cache isolation
-    queryFn: () => taskService.getTasks(filters),
+    queryKey: ['tasks', filters, siteId],
+    queryFn: () => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.getTasks(siteId, filters);  // Pass siteId to service
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!siteId,
   });
@@ -29,8 +32,11 @@ export const useTask = (id: string) => {
   const { siteId } = useAuth();
 
   return useQuery({
-    queryKey: ['task', id, siteId],  // Include siteId for cache isolation
-    queryFn: () => taskService.getTask(id),
+    queryKey: ['task', id, siteId],
+    queryFn: () => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.getTask(siteId, id);  // Pass siteId to service
+    },
     enabled: !!id && !!siteId,
   });
 };
@@ -39,8 +45,11 @@ export const useMyTasks = (status?: string[]) => {
   const { siteId } = useAuth();
 
   return useQuery({
-    queryKey: ['my-tasks', status, siteId],  // Include siteId for cache isolation
-    queryFn: () => taskService.getMyTasks(status),
+    queryKey: ['my-tasks', status, siteId],
+    queryFn: () => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.getMyTasks(siteId, status);  // Pass siteId to service
+    },
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnMount: 'always',
     enabled: !!siteId,
@@ -51,8 +60,11 @@ export const useTasksCreatedByMe = (status?: string[]) => {
   const { siteId } = useAuth();
 
   return useQuery({
-    queryKey: ['tasks-created-by-me', status, siteId],  // Include siteId for cache isolation
-    queryFn: () => taskService.getTasksCreatedByMe(status),
+    queryKey: ['tasks-created-by-me', status, siteId],
+    queryFn: () => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.getTasksCreatedByMe(siteId, status);  // Pass siteId to service
+    },
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnMount: 'always',
     enabled: !!siteId,
@@ -64,9 +76,11 @@ export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskData: CreateTaskData) => taskService.createTask(taskData),
+    mutationFn: (taskData: CreateTaskData) => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.createTask(siteId, taskData);  // Pass siteId to service
+    },
     onSuccess: () => {
-      // Invalidate with siteId for proper cache isolation
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks-created-by-me'] });
@@ -90,10 +104,11 @@ export const useUpdateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: UpdateTaskData }) =>
-      taskService.updateTask(id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: UpdateTaskData }) => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.updateTask(siteId, id, updates);  // Pass siteId to service
+    },
     onSuccess: () => {
-      // Invalidate with siteId for proper cache isolation
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks-created-by-me'] });
@@ -118,9 +133,11 @@ export const useDeleteTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => taskService.deleteTask(id),
+    mutationFn: (id: string) => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.deleteTask(siteId, id);  // Pass siteId to service
+    },
     onSuccess: () => {
-      // Invalidate with siteId for proper cache isolation
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks-created-by-me'] });
@@ -143,8 +160,11 @@ export const useTaskComments = (taskId: string) => {
   const { siteId } = useAuth();
 
   return useQuery({
-    queryKey: ['task-comments', taskId, siteId],  // Include siteId for cache isolation
-    queryFn: () => taskService.getTaskComments(taskId),
+    queryKey: ['task-comments', taskId, siteId],
+    queryFn: () => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.getTaskComments(siteId, taskId);  // Pass siteId to service
+    },
     enabled: !!taskId && !!siteId,
   });
 };
@@ -154,8 +174,10 @@ export const useAddTaskComment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ taskId, comment }: { taskId: string; comment: string }) =>
-      taskService.addTaskComment(taskId, comment),
+    mutationFn: ({ taskId, comment }: { taskId: string; comment: string }) => {
+      if (!siteId) throw new Error('Site ID is required');
+      return taskService.addTaskComment(siteId, taskId, comment);  // Pass siteId to service
+    },
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['task-comments', taskId] });
       toast({

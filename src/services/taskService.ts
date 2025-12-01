@@ -68,12 +68,19 @@ export interface UpdateTaskData {
 }
 
 class TaskService {
-  async getTasks(filters?: {
+  /**
+   * Get tasks with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param filters - Optional filters for status, assigned_to, project_id, search
+   */
+  async getTasks(siteId: string, filters?: {
     status?: string[];
     assigned_to?: string;
     project_id?: string;
     search?: string;
   }): Promise<TaskWithDetails[]> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     // Use Supabase foreign key joins to fetch related data in a single query
     let query = supabase
       .from('tasks')
@@ -85,6 +92,7 @@ class TaskService {
         assigned_to_profile:user_profiles!assigned_to(id, first_name, last_name, email),
         created_by_profile:user_profiles!created_by(id, first_name, last_name, email)
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -113,10 +121,18 @@ class TaskService {
     }));
   }
 
-  async getTask(id: string): Promise<TaskWithDetails | null> {
+  /**
+   * Get a single task with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param id - Task ID
+   */
+  async getTask(siteId: string, id: string): Promise<TaskWithDetails | null> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id)
       .maybeSingle();
 
@@ -153,13 +169,21 @@ class TaskService {
     };
   }
 
-  async createTask(taskData: CreateTaskData): Promise<Task> {
+  /**
+   * Create a task with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param taskData - Task data to create
+   */
+  async createTask(siteId: string, taskData: CreateTaskData): Promise<Task> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('company_id')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -169,6 +193,7 @@ class TaskService {
       .from('tasks')
       .insert({
         ...taskData,
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id: userProfile.company_id,
         created_by: user.id,
         assigned_to: taskData.assigned_to || user.id,
@@ -185,10 +210,19 @@ class TaskService {
     return data;
   }
 
-  async updateTask(id: string, updates: UpdateTaskData): Promise<Task> {
+  /**
+   * Update a task with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param id - Task ID
+   * @param updates - Task data to update
+   */
+  async updateTask(siteId: string, id: string, updates: UpdateTaskData): Promise<Task> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data, error } = await supabase
       .from('tasks')
       .update(updates)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id)
       .select()
       .single();
@@ -200,10 +234,18 @@ class TaskService {
     return data;
   }
 
-  async deleteTask(id: string): Promise<void> {
+  /**
+   * Delete a task with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param id - Task ID
+   */
+  async deleteTask(siteId: string, id: string): Promise<void> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { error } = await supabase
       .from('tasks')
       .delete()
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', id);
 
     if (error) {
@@ -211,13 +253,21 @@ class TaskService {
     }
   }
 
-  async getTaskComments(taskId: string) {
+  /**
+   * Get task comments with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param taskId - Task ID
+   */
+  async getTaskComments(siteId: string, taskId: string) {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data, error } = await supabase
       .from('task_comments')
       .select(`
         *,
         user_profiles!task_comments_user_id_fkey(first_name, last_name, email)
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('task_id', taskId)
       .order('created_at', { ascending: true });
 
@@ -228,13 +278,22 @@ class TaskService {
     return data || [];
   }
 
-  async addTaskComment(taskId: string, comment: string) {
+  /**
+   * Add task comment with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param taskId - Task ID
+   * @param comment - Comment text
+   */
+  async addTaskComment(siteId: string, taskId: string, comment: string) {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('task_comments')
       .insert({
+        site_id: siteId,  // CRITICAL: Site isolation
         task_id: taskId,
         user_id: user.id,
         comment
@@ -252,23 +311,38 @@ class TaskService {
     return data;
   }
 
-  async getMyTasks(status?: string[]): Promise<TaskWithDetails[]> {
+  /**
+   * Get tasks assigned to current user with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param status - Optional status filter
+   */
+  async getMyTasks(siteId: string, status?: string[]): Promise<TaskWithDetails[]> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    return this.getTasks({
+    return this.getTasks(siteId, {
       assigned_to: user.id,
       status
     });
   }
 
-  async getTasksCreatedByMe(status?: string[]): Promise<TaskWithDetails[]> {
+  /**
+   * Get tasks created by current user with multi-tenant site_id isolation
+   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * @param status - Optional status filter
+   */
+  async getTasksCreatedByMe(siteId: string, status?: string[]): Promise<TaskWithDetails[]> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     let query = supabase
       .from('tasks')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('created_by', user.id)
       .order('created_at', { ascending: false });
 
@@ -296,10 +370,10 @@ class TaskService {
 
     const [projectsRes, profilesRes] = await Promise.all([
       projectIds.length
-        ? supabase.from('projects').select('id, name, site_id').in('id', projectIds)
+        ? supabase.from('projects').select('id, name, site_id').eq('site_id', siteId).in('id', projectIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
       userIds.length
-        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
+        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').eq('site_id', siteId).in('id', userIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
     ]);
 

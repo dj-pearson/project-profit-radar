@@ -77,10 +77,15 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
+
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id });
+
+    // Extract site_id from JWT metadata for multi-tenant isolation
+    const siteId = user.app_metadata?.site_id || user.user_metadata?.site_id;
+    if (!siteId) throw new Error("Site ID not found in user context");
+
+    logStep("User authenticated", { userId: user.id, siteId });
 
     const { company_id, secret_key, webhook_secret } = await req.json();
     if (!company_id || !secret_key) {
@@ -93,7 +98,7 @@ serve(async (req) => {
     const encryptedSecretKey = await encryptKey(secret_key);
     const encryptedWebhookSecret = webhook_secret ? await encryptKey(webhook_secret) : null;
 
-    // Update the company payment settings with encrypted keys
+    // Update the company payment settings with encrypted keys and site isolation
     const { error: updateError } = await supabaseClient
       .from('company_payment_settings')
       .update({
@@ -101,6 +106,7 @@ serve(async (req) => {
         stripe_webhook_secret_encrypted: encryptedWebhookSecret,
         updated_at: new Date().toISOString()
       })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     if (updateError) throw updateError;
