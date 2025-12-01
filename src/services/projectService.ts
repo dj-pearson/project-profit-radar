@@ -1,3 +1,8 @@
+/**
+ * Project Service
+ * Updated with multi-tenant site_id isolation
+ * All methods require siteId as first parameter for complete isolation
+ */
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Project {
@@ -16,6 +21,7 @@ export interface Project {
   end_date?: string;
   completion_percentage: number;
   company_id: string;
+  site_id?: string;
   project_manager_id?: string;
   created_by?: string;
   created_at: string;
@@ -65,7 +71,9 @@ export interface ProjectStats {
 }
 
 class ProjectService {
-  async getProjects(companyId?: string): Promise<ProjectWithRelations[]> {
+  async getProjects(siteId: string, companyId?: string): Promise<ProjectWithRelations[]> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     let query = supabase
       .from('projects')
       .select(`
@@ -77,6 +85,7 @@ class ProjectService {
         job_costs(id, total_cost),
         change_orders(id, title, amount, status)
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .order('created_at', { ascending: false });
 
     if (companyId) {
@@ -88,7 +97,9 @@ class ProjectService {
     return data || [];
   }
 
-  async getProject(projectId: string, companyId?: string): Promise<ProjectWithRelations | null> {
+  async getProject(siteId: string, projectId: string, companyId?: string): Promise<ProjectWithRelations | null> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     let query = supabase
       .from('projects')
       .select(`
@@ -100,6 +111,7 @@ class ProjectService {
         job_costs(id, total_cost),
         change_orders(id, title, description, amount, status)
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', projectId);
 
     // Enforce company_id filter for non-root_admin users
@@ -113,11 +125,14 @@ class ProjectService {
     return data;
   }
 
-  async createProject(projectData: CreateProjectData): Promise<Project> {
+  async createProject(siteId: string, projectData: CreateProjectData): Promise<Project> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const { data, error } = await supabase
       .from('projects')
       .insert([{
         ...projectData,
+        site_id: siteId,  // CRITICAL: Site isolation
         completion_percentage: 0,
         geofence_radius_meters: 100
       }])
@@ -128,10 +143,13 @@ class ProjectService {
     return data;
   }
 
-  async updateProject(projectId: string, updates: Partial<Project>, companyId?: string): Promise<Project> {
+  async updateProject(siteId: string, projectId: string, updates: Partial<Project>, companyId?: string): Promise<Project> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     let query = supabase
       .from('projects')
       .update(updates)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', projectId);
 
     // Enforce company_id filter for non-root_admin users
@@ -147,10 +165,13 @@ class ProjectService {
     return data;
   }
 
-  async deleteProject(projectId: string, companyId?: string): Promise<void> {
+  async deleteProject(siteId: string, projectId: string, companyId?: string): Promise<void> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     let query = supabase
       .from('projects')
       .delete()
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', projectId);
 
     // Enforce company_id filter for non-root_admin users
@@ -163,13 +184,15 @@ class ProjectService {
     if (error) throw error;
   }
 
-  async getProjectStats(companyId?: string): Promise<ProjectStats> {
+  async getProjectStats(siteId: string, companyId?: string): Promise<ProjectStats> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
     if (!companyId) {
       throw new Error('Company ID is required for project stats');
     }
 
     // Use database aggregation function for better performance
     const { data, error } = await supabase.rpc('get_project_stats', {
+      p_site_id: siteId,  // CRITICAL: Site isolation
       company_id: companyId
     });
 
@@ -180,6 +203,7 @@ class ProjectService {
     const { data: overdueCount, error: overdueError } = await supabase
       .from('projects')
       .select('id', { count: 'exact', head: true })
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('company_id', companyId)
       .lt('end_date', now)
       .neq('status', 'completed');
@@ -187,19 +211,21 @@ class ProjectService {
     if (overdueError) throw overdueError;
 
     const stats: ProjectStats = {
-      totalProjects: data.totalProjects || 0,
-      activeProjects: data.activeProjects || 0,
-      completedProjects: data.completedProjects || 0,
-      onHoldProjects: data.onHoldProjects || 0,
-      totalBudget: data.totalBudget || 0,
-      avgCompletion: data.avgCompletion || 0,
+      totalProjects: data?.totalProjects || 0,
+      activeProjects: data?.activeProjects || 0,
+      completedProjects: data?.completedProjects || 0,
+      onHoldProjects: data?.onHoldProjects || 0,
+      totalBudget: data?.totalBudget || 0,
+      avgCompletion: data?.avgCompletion || 0,
       overdueProjects: overdueCount || 0
     };
 
     return stats;
   }
 
-  async updateProjectCompletion(projectId: string, percentage: number, companyId?: string): Promise<void> {
+  async updateProjectCompletion(siteId: string, projectId: string, percentage: number, companyId?: string): Promise<void> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     const updates: Partial<Project> = {
       completion_percentage: percentage,
       updated_at: new Date().toISOString()
@@ -215,6 +241,7 @@ class ProjectService {
     let query = supabase
       .from('projects')
       .update(updates)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', projectId);
 
     // Enforce company_id filter for non-root_admin users
@@ -227,7 +254,9 @@ class ProjectService {
     if (error) throw error;
   }
 
-  async searchProjects(searchTerm: string, companyId?: string): Promise<ProjectWithRelations[]> {
+  async searchProjects(siteId: string, searchTerm: string, companyId?: string): Promise<ProjectWithRelations[]> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     let query = supabase
       .from('projects')
       .select(`
@@ -236,6 +265,7 @@ class ProjectService {
         materials(id, name, description),
         documents(id, name)
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .or(`name.ilike.%${searchTerm}%, client_name.ilike.%${searchTerm}%, description.ilike.%${searchTerm}%`)
       .order('created_at', { ascending: false });
 
@@ -248,10 +278,13 @@ class ProjectService {
     return data || [];
   }
 
-  async getProjectsByStatus(status: string, companyId?: string): Promise<Project[]> {
+  async getProjectsByStatus(siteId: string, status: string, companyId?: string): Promise<Project[]> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     let query = supabase
       .from('projects')
       .select('*')
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('status', status)
       .order('created_at', { ascending: false });
 
@@ -264,8 +297,10 @@ class ProjectService {
     return data || [];
   }
 
-  async duplicateProject(projectId: string, newName: string, companyId?: string): Promise<Project> {
-    const original = await this.getProject(projectId, companyId);
+  async duplicateProject(siteId: string, projectId: string, newName: string, companyId?: string): Promise<Project> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
+    const original = await this.getProject(siteId, projectId, companyId);
     if (!original) throw new Error('Project not found or access denied');
 
     const { tasks, materials, documents, project_phases, job_costs, change_orders, ...projectData } = original;
@@ -278,7 +313,7 @@ class ProjectService {
       company_id: projectData.company_id
     };
 
-    return this.createProject(duplicateData);
+    return this.createProject(siteId, duplicateData);
   }
 }
 

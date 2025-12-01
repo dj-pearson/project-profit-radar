@@ -46,7 +46,7 @@ export const ConvertToProjectDialog = ({
   onClose,
   onSuccess
 }: ConvertToProjectDialogProps) => {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -72,11 +72,11 @@ export const ConvertToProjectDialog = ({
   }, [isOpen, estimateId]);
 
   const loadEstimatePreview = async () => {
-    if (!estimateId) return;
+    if (!estimateId || !siteId) return;
 
     setLoading(true);
     try {
-      const preview = await estimateConversionService.getConversionPreview(estimateId);
+      const preview = await estimateConversionService.getConversionPreview(siteId, estimateId);
 
       setEstimate(preview.estimate);
       setCanConvert(preview.canConvert);
@@ -102,7 +102,7 @@ export const ConvertToProjectDialog = ({
   };
 
   const handleConvert = async () => {
-    if (!estimateId || !userProfile?.company_id || !canConvert) return;
+    if (!estimateId || !userProfile?.company_id || !siteId || !canConvert) return;
 
     setConverting(true);
     try {
@@ -116,6 +116,7 @@ export const ConvertToProjectDialog = ({
       };
 
       const result = await estimateConversionService.convertEstimateToProject(
+        siteId,  // CRITICAL: Site isolation
         estimateId,
         userProfile.company_id,
         customizations

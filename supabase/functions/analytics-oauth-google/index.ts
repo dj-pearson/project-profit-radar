@@ -261,10 +261,11 @@ serve(async (req) => {
     if (action === 'refresh') {
       const { connection_id } = await req.json();
 
-      // Get connection
+      // Get connection with site isolation
       const { data: connection } = await supabaseClient
         .from('analytics_platform_connections')
         .select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', connection_id)
         .single();
 
@@ -294,7 +295,7 @@ serve(async (req) => {
 
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
-      // Update connection
+      // Update connection with site isolation
       await supabaseClient
         .from('analytics_platform_connections')
         .update({
@@ -302,6 +303,7 @@ serve(async (req) => {
           expires_at: expiresAt,
           connection_status: 'connected',
         })
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', connection_id);
 
       return new Response(
@@ -323,10 +325,11 @@ serve(async (req) => {
     if (action === 'disconnect') {
       const { connection_id } = await req.json();
 
-      // Revoke Google token
+      // Revoke Google token with site isolation
       const { data: connection } = await supabaseClient
         .from('analytics_platform_connections')
         .select('access_token_encrypted')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', connection_id)
         .single();
 
@@ -339,7 +342,7 @@ serve(async (req) => {
         );
       }
 
-      // Update connection status
+      // Update connection status with site isolation
       await supabaseClient
         .from('analytics_platform_connections')
         .update({
@@ -349,6 +352,7 @@ serve(async (req) => {
           access_token_encrypted: null,
           refresh_token_encrypted: null,
         })
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', connection_id);
 
       return new Response(

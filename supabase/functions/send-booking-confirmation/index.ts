@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -19,14 +20,18 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { siteId, supabase: supabaseClient } = authContext;
+    console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized', { siteId });
+
     const { bookingId }: BookingConfirmationRequest = await req.json();
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    // Fetch booking details with booking page info
+    // Fetch booking details with booking page info and site isolation
     const { data: booking, error: bookingError } = await supabaseClient
       .from('bookings')
       .select(`
@@ -36,6 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
           location
         )
       `)
+      .eq('site_id', siteId)  // CRITICAL: Site isolation
       .eq('id', bookingId)
       .single();
 

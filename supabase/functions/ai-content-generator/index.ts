@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { aiService } from "../_shared/ai-service.ts";
+import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,15 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { user, siteId } = authContext;
+    console.log('[AI-CONTENT-GENERATOR] User authenticated', { userId: user.id, siteId });
+
     const { prompt, system_prompt, model_alias, content_type } = await req.json();
 
     if (!prompt) {

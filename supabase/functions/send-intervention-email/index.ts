@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { initializeAuthContext, errorResponse } from "../_shared/auth-helpers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,17 +15,22 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize auth context - extracts user AND site_id from JWT
+    const authContext = await initializeAuthContext(req);
+    if (!authContext) {
+      return errorResponse('Unauthorized', 401);
+    }
+
+    const { siteId, supabase: supabaseClient } = authContext;
+    console.log('[SEND-INTERVENTION-EMAIL] Auth context initialized', { siteId });
+
     const { userId, predictionId } = await req.json();
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    // Get user and prediction data
+    // Get user and prediction data with site isolation
     const { data: user, error: userError } = await supabaseClient
       .from("user_profiles")
       .select("email, first_name, last_name")
+      .eq("site_id", siteId)  // CRITICAL: Site isolation
       .eq("id", userId)
       .single();
 
@@ -33,6 +39,7 @@ serve(async (req) => {
     const { data: prediction, error: predictionError } = await supabaseClient
       .from("churn_predictions")
       .select("*")
+      .eq("site_id", siteId)  // CRITICAL: Site isolation
       .eq("id", predictionId)
       .single();
 
@@ -125,8 +132,9 @@ serve(async (req) => {
       throw new Error(`Failed to send email: ${error}`);
     }
 
-    // Log intervention in database
+    // Log intervention in database with site isolation
     await supabaseClient.from("intervention_logs").insert({
+      site_id: siteId,  // CRITICAL: Site isolation
       user_id: userId,
       prediction_id: predictionId,
       intervention_type: "email",

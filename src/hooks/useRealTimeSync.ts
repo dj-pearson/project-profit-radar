@@ -27,7 +27,7 @@ export interface UseRealTimeSyncOptions {
 }
 
 export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const channelsRef = useRef<Map<string, RealtimeChannel>>(new Map());
   const { subscriptions, enableCrossModuleSync = true, enableNotifications = true, onError } = options;
 
@@ -96,7 +96,7 @@ export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
   };
 
   const subscribe = useCallback(() => {
-    if (!userProfile?.company_id) return;
+    if (!userProfile?.company_id || !siteId) return;
 
     channelsRef.current.forEach((channel) => {
       supabase.removeChannel(channel);
@@ -114,7 +114,8 @@ export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
               event: '*',
               schema: 'public',
               table: table,
-              filter: `company_id=eq.${userProfile.company_id}`
+              // CRITICAL: Site isolation - filter by site_id AND company_id
+              filter: `site_id=eq.${siteId},company_id=eq.${userProfile.company_id}`
             },
             (payload) => {
               const syncEvent: SyncEvent = {
@@ -133,7 +134,7 @@ export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
         channelsRef.current.set(channelName, channel);
       });
     });
-  }, [userProfile?.company_id, subscriptions, handleSyncEvent]);
+  }, [userProfile?.company_id, siteId, subscriptions, handleSyncEvent]);
 
   const unsubscribe = useCallback(() => {
     channelsRef.current.forEach((channel) => {

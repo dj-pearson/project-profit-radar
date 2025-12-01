@@ -4,6 +4,7 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Device } from '@capacitor/device';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface OfflineData {
   id: string;
@@ -31,6 +32,7 @@ export const useOfflineSync = () => {
   });
 
   const { toast } = useToast();
+  const { siteId } = useAuth();
 
   useEffect(() => {
     // Load pending sync data on mount
@@ -299,34 +301,50 @@ export const useOfflineSync = () => {
   };
 
   const syncTimeEntry = async (item: OfflineData) => {
+    if (!siteId) throw new Error('No site_id available for sync');
     const { error } = await supabase
       .from('time_entries')
-      .insert(item.data);
-    
+      .insert({
+        ...item.data,
+        site_id: siteId  // CRITICAL: Site isolation
+      });
+
     if (error) throw error;
   };
 
   const syncDailyReport = async (item: OfflineData) => {
+    if (!siteId) throw new Error('No site_id available for sync');
     const { error } = await supabase
       .from('daily_reports')
-      .insert(item.data);
-    
+      .insert({
+        ...item.data,
+        site_id: siteId  // CRITICAL: Site isolation
+      });
+
     if (error) throw error;
   };
 
   const syncExpense = async (item: OfflineData) => {
+    if (!siteId) throw new Error('No site_id available for sync');
     const { error } = await supabase
       .from('expenses')
-      .insert(item.data);
-    
+      .insert({
+        ...item.data,
+        site_id: siteId  // CRITICAL: Site isolation
+      });
+
     if (error) throw error;
   };
 
   const syncSafetyIncident = async (item: OfflineData) => {
+    if (!siteId) throw new Error('No site_id available for sync');
     const { error } = await supabase
       .from('safety_incidents')
-      .insert(item.data);
-    
+      .insert({
+        ...item.data,
+        site_id: siteId  // CRITICAL: Site isolation
+      });
+
     if (error) throw error;
   };
 

@@ -1,3 +1,8 @@
+/**
+ * Estimate to Project Conversion Service
+ * Updated with multi-tenant site_id isolation
+ * All methods require siteId as first parameter for complete isolation
+ */
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EstimateData {
@@ -36,15 +41,19 @@ class EstimateToProjectConversionService {
    * Converts an accepted estimate into a project
    */
   async convertEstimateToProject(
+    siteId: string,
     estimateId: string,
     companyId: string,
     customizations?: Partial<ProjectConversionData>
   ): Promise<ConversionResult> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     try {
       // 1. Fetch the estimate with all details
       const { data: estimate, error: estimateError } = await supabase
         .from('estimates')
         .select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', estimateId)
         .single();
 
@@ -65,6 +74,7 @@ class EstimateToProjectConversionService {
 
       // 3. Prepare project data from estimate
       const projectData: any = {
+        site_id: siteId,  // CRITICAL: Site isolation
         company_id: companyId,
         name: customizations?.name || estimate.title,
         client_name: estimate.client_name,
@@ -95,6 +105,7 @@ class EstimateToProjectConversionService {
       // 5. Transfer line items to job costing structure if they exist
       if (estimate.line_items && Array.isArray(estimate.line_items)) {
         await this.transferLineItemsToJobCosting(
+          siteId,
           estimate.line_items,
           newProject.id,
           companyId
@@ -109,6 +120,7 @@ class EstimateToProjectConversionService {
           status: 'accepted',
           accepted_date: new Date().toISOString()
         })
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', estimateId);
 
       if (updateError) {
@@ -121,6 +133,7 @@ class EstimateToProjectConversionService {
         await supabase
           .from('project_notes')
           .insert({
+            site_id: siteId,  // CRITICAL: Site isolation
             project_id: newProject.id,
             note: `Estimate Notes: ${estimate.notes}`,
             created_by: (await supabase.auth.getUser()).data.user?.id
@@ -145,6 +158,7 @@ class EstimateToProjectConversionService {
    * Transfers estimate line items to project job costing structure
    */
   private async transferLineItemsToJobCosting(
+    siteId: string,
     lineItems: any[],
     projectId: string,
     companyId: string
@@ -152,6 +166,7 @@ class EstimateToProjectConversionService {
     try {
       // Group line items by category for job cost structure
       const costEntries = lineItems.map((item) => ({
+        site_id: siteId,  // CRITICAL: Site isolation
         project_id: projectId,
         company_id: companyId,
         cost_code: item.category || 'General',
@@ -184,15 +199,18 @@ class EstimateToProjectConversionService {
   /**
    * Gets conversion preview data
    */
-  async getConversionPreview(estimateId: string): Promise<{
+  async getConversionPreview(siteId: string, estimateId: string): Promise<{
     estimate: EstimateData | null;
     canConvert: boolean;
     issues: string[];
   }> {
+    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
+
     try {
       const { data: estimate, error } = await supabase
         .from('estimates')
         .select('*')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('id', estimateId)
         .single();
 
