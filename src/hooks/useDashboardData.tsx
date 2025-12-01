@@ -58,14 +58,14 @@ export interface DashboardData {
 }
 
 export const useDashboardData = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, siteId } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadDashboardData = useCallback(async () => {
-    if (!userProfile?.company_id) {
+    if (!userProfile?.company_id || !siteId) {
       setLoading(false);
       return;
     }
@@ -74,28 +74,31 @@ export const useDashboardData = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch basic project data
+      // Fetch basic project data with site isolation
       const { data: projects, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, completion_percentage, status, start_date, end_date')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .in('status', ['active', 'in_progress', 'planning']);
 
       if (projectsError) throw projectsError;
 
-      // Fetch team members count
+      // Fetch team members count with site isolation
       const { data: teamMembers, error: teamError } = await supabase
         .from('user_profiles')
         .select('id')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .eq('is_active', true);
 
       if (teamError) throw teamError;
 
-      // Fetch recent activity
+      // Fetch recent activity with site isolation
       const { data: activities, error: activityError } = await supabase
         .from('activity_feed')
         .select('id, activity_type, title, created_at, user_id, project_id')
+        .eq('site_id', siteId)  // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -156,7 +159,7 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile?.company_id, toast]);
+  }, [userProfile?.company_id, siteId, toast]);
 
   useEffect(() => {
     loadDashboardData();
