@@ -1,0 +1,199 @@
+Section,Category,Item,Current Status,Priority,Effort Estimate,Notes/Details,Blocking Launch
+Core Auth,SSO/SAML,Implement SAML 2.0 provider integration (Okta Azure AD OneLogin),Not Started,Critical,2-3 weeks,Database tables ready - UI and integration missing,Yes - Enterprise requirement
+Core Auth,SSO/SAML,Build SAML configuration management UI,Not Started,Critical,1 week,Need admin interface for configuring SAML providers,Yes - Enterprise requirement
+Core Auth,SSO/SAML,Implement OAuth flow (Google Microsoft GitHub),Not Started,Critical,1 week,Standard OAuth 2.0 implementation needed,Yes - Enterprise requirement
+Core Auth,SSO/SAML,Add LDAP/Active Directory integration,Not Started,High,1-2 weeks,Enterprise customers use AD for identity,No
+Core Auth,MFA,Build TOTP setup and verification screens,Not Started,Critical,1 week,Database ready - need mobile authenticator flow,Yes - Security requirement
+Core Auth,MFA,Implement SMS MFA option,Not Started,High,3-5 days,Need Twilio integration,No
+Core Auth,MFA,Implement Email MFA option,Not Started,High,2-3 days,Need email service first,No
+Core Auth,MFA,Build device trust management UI,Not Started,High,1 week,Allow users to manage trusted devices,No
+Core Auth,Session,Verify session timeout configuration (30 min),Implemented,Low,1 day,Verify production settings match requirements,No
+Core Auth,Session,Test session auto-refresh mechanism,Implemented,Medium,1 day,Needs end-to-end testing,No
+Core Auth,RBAC,Verify 7 core roles are properly configured,Implemented,Low,2-3 days,root_admin admin project_manager field_supervisor office_staff accounting client_portal,No
+Core Auth,RBAC,Verify 22 permissions are properly enforced,Implemented,Medium,3-5 days,Test permission enforcement across all routes,No
+Core Auth,Biometric,Implement fingerprint/Face ID for mobile,Not Started,Low,2 weeks,Planned for mobile enhancement,No
+Security,RLS,Apply Phase 5 RLS migration,Not Applied,Critical,2 hours,File exists: 20250202000028_phase5_rls_policies.sql - run in SQL Editor,Yes - Security blocker
+Security,RLS,Verify RLS on all 30+ tables,Mostly Complete,High,3-5 days,Audit and test RLS policies on all tenant tables,Yes - Security blocker
+Security,Encryption,Implement field-level encryption for sensitive data,Not Started,High,1-2 weeks,Tax IDs SSNs bank info need encryption at rest,Yes - Compliance
+Security,Encryption,Encrypt API keys at rest (beyond SHA-256),Implemented,Low,N/A,SHA-256 hashing in place,No
+Security,Input Validation,Verify Zod schemas on all critical forms,Implemented,Medium,3-5 days,Audit all forms for proper validation,No
+Security,XSS,Verify DOMPurify on all user-generated content,Implemented,Medium,2-3 days,Audit all content rendering paths,No
+Security,Audit,Verify blockchain-style audit logging working,Implemented,Medium,1-2 days,Test tamper-proof logging system,No
+Security,Security Review,Complete security audit of all 153+ edge functions,Partially Complete,High,1-2 weeks,16 critical tables secured - need full audit,Yes
+Security,Secrets,Remove all hardcoded credentials/secrets,Unknown,Critical,1 week,Audit codebase for any exposed secrets,Yes
+Security,Console Logs,Remove 1612 console statements,Not Started,High,1 week,Security risk - info leakage in production,Yes
+Media,Image Upload,Verify image upload and storage working,Implemented,Low,1 day,Supabase Storage configured,No
+Media,Image Optimization,WebP/AVIF conversion pipeline,Implemented,Low,N/A,Scripts available for image optimization,No
+Media,Video Upload,Support video uploads for project documentation,Partially Implemented,Medium,3-5 days,Storage ready - may need size limits,No
+Media,File Size Limits,Configure upload size limits,Implemented,Low,1 day,Verify limits are appropriate,No
+Media,CDN,Verify Cloudflare CDN for media delivery,Implemented,Low,N/A,Cloudflare Pages handles CDN,No
+CRM,Contacts,Contact management functionality,Implemented,Low,N/A,Core CRM contacts working,No
+CRM,Leads,Lead tracking and pipeline,Implemented,Low,N/A,Lead management implemented,No
+CRM,Lead Scoring,Implement ML-based lead scoring,Partially Implemented,Medium,2 weeks,Database schema ready - ML integration incomplete,No
+CRM,Opportunities,Opportunity management,Implemented,Low,N/A,CRM opportunities working,No
+CRM,Campaigns,Marketing campaign management,Implemented,Medium,3-5 days,Basic implementation - needs testing,No
+CRM,Email Integration,CRM email automation,Not Started,High,1-2 weeks,Depends on email service integration,Yes - Feature dependency
+CRM,Lead Intelligence,AI-powered lead insights,Partially Implemented,Medium,1 week,Basic implementation needs enhancement,No
+GPS,Geofencing,GPS-enabled geofencing for job sites,Implemented,Low,N/A,Working with configurable boundaries,No
+GPS,Time Tracking,GPS clock in/out,Implemented,Low,N/A,Crew check-ins with location working,No
+GPS,Location History,View employee location history,Implemented,Low,N/A,GPS tracking history available,No
+GPS,Alerts,Geofence entry/exit alerts,Implemented,Medium,2-3 days,Verify alert system working properly,No
+GPS,Mobile,Mobile GPS tracking,Implemented,Medium,3-5 days,Capacitor geolocation - verify accuracy,No
+GPS,Offline,Offline GPS queuing,Partially Implemented,Medium,1 week,Queue GPS data when offline,No
+Billing,Stripe Webhooks,Stripe webhook processing,Implemented,High,3-5 days,Needs thorough testing of all webhook events,Yes
+Billing,Subscriptions,Subscription management,Implemented,Medium,2-3 days,Verify subscription flows end-to-end,No
+Billing,Invoicing,Invoice generation and delivery,Implemented,Medium,2-3 days,Verify PDF generation and email delivery,No
+Billing,Refunds,Refund processing workflow,Partially Implemented,High,3-5 days,Needs testing and verification,Yes
+Billing,Chargebacks,Chargeback handling,Not Implemented,High,1 week,Need chargeback webhook handling,Yes
+Billing,Failed Payments,Failed payment recovery flow,Partially Implemented,High,3-5 days,Needs dunning email sequence,Yes
+Billing,Proration,Proration logic for plan changes,Partially Implemented,Medium,2-3 days,Needs review and testing,No
+Billing,Usage Metering,Usage-based billing tracking,Not Implemented,Low,2 weeks,Future enhancement for API usage,No
+Billing,Payment Reminders,Automated payment reminder emails,90% Complete,Critical,1-2 days,Needs email service integration,Yes
+Billing,Billing Automation,Automation rules for billing,Implemented,Medium,2-3 days,Verify automation rules working,No
+Templates,Project Templates,Reusable project templates,Implemented,Low,N/A,Working and tested,No
+Templates,Estimate Templates,Estimate template system,Implemented,Low,N/A,Line item library included,No
+Templates,Report Templates,Custom report templates,Implemented,Medium,3-5 days,Phase 5 feature - verify scheduling,No
+Templates,Daily Report Templates,Daily report template system,Implemented,Low,N/A,Working with customization,No
+Templates,Email Templates,Email notification templates,Implemented,Medium,2-3 days,Verify templates render correctly,No
+Storage,Supabase Storage,File storage configuration,Implemented,Low,N/A,Supabase Storage configured,No
+Storage,Access Control,Storage bucket permissions,Implemented,Medium,2-3 days,Verify RLS on storage buckets,No
+Storage,Backup,Database backup strategy,Partially Implemented,High,1 week,Supabase daily backups - restore not tested,Yes
+Storage,Disaster Recovery,Document disaster recovery plan,Not Started,High,1 week,Need documented DR procedures,Yes
+Storage,Data Retention,Data retention policy implementation,Implemented,Medium,2-3 days,Verify retention policies enforced,No
+Documents,Upload,Document upload and categorization,Implemented,Low,N/A,Document management working,No
+Documents,OCR,OCR processing with Tesseract,Implemented,Medium,2-3 days,Verify OCR accuracy and performance,No
+Documents,Version Control,Document version tracking,Implemented,Low,N/A,Version history available,No
+Documents,Search,Document search functionality,Implemented,Medium,2-3 days,Verify full-text search working,No
+Documents,E-Signature,Document e-signature integration,Not Implemented,Medium,3-4 weeks,Future enhancement - DocuSign/HelloSign,No
+Documents,Sharing,Document sharing with external parties,Implemented,Medium,2-3 days,Verify client portal document access,No
+AI,Content Generation,AI content generation,Implemented,Low,N/A,Edge function working,No
+AI,Estimating,AI-powered estimate generation,Implemented,Low,N/A,Working and tested,No
+AI,Image Analysis,Photo classification and insights,Implemented,Medium,2-3 days,Verify accuracy of classification,No
+AI,Quality Control,AI-powered inspection,Implemented,Medium,2-3 days,Verify inspection workflow,No
+AI,Support Tickets,Automated ticket analysis,Implemented,Low,N/A,Working ticket routing,No
+AI,Risk Prediction,Project risk analytics,Implemented,Medium,3-5 days,Verify predictive model accuracy,No
+AI,Smart Procurement,Material forecasting and supplier optimization,Implemented,Low,N/A,Phase 5 feature complete,No
+AI,Auto-Scheduling,Intelligent resource scheduling,Implemented,Medium,2-3 days,Verify scheduling optimization,No
+AI,Model Manager,AI model management UI,Implemented,Low,N/A,Management interface available,No
+AI,Predictive Analytics,Advanced predictive models,Partially Implemented,Medium,2 weeks,ML integration incomplete,No
+Blog,AI Generation,AI-powered blog content,Implemented,Medium,2-3 days,Needs email for scheduling,No
+Blog,Automation,Blog automation scheduling,Implemented,Medium,2-3 days,Verify cron job setup,No
+Blog,Social Integration,Social media posting,Implemented,Medium,3-5 days,Verify social API integrations,No
+Blog,Categories,Blog category management,Implemented,Low,N/A,Working categories and tags,No
+SEO,Sitemap,Automated sitemap generation,Implemented,Low,N/A,Working with versioning,No
+SEO,Schema Markup,Structured data markup,Implemented,Low,N/A,Enhanced schema in place,No
+SEO,Meta Tags,Dynamic SEO metadata,Implemented,Low,N/A,Meta tags configured,No
+SEO,Keyword Analysis,Semantic keyword analysis,Implemented,Medium,2-3 days,Verify keyword tracking,No
+SEO,Link Analysis,Internal link analysis,Implemented,Medium,2-3 days,Verify link optimization,No
+SEO,AI Search,AI search engine optimization,Implemented,Medium,3-5 days,Verify discoverability,No
+SEO,Google Search Console,GSC integration,Implemented,Low,N/A,Analytics integration working,No
+Automation,Workflows,Basic automation workflows,Implemented,Medium,3-5 days,Verify trigger conditions,No
+Automation,Custom Workflows,Custom workflow builder,Not Implemented,Low,4-6 weeks,Future enhancement,No
+Automation,Notifications,Automated notifications,Implemented,Medium,2-3 days,Verify notification delivery,No
+Automation,Approval Workflows,Multi-level approval workflows,Partially Implemented,Medium,1 week,Basic implementation - needs enhancement,No
+Automation,Cron Jobs,Setup pg_cron scheduling,Not Started,Critical,1 day,Must configure in Supabase Dashboard,Yes
+Automation,Payment Automation,Automated payment processing rules,Implemented,Medium,2-3 days,Verify automation rules,No
+Email,Service Integration,Configure email provider (Resend/SendGrid),Not Started,Critical,1-2 days,Blocker for multiple features,Yes
+Email,API Keys,Add email API keys to Supabase secrets,Not Started,Critical,1 hour,Required for email delivery,Yes
+Email,Edge Functions,Update edge functions for email,90% Complete,Critical,1 day,Functions ready - needs provider config,Yes
+Email,Template Testing,Test all email templates,Not Started,High,2-3 days,Verify rendering and delivery,Yes
+Email,SMS Integration,Twilio SMS integration,Not Started,Medium,3-5 days,Prepared but not integrated,No
+Email,Deliverability,Setup SPF DKIM DMARC,Not Started,High,1 day,Required for email deliverability,Yes
+Testing,Unit Tests,Increase test coverage to 60%,10% Coverage,High,2-3 weeks,Currently only 12 test files,Yes
+Testing,E2E Tests,Add comprehensive E2E tests,3 Tests,High,2 weeks,Only auth dashboard smoke tests,Yes
+Testing,Integration Tests,Test critical integrations,Minimal,High,1 week,Stripe QuickBooks calendar tests,Yes
+Testing,Security Tests,Security-critical path testing,Minimal,Critical,1 week,Test auth RLS permissions,Yes
+Testing,Performance Tests,Verify Lighthouse 90+ score,Not Verified,Medium,2-3 days,Run full Lighthouse audit,No
+Testing,Load Testing,Test with 1000+ concurrent users,Not Started,High,2-3 weeks,No load testing performed,Yes
+Testing,Mobile Testing,Test iOS and Android apps,Partially Done,High,1-2 weeks,iOS crash issues need resolution,Yes
+Mobile,iOS Crash Fix,Fix Hermes string.replace() crashes,Not Started,Critical,3-5 days,278+ unsafe .replace() calls to fix,Yes
+Mobile,iOS Build,iOS TestFlight submission,Not Started,High,1 week,Certificates and profiles needed,Yes
+Mobile,Android Build,Android Play Store submission,Not Started,High,1 week,Keystore and signing needed,Yes
+Mobile,App Store Connect,Setup App Store Connect account,Not Started,High,1 day,Apple developer account required,Yes
+Mobile,Play Store,Setup Google Play Console,Not Started,High,1 day,Google developer account required,Yes
+Mobile,Screenshots,App store screenshots and previews,Not Started,Medium,2-3 days,Required for store listings,Yes
+Mobile,Privacy Policy,Mobile app privacy policy,Not Started,High,1 day,Required for store submission,Yes
+Mobile,Offline Sync,Complete offline-first sync,Partially Implemented,Medium,2 weeks,Queue mutations when offline,No
+Mobile,Push Notifications,Push notification service,Framework Ready,Medium,1 week,Service integration incomplete,No
+Mobile,Background Sync,Background data synchronization,Not Implemented,Medium,2 weeks,Planned enhancement,No
+API,Documentation,Create API endpoint documentation,Not Started,High,1-2 weeks,Zero documentation exists,Yes
+API,Examples,Write code examples,Not Started,High,3-5 days,Required for developers,Yes
+API,Authentication Guide,Document API authentication,Not Started,High,2-3 days,JWT and API key docs,Yes
+API,Developer Portal,Complete developer portal UI,20% Complete,Medium,2 weeks,Framework ready - incomplete,No
+API,SDK Generation,Generate client SDK libraries,Not Started,Medium,2 weeks,TypeScript SDK priority,No
+API,Versioning,Implement API versioning strategy,Not Started,Medium,1 week,Required for API stability,No
+API,Rate Limiting,Verify rate limiting configuration,Implemented,Medium,2-3 days,Test multi-tier limits,No
+API,Webhook Delivery,Complete webhook delivery system,Partially Implemented,High,1 week,HMAC signing ready - delivery incomplete,Yes
+Monitoring,Error Tracking,Configure Sentry DSN,Not Started,Critical,2-3 days,Logger hooks exist - needs DSN,Yes
+Monitoring,Error Boundaries,Integrate React error boundaries,Partially Implemented,High,2-3 days,Add boundaries to all routes,Yes
+Monitoring,Performance,Setup performance monitoring,Not Started,High,3-5 days,Sentry performance or alternative,Yes
+Monitoring,Log Aggregation,Setup log aggregation service,Not Started,High,1 week,No centralized logging,Yes
+Monitoring,Uptime,Setup uptime monitoring,Not Started,High,1 day,Use Uptime Robot or similar,Yes
+Monitoring,Alerts,Configure alerting system,Not Started,High,2-3 days,Alert on errors and downtime,Yes
+Monitoring,Dashboards,Build monitoring dashboards,Not Started,Medium,1-2 weeks,Operations visibility,No
+Monitoring,SLA Tracking,Implement SLA monitoring,Not Started,Medium,1 week,Track uptime and response times,No
+Compliance,GDPR Export,Data export functionality,Not Implemented,High,1 week,Legal requirement for EU,Yes
+Compliance,GDPR Deletion,Data deletion workflows,Not Implemented,High,1 week,Right to erasure,Yes
+Compliance,Privacy Policy,Publish privacy policy,Not Started,Critical,1 day,Required before launch,Yes
+Compliance,Terms of Service,Publish terms of service,Not Started,Critical,1 day,Required before launch,Yes
+Compliance,Cookie Policy,Cookie consent implementation,Not Started,High,2-3 days,Required for EU compliance,Yes
+Compliance,SOC2,SOC2 readiness assessment,50% Ready,Medium,2-4 weeks,RLS and audit in place - gaps remain,No
+Compliance,HIPAA,HIPAA workflow implementation,30% Ready,Low,4-6 weeks,Database ready - workflows incomplete,No
+Compliance,Data Retention,Verify retention policy enforcement,Implemented,Medium,2-3 days,Test automatic data cleanup,No
+Multi-Tenant,Site Isolation,Verify site_id on all tables,95% Complete,High,3-5 days,Audit all 30+ tables,Yes
+Multi-Tenant,RLS Policies,Verify RLS includes site_id,95% Complete,High,3-5 days,Test isolation between sites,Yes
+Multi-Tenant,Frontend Context,Verify site context in all queries,Partially Complete,High,1 week,Some edge functions may miss site_id,Yes
+Multi-Tenant,Edge Functions,Audit 153+ edge functions for site_id,Partially Complete,High,2 weeks,Verify all functions use site isolation,Yes
+Multi-Tenant,Data Migration,Site data migration procedures,Documented,Medium,2-3 days,Verify migration scripts,No
+Integrations,QuickBooks,2-way QuickBooks sync,Implemented,Medium,3-5 days,Verify sync accuracy,No
+Integrations,Google Calendar,Calendar integration,Implemented,Medium,2-3 days,Verify OAuth and sync,No
+Integrations,Outlook,Outlook calendar integration,Implemented,Medium,2-3 days,Verify OAuth and sync,No
+Integrations,Stripe,Full Stripe integration testing,Implemented,High,1 week,Test all payment scenarios,Yes
+Infrastructure,CDN,Cloudflare CDN configuration,Implemented,Low,N/A,Cloudflare Pages handles this,No
+Infrastructure,SSL,SSL/TLS certificate management,Implemented,Low,N/A,Managed by Cloudflare,No
+Infrastructure,DNS,DNS and DNSSEC configuration,Implemented,Low,N/A,Cloudflare DNS configured,No
+Infrastructure,Deployment,Automated deployment pipeline,Implemented,Medium,2-3 days,Verify CI/CD working,No
+Infrastructure,Environment Variables,Production environment config,Partially Configured,High,1 day,Verify all secrets configured,Yes
+Performance,Bundle Size,Optimize bundle under 800KB,~1MB,Medium,1 week,Currently optimized but could improve,No
+Performance,Code Splitting,Verify lazy loading working,Implemented,Low,N/A,78+ lazy-loaded routes,No
+Performance,Lighthouse,Achieve Lighthouse 90+ score,Not Verified,Medium,3-5 days,Run full audit,No
+Performance,Query Optimization,Optimize database queries,Implemented,Medium,1 week,Review slow queries under load,No
+Performance,Caching,Verify caching strategy,Implemented,Medium,2-3 days,React Query caching configured,No
+Documentation,User Guides,Create user documentation,Not Started,Medium,2 weeks,Each module needs guide,No
+Documentation,Admin Handbook,Administrator documentation,Not Started,Medium,1 week,Setup and configuration guide,No
+Documentation,Deployment Runbook,Deployment procedures,Not Started,High,3-5 days,Required for operations,Yes
+Documentation,Troubleshooting,Troubleshooting guides,Not Started,Medium,1 week,Common issues and solutions,No
+Documentation,Architecture,Technical architecture docs,Implemented,Low,N/A,CLAUDE.md and docs/ complete,No
+Code Quality,TODOs,Resolve 29 TODO/FIXME comments,Not Started,Medium,3-5 days,Distributed across 20+ files,No
+Code Quality,TypeScript,Fix any TypeScript errors,Mostly Clean,Low,2-3 days,Verify strict mode compliance,No
+Code Quality,Linting,Resolve all ESLint warnings,Mostly Clean,Low,2-3 days,Run full lint check,No
+Code Quality,Dependencies,Audit and update dependencies,Current,Medium,1 day,Check for security vulnerabilities,No
+Code Quality,Dead Code,Remove unused code,Unknown,Low,3-5 days,Tree shake analysis,No
+Accessibility,WCAG,WCAG 2.1 AA compliance,Not Verified,Medium,2 weeks,Full accessibility audit needed,No
+Accessibility,Keyboard,Keyboard navigation testing,Partially Implemented,Medium,3-5 days,Radix primitives help,No
+Accessibility,Screen Reader,Screen reader testing,Not Tested,Medium,3-5 days,Test with NVDA/VoiceOver,No
+Accessibility,Color Contrast,Color contrast verification,Not Verified,Medium,2-3 days,Automated and manual check,No
+Analytics,PostHog,Verify PostHog integration,Implemented,Low,N/A,Product analytics working,No
+Analytics,Web Vitals,Core Web Vitals tracking,Implemented,Medium,2-3 days,Verify metrics collection,No
+Analytics,Custom Events,User interaction tracking,Implemented,Low,N/A,Event tracking configured,No
+Analytics,Dashboards,Analytics dashboards,Implemented,Medium,3-5 days,Verify dashboard accuracy,No
+Client Portal,Access,Client portal authentication,Implemented,Medium,2-3 days,Verify limited access,No
+Client Portal,Documents,Document sharing with clients,Implemented,Medium,2-3 days,Verify permissions,No
+Client Portal,Progress,Project progress updates,Implemented,Medium,2-3 days,Verify update delivery,No
+Client Portal,Email,Client notification emails,90% Complete,High,1-2 days,Needs email service,Yes
+Real-Time,WebSocket,Verify Supabase Realtime,Implemented,Medium,2-3 days,Test live updates,No
+Real-Time,Subscriptions,Real-time subscriptions working,Implemented,Medium,2-3 days,Verify all channels,No
+Real-Time,Notifications,Live notification delivery,Implemented,Medium,2-3 days,Test notification flow,No
+Time Tracking,Entry,Time entry functionality,Implemented,Low,N/A,Working and tested,No
+Time Tracking,Approval,Timesheet approval workflow,Implemented,Medium,2-3 days,Verify multi-level approval,No
+Time Tracking,Export,Timesheet export,Implemented,Low,N/A,PDF and Excel export,No
+Time Tracking,Overtime,Overtime calculation,Implemented,Medium,2-3 days,Verify calculation rules,No
+Financial,Job Costing,Real-time job costing,Implemented,Low,N/A,Core feature working,No
+Financial,Budget Tracking,Budget vs actual,Implemented,Low,N/A,Variance analysis working,No
+Financial,Cash Flow,Cash flow forecasting,Implemented,Medium,2-3 days,Verify projections,No
+Financial,Reports,Financial reporting,Implemented,Medium,3-5 days,Verify report accuracy,No
+Projects,Management,Project management core,Implemented,Low,N/A,Full project lifecycle,No
+Projects,Change Orders,Change order management,Implemented,Medium,2-3 days,Verify approval workflow,No
+Projects,Daily Reports,Daily progress reports,Implemented,Low,N/A,Working with templates,No
+Projects,Scheduling,Project scheduling,Implemented,Medium,2-3 days,Verify Gantt functionality,No
+Projects,Bulk Operations,Multi-project operations,Implemented,Low,N/A,Bulk actions available,No
