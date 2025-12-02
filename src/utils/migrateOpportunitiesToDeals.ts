@@ -25,9 +25,7 @@ interface PipelineStage {
 
 export async function migrateOpportunitiesToDeals(companyId: string) {
   try {
-      "Starting migration of opportunities to deals for company:",
-      companyId
-    );
+    // Starting migration of opportunities to deals
 
     // 1. Load existing opportunities
     const { data: opportunities, error: oppError } = await supabase
