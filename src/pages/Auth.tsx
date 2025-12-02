@@ -70,6 +70,7 @@ const Auth = () => {
     signInWithApple,
     signUp,
     resetPassword,
+    resetPasswordWithOTP,
     sendOTP,
     verifyOTP,
     resendOTP,
@@ -273,6 +274,7 @@ const Auth = () => {
     }
 
     setLoading(true);
+    setOtpFlowState('sending');
 
     const userData = {
       first_name: firstName,
@@ -280,37 +282,28 @@ const Auth = () => {
       role: "admin",
     };
 
-    // First, create the account with Supabase
-    const { error } = await signUp(email, password, userData);
+    // Create account and send OTP via signup-with-otp edge function
+    // This bypasses Supabase's email system and sends OTP via Amazon SES
+    const result = await signUp(email, password, userData);
 
-    if (!error) {
-      // Now send OTP for email verification
-      setOtpFlowState('sending');
-
-      const otpResult = await sendOTP({
-        email,
-        type: 'confirm_signup',
-        recipientName: firstName,
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Sign Up Failed",
+        description: result.error,
       });
-
-      if (otpResult.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: otpResult.error,
-        });
-        setOtpFlowState('idle');
-      } else {
-        setOtpExpiresIn(otpResult.expiresInMinutes || 15);
-        setOtpFlowState('verifying');
-        setEmailSent(true);
-        setEmailSentType('signup');
-        startResendCooldown(60);
-        toast({
-          title: "Verification Code Sent!",
-          description: "Please check your email for the 6-digit verification code.",
-        });
-      }
+      setOtpFlowState('idle');
+    } else {
+      // OTP was already sent by the signup-with-otp edge function
+      setOtpExpiresIn(result.expiresInMinutes || 15);
+      setOtpFlowState('verifying');
+      setEmailSent(true);
+      setEmailSentType('signup');
+      startResendCooldown(60);
+      toast({
+        title: "Verification Code Sent!",
+        description: "Please check your email for the 6-digit verification code.",
+      });
     }
 
     setLoading(false);
@@ -410,21 +403,19 @@ const Auth = () => {
     setLoading(true);
     setOtpFlowState('sending');
 
-    // Send OTP for password reset instead of using Supabase's default reset link
-    const otpResult = await sendOTP({
-      email: resetEmail,
-      type: 'reset_password',
-    });
+    // Send OTP for password reset via reset-password-otp edge function
+    // This bypasses Supabase's email system and sends OTP via Amazon SES
+    const result = await resetPassword(resetEmail);
 
-    if (otpResult.error) {
+    if (result.error) {
       toast({
         variant: "destructive",
         title: "Reset Failed",
-        description: otpResult.error,
+        description: result.error,
       });
       setOtpFlowState('idle');
     } else {
-      setOtpExpiresIn(otpResult.expiresInMinutes || 10);
+      setOtpExpiresIn(result.expiresInMinutes || 10);
       setOtpFlowState('verifying');
       setEmailSent(true);
       setEmailSentType('reset');
@@ -451,8 +442,10 @@ const Auth = () => {
     setNewPasswordValidation({ isValid: errors.length === 0, errors });
   };
 
-  // Handle OTP verification for password reset
-  const handleVerifyResetOTP = async () => {
+  // Handle OTP format validation for password reset
+  // Note: Actual OTP verification happens in handleSetNewPassword to avoid
+  // marking the OTP as used before the password is set
+  const handleVerifyResetOTP = () => {
     if (otpCode.length !== 6) {
       toast({
         variant: "destructive",
@@ -462,34 +455,17 @@ const Auth = () => {
       return;
     }
 
-    setLoading(true);
-    setOtpFlowState('submitted');
-
-    const result = await verifyOTP({
-      email: resetEmail,
-      otpCode,
-      type: 'reset_password',
+    // Just validate format and proceed to password entry
+    // The actual OTP verification will happen when setting the new password
+    setOtpFlowState('setting_password');
+    toast({
+      title: "Enter New Password",
+      description: "Please create your new password below.",
     });
-
-    if (result.success && result.canResetPassword) {
-      setOtpFlowState('setting_password');
-      toast({
-        title: "Code Verified!",
-        description: "Please enter your new password.",
-      });
-    } else {
-      setOtpFlowState('verifying');
-      toast({
-        variant: "destructive",
-        title: "Verification Failed",
-        description: result.error || "Invalid verification code. Please try again.",
-      });
-    }
-
-    setLoading(false);
   };
 
-  // Handle setting new password after OTP verification
+  // Handle setting new password after OTP entry
+  // This verifies the OTP and sets the new password in one step
   const handleSetNewPassword = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -513,14 +489,11 @@ const Auth = () => {
 
     setLoading(true);
 
-    const result = await verifyOTP({
-      email: resetEmail,
-      otpCode,
-      type: 'reset_password',
-      password: newPassword,
-    });
+    // Verify OTP and set new password via reset-password-otp edge function
+    // This bypasses Supabase's email system entirely
+    const result = await resetPasswordWithOTP(resetEmail, otpCode, newPassword);
 
-    if (result.success && result.passwordReset) {
+    if (result.success) {
       setOtpFlowState('verified');
       toast({
         title: "Password Reset!",
@@ -538,6 +511,10 @@ const Auth = () => {
         setActiveTab("signin");
       }, 2000);
     } else {
+      // If OTP verification failed, go back to the OTP entry step
+      if (result.error?.toLowerCase().includes('code') || result.error?.toLowerCase().includes('otp')) {
+        setOtpFlowState('verifying');
+      }
       toast({
         variant: "destructive",
         title: "Reset Failed",
@@ -554,10 +531,8 @@ const Auth = () => {
 
     setLoading(true);
 
-    const result = await resendOTP({
-      email: resetEmail,
-      type: 'reset_password',
-    });
+    // Resend OTP via reset-password-otp edge function
+    const result = await resetPassword(resetEmail);
 
     if (result.error) {
       toast({
