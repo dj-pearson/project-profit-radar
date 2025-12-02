@@ -37,7 +37,6 @@ export const useWebVitals = (config: WebVitalsConfig = {}) => {
       };
 
       if (enableLogging) {
-        console.log(`[Web Vitals] ${metric.name}:`, {
           value: `${metric.value.toFixed(2)}ms`,
           rating: metric.rating,
           id: metric.id,

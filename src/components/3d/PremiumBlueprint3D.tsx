@@ -463,19 +463,16 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
 
         const handleMouseEnter = () => {
             isMouseOver = true;
-            console.log('🎯 Mouse ENTERED 3D building - scroll will control animation');
         };
 
         const handleMouseLeave = () => {
             isMouseOver = false;
-            console.log('👋 Mouse LEFT 3D building - normal scroll restored');
         };
 
         const handleWheel = (e: WheelEvent) => {
             // Only hijack scroll if mouse is over the container
             if (!isMouseOver) return;
 
-            console.log('✅ Scroll hijacked in 3D building! Delta:', e.deltaY);
             
             // preventDefault stops the page from scrolling
             e.preventDefault();
@@ -499,13 +496,11 @@ const PremiumBlueprint3D: React.FC<BlueprintProps> = ({ isBuildMode, onToggleMod
         // Attach wheel listener to window with passive: false
         window.addEventListener('wheel', handleWheel, { passive: false });
 
-        console.log('🚀 Scroll hijacking initialized for 3D building');
 
         return () => {
             container.removeEventListener('mouseenter', handleMouseEnter);
             container.removeEventListener('mouseleave', handleMouseLeave);
             window.removeEventListener('wheel', handleWheel);
-            console.log('🛑 Scroll hijacking cleaned up for 3D building');
         };
     }, []);
 

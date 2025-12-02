@@ -77,7 +77,6 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
 
       // Force emergency reload after delay
       setTimeout(() => {
-        console.log("Force reloading page to clear state");
         window.location.href = "/auth";
       }, 3000);
     }
@@ -138,7 +137,6 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
       return null;
     }
 
-    console.log("No user found, redirecting to auth");
     incrementRedirectCount();
     setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
@@ -168,7 +166,6 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
       return null;
     }
 
-    console.log("User exists but profile failed to load, redirecting to auth");
     // Remember current route before redirecting
     rememberCurrentRoute(location);
     incrementRedirectCount();
@@ -188,14 +185,12 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
   ];
 
   if (!allowedRoles.includes(userProfile.role)) {
-    console.log("Invalid role, redirecting to auth");
     incrementRedirectCount();
     return <Navigate to="/auth" replace />;
   }
 
   // Success - allow access (log only once per session)
   if (!accessGrantedLogged.current) {
-    console.log("Access granted for role:", userProfile.role);
     accessGrantedLogged.current = true;
   }
 

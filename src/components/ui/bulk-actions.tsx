@@ -227,25 +227,25 @@ export const defaultBulkActions: BulkAction[] = [
     id: 'complete',
     label: 'Mark Complete',
     icon: <CheckCircle2 className="h-4 w-4" />,
-    action: (ids) => console.log('Mark complete:', ids)
+    action: (ids) => { /* TODO: Implement mark complete */ }
   },
   {
     id: 'duplicate',
     label: 'Duplicate',
     icon: <Copy className="h-4 w-4" />,
-    action: (ids) => console.log('Duplicate:', ids)
+    action: (ids) => { /* TODO: Implement duplicate */ }
   },
   {
     id: 'archive',
     label: 'Archive',
     icon: <Archive className="h-4 w-4" />,
-    action: (ids) => console.log('Archive:', ids)
+    action: (ids) => { /* TODO: Implement archive */ }
   },
   {
     id: 'export',
     label: 'Export',
     icon: <Download className="h-4 w-4" />,
-    action: (ids) => console.log('Export:', ids)
+    action: (ids) => { /* TODO: Implement export */ }
   },
   {
     id: 'delete',
@@ -253,7 +253,7 @@ export const defaultBulkActions: BulkAction[] = [
     icon: <Trash2 className="h-4 w-4" />,
     variant: 'destructive' as const,
     requiresConfirmation: true,
-    action: (ids) => console.log('Delete:', ids)
+    action: (ids) => { /* TODO: Implement delete */ }
   }
 ];
 

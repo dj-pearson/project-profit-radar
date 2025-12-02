@@ -89,7 +89,6 @@ export const useNotifications = () => {
       // Check if platform supports notifications
       const deviceInfo = await Device.getInfo();
       if (deviceInfo.platform === 'web') {
-        console.log('Web platform - using browser notifications');
         return;
       }
 
@@ -101,11 +100,9 @@ export const useNotifications = () => {
         
         // Set up local notification listeners
         LocalNotifications.addListener('localNotificationReceived', (notification) => {
-          console.log('Local notification received:', notification);
         });
 
         LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
-          console.log('Notification action performed:', notificationAction);
           handleNotificationAction(notificationAction);
         });
       }
@@ -129,7 +126,6 @@ export const useNotifications = () => {
 
         // Set up push notification listeners
         PushNotifications.addListener('registration', (token) => {
-          console.log('Push registration success, token:', token.value);
           setPushToken(token.value);
           savePushTokenToServer(token.value);
         });
@@ -139,11 +135,9 @@ export const useNotifications = () => {
         });
 
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push notification received:', notification);
         });
 
         PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('Push notification action performed:', notification);
           handleNotificationAction(notification);
         });
       }
@@ -183,7 +177,6 @@ export const useNotifications = () => {
         // Mark task as complete
         if (notification.extra?.taskId) {
           // Handle task completion
-          console.log('Marking task complete:', notification.extra.taskId);
         }
         break;
       

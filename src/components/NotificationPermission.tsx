@@ -31,7 +31,6 @@ export const NotificationPermission = () => {
         setShowPrompt(false);
         // Register for push notifications
         const registration = await navigator.serviceWorker.ready;
-        console.log('Notifications enabled, registration:', registration);
       }
     } catch (error) {
       console.error('Error requesting notification permission:', error);

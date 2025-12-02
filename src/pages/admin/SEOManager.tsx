@@ -333,8 +333,6 @@ const SEOManager = () => {
 
       // Log the generated sitemap for manual copying if needed
       if (data) {
-        console.log('Generated Sitemap XML:', data);
-        console.log('Copy this content to public/sitemap.xml if needed');
       }
 
       // Save sitemap to public directory (in a real implementation, this would save to your server)
@@ -637,7 +635,6 @@ ${JSON.stringify(faqSchema, null, 2)}
         description: `Found ${goodCount} good, ${warningCount} warnings, ${errorCount} errors. Check the console for details.`
       });
       
-      console.log('SEO Audit Results:', auditResults);
       
     } catch (error: any) {
       console.error('Error running SEO audit:', error);

@@ -245,23 +245,19 @@ export const updateSEOConfiguration = async () => {
  */
 export const initializeSEOBackendIntegration = async () => {
   try {
-    console.log('🚀 Initializing SEO backend integration...');
     
     // Step 1: Sync all SEO pages
     const syncResult = await syncSEOPagesToBackend();
     if (!syncResult.success) {
       throw new Error(`Page sync failed: ${syncResult.message}`);
     }
-    console.log('✅ SEO pages synced to database');
 
     // Step 2: Update SEO configuration
     const configResult = await updateSEOConfiguration();
     if (!configResult.success) {
       throw new Error(`Config update failed: ${configResult.message}`);
     }
-    console.log('✅ SEO configuration updated');
 
-    console.log('🎉 SEO backend integration complete!');
     return { success: true, message: 'SEO backend integration initialized successfully' };
 
   } catch (error) {

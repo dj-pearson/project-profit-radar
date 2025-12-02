@@ -321,24 +321,20 @@ export default function BuildDeskHero3D() {
 
     const handleMouseEnter = () => {
       isMouseOver = true;
-      console.log('🎯 Mouse ENTERED hero section - scroll will control animation');
       document.body.style.cursor = 'grab';
     };
 
     const handleMouseLeave = () => {
       isMouseOver = false;
-      console.log('👋 Mouse LEFT hero section - normal scroll restored');
       document.body.style.cursor = 'default';
     };
 
     const handleWheel = (e: WheelEvent) => {
       // Only hijack scroll if mouse is over the container
       if (!isMouseOver) {
-        console.log('⚠️ Scroll event but mouse NOT over hero - allowing normal scroll');
         return;
       }
 
-      console.log('✅ Scroll hijacked! Delta:', e.deltaY);
       
       // preventDefault stops the page from scrolling
       e.preventDefault();
@@ -364,14 +360,12 @@ export default function BuildDeskHero3D() {
     // Attach to window to catch all scroll events
     window.addEventListener('wheel', handleWheel, { passive: false });
 
-    console.log('🚀 Scroll hijacking initialized for hero section');
 
     return () => {
       container.removeEventListener('mouseenter', handleMouseEnter);
       container.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('wheel', handleWheel);
       document.body.style.cursor = 'default';
-      console.log('🛑 Scroll hijacking cleaned up');
     };
   }, [isMobile]);
 

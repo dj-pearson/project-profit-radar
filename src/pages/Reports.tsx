@@ -259,14 +259,12 @@ const Reports = () => {
           <TabsContent value="builder">
             <CustomReportBuilder
               onSave={(config) => {
-                console.log('Saving report config:', config);
                 toast({
                   title: "Success",
                   description: "Report configuration saved successfully"
                 });
               }}
               onExecute={(config) => {
-                console.log('Executing report:', config);
               }}
             />
           </TabsContent>

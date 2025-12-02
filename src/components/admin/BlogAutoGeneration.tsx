@@ -286,14 +286,10 @@ const BlogAutoGeneration = () => {
   };
 
   const triggerImmediateGeneration = async () => {
-    console.log('[BlogAutoGen] Generate Now clicked!');
-    console.log('[BlogAutoGen] Settings:', settings);
-    console.log('[BlogAutoGen] User Profile:', userProfile);
     
     setGenerating(true);
     
     try {
-      console.log('[BlogAutoGen] Calling enhanced-blog-ai function...');
       
       toast({
         title: "Generating Content",
@@ -310,7 +306,6 @@ const BlogAutoGeneration = () => {
         }
       });
 
-      console.log('[BlogAutoGen] Function response:', { data, error });
 
       if (error) throw error;
 

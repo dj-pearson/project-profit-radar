@@ -156,7 +156,6 @@ export function IndustryWorkflowTemplates() {
       });
 
       // Here you would typically navigate to project creation with this template
-      console.log('Using template:', template);
     } catch (error) {
       console.error('Error using template:', error);
       toast({

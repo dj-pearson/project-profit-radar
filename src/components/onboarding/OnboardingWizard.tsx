@@ -181,7 +181,6 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
       if (inviteTeam && teamEmails) {
         const emails = teamEmails.split(',').map(e => e.trim()).filter(e => e);
         // TODO: Implement team invitation logic
-        console.log('Send invitations to:', emails);
       }
 
       // Mark user profile as onboarded

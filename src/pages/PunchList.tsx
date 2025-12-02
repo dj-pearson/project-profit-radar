@@ -177,7 +177,6 @@ const PunchList = () => {
     }
 
     try {
-      console.log('Creating punch list item with data:', {
         item_number: `PLI-${Date.now().toString().slice(-8)}`,
         project_id: newItem.project_id,
         description: newItem.description,
@@ -204,7 +203,6 @@ const PunchList = () => {
         })
         .select();
 
-      console.log('Insert result:', { data, error });
 
       if (error) throw error;
 

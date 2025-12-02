@@ -24,7 +24,6 @@ export const initializeGoogleAnalytics = async () => {
       .maybeSingle();
 
     if (error || !seoConfig?.google_analytics_id) {
-      console.log('No Google Analytics ID found in SEO configuration');
       return;
     }
 
@@ -38,6 +37,7 @@ export const initializeGoogleAnalytics = async () => {
 
     // Load Google Analytics script
     loadGoogleAnalyticsScript(trackingId);
+    
 
     console.log('Google Analytics initialized with ID:', trackingId);
   } catch (error) {

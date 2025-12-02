@@ -107,7 +107,6 @@ export const PhotoProgressTracking: React.FC<PhotoProgressTrackingProps> = ({ pr
     const files = event.target.files;
     if (files) {
       // In a real app, you'd upload to storage and create photo records
-      console.log('Uploading files:', files);
       setIsUploadDialogOpen(false);
     }
   };

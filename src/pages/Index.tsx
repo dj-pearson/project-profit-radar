@@ -84,7 +84,6 @@ const Index = () => {
         if (data?.session?.user) {
           initializeSEOBackendIntegration().then(result => {
             if (result.success) {
-              console.log('✅ SEO backend integration successful');
             } else {
               console.warn('⚠️ SEO backend integration warning:', result.message);
             }

@@ -100,7 +100,6 @@ export const createRUMMetric = (metric: Metric): RUMMetric => {
 export const sendRUMData = async (metric: RUMMetric): Promise<void> => {
   // In development, just log
   if (import.meta.env.DEV) {
-    console.log('[RUM]', {
       metric: metric.name,
       value: metric.value,
       rating: metric.rating,
@@ -141,7 +140,6 @@ export const sendRUMData = async (metric: RUMMetric): Promise<void> => {
  */
 export const trackCustomMetric = (name: string, value: number, additionalData?: Record<string, any>): void => {
   if (import.meta.env.DEV) {
-    console.log('[RUM] Custom metric:', name, value, additionalData);
   }
 
   // Send to analytics
@@ -248,5 +246,4 @@ export const initializeRUM = (): void => {
   trackNavigation();
   trackResourceLoading();
 
-  console.log('[RUM] Monitoring initialized');
 };

@@ -23,7 +23,6 @@ const BlogSection = () => {
 
   const loadRecentPosts = async () => {
     try {
-      console.log('Loading recent blog posts...');
       const { data, error } = await supabase
         .from('blog_posts')
         .select('id, title, excerpt, featured_image_url, published_at, slug')
@@ -37,10 +36,6 @@ const BlogSection = () => {
         throw error;
       }
       
-      console.log('Loaded blog posts:', data);
-      console.log('Number of posts:', data?.length || 0);
-      console.log('First post details:', data?.[0]);
-      console.log('All posts status check:', data?.map(p => ({ title: p.title, status: 'published', published_at: p.published_at })));
       setPosts(data || []);
     } catch (error) {
       console.error('Error loading blog posts:', error);

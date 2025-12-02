@@ -276,7 +276,6 @@ const FinancialHealthCheck = () => {
   const handleSubmit = () => {
     if (email) {
       // In production, send email to backend for lead capture
-      console.log("Lead captured:", { email, companyName, answers });
       setShowResults(true);
     }
   };

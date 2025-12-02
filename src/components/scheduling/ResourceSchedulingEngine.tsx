@@ -99,7 +99,6 @@ export const ResourceSchedulingEngine: React.FC = () => {
 
   const optimizeSchedule = () => {
     // AI-powered schedule optimization logic
-    console.log('Running schedule optimization...');
     // This would contain algorithms to:
     // - Minimize travel time between sites
     // - Balance resource utilization

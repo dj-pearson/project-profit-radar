@@ -47,7 +47,6 @@ class SecurityService {
     metadata?: any
   ): Promise<void> {
     try {
-      console.log('Security event logged:', {
         type,
         severity,
         description,
@@ -134,7 +133,6 @@ class SecurityService {
 
   async updateSecuritySettings(companyId: string, settings: SecuritySettings): Promise<boolean> {
     try {
-      console.log('Updating security settings for company:', companyId, settings);
       toast.success('Security settings updated successfully');
       return true;
     } catch (error: any) {
@@ -186,7 +184,6 @@ class SecurityService {
 
   async resolveSecurityAlert(alertId: string): Promise<boolean> {
     try {
-      console.log('Resolving security alert:', alertId);
       toast.success('Security alert resolved');
       return true;
     } catch (error: any) {

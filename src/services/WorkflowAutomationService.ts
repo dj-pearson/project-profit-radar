@@ -54,7 +54,6 @@ class WorkflowAutomationService {
         executionCount: 0
       };
 
-      console.log('Created workflow rule:', newRule);
       toast.success('Workflow rule created successfully');
       return newRule;
     } catch (error: any) {
@@ -98,7 +97,6 @@ class WorkflowAutomationService {
 
   async updateWorkflowRule(ruleId: string, updates: Partial<WorkflowRule>): Promise<boolean> {
     try {
-      console.log('Updating workflow rule:', ruleId, updates);
       toast.success('Workflow rule updated successfully');
       return true;
     } catch (error: any) {
@@ -110,7 +108,6 @@ class WorkflowAutomationService {
 
   async deleteWorkflowRule(ruleId: string): Promise<boolean> {
     try {
-      console.log('Deleting workflow rule:', ruleId);
       toast.success('Workflow rule deleted successfully');
       return true;
     } catch (error: any) {
@@ -130,7 +127,6 @@ class WorkflowAutomationService {
         executionData: triggerData
       };
 
-      console.log('Executed workflow:', execution);
       return execution;
     } catch (error: any) {
       console.error('Error executing workflow:', error);
@@ -140,7 +136,6 @@ class WorkflowAutomationService {
 
   async processProjectStatusChange(projectId: string, oldStatus: string, newStatus: string): Promise<void> {
     try {
-      console.log('Processing project status change:', {
         projectId,
         oldStatus,
         newStatus
@@ -158,7 +153,6 @@ class WorkflowAutomationService {
 
   async processTaskCompletion(taskId: string, projectId: string): Promise<void> {
     try {
-      console.log('Processing task completion:', { taskId, projectId });
       
       // Mock task completion processing
       toast.info('Task completion workflows processed');
@@ -201,7 +195,6 @@ class WorkflowAutomationService {
 
   async toggleWorkflowRule(ruleId: string, isActive: boolean): Promise<boolean> {
     try {
-      console.log(`${isActive ? 'Activating' : 'Deactivating'} workflow rule:`, ruleId);
       toast.success(`Workflow rule ${isActive ? 'activated' : 'deactivated'}`);
       return true;
     } catch (error: any) {

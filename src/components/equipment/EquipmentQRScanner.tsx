@@ -134,7 +134,6 @@ export const EquipmentQRScanner: React.FC<EquipmentQRScannerProps> = ({
   };
 
   const handleQRDetected = async (qrValue: string) => {
-    console.log('QR Code detected:', qrValue);
     setScannedQRValue(qrValue);
     stopScanning();
     await validateAndLookupEquipment(qrValue);

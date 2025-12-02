@@ -251,7 +251,6 @@ const hasChecked = useRef(false);
 async function notifyUser(userEmail: string, adminEmail: string) {
   // In production, this would send an email notification
   // For now, we'll just log it
-  console.log(`User ${userEmail} notified of impersonation by ${adminEmail}`);
 
   // TODO: Implement email notification
   // await supabase.functions.invoke('send-email', {

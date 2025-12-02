@@ -41,7 +41,6 @@ export const usePerformanceMonitor = (config: PerformanceConfig = defaultConfig)
     
     if (config.enableConsoleLogging) {
       const status = value <= threshold ? '✅' : '❌';
-      console.log(`${status} ${name.toUpperCase()}: ${Math.round(value)}${name === 'cls' ? '' : 'ms'} (threshold: ${threshold}${name === 'cls' ? '' : 'ms'})`);
     }
 
     // Report to analytics if enabled
@@ -146,7 +145,6 @@ export const useRealUserMetrics = () => {
       };
 
       // Log performance data
-      console.log('📊 Page Performance Metrics:', performanceData.current);
 
       // Report slow pages to analytics
       if (performanceData.current.pageLoadTime > 3000) {

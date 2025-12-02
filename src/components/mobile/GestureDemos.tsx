@@ -26,7 +26,7 @@ export function LongPressDemo() {
     },
     {
       threshold: 500,
-      onStart: () => console.log('Long press started'),
+      onStart: () => {},
     }
   );
 
@@ -146,7 +146,7 @@ export function DoubleTapDemo() {
  */
 export function PinchZoomDemo() {
   const { scale, isPinching, handlers, resetScale } = usePinchZoom(
-    (newScale) => console.log('Pinching:', newScale),
+    () => {},
     {
       minScale: 0.5,
       maxScale: 3,
@@ -267,7 +267,7 @@ export function DragDemo() {
  */
 export function RotationDemo() {
   const { angle, isRotating, handlers, resetAngle } = useRotationGesture(
-    (newAngle) => console.log('Rotating:', newAngle)
+    () => {}
   );
 
   return (
