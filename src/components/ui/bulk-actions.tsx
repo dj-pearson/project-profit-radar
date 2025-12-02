@@ -256,3 +256,144 @@ export const defaultBulkActions: BulkAction[] = [
     action: (ids) => { /* TODO: Implement delete */ }
   }
 ];
+
+/**
+ * Create bulk actions for invoices
+ * @param handlers - Object containing handler functions for each action
+ */
+export const createInvoiceBulkActions = (handlers: {
+  onMarkSent?: (ids: string[]) => Promise<void>;
+  onMarkPaid?: (ids: string[]) => Promise<void>;
+  onExport?: (ids: string[]) => Promise<void>;
+  onSendReminder?: (ids: string[]) => Promise<void>;
+  onArchive?: (ids: string[]) => Promise<void>;
+  onDelete?: (ids: string[]) => Promise<void>;
+}): BulkAction[] => [
+  ...(handlers.onMarkSent ? [{
+    id: 'mark-sent',
+    label: 'Mark Sent',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    action: handlers.onMarkSent
+  }] : []),
+  ...(handlers.onMarkPaid ? [{
+    id: 'mark-paid',
+    label: 'Mark Paid',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    action: handlers.onMarkPaid
+  }] : []),
+  ...(handlers.onSendReminder ? [{
+    id: 'send-reminder',
+    label: 'Send Reminder',
+    icon: <Edit className="h-4 w-4" />,
+    action: handlers.onSendReminder
+  }] : []),
+  ...(handlers.onExport ? [{
+    id: 'export',
+    label: 'Export',
+    icon: <Download className="h-4 w-4" />,
+    action: handlers.onExport
+  }] : []),
+  ...(handlers.onArchive ? [{
+    id: 'archive',
+    label: 'Archive',
+    icon: <Archive className="h-4 w-4" />,
+    action: handlers.onArchive,
+    requiresConfirmation: true
+  }] : []),
+  ...(handlers.onDelete ? [{
+    id: 'delete',
+    label: 'Delete',
+    icon: <Trash2 className="h-4 w-4" />,
+    variant: 'destructive' as const,
+    requiresConfirmation: true,
+    action: handlers.onDelete
+  }] : [])
+];
+
+/**
+ * Create bulk actions for expenses
+ * @param handlers - Object containing handler functions for each action
+ */
+export const createExpenseBulkActions = (handlers: {
+  onApprove?: (ids: string[]) => Promise<void>;
+  onReject?: (ids: string[]) => Promise<void>;
+  onCategorize?: (ids: string[], category: string) => Promise<void>;
+  onExport?: (ids: string[]) => Promise<void>;
+  onMarkReimbursed?: (ids: string[]) => Promise<void>;
+  onDelete?: (ids: string[]) => Promise<void>;
+}): BulkAction[] => [
+  ...(handlers.onApprove ? [{
+    id: 'approve',
+    label: 'Approve',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    action: handlers.onApprove
+  }] : []),
+  ...(handlers.onReject ? [{
+    id: 'reject',
+    label: 'Reject',
+    icon: <X className="h-4 w-4" />,
+    variant: 'destructive' as const,
+    action: handlers.onReject
+  }] : []),
+  ...(handlers.onMarkReimbursed ? [{
+    id: 'mark-reimbursed',
+    label: 'Mark Reimbursed',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    action: handlers.onMarkReimbursed
+  }] : []),
+  ...(handlers.onExport ? [{
+    id: 'export',
+    label: 'Export',
+    icon: <Download className="h-4 w-4" />,
+    action: handlers.onExport
+  }] : []),
+  ...(handlers.onDelete ? [{
+    id: 'delete',
+    label: 'Delete',
+    icon: <Trash2 className="h-4 w-4" />,
+    variant: 'destructive' as const,
+    requiresConfirmation: true,
+    action: handlers.onDelete
+  }] : [])
+];
+
+/**
+ * Create bulk actions for tasks
+ * @param handlers - Object containing handler functions for each action
+ */
+export const createTaskBulkActions = (handlers: {
+  onMarkComplete?: (ids: string[]) => Promise<void>;
+  onAssign?: (ids: string[], assigneeId: string) => Promise<void>;
+  onChangePriority?: (ids: string[], priority: string) => Promise<void>;
+  onArchive?: (ids: string[]) => Promise<void>;
+  onDuplicate?: (ids: string[]) => Promise<void>;
+  onDelete?: (ids: string[]) => Promise<void>;
+}): BulkAction[] => [
+  ...(handlers.onMarkComplete ? [{
+    id: 'mark-complete',
+    label: 'Mark Complete',
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    action: handlers.onMarkComplete
+  }] : []),
+  ...(handlers.onDuplicate ? [{
+    id: 'duplicate',
+    label: 'Duplicate',
+    icon: <Copy className="h-4 w-4" />,
+    action: handlers.onDuplicate
+  }] : []),
+  ...(handlers.onArchive ? [{
+    id: 'archive',
+    label: 'Archive',
+    icon: <Archive className="h-4 w-4" />,
+    action: handlers.onArchive,
+    requiresConfirmation: true
+  }] : []),
+  ...(handlers.onDelete ? [{
+    id: 'delete',
+    label: 'Delete',
+    icon: <Trash2 className="h-4 w-4" />,
+    variant: 'destructive' as const,
+    requiresConfirmation: true,
+    action: handlers.onDelete
+  }] : [])
+];
