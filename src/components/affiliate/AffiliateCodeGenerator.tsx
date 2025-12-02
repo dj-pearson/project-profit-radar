@@ -26,7 +26,7 @@ interface AffiliateCode {
 }
 
 const AffiliateCodeGenerator = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const [affiliateCode, setAffiliateCode] = useState<AffiliateCode | null>(null);
   const [program, setProgram] = useState<AffiliateProgram | null>(null);
@@ -84,7 +84,7 @@ const AffiliateCodeGenerator = () => {
     
     setGenerating(true);
     try {
-      const { data, error } = await supabase.rpc('create_company_affiliate_code', {
+      const { error } = await supabase.rpc('create_company_affiliate_code', {
         p_company_id: companyId
       });
 

@@ -56,7 +56,7 @@ const parseKeywordStatsCSV = async (file: File): Promise<ParsedKeywordStats> => 
       try {
         const csv = e.target?.result as string;
         const lines = csv.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
+        lines[0].split(',').map(h => h.trim());
         
         const keywords: KeywordData[] = lines.slice(1)
           .filter(line => line.trim())

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -80,7 +80,7 @@ interface BenchmarkMetrics {
 }
 
 export default function PerformanceBenchmarking() {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [benchmarkData, setBenchmarkData] = useState<BenchmarkMetrics | null>(null);
@@ -142,7 +142,7 @@ export default function PerformanceBenchmarking() {
     }
   };
 
-  const chartConfig = {
+  const _chartConfig = {
     performance: {
       label: "Your Performance",
       color: "hsl(var(--primary))",

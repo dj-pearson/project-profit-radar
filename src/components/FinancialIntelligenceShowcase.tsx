@@ -1,6 +1,5 @@
 import { DollarSign, TrendingUp, Zap, Brain, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 const FinancialIntelligenceShowcase = () => {
   const features = [

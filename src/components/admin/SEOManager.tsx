@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -315,7 +315,7 @@ const SEOManager = () => {
                 <Input placeholder="Start URL" value={auditUrl} onChange={(e) => setAuditUrl(e.target.value)} />
                 <Input type="number" placeholder="Max Pages" defaultValue="50" id="max-pages" />
                 <Button onClick={async () => {
-                  const data = await runFunction('crawl-site', {
+                  await runFunction('crawl-site', {
                     start_url: auditUrl,
                     max_pages: parseInt((document.getElementById('max-pages') as HTMLInputElement)?.value || '50')
                   }, 'Crawl complete');

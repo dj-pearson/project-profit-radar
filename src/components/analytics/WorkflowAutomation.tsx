@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Play, 
+  Play,
   Pause, 
   Settings, 
   Clock, 
@@ -118,7 +118,7 @@ export default function WorkflowAutomation() {
     try {
       setExecuting(workflowId);
       
-      const { data, error } = await supabase.functions.invoke('execute-workflow', {
+      const { error } = await supabase.functions.invoke('execute-workflow', {
         body: { 
           workflowId,
           triggerData: { 
