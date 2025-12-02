@@ -105,8 +105,7 @@ export async function migrateOpportunitiesToDeals(companyId: string) {
       }));
 
     if (dealsToInsert.length === 0) {
-        "No new opportunities to migrate (all already exist as deals)"
-      );
+      // No new opportunities to migrate (all already exist as deals)
       return { success: true, migrated: 0 };
     }
 
@@ -118,8 +117,7 @@ export async function migrateOpportunitiesToDeals(companyId: string) {
 
     if (insertError) throw insertError;
 
-      `Successfully migrated ${dealsToInsert.length} opportunities to deals`
-    );
+    // Successfully migrated opportunities to deals
 
     return {
       success: true,
