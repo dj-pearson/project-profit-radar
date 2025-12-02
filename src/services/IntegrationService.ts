@@ -172,11 +172,7 @@ class IntegrationService {
   async createTaskFromData(data: any): Promise<void> {
     try {
       // Mock task creation
-        name: data.name,
-        priority: data.priority,
-        status: data.status,
-        project_id: data.project_id
-      });
+      // Task would be created with: name, priority, status, project_id
       
       toast.success('Task created successfully');
     } catch (error: any) {
