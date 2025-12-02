@@ -194,13 +194,6 @@ const ChangeOrders = () => {
     }
 
     try {
-        action: 'create',
-        ...newOrder,
-        amount: amount,
-        assigned_approvers: selectedApprovers,
-        approval_due_date: approvalDueDate ? format(approvalDueDate, 'yyyy-MM-dd') : null
-      });
-      
       const { data, error } = await supabase.functions.invoke('change-orders', {
         body: { 
           action: 'create',
