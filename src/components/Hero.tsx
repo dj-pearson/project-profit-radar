@@ -184,7 +184,7 @@ const Hero = () => {
             {/* Social Proof */}
             <div className="pt-8 border-t border-border/50">
               <p className="text-sm text-muted-foreground mb-4">Trusted by 2,000+ innovative builders</p>
-              <div className="flex flex-wrap justify-center lg:justify-start gap-x-8 gap-y-4 grayscale opacity-60">
+              <div className="flex flex-wrap justify-center lg:justify-start gap-x-8 gap-y-4 grayscale">
                 {/* Simple text placeholders for logos to keep it clean */}
                 <span className="font-bold text-lg">ACME Build</span>
                 <span className="font-bold text-lg">ConstructCo</span>
