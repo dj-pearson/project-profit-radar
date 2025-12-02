@@ -265,8 +265,8 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
 export const preloadHighPriorityRoutes = () => {
   // Note: React.lazy components don't have a preload method
   // This function is kept for future implementation if needed
-    lazyRouteConfigs.filter(config => config.preload).map(config => config.path)
-  );
+  // Return early as preloading is not currently implemented
+  return;
 };
 
 /**
