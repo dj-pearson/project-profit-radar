@@ -105,10 +105,7 @@ export const monitorFontPerformance = (): void => {
             
             if (resourceEntry.initiatorType === 'link' && 
                 resourceEntry.name.includes('font')) {
-                url: resourceEntry.name,
-                duration: `${resourceEntry.duration.toFixed(2)}ms`,
-                size: `${((resourceEntry.transferSize || 0) / 1024).toFixed(2)}KB`,
-              });
+              // Font resource loaded
             }
           }
         });
