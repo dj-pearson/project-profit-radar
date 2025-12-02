@@ -115,6 +115,7 @@ interface AuthContextType {
   sendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
   verifyOTP: (options: VerifyOTPOptions) => Promise<VerifyOTPResult>;
   resendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
+  resetPasswordWithOTP: (email: string, otpCode: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -875,10 +876,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, []);
 
+  // Sign up using our custom edge function (bypasses Supabase's email)
   const signUp = useCallback(
-    async (email: string, password: string, userData?: any) => {
+    async (email: string, password: string, userData?: any): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
       try {
-        logger.debug("FIXED AuthContext: Signing up...");
+        logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);
 
         // Resolve current site so new users are scoped to the correct tenant/site
@@ -889,32 +891,40 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return { error: "Unable to determine site. Please try again." };
         }
 
-        const location = getWindowLocation();
-        const redirectUrl = location ? `${location.origin}/` : "builddesk://";
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              ...(userData || {}),
-              site_id: currentSiteId,
+        // Call our custom signup edge function (doesn't trigger Supabase email)
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/signup-with-otp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
             },
-          },
-        });
+            body: JSON.stringify({
+              email,
+              password,
+              firstName: userData?.first_name || "",
+              lastName: userData?.last_name || "",
+              siteId: currentSiteId,
+              role: userData?.role || "admin",
+            }),
+          }
+        );
 
-        if (error) {
-          logger.error("FIXED AuthContext: Sign up error:", error);
+        const data = await response.json();
+
+        if (!response.ok) {
+          logger.error("AuthContext: Sign up error:", data.error);
           setLoading(false);
-          return { error: error.message };
+          return { error: data.error || "Failed to create account" };
         }
 
-        logger.debug("FIXED AuthContext: Sign up successful");
+        logger.debug("AuthContext: Sign up successful, OTP sent");
         gtag.trackAuth("signup", "email");
         setLoading(false);
-        return {};
+        return { userId: data.userId, expiresInMinutes: data.expiresInMinutes };
       } catch (error) {
-        logger.error("FIXED AuthContext: Sign up exception:", error);
+        logger.error("AuthContext: Sign up exception:", error);
         setLoading(false);
         return { error: "An unexpected error occurred" };
       }
@@ -966,25 +976,92 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
+  // Request password reset using our custom edge function (bypasses Supabase's email)
+  const resetPassword = useCallback(async (email: string): Promise<{ error?: string; expiresInMinutes?: number }> => {
     try {
-      logger.debug("FIXED AuthContext: Resetting password...");
-      const location = getWindowLocation();
-      const redirectUrl = location ? `${location.origin}/auth` : 'builddesk://auth';
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      });
+      logger.debug("AuthContext: Requesting password reset via OTP flow...");
 
-      if (error) {
-        logger.error("FIXED AuthContext: Reset password error:", error);
-        return { error: error.message };
+      const currentSiteId = await getCurrentSiteId();
+      if (!currentSiteId) {
+        return { error: "Unable to determine site. Please try again." };
       }
 
-      logger.debug("FIXED AuthContext: Password reset email sent");
-      return {};
+      // Call our custom reset password edge function
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            action: "request",
+            email,
+            siteId: currentSiteId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("AuthContext: Reset password error:", data.error);
+        return { error: data.error || "Failed to send reset code" };
+      }
+
+      logger.debug("AuthContext: Password reset OTP sent");
+      return { expiresInMinutes: data.expiresInMinutes };
     } catch (error) {
-      logger.error("FIXED AuthContext: Reset password exception:", error);
+      logger.error("AuthContext: Reset password exception:", error);
       return { error: "An unexpected error occurred" };
+    }
+  }, []);
+
+  // Verify OTP and set new password
+  const resetPasswordWithOTP = useCallback(async (
+    email: string,
+    otpCode: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      logger.debug("AuthContext: Verifying reset OTP and updating password...");
+
+      const currentSiteId = await getCurrentSiteId();
+      if (!currentSiteId) {
+        return { success: false, error: "Unable to determine site. Please try again." };
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            action: "verify",
+            email,
+            otpCode,
+            newPassword,
+            siteId: currentSiteId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("AuthContext: Reset password verify error:", data.error);
+        return { success: false, error: data.error || "Failed to reset password" };
+      }
+
+      logger.debug("AuthContext: Password reset successful");
+      return { success: true };
+    } catch (error) {
+      logger.error("AuthContext: Reset password verify exception:", error);
+      return { success: false, error: "An unexpected error occurred" };
     }
   }, []);
 
@@ -1132,6 +1209,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       signUp,
       signOut,
       resetPassword,
+      resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
       sendOTP,
@@ -1151,6 +1229,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       signUp,
       signOut,
       resetPassword,
+      resetPasswordWithOTP,
       updateProfile,
       refreshProfile,
       sendOTP,
