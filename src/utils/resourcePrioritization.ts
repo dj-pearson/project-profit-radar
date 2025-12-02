@@ -134,11 +134,12 @@ export const optimizeThirdPartyScripts = (): void => {
  */
 export const preconnectCriticalOrigins = (): void => {
   if (typeof document === 'undefined') return;
-  
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const origins = [
-    'https://ilhzuvemiuyfuxfegtlv.supabase.co',
+    supabaseUrl,
     'https://fonts.gstatic.com',
-  ];
+  ].filter(Boolean) as string[];
   
   origins.forEach(origin => {
     // Check if already exists

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Brain,
@@ -98,7 +98,7 @@ export function AIEstimating() {
         .eq('id', user?.id)
         .single();
 
-      const response = await fetch(`https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/ai-estimating`, {
+      const response = await fetch(getEdgeFunctionUrl('ai-estimating'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

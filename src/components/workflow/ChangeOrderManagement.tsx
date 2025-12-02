@@ -11,15 +11,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Eye, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, FileText } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Use the global supabase client to avoid import issues
-declare global {
-  interface Window {
-    supabase: any;
-  }
-}
 
 export const ChangeOrderManagement: React.FC = () => {
   const { userProfile, siteId } = useAuth();
@@ -39,15 +33,6 @@ export const ChangeOrderManagement: React.FC = () => {
     amount: 0
   });
 
-  // Initialize Supabase client directly to avoid type issues
-  const getSupabaseClient = () => {
-    const { createClient } = require('@supabase/supabase-js');
-    return createClient(
-      'https://ilhzuvemiuyfuxfegtlv.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHp1dmVtaXV5ZnV4ZmVndGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0OTU1NDQsImV4cCI6MjA2NzA3MTU0NH0.1JSYhiiJRohQnt8feFbTza9VnmKFprwsOxW0jBRcM2s'
-    );
-  };
-
   useEffect(() => {
     loadData();
   }, [userProfile?.company_id]);
@@ -56,8 +41,6 @@ export const ChangeOrderManagement: React.FC = () => {
     if (!userProfile?.company_id) return;
 
     try {
-      const supabase = getSupabaseClient();
-      
       // Load change orders
       const ordersResult = await supabase
         .from('change_orders')
@@ -96,7 +79,6 @@ export const ChangeOrderManagement: React.FC = () => {
     if (!userProfile?.company_id || !changeOrderForm.project_id || !changeOrderForm.title) return;
 
     try {
-      const supabase = getSupabaseClient();
       const changeOrderData = {
         company_id: userProfile.company_id,
         site_id: siteId,
@@ -147,7 +129,6 @@ export const ChangeOrderManagement: React.FC = () => {
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     try {
-      const supabase = getSupabaseClient();
       const updateData: any = { status: newStatus };
       
       if (newStatus === 'approved') {

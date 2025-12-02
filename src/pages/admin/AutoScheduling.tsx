@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -186,7 +186,7 @@ export function AutoScheduling() {
       if (!session) throw new Error('No session');
 
       const response = await fetch(
-        `https://ilhzuvemiuyfuxfegtlv.supabase.co/functions/v1/auto-scheduling`,
+        getEdgeFunctionUrl('auto-scheduling'),
         {
           method: 'POST',
           headers: {
