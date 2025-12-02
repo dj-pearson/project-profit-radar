@@ -44,9 +44,10 @@ class SecurityService {
     severity: 'low' | 'medium' | 'high' | 'critical',
     description: string,
     userId?: string,
-    metadata?: any
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
+      console.log('Security event:', {
         type,
         severity,
         description,
@@ -58,7 +59,7 @@ class SecurityService {
       if (severity === 'high' || severity === 'critical') {
         toast.warning(`Security alert: ${description}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error logging security event:', error);
     }
   }

@@ -136,16 +136,13 @@ class WorkflowAutomationService {
 
   async processProjectStatusChange(projectId: string, oldStatus: string, newStatus: string): Promise<void> {
     try {
-        projectId,
-        oldStatus,
-        newStatus
-      });
+      console.log('Processing status change:', { projectId, oldStatus, newStatus });
 
       // Mock workflow execution
       if (newStatus === 'completed') {
         toast.success('Project completion workflows triggered');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error processing project status change:', error);
       throw error;
     }
@@ -153,10 +150,10 @@ class WorkflowAutomationService {
 
   async processTaskCompletion(taskId: string, projectId: string): Promise<void> {
     try {
-      
+      console.log('Processing task completion:', { taskId, projectId });
       // Mock task completion processing
       toast.info('Task completion workflows processed');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error processing task completion:', error);
       throw error;
     }
