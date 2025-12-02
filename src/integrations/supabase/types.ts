@@ -21711,7 +21711,7 @@ export type Database = {
           email: string | null
           id: string
           role: string | null
-          site_id: string
+          site_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -21721,7 +21721,7 @@ export type Database = {
           email?: string | null
           id: string
           role?: string | null
-          site_id: string
+          site_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -21731,7 +21731,7 @@ export type Database = {
           email?: string | null
           id?: string
           role?: string | null
-          site_id?: string
+          site_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
