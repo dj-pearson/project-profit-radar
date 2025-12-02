@@ -46,6 +46,52 @@ interface UserProfile {
   is_active: boolean;
 }
 
+// OTP types for email verification flows
+type OTPType =
+  | 'confirm_signup'
+  | 'invite_user'
+  | 'magic_link'
+  | 'change_email'
+  | 'reset_password'
+  | 'reauthentication';
+
+interface SendOTPOptions {
+  email: string;
+  type: OTPType;
+  recipientName?: string;
+  newEmail?: string;
+  inviterName?: string;
+  inviterUserId?: string;
+  companyId?: string;
+  companyName?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface VerifyOTPOptions {
+  email: string;
+  otpCode: string;
+  type: OTPType;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface VerifyOTPResult {
+  success: boolean;
+  verified?: boolean;
+  emailConfirmed?: boolean;
+  userCreated?: boolean;
+  emailChanged?: boolean;
+  passwordReset?: boolean;
+  canResetPassword?: boolean;
+  reauthenticated?: boolean;
+  userId?: string;
+  newEmail?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  error?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -65,9 +111,16 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  // OTP-based authentication methods
+  sendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
+  verifyOTP: (options: VerifyOTPOptions) => Promise<VerifyOTPResult>;
+  resendOTP: (options: SendOTPOptions) => Promise<{ error?: string; expiresInMinutes?: number }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Export types for use in components
+export type { OTPType, SendOTPOptions, VerifyOTPOptions, VerifyOTPResult };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -967,6 +1020,104 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, fetchUserProfile]);
 
+  // OTP-based authentication functions
+  const sendOTP = useCallback(
+    async (options: SendOTPOptions): Promise<{ error?: string; expiresInMinutes?: number }> => {
+      try {
+        const currentSiteId = await getCurrentSiteId();
+        if (!currentSiteId) {
+          return { error: "Unable to determine site. Please try again." };
+        }
+
+        logger.debug(`Sending OTP for ${options.type} to ${options.email}`);
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-auth-otp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              ...options,
+              siteId: currentSiteId,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          logger.error("Send OTP error:", data.error);
+          return { error: data.error || "Failed to send verification code" };
+        }
+
+        logger.debug("OTP sent successfully");
+        return { expiresInMinutes: data.expiresInMinutes || 15 };
+      } catch (error) {
+        logger.error("Send OTP exception:", error);
+        return { error: "An unexpected error occurred" };
+      }
+    },
+    []
+  );
+
+  const verifyOTP = useCallback(
+    async (options: VerifyOTPOptions): Promise<VerifyOTPResult> => {
+      try {
+        const currentSiteId = await getCurrentSiteId();
+        if (!currentSiteId) {
+          return { success: false, error: "Unable to determine site. Please try again." };
+        }
+
+        logger.debug(`Verifying OTP for ${options.type}`);
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-auth-otp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              ...options,
+              siteId: currentSiteId,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          logger.error("Verify OTP error:", data.error);
+          return { success: false, error: data.error || "Verification failed" };
+        }
+
+        logger.debug("OTP verified successfully:", data);
+        gtag.trackAuth("otp_verified", options.type);
+
+        return {
+          success: true,
+          ...data,
+        };
+      } catch (error) {
+        logger.error("Verify OTP exception:", error);
+        return { success: false, error: "An unexpected error occurred" };
+      }
+    },
+    []
+  );
+
+  const resendOTP = useCallback(
+    async (options: SendOTPOptions): Promise<{ error?: string; expiresInMinutes?: number }> => {
+      // Resend is just sending again
+      return sendOTP(options);
+    },
+    [sendOTP]
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -983,6 +1134,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resetPassword,
       updateProfile,
       refreshProfile,
+      sendOTP,
+      verifyOTP,
+      resendOTP,
     }),
     [
       user,
@@ -999,6 +1153,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resetPassword,
       updateProfile,
       refreshProfile,
+      sendOTP,
+      verifyOTP,
+      resendOTP,
     ]
   );
 

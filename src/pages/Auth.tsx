@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,25 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from "@/components/ui/input-otp";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock } from "lucide-react";
+import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock, RefreshCw, KeyRound } from "lucide-react";
 import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
 
+// OTP verification flow states
+type OTPFlowState =
+  | 'idle'           // Not in OTP flow
+  | 'sending'        // Sending OTP email
+  | 'verifying'      // Waiting for user to enter OTP
+  | 'submitted'      // OTP submitted, verifying
+  | 'verified'       // OTP verified successfully
+  | 'setting_password'; // Setting new password (for reset)
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -35,9 +49,64 @@ const Auth = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [emailSentType, setEmailSentType] = useState<'signup' | 'reset' | null>(null);
   const [pendingPlan, setPendingPlan] = useState<{tier: string, period: string} | null>(null);
-  const { signIn, signInWithGoogle, signInWithApple, signUp, resetPassword, user, userProfile, loading: authLoading } = useAuth();
+
+  // OTP verification state
+  const [otpFlowState, setOtpFlowState] = useState<OTPFlowState>('idle');
+  const [otpCode, setOtpCode] = useState("");
+  const [otpExpiresIn, setOtpExpiresIn] = useState<number>(15);
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordValidation, setNewPasswordValidation] = useState({
+    isValid: true,
+    errors: [] as string[],
+  });
+
+  const otpResendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const {
+    signIn,
+    signInWithGoogle,
+    signInWithApple,
+    signUp,
+    resetPassword,
+    sendOTP,
+    verifyOTP,
+    resendOTP,
+    user,
+    userProfile,
+    loading: authLoading
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Cleanup resend timer on unmount
+  useEffect(() => {
+    return () => {
+      if (otpResendTimerRef.current) {
+        clearInterval(otpResendTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Start resend cooldown timer
+  const startResendCooldown = (seconds: number = 60) => {
+    setOtpResendCooldown(seconds);
+    if (otpResendTimerRef.current) {
+      clearInterval(otpResendTimerRef.current);
+    }
+    otpResendTimerRef.current = setInterval(() => {
+      setOtpResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (otpResendTimerRef.current) {
+            clearInterval(otpResendTimerRef.current);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   // Check for plan context from URL on mount
   useEffect(() => {
@@ -211,14 +280,114 @@ const Auth = () => {
       role: "admin",
     };
 
+    // First, create the account with Supabase
     const { error } = await signUp(email, password, userData);
 
     if (!error) {
-      setEmailSent(true);
-      setEmailSentType('signup');
+      // Now send OTP for email verification
+      setOtpFlowState('sending');
+
+      const otpResult = await sendOTP({
+        email,
+        type: 'confirm_signup',
+        recipientName: firstName,
+      });
+
+      if (otpResult.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: otpResult.error,
+        });
+        setOtpFlowState('idle');
+      } else {
+        setOtpExpiresIn(otpResult.expiresInMinutes || 15);
+        setOtpFlowState('verifying');
+        setEmailSent(true);
+        setEmailSentType('signup');
+        startResendCooldown(60);
+        toast({
+          title: "Verification Code Sent!",
+          description: "Please check your email for the 6-digit verification code.",
+        });
+      }
+    }
+
+    setLoading(false);
+  };
+
+  // Handle OTP verification for signup
+  const handleVerifySignupOTP = async () => {
+    if (otpCode.length !== 6) {
       toast({
-        title: "Account Created!",
-        description: "Please check your email and click the verification link to activate your account.",
+        variant: "destructive",
+        title: "Invalid Code",
+        description: "Please enter the complete 6-digit verification code.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setOtpFlowState('submitted');
+
+    const result = await verifyOTP({
+      email,
+      otpCode,
+      type: 'confirm_signup',
+    });
+
+    if (result.success && result.emailConfirmed) {
+      setOtpFlowState('verified');
+      toast({
+        title: "Email Verified!",
+        description: "Your account has been verified. You can now sign in.",
+      });
+      // Reset form and switch to sign in tab
+      setTimeout(() => {
+        setOtpFlowState('idle');
+        setEmailSent(false);
+        setEmailSentType(null);
+        setOtpCode("");
+        setPassword("");
+        setActiveTab("signin");
+      }, 2000);
+    } else {
+      setOtpFlowState('verifying');
+      toast({
+        variant: "destructive",
+        title: "Verification Failed",
+        description: result.error || "Invalid verification code. Please try again.",
+      });
+    }
+
+    setLoading(false);
+  };
+
+  // Handle resend OTP for signup
+  const handleResendSignupOTP = async () => {
+    if (otpResendCooldown > 0) return;
+
+    setLoading(true);
+
+    const result = await resendOTP({
+      email,
+      type: 'confirm_signup',
+      recipientName: firstName,
+    });
+
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error,
+      });
+    } else {
+      setOtpExpiresIn(result.expiresInMinutes || 15);
+      setOtpCode("");
+      startResendCooldown(60);
+      toast({
+        title: "Code Resent!",
+        description: "A new verification code has been sent to your email.",
       });
     }
 
@@ -239,23 +408,171 @@ const Auth = () => {
     }
 
     setLoading(true);
+    setOtpFlowState('sending');
 
-    const { error } = await resetPassword(resetEmail);
-    
-    if (error) {
+    // Send OTP for password reset instead of using Supabase's default reset link
+    const otpResult = await sendOTP({
+      email: resetEmail,
+      type: 'reset_password',
+    });
+
+    if (otpResult.error) {
       toast({
         variant: "destructive",
         title: "Reset Failed",
-        description: error,
+        description: otpResult.error,
       });
+      setOtpFlowState('idle');
     } else {
+      setOtpExpiresIn(otpResult.expiresInMinutes || 10);
+      setOtpFlowState('verifying');
       setEmailSent(true);
       setEmailSentType('reset');
+      startResendCooldown(60);
       toast({
-        title: "Reset Link Sent!",
-        description: "Please check your email for the password reset link. The link will expire in 10 minutes.",
+        title: "Reset Code Sent!",
+        description: "Please check your email for the 6-digit verification code.",
       });
-      setResetEmail("");
+    }
+
+    setLoading(false);
+  };
+
+  // Validate new password for reset
+  const validateNewPassword = (pwd: string) => {
+    const errors: string[] = [];
+
+    if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
+    if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
+    if (!/[a-z]/.test(pwd)) errors.push('Password must contain at least one lowercase letter');
+    if (!/\d/.test(pwd)) errors.push('Password must contain at least one number');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) errors.push('Password must contain at least one special character');
+
+    setNewPasswordValidation({ isValid: errors.length === 0, errors });
+  };
+
+  // Handle OTP verification for password reset
+  const handleVerifyResetOTP = async () => {
+    if (otpCode.length !== 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Code",
+        description: "Please enter the complete 6-digit verification code.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setOtpFlowState('submitted');
+
+    const result = await verifyOTP({
+      email: resetEmail,
+      otpCode,
+      type: 'reset_password',
+    });
+
+    if (result.success && result.canResetPassword) {
+      setOtpFlowState('setting_password');
+      toast({
+        title: "Code Verified!",
+        description: "Please enter your new password.",
+      });
+    } else {
+      setOtpFlowState('verifying');
+      toast({
+        variant: "destructive",
+        title: "Verification Failed",
+        description: result.error || "Invalid verification code. Please try again.",
+      });
+    }
+
+    setLoading(false);
+  };
+
+  // Handle setting new password after OTP verification
+  const handleSetNewPassword = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!newPasswordValidation.isValid) {
+      toast({
+        variant: "destructive",
+        title: "Password Requirements Not Met",
+        description: newPasswordValidation.errors[0],
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords Don't Match",
+        description: "Please make sure your passwords match.",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    const result = await verifyOTP({
+      email: resetEmail,
+      otpCode,
+      type: 'reset_password',
+      password: newPassword,
+    });
+
+    if (result.success && result.passwordReset) {
+      setOtpFlowState('verified');
+      toast({
+        title: "Password Reset!",
+        description: "Your password has been updated. You can now sign in.",
+      });
+      // Reset form and switch to sign in tab
+      setTimeout(() => {
+        setOtpFlowState('idle');
+        setEmailSent(false);
+        setEmailSentType(null);
+        setOtpCode("");
+        setResetEmail("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setActiveTab("signin");
+      }, 2000);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Reset Failed",
+        description: result.error || "Failed to reset password. Please try again.",
+      });
+    }
+
+    setLoading(false);
+  };
+
+  // Handle resend OTP for password reset
+  const handleResendResetOTP = async () => {
+    if (otpResendCooldown > 0) return;
+
+    setLoading(true);
+
+    const result = await resendOTP({
+      email: resetEmail,
+      type: 'reset_password',
+    });
+
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error,
+      });
+    } else {
+      setOtpExpiresIn(result.expiresInMinutes || 10);
+      setOtpCode("");
+      startResendCooldown(60);
+      toast({
+        title: "Code Resent!",
+        description: "A new verification code has been sent to your email.",
+      });
     }
 
     setLoading(false);
@@ -436,36 +753,106 @@ const Auth = () => {
               <CardContent>
                 {emailSent && emailSentType === 'signup' ? (
                   <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                        <Mail className="w-8 h-8 text-green-600" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Check Your Email</h3>
-                      <p className="text-muted-foreground">
-                        We've sent a verification link to <strong>{email}</strong>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Click the link in your email to activate your account and complete the signup process.
-                      </p>
-                    </div>
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Didn't receive the email? Check your spam folder or contact support.
-                      </AlertDescription>
-                    </Alert>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setEmailSent(false);
-                        setEmailSentType(null);
-                        setActiveTab("signin");
-                      }}
-                    >
-                      Back to Sign In
-                    </Button>
+                    {otpFlowState === 'verified' ? (
+                      <>
+                        <div className="flex justify-center">
+                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                            <CheckCircle className="w-8 h-8 text-green-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-green-600">Email Verified!</h3>
+                          <p className="text-muted-foreground">
+                            Your account has been verified. Redirecting to sign in...
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-center">
+                          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                            <KeyRound className="w-8 h-8 text-orange-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold">Enter Verification Code</h3>
+                          <p className="text-muted-foreground">
+                            We've sent a 6-digit code to <strong>{email}</strong>
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            The code expires in {otpExpiresIn} minutes.
+                          </p>
+                        </div>
+
+                        <div className="flex justify-center py-4">
+                          <InputOTP
+                            value={otpCode}
+                            onChange={setOtpCode}
+                            maxLength={6}
+                            disabled={loading || otpFlowState === 'submitted'}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                            </InputOTPGroup>
+                            <InputOTPSeparator />
+                            <InputOTPGroup>
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+
+                        <Button
+                          className="w-full"
+                          onClick={handleVerifySignupOTP}
+                          disabled={loading || otpCode.length !== 6}
+                        >
+                          {loading ? "Verifying..." : "Verify Email"}
+                        </Button>
+
+                        <div className="flex items-center justify-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Didn't receive the code?</span>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto"
+                            onClick={handleResendSignupOTP}
+                            disabled={loading || otpResendCooldown > 0}
+                          >
+                            {otpResendCooldown > 0 ? (
+                              <span className="flex items-center gap-1">
+                                <RefreshCw className="h-3 w-3" />
+                                Resend in {otpResendCooldown}s
+                              </span>
+                            ) : (
+                              "Resend Code"
+                            )}
+                          </Button>
+                        </div>
+
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Check your spam folder if you don't see the email.
+                          </AlertDescription>
+                        </Alert>
+
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setEmailSent(false);
+                            setEmailSentType(null);
+                            setOtpFlowState('idle');
+                            setOtpCode("");
+                            setActiveTab("signin");
+                          }}
+                        >
+                          Back to Sign In
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
@@ -475,7 +862,7 @@ const Auth = () => {
                       <AlertDescription className="text-blue-900">
                         <strong>Email Verification Required</strong>
                         <p className="text-sm mt-1">
-                          After signing up, check your email and click the verification link to activate your account. You won't be able to sign in until verified.
+                          After signing up, you'll receive a 6-digit verification code to activate your account.
                         </p>
                       </AlertDescription>
                     </Alert>
@@ -552,8 +939,8 @@ const Auth = () => {
                     <Alert className="mb-4">
                       <Shield className="h-4 w-4" />
                       <AlertDescription>
-                        After creating your account, you'll receive an email verification link. 
-                        You must verify your email before you can sign in.
+                        After creating your account, you'll receive a 6-digit verification code.
+                        Enter the code to verify your email and activate your account.
                       </AlertDescription>
                     </Alert>
                     
@@ -627,61 +1014,201 @@ const Auth = () => {
               <CardHeader>
                 <CardTitle>Reset Password</CardTitle>
                 <CardDescription>
-                  Enter your email to receive a password reset link
+                  {otpFlowState === 'setting_password'
+                    ? 'Enter your new password'
+                    : otpFlowState === 'verifying'
+                    ? 'Enter the verification code'
+                    : 'Enter your email to receive a reset code'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {emailSent && emailSentType === 'reset' ? (
-                  <div className="text-center space-y-4">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Clock className="w-8 h-8 text-blue-600" />
+                  <div className="space-y-4">
+                    {otpFlowState === 'verified' ? (
+                      <div className="text-center space-y-4">
+                        <div className="flex justify-center">
+                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                            <CheckCircle className="w-8 h-8 text-green-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-green-600">Password Reset!</h3>
+                          <p className="text-muted-foreground">
+                            Your password has been updated. Redirecting to sign in...
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Reset Link Sent</h3>
-                      <p className="text-muted-foreground">
-                        We've sent a password reset link to <strong>{resetEmail}</strong>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        The reset link will expire in 10 minutes for security.
-                      </p>
-                    </div>
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Didn't receive the email? Check your spam folder or try again.
-                      </AlertDescription>
-                    </Alert>
-                    <div className="space-y-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setEmailSent(false);
-                          setEmailSentType(null);
-                        }}
-                      >
-                        Try Again
-                      </Button>
-                      <Button 
-                        variant="ghost"
-                        className="w-full"
-                        onClick={() => {
-                          setEmailSent(false);
-                          setEmailSentType(null);
-                          setActiveTab("signin");
-                        }}
-                      >
-                        Back to Sign In
-                      </Button>
-                    </div>
+                    ) : otpFlowState === 'setting_password' ? (
+                      <form onSubmit={handleSetNewPassword} className="space-y-4">
+                        <div className="text-center mb-4">
+                          <div className="flex justify-center mb-4">
+                            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                              <CheckCircle className="w-6 h-6 text-green-600" />
+                            </div>
+                          </div>
+                          <p className="text-sm text-green-600 font-medium">Code verified! Create your new password.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword">New Password</Label>
+                          <Input
+                            id="newPassword"
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => {
+                              setNewPassword(e.target.value);
+                              validateNewPassword(e.target.value);
+                            }}
+                            required
+                            minLength={8}
+                          />
+                          {newPassword.length > 0 && (
+                            <div className="space-y-2 p-3 bg-muted rounded-md">
+                              <p className="text-sm font-medium">Password Requirements:</p>
+                              <div className="space-y-1">
+                                {[
+                                  { key: 'length', text: 'At least 8 characters', valid: newPassword.length >= 8 },
+                                  { key: 'lowercase', text: 'One lowercase letter', valid: /[a-z]/.test(newPassword) },
+                                  { key: 'uppercase', text: 'One uppercase letter', valid: /[A-Z]/.test(newPassword) },
+                                  { key: 'number', text: 'One number', valid: /\d/.test(newPassword) },
+                                  { key: 'special', text: 'One special character', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) }
+                                ].map(req => (
+                                  <div key={req.key} className="flex items-center gap-2 text-sm">
+                                    {req.valid ? (
+                                      <CheckCircle className="w-4 h-4 text-green-600" />
+                                    ) : (
+                                      <XCircle className="w-4 h-4 text-red-500" />
+                                    )}
+                                    <span className={req.valid ? 'text-green-600' : 'text-red-500'}>
+                                      {req.text}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Confirm Password</Label>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            minLength={8}
+                          />
+                          {confirmPassword.length > 0 && newPassword !== confirmPassword && (
+                            <p className="text-sm text-red-500 flex items-center gap-1">
+                              <XCircle className="w-4 h-4" />
+                              Passwords don't match
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={loading || !newPasswordValidation.isValid || newPassword !== confirmPassword}
+                        >
+                          {loading ? "Resetting Password..." : "Reset Password"}
+                        </Button>
+                      </form>
+                    ) : (
+                      <div className="text-center space-y-4">
+                        <div className="flex justify-center">
+                          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                            <KeyRound className="w-8 h-8 text-orange-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold">Enter Reset Code</h3>
+                          <p className="text-muted-foreground">
+                            We've sent a 6-digit code to <strong>{resetEmail}</strong>
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            The code expires in {otpExpiresIn} minutes.
+                          </p>
+                        </div>
+
+                        <div className="flex justify-center py-4">
+                          <InputOTP
+                            value={otpCode}
+                            onChange={setOtpCode}
+                            maxLength={6}
+                            disabled={loading || otpFlowState === 'submitted'}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                            </InputOTPGroup>
+                            <InputOTPSeparator />
+                            <InputOTPGroup>
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+
+                        <Button
+                          className="w-full"
+                          onClick={handleVerifyResetOTP}
+                          disabled={loading || otpCode.length !== 6}
+                        >
+                          {loading ? "Verifying..." : "Verify Code"}
+                        </Button>
+
+                        <div className="flex items-center justify-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Didn't receive the code?</span>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto"
+                            onClick={handleResendResetOTP}
+                            disabled={loading || otpResendCooldown > 0}
+                          >
+                            {otpResendCooldown > 0 ? (
+                              <span className="flex items-center gap-1">
+                                <RefreshCw className="h-3 w-3" />
+                                Resend in {otpResendCooldown}s
+                              </span>
+                            ) : (
+                              "Resend Code"
+                            )}
+                          </Button>
+                        </div>
+
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Check your spam folder if you don't see the email.
+                          </AlertDescription>
+                        </Alert>
+
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setEmailSent(false);
+                            setEmailSentType(null);
+                            setOtpFlowState('idle');
+                            setOtpCode("");
+                            setResetEmail("");
+                            setActiveTab("signin");
+                          }}
+                        >
+                          Back to Sign In
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <form onSubmit={handleForgotPassword} className="space-y-4">
                     <Alert className="mb-4">
                       <Clock className="h-4 w-4" />
                       <AlertDescription>
-                        Reset links expire after 10 minutes for security. You'll need to create a new password that meets our requirements.
+                        You'll receive a 6-digit verification code to reset your password. The code expires after 10 minutes.
                       </AlertDescription>
                     </Alert>
                     <div className="space-y-2">
@@ -695,7 +1222,7 @@ const Auth = () => {
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Sending Reset Link..." : "Send Reset Link"}
+                      {loading ? "Sending Reset Code..." : "Send Reset Code"}
                     </Button>
                     <div className="text-center">
                       <button
