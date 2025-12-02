@@ -1,5 +1,18 @@
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Validate Google Analytics tracking ID format
+ * SECURITY: Prevents script injection via malformed tracking IDs
+ * Valid formats: G-XXXXXXXX (GA4) or UA-XXXXX-X (Universal Analytics)
+ */
+const isValidGATrackingId = (trackingId: string): boolean => {
+  if (!trackingId || typeof trackingId !== 'string') return false;
+  // GA4 format: G-XXXXXXXXXX or Universal Analytics format: UA-XXXXX-X
+  const ga4Pattern = /^G-[A-Z0-9]{4,15}$/;
+  const uaPattern = /^UA-\d{4,10}-\d{1,4}$/;
+  return ga4Pattern.test(trackingId) || uaPattern.test(trackingId);
+};
+
 // Initialize Google Analytics based on SEO configuration
 export const initializeGoogleAnalytics = async () => {
   try {
@@ -16,10 +29,16 @@ export const initializeGoogleAnalytics = async () => {
     }
 
     const trackingId = seoConfig.google_analytics_id;
-    
+
+    // SECURITY: Validate tracking ID format before injecting into script
+    if (!isValidGATrackingId(trackingId)) {
+      console.error('Invalid Google Analytics tracking ID format:', trackingId);
+      return;
+    }
+
     // Load Google Analytics script
     loadGoogleAnalyticsScript(trackingId);
-    
+
     console.log('Google Analytics initialized with ID:', trackingId);
   } catch (error) {
     console.error('Error initializing Google Analytics:', error);
@@ -29,7 +48,13 @@ export const initializeGoogleAnalytics = async () => {
 // Load Google Analytics script directly
 const loadGoogleAnalyticsScript = (trackingId: string) => {
   if (typeof window === 'undefined') return;
-  
+
+  // SECURITY: Double-check tracking ID format before injecting into script
+  if (!isValidGATrackingId(trackingId)) {
+    console.error('Invalid tracking ID format, refusing to load script');
+    return;
+  }
+
   // Check if already loaded
   if (document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${trackingId}"]`)) {
     return;

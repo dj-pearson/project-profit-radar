@@ -1,16 +1,24 @@
 /**
  * Shared authentication and site isolation helpers for Edge Functions
- * 
+ *
  * Usage:
  * import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
- * 
+ *
  * const authContext = await initializeAuthContext(req);
  * if (!authContext) return errorResponse('Unauthorized', 401);
- * 
+ *
  * const { siteId, supabase } = authContext;
  */
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getCorsHeaders } from './secure-cors.ts';
+
+// Default secure CORS headers (fallback when request not available)
+const DEFAULT_SECURE_CORS = {
+  'Access-Control-Allow-Origin': 'https://build-desk.com',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+};
 
 export interface AuthContext {
   user: any;
@@ -63,15 +71,19 @@ export async function initializeAuthContext(
 
 /**
  * Return a standardized error response
- * 
- * @param message - Error message
+ * SECURITY: Uses secure CORS (whitelist-based) instead of wildcard
+ *
+ * @param message - Error message (keep generic to avoid info disclosure)
  * @param status - HTTP status code (default: 400)
+ * @param request - Optional request for CORS header generation
  * @returns Response object
  */
 export function errorResponse(
   message: string,
-  status: number = 400
+  status: number = 400,
+  request?: Request
 ): Response {
+  const corsHeaders = request ? getCorsHeaders(request) : DEFAULT_SECURE_CORS;
   return new Response(
     JSON.stringify({
       error: message,
@@ -82,8 +94,7 @@ export function errorResponse(
       status,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        ...corsHeaders,
       },
     }
   );
@@ -91,11 +102,14 @@ export function errorResponse(
 
 /**
  * Return a standardized success response
- * 
+ * SECURITY: Uses secure CORS (whitelist-based) instead of wildcard
+ *
  * @param data - Response data
+ * @param request - Optional request for CORS header generation
  * @returns Response object
  */
-export function successResponse(data: any): Response {
+export function successResponse(data: any, request?: Request): Response {
+  const corsHeaders = request ? getCorsHeaders(request) : DEFAULT_SECURE_CORS;
   return new Response(
     JSON.stringify({
       data,
@@ -106,8 +120,7 @@ export function successResponse(data: any): Response {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        ...corsHeaders,
       },
     }
   );
@@ -262,28 +275,28 @@ export async function getSiteByDomain(
 
 /**
  * Handle CORS preflight requests
- * 
+ * SECURITY: Uses secure CORS (whitelist-based) instead of wildcard
+ *
+ * @param request - Optional request for CORS header generation
  * @returns Response for OPTIONS request
  */
-export function corsResponse(): Response {
+export function corsResponse(request?: Request): Response {
+  const corsHeaders = request ? getCorsHeaders(request) : DEFAULT_SECURE_CORS;
   return new Response(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    },
+    headers: corsHeaders,
   });
 }
 
 /**
  * Wrapper for Edge Function handlers with automatic auth and CORS
- * 
+ * SECURITY: Uses secure CORS and sanitizes error messages
+ *
  * Usage:
  * export default withAuth(async (req, authContext) => {
  *   const { siteId, supabase } = authContext;
  *   // Your function logic here
- *   return successResponse({ message: 'Hello from ' + siteId });
+ *   return successResponse({ message: 'Hello from ' + siteId }, req);
  * });
  */
 export function withAuth(
@@ -292,23 +305,21 @@ export function withAuth(
   return async (req: Request): Promise<Response> => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-      return corsResponse();
+      return corsResponse(req);
     }
 
     // Initialize auth context
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
-      return errorResponse('Unauthorized', 401);
+      return errorResponse('Unauthorized', 401, req);
     }
 
     try {
       return await handler(req, authContext);
     } catch (error) {
       console.error('[Error]', error);
-      return errorResponse(
-        error instanceof Error ? error.message : 'Internal server error',
-        500
-      );
+      // SECURITY: Don't expose internal error details to clients
+      return errorResponse('An error occurred processing your request', 500, req);
     }
   };
 }
