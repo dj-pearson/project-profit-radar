@@ -89,7 +89,6 @@ export const TeamPresencePanel: React.FC<TeamPresencePanelProps> = ({
 
   const handleMessageUser = (userId: string) => {
     // TODO: Open chat/messaging interface
-    console.log('Message user:', userId);
   };
 
   const StatusSummary = () => (

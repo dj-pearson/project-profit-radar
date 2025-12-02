@@ -263,7 +263,6 @@ export default function Equipment() {
                         size="sm" 
                         className="flex-1"
                         onClick={() => {
-                          console.log('Schedule Maintenance clicked for:', item.name);
                           // TODO: Open maintenance scheduling dialog
                         }}
                       >
@@ -275,7 +274,6 @@ export default function Equipment() {
                         size="sm" 
                         className="flex-1"
                         onClick={() => {
-                          console.log('View Details clicked for:', item.name);
                           // TODO: Open equipment details dialog
                         }}
                       >
@@ -329,7 +327,6 @@ export default function Equipment() {
                         size="sm" 
                         className="w-full sm:w-auto"
                         onClick={() => {
-                          console.log('View Maintenance Details clicked for:', record.equipment_name);
                           // TODO: Open maintenance details dialog
                         }}
                       >

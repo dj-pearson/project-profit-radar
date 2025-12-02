@@ -182,9 +182,7 @@ export default function EquipmentManagement() {
   };
 
   const handleEditEquipment = (item: any) => {
-    console.log('Edit button clicked for equipment:', item);
     setEditingEquipment(item);
-    console.log('editingEquipment state set to:', item);
   };
 
   const handleEquipmentUpdate = (updatedEquipment: any) => {
@@ -344,7 +342,6 @@ export default function EquipmentManagement() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('Edit button clicked for equipment:', item);
                             handleEditEquipment(item);
                           }}
                           className="p-2"

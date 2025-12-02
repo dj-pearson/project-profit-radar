@@ -330,7 +330,6 @@ const BulkOperations = () => {
 
   const archiveItem = async (item: BulkItem) => {
     // Archive implementation would depend on schema
-    console.log('Archiving item:', item.name);
   };
 
   const deleteItem = async (item: BulkItem) => {
@@ -346,12 +345,10 @@ const BulkOperations = () => {
 
   const sendNotification = async (item: BulkItem) => {
     // Send notification via email service
-    console.log('Sending notification for:', item.name);
   };
 
   const assignUser = async (item: BulkItem) => {
     // Assign user implementation
-    console.log('Assigning user to:', item.name);
   };
 
   const filteredItems = items.filter(item => 

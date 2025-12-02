@@ -42,19 +42,16 @@ const applyMobileOptimizations = (capabilities: any, saveDataEnabled: boolean) =
   if (capabilities.isLowEndDevice || saveDataEnabled) {
     document.documentElement.style.setProperty('--animation-duration', '0s');
     document.documentElement.classList.add('reduce-motion');
-    console.log('📱 Reduced animations for low-end device');
   }
 
   // Adjust image quality based on connection
   if (capabilities.effectiveType === 'slow-2g' || capabilities.effectiveType === '2g') {
     document.documentElement.classList.add('low-bandwidth');
-    console.log('📡 Low bandwidth mode activated');
   }
 
   // Disable non-essential features for data saver
   if (saveDataEnabled) {
     document.documentElement.classList.add('data-saver');
-    console.log('💾 Data saver mode activated');
   }
 
   // Optimize touch interactions
@@ -74,7 +71,6 @@ const applyMobileOptimizations = (capabilities: any, saveDataEnabled: boolean) =
       }
     `;
     document.head.appendChild(style);
-    console.log('👆 Touch optimizations applied');
   }
 };
 
@@ -197,7 +193,6 @@ export const MobilePerformanceProvider = ({ children }: { children: React.ReactN
     // Adjust rendering based on memory
     if (capabilities.deviceMemory < 2) {
       root.classList.add('low-memory');
-      console.log('🧠 Low memory optimizations applied');
     }
   }, [capabilities.isLowEndDevice, capabilities.deviceMemory]); // Only depend on specific values
 

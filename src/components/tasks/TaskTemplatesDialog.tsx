@@ -229,7 +229,6 @@ export const TaskTemplatesDialog: React.FC<TaskTemplatesDialogProps> = ({
 
   const deployTemplate = async (templateId: string) => {
     // This would typically open a dialog to select a project and deploy the template
-    console.log('Deploy template:', templateId);
   };
 
   return (

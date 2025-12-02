@@ -135,7 +135,6 @@ const KnowledgeBase = () => {
 
   const handleVote = async (type: 'article' | 'faq', id: string, vote: 'helpful' | 'not_helpful') => {
     // Implementation for voting would go here
-    console.log(`Voted ${vote} for ${type} ${id}`);
   };
 
   const getCategoryIcon = (category: string) => {

@@ -517,7 +517,6 @@ class EnterpriseSeOService {
 
   private async storePageConfig(config: SEOPageConfig): Promise<void> {
     // TODO: Create seo_page_configs table in database before enabling this
-    console.log('SEO page config stored locally:', config);
     /*
     await supabase
       .from('seo_page_configs')
@@ -592,12 +591,10 @@ class EnterpriseSeOService {
 
   private async setupCompetitorMonitoring(): Promise<void> {
     // Setup competitor monitoring
-    console.log('Setting up competitor monitoring...');
   }
 
   private async initializePerformanceTracking(): Promise<void> {
     // Initialize performance tracking
-    console.log('Initializing performance tracking...');
   }
 
   private async getKeywordRecommendations(route: string): Promise<KeywordAnalysis[]> {
@@ -638,7 +635,6 @@ class EnterpriseSeOService {
 
   private async storeCompetitorAnalysis(analyses: CompetitorAnalysis[]): Promise<void> {
     // Store competitor analysis data
-    console.log('Storing competitor analysis...');
   }
 }
 

@@ -12,7 +12,6 @@ export const initSentry = () => {
 
   // Only initialize if DSN is provided
   if (!dsn) {
-    console.info('Sentry DSN not configured. Error tracking is disabled.');
     return;
   }
 

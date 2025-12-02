@@ -77,7 +77,7 @@ export default function MobileShowcase() {
           size="sm"
           variant="outline"
           icon={<Plus className="h-4 w-4" />}
-          onClick={() => console.log('Add clicked')}
+          onClick={() => {}}
         >
           Add
         </MobileButton>
@@ -108,7 +108,7 @@ export default function MobileShowcase() {
                 icon={stat.icon}
                 trend={stat.trend as any}
                 trendValue={stat.trendValue}
-                onClick={() => console.log(`Clicked ${stat.title}`)}
+                onClick={() => {}}
               />
             ))}
           </MobileGrid>
@@ -125,7 +125,7 @@ export default function MobileShowcase() {
                   subtitle={`${project.budget} • ${project.completion} complete`}
                   value={project.status}
                   icon={<Building2 className="h-5 w-5" />}
-                  onClick={() => console.log(`Clicked ${project.name}`)}
+                  onClick={() => {}}
                   className={index < projects.length - 1 ? 'border-b' : ''}
                 />
               ))}
@@ -138,7 +138,7 @@ export default function MobileShowcase() {
           <MobileTable
             data={projects}
             columns={tableColumns}
-            onRowClick={(item) => console.log('Clicked row:', item)}
+            onRowClick={() => {}}
             emptyMessage="No projects found"
             keyExtractor={(item) => item.id.toString()}
           />
@@ -241,7 +241,7 @@ export default function MobileShowcase() {
       {isMobile && (
         <MobileFAB
           icon={<Plus className="h-6 w-6" />}
-          onClick={() => console.log('FAB clicked')}
+          onClick={() => {}}
           label="Add new item"
           position="bottom-right"
         />
@@ -256,22 +256,22 @@ export default function MobileShowcase() {
         <MobileActionSheetItem
           icon={<Edit className="h-5 w-5" />}
           label="Edit Project"
-          onClick={() => console.log('Edit clicked')}
+          onClick={() => {}}
         />
         <MobileActionSheetItem
           icon={<Share className="h-5 w-5" />}
           label="Share Project"
-          onClick={() => console.log('Share clicked')}
+          onClick={() => {}}
         />
         <MobileActionSheetItem
           icon={<Download className="h-5 w-5" />}
           label="Download Report"
-          onClick={() => console.log('Download clicked')}
+          onClick={() => {}}
         />
         <MobileActionSheetItem
           icon={<Trash className="h-5 w-5" />}
           label="Delete Project"
-          onClick={() => console.log('Delete clicked')}
+          onClick={() => {}}
           variant="destructive"
         />
       </MobileActionSheet>

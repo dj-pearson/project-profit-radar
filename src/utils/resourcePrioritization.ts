@@ -176,7 +176,6 @@ export const monitorResourcePerformance = (): void => {
       }
     });
     
-    console.log('📊 Resource Loading Summary:', byType);
     
     if (slowResources.length > 0) {
       console.warn('⚠️ Slow Resources (>1s):', slowResources.map(r => ({

@@ -108,7 +108,6 @@ export const CoreWebVitalsOptimizer: React.FC<CoreWebVitalsOptimizerProps> = ({
     // Monitor and report Web Vitals
     if (typeof window !== 'undefined' && 'web-vitals' in window) {
       // Web Vitals monitoring would go here in production
-      console.log('Core Web Vitals optimizer activated for', pageType);
     }
 
     return () => {

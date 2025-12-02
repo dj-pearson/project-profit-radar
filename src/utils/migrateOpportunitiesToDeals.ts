@@ -25,7 +25,6 @@ interface PipelineStage {
 
 export async function migrateOpportunitiesToDeals(companyId: string) {
   try {
-    console.log(
       "Starting migration of opportunities to deals for company:",
       companyId
     );
@@ -39,7 +38,6 @@ export async function migrateOpportunitiesToDeals(companyId: string) {
     if (oppError) throw oppError;
 
     if (!opportunities || opportunities.length === 0) {
-      console.log("No opportunities found to migrate");
       return { success: true, migrated: 0 };
     }
 
@@ -109,7 +107,6 @@ export async function migrateOpportunitiesToDeals(companyId: string) {
       }));
 
     if (dealsToInsert.length === 0) {
-      console.log(
         "No new opportunities to migrate (all already exist as deals)"
       );
       return { success: true, migrated: 0 };
@@ -123,7 +120,6 @@ export async function migrateOpportunitiesToDeals(companyId: string) {
 
     if (insertError) throw insertError;
 
-    console.log(
       `Successfully migrated ${dealsToInsert.length} opportunities to deals`
     );
 

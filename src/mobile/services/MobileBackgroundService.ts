@@ -60,7 +60,6 @@ Notifications.setNotificationHandler({
 // Background fetch task
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   try {
-    console.log('Background fetch task running...');
     
     // Sync critical data
     await syncCriticalData();
@@ -84,7 +83,6 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 
   if (data) {
     const { locations } = data as any;
-    console.log('Received new locations', locations);
     
     // Process location updates
     await processLocationUpdates(locations);
@@ -109,7 +107,6 @@ class MobileBackgroundService {
       await this.setupNotificationChannels();
 
       this.isInitialized = true;
-      console.log('Mobile background service initialized');
     } catch (error) {
       console.error('Failed to initialize background service:', error);
     }
@@ -168,7 +165,6 @@ class MobileBackgroundService {
         },
       });
 
-      console.log('Background location tracking started');
     } catch (error) {
       console.error('Failed to start location tracking:', error);
     }
@@ -177,7 +173,6 @@ class MobileBackgroundService {
   async stopLocationTracking(): Promise<void> {
     try {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      console.log('Background location tracking stopped');
     } catch (error) {
       console.error('Failed to stop location tracking:', error);
     }
@@ -315,7 +310,6 @@ class MobileBackgroundService {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.USER_ID, userId);
       await AsyncStorage.setItem(STORAGE_KEYS.COMPANY_ID, companyId);
-      console.log('User credentials stored for background processing');
     } catch (error) {
       console.error('Failed to store user credentials:', error);
     }
@@ -332,7 +326,6 @@ class MobileBackgroundService {
         STORAGE_KEYS.ACTIVE_TIME_ENTRY,
         STORAGE_KEYS.INSIDE_GEOFENCES,
       ]);
-      console.log('User credentials cleared');
     } catch (error) {
       console.error('Failed to clear user credentials:', error);
     }
@@ -347,7 +340,6 @@ class MobileBackgroundService {
         STORAGE_KEYS.ACTIVE_GEOFENCES,
         JSON.stringify(geofences)
       );
-      console.log(`Stored ${geofences.length} geofences for background monitoring`);
     } catch (error) {
       console.error('Failed to store geofences:', error);
     }
@@ -430,7 +422,6 @@ async function syncCriticalData(): Promise<void> {
     if (pendingUploads) {
       const uploads = JSON.parse(pendingUploads);
       // Process uploads...
-      console.log(`Processing ${uploads.length} pending uploads`);
     }
 
     // Sync offline changes
@@ -438,7 +429,6 @@ async function syncCriticalData(): Promise<void> {
     if (offlineChanges) {
       const changes = JSON.parse(offlineChanges);
       // Sync changes...
-      console.log(`Syncing ${changes.length} offline changes`);
     }
   } catch (error) {
     console.error('Failed to sync critical data:', error);
@@ -449,7 +439,6 @@ async function checkUrgentUpdates(): Promise<void> {
   try {
     // Check for urgent project updates, safety alerts, etc.
     // This would typically make API calls to check for updates
-    console.log('Checking for urgent updates...');
   } catch (error) {
     console.error('Failed to check urgent updates:', error);
   }
@@ -510,7 +499,6 @@ async function queueClockEvent(event: PendingClockEvent): Promise<void> {
     const pending: PendingClockEvent[] = pendingStr ? JSON.parse(pendingStr) : [];
     pending.push(event);
     await AsyncStorage.setItem(STORAGE_KEYS.PENDING_CLOCK_EVENTS, JSON.stringify(pending));
-    console.log(`Queued ${event.type} event for ${event.geofenceName}`);
   } catch (error) {
     console.error('Failed to queue clock event:', error);
   }
@@ -662,7 +650,6 @@ async function processLocationUpdates(locations: Location.LocationObject[]): Pro
     // Get stored geofences
     const geofencesStr = await AsyncStorage.getItem(STORAGE_KEYS.ACTIVE_GEOFENCES);
     if (!geofencesStr) {
-      console.log('No active geofences to check');
       return;
     }
 
@@ -680,7 +667,6 @@ async function processLocationUpdates(locations: Location.LocationObject[]): Pro
     if (!latestLocation) return;
 
     const { latitude, longitude, accuracy } = latestLocation.coords;
-    console.log(`Processing location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`);
 
     // Check each geofence for enter/exit events
     const newlyInside = new Set<string>();
@@ -698,13 +684,11 @@ async function processLocationUpdates(locations: Location.LocationObject[]): Pro
 
       // Entered geofence
       if (isNowInside && !wasInside) {
-        console.log(`Entered geofence: ${geofence.name}`);
         await handleGeofenceEntry(geofence, latestLocation);
       }
 
       // Exited geofence
       if (!isNowInside && wasInside) {
-        console.log(`Exited geofence: ${geofence.name}`);
         await handleGeofenceExit(geofence, latestLocation);
       }
     }

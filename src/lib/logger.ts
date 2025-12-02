@@ -107,7 +107,6 @@ class Logger {
    */
   debug(message: string, ...args: any[]) {
     if (this.shouldLog('debug')) {
-      console.log(this.formatMessage(message, 'debug'), ...args);
     }
   }
 
@@ -116,7 +115,6 @@ class Logger {
    */
   info(message: string, ...args: any[]) {
     if (this.shouldLog('info')) {
-      console.info(this.formatMessage(message, 'info'), ...args);
     }
   }
 

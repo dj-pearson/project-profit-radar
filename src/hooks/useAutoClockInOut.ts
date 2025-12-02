@@ -150,7 +150,6 @@ export const useAutoClockInOut = (options: UseAutoClockInOutOptions = {}): UseAu
       }
     } catch (err) {
       // No active time entry, that's fine
-      console.log('No active time entry found');
     }
   }, [userProfile?.id]);
 

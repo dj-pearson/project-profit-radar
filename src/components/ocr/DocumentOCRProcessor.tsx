@@ -77,7 +77,6 @@ const DocumentOCRProcessor: React.FC<DocumentOCRProcessorProps> = ({
 
     try {
       // Step 1: OCR Processing - Lazy load Tesseract.js only when needed
-      console.log('Starting OCR processing...');
       const Tesseract = await import('tesseract.js');
 
       const { data: { text } } = await Tesseract.default.recognize(file, 'eng', {
@@ -89,11 +88,9 @@ const DocumentOCRProcessor: React.FC<DocumentOCRProcessorProps> = ({
       });
 
       setOcrText(text);
-      console.log('OCR completed, extracted text length:', text.length);
       
       // Step 2: AI Classification
       setCurrentStep('ai');
-      console.log('Starting AI classification...');
       
       const aiResult = await classifyDocument(text);
       setAiClassification(aiResult);

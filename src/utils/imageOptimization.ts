@@ -175,7 +175,6 @@ export const initializeImageOptimizations = (): void => {
     img.dataset.optimized = 'true';
   });
 
-  console.log('[Image Optimization] Initialized for', images.length, 'images');
 };
 
 /**

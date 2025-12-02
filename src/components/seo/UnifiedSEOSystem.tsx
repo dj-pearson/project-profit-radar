@@ -212,7 +212,6 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
           });
         }
       } catch (error) {
-        console.log('SEO tracking unavailable:', error);
       }
     }
   }, [enableAnalytics, isLoading, location.pathname]);

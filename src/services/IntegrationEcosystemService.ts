@@ -278,7 +278,6 @@ class IntegrationEcosystemService {
           await this.handleInvoicePaid(payload);
           break;
         default:
-          console.log(`Unknown webhook event type: ${eventType}`);
       }
 
       webhookEvent.processed = true;
@@ -315,15 +314,12 @@ class IntegrationEcosystemService {
 
   // Private webhook handlers
   private async handleProjectCreated(payload: any): Promise<void> {
-    console.log('Processing project created webhook:', payload);
   }
 
   private async handleTaskUpdated(payload: any): Promise<void> {
-    console.log('Processing task updated webhook:', payload);
   }
 
   private async handleInvoicePaid(payload: any): Promise<void> {
-    console.log('Processing invoice paid webhook:', payload);
   }
 }
 

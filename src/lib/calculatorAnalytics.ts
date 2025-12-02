@@ -104,7 +104,6 @@ export async function trackCalculation(
       p_session_id: sessionId
     }).catch(() => {
       // Fallback if function doesn't exist
-      console.log('Session calculation tracking not available');
     });
 
     trackEvent({
@@ -197,7 +196,7 @@ export async function trackPDFDownload(sessionId: string, leadId?: string): Prom
       await supabase.rpc('increment_lead_score', {
         p_lead_id: leadId,
         p_points: 5
-      }).catch(() => console.log('Lead score increment not available'));
+      }).catch(() => { /* Silently handle if lead scoring not available */ });
     }
 
     trackEvent({
@@ -230,7 +229,7 @@ export async function trackSocialShare(
       await supabase.rpc('increment_lead_score', {
         p_lead_id: leadId,
         p_points: 8
-      }).catch(() => console.log('Lead score increment not available'));
+      }).catch(() => { /* Silently handle if lead scoring not available */ });
     }
 
     trackEvent({
@@ -260,7 +259,7 @@ export async function trackTrialClick(sessionId: string, leadId?: string): Promi
       await supabase.rpc('increment_lead_score', {
         p_lead_id: leadId,
         p_points: 20
-      }).catch(() => console.log('Lead score increment not available'));
+      }).catch(() => { /* Silently handle if lead scoring not available */ });
     }
 
     trackEvent({
@@ -389,7 +388,6 @@ function getOS(): string {
  */
 function trackEvent(event: AnalyticsEvent): void {
   // Console log for debugging
-  console.log('Analytics Event:', event);
 
   // Send to Google Analytics if available
   if (typeof window !== 'undefined' && (window as any).gtag) {

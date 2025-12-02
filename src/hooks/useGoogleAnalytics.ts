@@ -36,7 +36,6 @@ const getAnalyticsConfig = async (): Promise<AnalyticsConfig> => {
       .single();
 
     if (error) {
-      console.log('No SEO configuration found, checking localStorage fallback');
       // Fallback to localStorage for backwards compatibility
       const saved = localStorage.getItem('analytics-config');
       if (saved) {
@@ -100,7 +99,6 @@ const loadGoogleAnalytics = (trackingId: string) => {
   `;
   document.head.appendChild(script2);
   
-  console.log('Google Analytics loaded with tracking ID:', trackingId);
 };
 
 // Google Analytics utility functions

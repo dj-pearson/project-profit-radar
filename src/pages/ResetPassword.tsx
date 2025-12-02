@@ -70,7 +70,6 @@ const ResetPassword = () => {
               description: "This password reset link is invalid or has expired.",
             });
           } else {
-            console.log('Session established for password reset');
             setIsValidToken(true);
           }
         } catch (error) {
@@ -83,10 +82,8 @@ const ResetPassword = () => {
         try {
           const { data: { session }, error } = await supabase.auth.getSession();
           if (session && !error) {
-            console.log('Found existing recovery session');
             setIsValidToken(true);
           } else {
-            console.log('No valid session found for recovery');
             setIsValidToken(false);
             toast({
               variant: "destructive",

@@ -549,7 +549,6 @@ ${JSON.stringify(faqSchema, null, 2)}
       });
 
       // Store audit results
-      console.log('SEO Audit Results:', auditResults);
       
       const goodCount = auditResults.filter(r => r.status === 'good').length;
       const warningCount = auditResults.filter(r => r.status === 'warning').length;

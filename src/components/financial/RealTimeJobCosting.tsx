@@ -146,7 +146,6 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
           filter: `project_id=eq.${selectedProject}`
         },
         (payload) => {
-          console.log('Real-time job costs update:', payload);
           handleRealTimeUpdate(payload);
         }
       )

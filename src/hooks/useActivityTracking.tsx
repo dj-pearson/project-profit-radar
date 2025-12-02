@@ -45,7 +45,6 @@ export const useActivityTracking = () => {
         });
       } catch (error) {
         // Silently fail - don't break app if tracking fails
-        console.debug('Activity tracking failed:', error);
       }
     },
     [user, userProfile]
@@ -92,7 +91,6 @@ export const useActivityTracking = () => {
           }),
         ]);
       } catch (error) {
-        console.debug('Error tracking failed:', error);
       }
     },
     [user, userProfile]
@@ -157,7 +155,6 @@ export const useActivityTracking = () => {
             details: { status },
           });
         } catch (error) {
-          console.debug('Performance tracking failed:', error);
         }
       }
     },

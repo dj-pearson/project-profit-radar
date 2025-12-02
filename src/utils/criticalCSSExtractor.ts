@@ -187,6 +187,5 @@ export const measureCriticalCSSImpact = (): void => {
   const fcp = paintEntries.find(entry => entry.name === 'first-contentful-paint');
   
   if (fcp) {
-    console.log(`🎨 FCP with critical CSS: ${fcp.startTime.toFixed(2)}ms`);
   }
 };

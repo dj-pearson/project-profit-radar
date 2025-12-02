@@ -281,7 +281,6 @@ class DosProtectionService {
       // Remove from request tracking
       this.requestCounts.delete(ipAddress);
       
-      console.log(`IP ${ipAddress} blocked: ${reason}`);
     } catch (error) {
       console.error('Failed to block IP:', error);
     }
@@ -301,7 +300,6 @@ class DosProtectionService {
       
       this.blockedIPs.delete(ipAddress);
       
-      console.log(`IP ${ipAddress} unblocked`);
     } catch (error) {
       console.error('Failed to unblock IP:', error);
     }
@@ -321,7 +319,6 @@ class DosProtectionService {
       
       this.whitelistedIPs.add(ipAddress);
       
-      console.log(`IP ${ipAddress} whitelisted`);
     } catch (error) {
       console.error('Failed to whitelist IP:', error);
     }

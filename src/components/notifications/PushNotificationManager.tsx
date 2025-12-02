@@ -89,7 +89,6 @@ export const PushNotificationManager = () => {
   const registerServiceWorker = async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered:', registration);
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
