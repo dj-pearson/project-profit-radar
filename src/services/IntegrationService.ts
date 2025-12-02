@@ -185,11 +185,7 @@ class IntegrationService {
   async processCrossModuleOperations(operations: CrossModuleOperation[]): Promise<void> {
     try {
       for (const operation of operations) {
-          id: operation.id,
-          type: operation.operation_type,
-          source: operation.source_module,
-          target: operation.target_module
-        });
+        // Process each cross-module operation
       }
       
       toast.success(`Processed ${operations.length} cross-module operations`);
