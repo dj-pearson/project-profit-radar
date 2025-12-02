@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import {
   CheckSquare,
   Square,
@@ -43,6 +44,7 @@ export function BulkActionsToolbar({
   allSelected
 }: BulkActionsToolbarProps) {
   const { toast } = useToast();
+  const { logAuditEvent, logDataAccess } = useAuditLog();
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [newStatus, setNewStatus] = useState<string>('');
@@ -66,6 +68,18 @@ export function BulkActionsToolbar({
         .in('id', selectedProjectIds);
 
       if (error) throw error;
+
+      // AUDIT: Log bulk status change
+      await logAuditEvent({
+        actionType: 'bulk_update',
+        resourceType: 'project',
+        resourceName: `${selectedCount} projects`,
+        newValues: { status: newStatus, projectIds: selectedProjectIds },
+        riskLevel: 'medium',
+        complianceCategory: 'data_access',
+        description: `Bulk status change: ${selectedCount} projects updated to ${newStatus}`,
+        metadata: { projectCount: selectedCount, newStatus }
+      });
 
       toast({
         title: 'Status Updated',
@@ -95,6 +109,18 @@ export function BulkActionsToolbar({
         .in('id', selectedProjectIds);
 
       if (error) throw error;
+
+      // AUDIT: Log bulk archive action
+      await logAuditEvent({
+        actionType: 'bulk_archive',
+        resourceType: 'project',
+        resourceName: `${selectedCount} projects`,
+        newValues: { status: 'archived', projectIds: selectedProjectIds },
+        riskLevel: 'high',
+        complianceCategory: 'data_access',
+        description: `Bulk archive: ${selectedCount} projects archived`,
+        metadata: { projectCount: selectedCount, action: 'archive' }
+      });
 
       toast({
         title: 'Projects Archived',
@@ -159,6 +185,17 @@ export function BulkActionsToolbar({
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+
+      // AUDIT: Log data export (GDPR-relevant)
+      await logDataAccess({
+        dataType: 'project',
+        dataClassification: 'internal',
+        resourceId: selectedProjectIds.join(','),
+        resourceName: `${selectedCount} projects exported`,
+        accessMethod: 'export',
+        accessPurpose: 'Data export to CSV',
+        lawfulBasis: 'Legitimate interests'
+      });
 
       toast({
         title: 'Export Complete',
