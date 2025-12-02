@@ -15,15 +15,10 @@ import {
   Line, 
   XAxis, 
   YAxis, 
-  CartesianGrid, 
-  PieChart, 
-  Pie, 
-  Cell,
-  ResponsiveContainer as RechartsResponsiveContainer
+  CartesianGrid
 } from 'recharts';
 import { 
   TrendingUp, 
-  TrendingDown,
   DollarSign, 
   Users, 
   Building2, 
@@ -32,8 +27,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  Download,
-  Calendar
+  Download
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -344,7 +338,7 @@ const ExecutiveDashboard: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: ProjectHealth['status']) => {
+  const _getStatusColor = (status: ProjectHealth['status']) => {
     switch (status) {
       case 'healthy':
         return 'text-green-600';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,17 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, 
-  Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, RadarChart, 
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  Tooltip, Legend, ResponsiveContainer, RadarChart, 
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Area, AreaChart 
 } from 'recharts';
 import { 
-  TrendingUp, TrendingDown, DollarSign, Clock, Users, AlertTriangle, 
-  Target, Calendar, Download, Filter, RefreshCw, BarChart3, PieChart as PieChartIcon,
-  Activity, Zap, Award, Shield
+  TrendingUp, DollarSign, AlertTriangle, 
+  Target, Download, RefreshCw, BarChart3
 } from 'lucide-react';
 
 interface ProjectMetrics {
@@ -54,18 +52,16 @@ interface SafetyMetrics {
   complianceScore: number;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
-
 export const AdvancedReportingDashboard = () => {
   const [dateRange, setDateRange] = useState('30d');
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-  const [reportType, setReportType] = useState('overview');
+  const [selectedProjects] = useState<string[]>([]);
+  useState('overview');
   const [isLoading, setIsLoading] = useState(false);
   const [projectMetrics, setProjectMetrics] = useState<ProjectMetrics[]>([]);
   const [financialData, setFinancialData] = useState<FinancialData[]>([]);
   const [productivityData, setProductivityData] = useState<ProductivityMetrics[]>([]);
   const [safetyData, setSafetyData] = useState<SafetyMetrics[]>([]);
-  const { userProfile } = useAuth();
+  useAuth();
   const { toast } = useToast();
 
   useEffect(() => {

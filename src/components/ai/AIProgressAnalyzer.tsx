@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { 
   Camera, Upload, Zap, Brain, TrendingUp, AlertTriangle, 
-  CheckCircle, Clock, MapPin, BarChart3, Eye, Target
+  CheckCircle, Clock, BarChart3, Eye, Target
 } from 'lucide-react';
 
 interface ProgressAnalysis {
@@ -80,7 +80,7 @@ interface ProjectMilestone {
 }
 
 export const AIProgressAnalyzer: React.FC = () => {
-  const [analyses, setAnalyses] = useState<ProgressAnalysis[]>([
+  const [analyses] = useState<ProgressAnalysis[]>([
     {
       id: '1',
       projectId: 'proj-001',
@@ -182,7 +182,7 @@ export const AIProgressAnalyzer: React.FC = () => {
     }
   ]);
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [, setSelectedImage] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string>('proj-001');
 

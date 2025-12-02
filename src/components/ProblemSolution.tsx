@@ -1,5 +1,4 @@
 import { AlertTriangle, CheckCircle, Clock, DollarSign, ArrowRight, ShieldAlert, TrendingDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ProblemSolution = () => {
