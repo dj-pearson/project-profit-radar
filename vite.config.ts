@@ -4,7 +4,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
-import { copyFileSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -31,12 +31,17 @@ export default defineConfig(({ mode }) => ({
     // Copy service worker during build
     mode === "production" && {
       name: 'copy-sw',
-      closeBundle() {
+      writeBundle() {
         try {
-          copyFileSync('public/sw.js', 'dist/sw.js');
-          console.log('✅ Service worker copied to dist/');
+          // Ensure dist directory exists
+          if (!existsSync('dist')) {
+            mkdirSync('dist', { recursive: true });
+          }
+          if (existsSync('public/sw.js')) {
+            copyFileSync('public/sw.js', 'dist/sw.js');
+          }
         } catch (err) {
-          console.error('Failed to copy service worker:', err);
+          // Non-fatal: service worker copy failed
         }
       }
     }
