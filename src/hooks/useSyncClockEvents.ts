@@ -138,12 +138,10 @@ export const useSyncClockEvents = (): UseSyncClockEventsReturn => {
       const pendingEvents = await getPendingEvents();
 
       if (pendingEvents.length === 0) {
-        console.log('No pending clock events to sync');
         setLastSyncAt(new Date());
         return;
       }
 
-      console.log(`Syncing ${pendingEvents.length} pending clock events...`);
 
       const syncedTimestamps: string[] = [];
       let successCount = 0;

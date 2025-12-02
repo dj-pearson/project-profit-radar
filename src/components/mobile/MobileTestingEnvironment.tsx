@@ -20,7 +20,6 @@ export const MobileTestingEnvironment = () => {
   const [showCamera, setShowCamera] = useState(false);
 
   const handleCameraCapture = (file: File, metadata?: any) => {
-    console.log('Photo captured:', file, metadata);
     setShowCamera(false);
   };
 

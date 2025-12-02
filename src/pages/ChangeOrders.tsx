@@ -143,12 +143,10 @@ const ChangeOrders = () => {
       setCompanyUsers(usersData || []);
 
       // Load change orders
-      console.log('Loading change orders...');
       const { data: ordersData, error: ordersError } = await supabase.functions.invoke('change-orders', {
         body: { action: 'list' }
       });
 
-      console.log('Change orders response:', { ordersData, ordersError });
 
       if (ordersError) {
         console.error('Change orders error:', ordersError);
@@ -156,10 +154,8 @@ const ChangeOrders = () => {
       }
       
       if (ordersData?.changeOrders) {
-        console.log('Setting change orders:', ordersData.changeOrders);
         setChangeOrders(ordersData.changeOrders);
       } else {
-        console.log('No change orders in response');
         setChangeOrders([]);
       }
 
@@ -198,7 +194,6 @@ const ChangeOrders = () => {
     }
 
     try {
-      console.log('Creating change order with data:', { 
         action: 'create',
         ...newOrder,
         amount: amount,
@@ -216,7 +211,6 @@ const ChangeOrders = () => {
         }
       });
 
-      console.log('Create response:', { data, error });
 
       if (error) throw error;
 

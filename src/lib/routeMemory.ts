@@ -65,7 +65,6 @@ export function rememberCurrentRoute(location: { pathname: string; search: strin
   try {
     sessionStorage.setItem(ROUTE_MEMORY_KEY, JSON.stringify(routeData));
     sessionStorage.setItem(ROUTE_MEMORY_TIMESTAMP_KEY, Date.now().toString());
-    console.log('Route remembered:', routeData.fullUrl);
   } catch (error) {
     console.warn('Failed to remember route:', error);
   }
@@ -86,13 +85,11 @@ export function getRememberedRoute(): string | null {
     // Check if route memory has expired
     const age = Date.now() - parseInt(timestamp, 10);
     if (age > ROUTE_MEMORY_TTL) {
-      console.log('Route memory expired, clearing');
       clearRememberedRoute();
       return null;
     }
 
     const routeData: StoredRoute = JSON.parse(stored);
-    console.log('Route retrieved from memory:', routeData.fullUrl);
     return routeData.fullUrl;
   } catch (error) {
     console.warn('Failed to retrieve remembered route:', error);

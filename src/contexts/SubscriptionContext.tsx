@@ -355,7 +355,6 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Subscription changed:', payload);
           fetchSubscriptionData();
         }
       )

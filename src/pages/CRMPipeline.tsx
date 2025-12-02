@@ -103,7 +103,7 @@ const CRMPipeline = () => {
           </TabsList>
           <TabsContent value="kanban" className="space-y-6">
             <EnhancedPipelineKanban
-              onDealClick={(deal) => console.log("Deal clicked:", deal)}
+              onDealClick={() => {}}
               showAnalytics={true}
             />
           </TabsContent>

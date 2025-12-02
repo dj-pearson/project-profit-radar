@@ -66,7 +66,6 @@ export default function KnowledgeBase() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('KnowledgeBase: Component mounted, fetching data...');
     fetchCategories();
     fetchArticles();
   }, []);
@@ -98,7 +97,6 @@ export default function KnowledgeBase() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      console.log('KnowledgeBase: Fetching articles...');
       const { data, error } = await supabase
         .from('knowledge_base_articles')
         .select(`
@@ -114,7 +112,6 @@ export default function KnowledgeBase() {
         .order('published_at', { ascending: false });
 
       if (error) throw error;
-      console.log('KnowledgeBase: Fetched articles:', data?.length || 0);
       setArticles(data || []);
     } catch (error) {
       console.error('Error fetching articles:', error);

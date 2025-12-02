@@ -22,11 +22,9 @@ class MobileNotificationService {
       const pushPermResult = await PushNotifications.requestPermissions();
 
       if (localPermResult.display === 'granted') {
-        console.log('Local notifications permission granted');
       }
 
       if (pushPermResult.receive === 'granted') {
-        console.log('Push notifications permission granted');
         
         // Register for push notifications
         await PushNotifications.register();
@@ -44,7 +42,6 @@ class MobileNotificationService {
   private setupListeners() {
     // Push notification listeners
     PushNotifications.addListener('registration', (token) => {
-      console.log('Push registration success, token: ' + token.value);
       // Here you would send the token to your backend
     });
 
@@ -53,23 +50,19 @@ class MobileNotificationService {
     });
 
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push notification received: ', notification);
       // Handle foreground notifications
     });
 
     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      console.log('Push notification action performed', notification);
       // Handle notification tap
       this.handleNotificationTap(notification.notification.data);
     });
 
     // Local notification listeners
     LocalNotifications.addListener('localNotificationReceived', (notification) => {
-      console.log('Local notification received: ', notification);
     });
 
     LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
-      console.log('Local notification action performed', notificationAction);
       this.handleNotificationTap(notificationAction.notification.extra);
     });
   }
@@ -106,7 +99,6 @@ class MobileNotificationService {
         notifications: [notification]
       });
 
-      console.log('Local notification scheduled:', notification);
     } catch (error) {
       console.error('Failed to schedule notification:', error);
     }

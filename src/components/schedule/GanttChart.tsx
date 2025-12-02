@@ -203,7 +203,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         const fileName = `${project.name.replace(/\s+/g, '_')}_Schedule.pdf`;
         exporter.downloadPDF(fileName);
         
-        console.log('PDF exported successfully:', fileName);
       }
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -218,7 +217,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       onSettings();
     } else {
       // Default settings functionality
-      console.log('Opening settings for project:', project.name);
       alert('Settings panel coming soon! Configure project details, resources, and preferences.');
     }
   };

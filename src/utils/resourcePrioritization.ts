@@ -134,11 +134,12 @@ export const optimizeThirdPartyScripts = (): void => {
  */
 export const preconnectCriticalOrigins = (): void => {
   if (typeof document === 'undefined') return;
-  
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const origins = [
-    'https://ilhzuvemiuyfuxfegtlv.supabase.co',
+    supabaseUrl,
     'https://fonts.gstatic.com',
-  ];
+  ].filter(Boolean) as string[];
   
   origins.forEach(origin => {
     // Check if already exists
@@ -175,7 +176,6 @@ export const monitorResourcePerformance = (): void => {
       }
     });
     
-    console.log('📊 Resource Loading Summary:', byType);
     
     if (slowResources.length > 0) {
       console.warn('⚠️ Slow Resources (>1s):', slowResources.map(r => ({

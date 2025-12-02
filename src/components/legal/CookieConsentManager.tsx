@@ -216,7 +216,6 @@ const CookieConsentManager = () => {
     // - Load/unload analytics scripts based on consent
     // - Set/remove marketing cookies
     // - Configure tracking tools
-    console.log('Applying cookie settings:', currentConsent);
   };
 
   const acceptAll = () => {

@@ -1,24 +1,44 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 
 serve(async (req) => {
+  // Use secure CORS (whitelist-based)
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
 
   try {
+    // SECURITY: Require a secret API key for this sensitive operation
+    // This prevents unauthorized admin creation
+    const adminCreationSecret = req.headers.get('X-Admin-Creation-Secret');
+    const expectedSecret = Deno.env.get('ADMIN_CREATION_SECRET');
+
+    if (!expectedSecret) {
+      console.error('[SECURITY] ADMIN_CREATION_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error', success: false }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+
+    if (!adminCreationSecret || adminCreationSecret !== expectedSecret) {
+      console.error('[SECURITY] Unauthorized attempt to create root admin');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', success: false }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     // Use service role key to create admin user
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    console.log("Creating root admin user...");
+    console.log("Creating root admin user (authorized request)...");
 
     // Get admin credentials from environment variables
     const adminEmail = Deno.env.get("ADMIN_EMAIL");
@@ -82,9 +102,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error creating root admin:", error);
+    // SECURITY: Don't expose internal error details
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
+      JSON.stringify({
+        error: 'An error occurred during admin creation',
         success: false
       }),
       {

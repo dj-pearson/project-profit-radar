@@ -179,7 +179,6 @@ export const ProjectChat: React.FC<ProjectChatProps> = ({ channel, userProfile }
 
   const sendMentionNotifications = async (mentions: string[], content: string) => {
     // This would typically send notifications to mentioned users
-    console.log('Sending notifications to:', mentions, 'for message:', content);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

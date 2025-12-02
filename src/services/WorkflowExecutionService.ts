@@ -23,7 +23,6 @@ class WorkflowExecutionService {
         throw new Error('User not authenticated');
       }
 
-      console.log('Triggering workflow execution:', { workflowId, triggerData });
 
       const { data, error } = await supabase.functions.invoke('workflow-execution', {
         body: {
@@ -119,11 +118,9 @@ class WorkflowExecutionService {
       }
 
       if (!workflows || workflows.length === 0) {
-        console.log('No workflows found for trigger:', triggerType);
         return;
       }
 
-      console.log(`Found ${workflows.length} workflows for trigger:`, triggerType);
 
       // Execute each workflow
       const executions = workflows.map(workflow =>

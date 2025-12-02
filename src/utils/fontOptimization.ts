@@ -71,7 +71,6 @@ export const preconnectFontProviders = (providers: string[]): void => {
     document.head.appendChild(dnsPrefetch);
   });
 
-  console.log('[Font Optimization] Preconnected to', providers.length, 'providers');
 };
 
 /**
@@ -97,7 +96,6 @@ export const monitorFontPerformance = (): void => {
 
   document.fonts.ready.then(() => {
     const fonts = Array.from(document.fonts);
-    console.log('[Font Performance] Loaded fonts:', fonts.length);
 
     if (PerformanceObserver) {
       try {
@@ -107,7 +105,6 @@ export const monitorFontPerformance = (): void => {
             
             if (resourceEntry.initiatorType === 'link' && 
                 resourceEntry.name.includes('font')) {
-              console.log('[Font Performance]', {
                 url: resourceEntry.name,
                 duration: `${resourceEntry.duration.toFixed(2)}ms`,
                 size: `${((resourceEntry.transferSize || 0) / 1024).toFixed(2)}KB`,
@@ -133,11 +130,9 @@ export const initializeFontOptimizations = (fonts: FontConfig[]): void => {
   fonts
     .filter(font => font.preload)
     .forEach(font => {
-      console.log('[Font Optimization] Would preload:', font.family);
     });
 
   applyFontDisplay('swap');
   monitorFontPerformance();
 
-  console.log('[Font Optimization] Initialized for', fonts.length, 'fonts');
 };

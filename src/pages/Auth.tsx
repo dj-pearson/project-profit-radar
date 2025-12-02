@@ -81,7 +81,6 @@ const Auth = () => {
       return;
     }
 
-    console.log("User authenticated, determining redirect destination...");
 
     // Check if there's a pending checkout
     const pendingCheckout = localStorage.getItem('pendingCheckout');
@@ -90,7 +89,6 @@ const Auth = () => {
         const checkout = JSON.parse(pendingCheckout);
         // Check if checkout is not expired (1 hour)
         if (Date.now() - checkout.timestamp < 3600000) {
-          console.log("Redirecting to checkout with pending plan...");
           // Clear the stored checkout
           localStorage.removeItem('pendingCheckout');
           clearRememberedRoute();
@@ -109,7 +107,6 @@ const Auth = () => {
 
     // If user doesn't have a company in their profile (and isn't root_admin), redirect to setup
     if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
-      console.log("User has no company in profile (non-root admin), redirecting to setup...");
       clearRememberedRoute();
       navigate('/setup');
       return;
@@ -117,7 +114,6 @@ const Auth = () => {
 
     // Get return URL from query params or remembered route
     const returnUrl = getReturnUrl(urlParams, '/dashboard');
-    console.log("Redirecting to:", returnUrl);
 
     // Clear route memory after successful redirect
     clearRememberedRoute();

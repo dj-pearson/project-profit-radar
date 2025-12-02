@@ -110,7 +110,6 @@ export function useAuth() {
       }
 
       if (event === 'TOKEN_REFRESHED') {
-        console.log('[Auth] Session token refreshed');
       }
     });
 

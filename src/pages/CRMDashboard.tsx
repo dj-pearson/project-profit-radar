@@ -625,7 +625,6 @@ const CRMDashboard = () => {
 
   const updateLead = async (leadId: string, updates: Partial<Lead>) => {
     try {
-      console.log('Updating lead:', leadId, 'with updates:', updates);
       
       // Convert empty strings to null for date fields
       const cleanedUpdates: any = {};
@@ -644,7 +643,6 @@ const CRMDashboard = () => {
         ...cleanedUpdates
       };
       
-      console.log('Final update data:', updateData);
       
       const { error } = await supabase
         .from('leads')

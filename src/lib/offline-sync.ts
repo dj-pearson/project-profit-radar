@@ -147,7 +147,6 @@ class OfflineSyncEngine {
     const errors: string[] = [];
 
     try {
-      console.log('[OfflineSync] Starting synchronization...');
 
       // Step 1: Push local changes to server
       await this.pushChanges();
@@ -155,7 +154,6 @@ class OfflineSyncEngine {
       // Step 2: Pull remote changes from server
       await this.pullChanges();
 
-      console.log('[OfflineSync] Synchronization complete');
       return { success: true, errors };
 
     } catch (error: any) {
@@ -191,7 +189,6 @@ class OfflineSyncEngine {
 
         // Remove from queue on success
         await this.db.delete('sync_queue', item.id);
-        console.log(`[OfflineSync] Pushed ${item.action} to ${item.table}`);
 
       } catch (error: any) {
         console.error(`[OfflineSync] Failed to push ${item.action}:`, error);
@@ -249,7 +246,6 @@ class OfflineSyncEngine {
             last_sync_success: true
           });
 
-          console.log(`[OfflineSync] Pulled ${data.length} records from ${table}`);
         }
 
       } catch (error: any) {
@@ -333,7 +329,6 @@ class OfflineSyncEngine {
       await this.db.clear(table as any);
     }
 
-    console.log('[OfflineSync] All local data cleared');
   }
 
   // Get sync status

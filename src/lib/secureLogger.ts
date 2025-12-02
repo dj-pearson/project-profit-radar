@@ -150,7 +150,6 @@ class SecureLogger {
    */
   info(...args: any[]): void {
     if (this.isDevelopment) {
-      console.info(...this.formatArgs(...args));
     }
   }
 
@@ -159,7 +158,6 @@ class SecureLogger {
    */
   debug(...args: any[]): void {
     if (this.isDevelopment) {
-      console.debug(...this.formatArgs(...args));
     }
   }
 
@@ -182,7 +180,6 @@ class SecureLogger {
    */
   log(...args: any[]): void {
     if (this.isDevelopment) {
-      console.log(...this.formatArgs(...args));
     }
   }
 

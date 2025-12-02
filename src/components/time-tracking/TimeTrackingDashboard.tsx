@@ -94,7 +94,6 @@ export const TimeTrackingDashboard = () => {
     table: 'time_entries',
     filter: `user_id=eq.${user?.id}`,
     onChange: () => {
-      console.log('Time entry changed, refetching...');
       refetchEntries();
     },
     enabled: !!user?.id

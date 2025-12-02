@@ -421,6 +421,17 @@ async function syncPayment(supabaseClient: any, siteId: string, companyId: strin
     .upsert(paymentData, { onConflict: 'qb_payment_id,company_id,site_id' })
 }
 
+/**
+ * Escape a string for use in QuickBooks query language
+ * Prevents query injection by escaping single quotes
+ */
+function escapeQBQueryString(str: string): string {
+  if (!str) return '';
+  // QuickBooks uses single quotes for string literals
+  // Escape single quotes by doubling them
+  return str.replace(/'/g, "''");
+}
+
 async function syncInvoiceToQuickBooks(supabaseClient: any, siteId: string, baseUrl: string, realmId: string, accessToken: string, invoice: any) {
   // First, try to find the customer in QuickBooks
   let customerRef = { value: "1" } // Default fallback
@@ -428,7 +439,9 @@ async function syncInvoiceToQuickBooks(supabaseClient: any, siteId: string, base
   // Try to find customer by name or use default
   if (invoice.client_name) {
     try {
-      const customerQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${invoice.client_name}'`)
+      // SECURITY: Escape client_name to prevent query injection
+      const escapedClientName = escapeQBQueryString(invoice.client_name);
+      const customerQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${escapedClientName}'`)
       const customerResponse = await fetch(
         `${baseUrl}/v3/company/${realmId}/query?query=${customerQuery}&minorversion=65`,
         {

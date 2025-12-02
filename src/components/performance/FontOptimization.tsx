@@ -60,7 +60,6 @@ export const FontOptimization = () => {
     `;
     document.head.appendChild(style);
 
-    console.log('🔤 Font optimization applied');
   }, []);
 
   return null;
@@ -83,7 +82,6 @@ export const useFontOptimization = () => {
         try {
           await font.load();
           document.fonts.add(font);
-          console.log('✅ Font loaded:', font.family);
         } catch (error) {
           console.warn('Font load failed:', font.family, error);
         }
@@ -96,7 +94,6 @@ export const useFontOptimization = () => {
     document.fonts.ready.then(() => {
       document.documentElement.classList.remove('fonts-loading');
       document.documentElement.classList.add('fonts-loaded');
-      console.log('🎨 All fonts loaded');
     });
   }, []);
 };

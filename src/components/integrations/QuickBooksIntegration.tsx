@@ -70,7 +70,6 @@ export const QuickBooksIntegration = () => {
         .single();
 
       if (integrationError || !integrationData) {
-        console.log('QuickBooks integration not set up, using default status');
         setStatus({
           connected: false,
           sync_status: 'never'

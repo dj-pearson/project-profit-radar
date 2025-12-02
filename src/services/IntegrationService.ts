@@ -43,7 +43,6 @@ class IntegrationService {
   async connectQuickBooks(companyId: string, credentials: any): Promise<boolean> {
     try {
       // Mock QuickBooks connection
-      console.log('Connecting to QuickBooks for company:', companyId);
       toast.success('QuickBooks connected successfully');
       return true;
     } catch (error: any) {
@@ -97,7 +96,6 @@ class IntegrationService {
 
   async connectGoogleCalendar(companyId: string, credentials: any): Promise<boolean> {
     try {
-      console.log('Connecting to Google Calendar for company:', companyId);
       toast.success('Google Calendar connected successfully');
       return true;
     } catch (error: any) {
@@ -130,7 +128,6 @@ class IntegrationService {
 
   async connectSlack(companyId: string, credentials: any): Promise<boolean> {
     try {
-      console.log('Connecting to Slack for company:', companyId);
       toast.success('Slack connected successfully');
       return true;
     } catch (error: any) {
@@ -162,7 +159,6 @@ class IntegrationService {
         }
       ];
 
-      console.log('Would import contacts:', mockContacts);
       toast.success(`Imported ${mockContacts.length} contacts successfully`);
       
       return { success: true, contactsImported: mockContacts.length };
@@ -176,7 +172,6 @@ class IntegrationService {
   async createTaskFromData(data: any): Promise<void> {
     try {
       // Mock task creation
-      console.log('Would create task:', {
         name: data.name,
         priority: data.priority,
         status: data.status,
@@ -194,7 +189,6 @@ class IntegrationService {
   async processCrossModuleOperations(operations: CrossModuleOperation[]): Promise<void> {
     try {
       for (const operation of operations) {
-        console.log('Processing cross-module operation:', {
           id: operation.id,
           type: operation.operation_type,
           source: operation.source_module,
@@ -223,7 +217,6 @@ class IntegrationService {
         }
       ];
 
-      console.log('Would sync invoices:', mockInvoices);
       toast.success(`Synced ${mockInvoices.length} invoices from accounting system`);
       
       return { success: true, invoicesSynced: mockInvoices.length };
@@ -254,7 +247,6 @@ class IntegrationService {
 
   async scheduleDataSync(companyId: string, frequency: 'hourly' | 'daily' | 'weekly'): Promise<void> {
     try {
-      console.log(`Scheduling ${frequency} data sync for company:`, companyId);
       toast.success(`Data sync scheduled to run ${frequency}`);
     } catch (error: any) {
       console.error('Failed to schedule data sync:', error);
@@ -272,7 +264,6 @@ class IntegrationService {
   }): Promise<{ success: boolean; projectId?: string }> {
     try {
       const projectId = `proj-${Date.now()}`;
-      console.log('Would create project from opportunity:', data);
       toast.success('Project created from opportunity');
       return { success: true, projectId };
     } catch (error: any) {
@@ -285,7 +276,6 @@ class IntegrationService {
   async createInvoiceFromProject(projectId: string): Promise<{ success: boolean; invoiceId?: string }> {
     try {
       const invoiceId = `inv-${Date.now()}`;
-      console.log('Would create invoice from project:', projectId);
       toast.success('Invoice created from project');
       return { success: true, invoiceId };
     } catch (error: any) {

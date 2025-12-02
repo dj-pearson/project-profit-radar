@@ -56,7 +56,6 @@ export const useRealtimeSubscription = ({
             filter,
           },
           (payload: any) => {
-            console.log(`[Realtime] ${table} change:`, payload);
 
             // Call specific event handlers
             switch (payload.eventType) {
@@ -76,7 +75,6 @@ export const useRealtimeSubscription = ({
           }
         )
         .subscribe((status) => {
-          console.log(`[Realtime] ${table} subscription status:`, status);
         });
     };
 
@@ -117,7 +115,6 @@ export const useRealtimeSubscriptions = (
             filter: sub.filter,
           },
           (payload: any) => {
-            console.log(`[Realtime] ${sub.table} change:`, payload);
 
             switch (payload.eventType) {
               case 'INSERT':

@@ -11,7 +11,6 @@ export const createRootAdmin = async () => {
       return { success: false, error };
     }
     
-    console.log('Root admin created successfully:', data);
     return { success: true, data };
   } catch (error) {
     console.error('Unexpected error:', error);
@@ -21,5 +20,4 @@ export const createRootAdmin = async () => {
 
 // Auto-invoke the function
 createRootAdmin().then(result => {
-  console.log('Create admin result:', result);
 });

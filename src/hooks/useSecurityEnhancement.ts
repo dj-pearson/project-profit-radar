@@ -136,7 +136,6 @@ export const useSecurityEnhancement = (config: SecurityConfig = {
     
     if (lastActivity && (now - lastActivity) > 30 * 60 * 1000) {
       // Session has been idle for 30+ minutes
-      console.info('Session timeout due to inactivity');
       sessionStorage.clear();
     }
     

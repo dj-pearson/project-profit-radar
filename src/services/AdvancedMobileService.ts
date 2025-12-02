@@ -174,7 +174,6 @@ class AdvancedMobileService {
         timestamp: new Date().toISOString()
       };
 
-      console.log(`Geofence ${eventType} event logged for project ${projectId}`);
       return event;
 
     } catch (error: any) {
@@ -192,7 +191,6 @@ class AdvancedMobileService {
     markups: ARMarkup[]
   ): Promise<void> {
     try {
-      console.log(`Processed ${markups.length} AR markups for project ${projectId}`);
     } catch (error: any) {
       console.error('Error processing AR markups:', error);
       throw new Error(`AR markup processing failed: ${error.message}`);
@@ -218,7 +216,6 @@ class AdvancedMobileService {
           await this.reportIssueFromVoice(command);
           break;
         default:
-          console.log('Unknown voice command action:', command.action);
       }
     } catch (error: any) {
       console.error('Error executing voice command:', error);
@@ -226,7 +223,6 @@ class AdvancedMobileService {
   }
 
   private async createTaskFromVoice(command: VoiceCommand): Promise<void> {
-    console.log('Would create task:', command.parameters);
     toast({
       title: "Task Created",
       description: `Task "${command.parameters.title}" created via voice command`,
@@ -234,7 +230,6 @@ class AdvancedMobileService {
   }
 
   private async updateStatusFromVoice(command: VoiceCommand): Promise<void> {
-    console.log('Would update project status to:', command.parameters.status);
     toast({
       title: "Status Updated",
       description: `Project status updated to ${command.parameters.status}`,
@@ -242,7 +237,6 @@ class AdvancedMobileService {
   }
 
   private async logTimeFromVoice(command: VoiceCommand): Promise<void> {
-    console.log('Would log time entry:', command.parameters);
     toast({
       title: "Time Logged",
       description: `Time entry logged via voice command`,
@@ -250,7 +244,6 @@ class AdvancedMobileService {
   }
 
   private async reportIssueFromVoice(command: VoiceCommand): Promise<void> {
-    console.log('Would create issue report:', command.parameters);
     toast({
       title: "Issue Reported",
       description: `Issue reported: ${command.parameters.description}`,

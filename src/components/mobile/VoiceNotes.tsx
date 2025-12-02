@@ -135,7 +135,6 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
 
       setVoiceNotes(noteMetadata.filter(Boolean));
     } catch (error) {
-      console.log('No stored voice notes found');
     }
   };
 
