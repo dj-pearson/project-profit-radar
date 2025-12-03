@@ -67,7 +67,7 @@ const Hero = () => {
       // Wait for idle time or next frame
       if ('requestIdleCallback' in window) {
         (window as any).requestIdleCallback(async () => {
-          const [, gsapModule] = await Promise.all([
+          const [{ useGSAP }, gsapModule] = await Promise.all([
             import("@gsap/react"),
             import("gsap")
           ]);

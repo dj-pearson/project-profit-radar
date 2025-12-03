@@ -1,0 +1,19 @@
+# Playwright MCP Server Dockerfile
+FROM mcr.microsoft.com/playwright:v1.40.0-jammy
+
+WORKDIR /app
+
+# Install Node.js dependencies
+RUN npm install -g @playwright/mcp@latest
+
+# Create non-root user for security
+RUN useradd -m -s /bin/bash mcpuser || true
+USER mcpuser
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Entry point for MCP server (stdio mode)
+ENTRYPOINT ["npx", "@playwright/mcp@latest"]
+

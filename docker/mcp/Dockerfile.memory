@@ -1,0 +1,20 @@
+# Memory MCP Server Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install MCP server
+RUN npm install -g @modelcontextprotocol/server-memory@latest
+
+# Create data directory
+RUN mkdir -p /data
+
+# Create non-root user
+RUN adduser -D mcpuser && chown -R mcpuser:mcpuser /data
+USER mcpuser
+
+ENV NODE_ENV=production
+ENV MEMORY_FILE_PATH=/data/memory.json
+
+ENTRYPOINT ["npx", "@modelcontextprotocol/server-memory"]
+

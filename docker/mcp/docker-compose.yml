@@ -1,0 +1,89 @@
+# Docker Compose for MCP (Model Context Protocol) Servers
+# Run with: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # Playwright MCP Server - Browser automation
+  playwright-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    container_name: mcp-playwright
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=:99
+    volumes:
+      - playwright-data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Puppeteer MCP Server - Browser automation alternative
+  puppeteer-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.puppeteer
+    container_name: mcp-puppeteer
+    stdin_open: true
+    tty: true
+    environment:
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    volumes:
+      - puppeteer-data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Sequential Thinking MCP Server
+  sequential-thinking-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.sequential-thinking
+    container_name: mcp-sequential-thinking
+    stdin_open: true
+    tty: true
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Filesystem MCP Server - File operations
+  filesystem-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.filesystem
+    container_name: mcp-filesystem
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${PROJECT_PATH:-../../}:/workspace:rw
+    working_dir: /workspace
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Memory MCP Server - Persistent memory/knowledge base
+  memory-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.memory
+    container_name: mcp-memory
+    stdin_open: true
+    tty: true
+    volumes:
+      - memory-data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+volumes:
+  playwright-data:
+  puppeteer-data:
+  memory-data:
+
+networks:
+  mcp-network:
+    driver: bridge
+

@@ -1,0 +1,17 @@
+# Filesystem MCP Server Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install MCP server
+RUN npm install -g @modelcontextprotocol/server-filesystem@latest
+
+# Create non-root user with access to workspace
+RUN adduser -D mcpuser
+USER mcpuser
+
+ENV NODE_ENV=production
+
+# The /workspace directory will be mounted at runtime
+ENTRYPOINT ["npx", "@modelcontextprotocol/server-filesystem", "/workspace"]
+
