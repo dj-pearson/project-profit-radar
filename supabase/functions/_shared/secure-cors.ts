@@ -65,7 +65,7 @@ export const isOriginAllowed = (origin: string): boolean => {
  * @returns Response with CORS headers
  */
 export const handleCorsPreflightRequest = (request: Request): Response => {
-  return new Response('ok', {
+  return new Response(null, {
     headers: getCorsHeaders(request),
     status: 204,
   });
