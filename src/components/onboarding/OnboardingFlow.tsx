@@ -87,7 +87,7 @@ export const OnboardingFlow = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { user } = useAuth();
+  const { user, siteId, userProfile } = useAuth();
   const { toast} = useToast();
   const navigate = useNavigate();
 
@@ -245,7 +245,19 @@ export const OnboardingFlow = () => {
     try {
       setIsLoading(true);
 
+      // Validate siteId is available (required for multi-tenant isolation)
+      if (!siteId) {
+        toast({
+          title: "Configuration Error",
+          description: "Unable to determine site. Please refresh the page and try again.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Create company record with onboarding data
+      // Include site_id for multi-tenant isolation (required by RLS)
       const { data: company, error: companyError } = await supabase
         .from('companies')
         .insert({
@@ -254,18 +266,24 @@ export const OnboardingFlow = () => {
           company_size: formData.teamSize.toString(),
           annual_revenue_range: 'startup', // Default for new companies
           subscription_tier: formData.selectedPlan as 'starter' | 'professional' | 'enterprise',
-          subscription_status: 'trial'
+          subscription_status: 'trial',
+          // Multi-tenant scoping - use resolved siteId from AuthContext
+          site_id: siteId,
+          tenant_id: userProfile?.tenant_id || null,
         })
         .select()
         .single();
 
       if (companyError) throw companyError;
 
-      // Update user profile with company and onboarding preferences
+      // Update user profile with company, site_id, and onboarding preferences
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update({
           company_id: company.id,
+          // Ensure site_id is set on user profile for future RLS checks
+          site_id: siteId,
+          tenant_id: userProfile?.tenant_id || null,
           // Store onboarding preferences for dashboard personalization
           preferences: {
             onboarding_completed: true,
