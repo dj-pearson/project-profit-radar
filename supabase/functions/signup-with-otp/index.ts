@@ -14,7 +14,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
-import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templates.ts';
 
@@ -33,8 +33,9 @@ const OTP_EXPIRY_MINUTES = 15;
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
 
+  // Handle CORS preflight - 204 No Content cannot have a body
   if (req.method === 'OPTIONS') {
-    return handleCorsPreflightRequest(req);
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   if (req.method !== 'POST') {
