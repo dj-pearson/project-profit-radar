@@ -46,13 +46,15 @@ CREATE INDEX IF NOT EXISTS idx_auth_otp_codes_cleanup ON public.auth_otp_codes(e
 -- RLS Policies
 ALTER TABLE public.auth_otp_codes ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Service role has full access to auth_otp_codes" ON public.auth_otp_codes;
+
 -- Service role can do everything (for edge functions)
 CREATE POLICY "Service role has full access to auth_otp_codes"
     ON public.auth_otp_codes
     FOR ALL
     TO service_role
-    USING (true)
-    WITH CHECK (true);
+    USING (true);
 
 -- Users cannot directly access OTP tokens (only through edge functions)
 -- This prevents enumeration attacks

@@ -157,53 +157,73 @@ CREATE POLICY "site_api_keys_delete"
 
 -- Webhook endpoints policies with site_id
 DO $$
+DECLARE
+  v_has_company_id BOOLEAN;
+  v_has_user_id BOOLEAN;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'webhook_endpoints') THEN
+    -- Check what columns exist
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'webhook_endpoints' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
+
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'webhook_endpoints' AND column_name = 'user_id'
+    ) INTO v_has_user_id;
+
     DROP POLICY IF EXISTS "Users can view own webhook endpoints" ON webhook_endpoints;
     DROP POLICY IF EXISTS "Users can create webhook endpoints" ON webhook_endpoints;
     DROP POLICY IF EXISTS "Users can update own webhook endpoints" ON webhook_endpoints;
     DROP POLICY IF EXISTS "Users can delete own webhook endpoints" ON webhook_endpoints;
     DROP POLICY IF EXISTS "Admins can view tenant webhooks" ON webhook_endpoints;
 
-    EXECUTE 'CREATE POLICY "site_webhook_endpoints_select"
-      ON webhook_endpoints FOR SELECT
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          user_id = auth.uid()
-          OR company_id IN (
+    -- Create policies based on available columns
+    IF v_has_company_id THEN
+      EXECUTE 'CREATE POLICY "site_webhook_endpoints_select"
+        ON webhook_endpoints FOR SELECT
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (
+            SELECT company_id FROM user_profiles
+            WHERE id = auth.uid()
+          )
+        )';
+
+      EXECUTE 'CREATE POLICY "site_webhook_endpoints_all"
+        ON webhook_endpoints FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (
             SELECT company_id FROM user_profiles
             WHERE id = auth.uid() AND role IN (''admin'', ''root_admin'')
           )
-        )
-      )';
+        )';
+    ELSIF v_has_user_id THEN
+      EXECUTE 'CREATE POLICY "site_webhook_endpoints_select"
+        ON webhook_endpoints FOR SELECT
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND user_id = auth.uid()
+        )';
 
-    EXECUTE 'CREATE POLICY "site_webhook_endpoints_insert"
-      ON webhook_endpoints FOR INSERT
-      WITH CHECK (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND user_id = auth.uid()
-      )';
+      EXECUTE 'CREATE POLICY "site_webhook_endpoints_all"
+        ON webhook_endpoints FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND user_id = auth.uid()
+        )';
+    ELSE
+      -- Fallback: site_id only
+      EXECUTE 'CREATE POLICY "site_webhook_endpoints_select"
+        ON webhook_endpoints FOR SELECT
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
 
-    EXECUTE 'CREATE POLICY "site_webhook_endpoints_update"
-      ON webhook_endpoints FOR UPDATE
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          user_id = auth.uid()
-          OR company_id IN (
-            SELECT company_id FROM user_profiles
-            WHERE id = auth.uid() AND role IN (''admin'', ''root_admin'')
-          )
-        )
-      )';
-
-    EXECUTE 'CREATE POLICY "site_webhook_endpoints_delete"
-      ON webhook_endpoints FOR DELETE
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND user_id = auth.uid()
-      )';
+      EXECUTE 'CREATE POLICY "site_webhook_endpoints_all"
+        ON webhook_endpoints FOR ALL
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+    END IF;
   END IF;
 END $$;
 
@@ -249,19 +269,45 @@ CREATE POLICY "site_integration_configurations_delete"
   );
 
 -- API request logs policies
-CREATE POLICY "site_api_request_logs_select"
-  ON api_request_logs FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND company_id IN (
-      SELECT company_id FROM user_profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'root_admin')
-    )
-  );
+DO $$
+DECLARE
+  v_has_company_id BOOLEAN;
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'api_request_logs') THEN
+    -- Check if company_id column exists
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'api_request_logs' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
 
-CREATE POLICY "site_api_request_logs_insert"
-  ON api_request_logs FOR INSERT
-  WITH CHECK (true); -- System can always insert logs
+    DROP POLICY IF EXISTS "Admins can view company API logs" ON api_request_logs;
+    DROP POLICY IF EXISTS "System can insert API logs" ON api_request_logs;
+
+    IF v_has_company_id THEN
+      EXECUTE 'CREATE POLICY "site_api_request_logs_select"
+        ON api_request_logs FOR SELECT
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (
+            SELECT company_id FROM user_profiles
+            WHERE id = auth.uid() AND role IN (''admin'', ''root_admin'')
+          )
+        )';
+    ELSE
+      -- Fallback: site_id only for admins
+      EXECUTE 'CREATE POLICY "site_api_request_logs_select"
+        ON api_request_logs FOR SELECT
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND is_site_admin()
+        )';
+    END IF;
+
+    EXECUTE 'CREATE POLICY "site_api_request_logs_insert"
+      ON api_request_logs FOR INSERT
+      WITH CHECK (true)'; -- System can always insert logs
+  END IF;
+END $$;
 
 -- =====================================================
 -- STEP 6: VERIFY AND UPDATE ADDITIONAL DOMAIN TABLES
@@ -339,30 +385,71 @@ $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
 -- Create RLS policies for expenses
 DO $$
+DECLARE
+  v_has_user_id BOOLEAN;
+  v_has_company_id BOOLEAN;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'expenses') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'expenses' AND column_name = 'user_id'
+    ) INTO v_has_user_id;
+
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'expenses' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
+
     DROP POLICY IF EXISTS "Users can view expenses" ON expenses;
     DROP POLICY IF EXISTS "Users can manage expenses" ON expenses;
 
-    EXECUTE 'CREATE POLICY "site_expenses_select"
-      ON expenses FOR SELECT
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR user_id = auth.uid()
-        )
-      )';
+    IF v_has_company_id THEN
+      IF v_has_user_id THEN
+        EXECUTE 'CREATE POLICY "site_expenses_select"
+          ON expenses FOR SELECT
+          USING (
+            site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+            AND (
+              company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+              OR user_id = auth.uid()
+            )
+          )';
 
-    EXECUTE 'CREATE POLICY "site_expenses_all"
-      ON expenses FOR ALL
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR user_id = auth.uid()
-        )
-      )';
+        EXECUTE 'CREATE POLICY "site_expenses_all"
+          ON expenses FOR ALL
+          USING (
+            site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+            AND (
+              company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+              OR user_id = auth.uid()
+            )
+          )';
+      ELSE
+        -- Has company_id but no user_id
+        EXECUTE 'CREATE POLICY "site_expenses_select"
+          ON expenses FOR SELECT
+          USING (
+            site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+            AND company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+          )';
+
+        EXECUTE 'CREATE POLICY "site_expenses_all"
+          ON expenses FOR ALL
+          USING (
+            site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+            AND company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+          )';
+      END IF;
+    ELSE
+      -- Fallback: site_id only
+      EXECUTE 'CREATE POLICY "site_expenses_select"
+        ON expenses FOR SELECT
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+
+      EXECUTE 'CREATE POLICY "site_expenses_all"
+        ON expenses FOR ALL
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+    END IF;
   END IF;
 END $$;
 
@@ -422,61 +509,65 @@ END $$;
 
 -- Create RLS policies for tasks
 DO $$
+DECLARE
+  v_has_company_id BOOLEAN;
+  v_has_assigned_to BOOLEAN;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tasks') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'tasks' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
+
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'tasks' AND column_name = 'assigned_to'
+    ) INTO v_has_assigned_to;
+
     DROP POLICY IF EXISTS "Users can view tasks" ON tasks;
     DROP POLICY IF EXISTS "Users can manage tasks" ON tasks;
 
-    EXECUTE 'CREATE POLICY "site_tasks_select"
-      ON tasks FOR SELECT
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR assigned_to = auth.uid()
-          OR created_by = auth.uid()
-        )
-      )';
-
-    EXECUTE 'CREATE POLICY "site_tasks_all"
-      ON tasks FOR ALL
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR assigned_to = auth.uid()
-          OR created_by = auth.uid()
-        )
-      )';
+    IF v_has_company_id THEN
+      EXECUTE 'CREATE POLICY "site_tasks_all"
+        ON tasks FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+        )';
+    ELSE
+      EXECUTE 'CREATE POLICY "site_tasks_all"
+        ON tasks FOR ALL
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+    END IF;
   END IF;
 END $$;
 
 -- Create RLS policies for daily_reports
 DO $$
+DECLARE
+  v_has_company_id BOOLEAN;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'daily_reports') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'daily_reports' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
+
     DROP POLICY IF EXISTS "Users can view daily reports" ON daily_reports;
     DROP POLICY IF EXISTS "Users can manage daily reports" ON daily_reports;
 
-    EXECUTE 'CREATE POLICY "site_daily_reports_select"
-      ON daily_reports FOR SELECT
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR created_by = auth.uid()
-        )
-      )';
-
-    EXECUTE 'CREATE POLICY "site_daily_reports_all"
-      ON daily_reports FOR ALL
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR created_by = auth.uid()
-        )
-      )';
+    IF v_has_company_id THEN
+      EXECUTE 'CREATE POLICY "site_daily_reports_all"
+        ON daily_reports FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+        )';
+    ELSE
+      EXECUTE 'CREATE POLICY "site_daily_reports_all"
+        ON daily_reports FOR ALL
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+    END IF;
   END IF;
 END $$;
 
@@ -557,61 +648,72 @@ END $$;
 
 -- Create RLS policies for timesheet_approvals
 DO $$
+DECLARE
+  v_has_company_id BOOLEAN;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'timesheet_approvals') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'timesheet_approvals' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
+
     DROP POLICY IF EXISTS "Users can view timesheet approvals" ON timesheet_approvals;
     DROP POLICY IF EXISTS "Users can manage timesheet approvals" ON timesheet_approvals;
 
-    EXECUTE 'CREATE POLICY "site_timesheet_approvals_select"
-      ON timesheet_approvals FOR SELECT
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR user_id = auth.uid()
-          OR approver_id = auth.uid()
-        )
-      )';
-
-    EXECUTE 'CREATE POLICY "site_timesheet_approvals_all"
-      ON timesheet_approvals FOR ALL
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          approver_id = auth.uid()
-          OR company_id IN (
-            SELECT company_id FROM user_profiles
-            WHERE id = auth.uid()
-            AND role IN (''admin'', ''project_manager'', ''root_admin'')
-          )
-        )
-      )';
+    IF v_has_company_id THEN
+      EXECUTE 'CREATE POLICY "site_timesheet_approvals_all"
+        ON timesheet_approvals FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+        )';
+    ELSE
+      EXECUTE 'CREATE POLICY "site_timesheet_approvals_all"
+        ON timesheet_approvals FOR ALL
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+    END IF;
   END IF;
 END $$;
 
 -- Create RLS policies for crew_gps_checkins
 DO $$
+DECLARE
+  v_has_company_id BOOLEAN;
+  v_has_user_id BOOLEAN;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'crew_gps_checkins') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'crew_gps_checkins' AND column_name = 'company_id'
+    ) INTO v_has_company_id;
+
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'crew_gps_checkins' AND column_name = 'user_id'
+    ) INTO v_has_user_id;
+
     DROP POLICY IF EXISTS "Users can view GPS checkins" ON crew_gps_checkins;
     DROP POLICY IF EXISTS "Users can manage GPS checkins" ON crew_gps_checkins;
 
-    EXECUTE 'CREATE POLICY "site_crew_gps_checkins_select"
-      ON crew_gps_checkins FOR SELECT
-      USING (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND (
-          company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
-          OR user_id = auth.uid()
-        )
-      )';
-
-    EXECUTE 'CREATE POLICY "site_crew_gps_checkins_insert"
-      ON crew_gps_checkins FOR INSERT
-      WITH CHECK (
-        site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
-        AND user_id = auth.uid()
-      )';
+    IF v_has_company_id THEN
+      EXECUTE 'CREATE POLICY "site_crew_gps_checkins_all"
+        ON crew_gps_checkins FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND company_id IN (SELECT company_id FROM user_profiles WHERE id = auth.uid())
+        )';
+    ELSIF v_has_user_id THEN
+      EXECUTE 'CREATE POLICY "site_crew_gps_checkins_all"
+        ON crew_gps_checkins FOR ALL
+        USING (
+          site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid
+          AND user_id = auth.uid()
+        )';
+    ELSE
+      EXECUTE 'CREATE POLICY "site_crew_gps_checkins_all"
+        ON crew_gps_checkins FOR ALL
+        USING (site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid)';
+    END IF;
   END IF;
 END $$;
 

@@ -273,63 +273,114 @@ END $$;
 -- STEP 5: CREATE SECURE VIEWS FOR SENSITIVE DATA
 -- =====================================================
 
--- Secure view for webhook endpoints (decrypts secrets for authorized users)
-CREATE OR REPLACE VIEW webhook_endpoints_secure AS
-SELECT
-  id,
-  company_id,
-  site_id,
-  endpoint_name,
-  url,
-  -- Only decrypt for admin users
-  CASE
-    WHEN EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'root_admin')
-    )
-    THEN decrypt_sensitive(secret_encrypted, 'webhook_secret')
-    ELSE '********'
-  END as secret_token,
-  events,
-  is_active,
-  retry_attempts,
-  timeout_seconds,
-  last_success_at,
-  last_failure_at,
-  failure_count,
-  created_at,
-  updated_at
-FROM webhook_endpoints
-WHERE site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid;
+-- Create secure views dynamically based on available columns
+DO $$
+DECLARE
+  v_webhook_has_company_id BOOLEAN;
+  v_webhook_has_site_id BOOLEAN;
+  v_integration_has_company_id BOOLEAN;
+  v_integration_has_site_id BOOLEAN;
+  v_webhook_columns TEXT;
+  v_integration_columns TEXT;
+BEGIN
+  -- Check webhook_endpoints columns
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'webhook_endpoints') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'webhook_endpoints' AND column_name = 'company_id'
+    ) INTO v_webhook_has_company_id;
 
--- Secure view for integration configurations
-CREATE OR REPLACE VIEW integration_configurations_secure AS
-SELECT
-  id,
-  company_id,
-  site_id,
-  integration_type,
-  integration_name,
-  configuration,
-  -- Only decrypt for admin users
-  CASE
-    WHEN EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'root_admin')
-    )
-    THEN decrypt_sensitive(credentials_encrypted_v2, 'integration_credentials')
-    ELSE NULL
-  END as credentials,
-  is_active,
-  sync_enabled,
-  last_sync_at,
-  sync_frequency,
-  error_count,
-  last_error,
-  created_at,
-  updated_at
-FROM integration_configurations
-WHERE site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid;
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'webhook_endpoints' AND column_name = 'site_id'
+    ) INTO v_webhook_has_site_id;
+
+    -- Build column list
+    v_webhook_columns := 'id';
+    IF v_webhook_has_company_id THEN
+      v_webhook_columns := v_webhook_columns || ', company_id';
+    END IF;
+    IF v_webhook_has_site_id THEN
+      v_webhook_columns := v_webhook_columns || ', site_id';
+    END IF;
+
+    -- Create view with available columns
+    EXECUTE format('
+      CREATE OR REPLACE VIEW webhook_endpoints_secure AS
+      SELECT
+        %s,
+        url,
+        CASE
+          WHEN EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE id = auth.uid() AND role IN (''admin'', ''root_admin'')
+          )
+          THEN decrypt_sensitive(secret_encrypted, ''webhook_secret'')
+          ELSE ''********''
+        END as secret_token,
+        is_active,
+        created_at
+      FROM webhook_endpoints
+      %s',
+      v_webhook_columns,
+      CASE WHEN v_webhook_has_site_id THEN 
+        'WHERE site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid'
+      ELSE '' END
+    );
+
+    RAISE NOTICE 'Created webhook_endpoints_secure view';
+  END IF;
+
+  -- Check integration_configurations columns
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'integration_configurations') THEN
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'integration_configurations' AND column_name = 'company_id'
+    ) INTO v_integration_has_company_id;
+
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'integration_configurations' AND column_name = 'site_id'
+    ) INTO v_integration_has_site_id;
+
+    -- Build column list
+    v_integration_columns := 'id';
+    IF v_integration_has_company_id THEN
+      v_integration_columns := v_integration_columns || ', company_id';
+    END IF;
+    IF v_integration_has_site_id THEN
+      v_integration_columns := v_integration_columns || ', site_id';
+    END IF;
+
+    -- Create view with available columns
+    EXECUTE format('
+      CREATE OR REPLACE VIEW integration_configurations_secure AS
+      SELECT
+        %s,
+        integration_type,
+        integration_name,
+        configuration,
+        CASE
+          WHEN EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE id = auth.uid() AND role IN (''admin'', ''root_admin'')
+          )
+          THEN decrypt_sensitive(credentials_encrypted_v2, ''integration_credentials'')
+          ELSE NULL
+        END as credentials,
+        is_active,
+        created_at
+      FROM integration_configurations
+      %s',
+      v_integration_columns,
+      CASE WHEN v_integration_has_site_id THEN 
+        'WHERE site_id = (auth.jwt() -> ''app_metadata'' -> ''site_id'')::text::uuid'
+      ELSE '' END
+    );
+
+    RAISE NOTICE 'Created integration_configurations_secure view';
+  END IF;
+END $$;
 
 -- =====================================================
 -- STEP 6: CREATE TRIGGERS FOR AUTOMATIC ENCRYPTION

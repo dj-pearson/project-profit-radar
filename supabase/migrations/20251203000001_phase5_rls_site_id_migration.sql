@@ -289,369 +289,171 @@ $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 -- =====================================================
 CREATE POLICY "site_material_forecasts_select"
   ON material_forecasts FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_material_forecasts_insert"
   ON material_forecasts FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_material_forecasts_update"
   ON material_forecasts FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_material_forecasts_delete"
   ON material_forecasts FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- SUPPLIER CATALOG POLICIES
 -- =====================================================
 CREATE POLICY "site_supplier_catalog_select"
   ON supplier_catalog FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_supplier_catalog_insert"
   ON supplier_catalog FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_supplier_catalog_update"
   ON supplier_catalog FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_supplier_catalog_delete"
   ON supplier_catalog FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- PURCHASE RECOMMENDATIONS POLICIES
 -- =====================================================
 CREATE POLICY "site_purchase_recommendations_select"
   ON purchase_recommendations FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_purchase_recommendations_insert"
   ON purchase_recommendations FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_purchase_recommendations_update"
   ON purchase_recommendations FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_purchase_recommendations_delete"
   ON purchase_recommendations FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- FINANCIAL SNAPSHOTS POLICIES
 -- =====================================================
 CREATE POLICY "site_financial_snapshots_select"
   ON financial_snapshots FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_financial_snapshots_insert"
   ON financial_snapshots FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_financial_snapshots_update"
   ON financial_snapshots FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_financial_snapshots_delete"
   ON financial_snapshots FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- KPI METRICS POLICIES
 -- =====================================================
 CREATE POLICY "site_kpi_metrics_select"
   ON kpi_metrics FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_kpi_metrics_insert"
   ON kpi_metrics FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_kpi_metrics_update"
   ON kpi_metrics FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_kpi_metrics_delete"
   ON kpi_metrics FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- CLIENT PORTAL ACCESS POLICIES
 -- =====================================================
 CREATE POLICY "site_client_portal_access_select"
   ON client_portal_access FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-      OR user_id = auth.uid()
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_client_portal_access_insert"
   ON client_portal_access FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_client_portal_access_update"
   ON client_portal_access FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_client_portal_access_delete"
   ON client_portal_access FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- CLIENT MESSAGES POLICIES
 -- =====================================================
 CREATE POLICY "site_client_messages_select"
   ON client_messages FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-      OR sender_id = auth.uid()
-      OR recipient_id = auth.uid()
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_client_messages_insert"
   ON client_messages FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND sender_id = auth.uid()
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_client_messages_update"
   ON client_messages FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (sender_id = auth.uid() OR has_company_site_access(company_id))
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_client_messages_delete"
   ON client_messages FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND sender_id = auth.uid()
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- BILLING AUTOMATION RULES POLICIES
 -- =====================================================
 CREATE POLICY "site_billing_automation_rules_select"
   ON billing_automation_rules FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND has_company_site_access(company_id)
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_billing_automation_rules_insert"
   ON billing_automation_rules FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND has_company_site_access(company_id)
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_billing_automation_rules_update"
   ON billing_automation_rules FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND has_company_site_access(company_id)
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_billing_automation_rules_delete"
   ON billing_automation_rules FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND has_company_site_access(company_id)
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- PAYMENT REMINDERS POLICIES
 -- =====================================================
 CREATE POLICY "site_payment_reminders_select"
   ON payment_reminders FOR SELECT
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_payment_reminders_insert"
   ON payment_reminders FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_payment_reminders_update"
   ON payment_reminders FOR UPDATE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_payment_reminders_delete"
   ON payment_reminders FOR DELETE
-  USING (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  USING (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 -- =====================================================
 -- CUSTOM REPORTS POLICIES
@@ -660,41 +462,25 @@ CREATE POLICY "site_custom_reports_select"
   ON custom_reports FOR SELECT
   USING (
     site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-      OR created_by = auth.uid()
-    )
+    AND (created_by = auth.uid() OR auth.uid() IS NOT NULL)
   );
 
 CREATE POLICY "site_custom_reports_insert"
   ON custom_reports FOR INSERT
-  WITH CHECK (
-    site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      company_id IS NULL
-      OR has_company_site_access(company_id)
-    )
-  );
+  WITH CHECK (site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid);
 
 CREATE POLICY "site_custom_reports_update"
   ON custom_reports FOR UPDATE
   USING (
     site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      has_company_site_access(company_id)
-      OR created_by = auth.uid()
-    )
+    AND created_by = auth.uid()
   );
 
 CREATE POLICY "site_custom_reports_delete"
   ON custom_reports FOR DELETE
   USING (
     site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-    AND (
-      has_company_site_access(company_id)
-      OR created_by = auth.uid()
-    )
+    AND created_by = auth.uid()
   );
 
 -- =====================================================
@@ -708,7 +494,7 @@ CREATE POLICY "site_report_schedules_select"
       SELECT 1 FROM custom_reports cr
       WHERE cr.id = report_schedules.custom_report_id
       AND cr.site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-      AND (cr.created_by = auth.uid() OR has_company_site_access(cr.company_id))
+      AND cr.created_by = auth.uid()
     )
   );
 
@@ -720,7 +506,7 @@ CREATE POLICY "site_report_schedules_insert"
       SELECT 1 FROM custom_reports cr
       WHERE cr.id = report_schedules.custom_report_id
       AND cr.site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-      AND (cr.created_by = auth.uid() OR has_company_site_access(cr.company_id))
+      AND cr.created_by = auth.uid()
     )
   );
 
@@ -732,7 +518,7 @@ CREATE POLICY "site_report_schedules_update"
       SELECT 1 FROM custom_reports cr
       WHERE cr.id = report_schedules.custom_report_id
       AND cr.site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-      AND (cr.created_by = auth.uid() OR has_company_site_access(cr.company_id))
+      AND cr.created_by = auth.uid()
     )
   );
 
@@ -744,7 +530,7 @@ CREATE POLICY "site_report_schedules_delete"
       SELECT 1 FROM custom_reports cr
       WHERE cr.id = report_schedules.custom_report_id
       AND cr.site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-      AND (cr.created_by = auth.uid() OR has_company_site_access(cr.company_id))
+      AND cr.created_by = auth.uid()
     )
   );
 
@@ -759,7 +545,7 @@ CREATE POLICY "site_report_history_select"
       SELECT 1 FROM custom_reports cr
       WHERE cr.id = report_history.custom_report_id
       AND cr.site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-      AND (cr.created_by = auth.uid() OR has_company_site_access(cr.company_id))
+      AND cr.created_by = auth.uid()
     )
   );
 
@@ -771,7 +557,7 @@ CREATE POLICY "site_report_history_insert"
       SELECT 1 FROM custom_reports cr
       WHERE cr.id = report_history.custom_report_id
       AND cr.site_id = (auth.jwt() -> 'app_metadata' -> 'site_id')::text::uuid
-      AND (cr.created_by = auth.uid() OR has_company_site_access(cr.company_id))
+      AND cr.created_by = auth.uid()
     )
   );
 
