@@ -15,6 +15,18 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
+// Helper function to get user by email (works with all Supabase client versions)
+async function getUserByEmail(supabaseAdmin: any, email: string) {
+  const { data: usersData, error } = await supabaseAdmin.auth.admin.listUsers();
+  if (error) {
+    return { user: null, error };
+  }
+  const user = usersData?.users?.find(
+    (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+  );
+  return { user: user || null, error: null };
+}
+
 // Validation schemas
 const verifyOTPSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -107,9 +119,9 @@ const handler = async (req: Request): Promise<Response> => {
     switch (type) {
       case 'confirm_signup': {
         // Confirm user's email
-        const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        const { user: authUser, error: getUserError } = await getUserByEmail(supabaseAdmin, email);
 
-        if (getUserError || !authUser?.user) {
+        if (getUserError || !authUser) {
           console.error('[VerifyAuthOTP] User not found for email confirmation:', email);
           return new Response(
             JSON.stringify({ error: 'User not found' }),
@@ -119,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Update user to confirm email
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-          authUser.user.id,
+          authUser.id,
           { email_confirm: true }
         );
 
@@ -134,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
         actionResult = {
           verified: true,
           emailConfirmed: true,
-          userId: authUser.user.id,
+          userId: authUser.id,
         };
         break;
       }
@@ -200,9 +212,9 @@ const handler = async (req: Request): Promise<Response> => {
 
       case 'magic_link': {
         // Generate a magic link session token
-        const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        const { user: authUser } = await getUserByEmail(supabaseAdmin, email);
 
-        if (!authUser?.user) {
+        if (!authUser) {
           return new Response(
             JSON.stringify({ error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -225,7 +237,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         actionResult = {
           verified: true,
-          userId: authUser.user.id,
+          userId: authUser.id,
           // Return the token properties for frontend to use
           accessToken: linkData.properties?.access_token,
           refreshToken: linkData.properties?.refresh_token,
@@ -235,9 +247,9 @@ const handler = async (req: Request): Promise<Response> => {
 
       case 'change_email': {
         // Update user's email address
-        const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        const { user: authUser } = await getUserByEmail(supabaseAdmin, email);
 
-        if (!authUser?.user) {
+        if (!authUser) {
           return new Response(
             JSON.stringify({ error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -253,7 +265,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Update the user's email
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-          authUser.user.id,
+          authUser.id,
           {
             email: result.new_email,
             email_confirm: true,
@@ -272,22 +284,22 @@ const handler = async (req: Request): Promise<Response> => {
         await supabaseAdmin
           .from('user_profiles')
           .update({ email: result.new_email })
-          .eq('id', authUser.user.id);
+          .eq('id', authUser.id);
 
         actionResult = {
           verified: true,
           emailChanged: true,
           newEmail: result.new_email,
-          userId: authUser.user.id,
+          userId: authUser.id,
         };
         break;
       }
 
       case 'reset_password': {
         // Generate a password reset token for the user
-        const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        const { user: authUser } = await getUserByEmail(supabaseAdmin, email);
 
-        if (!authUser?.user) {
+        if (!authUser) {
           return new Response(
             JSON.stringify({ error: 'User not found' }),
             { status: 404, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -297,7 +309,7 @@ const handler = async (req: Request): Promise<Response> => {
         // If password is provided, update it directly
         if (password) {
           const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-            authUser.user.id,
+            authUser.id,
             { password }
           );
 
@@ -312,14 +324,14 @@ const handler = async (req: Request): Promise<Response> => {
           actionResult = {
             verified: true,
             passwordReset: true,
-            userId: authUser.user.id,
+            userId: authUser.id,
           };
         } else {
           // Just confirm OTP is valid - password will be set in a follow-up request
           actionResult = {
             verified: true,
             canResetPassword: true,
-            userId: authUser.user.id,
+            userId: authUser.id,
             tokenId: result.token_id,
           };
         }
