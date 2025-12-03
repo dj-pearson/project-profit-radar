@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 
 const Setup = () => {
-  const { user, userProfile, refreshProfile, loading } = useAuth();
+  const { user, userProfile, refreshProfile, loading, siteId } = useAuth();
   const navigate = useNavigate();
   const [setupLoading, setSetupLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -53,6 +53,17 @@ const Setup = () => {
     setSetupLoading(true);
 
       try {
+        // Validate siteId is available (required for multi-tenant isolation)
+        if (!siteId) {
+          toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: "Unable to determine site. Please refresh the page and try again."
+          });
+          setSetupLoading(false);
+          return;
+        }
+
         // Create company scoped to current site/tenant
         const { data: company, error: companyError } = await supabase
           .from('companies')
@@ -64,8 +75,8 @@ const Setup = () => {
               company_size: companySize,
               annual_revenue_range: annualRevenue,
               license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
-              // Multi-tenant scoping
-              site_id: userProfile?.site_id || null,
+              // Multi-tenant scoping - use resolved siteId from AuthContext
+              site_id: siteId,
               tenant_id: userProfile?.tenant_id || null,
             }
           ])
@@ -74,10 +85,14 @@ const Setup = () => {
 
         if (companyError) throw companyError;
 
-        // Update user profile with company_id
+        // Update user profile with company_id and ensure site_id is set
         const { error: profileError } = await supabase
           .from('user_profiles')
-          .update({ company_id: company.id })
+          .update({
+            company_id: company.id,
+            site_id: siteId,
+            tenant_id: userProfile?.tenant_id || null,
+          })
           .eq('id', user.id);
 
       if (profileError) throw profileError;
