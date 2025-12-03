@@ -31,23 +31,32 @@ const signupSchema = z.object({
 const OTP_EXPIRY_MINUTES = 15;
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('[SignupWithOTP] Handler invoked, method:', req.method);
+
   const corsHeaders = getCorsHeaders(req);
+  console.log('[SignupWithOTP] CORS headers obtained');
 
   // Handle CORS preflight - 204 No Content cannot have a body
   if (req.method === 'OPTIONS') {
+    console.log('[SignupWithOTP] Handling OPTIONS preflight');
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   if (req.method !== 'POST') {
+    console.log('[SignupWithOTP] Method not POST:', req.method);
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
       { status: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
 
+  console.log('[SignupWithOTP] Processing POST request');
+
   try {
     // Parse and validate request
+    console.log('[SignupWithOTP] Parsing request body...');
     const rawBody = await req.json();
+    console.log('[SignupWithOTP] Request body parsed');
     const validation = signupSchema.safeParse(rawBody);
 
     if (!validation.success) {
