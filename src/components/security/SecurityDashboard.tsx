@@ -21,6 +21,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MFASetup } from './MFASetup';
 import { DataClassificationDashboard } from './DataClassificationDashboard';
 import { SecurityMonitoringDashboard } from './SecurityMonitoringDashboard';
+import { DeviceTrustManagement } from './DeviceTrustManagement';
+import { ActiveSessionsManagement } from './ActiveSessionsManagement';
 import { mobileGridClasses, mobileCardClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 
 interface SecurityEvent {
@@ -236,9 +238,11 @@ export const SecurityDashboard: React.FC = () => {
 
       {/* Security Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 h-auto">
           <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
           <TabsTrigger value="mfa" className="text-xs sm:text-sm py-2">MFA</TabsTrigger>
+          <TabsTrigger value="devices" className="text-xs sm:text-sm py-2">Devices</TabsTrigger>
+          <TabsTrigger value="sessions" className="text-xs sm:text-sm py-2 hidden sm:flex">Sessions</TabsTrigger>
           <TabsTrigger value="data-classification" className="text-xs sm:text-sm py-2 hidden sm:flex">Data Class</TabsTrigger>
           <TabsTrigger value="monitoring" className="text-xs sm:text-sm py-2 hidden sm:flex">Monitoring</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs sm:text-sm py-2">Activity</TabsTrigger>
@@ -302,6 +306,14 @@ export const SecurityDashboard: React.FC = () => {
             setSecurityStatus(prev => prev ? { ...prev, mfa_enabled: enabled } : null);
             loadSecurityData(); // Reload to get updated events
           }} />
+        </TabsContent>
+
+        <TabsContent value="devices" className="space-y-4">
+          <DeviceTrustManagement />
+        </TabsContent>
+
+        <TabsContent value="sessions" className="space-y-4">
+          <ActiveSessionsManagement />
         </TabsContent>
 
         <TabsContent value="data-classification" className="space-y-4">
