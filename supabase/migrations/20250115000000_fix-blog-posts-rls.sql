@@ -54,12 +54,4 @@ AS $$
   );
 $$;
 
--- Alternative policy using the new function (backup)
-CREATE POLICY "Root admins can manage all blog posts v2"
-ON public.blog_posts
-FOR ALL
-TO authenticated
-USING (public.get_user_role_v2(auth.uid()) = 'root_admin');
-
--- Disable the v2 policy for now (enable if main policy fails)
-ALTER POLICY "Root admins can manage all blog posts v2" ON public.blog_posts DISABLE; 
+-- Alternative policy using the new function (as backup - you can drop the main policy and use this one if needed) 
