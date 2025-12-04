@@ -65,13 +65,15 @@ const Setup = () => {
         }
 
         // DEBUG: Log authentication state
-        console.log('🔍 Setup Debug - Authentication State:', {
+        console.log('🔍 Setup Debug - Start:', {
+          timestamp: new Date().toISOString(),
           user: user?.id,
           userEmail: user?.email,
           userProfile: userProfile?.id,
           userRole: userProfile?.role,
           siteId,
-          hasSession: !!user
+          hasSession: !!user,
+          supabaseUrl: import.meta.env.VITE_SUPABASE_URL
         });
 
         // DEBUG: Check current session
@@ -80,7 +82,10 @@ const Setup = () => {
           hasSession: !!session,
           sessionError,
           accessToken: session?.access_token ? 'exists' : 'missing',
-          user: session?.user?.id
+          accessTokenPreview: session?.access_token ? session.access_token.substring(0, 50) + '...' : 'none',
+          user: session?.user?.id,
+          userRole: session?.user?.role,
+          userEmail: session?.user?.email
         });
 
         if (!session || sessionError) {
@@ -106,6 +111,14 @@ const Setup = () => {
           tenant_id: userProfile?.tenant_id || null,
         };
         console.log('🔍 Setup Debug - Insert Payload:', insertPayload);
+        
+        // DEBUG: Check what Supabase client will send
+        const { data: authData } = await supabase.auth.getUser();
+        console.log('🔍 Setup Debug - Auth User Check:', {
+          userId: authData?.user?.id,
+          userEmail: authData?.user?.email,
+          userRole: authData?.user?.role
+        });
 
         // Create company scoped to current site/tenant
         const { data: company, error: companyError } = await supabase
