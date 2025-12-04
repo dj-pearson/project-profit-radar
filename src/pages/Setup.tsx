@@ -64,26 +64,67 @@ const Setup = () => {
           return;
         }
 
+        // DEBUG: Log authentication state
+        console.log('🔍 Setup Debug - Authentication State:', {
+          user: user?.id,
+          userEmail: user?.email,
+          userProfile: userProfile?.id,
+          userRole: userProfile?.role,
+          siteId,
+          hasSession: !!user
+        });
+
+        // DEBUG: Check current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('🔍 Setup Debug - Session Check:', {
+          hasSession: !!session,
+          sessionError,
+          accessToken: session?.access_token ? 'exists' : 'missing',
+          user: session?.user?.id
+        });
+
+        if (!session || sessionError) {
+          console.error('❌ No valid session!', sessionError);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Your session has expired. Please log in again."
+          });
+          setSetupLoading(false);
+          return;
+        }
+
+        // DEBUG: Log insert payload
+        const insertPayload = {
+          name: companyName,
+          address,
+          industry_type: industryType as 'residential' | 'commercial' | 'civil_infrastructure' | 'specialty_trades',
+          company_size: companySize,
+          annual_revenue_range: annualRevenue,
+          license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
+          site_id: siteId,
+          tenant_id: userProfile?.tenant_id || null,
+        };
+        console.log('🔍 Setup Debug - Insert Payload:', insertPayload);
+
         // Create company scoped to current site/tenant
         const { data: company, error: companyError } = await supabase
           .from('companies')
-          .insert([
-            {
-              name: companyName,
-              address,
-              industry_type: industryType as 'residential' | 'commercial' | 'civil_infrastructure' | 'specialty_trades',
-              company_size: companySize,
-              annual_revenue_range: annualRevenue,
-              license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
-              // Multi-tenant scoping - use resolved siteId from AuthContext
-              site_id: siteId,
-              tenant_id: userProfile?.tenant_id || null,
-            }
-          ])
+          .insert([insertPayload])
           .select()
           .single();
 
-        if (companyError) throw companyError;
+        console.log('🔍 Setup Debug - Insert Result:', { company, companyError });
+
+        if (companyError) {
+          console.error('❌ Company Insert Error:', {
+            message: companyError.message,
+            code: companyError.code,
+            details: companyError.details,
+            hint: companyError.hint
+          });
+          throw companyError;
+        }
 
         // Update user profile with company_id and ensure site_id is set
         const { error: profileError } = await supabase
