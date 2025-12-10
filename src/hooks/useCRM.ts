@@ -1583,3 +1583,466 @@ export function useBulkDeleteLeads() {
     },
   });
 }
+
+// ============================================================================
+// CONTACT BULK OPERATIONS
+// ============================================================================
+
+export function useBulkUpdateContacts() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ contactIds, updates }: { contactIds: string[]; updates: Partial<ContactUpdate> }) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      const { data, error } = await supabase
+        .from('contacts')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .in('id', contactIds)
+        .eq('site_id', siteId)
+        .select();
+
+      if (error) throw error;
+      return data || [];
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success(`${data.length} contacts updated successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update contacts: ${error.message}`);
+    },
+  });
+}
+
+export function useBulkDeleteContacts() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (contactIds: string[]) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .in('id', contactIds)
+        .eq('site_id', siteId);
+
+      if (error) throw error;
+      return contactIds.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success(`${count} contacts deleted successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete contacts: ${error.message}`);
+    },
+  });
+}
+
+export function useMergeContacts() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ primaryId, secondaryIds }: { primaryId: string; secondaryIds: string[] }) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      // Get primary contact
+      const { data: primary, error: primaryError } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('id', primaryId)
+        .eq('site_id', siteId)
+        .single();
+
+      if (primaryError) throw primaryError;
+
+      // Get secondary contacts
+      const { data: secondaries, error: secondariesError } = await supabase
+        .from('contacts')
+        .select('*')
+        .in('id', secondaryIds)
+        .eq('site_id', siteId);
+
+      if (secondariesError) throw secondariesError;
+
+      // Merge data - prefer primary, fill gaps from secondaries
+      const mergedData: Partial<ContactUpdate> = {
+        phone: primary.phone || secondaries?.find(s => s.phone)?.phone,
+        mobile: primary.mobile || secondaries?.find(s => s.mobile)?.mobile,
+        address: primary.address || secondaries?.find(s => s.address)?.address,
+        notes: [primary.notes, ...secondaries.map(s => s.notes)].filter(Boolean).join('\n---\n'),
+      };
+
+      // Update primary with merged data
+      const { error: updateError } = await supabase
+        .from('contacts')
+        .update({ ...mergedData, updated_at: new Date().toISOString() })
+        .eq('id', primaryId)
+        .eq('site_id', siteId);
+
+      if (updateError) throw updateError;
+
+      // Reassign related records to primary contact
+      await supabase
+        .from('crm_activities')
+        .update({ contact_id: primaryId })
+        .in('contact_id', secondaryIds)
+        .eq('site_id', siteId);
+
+      // Delete secondary contacts
+      const { error: deleteError } = await supabase
+        .from('contacts')
+        .delete()
+        .in('id', secondaryIds)
+        .eq('site_id', siteId);
+
+      if (deleteError) throw deleteError;
+
+      return { primaryId, mergedCount: secondaryIds.length };
+    },
+    onSuccess: ({ mergedCount }) => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-activities'] });
+      toast.success(`Merged ${mergedCount + 1} contacts successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to merge contacts: ${error.message}`);
+    },
+  });
+}
+
+// ============================================================================
+// OPPORTUNITY BULK OPERATIONS
+// ============================================================================
+
+export function useBulkUpdateOpportunities() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ opportunityIds, updates }: { opportunityIds: string[]; updates: Partial<OpportunityUpdate> }) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      const { data, error } = await supabase
+        .from('opportunities')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .in('id', opportunityIds)
+        .eq('site_id', siteId)
+        .select();
+
+      if (error) throw error;
+      return data || [];
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      toast.success(`${data.length} opportunities updated successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update opportunities: ${error.message}`);
+    },
+  });
+}
+
+export function useBulkDeleteOpportunities() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (opportunityIds: string[]) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .in('id', opportunityIds)
+        .eq('site_id', siteId);
+
+      if (error) throw error;
+      return opportunityIds.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      toast.success(`${count} opportunities deleted successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete opportunities: ${error.message}`);
+    },
+  });
+}
+
+export function useConvertOpportunityToDeal() {
+  const { siteId, user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (opportunityId: string) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      // Get the opportunity
+      const { data: opportunity, error: fetchError } = await supabase
+        .from('opportunities')
+        .select('*')
+        .eq('id', opportunityId)
+        .eq('site_id', siteId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Create a deal from the opportunity
+      const { data: deal, error: createError } = await supabase
+        .from('deals')
+        .insert({
+          site_id: siteId,
+          company_id: opportunity.company_id,
+          opportunity_id: opportunityId,
+          contact_id: opportunity.contact_id,
+          lead_id: opportunity.lead_id,
+          deal_name: opportunity.name,
+          deal_value: opportunity.value,
+          stage: 'negotiation',
+          probability: opportunity.probability || 75,
+          expected_close_date: opportunity.expected_close_date,
+          notes: opportunity.notes,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // Update opportunity status
+      await supabase
+        .from('opportunities')
+        .update({
+          stage: 'closed_won',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', opportunityId)
+        .eq('site_id', siteId);
+
+      return deal;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      toast.success('Opportunity converted to deal successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to convert opportunity: ${error.message}`);
+    },
+  });
+}
+
+// ============================================================================
+// DEAL BULK OPERATIONS
+// ============================================================================
+
+export function useBulkUpdateDeals() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ dealIds, updates }: { dealIds: string[]; updates: Partial<DealUpdate> }) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      const { data, error } = await supabase
+        .from('deals')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .in('id', dealIds)
+        .eq('site_id', siteId)
+        .select();
+
+      if (error) throw error;
+      return data || [];
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      toast.success(`${data.length} deals updated successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update deals: ${error.message}`);
+    },
+  });
+}
+
+export function useBulkDeleteDeals() {
+  const { siteId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (dealIds: string[]) => {
+      if (!siteId) throw new Error('No site_id available');
+
+      const { error } = await supabase
+        .from('deals')
+        .delete()
+        .in('id', dealIds)
+        .eq('site_id', siteId);
+
+      if (error) throw error;
+      return dealIds.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      toast.success(`${count} deals deleted successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete deals: ${error.message}`);
+    },
+  });
+}
+
+// ============================================================================
+// CRM SEARCH HOOKS
+// ============================================================================
+
+export interface GlobalSearchResult {
+  type: 'lead' | 'contact' | 'opportunity' | 'deal';
+  id: string;
+  title: string;
+  subtitle?: string;
+  score?: number;
+}
+
+export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean }) {
+  const { siteId } = useAuth();
+
+  return useQuery({
+    queryKey: ['crm-search', siteId, query],
+    queryFn: async (): Promise<GlobalSearchResult[]> => {
+      if (!siteId) throw new Error('No site_id available');
+      if (!query || query.length < 2) return [];
+
+      const searchPattern = `%${query}%`;
+      const results: GlobalSearchResult[] = [];
+
+      // Search leads
+      const { data: leads } = await supabase
+        .from('leads')
+        .select('id, first_name, last_name, email, company_name')
+        .eq('site_id', siteId)
+        .or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},email.ilike.${searchPattern},company_name.ilike.${searchPattern}`)
+        .limit(10);
+
+      for (const lead of leads || []) {
+        results.push({
+          type: 'lead',
+          id: lead.id,
+          title: `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || lead.email || 'Unknown',
+          subtitle: lead.company_name,
+        });
+      }
+
+      // Search contacts
+      const { data: contacts } = await supabase
+        .from('contacts')
+        .select('id, first_name, last_name, email, company')
+        .eq('site_id', siteId)
+        .or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},email.ilike.${searchPattern},company.ilike.${searchPattern}`)
+        .limit(10);
+
+      for (const contact of contacts || []) {
+        results.push({
+          type: 'contact',
+          id: contact.id,
+          title: `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || contact.email || 'Unknown',
+          subtitle: contact.company,
+        });
+      }
+
+      // Search opportunities
+      const { data: opportunities } = await supabase
+        .from('opportunities')
+        .select('id, name, value')
+        .eq('site_id', siteId)
+        .ilike('name', searchPattern)
+        .limit(10);
+
+      for (const opp of opportunities || []) {
+        results.push({
+          type: 'opportunity',
+          id: opp.id,
+          title: opp.name,
+          subtitle: opp.value ? `$${opp.value.toLocaleString()}` : undefined,
+        });
+      }
+
+      // Search deals
+      const { data: deals } = await supabase
+        .from('deals')
+        .select('id, deal_name, deal_value')
+        .eq('site_id', siteId)
+        .ilike('deal_name', searchPattern)
+        .limit(10);
+
+      for (const deal of deals || []) {
+        results.push({
+          type: 'deal',
+          id: deal.id,
+          title: deal.deal_name,
+          subtitle: deal.deal_value ? `$${deal.deal_value.toLocaleString()}` : undefined,
+        });
+      }
+
+      return results;
+    },
+    enabled: !!siteId && !!query && query.length >= 2 && (options?.enabled !== false),
+  });
+}
+
+// ============================================================================
+// CRM DASHBOARD STATS
+// ============================================================================
+
+export function useCRMDashboardStats(options?: { enabled?: boolean }) {
+  const { siteId } = useAuth();
+
+  return useQuery({
+    queryKey: ['crm-dashboard-stats', siteId],
+    queryFn: async () => {
+      if (!siteId) throw new Error('No site_id available');
+
+      // Get counts in parallel
+      const [
+        { count: leadCount },
+        { count: contactCount },
+        { count: opportunityCount },
+        { count: dealCount },
+        { data: recentLeads },
+        { data: recentActivities },
+        { data: opportunityValues },
+        { data: dealValues },
+      ] = await Promise.all([
+        supabase.from('leads').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
+        supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
+        supabase.from('opportunities').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
+        supabase.from('deals').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
+        supabase.from('leads').select('id, created_at').eq('site_id', siteId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('crm_activities').select('id, created_at').eq('site_id', siteId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('opportunities').select('value').eq('site_id', siteId).not('value', 'is', null),
+        supabase.from('deals').select('deal_value').eq('site_id', siteId).not('deal_value', 'is', null),
+      ]);
+
+      const totalOpportunityValue = opportunityValues?.reduce((sum, o) => sum + (o.value || 0), 0) || 0;
+      const totalDealValue = dealValues?.reduce((sum, d) => sum + (d.deal_value || 0), 0) || 0;
+
+      return {
+        total_leads: leadCount || 0,
+        total_contacts: contactCount || 0,
+        total_opportunities: opportunityCount || 0,
+        total_deals: dealCount || 0,
+        leads_this_week: recentLeads?.length || 0,
+        activities_this_week: recentActivities?.length || 0,
+        total_opportunity_value: totalOpportunityValue,
+        total_deal_value: totalDealValue,
+        pipeline_value: totalOpportunityValue + totalDealValue,
+      };
+    },
+    enabled: !!siteId && (options?.enabled !== false),
+  });
+}
