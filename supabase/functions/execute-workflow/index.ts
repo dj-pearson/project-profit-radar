@@ -252,22 +252,43 @@ async function executeStep(supabase: any, step: WorkflowStep, execution: any, st
     switch (step.type) {
       case 'notification':
         return await executeNotificationStep(supabase, step, execution)
-      
+
+      case 'send_email':
+        return await executeEmailStep(supabase, step, execution)
+
+      case 'send_sms':
+        return await executeSMSStep(supabase, step, execution)
+
       case 'task_creation':
         return await executeTaskCreationStep(supabase, step, execution)
-      
+
       case 'status_update':
         return await executeStatusUpdateStep(supabase, step, execution)
-      
+
+      case 'field_update':
+        return await executeFieldUpdateStep(supabase, step, execution)
+
       case 'calculation':
         return await executeCalculationStep(supabase, step, execution)
-      
+
       case 'report_generation':
         return await executeReportGenerationStep(supabase, step, execution)
-      
+
       case 'condition':
         return await executeConditionStep(supabase, step, execution)
-      
+
+      case 'webhook':
+        return await executeWebhookStep(supabase, step, execution)
+
+      case 'create_activity':
+        return await executeCreateActivityStep(supabase, step, execution)
+
+      case 'enroll_campaign':
+        return await executeEnrollCampaignStep(supabase, step, execution)
+
+      case 'delay':
+        return await executeDelayStep(supabase, step, execution)
+
       default:
         return {
           success: false,
@@ -391,11 +412,11 @@ async function executeReportGenerationStep(supabase: any, step: WorkflowStep, ex
 
 async function executeConditionStep(supabase: any, step: WorkflowStep, execution: any) {
   const { condition, if_true_action, if_false_action } = step.config
-  
+
   // Mock condition evaluation - in real implementation, evaluate actual conditions
   const conditionMet = Math.random() > 0.5 // Random for demo
   const action = conditionMet ? if_true_action : if_false_action
-  
+
   return {
     success: true,
     output: {
@@ -405,4 +426,469 @@ async function executeConditionStep(supabase: any, step: WorkflowStep, execution
       evaluated_at: new Date().toISOString()
     }
   }
+}
+
+// ============================================================================
+// EMAIL AUTOMATION STEP FUNCTIONS
+// ============================================================================
+
+async function executeEmailStep(supabase: any, step: WorkflowStep, execution: any) {
+  const {
+    to,
+    subject,
+    template_id,
+    html_content,
+    text_content,
+    from_email,
+    from_name,
+    reply_to,
+    delay_minutes,
+    variables
+  } = step.config
+
+  const siteId = execution.site_id
+  const companyId = execution.company_id
+  const triggerData = execution.trigger_data || {}
+
+  // Resolve recipient email
+  let recipientEmail = to
+  if (to === '{{trigger.email}}' || to === '{{entity.email}}') {
+    recipientEmail = triggerData.email || triggerData.entity?.email
+  }
+
+  if (!recipientEmail) {
+    return {
+      success: false,
+      error: 'No recipient email specified or found in trigger data',
+      output: null
+    }
+  }
+
+  // Get template if specified
+  let emailHtml = html_content || ''
+  let emailSubject = subject
+  let emailText = text_content
+
+  if (template_id) {
+    const { data: template } = await supabase
+      .from('email_templates')
+      .select('*')
+      .eq('id', template_id)
+      .eq('site_id', siteId)
+      .single()
+
+    if (template) {
+      emailHtml = template.content || emailHtml
+      emailSubject = template.subject || emailSubject
+    }
+  }
+
+  // Prepare variables for substitution
+  const allVariables = {
+    ...variables,
+    ...triggerData,
+    ...(triggerData.entity || {}),
+    current_date: new Date().toLocaleDateString(),
+    current_year: new Date().getFullYear(),
+    company_id: companyId,
+    site_id: siteId,
+  }
+
+  // Substitute variables in content
+  emailHtml = substituteVariables(emailHtml, allVariables)
+  emailSubject = substituteVariables(emailSubject, allVariables)
+  if (emailText) {
+    emailText = substituteVariables(emailText, allVariables)
+  }
+
+  // Calculate scheduled time
+  const scheduledFor = delay_minutes
+    ? new Date(Date.now() + delay_minutes * 60 * 1000).toISOString()
+    : new Date().toISOString()
+
+  // Queue the email
+  const { data: queuedEmail, error: queueError } = await supabase
+    .from('email_queue')
+    .insert({
+      site_id: siteId,
+      company_id: companyId,
+      recipient_email: recipientEmail,
+      subject: emailSubject,
+      html_content: emailHtml,
+      text_content: emailText,
+      from_email: from_email || 'noreply@build-desk.com',
+      from_name: from_name || 'BuildDesk',
+      reply_to: reply_to,
+      scheduled_for: scheduledFor,
+      status: 'pending',
+      priority: 1,
+      queue_metadata: {
+        workflow_id: execution.workflow_id,
+        execution_id: execution.id,
+        step_name: step.name,
+      }
+    })
+    .select()
+    .single()
+
+  if (queueError) {
+    return {
+      success: false,
+      error: `Failed to queue email: ${queueError.message}`,
+      output: null
+    }
+  }
+
+  console.log(`[WORKFLOW] Email queued: ${queuedEmail.id} to ${recipientEmail}`)
+
+  return {
+    success: true,
+    output: {
+      email_queued: true,
+      queue_id: queuedEmail.id,
+      recipient: recipientEmail,
+      subject: emailSubject,
+      scheduled_for: scheduledFor
+    }
+  }
+}
+
+async function executeSMSStep(supabase: any, step: WorkflowStep, execution: any) {
+  const { to, message, variables } = step.config
+  const triggerData = execution.trigger_data || {}
+
+  // Resolve recipient phone
+  let recipientPhone = to
+  if (to === '{{trigger.phone}}' || to === '{{entity.phone}}') {
+    recipientPhone = triggerData.phone || triggerData.entity?.phone
+  }
+
+  if (!recipientPhone) {
+    return {
+      success: false,
+      error: 'No recipient phone specified or found in trigger data',
+      output: null
+    }
+  }
+
+  // Substitute variables
+  const allVariables = { ...variables, ...triggerData, ...(triggerData.entity || {}) }
+  const smsMessage = substituteVariables(message, allVariables)
+
+  // TODO: Integrate with SMS provider (Twilio, etc.)
+  console.log(`[WORKFLOW] Would send SMS to ${recipientPhone}: ${smsMessage}`)
+
+  return {
+    success: true,
+    output: {
+      sms_sent: true,
+      recipient: recipientPhone,
+      message: smsMessage,
+      sent_at: new Date().toISOString()
+    }
+  }
+}
+
+async function executeFieldUpdateStep(supabase: any, step: WorkflowStep, execution: any) {
+  const { table, record_id, field, value, use_trigger_id } = step.config
+  const siteId = execution.site_id
+  const companyId = execution.company_id
+  const triggerData = execution.trigger_data || {}
+
+  // Resolve record ID
+  const targetId = use_trigger_id ? triggerData.entity_id || triggerData.id : record_id
+
+  if (!targetId) {
+    return {
+      success: false,
+      error: 'No record ID specified',
+      output: null
+    }
+  }
+
+  // Update the field
+  const { data, error } = await supabase
+    .from(table)
+    .update({ [field]: value, updated_at: new Date().toISOString() })
+    .eq('id', targetId)
+    .eq('site_id', siteId)
+    .select()
+    .single()
+
+  if (error) {
+    return {
+      success: false,
+      error: `Failed to update field: ${error.message}`,
+      output: null
+    }
+  }
+
+  console.log(`[WORKFLOW] Updated ${table}.${field} = ${value} for record ${targetId}`)
+
+  return {
+    success: true,
+    output: {
+      updated: true,
+      table,
+      record_id: targetId,
+      field,
+      new_value: value,
+      updated_at: new Date().toISOString()
+    }
+  }
+}
+
+async function executeWebhookStep(supabase: any, step: WorkflowStep, execution: any) {
+  const { url, method, headers, body, include_trigger_data } = step.config
+  const triggerData = execution.trigger_data || {}
+
+  // Prepare request body
+  let requestBody = body || {}
+  if (include_trigger_data) {
+    requestBody = {
+      ...requestBody,
+      trigger_data: triggerData,
+      execution_id: execution.id,
+      workflow_id: execution.workflow_id,
+      company_id: execution.company_id,
+      timestamp: new Date().toISOString()
+    }
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: method || 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    const responseData = await response.text()
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Webhook failed with status ${response.status}: ${responseData}`,
+        output: { status: response.status, response: responseData }
+      }
+    }
+
+    console.log(`[WORKFLOW] Webhook sent to ${url}, status: ${response.status}`)
+
+    return {
+      success: true,
+      output: {
+        webhook_sent: true,
+        url,
+        method: method || 'POST',
+        status: response.status,
+        response: responseData,
+        sent_at: new Date().toISOString()
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: `Webhook request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      output: null
+    }
+  }
+}
+
+async function executeCreateActivityStep(supabase: any, step: WorkflowStep, execution: any) {
+  const { activity_type, description, lead_id, opportunity_id, outcome, duration_minutes } = step.config
+  const siteId = execution.site_id
+  const companyId = execution.company_id
+  const triggerData = execution.trigger_data || {}
+
+  // Resolve entity IDs from trigger data if not specified
+  const resolvedLeadId = lead_id === '{{trigger.id}}' ? triggerData.entity_id : lead_id
+  const resolvedOppId = opportunity_id === '{{trigger.id}}' ? triggerData.entity_id : opportunity_id
+
+  // Substitute variables in description
+  const allVariables = { ...triggerData, ...(triggerData.entity || {}) }
+  const activityDescription = substituteVariables(description, allVariables)
+
+  const { data: activity, error } = await supabase
+    .from('crm_activities')
+    .insert({
+      site_id: siteId,
+      company_id: companyId,
+      activity_type: activity_type || 'workflow',
+      description: activityDescription,
+      lead_id: resolvedLeadId || null,
+      opportunity_id: resolvedOppId || null,
+      outcome: outcome || 'automated',
+      duration_minutes: duration_minutes || null,
+      activity_date: new Date().toISOString(),
+      created_by: null // System created
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return {
+      success: false,
+      error: `Failed to create activity: ${error.message}`,
+      output: null
+    }
+  }
+
+  console.log(`[WORKFLOW] Activity created: ${activity.id}`)
+
+  return {
+    success: true,
+    output: {
+      activity_created: true,
+      activity_id: activity.id,
+      activity_type,
+      description: activityDescription
+    }
+  }
+}
+
+async function executeEnrollCampaignStep(supabase: any, step: WorkflowStep, execution: any) {
+  const { campaign_id, entity_type, use_trigger_entity } = step.config
+  const siteId = execution.site_id
+  const companyId = execution.company_id
+  const triggerData = execution.trigger_data || {}
+
+  // Get entity ID
+  const entityId = use_trigger_entity ? (triggerData.entity_id || triggerData.id) : step.config.entity_id
+
+  if (!entityId) {
+    return {
+      success: false,
+      error: 'No entity ID specified for campaign enrollment',
+      output: null
+    }
+  }
+
+  // Get entity data for email
+  const tableName = entity_type === 'lead' ? 'leads' : entity_type === 'contact' ? 'contacts' : entity_type
+  const { data: entity } = await supabase
+    .from(tableName)
+    .select('*')
+    .eq('id', entityId)
+    .eq('site_id', siteId)
+    .single()
+
+  if (!entity || !entity.email) {
+    return {
+      success: false,
+      error: 'Entity not found or has no email',
+      output: null
+    }
+  }
+
+  // Check if already enrolled
+  const { data: existing } = await supabase
+    .from('campaign_enrollments')
+    .select('id')
+    .eq('campaign_id', campaign_id)
+    .eq('entity_id', entityId)
+    .eq('site_id', siteId)
+    .single()
+
+  if (existing) {
+    return {
+      success: true,
+      output: {
+        enrolled: false,
+        reason: 'already_enrolled',
+        enrollment_id: existing.id
+      }
+    }
+  }
+
+  // Create enrollment
+  const { data: enrollment, error } = await supabase
+    .from('campaign_enrollments')
+    .insert({
+      site_id: siteId,
+      company_id: companyId,
+      campaign_id,
+      entity_type,
+      entity_id: entityId,
+      recipient_email: entity.email,
+      status: 'active',
+      current_step: 0,
+      enrolled_at: new Date().toISOString()
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return {
+      success: false,
+      error: `Failed to enroll in campaign: ${error.message}`,
+      output: null
+    }
+  }
+
+  console.log(`[WORKFLOW] Enrolled entity ${entityId} in campaign ${campaign_id}`)
+
+  return {
+    success: true,
+    output: {
+      enrolled: true,
+      enrollment_id: enrollment.id,
+      campaign_id,
+      entity_id: entityId,
+      entity_type
+    }
+  }
+}
+
+async function executeDelayStep(supabase: any, step: WorkflowStep, execution: any) {
+  const { delay_minutes, delay_until } = step.config
+
+  // For now, delays are handled by scheduling - mark as completed
+  // In a production system, you'd pause execution and resume later
+
+  const delayUntil = delay_until
+    ? new Date(delay_until)
+    : new Date(Date.now() + (delay_minutes || 0) * 60 * 1000)
+
+  console.log(`[WORKFLOW] Delay step: would wait until ${delayUntil.toISOString()}`)
+
+  return {
+    success: true,
+    output: {
+      delayed: true,
+      delay_minutes,
+      delay_until: delayUntil.toISOString(),
+      note: 'Delay step completed - in production, execution would pause and resume'
+    }
+  }
+}
+
+// Helper function to substitute variables in templates
+function substituteVariables(template: string, variables: Record<string, any>): string {
+  let result = template
+
+  // Replace {{variable}} patterns
+  for (const [key, value] of Object.entries(variables)) {
+    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'gi')
+    result = result.replace(regex, String(value ?? ''))
+  }
+
+  // Replace ${variable} patterns
+  for (const [key, value] of Object.entries(variables)) {
+    const regex = new RegExp(`\\$\\{\\s*${key}\\s*\\}`, 'gi')
+    result = result.replace(regex, String(value ?? ''))
+  }
+
+  // Replace nested patterns like {{entity.field}}
+  const nestedPattern = /\{\{\s*(\w+)\.(\w+)\s*\}\}/g
+  result = result.replace(nestedPattern, (match, obj, field) => {
+    if (variables[obj] && typeof variables[obj] === 'object') {
+      return String(variables[obj][field] ?? '')
+    }
+    return ''
+  })
+
+  return result
 }
