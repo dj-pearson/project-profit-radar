@@ -27,6 +27,19 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: supabaseStorage,
     persistSession: true,
     autoRefreshToken: true,
+  },
+  global: {
+    // Override functions URL for self-hosted setup
+    fetch: (url, options) => {
+      // If it's a functions call, redirect to our edge functions server
+      const urlString = url.toString();
+      if (urlString.includes('/functions/v1/')) {
+        const functionPath = urlString.split('/functions/v1/')[1];
+        const newUrl = `${EDGE_FUNCTIONS_URL}/${functionPath}`;
+        return fetch(newUrl, options);
+      }
+      return fetch(url, options);
+    }
   }
 });
 
