@@ -113,3 +113,4 @@ supabase/.temp/gotrue-version
 supabase/.temp/pooler-url
 /deployment
 SELF_HOSTED_MIGRATION.md
+GET_SUPABASE_KEYS.md
