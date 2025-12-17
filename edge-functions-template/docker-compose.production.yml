@@ -1,0 +1,116 @@
+version: '3.8'
+
+# Production Docker Compose Configuration
+# Use this for production deployments with proper networking and security
+
+services:
+  edge-functions:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        GIT_COMMIT: ${GIT_COMMIT:-}
+        GIT_BRANCH: ${GIT_BRANCH:-main}
+    image: supabase-edge-functions:latest
+    container_name: supabase-edge-functions-prod
+    restart: unless-stopped
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.deno_cache:mode=770,size=500M
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Port mapping (internal only, use reverse proxy in production)
+    ports:
+      - "127.0.0.1:8000:8000"  # Only bind to localhost
+    
+    # Environment variables
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - PORT=8000
+      - NODE_ENV=production
+      - DENO_DIR=/app/.deno_cache
+    
+    # Read-only functions directory (no hot reload in production)
+    volumes:
+      - ./logs:/app/logs:rw
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/_health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "production"
+    
+    networks:
+      - supabase-internal
+      - web
+
+  # Reverse proxy (Traefik example)
+  # Uncomment and configure for production use
+  # traefik:
+  #   image: traefik:v2.10
+  #   container_name: traefik
+  #   restart: unless-stopped
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   environment:
+  #     - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}  # For Let's Encrypt DNS challenge
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - ./traefik/traefik.yml:/traefik.yml:ro
+  #     - ./traefik/acme.json:/acme.json
+  #   networks:
+  #     - web
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.api.rule=Host(`traefik.yourdomain.com`)"
+  #     - "traefik.http.routers.api.service=api@internal"
+
+networks:
+  supabase-internal:
+    driver: bridge
+    internal: true
+  web:
+    driver: bridge
+
+# Volumes for persistent data
+volumes:
+  logs:
+    driver: local
+
+# Usage:
+# 1. Configure .env with production credentials
+# 2. Build: docker-compose -f docker-compose.production.yml build
+# 3. Start: docker-compose -f docker-compose.production.yml up -d
+# 4. Logs: docker-compose -f docker-compose.production.yml logs -f
+# 5. Stop: docker-compose -f docker-compose.production.yml down
+

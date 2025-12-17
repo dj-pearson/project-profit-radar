@@ -1,0 +1,109 @@
+# AlertManager Configuration
+
+global:
+  resolve_timeout: 5m
+  # Slack configuration
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  
+  # Email configuration
+  smtp_smarthost: '${SMTP_HOST}:${SMTP_PORT}'
+  smtp_from: '${SMTP_FROM}'
+  smtp_auth_username: '${SMTP_USERNAME}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+# Templates
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route configuration
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  
+  routes:
+    # Critical alerts go to PagerDuty and Slack
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+    
+    # Warning alerts go to Slack
+    - match:
+        severity: warning
+      receiver: 'warning'
+      continue: true
+    
+    # Info alerts go to email
+    - match:
+        severity: info
+      receiver: 'email'
+
+# Inhibit rules (prevent duplicate alerts)
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+
+# Receivers
+receivers:
+  # Default receiver
+  - name: 'default'
+    slack_configs:
+      - channel: '#alerts'
+        title: 'Edge Functions Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+  # Critical alerts
+  - name: 'critical'
+    slack_configs:
+      - channel: '#critical-alerts'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+          *Severity:* {{ .CommonLabels.severity }}
+        send_resolved: true
+        color: 'danger'
+    
+    # Uncomment for PagerDuty integration
+    # pagerduty_configs:
+    #   - service_key: '${PAGERDUTY_SERVICE_KEY}'
+    #     description: '{{ .CommonAnnotations.summary }}'
+
+  # Warning alerts
+  - name: 'warning'
+    slack_configs:
+      - channel: '#warnings'
+        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        text: |
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+        send_resolved: true
+        color: 'warning'
+
+  # Email alerts
+  - name: 'email'
+    email_configs:
+      - to: '${ALERT_EMAIL}'
+        from: '${SMTP_FROM}'
+        smarthost: '${SMTP_HOST}:${SMTP_PORT}'
+        auth_username: '${SMTP_USERNAME}'
+        auth_password: '${SMTP_PASSWORD}'
+        headers:
+          Subject: 'Edge Functions Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>{{ .CommonAnnotations.summary }}</h2>
+          <p>{{ .CommonAnnotations.description }}</p>
+          <ul>
+          {{ range .Alerts }}
+            <li>{{ .Labels.instance }}: {{ .Annotations.description }}</li>
+          {{ end }}
+          </ul>
+

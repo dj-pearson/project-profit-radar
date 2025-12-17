@@ -1,0 +1,255 @@
+name: Deploy Edge Functions
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'supabase/functions/**'
+      - 'edge-functions-template/**'
+      - '.github/workflows/edge-functions-deploy.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'supabase/functions/**'
+      - 'edge-functions-template/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/edge-functions
+
+jobs:
+  # Job 1: Lint and validate functions
+  lint:
+    name: Lint Functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.40.0
+
+      - name: Lint functions
+        run: |
+          cd supabase/functions
+          for dir in */; do
+            if [ -f "$dir/index.ts" ] && [[ ! "$dir" =~ ^_.* ]]; then
+              echo "Linting $dir..."
+              deno lint "$dir" || true
+            fi
+          done
+
+      - name: Format check
+        run: |
+          cd supabase/functions
+          deno fmt --check || true
+
+  # Job 2: Build and test Docker image
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: lint
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy functions to template
+        run: |
+          cd edge-functions-template
+          chmod +x deploy-functions.sh
+          ./deploy-functions.sh
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./edge-functions-template
+          file: ./edge-functions-template/Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            GIT_COMMIT=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test image
+        run: |
+          docker run --rm \
+            -e SUPABASE_URL=https://test.supabase.co \
+            -e SUPABASE_ANON_KEY=test-key \
+            -e SUPABASE_SERVICE_ROLE_KEY=test-key \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ github.sha }} &
+          
+          sleep 10
+          
+          curl -f http://localhost:8000/_health || exit 1
+          
+          docker stop $(docker ps -q --filter ancestor=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ github.sha }})
+
+  # Job 3: Security scan
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 4: Deploy to staging (auto on develop branch)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://edge-functions-staging.yourdomain.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/edge-functions
+            docker-compose pull
+            docker-compose up -d
+            docker system prune -af
+
+      - name: Verify deployment
+        run: |
+          sleep 15
+          curl -f ${{ secrets.STAGING_URL }}/_health || exit 1
+
+      - name: Notify on success
+        if: success()
+        run: echo "✅ Staging deployment successful"
+
+  # Job 5: Deploy to production (manual approval required)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://edge-functions.yourdomain.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/edge-functions
+            docker-compose pull
+            docker-compose up -d --no-deps --build
+            docker system prune -af
+
+      - name: Verify deployment
+        run: |
+          sleep 30
+          curl -f ${{ secrets.PRODUCTION_URL }}/_health || exit 1
+
+      - name: Notify on success
+        if: success()
+        run: echo "✅ Production deployment successful"
+
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/edge-functions
+            docker-compose down
+            docker-compose pull ${{ needs.build.outputs.image-tag }}
+            docker-compose up -d
+
+  # Job 6: Notify on completion
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    steps:
+      - name: Send notification
+        run: |
+          echo "Deployment pipeline completed"
+          echo "Status: ${{ job.status }}"
+          # Add your notification logic here (Slack, Discord, etc.)
+

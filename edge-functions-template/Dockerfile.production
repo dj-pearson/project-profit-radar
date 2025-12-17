@@ -1,0 +1,90 @@
+# Multi-stage Production Dockerfile for Self-Hosted Supabase Edge Functions
+# Optimized for security, performance, and minimal image size
+
+# =====================================
+# Stage 1: Dependencies Cache
+# =====================================
+FROM denoland/deno:1.40.0 AS deps
+
+WORKDIR /cache
+
+# Copy function files to cache dependencies
+COPY functions /cache/functions
+COPY server.ts /cache/server.ts
+
+# Pre-cache all dependencies
+RUN deno cache --reload \
+  --allow-scripts=npm:@supabase/supabase-js@2 \
+  server.ts
+
+# Cache all function dependencies
+RUN for dir in /cache/functions/*/; do \
+  if [ -f "$dir/index.ts" ]; then \
+    echo "Caching dependencies for $(basename $dir)..."; \
+    deno cache --allow-scripts "$dir/index.ts" || true; \
+  fi; \
+done
+
+# =====================================
+# Stage 2: Production Build
+# =====================================
+FROM denoland/deno:1.40.0
+
+LABEL maintainer="your-email@example.com"
+LABEL description="Self-Hosted Supabase Edge Functions"
+LABEL version="1.0.0"
+
+# Set working directory
+WORKDIR /app
+
+# Install minimal required packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/.deno_cache /app/functions /app/logs && \
+    chown -R deno:deno /app
+
+# Copy cached dependencies from deps stage
+COPY --from=deps --chown=deno:deno /root/.cache/deno /app/.deno_cache
+
+# Copy application files
+COPY --chown=deno:deno functions /app/functions
+COPY --chown=deno:deno server.ts /app/server.ts
+
+# Set environment variables
+ENV DENO_DIR=/app/.deno_cache
+ENV PORT=8000
+ENV NODE_ENV=production
+
+# Switch to non-root user for security
+USER deno
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl --fail http://localhost:8000/_health || exit 1
+
+# Start server with optimized permissions
+CMD ["deno", "run", \
+  "--allow-net=:8000,0.0.0.0:8000", \
+  "--allow-read=/app/functions", \
+  "--allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,PORT,DENO_DIR,NODE_ENV", \
+  "--no-prompt", \
+  "server.ts"]
+
+# Metadata
+ARG BUILD_DATE
+ARG GIT_COMMIT
+ARG GIT_BRANCH
+
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
+LABEL org.opencontainers.image.source="https://github.com/your-org/your-repo"
+

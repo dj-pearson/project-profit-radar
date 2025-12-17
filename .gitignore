@@ -111,3 +111,4 @@ supabase/.temp/project-ref
 supabase/.temp/storage-version
 supabase/.temp/gotrue-version
 supabase/.temp/pooler-url
+/deployment
