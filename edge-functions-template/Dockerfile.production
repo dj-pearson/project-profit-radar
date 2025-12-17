@@ -8,6 +8,9 @@ FROM denoland/deno:1.44.0 AS deps
 
 WORKDIR /cache
 
+# Set Deno cache directory
+ENV DENO_DIR=/cache/.deno_cache
+
 # Copy function files to cache dependencies
 COPY functions /cache/functions
 COPY server.ts /cache/server.ts
@@ -48,7 +51,7 @@ RUN mkdir -p /app/.deno_cache /app/functions /app/logs && \
     chown -R deno:deno /app
 
 # Copy cached dependencies from deps stage
-COPY --from=deps --chown=deno:deno /root/.cache/deno /app/.deno_cache
+COPY --from=deps --chown=deno:deno /cache/.deno_cache /app/.deno_cache
 
 # Copy application files
 COPY --chown=deno:deno functions /app/functions
