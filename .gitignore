@@ -112,3 +112,4 @@ supabase/.temp/storage-version
 supabase/.temp/gotrue-version
 supabase/.temp/pooler-url
 /deployment
+SELF_HOSTED_MIGRATION.md
