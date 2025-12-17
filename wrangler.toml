@@ -1,3 +1,12 @@
 name = "builddesk"
 compatibility_date = "2024-07-01"
 pages_build_output_dir = "dist"
+
+# Environment variables (set these in Cloudflare Pages dashboard)
+# These are needed at BUILD TIME for Vite to inject into the bundle
+# Settings > Environment variables > Production environment
+#
+# Required:
+# - VITE_SUPABASE_URL=https://api.build-desk.com
+# - VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+# - VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
