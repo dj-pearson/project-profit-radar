@@ -1,7 +1,7 @@
 # Dockerfile for Self-Hosted Supabase Edge Functions
 # Based on Deno with dynamic function loading
 
-FROM denoland/deno:1.40.0
+FROM denoland/deno:1.44.0
 
 # Set working directory
 WORKDIR /app

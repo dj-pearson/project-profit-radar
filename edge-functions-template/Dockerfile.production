@@ -4,7 +4,7 @@
 # =====================================
 # Stage 1: Dependencies Cache
 # =====================================
-FROM denoland/deno:1.40.0 AS deps
+FROM denoland/deno:1.44.0 AS deps
 
 WORKDIR /cache
 
@@ -13,22 +13,20 @@ COPY functions /cache/functions
 COPY server.ts /cache/server.ts
 
 # Pre-cache all dependencies
-RUN deno cache --reload \
-  --allow-scripts=npm:@supabase/supabase-js@2 \
-  server.ts
+RUN deno cache --reload server.ts
 
 # Cache all function dependencies
 RUN for dir in /cache/functions/*/; do \
   if [ -f "$dir/index.ts" ]; then \
     echo "Caching dependencies for $(basename $dir)..."; \
-    deno cache --allow-scripts "$dir/index.ts" || true; \
+    deno cache "$dir/index.ts" || true; \
   fi; \
 done
 
 # =====================================
 # Stage 2: Production Build
 # =====================================
-FROM denoland/deno:1.40.0
+FROM denoland/deno:1.44.0
 
 LABEL maintainer="your-email@example.com"
 LABEL description="Self-Hosted Supabase Edge Functions"
