@@ -24,6 +24,15 @@ const Setup = () => {
   const [annualRevenue, setAnnualRevenue] = useState('');
   const [licenseNumbers, setLicenseNumbers] = useState('');
 
+  // Clear OAuth hash params to prevent redirect issues
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token=') || hash.includes('refresh_token='))) {
+      console.log('🔒 Clearing OAuth callback hash from URL (Setup)...');
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
