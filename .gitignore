@@ -111,3 +111,10 @@ supabase/.temp/project-ref
 supabase/.temp/storage-version
 supabase/.temp/gotrue-version
 supabase/.temp/pooler-url
+/deployment
+SELF_HOSTED_MIGRATION.md
+GET_SUPABASE_KEYS.md
+CLOUDFLARE_ENV_SETUP.md
+scripts/export-cloud-database.sh
+scripts/test-backend.js
+scripts/migrate-to-selfhosted.ps1

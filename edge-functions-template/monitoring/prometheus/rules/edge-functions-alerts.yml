@@ -1,0 +1,86 @@
+# Alert Rules for Edge Functions
+
+groups:
+  - name: edge_functions_alerts
+    interval: 30s
+    rules:
+      # Service down alert
+      - alert: EdgeFunctionsDown
+        expr: up{job="edge-functions"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Edge Functions service is down"
+          description: "Edge Functions service has been down for more than 1 minute."
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for the last 5 minutes."
+
+      # High latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+          description: "95th percentile latency is above 2 seconds."
+
+      # Memory usage
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{name="edge-functions"} / container_spec_memory_limit_bytes{name="edge-functions"}) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 90% for the last 5 minutes."
+
+      # CPU usage
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{name="edge-functions"}[5m]) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 90% for the last 10 minutes."
+
+      # Disk space
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Less than 10% disk space available."
+
+      # Container restarts
+      - alert: FrequentRestarts
+        expr: rate(container_last_seen{name="edge-functions"}[1h]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frequent container restarts"
+          description: "Container has restarted more than 5 times in the last hour."
+
+      # Health check failures
+      - alert: HealthCheckFailing
+        expr: increase(healthcheck_failures_total[5m]) > 3
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Health check failures"
+          description: "Health check has failed more than 3 times in the last 5 minutes."
+

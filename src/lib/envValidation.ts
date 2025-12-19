@@ -6,10 +6,12 @@
 import { logger } from './logger';
 
 interface EnvConfig {
-  /** Supabase project URL */
+  /** Supabase project URL (main API: Kong, Auth, Database, Storage) */
   VITE_SUPABASE_URL: string;
   /** Supabase anonymous/public key */
   VITE_SUPABASE_PUBLISHABLE_KEY: string;
+  /** Edge Functions URL (optional, defaults to SUPABASE_URL/functions/v1) */
+  VITE_EDGE_FUNCTIONS_URL?: string;
   /** Supabase project ID (optional) */
   VITE_SUPABASE_PROJECT_ID?: string;
   /** PostHog API key (optional) */
@@ -30,6 +32,7 @@ const REQUIRED_ENV_VARS: (keyof EnvConfig)[] = [
  * Optional environment variables
  */
 const OPTIONAL_ENV_VARS: (keyof EnvConfig)[] = [
+  'VITE_EDGE_FUNCTIONS_URL',
   'VITE_SUPABASE_PROJECT_ID',
   'VITE_POSTHOG_API_KEY',
   'VITE_POSTHOG_HOST',
@@ -65,6 +68,14 @@ const validateEnvVar = (key: string, required: boolean): boolean => {
     } catch {
       logger.error(`Invalid VITE_SUPABASE_URL: Must be a valid URL`, undefined, { value });
       return false;
+    }
+  }
+
+  if (key === 'VITE_EDGE_FUNCTIONS_URL' && value) {
+    try {
+      new URL(value);
+    } catch {
+      logger.warn(`Invalid VITE_EDGE_FUNCTIONS_URL: Should be a valid URL`, { value });
     }
   }
 
@@ -117,6 +128,7 @@ export const getEnvConfig = (): EnvConfig => {
   return {
     VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL') || '',
     VITE_SUPABASE_PUBLISHABLE_KEY: getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY') || '',
+    VITE_EDGE_FUNCTIONS_URL: getEnvVar('VITE_EDGE_FUNCTIONS_URL'),
     VITE_SUPABASE_PROJECT_ID: getEnvVar('VITE_SUPABASE_PROJECT_ID'),
     VITE_POSTHOG_API_KEY: getEnvVar('VITE_POSTHOG_API_KEY'),
     VITE_POSTHOG_HOST: getEnvVar('VITE_POSTHOG_HOST'),
@@ -156,6 +168,7 @@ export const displayEnvInfo = (): void => {
     logger.debug('Mode:', getMode());
     logger.debug('Supabase URL:', config.VITE_SUPABASE_URL ? '✓ Set' : '✗ Missing');
     logger.debug('Supabase Key:', config.VITE_SUPABASE_PUBLISHABLE_KEY ? '✓ Set' : '✗ Missing');
+    logger.debug('Edge Functions URL:', config.VITE_EDGE_FUNCTIONS_URL ? '✓ Set' : '- Using default');
     logger.debug('Supabase Project ID:', config.VITE_SUPABASE_PROJECT_ID ? '✓ Set' : '- Optional');
     logger.debug('PostHog API Key:', config.VITE_POSTHOG_API_KEY ? '✓ Set' : '- Optional');
     logger.debug('PostHog Host:', config.VITE_POSTHOG_HOST || '- Using default');
@@ -177,10 +190,11 @@ export const assertValidEnvironment = (): void => {
 ║                                                               ║
 ║  Please create a .env file in the project root with:         ║
 ║                                                               ║
-║  VITE_SUPABASE_URL=https://your-project.supabase.co          ║
+║  VITE_SUPABASE_URL=https://api.build-desk.com                ║
 ║  VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key                 ║
 ║                                                               ║
-║  Optional variables:                                          ║
+║  Optional variables (for self-hosted):                        ║
+║  VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com    ║
 ║  VITE_POSTHOG_API_KEY=your-posthog-key                       ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝

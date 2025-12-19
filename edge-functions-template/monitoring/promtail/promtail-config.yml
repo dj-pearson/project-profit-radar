@@ -1,0 +1,91 @@
+# Promtail Configuration for Log Collection
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Docker container logs
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+    pipeline_stages:
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            attrs: attrs
+      - json:
+          expressions:
+            tag: attrs.tag
+          source: attrs
+      - regex:
+          expression: (?P<image_name>(?:[^|]*[^|])).(?P<container_name>(?:[^|]*[^|])).(?P<image_id>(?:[^|]*[^|])).(?P<container_id>(?:[^|]*[^|]))
+          source: tag
+      - timestamp:
+          format: RFC3339Nano
+          source: time
+      - labels:
+          tag:
+          stream:
+          image_name:
+          container_name:
+      - output:
+          source: output
+
+  # Edge Functions application logs
+  - job_name: edge-functions
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: edge-functions
+          app: supabase-edge-functions
+          __path__: /app/logs/*.log
+
+    pipeline_stages:
+      - match:
+          selector: '{job="edge-functions"}'
+          stages:
+            - json:
+                expressions:
+                  level: level
+                  function: function
+                  message: message
+                  timestamp: timestamp
+            - labels:
+                level:
+                function:
+            - timestamp:
+                format: RFC3339Nano
+                source: timestamp
+
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/syslog
+
+  # Deno logs
+  - job_name: deno
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: deno
+          __path__: /var/log/deno/*.log
+
