@@ -1,8 +1,15 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { HubPageLayout } from "@/components/hub/HubPageLayout";
+import { hierarchicalNavigation } from "@/components/navigation/HierarchicalNavigationConfig";
+import { DollarSign } from "lucide-react";
 
 const FinancialHub: React.FC = () => {
+  // Get the financial area from hierarchical navigation
+  const financialArea = hierarchicalNavigation.find(area => area.id === "financial");
+  const sections = financialArea?.sections || [];
+
   return (
     <DashboardLayout title="Financial Hub">
       <Helmet>
@@ -10,10 +17,12 @@ const FinancialHub: React.FC = () => {
         <meta name="description" content="Financial hub – job costing, reports, and purchasing." />
         <link rel="canonical" href="/financial-hub" />
       </Helmet>
-      <main className="space-y-4">
-        <h1 className="text-2xl font-semibold">Financial Hub</h1>
-        <p className="text-muted-foreground">Access financial dashboards, reports, and purchasing.</p>
-      </main>
+      <HubPageLayout
+        title="Financial Hub"
+        description="Manage financial operations, job costing, purchasing, and financial reporting."
+        sections={sections}
+        icon={DollarSign}
+      />
     </DashboardLayout>
   );
 };
