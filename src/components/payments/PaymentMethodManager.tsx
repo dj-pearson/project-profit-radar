@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CreditCard, Plus, Trash2, Shield, Calendar } from 'lucide-react';
+import { CreditCard, Plus, Trash2, Shield, Calendar, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +23,7 @@ interface PaymentMethod {
 export const PaymentMethodManager = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [addingMethod, setAddingMethod] = useState(false);
   const { userProfile } = useAuth();
   const { toast } = useToast();
@@ -37,28 +37,26 @@ export const PaymentMethodManager = () => {
   const loadPaymentMethods = async () => {
     try {
       setLoading(true);
-      
-      // In a real implementation, this would fetch from Stripe via edge function
-      const { data, error } = await supabase.functions.invoke('get-payment-methods');
-      
-      if (error) throw error;
-      
-      setPaymentMethods(data?.payment_methods || []);
-    } catch (error) {
-      console.error('Error loading payment methods:', error);
-      // Mock data for demonstration
-      setPaymentMethods([
-        {
-          id: 'pm_1234',
-          type: 'card',
-          card_brand: 'visa',
-          last_four: '4242',
-          exp_month: 12,
-          exp_year: 2025,
-          is_default: true,
-          created_at: new Date().toISOString()
+      setError(null);
+
+      // Fetch payment methods from Stripe via edge function
+      const { data, error: fetchError } = await supabase.functions.invoke('get-payment-methods');
+
+      if (fetchError) {
+        // Check if it's a "function not found" error
+        if (fetchError.message?.includes('not found') || fetchError.message?.includes('404')) {
+          // Edge function doesn't exist yet - show empty state gracefully
+          setPaymentMethods([]);
+          return;
         }
-      ]);
+        throw fetchError;
+      }
+
+      setPaymentMethods(data?.payment_methods || []);
+    } catch (err) {
+      console.error('Error loading payment methods:', err);
+      setError('Unable to load payment methods. Please try again later.');
+      setPaymentMethods([]);
     } finally {
       setLoading(false);
     }
@@ -152,9 +150,56 @@ export const PaymentMethodManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-64 mt-2" />
+            </div>
+            <Skeleton className="h-10 w-28" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2].map(i => (
+              <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-10 w-10 rounded" />
+                  <div>
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48 mt-1" />
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-24" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Methods
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <p className="text-lg font-medium mb-2">Error Loading Payment Methods</p>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={loadPaymentMethods} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

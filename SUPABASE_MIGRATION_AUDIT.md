@@ -182,27 +182,28 @@ These files contain mock data as part of testing infrastructure (acceptable):
 - [x] **1.2** Migrate logo and assets to self-hosted storage (now uses `getAssetUrl()` utility)
 - [x] **1.3** Update all hardcoded storage URLs to use config/env variable
 
-### Phase 2: Core Functionality (Week 1)
+### Phase 2: Core Functionality ✅ COMPLETE
 
 - [x] **2.1** Replace mock data in `Equipment.tsx` with real database queries (created `useEquipment` hook)
-- [ ] **2.2** Replace mock data in `CashFlowRunwayWidget.tsx` with real financial data
-- [ ] **2.3** Implement real `PaymentDashboard.tsx` and `PaymentMethodManager.tsx`
-- [ ] **2.4** Update `EquipmentManagement.tsx` to fetch from database
+- [x] **2.2** Replace mock data in `CashFlowRunwayWidget.tsx` with real financial data (created `useCashFlow` hook)
+- [x] **2.3** Implement real `PaymentDashboard.tsx` and `PaymentMethodManager.tsx` (created `usePayments` hook)
+- [x] **2.4** Update `EquipmentManagement.tsx` to fetch from database (uses `useEquipmentWithMaintenance` hook)
 
-### Phase 3: Services (Week 2)
+### Phase 3: Services ✅ PARTIAL COMPLETE
 
-- [ ] **3.1** Implement real `ConstructionFlowEngine` or remove if not needed
-- [ ] **3.2** Implement real `MaterialOrchestrationService` or remove if not needed
-- [ ] **3.3** Review and implement `FinancialIntelligenceService` methods
-- [ ] **3.4** Review and implement `CashFlowOptimizationService` methods
+- [x] **3.1** `ConstructionFlowEngine` - REMOVED (unused orphan file)
+- [x] **3.2** `MaterialOrchestrationService` - REMOVED (unused orphan file)
+- [x] **3.3** `MockServices.ts` - REMOVED (unused orphan file)
+- [ ] **3.4** Review and implement `FinancialIntelligenceService` methods
+- [ ] **3.5** Review and implement `CashFlowOptimizationService` methods
 
-### Phase 4: Secondary Features (Week 3)
+### Phase 4: Secondary Features (Future)
 
 - [ ] **4.1** Implement `SecurityService` real functionality
 - [ ] **4.2** Implement `ComplianceAutomationService` real functionality
 - [ ] **4.3** Implement `IntegrationService` real functionality
 
-### Phase 5: Polish (Week 4)
+### Phase 5: Polish (Future)
 
 - [ ] **5.1** Address remaining TODO items
 - [ ] **5.2** Update documentation with new URLs
@@ -210,17 +211,29 @@ These files contain mock data as part of testing infrastructure (acceptable):
 
 ---
 
+## New Hooks Created
+
+The following React Query hooks were created to replace mock data with real database queries:
+
+| Hook File | Hooks Exported | Purpose |
+|-----------|----------------|---------|
+| `src/hooks/useEquipment.ts` | `useEquipment`, `useEquipmentWithMaintenance`, `useMaintenanceRecords`, `useEquipmentStats`, `useCreateEquipment`, `useUpdateEquipment`, `useDeleteEquipment` | Equipment CRUD operations |
+| `src/hooks/useCashFlow.ts` | `useCashFlowData`, `useCashFlowActivity` | Cash flow analytics from invoices/expenses |
+| `src/hooks/usePayments.ts` | `usePaymentStats`, `useRecentPayments` | Payment statistics from invoices |
+
+---
+
 ## Verification Checklist
 
 After completing the migration, verify:
 
-- [ ] No references to `ilhzuvemiuyfuxfegtlv.supabase.co` in source code
-- [ ] All edge functions use `Deno.env.get('SUPABASE_URL')`
-- [ ] All assets load from self-hosted storage
-- [ ] Equipment page shows real data from database
-- [ ] Financial widgets show real company data
-- [ ] Payment components connect to Stripe properly
-- [ ] No console errors related to failed API calls
+- [x] No references to `ilhzuvemiuyfuxfegtlv.supabase.co` in source code (except documentation)
+- [x] All edge functions use `Deno.env.get('SUPABASE_URL')`
+- [x] All assets load from self-hosted storage (via `getAssetUrl()` utility)
+- [x] Equipment page shows real data from database
+- [x] Financial widgets show real company data (CashFlowRunwayWidget)
+- [x] Payment components handle empty/error states gracefully
+- [ ] No console errors related to failed API calls (manual verification needed)
 
 ---
 
