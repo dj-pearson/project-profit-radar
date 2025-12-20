@@ -176,15 +176,15 @@ These files contain mock data as part of testing infrastructure (acceptable):
 
 ## Action Plan
 
-### Phase 1: Critical Infrastructure (Immediate)
+### Phase 1: Critical Infrastructure (Immediate) ✅ COMPLETE
 
-- [ ] **1.1** Update `supabase/functions/generate-scaling-plan/index.ts` to use environment variables
-- [ ] **1.2** Migrate logo and assets to self-hosted storage
-- [ ] **1.3** Update all hardcoded storage URLs to use config/env variable
+- [x] **1.1** Update `supabase/functions/generate-scaling-plan/index.ts` to use environment variables
+- [x] **1.2** Migrate logo and assets to self-hosted storage (now uses `getAssetUrl()` utility)
+- [x] **1.3** Update all hardcoded storage URLs to use config/env variable
 
 ### Phase 2: Core Functionality (Week 1)
 
-- [ ] **2.1** Replace mock data in `Equipment.tsx` with real database queries
+- [x] **2.1** Replace mock data in `Equipment.tsx` with real database queries (created `useEquipment` hook)
 - [ ] **2.2** Replace mock data in `CashFlowRunwayWidget.tsx` with real financial data
 - [ ] **2.3** Implement real `PaymentDashboard.tsx` and `PaymentMethodManager.tsx`
 - [ ] **2.4** Update `EquipmentManagement.tsx` to fetch from database
