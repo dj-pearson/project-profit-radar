@@ -8,107 +8,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import { Calendar, Truck, Clock, Plus, Settings, Search, Wrench, TrendingUp, AlertTriangle, CheckCircle, MapPin, Edit } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Calendar, Truck, Clock, Plus, Settings, Search, Wrench, TrendingUp, AlertTriangle, CheckCircle, MapPin, Edit, Package } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EquipmentGanttChart from '@/components/equipment/EquipmentGanttChart';
 import EquipmentEditForm from '@/components/equipment/EquipmentEditForm';
 import { useToast } from '@/hooks/use-toast';
-
-// Mock equipment data - in a real app, this would come from the database
-const mockEquipment = [
-  {
-    id: '1',
-    name: 'Excavator CAT 320',
-    type: 'Heavy Machinery',
-    model: 'CAT 320',
-    serial_number: 'CAT123456',
-    status: 'available',
-    location: 'Main Yard',
-    last_maintenance: '2024-01-15',
-    next_maintenance: '2024-04-15',
-    assigned_to: null,
-    availability: 'available',
-    total_hours: 2847.5,
-    utilization_rate: 78,
-    assigned_operator: 'John Doe'
-  },
-  {
-    id: '2',
-    name: 'Crane Tower 100T',
-    type: 'Heavy Machinery',
-    model: 'Tower 100T',
-    serial_number: 'CRN789012',
-    status: 'assigned',
-    location: 'Project Site A',
-    last_maintenance: '2024-01-10',
-    next_maintenance: '2024-04-10',
-    assigned_to: 'Downtown Office Complex',
-    availability: 'assigned',
-    total_hours: 1924.0,
-    utilization_rate: 85,
-    assigned_operator: 'Mike Johnson'
-  },
-  {
-    id: '3',
-    name: 'Forklift Toyota 5K',
-    type: 'Material Handling',
-    model: 'Toyota 5K',
-    serial_number: 'TYT345678',
-    status: 'maintenance',
-    location: 'Service Center',
-    last_maintenance: '2024-01-20',
-    next_maintenance: '2024-04-20',
-    assigned_to: null,
-    availability: 'maintenance',
-    total_hours: 3562.25,
-    utilization_rate: 45,
-    assigned_operator: null
-  },
-  {
-    id: '4',
-    name: 'Generator 50KW',
-    type: 'Power Equipment',
-    model: 'Gen 50KW',
-    serial_number: 'GEN901234',
-    status: 'available',
-    location: 'Main Yard',
-    last_maintenance: '2024-01-05',
-    next_maintenance: '2024-04-05',
-    assigned_to: null,
-    availability: 'available',
-    total_hours: 1245.0,
-    utilization_rate: 60,
-    assigned_operator: null
-  },
-  {
-    id: '5',
-    name: 'Concrete Mixer',
-    type: 'Construction Equipment',
-    model: 'CM-500',
-    serial_number: 'MIX567890',
-    status: 'assigned',
-    location: 'Project Site B',
-    last_maintenance: '2024-01-12',
-    next_maintenance: '2024-04-12',
-    assigned_to: 'Residential Complex Phase 2',
-    availability: 'assigned',
-    total_hours: 987.5,
-    utilization_rate: 72,
-    assigned_operator: 'Sarah Williams'
-  }
-];
+import { useEquipmentWithMaintenance, useUpdateEquipment } from '@/hooks/useEquipment';
 
 export default function EquipmentManagement() {
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [equipment, setEquipment] = useState(mockEquipment);
+  const { data: equipment = [], isLoading: equipmentLoading, refetch } = useEquipmentWithMaintenance();
+  const updateEquipment = useUpdateEquipment();
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingEquipment, setEditingEquipment] = useState<any>(null);
   const [currentTab, setCurrentTab] = useState("schedule");
+
+  const loading = authLoading || equipmentLoading;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -178,17 +99,15 @@ export default function EquipmentManagement() {
 
   const handleAssignmentChange = () => {
     setRefreshKey(prev => prev + 1);
-    // In a real app, you'd also refresh the equipment list to update availability status
+    refetch();
   };
 
   const handleEditEquipment = (item: any) => {
     setEditingEquipment(item);
   };
 
-  const handleEquipmentUpdate = (updatedEquipment: any) => {
-    setEquipment(prev => prev.map(item => 
-      item.id === updatedEquipment.id ? updatedEquipment : item
-    ));
+  const handleEquipmentUpdate = async (updatedEquipment: any) => {
+    await updateEquipment.mutateAsync(updatedEquipment);
     setEditingEquipment(null);
   };
 
@@ -198,19 +117,42 @@ export default function EquipmentManagement() {
   };
 
   const filteredEquipment = equipment.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.location.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.type?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (item.current_location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+      <DashboardLayout title="Equipment Management">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-9 w-64" />
+              <Skeleton className="h-5 w-96 mt-2" />
+            </div>
+            <Skeleton className="h-10 w-36" />
+          </div>
+          <Skeleton className="h-10 w-72" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -275,20 +217,20 @@ export default function EquipmentManagement() {
                         </div>
                         <div>
                           <label className="text-sm font-medium">Type</label>
-                          <p>{eq.type}</p>
+                          <p>{eq.type || 'Not specified'}</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium">Current Status</label>
-                          {getStatusBadge(eq.status)}
+                          {getStatusBadge(eq.status || 'available')}
                         </div>
                         <div>
                           <label className="text-sm font-medium">Location</label>
-                          <p>{eq.location}</p>
+                          <p>{eq.current_location || 'Not specified'}</p>
                         </div>
-                        {eq.assigned_to && (
+                        {eq.assigned_project && (
                           <div className="col-span-2">
                             <label className="text-sm font-medium">Currently Assigned To</label>
-                            <p>{eq.assigned_to}</p>
+                            <p>{eq.assigned_project}</p>
                           </div>
                         )}
                       </div>
@@ -318,100 +260,123 @@ export default function EquipmentManagement() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEquipment.map((item) => (
-                <Card 
-                  key={item.id} 
-                  className={`cursor-pointer transition-colors hover:shadow-md ${
-                    selectedEquipment === item.id ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => handleEquipmentSelect(item.id)}
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
-                          {item.name}
-                          {getStatusBadge(item.status)}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">{item.type}</p>
-                        <p className="text-xs text-muted-foreground">{item.model} • {item.serial_number}</p>
+              {filteredEquipment.map((item) => {
+                const utilizationRate = item.hours_meter && item.hours_meter > 0
+                  ? Math.min(100, Math.round((item.hours_meter / 3000) * 100))
+                  : 0;
+                return (
+                  <Card
+                    key={item.id}
+                    className={`cursor-pointer transition-colors hover:shadow-md ${
+                      selectedEquipment === item.id ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => handleEquipmentSelect(item.id)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
+                            {item.name}
+                            {getStatusBadge(item.status || 'available')}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">{item.type || 'Equipment'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.model && `${item.model} • `}{item.serial_number || 'No serial'}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditEquipment(item);
+                            }}
+                            className="p-2"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <div className="text-right">
+                            <div className={`text-xl font-bold ${getUtilizationColor(utilizationRate)}`}>
+                              {utilizationRate}%
+                            </div>
+                            <div className="text-xs text-muted-foreground">Utilization</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span>{item.current_location || 'Location not set'}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>{(item.hours_meter || 0).toLocaleString()} hours</span>
+                        </div>
+
+                        {item.assigned_operator && (
+                          <div className="text-sm">
+                            <span className="font-medium">Operator:</span>
+                            <p className="text-muted-foreground">{item.assigned_operator}</p>
+                          </div>
+                        )}
+
+                        {item.assigned_project && (
+                          <div className="text-sm">
+                            <span className="font-medium">Assigned to:</span>
+                            <p className="text-muted-foreground">{item.assigned_project}</p>
+                          </div>
+                        )}
+
+                        {item.next_maintenance_date && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span>Next Maintenance: {formatDate(item.next_maintenance_date)}</span>
+                          </div>
+                        )}
+
+                        <div className="space-y-1">
+                          <div className="text-sm text-muted-foreground">Utilization Rate</div>
+                          <Progress value={utilizationRate} className="w-full" />
+                        </div>
+
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
+                          className="w-full"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditEquipment(item);
+                            handleManageSchedule(item.id);
                           }}
-                          className="p-2"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Settings className="h-4 w-4 mr-2" />
+                          Manage Schedule
                         </Button>
-                        <div className="text-right">
-                          <div className={`text-xl font-bold ${getUtilizationColor(item.utilization_rate)}`}>
-                            {item.utilization_rate}%
-                          </div>
-                          <div className="text-xs text-muted-foreground">Utilization</div>
-                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{item.location}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{item.total_hours.toLocaleString()} hours</span>
-                      </div>
-
-                      {item.assigned_operator && (
-                        <div className="text-sm">
-                          <span className="font-medium">Operator:</span>
-                          <p className="text-muted-foreground">{item.assigned_operator}</p>
-                        </div>
-                      )}
-                      
-                      {item.assigned_to && (
-                        <div className="text-sm">
-                          <span className="font-medium">Assigned to:</span>
-                          <p className="text-muted-foreground">{item.assigned_to}</p>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>Next Maintenance: {formatDate(item.next_maintenance)}</span>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground">Utilization Rate</div>
-                        <Progress value={item.utilization_rate} className="w-full" />
-                      </div>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleManageSchedule(item.id);
-                        }}
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Manage Schedule
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
-            {filteredEquipment.length === 0 && (
+            {filteredEquipment.length === 0 && !searchTerm && (
+              <div className="text-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium mb-2">No Equipment Found</p>
+                <p className="text-muted-foreground mb-4">
+                  Add your first piece of equipment to start tracking
+                </p>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Equipment
+                </Button>
+              </div>
+            )}
+
+            {filteredEquipment.length === 0 && searchTerm && (
               <div className="text-center py-8 text-muted-foreground">
                 No equipment found matching your search criteria
               </div>
@@ -436,13 +401,6 @@ export default function EquipmentManagement() {
             )}
           </DialogContent>
         </Dialog>
-        
-        {/* Debug info */}
-        {editingEquipment && (
-          <div className="fixed bottom-4 right-4 bg-red-500 text-white p-2 rounded z-50">
-            Dialog should be open: {editingEquipment.name}
-          </div>
-        )}
       </div>
     </DashboardLayout>
   );

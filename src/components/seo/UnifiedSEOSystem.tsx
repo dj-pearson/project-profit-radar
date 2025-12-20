@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { BUILDDESK_LOGO_URL } from '@/lib/utils';
 
 export interface UnifiedSEOProps {
   // Allow manual override (existing pattern)
@@ -46,7 +47,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   keywords,
   ogTitle,
   ogDescription,
-  ogImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png',
+  ogImage = BUILDDESK_LOGO_URL,
   ogUrl,
   twitterCard = 'summary_large_image',
   twitterSite = '@builddesk',
@@ -161,7 +162,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     ogImage,
     dbConfig?.og_image,
     enterpriseConfig?.ogImage,
-    'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png'
+    BUILDDESK_LOGO_URL
   );
 
   const finalOgUrl = getFinalValue(
