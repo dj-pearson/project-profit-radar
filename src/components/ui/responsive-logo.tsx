@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HardHat, Building } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { BUILDDESK_LOGO_URL } from "@/lib/utils";
 
 interface ResponsiveLogoProps {
   className?: string;
@@ -75,7 +76,7 @@ const ResponsiveLogo = ({
     remote:
       isMobile && mobileRemoteUrl
         ? mobileRemoteUrl
-        : "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+        : BUILDDESK_LOGO_URL,
     local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BuildDeskLogo.png",
   };
 
@@ -237,8 +238,7 @@ export const useResponsiveLogoStatus = () => {
     state: "checking",
     device: isMobile ? "mobile" : "desktop",
     sources: {
-      remote:
-        "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+      remote: BUILDDESK_LOGO_URL,
       local: "/BuildDeskLogo.png",
     },
   });
@@ -246,8 +246,7 @@ export const useResponsiveLogoStatus = () => {
   useEffect(() => {
     const checkImages = async () => {
       const sources = {
-        remote:
-          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+        remote: BUILDDESK_LOGO_URL,
         local: "/BuildDeskLogo.png",
       };
 

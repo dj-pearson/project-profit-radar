@@ -14,6 +14,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { BUILDDESK_LOGO_URL } from '@/lib/utils';
 
 export interface PageSEOProps {
   // Basic SEO
@@ -47,7 +48,7 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   description,
   keywords = [],
   canonicalUrl,
-  ogImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png',
+  ogImage = BUILDDESK_LOGO_URL,
   ogType = 'website',
   twitterCard = 'summary_large_image',
   schema = [],

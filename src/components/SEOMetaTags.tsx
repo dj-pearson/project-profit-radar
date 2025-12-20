@@ -1,6 +1,7 @@
 // Legacy SEOMetaTags component - now uses UnifiedSEOSystem for compatibility
 // This ensures all existing pages continue to work without any code changes
 import { SEOMetaTags as CompatibleSEOMetaTags } from './seo/SEOCompatibilityLayer';
+import { BUILDDESK_LOGO_URL } from '@/lib/utils';
 
 export interface SEOMetaTagsProps {
   title?: string;
@@ -47,7 +48,7 @@ export const organizationStructuredData = {
   "@type": "Organization",
   "name": "BuildDesk",
   "url": "https://builddesk.com",
-  "logo": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png",
+  "logo": BUILDDESK_LOGO_URL,
   "sameAs": [
     "https://linkedin.com/company/builddesk",
     "https://twitter.com/builddesk"

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { HardHat, Building } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
+import { BUILDDESK_LOGO_URL } from "@/lib/utils";
 
 interface SmartLogoProps {
   className?: string;
@@ -56,7 +57,7 @@ const SmartLogo = ({
   const imageSources = {
     remote: useTenantLogo
       ? tenant.branding.logo_url!
-      : "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+      : BUILDDESK_LOGO_URL,
     local: "/BuildDeskLogo.png",
   };
 
@@ -231,8 +232,7 @@ export const useLogoStatus = () => {
           remoteImg.onload = () => resolve("remote");
           remoteImg.onerror = reject;
         });
-        remoteImg.src =
-          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90";
+        remoteImg.src = BUILDDESK_LOGO_URL;
 
         await remotePromise;
         setStatus("remote");
