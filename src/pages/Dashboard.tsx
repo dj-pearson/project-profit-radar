@@ -20,6 +20,16 @@ const Dashboard = () => {
   // Inject critical CSS for dashboard
   useCriticalCSS('dashboard');
 
+  // Clear OAuth hash params immediately to prevent redirect to Supabase Studio
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token=') || hash.includes('refresh_token='))) {
+      console.log('🔒 Clearing OAuth callback hash from URL...');
+      // Remove hash without reloading page
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   // Redirect unauthenticated users to auth page
   useEffect(() => {
     if (!authLoading && !user) {

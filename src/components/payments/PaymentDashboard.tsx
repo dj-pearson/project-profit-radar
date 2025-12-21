@@ -1,87 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CreditCard, DollarSign, TrendingUp, AlertCircle, Receipt, Calendar } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CreditCard, DollarSign, TrendingUp, AlertCircle, Receipt, Calendar, FileX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface PaymentStats {
-  total_revenue: number;
-  pending_payments: number;
-  failed_payments: number;
-  successful_payments: number;
-  monthly_recurring: number;
-}
-
-interface RecentPayment {
-  id: string;
-  amount: number;
-  status: string;
-  client_name: string;
-  created_at: string;
-  payment_method: string;
-}
+import { usePaymentStats, useRecentPayments } from '@/hooks/usePayments';
 
 export const PaymentDashboard = () => {
-  const [stats, setStats] = useState<PaymentStats | null>(null);
-  const [recentPayments, setRecentPayments] = useState<RecentPayment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { userProfile } = useAuth();
+  const { data: stats, isLoading: statsLoading } = usePaymentStats();
+  const { data: recentPayments, isLoading: paymentsLoading } = useRecentPayments();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (userProfile?.company_id) {
-      loadPaymentData();
-    }
-  }, [userProfile?.company_id]);
-
-  const loadPaymentData = async () => {
-    try {
-      setLoading(true);
-      
-      // Mock payment statistics for now
-      setStats({
-        total_revenue: 125000,
-        pending_payments: 5,
-        failed_payments: 2,
-        successful_payments: 48,
-        monthly_recurring: 15000
-      });
-
-      // Mock recent payments for now
-      setRecentPayments([
-        {
-          id: '1',
-          amount: 250000,
-          status: 'succeeded',
-          payment_method: 'card',
-          created_at: new Date().toISOString(),
-          client_name: 'ABC Construction Co.'
-        },
-        {
-          id: '2',
-          amount: 175000,
-          status: 'pending',
-          payment_method: 'ach',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          client_name: 'Smith Builders'
-        }
-      ]);
-
-    } catch (error) {
-      console.error('Error loading payment data:', error);
-      toast({
-        title: "Error Loading Data",
-        description: "Failed to load payment dashboard data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = statsLoading || paymentsLoading;
 
   const openStripePortal = async () => {
     try {
@@ -123,8 +56,27 @@ export const PaymentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-5 w-72 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-3 w-16 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
