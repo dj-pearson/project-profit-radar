@@ -162,15 +162,18 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
   }, [jobCosts, selectedProject]);
 
   const loadData = async () => {
+    console.time('loadData');
     try {
       setLoading(true);
       
       // Load projects
+      console.time('loadProjects');
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, status')
         .eq('company_id', userProfile?.company_id)
         .order('created_at', { ascending: false });
+      console.timeEnd('loadProjects');
 
       if (projectsError) throw projectsError;
       setProjects(projectsData || []);
@@ -181,12 +184,14 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       }
 
       // Load cost codes
+      console.time('loadCostCodes');
       const { data: costCodesData, error: costCodesError } = await supabase
         .from('cost_codes')
         .select('id, code, name, category')
         .eq('company_id', userProfile?.company_id)
         .eq('is_active', true)
         .order('code');
+      console.timeEnd('loadCostCodes');
 
       if (costCodesError) throw costCodesError;
       setCostCodes(costCodesData || []);
@@ -200,10 +205,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       });
     } finally {
       setLoading(false);
+      console.timeEnd('loadData');
     }
   };
 
   const loadJobCosts = async (projectId: string) => {
+    console.time('loadJobCosts');
     try {
       const { data: costsData, error: costsError } = await supabase
         .from('job_costs')
@@ -221,15 +228,19 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         title: "Error",
         description: "Failed to load job costs"
       });
+    } finally {
+      console.timeEnd('loadJobCosts');
     }
   };
 
   const handleRealTimeUpdate = useCallback((payload: any) => {
+    console.time('handleRealTimeUpdate');
     const { eventType, new: newRecord, old: oldRecord } = payload;
     
     switch (eventType) {
       case 'INSERT':
         // Fetch the complete record
+        console.time('handleRealTimeUpdate-INSERT');
         supabase
           .from('job_costs')
           .select('*')
@@ -243,10 +254,12 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
                 description: `Cost entry: $${data.total_cost?.toLocaleString()}`
               });
             }
+            console.timeEnd('handleRealTimeUpdate-INSERT');
           });
         break;
         
       case 'UPDATE':
+        console.time('handleRealTimeUpdate-UPDATE');
         setJobCosts(prev => 
           prev.map(cost => 
             cost.id === newRecord.id 
@@ -258,21 +271,29 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
           title: "Cost Updated",
           description: "Job cost has been updated"
         });
+        console.timeEnd('handleRealTimeUpdate-UPDATE');
         break;
         
       case 'DELETE':
+        console.time('handleRealTimeUpdate-DELETE');
         setJobCosts(prev => prev.filter(cost => cost.id !== oldRecord.id));
         toast({
           title: "Cost Deleted",
           description: "Job cost has been removed"
         });
+        console.timeEnd('handleRealTimeUpdate-DELETE');
         break;
     }
+    console.timeEnd('handleRealTimeUpdate');
   }, []);
 
   const calculateCostSummary = () => {
+    console.time('calculateCostSummary');
     const currentProject = projects.find(p => p.id === selectedProject);
-    if (!currentProject) return;
+    if (!currentProject) {
+      console.timeEnd('calculateCostSummary');
+      return;
+    }
 
     const totalCost = jobCosts.reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
     const laborCost = jobCosts.reduce((sum, cost) => sum + (cost.labor_cost || 0), 0);
@@ -293,6 +314,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       budgetVariance,
       budgetVariancePercentage
     });
+    console.timeEnd('calculateCostSummary');
   };
 
   const handleProjectChange = (projectId: string) => {

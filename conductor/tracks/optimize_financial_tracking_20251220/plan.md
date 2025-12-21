@@ -8,8 +8,8 @@ This plan outlines the phases and tasks required to optimize the performance of 
 
 ### Tasks
 
--   [ ] Task: Analyze the current implementation of the real-time financial tracking features to identify performance bottlenecks. This includes analyzing the frontend components, data fetching logic, and Supabase queries.
--   [ ] Task: Establish baseline performance metrics for the real-time financial tracking features. This includes measuring the initial load time, update latency, and resource consumption.
+-   [x] Task: Analyze the current implementation of the real-time financial tracking features to identify performance bottlenecks. This includes analyzing the frontend components, data fetching logic, and Supabase queries.
+-   [~] Task: Establish baseline performance metrics for the real-time financial tracking features. This includes measuring the initial load time, update latency, and resource consumption.
 -   [ ] Task: Create a detailed optimization plan based on the findings from the performance analysis. This plan should prioritize the identified bottlenecks and outline specific optimization strategies.
 -   [ ] Task: Conductor - User Manual Verification 'Performance Analysis and a plan for the next steps' (Protocol in workflow.md)
 
