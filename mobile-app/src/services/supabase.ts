@@ -3,9 +3,19 @@ import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// Supabase configuration
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://ilhzuvemiuyfuxfegtlv.supabase.co';
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHp1dmVtaXV5ZnV4ZmVndGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5OTU1NzksImV4cCI6MjA1MDU3MTU3OX0.cWiSKcTWJvlRR1K18xgpLQnIzjZd7kMr4rQ82faxDdM';
+// Supabase configuration for self-hosted infrastructure
+// REQUIRED: Set these environment variables in your .env file
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error(
+    'Missing Supabase configuration. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.\n' +
+    'For self-hosted setup:\n' +
+    '  EXPO_PUBLIC_SUPABASE_URL=https://api.build-desk.com\n' +
+    '  EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key'
+  );
+}
 
 // Custom storage adapter using Expo SecureStore
 const ExpoSecureStoreAdapter = {

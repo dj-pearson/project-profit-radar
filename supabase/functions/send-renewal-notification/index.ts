@@ -131,7 +131,7 @@ serve(async (req) => {
         month: 'long',
         day: 'numeric'
       });
-      const manageUrl = `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '')}.vercel.app/subscription`;
+      const manageUrl = Deno.env.get("APP_URL") || 'https://builddesk.com/subscription';
       
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

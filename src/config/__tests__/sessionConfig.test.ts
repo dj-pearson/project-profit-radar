@@ -55,7 +55,7 @@ describe('Session Configuration', () => {
 
     it('should have correct storage key prefixes', () => {
       expect(SESSION_CONFIG.STORAGE_KEYS.USER_PROFILE_PREFIX).toBe('bd.userProfile.');
-      expect(SESSION_CONFIG.STORAGE_KEYS.AUTH_TOKEN_PREFIX).toBe('sb-ilhzuvemiuyfuxfegtlv-auth-token');
+      expect(SESSION_CONFIG.STORAGE_KEYS.AUTH_TOKEN_PREFIX).toBe('sb-builddesk-auth-token');
       expect(SESSION_CONFIG.STORAGE_KEYS.SESSION_FINGERPRINT).toBe('bd.session.fingerprint');
       expect(SESSION_CONFIG.STORAGE_KEYS.SESSION_START_TIME).toBe('bd.session.startTime');
     });

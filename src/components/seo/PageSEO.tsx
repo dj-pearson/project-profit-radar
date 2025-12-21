@@ -47,7 +47,7 @@ export const PageSEO: React.FC<PageSEOProps> = ({
   description,
   keywords = [],
   canonicalUrl,
-  ogImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png',
+  ogImage = 'https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png',
   ogType = 'website',
   twitterCard = 'summary_large_image',
   schema = [],

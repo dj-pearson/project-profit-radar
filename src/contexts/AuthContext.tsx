@@ -195,7 +195,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       // Clear localStorage auth tokens
       const localKeys = Object.keys(localStorage);
       localKeys.forEach(key => {
-        if (key.startsWith('sb-ilhzuvemiuyfuxfegtlv-auth-token')) {
+        if (key.startsWith('sb-') && key.includes('-auth-token')) {
           localStorage.removeItem(key);
         }
       });

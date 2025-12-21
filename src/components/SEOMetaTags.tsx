@@ -47,7 +47,7 @@ export const organizationStructuredData = {
   "@type": "Organization",
   "name": "BuildDesk",
   "url": "https://builddesk.com",
-  "logo": "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png",
+  "logo": "https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png",
   "sameAs": [
     "https://linkedin.com/company/builddesk",
     "https://twitter.com/builddesk"

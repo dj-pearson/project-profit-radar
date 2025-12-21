@@ -75,7 +75,7 @@ const ResponsiveLogo = ({
     remote:
       isMobile && mobileRemoteUrl
         ? mobileRemoteUrl
-        : "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+        : "https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
     local: isMobile && mobileLocalUrl ? mobileLocalUrl : "/BuildDeskLogo.png",
   };
 
@@ -238,7 +238,7 @@ export const useResponsiveLogoStatus = () => {
     device: isMobile ? "mobile" : "desktop",
     sources: {
       remote:
-        "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+        "https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
       local: "/BuildDeskLogo.png",
     },
   });
@@ -247,7 +247,7 @@ export const useResponsiveLogoStatus = () => {
     const checkImages = async () => {
       const sources = {
         remote:
-          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+          "https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
         local: "/BuildDeskLogo.png",
       };
 

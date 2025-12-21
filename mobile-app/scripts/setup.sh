@@ -73,13 +73,15 @@ echo ""
 if [ ! -f ".env" ]; then
   echo "📝 Creating .env file..."
   cat > .env << 'EOL'
-# Supabase Configuration
-EXPO_PUBLIC_SUPABASE_URL=https://ilhzuvemiuyfuxfegtlv.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsaHp1dmVtaXV5ZnV4ZmVndGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5OTU1NzksImV4cCI6MjA1MDU3MTU3OX0.cWiSKcTWJvlRR1K18xgpLQnIzjZd7kMr4rQ82faxDdM
+# Supabase Configuration (Self-Hosted)
+EXPO_PUBLIC_SUPABASE_URL=https://api.build-desk.com
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+EXPO_PUBLIC_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
 
 # Optional: Add custom environment variables here
 EOL
   echo "✅ .env file created"
+  echo "⚠️  Remember to update EXPO_PUBLIC_SUPABASE_ANON_KEY with your actual key"
 else
   echo "✅ .env file exists"
 fi

@@ -56,7 +56,7 @@ const SmartLogo = ({
   const imageSources = {
     remote: useTenantLogo
       ? tenant.branding.logo_url!
-      : "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
+      : "https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90",
     local: "/BuildDeskLogo.png",
   };
 
@@ -232,7 +232,7 @@ export const useLogoStatus = () => {
           remoteImg.onerror = reject;
         });
         remoteImg.src =
-          "https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90";
+          "https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png?width=200&quality=90";
 
         await remotePromise;
         setStatus("remote");

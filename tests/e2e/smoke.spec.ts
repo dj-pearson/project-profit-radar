@@ -89,7 +89,7 @@ test.describe('Smoke Tests', () => {
 
     // Try to fetch from Supabase (should at least get a response)
     try {
-      const response = await request.get('https://ilhzuvemiuyfuxfegtlv.supabase.co/rest/v1/', {
+      const response = await request.get('https://api.build-desk.com/rest/v1/', {
         headers: {
           'apikey': 'test', // This will fail auth but proves endpoint is up
         },

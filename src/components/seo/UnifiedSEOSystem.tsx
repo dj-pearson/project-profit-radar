@@ -46,7 +46,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
   keywords,
   ogTitle,
   ogDescription,
-  ogImage = 'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png',
+  ogImage = 'https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png',
   ogUrl,
   twitterCard = 'summary_large_image',
   twitterSite = '@builddesk',
@@ -161,7 +161,7 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
     ogImage,
     dbConfig?.og_image,
     enterpriseConfig?.ogImage,
-    'https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/site-assets/BuildDeskLogo.png'
+    'https://api.build-desk.com/storage/v1/object/public/site-assets/BuildDeskLogo.png'
   );
 
   const finalOgUrl = getFinalValue(

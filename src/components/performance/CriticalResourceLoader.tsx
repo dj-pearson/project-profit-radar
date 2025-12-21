@@ -103,7 +103,7 @@ export const useCriticalResources = () => {
       'https://fonts.gstatic.com',
       'https://www.google-analytics.com',
       'https://www.googletagmanager.com',
-      'https://api.supabase.co'
+      'https://api.build-desk.com'
     ];
 
     externalDomains.forEach(domain => {

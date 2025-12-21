@@ -57,7 +57,7 @@ export const SESSION_CONFIG = {
    */
   STORAGE_KEYS: {
     USER_PROFILE_PREFIX: 'bd.userProfile.',
-    AUTH_TOKEN_PREFIX: 'sb-ilhzuvemiuyfuxfegtlv-auth-token',
+    AUTH_TOKEN_PREFIX: 'sb-builddesk-auth-token',
     SESSION_FINGERPRINT: 'bd.session.fingerprint',
     SESSION_START_TIME: 'bd.session.startTime',
   } as const,

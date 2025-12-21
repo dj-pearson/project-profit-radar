@@ -123,7 +123,7 @@ jobs:
       - name: Test image
         run: |
           docker run --rm \
-            -e SUPABASE_URL=https://test.supabase.co \
+            -e SUPABASE_URL=https://api.build-desk.com \
             -e SUPABASE_ANON_KEY=test-key \
             -e SUPABASE_SERVICE_ROLE_KEY=test-key \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ github.sha }} &

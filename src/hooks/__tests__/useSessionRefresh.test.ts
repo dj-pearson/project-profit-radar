@@ -301,13 +301,13 @@ describe('Session Storage Security', () => {
 
   it('should clear auth tokens on session expiry', () => {
     // Set up mock localStorage data
-    const authTokenKey = 'sb-ilhzuvemiuyfuxfegtlv-auth-token';
+    const authTokenKey = 'sb-builddesk-auth-token';
     localStorage.setItem(authTokenKey, 'test-token');
 
     // Clear auth tokens
     const localKeys = Object.keys(localStorage);
     localKeys.forEach(key => {
-      if (key.startsWith('sb-ilhzuvemiuyfuxfegtlv-auth-token')) {
+      if (key.startsWith('sb-') && key.includes('-auth-token')) {
         localStorage.removeItem(key);
       }
     });
