@@ -299,44 +299,40 @@ export const useOfflineSync = () => {
   };
 
   const syncTimeEntry = async (item: OfflineData) => {
-        const { error } = await supabase
+    const { error } = await supabase
       .from('time_entries')
       .insert({
-        ...item.data,
-        site_id: siteId  // CRITICAL: Site isolation
+        ...item.data
       });
 
     if (error) throw error;
   };
 
   const syncDailyReport = async (item: OfflineData) => {
-        const { error } = await supabase
+    const { error } = await supabase
       .from('daily_reports')
       .insert({
-        ...item.data,
-        site_id: siteId  // CRITICAL: Site isolation
+        ...item.data
       });
 
     if (error) throw error;
   };
 
   const syncExpense = async (item: OfflineData) => {
-        const { error } = await supabase
+    const { error } = await supabase
       .from('expenses')
       .insert({
-        ...item.data,
-        site_id: siteId  // CRITICAL: Site isolation
+        ...item.data
       });
 
     if (error) throw error;
   };
 
   const syncSafetyIncident = async (item: OfflineData) => {
-        const { error } = await supabase
+    const { error } = await supabase
       .from('safety_incidents')
       .insert({
-        ...item.data,
-        site_id: siteId  // CRITICAL: Site isolation
+        ...item.data
       });
 
     if (error) throw error;

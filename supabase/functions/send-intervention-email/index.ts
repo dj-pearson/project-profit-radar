@@ -15,21 +15,20 @@ serve(async (req) => {
   }
 
   try {
-        const authContext = await initializeAuthContext(req);
+    const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const {  supabase: supabaseClient } = authContext;
-    console.log('[SEND-INTERVENTION-EMAIL] Auth context initialized', { siteId });
+    const { supabase: supabaseClient } = authContext;
+    console.log('[SEND-INTERVENTION-EMAIL] Auth context initialized');
 
     const { userId, predictionId } = await req.json();
 
-    // Get user and prediction data with site isolation
+    // Get user and prediction data
     const { data: user, error: userError } = await supabaseClient
       .from("user_profiles")
       .select("email, first_name, last_name")
-      .eq("site_id")  // CRITICAL: Site isolation
       .eq("id", userId)
       .single();
 
@@ -38,7 +37,6 @@ serve(async (req) => {
     const { data: prediction, error: predictionError } = await supabaseClient
       .from("churn_predictions")
       .select("*")
-      .eq("site_id")  // CRITICAL: Site isolation
       .eq("id", predictionId)
       .single();
 
@@ -131,8 +129,8 @@ serve(async (req) => {
       throw new Error(`Failed to send email: ${error}`);
     }
 
-    // Log intervention in database with site isolation
-    await supabaseClient.from("intervention_logs").insert({  // CRITICAL: Site isolation
+    // Log intervention in database
+    await supabaseClient.from("intervention_logs").insert({
       user_id: userId,
       prediction_id: predictionId,
       intervention_type: "email",

@@ -20,11 +20,9 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { topic, company_id, queue_id, action, customSettings, site_id, site_key } = body;
+    const { topic, company_id, queue_id, action, customSettings } = body;
 
-    // Handle both payload formats:
-        // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...}, site_key }
-
+    // Handle both payload formats
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
     let finalQueueId = queue_id || customSettings?.queue_id;
@@ -33,28 +31,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-        let siteId = site_id || customSettings?.site_id;
-    if (!siteId && site_key) {
-      const { data: siteData } = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', site_key)
-        .eq('is_active', true)
-        .single();
-      siteId = siteData?.id;
-    }
-
-    // Fall back to default BuildDesk site if no site specified
-    = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-      siteId = defaultSite?.id;
-    }
-
-    logStep("Site context resolved", { siteId });
     
     // If no topic provided, generate a random one
     if (!finalTopic || finalTopic.trim() === '') {
@@ -78,9 +54,9 @@ serve(async (req) => {
       action: action || 'direct'
     });
 
-    // If no company_id, fetch the first available company within this site (for auto-generation mode)
+    // If no company_id, fetch the first available company (for auto-generation mode)
     if (!finalCompanyId) {
-      logStep("No company_id provided, fetching default company for site");
+      logStep("No company_id provided, fetching default company");
       const { data: companies } = await supabaseClient
         .from('companies')
         .select('id')
@@ -89,9 +65,9 @@ serve(async (req) => {
 
       if (companies) {
         finalCompanyId = companies.id;
-        logStep("Using default company", { company_id: finalCompanyId, });
+        logStep("Using default company", { company_id: finalCompanyId });
       } else {
-        throw new Error('No company found for this site. Please provide a company_id.');
+        throw new Error('No company found. Please provide a company_id.');
       }
     }
 
@@ -107,7 +83,7 @@ serve(async (req) => {
       contentLength: blogContent.content?.length || 0
     });
 
-        const insertData = {
+    const insertData = {
       company_id: finalCompanyId,
       queue_id: finalQueueId,
       title: blogContent.title,
@@ -137,7 +113,7 @@ serve(async (req) => {
     
     logStep("Blog post created successfully", { id: blogPost.id, title: blogPost.title });
 
-        if (finalQueueId) {
+    if (finalQueueId) {
       const { error: updateError } = await supabaseClient
         .from('blog_generation_queue')
         .update({

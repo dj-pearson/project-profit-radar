@@ -77,36 +77,8 @@ serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { action, topic, customSettings, site_id, site_key } = body;
-    logStep("Request parsed", { action, topic, authMethod, site_id, site_key });
-
-        let siteId = site_id;
-    if (!siteId && site_key) {
-      const { data: siteData } = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', site_key)
-        .eq('is_active', true)
-        .single();
-      siteId = siteData?.id;
-    }
-
-    // Fall back to default BuildDesk site if no site specified
-    = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-      siteId = defaultSite?.id;
-    }
-
-    ), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    logStep("Site resolved", { siteId });
+    const { action, topic, customSettings } = body;
+    logStep("Request parsed", { action, topic, authMethod });
 
     // Handle different actions
     if (action === 'generate-auto-content' || action === 'test-generation') {
@@ -138,11 +110,10 @@ serve(async (req) => {
 
 async function generateBlogContent(
   supabaseClient: any,
-  siteId: string,
   topic?: string,
   customSettings?: any
 ): Promise<Response> {
-  logStep("Starting content generation", {  topic });
+  logStep("Starting content generation", { topic });
 
   // Check Claude API key
   const claudeKey = Deno.env.get('CLAUDE_API_KEY');
@@ -219,7 +190,7 @@ Make the content authoritative, actionable, and valuable for construction profes
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    // Check if slug exists and make it unique (within this site)
+    // Check if slug exists and make it unique
     let uniqueSlug = slug;
     let counter = 1;
     let slugExists = true;
@@ -228,7 +199,6 @@ Make the content authoritative, actionable, and valuable for construction profes
       const { data: existingPost } = await supabaseClient
         .from('blog_posts')
         .select('id')
-          // CRITICAL: Site isolation
         .eq('slug', uniqueSlug)
         .maybeSingle();
 
@@ -240,10 +210,10 @@ Make the content authoritative, actionable, and valuable for construction profes
       }
     }
 
-    // Create the blog post in database with site isolation
+    // Create the blog post in database
     const { data: blogPost, error: postError } = await supabaseClient
       .from('blog_posts')
-      .insert([{  // CRITICAL: Site isolation
+      .insert([{
         title: parsed.title,
         slug: uniqueSlug,
         body: parsed.body,

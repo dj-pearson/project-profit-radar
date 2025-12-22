@@ -238,7 +238,7 @@ export const useDeviceTrust = () => {
       });
       return { error: error.message };
     }
-  }, [user, siteId, getCurrentDeviceId, generateDeviceFingerprint, parseUserAgent, loadTrustedDevices]);
+  }, [user, getCurrentDeviceId, generateDeviceFingerprint, parseUserAgent, loadTrustedDevices]);
 
   // Revoke device trust
   const revokeDeviceTrust = useCallback(async (deviceId: string) => {

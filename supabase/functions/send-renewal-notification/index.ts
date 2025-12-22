@@ -52,7 +52,6 @@ serve(async (req) => {
       .from('subscribers')
       .select(`
         id,
-        site_id,
         email,
         user_id,
         subscription_tier,
@@ -99,7 +98,6 @@ serve(async (req) => {
             const { data: existingNotifications } = await supabaseClient
         .from('renewal_notifications')
         .select('notification_type')
-        .eq('site_id', subscriber.site_id)
         .eq('subscriber_id', subscriber.id)
         .eq('notification_type', notificationType);
 
@@ -114,7 +112,6 @@ serve(async (req) => {
             const { data: profile } = await supabaseClient
         .from('user_profiles')
         .select('first_name, last_name')
-        .eq('site_id', subscriber.site_id)
         .eq('id', subscriber.user_id)
         .single();
 
@@ -198,7 +195,6 @@ serve(async (req) => {
             await supabaseClient
         .from('renewal_notifications')
         .insert({
-          site_id: subscriber.site_id,
           subscriber_id: subscriber.id,
           notification_type: notificationType,
           subscription_end_date: subscriber.subscription_end
@@ -207,7 +203,6 @@ serve(async (req) => {
             await supabaseClient
         .from('subscribers')
         .update({ renewal_notification_sent_at: new Date().toISOString() })
-        .eq('site_id', subscriber.site_id)
         .eq('id', subscriber.id);
 
       notificationsSent++;

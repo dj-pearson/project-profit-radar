@@ -18,65 +18,31 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-        const url = new URL(req.url);
-    let siteId = url.searchParams.get('site_id');
-    let siteKey = url.searchParams.get('site_key');
+    console.log("[SITEMAP-GENERATOR] Generating sitemap");
 
-    // Try to get from request body if POST
-    if (req.method === 'POST') {
-      try {
-        const body = await req.json();
-        siteId = siteId || body.site_id;
-        siteKey = siteKey || body.site_key;
-      } catch { /* ignore body parse errors */ }
-    }
-
-        if (!siteId && siteKey) {
-      const { data: siteData } = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', siteKey)
-        .single();
-      siteId = siteData?.id;
-    }
-
-    // Default to builddesk site if no site specified
-    = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-      siteId = defaultSite?.id;
-    }
-
-    console.log("[SITEMAP-GENERATOR] Generating sitemap for site:");
-
-    // Get SEO configuration for this site
+    // Get SEO configuration
     const { data: config, error: configError } = await supabaseClient
       .from('seo_configurations')
       .select('*')
-        // CRITICAL: Site isolation
       .limit(1)
       .single()
 
     if (configError) {
-      throw new Error('SEO configuration not found for this site')
+      throw new Error('SEO configuration not found')
     }
 
-    // Get all meta tags for dynamic pages with site isolation
+    // Get all meta tags for dynamic pages
     const { data: metaTags, error: metaError } = await supabaseClient
       .from('seo_meta_tags')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('no_index', false)
 
     if (metaError) throw metaError
 
-    // Get published blog posts with site isolation
+    // Get published blog posts
     const { data: blogPosts, error: blogError } = await supabaseClient
       .from('blog_posts')
       .select('slug, updated_at')
-        // CRITICAL: Site isolation
       .eq('status', 'published')
 
     if (blogError) {

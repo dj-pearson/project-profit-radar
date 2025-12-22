@@ -43,9 +43,7 @@ serve(async (req) => {
     const adminUser = userData.user;
     if (!adminUser?.email) throw new Error("Admin user not authenticated");
 
-            logStep("Site context extracted", { siteId });
-
-        const { data: adminProfile } = await supabaseClient
+    const { data: adminProfile } = await supabaseClient
       .from('user_profiles')
       .select('role')
       .eq('id', adminUser.id)
@@ -73,14 +71,14 @@ serve(async (req) => {
       const tier = request.subscription_tier || 'professional';
       const type = request.type || 'temporary';
 
-            const { data: existingSubscriber } = await supabaseClient
+      const { data: existingSubscriber } = await supabaseClient
         .from('subscribers')
         .select('id')
         .eq('user_id', targetUser.id)
         .single();
 
       if (existingSubscriber) {
-                await supabaseClient
+        await supabaseClient
           .from('subscribers')
           .update({
             subscribed: true,
@@ -95,7 +93,7 @@ serve(async (req) => {
           })
           .eq('id', existingSubscriber.id);
       } else {
-                await supabaseClient
+        await supabaseClient
           .from('subscribers')
           .insert({
             user_id: targetUser.id,
@@ -111,7 +109,7 @@ serve(async (req) => {
           });
       }
 
-            const { data: subscriber } = await supabaseClient
+      const { data: subscriber } = await supabaseClient
         .from('subscribers')
         .select('id')
         .eq('user_id', targetUser.id)
@@ -150,7 +148,7 @@ serve(async (req) => {
       });
 
     } else if (request.action === 'revoke') {
-            const { data: subscriber } = await supabaseClient
+      const { data: subscriber } = await supabaseClient
         .from('subscribers')
         .select('id')
         .eq('user_id', targetUser.id)
@@ -160,7 +158,7 @@ serve(async (req) => {
         throw new Error("Subscriber not found");
       }
 
-            await supabaseClient
+      await supabaseClient
         .from('subscribers')
         .update({
           subscribed: false,
@@ -174,7 +172,7 @@ serve(async (req) => {
         })
         .eq('id', subscriber.id);
 
-            await supabaseClient
+      await supabaseClient
         .from('complimentary_subscription_history')
         .update({
           status: 'revoked',

@@ -1,6 +1,5 @@
 // Automated Intervention Scheduler
 // Runs hourly to schedule automated interventions based on account health and trial status
-// Runs as cron job - processes all sites
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -126,130 +125,109 @@ serve(async (req) => {
 
     console.log("[AUTO-INTERVENTION-SCHEDULER] Starting intervention scheduler...");
 
-    // Get all active sites for multi-tenant processing
-    const { data: sites, error: sitesError } = await supabase
-      .from("sites")
-      .select("id, key, name")
-      .eq("is_active", true);
+    // Get all companies
+    const { data: companies, error: companiesError } = await supabase
+      .from("companies")
+      .select("*");
 
-    if (sitesError) {
-      throw new Error(`Error fetching sites: ${sitesError.message}`);
+    if (companiesError) {
+      throw new Error(`Error fetching companies: ${companiesError.message}`);
     }
 
-    console.log("[AUTO-INTERVENTION-SCHEDULER] Processing all active sites", { siteCount: sites?.length || 0 });
+    console.log("[AUTO-INTERVENTION-SCHEDULER] Processing companies", { companyCount: companies?.length || 0 });
 
     const allInterventions = [];
 
-    for (const site of sites || []) {
-      console.log(`[AUTO-INTERVENTION-SCHEDULER] Processing site`, { siteId: site.id, siteKey: site.key });
-
-      // Get all companies with their latest health scores for this site
-      const { data: companies, error: companiesError } = await supabase
-        .from("companies")
+    for (const company of companies || []) {
+      // Get latest health score
+      const { data: health, error: healthError } = await supabase
+        .from("account_health_scores")
         .select("*")
-        .eq("site_id", site.id);  // CRITICAL: Site isolation
+        .eq("company_id", company.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-      if (companiesError) {
-        console.error(`[AUTO-INTERVENTION-SCHEDULER] Error fetching companies for site ${site.id}:`, companiesError);
+      if (healthError || !health) {
+        console.log(`[AUTO-INTERVENTION-SCHEDULER] No health score for company ${company.id}, skipping`);
         continue;
       }
 
-      for (const company of companies || []) {
-        // Get latest health score with site isolation
-        const { data: health, error: healthError } = await supabase
-          .from("account_health_scores")
-          .select("*")
-          .eq("site_id", site.id)  // CRITICAL: Site isolation
-          .eq("company_id", company.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+      // Check if we've already sent an intervention recently (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        if (healthError || !health) {
-          console.log(`[AUTO-INTERVENTION-SCHEDULER] No health score for company ${company.id}, skipping`);
-          continue;
-        }
+      const { data: recentInterventions } = await supabase
+        .from("admin_interventions")
+        .select("id")
+        .eq("company_id", company.id)
+        .gte("created_at", sevenDaysAgo.toISOString());
 
-        // Check if we've already sent an intervention recently (last 7 days) with site isolation
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      if (recentInterventions && recentInterventions.length > 0) {
+        console.log(`[AUTO-INTERVENTION-SCHEDULER] Recent intervention exists for ${company.id}, skipping`);
+        continue;
+      }
 
-        const { data: recentInterventions } = await supabase
-          .from("admin_interventions")
-          .select("id")
-          .eq("site_id", site.id)  // CRITICAL: Site isolation
-          .eq("company_id", company.id)
-          .gte("created_at", sevenDaysAgo.toISOString());
+      // Check each rule
+      for (const rule of INTERVENTION_RULES) {
+        if (rule.condition(health, company)) {
+          console.log(
+            `[AUTO-INTERVENTION-SCHEDULER] Scheduling ${rule.type} intervention for company ${company.id}`
+          );
 
-        if (recentInterventions && recentInterventions.length > 0) {
-          console.log(`[AUTO-INTERVENTION-SCHEDULER] Recent intervention exists for ${company.id}, skipping`);
-          continue;
-        }
+          // Get admin email for the company
+          const { data: adminUser } = await supabase
+            .from("user_profiles")
+            .select("id, email, first_name, last_name")
+            .eq("company_id", company.id)
+            .eq("role", "admin")
+            .limit(1)
+            .single();
 
-        // Check each rule
-        for (const rule of INTERVENTION_RULES) {
-          if (rule.condition(health, company)) {
-            console.log(
-              `[AUTO-INTERVENTION-SCHEDULER] Scheduling ${rule.type} intervention for company ${company.id}`
+          const message = rule.getMessage(company, health);
+
+          // Schedule intervention
+          const { error: insertError } = await supabase
+            .from("admin_interventions")
+            .insert({
+              company_id: company.id,
+              user_id: adminUser?.id,
+              intervention_type: rule.type,
+              trigger_reason: `Health score: ${health.score}, Risk: ${health.risk_level}, Trend: ${health.trend}`,
+              template_used: rule.template,
+              subject: rule.subject,
+              message: message,
+              status: "scheduled",
+              scheduled_for: new Date().toISOString(),
+              metadata: {
+                health_score: health.score,
+                risk_level: health.risk_level,
+                trend: health.trend,
+                to_email: adminUser?.email,
+                to_name: `${adminUser?.first_name} ${adminUser?.last_name}`,
+              },
+            });
+
+          if (!insertError) {
+            allInterventions.push({
+              companyId: company.id,
+              type: rule.type,
+            });
+          } else {
+            console.error(
+              `[AUTO-INTERVENTION-SCHEDULER] Error scheduling intervention for ${company.id}:`,
+              insertError
             );
-
-            // Get admin email for the company with site isolation
-            const { data: adminUser } = await supabase
-              .from("user_profiles")
-              .select("id, email, first_name, last_name")
-              .eq("site_id", site.id)  // CRITICAL: Site isolation
-              .eq("company_id", company.id)
-              .eq("role", "admin")
-              .limit(1)
-              .single();
-
-            const message = rule.getMessage(company, health);
-
-            // Schedule intervention with site isolation
-            const { error: insertError } = await supabase
-              .from("admin_interventions")
-              .insert({
-                site_id: site.id,  // CRITICAL: Site isolation
-                company_id: company.id,
-                user_id: adminUser?.id,
-                intervention_type: rule.type,
-                trigger_reason: `Health score: ${health.score}, Risk: ${health.risk_level}, Trend: ${health.trend}`,
-                template_used: rule.template,
-                subject: rule.subject,
-                message: message,
-                status: "scheduled",
-                scheduled_for: new Date().toISOString(),
-                metadata: {
-                  health_score: health.score,
-                  risk_level: health.risk_level,
-                  trend: health.trend,
-                  to_email: adminUser?.email,
-                  to_name: `${adminUser?.first_name} ${adminUser?.last_name}`,
-                },
-              });
-
-            if (!insertError) {
-              allInterventions.push({
-                siteId: site.id,
-                companyId: company.id,
-                type: rule.type,
-              });
-            } else {
-              console.error(
-                `[AUTO-INTERVENTION-SCHEDULER] Error scheduling intervention for ${company.id}:`,
-                insertError
-              );
-            }
-
-            // Only trigger one intervention per company per run
-            break;
           }
+
+          // Only trigger one intervention per company per run
+          break;
         }
       }
     }
 
     console.log(
-      `[AUTO-INTERVENTION-SCHEDULER] Scheduled ${allInterventions.length} interventions across all sites`
+      `[AUTO-INTERVENTION-SCHEDULER] Scheduled ${allInterventions.length} interventions`
     );
 
     return new Response(

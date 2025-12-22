@@ -40,11 +40,10 @@ serve(async (req) => {
     const { company_id, subscription_tier, billing_period, payment_method_id }: ConversionRequest = await req.json();
     logStep("Conversion request", {  company_id, subscription_tier, billing_period });
 
-    // Verify user has access to this company with site isolation
+    // Verify user has access to this company
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('company_id, role')
-        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -52,11 +51,10 @@ serve(async (req) => {
       throw new Error("Unauthorized to convert this company's trial");
     }
 
-    // Get company details with site isolation
+    // Get company details
     const { data: company } = await supabaseClient
       .from('companies')
       .select('id, name, subscription_status, trial_end_date')
-        // CRITICAL: Site isolation
       .eq('id', company_id)
       .single();
 
@@ -184,7 +182,7 @@ serve(async (req) => {
       logStep("Created checkout session", { sessionId: session.id });
     }
 
-    // Update company status to pending conversion with site isolation
+    // Update company status to pending conversion
     await supabaseClient
       .from("companies")
       .update({
@@ -192,7 +190,6 @@ serve(async (req) => {
         subscription_tier,
         updated_at: new Date().toISOString()
       })
-      .eq("site_id")  // CRITICAL: Site isolation
       .eq("id", company_id);
 
     logStep("Updated company status to converting", { company_id });

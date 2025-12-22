@@ -52,37 +52,24 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { userId, email, firstName, companyName, site_id, site_key } = await req.json();
+    const { userId, email, firstName, companyName } = await req.json();
 
     if (!userId || !email) {
       throw new Error("Missing required fields: userId and email");
     }
 
-        let siteId = site_id;
-    const siteKey = site_key || req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
-    = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', siteKey)
-        .single();
-      siteId = siteData?.id;
-    }
-
-    logStep("Site resolved", { siteKey });
     logStep("Scheduling emails for user", { userId, email });
 
-    // Get user's company and trial end date with site isolation
+    // Get user's company and trial end date
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('company_id')
-        // CRITICAL: Site isolation
       .eq('id', userId)
       .single();
 
     const { data: company } = await supabaseClient
       .from('companies')
       .select('trial_end_date, subscription_status')
-        // CRITICAL: Site isolation
       .eq('id', profile?.company_id)
       .single();
 
@@ -93,11 +80,10 @@ serve(async (req) => {
     const trialStartDate = new Date();
     const trialEndDate = new Date(company.trial_end_date);
 
-    // Check if campaigns already exist (prevent duplicates) with site isolation
+    // Check if campaigns already exist (prevent duplicates)
     const { data: existingCampaigns } = await supabaseClient
       .from('email_campaigns')
       .select('campaign_name')
-        // CRITICAL: Site isolation
       .in('campaign_name', EMAIL_SCHEDULE.map(s => `trial_${s.emailType}`))
       .eq('is_active', true);
 
@@ -111,10 +97,10 @@ serve(async (req) => {
         continue;
       }
 
-      // Create campaign with site isolation
+      // Create campaign
       await supabaseClient
         .from('email_campaigns')
-        .insert({  // CRITICAL: Site isolation
+        .insert({
           campaign_name: campaignName,
           campaign_description: schedule.campaignName,
           campaign_type: 'trial_nurture',
@@ -144,11 +130,10 @@ serve(async (req) => {
         continue;
       }
 
-      // Get campaign ID with site isolation
+      // Get campaign ID
       const { data: campaign } = await supabaseClient
         .from('email_campaigns')
         .select('id')
-          // CRITICAL: Site isolation
         .eq('campaign_name', `trial_${schedule.emailType}`)
         .single();
 
@@ -157,10 +142,10 @@ serve(async (req) => {
         continue;
       }
 
-      // Add to email queue with site isolation
+      // Add to email queue
       const { data: queuedEmail, error: queueError } = await supabaseClient
         .from('email_queue')
-        .insert({  // CRITICAL: Site isolation
+        .insert({
           campaign_id: campaign.id,
           user_id: userId,
           recipient_email: email,
@@ -193,17 +178,17 @@ serve(async (req) => {
       });
     }
 
-    // Create user email preferences with site isolation
+    // Create user email preferences
     await supabaseClient
       .from('email_preferences')
-      .upsert({  // CRITICAL: Site isolation
+      .upsert({
         user_id: userId,
         marketing_emails: true,
         product_updates: true,
         trial_nurture: true,
         billing_notifications: true,
         email_frequency: 'normal',
-      }, { onConflict: 'site_id,user_id' });
+      }, { onConflict: 'user_id' });
 
     logStep("Email scheduling complete", {
       userId,

@@ -4,7 +4,6 @@
  * - Trigger-based emails (new lead, status change, follow-up reminders)
  * - Drip campaigns with sequences
  * - Template-based personalized emails
- * - Multi-tenant site_id isolation
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
@@ -39,7 +38,6 @@ interface AutomationRequest {
   trigger: TriggerType;
   entityType: 'lead' | 'contact' | 'opportunity' | 'deal';
   entityId: string;
-  siteId: string;
   companyId?: string;
   metadata?: Record<string, unknown>;
 }
@@ -144,7 +142,6 @@ Deno.serve(async (req) => {
 
 async function findMatchingAutomations(
   supabase: ReturnType<typeof createClient>,
-  siteId: string,
   trigger: TriggerType,
   entityType: string,
   companyId?: string
@@ -174,7 +171,6 @@ async function getEntityData(
   supabase: ReturnType<typeof createClient>,
   entityType: string,
   entityId: string,
-  siteId: string,
   companyId?: string
 ) {
   const tableName = getTableName(entityType);
@@ -182,8 +178,7 @@ async function getEntityData(
   let query = supabase
     .from(tableName)
     .select('*')
-    .eq('id', entityId)
-    ;
+    .eq('id', entityId);
 
   if (companyId) {
     query = query.eq('company_id', companyId);
@@ -213,7 +208,6 @@ async function processAutomation(
   supabase: ReturnType<typeof createClient>,
   automation: Record<string, unknown>,
   entityData: Record<string, unknown>,
-  siteId: string,
   companyId?: string,
   additionalMetadata?: Record<string, unknown>
 ) {
@@ -249,7 +243,7 @@ async function processAutomation(
     ...config.variables,
     ...additionalMetadata,
     ...prepareEntityVariables(entityData),
-    unsubscribe_url: `https://build-desk.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}&site=${siteId}`,
+    unsubscribe_url: `https://build-desk.com/unsubscribe?email=${encodeURIComponent(recipientEmail)}`,
     current_date: new Date().toLocaleDateString(),
     current_year: new Date().getFullYear(),
   };
@@ -337,7 +331,6 @@ function getRecipientEmail(entityData: Record<string, unknown>): string | null {
 
 async function checkUnsubscribed(
   supabase: ReturnType<typeof createClient>,
-  siteId: string,
   email: string
 ): Promise<boolean> {
   const { data } = await supabase
@@ -353,14 +346,12 @@ async function checkUnsubscribed(
 async function getEmailTemplate(
   supabase: ReturnType<typeof createClient>,
   templateId: string,
-  siteId: string,
   companyId?: string
 ) {
   let query = supabase
     .from('email_templates')
     .select('*')
-    .eq('id', templateId)
-    ;
+    .eq('id', templateId);
 
   if (companyId) {
     query = query.eq('company_id', companyId);
@@ -418,7 +409,6 @@ export async function enrollInDripCampaign(
   campaignId: string,
   entityType: string,
   entityId: string,
-  siteId: string,
   companyId?: string
 ) {
   // Get campaign details
@@ -496,7 +486,6 @@ async function scheduleNextCampaignEmail(
   enrollment: Record<string, unknown>,
   campaign: Record<string, unknown>,
   entity: Record<string, unknown>,
-  siteId: string,
   companyId?: string
 ) {
   const steps = (campaign.sequence_steps as Array<{

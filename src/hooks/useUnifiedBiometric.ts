@@ -228,7 +228,7 @@ export function useUnifiedBiometric(): UseUnifiedBiometricReturn {
 
   // Enable biometric login
   const enableBiometricLogin = useCallback(async (): Promise<boolean> => {
-    if (!user || !siteId) {
+    if (!user) {
       toast({
         title: 'Error',
         description: 'You must be logged in to enable biometric login',
@@ -240,7 +240,6 @@ export function useUnifiedBiometric(): UseUnifiedBiometricReturn {
     const credentials: StoredCredentials = {
       email: user.email || '',
       userId: user.id,
-      siteId,
       lastAuthenticated: new Date().toISOString(),
     };
 
@@ -282,7 +281,7 @@ export function useUnifiedBiometric(): UseUnifiedBiometricReturn {
       });
       return false;
     }
-  }, [user, siteId, state.environment]);
+  }, [user, state.environment]);
 
   // Disable biometric login
   const disableBiometricLogin = useCallback(async (): Promise<boolean> => {

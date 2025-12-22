@@ -1,7 +1,7 @@
 /**
- * CRM Hooks - Data fetching hooks for CRM features with multi-tenant isolation
+ * CRM Hooks - Data fetching hooks for CRM features
  *
- * These hooks ensure proper site_id and company_id filtering for all CRM operations.
+ * These hooks ensure proper company_id filtering for all CRM operations.
  */
 
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
@@ -58,10 +58,10 @@ export interface LeadFilters {
 }
 
 export function useLeads(filters?: LeadFilters, options?: Omit<UseQueryOptions<Lead[], Error>, 'queryKey' | 'queryFn'>) {
-    return useQuery({
-    queryKey: [ filters],
+  return useQuery({
+    queryKey: ['leads', filters],
     queryFn: async () => {
-            let query = supabase
+      let query = supabase
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false });
@@ -99,10 +99,10 @@ export function useLeads(filters?: LeadFilters, options?: Omit<UseQueryOptions<L
 }
 
 export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptions<Lead | null, Error>, 'queryKey' | 'queryFn'>) {
-    return useQuery({
+  return useQuery({
     queryKey: ['lead', leadId],
     queryFn: async () => {
-      if (!siteId || !leadId) throw new Error('Missing site_id or lead_id');
+      if (!leadId) throw new Error('Missing lead_id');
 
       const { data, error } = await supabase
         .from('leads')
@@ -119,13 +119,13 @@ export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptio
 }
 
 export function useCreateLead() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (lead: Omit<LeadInsert, 'site_id'>) => {
-            const { data, error } = await supabase
+    mutationFn: async (lead: LeadInsert) => {
+      const { data, error } = await supabase
         .from('leads')
-        .insert({ ...lead, })
+        .insert({ ...lead })
         .select()
         .single();
 
@@ -143,11 +143,11 @@ export function useCreateLead() {
 }
 
 export function useUpdateLead() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: LeadUpdate & { id: string }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('leads')
         .update(updates)
         .eq('id', id)
@@ -169,15 +169,14 @@ export function useUpdateLead() {
 }
 
 export function useDeleteLead() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (leadId: string) => {
-            const { error } = await supabase
+      const { error } = await supabase
         .from('leads')
         .delete()
-        .eq('id', leadId)
-        ;
+        .eq('id', leadId);
 
       if (error) throw error;
     },
@@ -204,13 +203,13 @@ export interface ContactFilters {
 }
 
 export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOptions<Contact[], Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, filters],
+    queryKey: ['contacts', companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       let query = supabase
         .from('contacts')
@@ -244,13 +243,13 @@ export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOpt
 }
 
 export function useContact(contactId: string | undefined, options?: Omit<UseQueryOptions<Contact | null, Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['contact', contactId, siteId, companyId],
+    queryKey: ['contact', contactId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !contactId) throw new Error('Missing required IDs');
+      if (!companyId || !contactId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('contacts')
@@ -268,13 +267,13 @@ export function useContact(contactId: string | undefined, options?: Omit<UseQuer
 }
 
 export function useCreateContact() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (contact: Omit<ContactInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+    mutationFn: async (contact: Omit<ContactInsert, 'company_id'>) => {
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('contacts')
@@ -296,13 +295,13 @@ export function useCreateContact() {
 }
 
 export function useUpdateContact() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ContactUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('contacts')
@@ -327,13 +326,13 @@ export function useUpdateContact() {
 }
 
 export function useDeleteContact() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (contactId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { error } = await supabase
         .from('contacts')
@@ -367,13 +366,13 @@ export interface OpportunityFilters {
 }
 
 export function useOpportunities(filters?: OpportunityFilters, options?: Omit<UseQueryOptions<Opportunity[], Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, filters],
+    queryKey: ['opportunities', companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       let query = supabase
         .from('opportunities')
@@ -410,13 +409,13 @@ export function useOpportunities(filters?: OpportunityFilters, options?: Omit<Us
 }
 
 export function useOpportunity(opportunityId: string | undefined, options?: Omit<UseQueryOptions<Opportunity | null, Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['opportunity', opportunityId, siteId, companyId],
+    queryKey: ['opportunity', opportunityId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !opportunityId) throw new Error('Missing required IDs');
+      if (!companyId || !opportunityId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('opportunities')
@@ -434,13 +433,13 @@ export function useOpportunity(opportunityId: string | undefined, options?: Omit
 }
 
 export function useCreateOpportunity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (opportunity: Omit<OpportunityInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+    mutationFn: async (opportunity: Omit<OpportunityInsert, 'company_id'>) => {
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('opportunities')
@@ -462,13 +461,13 @@ export function useCreateOpportunity() {
 }
 
 export function useUpdateOpportunity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: OpportunityUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('opportunities')
@@ -493,13 +492,13 @@ export function useUpdateOpportunity() {
 }
 
 export function useDeleteOpportunity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (opportunityId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { error } = await supabase
         .from('opportunities')
@@ -532,13 +531,13 @@ export interface DealFilters {
 }
 
 export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<Deal[], Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, filters],
+    queryKey: ['deals', companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       let query = supabase
         .from('deals')
@@ -572,13 +571,13 @@ export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<D
 }
 
 export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptions<Deal | null, Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['deal', dealId, siteId, companyId],
+    queryKey: ['deal', dealId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !dealId) throw new Error('Missing required IDs');
+      if (!companyId || !dealId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('deals')
@@ -596,13 +595,13 @@ export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptio
 }
 
 export function useCreateDeal() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (deal: Omit<DealInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+    mutationFn: async (deal: Omit<DealInsert, 'company_id'>) => {
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('deals')
@@ -624,13 +623,13 @@ export function useCreateDeal() {
 }
 
 export function useUpdateDeal() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: DealUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('deals')
@@ -655,13 +654,13 @@ export function useUpdateDeal() {
 }
 
 export function useDeleteDeal() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (dealId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { error } = await supabase
         .from('deals')
@@ -693,10 +692,10 @@ export interface CampaignFilters {
 }
 
 export function useEmailCampaigns(filters?: CampaignFilters, options?: Omit<UseQueryOptions<EmailCampaign[], Error>, 'queryKey' | 'queryFn'>) {
-    return useQuery({
-    queryKey: [ filters],
+  return useQuery({
+    queryKey: ['email_campaigns', filters],
     queryFn: async () => {
-            let query = supabase
+      let query = supabase
         .from('email_campaigns')
         .select('*')
         .order('created_at', { ascending: false });
@@ -724,10 +723,10 @@ export function useEmailCampaigns(filters?: CampaignFilters, options?: Omit<UseQ
 }
 
 export function useEmailCampaign(campaignId: string | undefined, options?: Omit<UseQueryOptions<EmailCampaign | null, Error>, 'queryKey' | 'queryFn'>) {
-    return useQuery({
+  return useQuery({
     queryKey: ['email_campaign', campaignId],
     queryFn: async () => {
-      if (!siteId || !campaignId) throw new Error('Missing required IDs');
+      if (!campaignId) throw new Error('Missing campaign_id');
 
       const { data, error } = await supabase
         .from('email_campaigns')
@@ -744,13 +743,13 @@ export function useEmailCampaign(campaignId: string | undefined, options?: Omit<
 }
 
 export function useCreateEmailCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (campaign: Omit<EmailCampaignInsert, 'site_id'>) => {
-            const { data, error } = await supabase
+    mutationFn: async (campaign: EmailCampaignInsert) => {
+      const { data, error } = await supabase
         .from('email_campaigns')
-        .insert({ ...campaign, })
+        .insert({ ...campaign })
         .select()
         .single();
 
@@ -768,11 +767,11 @@ export function useCreateEmailCampaign() {
 }
 
 export function useUpdateEmailCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: EmailCampaignUpdate & { id: string }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('email_campaigns')
         .update(updates)
         .eq('id', id)
@@ -794,15 +793,14 @@ export function useUpdateEmailCampaign() {
 }
 
 export function useDeleteEmailCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (campaignId: string) => {
-            const { error } = await supabase
+      const { error } = await supabase
         .from('email_campaigns')
         .delete()
-        .eq('id', campaignId)
-        ;
+        .eq('id', campaignId);
 
       if (error) throw error;
     },
@@ -828,13 +826,13 @@ export interface TemplateFilters {
 }
 
 export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQueryOptions<EmailTemplate[], Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, filters],
+    queryKey: ['email_templates', companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       let query = supabase
         .from('email_templates')
@@ -865,13 +863,13 @@ export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQ
 }
 
 export function useCreateEmailTemplate() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (template: Omit<EmailTemplateInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+    mutationFn: async (template: Omit<EmailTemplateInsert, 'company_id'>) => {
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('email_templates')
@@ -893,13 +891,13 @@ export function useCreateEmailTemplate() {
 }
 
 export function useUpdateEmailTemplate() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: EmailTemplateUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('email_templates')
@@ -923,13 +921,13 @@ export function useUpdateEmailTemplate() {
 }
 
 export function useDeleteEmailTemplate() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (templateId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { error } = await supabase
         .from('email_templates')
@@ -960,13 +958,13 @@ export interface WorkflowFilters {
 }
 
 export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit<UseQueryOptions<WorkflowDefinition[], Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, filters],
+    queryKey: ['workflow_definitions', companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       let query = supabase
         .from('workflow_definitions')
@@ -994,13 +992,13 @@ export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit
 }
 
 export function useWorkflowDefinition(workflowId: string | undefined, options?: Omit<UseQueryOptions<WorkflowDefinition | null, Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['workflow_definition', workflowId, siteId, companyId],
+    queryKey: ['workflow_definition', workflowId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !workflowId) throw new Error('Missing required IDs');
+      if (!companyId || !workflowId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('workflow_definitions')
@@ -1018,13 +1016,13 @@ export function useWorkflowDefinition(workflowId: string | undefined, options?: 
 }
 
 export function useCreateWorkflowDefinition() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (workflow: Omit<WorkflowDefinitionInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+    mutationFn: async (workflow: Omit<WorkflowDefinitionInsert, 'company_id'>) => {
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('workflow_definitions')
@@ -1046,13 +1044,13 @@ export function useCreateWorkflowDefinition() {
 }
 
 export function useUpdateWorkflowDefinition() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: WorkflowDefinitionUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('workflow_definitions')
@@ -1077,13 +1075,13 @@ export function useUpdateWorkflowDefinition() {
 }
 
 export function useDeleteWorkflowDefinition() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (workflowId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { error } = await supabase
         .from('workflow_definitions')
@@ -1116,13 +1114,13 @@ export interface ActivityFilters {
 }
 
 export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQueryOptions<CRMActivity[], Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, filters],
+    queryKey: ['crm_activities', companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       let query = supabase
         .from('crm_activities')
@@ -1156,13 +1154,13 @@ export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQu
 }
 
 export function useCreateCRMActivity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (activity: Omit<CRMActivityInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+    mutationFn: async (activity: Omit<CRMActivityInsert, 'company_id'>) => {
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('crm_activities')
@@ -1184,13 +1182,13 @@ export function useCreateCRMActivity() {
 }
 
 export function useUpdateCRMActivity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: CRMActivityUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { data, error } = await supabase
         .from('crm_activities')
@@ -1214,13 +1212,13 @@ export function useUpdateCRMActivity() {
 }
 
 export function useDeleteCRMActivity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (activityId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       const { error } = await supabase
         .from('crm_activities')
@@ -1257,19 +1255,18 @@ export interface PipelineStats {
 }
 
 export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, Error>, 'queryKey' | 'queryFn'>) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId],
+    queryKey: ['pipeline_stats', companyId],
     queryFn: async (): Promise<PipelineStats> => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       // Fetch leads
       const { data: leads, error: leadsError } = await supabase
         .from('leads')
-        .select('id, status, lead_source, converted_at')
-        ;
+        .select('id, status, lead_source, converted_at');
 
       if (leadsError) throw leadsError;
 
@@ -1353,12 +1350,12 @@ export interface LeadScore {
 }
 
 export function useLeadScore(leadId: string | undefined, options?: Omit<UseQueryOptions<LeadScore | null, Error>, 'queryKey' | 'queryFn'>) {
-  const {  session } = useAuth();
+  const { session } = useAuth();
 
   return useQuery({
     queryKey: ['lead_score', leadId],
     queryFn: async (): Promise<LeadScore | null> => {
-            // Call the AI lead scoring edge function
+      // Call the AI lead scoring edge function
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-lead-score`, {
         method: 'POST',
         headers: {
@@ -1386,7 +1383,7 @@ export function useLeadScore(leadId: string | undefined, options?: Omit<UseQuery
 // ============================================================================
 
 export function useConvertLeadToOpportunity() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1398,7 +1395,7 @@ export function useConvertLeadToOpportunity() {
       leadId: string;
       opportunityData: Partial<OpportunityInsert>;
     }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No company_id available');
 
       // Get the lead data
       const { data: lead, error: leadError } = await supabase
@@ -1435,8 +1432,7 @@ export function useConvertLeadToOpportunity() {
           status: 'converted',
           converted_at: new Date().toISOString(),
         })
-        .eq('id', leadId)
-        ;
+        .eq('id', leadId);
 
       if (updateError) throw updateError;
 
@@ -1459,7 +1455,7 @@ export function useConvertLeadToOpportunity() {
 // ============================================================================
 
 export function useBulkUpdateLeads() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -1469,7 +1465,7 @@ export function useBulkUpdateLeads() {
       leadIds: string[];
       updates: Partial<LeadUpdate>;
     }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('leads')
         .update(updates)
         .in('id', leadIds)
@@ -1489,15 +1485,14 @@ export function useBulkUpdateLeads() {
 }
 
 export function useBulkDeleteLeads() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (leadIds: string[]) => {
-            const { error } = await supabase
+      const { error } = await supabase
         .from('leads')
         .delete()
-        .in('id', leadIds)
-        ;
+        .in('id', leadIds);
 
       if (error) throw error;
       return leadIds.length;
@@ -1517,11 +1512,11 @@ export function useBulkDeleteLeads() {
 // ============================================================================
 
 export function useBulkUpdateContacts() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ contactIds, updates }: { contactIds: string[]; updates: Partial<ContactUpdate> }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('contacts')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', contactIds)
@@ -1541,15 +1536,14 @@ export function useBulkUpdateContacts() {
 }
 
 export function useBulkDeleteContacts() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (contactIds: string[]) => {
-            const { error } = await supabase
+      const { error } = await supabase
         .from('contacts')
         .delete()
-        .in('id', contactIds)
-        ;
+        .in('id', contactIds);
 
       if (error) throw error;
       return contactIds.length;
@@ -1565,11 +1559,11 @@ export function useBulkDeleteContacts() {
 }
 
 export function useMergeContacts() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ primaryId, secondaryIds }: { primaryId: string; secondaryIds: string[] }) => {
-            // Get primary contact
+      // Get primary contact
       const { data: primary, error: primaryError } = await supabase
         .from('contacts')
         .select('*')
@@ -1582,8 +1576,7 @@ export function useMergeContacts() {
       const { data: secondaries, error: secondariesError } = await supabase
         .from('contacts')
         .select('*')
-        .in('id', secondaryIds)
-        ;
+        .in('id', secondaryIds);
 
       if (secondariesError) throw secondariesError;
 
@@ -1599,8 +1592,7 @@ export function useMergeContacts() {
       const { error: updateError } = await supabase
         .from('contacts')
         .update({ ...mergedData, updated_at: new Date().toISOString() })
-        .eq('id', primaryId)
-        ;
+        .eq('id', primaryId);
 
       if (updateError) throw updateError;
 
@@ -1608,15 +1600,13 @@ export function useMergeContacts() {
       await supabase
         .from('crm_activities')
         .update({ contact_id: primaryId })
-        .in('contact_id', secondaryIds)
-        ;
+        .in('contact_id', secondaryIds);
 
       // Delete secondary contacts
       const { error: deleteError } = await supabase
         .from('contacts')
         .delete()
-        .in('id', secondaryIds)
-        ;
+        .in('id', secondaryIds);
 
       if (deleteError) throw deleteError;
 
@@ -1638,11 +1628,11 @@ export function useMergeContacts() {
 // ============================================================================
 
 export function useBulkUpdateOpportunities() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ opportunityIds, updates }: { opportunityIds: string[]; updates: Partial<OpportunityUpdate> }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('opportunities')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', opportunityIds)
@@ -1662,15 +1652,14 @@ export function useBulkUpdateOpportunities() {
 }
 
 export function useBulkDeleteOpportunities() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (opportunityIds: string[]) => {
-            const { error } = await supabase
+      const { error } = await supabase
         .from('opportunities')
         .delete()
-        .in('id', opportunityIds)
-        ;
+        .in('id', opportunityIds);
 
       if (error) throw error;
       return opportunityIds.length;
@@ -1686,12 +1675,12 @@ export function useBulkDeleteOpportunities() {
 }
 
 export function useConvertOpportunityToDeal() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (opportunityId: string) => {
-            // Get the opportunity
+      // Get the opportunity
       const { data: opportunity, error: fetchError } = await supabase
         .from('opportunities')
         .select('*')
@@ -1728,8 +1717,7 @@ export function useConvertOpportunityToDeal() {
           stage: 'closed_won',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', opportunityId)
-        ;
+        .eq('id', opportunityId);
 
       return deal;
     },
@@ -1749,11 +1737,11 @@ export function useConvertOpportunityToDeal() {
 // ============================================================================
 
 export function useBulkUpdateDeals() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ dealIds, updates }: { dealIds: string[]; updates: Partial<DealUpdate> }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('deals')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', dealIds)
@@ -1773,15 +1761,14 @@ export function useBulkUpdateDeals() {
 }
 
 export function useBulkDeleteDeals() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (dealIds: string[]) => {
-            const { error } = await supabase
+      const { error } = await supabase
         .from('deals')
         .delete()
-        .in('id', dealIds)
-        ;
+        .in('id', dealIds);
 
       if (error) throw error;
       return dealIds.length;
@@ -1809,10 +1796,10 @@ export interface GlobalSearchResult {
 }
 
 export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean }) {
-    return useQuery({
-    queryKey: [ query],
+  return useQuery({
+    queryKey: ['crm_global_search', query],
     queryFn: async (): Promise<GlobalSearchResult[]> => {
-            if (!query || query.length < 2) return [];
+      if (!query || query.length < 2) return [];
 
       const searchPattern = `%${query}%`;
       const results: GlobalSearchResult[] = [];
@@ -1892,10 +1879,10 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
 // ============================================================================
 
 export function useCRMDashboardStats(options?: { enabled?: boolean }) {
-    return useQuery({
+  return useQuery({
     queryKey: ['crm-dashboard-stats'],
     queryFn: async () => {
-            // Get counts in parallel
+      // Get counts in parallel
       const [
         { count: leadCount },
         { count: contactCount },

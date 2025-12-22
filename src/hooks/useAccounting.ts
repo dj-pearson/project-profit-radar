@@ -1,6 +1,5 @@
 /**
  * Accounting Hooks for Enterprise Finance Module
- * Updated with multi-tenant site_id isolation
  *
  * Provides React hooks for:
  * - Chart of Accounts management
@@ -70,7 +69,7 @@ export function useCreateAccount() {
             const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert({
-          ...accountData,  // CRITICAL: Include site_id
+          ...accountData,
         })
         .select()
         .single();
@@ -232,7 +231,7 @@ export function useCreateJournalEntry() {
       // Create journal entry header with site isolation
       const { data: headerData, error: headerError } = await supabase
         .from('journal_entries')
-        .insert({  // CRITICAL: Include site_id
+        .insert({
           company_id: entry.companyId,
           entry_number: entryNumber,
           entry_date: entry.entryDate,
@@ -248,7 +247,7 @@ export function useCreateJournalEntry() {
 
       // Create journal entry lines with site isolation
       const lines = entry.lines.map((line, index) => ({
-        journal_entry_id: headerData.id,  // CRITICAL: Include site_id
+        journal_entry_id: headerData.id,
         company_id: entry.companyId,
         line_number: index + 1,
         account_id: line.accountId,
@@ -392,7 +391,7 @@ export function useCreateBill() {
       // Create bill header with site isolation
       const { data: billData, error: billError } = await supabase
         .from('bills')
-        .insert({  // CRITICAL: Include site_id
+        .insert({
           company_id: bill.companyId,
           bill_number: billNumber,
           vendor_id: bill.vendorId,
@@ -412,7 +411,7 @@ export function useCreateBill() {
 
       // Create line items with site isolation
       const lineItems = bill.lineItems.map((item, index) => ({
-        bill_id: billData.id,  // CRITICAL: Include site_id
+        bill_id: billData.id,
         company_id: bill.companyId,
         line_number: index + 1,
         description: item.description,

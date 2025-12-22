@@ -1,6 +1,5 @@
 // Webhook Delivery Worker Edge Function
 // Delivers webhook events to registered endpoints with retry logic
-// Runs as cron job - processes all sites
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
@@ -12,7 +11,6 @@ const corsHeaders = {
 
 interface WebhookEndpoint {
   id: string
-  site_id: string
   url: string
   secret: string
   is_active: boolean
@@ -24,7 +22,6 @@ interface WebhookEndpoint {
 
 interface WebhookDelivery {
   id: string
-  site_id: string
   endpoint_id: string
   event_type: string
   payload: any
@@ -56,26 +53,20 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       const body = await req.json()
-      const { delivery_id, site_id } = body
+      const { delivery_id } = body
 
       if (delivery_id) {
-        let query = supabaseClient
+        const { data, error } = await supabaseClient
           .from('webhook_deliveries')
           .select('*')
           .eq('id', delivery_id)
-
-                if (site_id) {
-          query = query.eq('site_id', site_id)  // CRITICAL: Site isolation
-        }
-
-        const { data, error } = await query.single()
+          .single()
 
         if (error) throw error
         if (data) deliveriesToProcess = [data]
       }
     } else {
-      // GET request - process all pending deliveries across all sites
-      // Note: This is a cron job that processes deliveries for all sites
+      // GET request - process all pending deliveries
       const { data, error } = await supabaseClient
         .from('webhook_deliveries')
         .select('*')
@@ -92,17 +83,12 @@ serve(async (req) => {
     const results = []
 
     for (const delivery of deliveriesToProcess) {
-      // Get the webhook endpoint details with site isolation
-      let endpointQuery = supabaseClient
+      // Get the webhook endpoint details
+      const { data: endpoint, error: endpointError } = await supabaseClient
         .from('webhook_endpoints')
         .select('*')
         .eq('id', delivery.endpoint_id)
-
-            if (delivery.site_id) {
-        endpointQuery = endpointQuery.eq('site_id', delivery.site_id)  // CRITICAL: Site isolation
-      }
-
-      const { data: endpoint, error: endpointError } = await endpointQuery.single()
+        .single()
 
       if (endpointError || !endpoint) {
         console.error('[WEBHOOK-DELIVERY] Endpoint not found:', delivery.endpoint_id)
@@ -125,11 +111,11 @@ serve(async (req) => {
       const deliveryResult = await deliverWebhook(delivery, endpoint)
       results.push(deliveryResult)
 
-      // Update delivery record with site isolation
-      await updateDeliveryRecord(supabaseClient, delivery.id, delivery.site_id, deliveryResult)
+      // Update delivery record
+      await updateDeliveryRecord(supabaseClient, delivery.id, deliveryResult)
 
-      // Update endpoint statistics with site isolation
-      await updateEndpointStats(supabaseClient, endpoint.id, endpoint.site_id, deliveryResult.success)
+      // Update endpoint statistics
+      await updateEndpointStats(supabaseClient, endpoint.id, deliveryResult.success)
     }
 
     return new Response(
@@ -276,11 +262,10 @@ async function generateHMACSignature(payload: string, secret: string): Promise<s
   return `sha256=${signatureHex}`
 }
 
-// Update delivery record with result and site isolation
+// Update delivery record with result
 async function updateDeliveryRecord(
   supabaseClient: any,
   deliveryId: string,
-  siteId: string | null,
   result: any
 ): Promise<void> {
   const newAttemptCount = result.attempt_count || 1
@@ -296,7 +281,7 @@ async function updateDeliveryRecord(
     status = 'failed_permanent'
   }
 
-  let updateQuery = supabaseClient
+  await supabaseClient
     .from('webhook_deliveries')
     .update({
       status,
@@ -308,32 +293,20 @@ async function updateDeliveryRecord(
       error_message: result.error_message,
       delivered_at: result.success ? new Date().toISOString() : null
     })
-    .eq('id', deliveryId)
-
-  if (siteId) {
-    updateQuery = updateQuery  // CRITICAL: Site isolation on update
-  }
-
-  await updateQuery
+    .eq('id', deliveryId);
 }
 
-// Update endpoint statistics with site isolation
+// Update endpoint statistics
 async function updateEndpointStats(
   supabaseClient: any,
   endpointId: string,
-  siteId: string | null,
   success: boolean
 ): Promise<void> {
-  let selectQuery = supabaseClient
+  const { data: endpoint } = await supabaseClient
     .from('webhook_endpoints')
     .select('success_count, failure_count')
     .eq('id', endpointId)
-
-  if (siteId) {
-    selectQuery = selectQuery  // CRITICAL: Site isolation
-  }
-
-  const { data: endpoint } = await selectQuery.single()
+    .single()
 
   if (!endpoint) return
 
@@ -355,14 +328,8 @@ async function updateEndpointStats(
     }
   }
 
-  let updateQuery = supabaseClient
+  await supabaseClient
     .from('webhook_endpoints')
     .update(updates)
-    .eq('id', endpointId)
-
-  if (siteId) {
-    updateQuery = updateQuery  // CRITICAL: Site isolation on update
-  }
-
-  await updateQuery
+    .eq('id', endpointId);
 }

@@ -45,7 +45,6 @@ export interface ProcessingResult {
 
 export interface ProcessingQueueItem {
   id: string;
-  site_id: string;
   company_id?: string;
   original_path: string;
   bucket: string;
@@ -58,7 +57,6 @@ export interface ProcessingQueueItem {
 
 export interface ProcessedImage {
   id: string;
-  site_id: string;
   document_id?: string;
   original_path: string;
   original_size: number;
@@ -118,15 +116,10 @@ export function useProcessImage() {
         throw new Error('Not authenticated');
       }
 
-      if (!siteId) {
-        throw new Error('No site_id available');
-      }
-
       const response = await supabase.functions.invoke('image-processor', {
         body: {
           storagePath,
           bucket,
-          siteId,
           companyId,
           documentId,
           generateThumbnail: options.generateThumbnail ?? true,
@@ -153,10 +146,10 @@ export function useProcessImage() {
  * Hook to get processing queue status
  */
 export function useProcessingQueue(options?: { enabled?: boolean }) {
-    return useQuery({
+  return useQuery({
     queryKey: ['processing-queue'],
     queryFn: async (): Promise<ProcessingQueueItem[]> => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('image_processing_queue')
         .select('*')
         .order('created_at', { ascending: false })
@@ -185,7 +178,6 @@ export function usePendingProcessingCount() {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!siteId,
     refetchInterval: 10000,
   });
 }
@@ -394,7 +386,6 @@ export function useImageProcessingStats() {
         totalSavings: processedStats.totalOriginalSize - processedStats.totalProcessedSize,
       };
     },
-    enabled: !!siteId,
   });
 }
 
@@ -423,10 +414,6 @@ export function useUploadAndProcessImage() {
     }): Promise<ProcessingResult> => {
       if (!session?.access_token) {
         throw new Error('Not authenticated');
-      }
-
-      if (!siteId) {
-        throw new Error('No site_id available');
       }
 
       // Validate file type

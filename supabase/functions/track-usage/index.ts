@@ -27,7 +27,7 @@ serve(async (req) => {
   try {
     logStep("Usage tracking request received");
 
-        const authContext = await initializeAuthContext(req);
+    const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
@@ -53,11 +53,10 @@ serve(async (req) => {
     let targetUserId = user_id || user.id;
 
     if (!targetCompanyId) {
-      // Get user's company from profile with site isolation
+      // Get user's company from profile
       const { data: profile } = await supabaseClient
         .from("user_profiles")
         .select("company_id")
-        .eq("site_id")  // CRITICAL: Site isolation
         .eq("id", user.id)
         .single();
 
@@ -70,11 +69,10 @@ serve(async (req) => {
       throw new Error("Could not determine company_id for usage tracking");
     }
 
-    // Check if usage record exists for this period with site isolation
+    // Check if usage record exists for this period
     const { data: existingUsage } = await supabaseClient
       .from("usage_metrics")
       .select("*")
-      .eq("site_id")  // CRITICAL: Site isolation
       .eq("company_id", targetCompanyId)
       .eq("user_id", targetUserId)
       .eq("metric_type", metric_type)
@@ -83,7 +81,7 @@ serve(async (req) => {
       .single();
 
     if (existingUsage) {
-      // Update existing record with site isolation
+      // Update existing record
       const newValue = parseFloat(existingUsage.metric_value) + metric_value;
 
       await supabaseClient
@@ -92,15 +90,14 @@ serve(async (req) => {
           metric_value: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("site_id")  // CRITICAL: Site isolation
         .eq("id", existingUsage.id);
 
       logStep("Updated existing usage record", { id: existingUsage.id, newValue });
     } else {
-      // Create new record with site isolation
+      // Create new record
       const { data: newUsage } = await supabaseClient
         .from("usage_metrics")
-        .insert({  // CRITICAL: Site isolation
+        .insert({
           company_id: targetCompanyId,
           user_id: targetUserId,
           metric_type,
@@ -114,7 +111,7 @@ serve(async (req) => {
       logStep("Created new usage record", { id: newUsage?.id });
     }
 
-    // Check for usage alerts/limits with site isolation
+    // Check for usage alerts/limits
     await checkUsageAlerts(targetCompanyId, metric_type, supabaseClient);
 
     return new Response(JSON.stringify({ success: true }), {
@@ -132,12 +129,11 @@ serve(async (req) => {
   }
 });
 
-async function checkUsageAlerts(companyId: string, metricType: string, supabaseClient: any, siteId: string) {
-  // Get company subscription tier to determine limits with site isolation
+async function checkUsageAlerts(companyId: string, metricType: string, supabaseClient: any) {
+  // Get company subscription tier to determine limits
   const { data: company } = await supabaseClient
     .from("companies")
     .select("subscription_tier")
-    .eq("site_id")  // CRITICAL: Site isolation
     .eq("id", companyId)
     .single();
 
@@ -170,7 +166,7 @@ async function checkUsageAlerts(companyId: string, metricType: string, supabaseC
 
   if (!limit) return;
 
-  // Get current period usage with site isolation
+  // Get current period usage
   const now = new Date();
   const billingPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const billingPeriodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -178,7 +174,6 @@ async function checkUsageAlerts(companyId: string, metricType: string, supabaseC
   const { data: usage } = await supabaseClient
     .from("usage_metrics")
     .select("metric_value")
-    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", companyId)
     .eq("metric_type", metricType)
     .eq("billing_period_start", billingPeriodStart.toISOString().split('T')[0])

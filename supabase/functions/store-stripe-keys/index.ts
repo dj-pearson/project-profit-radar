@@ -81,8 +81,6 @@ serve(async (req) => {
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
 
-            if (!siteId) throw new Error("Site ID not found in user context");
-
     logStep("User authenticated", { userId: user.id });
 
     const { company_id, secret_key, webhook_secret } = await req.json();
@@ -96,7 +94,7 @@ serve(async (req) => {
     const encryptedSecretKey = await encryptKey(secret_key);
     const encryptedWebhookSecret = webhook_secret ? await encryptKey(webhook_secret) : null;
 
-    // Update the company payment settings with encrypted keys and site isolation
+    // Update the company payment settings with encrypted keys
     const { error: updateError } = await supabaseClient
       .from('company_payment_settings')
       .update({
@@ -104,7 +102,6 @@ serve(async (req) => {
         stripe_webhook_secret_encrypted: encryptedWebhookSecret,
         updated_at: new Date().toISOString()
       })
-        // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     if (updateError) throw updateError;

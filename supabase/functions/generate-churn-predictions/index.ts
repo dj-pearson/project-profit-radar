@@ -24,36 +24,22 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get all active sites for multi-tenant processing
-    const { data: sites, error: sitesError } = await supabaseClient
-      .from("sites")
-      .select("id, key, name")
-      .eq("is_active", true);
-
-    if (sitesError) throw sitesError;
-
-    logStep("Processing churn predictions for sites", { siteCount: sites?.length || 0 });
+    logStep("Processing churn predictions");
 
     let predictionsGenerated = 0;
-    let sitesProcessed = 0;
 
-    // Process each site
-    for (const site of sites || []) {
-      logStep(`Processing site: ${site.key}`, { siteId: site.id });
+    // Get all users with health scores
+    const { data: healthScores, error: healthError } = await supabaseClient
+      .from("user_health_scores")
+      .select(`
+        *,
+        user_profiles!inner(id, email, first_name, last_name)
+      `);
 
-      // Get all users with health scores for this site
-      const { data: healthScores, error: healthError } = await supabaseClient
-        .from("user_health_scores")
-        .select(`
-          *,
-          user_profiles!inner(id, email, first_name, last_name)
-        `)
-        .eq("site_id", site.id);  // CRITICAL: Site isolation
-
-      if (healthError) {
-        logStep(`Error fetching health scores for site ${site.key}`, { error: healthError.message });
-        continue;
-      }
+    if (healthError) {
+      logStep("Error fetching health scores", { error: healthError.message });
+      throw healthError;
+    }
 
     for (const score of healthScores || []) {
       // Calculate churn probability based on multiple factors
@@ -115,16 +101,14 @@ serve(async (req) => {
 
       // Only create/update predictions for users with meaningful churn risk
       if (churnProbability >= 30 || contributingFactors.length > 0) {
-        // Check if prediction already exists with site isolation
+        // Check if prediction already exists
         const { data: existingPrediction } = await supabaseClient
           .from("churn_predictions")
           .select("id")
-          .eq("site_id", site.id)  // CRITICAL: Site isolation
           .eq("user_id", score.user_id)
           .single();
 
         const predictionData = {
-          site_id: site.id,  // CRITICAL: Site isolation
           user_id: score.user_id,
           churn_probability: Math.round(churnProbability),
           predicted_churn_date: predictedChurnDate.toISOString().split('T')[0],
@@ -136,11 +120,10 @@ serve(async (req) => {
         };
 
         if (existingPrediction) {
-          // Update existing prediction with site isolation
+          // Update existing prediction
           await supabaseClient
             .from("churn_predictions")
             .update(predictionData)
-            .eq("site_id", site.id)  // CRITICAL: Site isolation
             .eq("id", existingPrediction.id);
         } else {
           // Insert new prediction
@@ -153,17 +136,13 @@ serve(async (req) => {
       }
     }
 
-      sitesProcessed++;
-    }  // End of sites loop
-
-    logStep("Churn predictions completed", { predictionsGenerated, sitesProcessed });
+    logStep("Churn predictions completed", { predictionsGenerated });
 
     return new Response(
       JSON.stringify({
         success: true,
         count: predictionsGenerated,
-        sites_processed: sitesProcessed,
-        message: `Generated ${predictionsGenerated} churn predictions across ${sitesProcessed} sites`,
+        message: `Generated ${predictionsGenerated} churn predictions`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

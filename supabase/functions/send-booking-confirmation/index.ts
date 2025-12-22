@@ -25,12 +25,12 @@ const handler = async (req: Request): Promise<Response> => {
       return errorResponse('Unauthorized', 401);
     }
 
-    const {  supabase: supabaseClient } = authContext;
-    console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized', { siteId });
+    const { supabase: supabaseClient } = authContext;
+    console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized');
 
     const { bookingId }: BookingConfirmationRequest = await req.json();
 
-    // Fetch booking details with booking page info and site isolation
+    // Fetch booking details with booking page info
     const { data: booking, error: bookingError } = await supabaseClient
       .from('bookings')
       .select(`
@@ -40,7 +40,6 @@ const handler = async (req: Request): Promise<Response> => {
           location
         )
       `)
-        // CRITICAL: Site isolation
       .eq('id', bookingId)
       .single();
 

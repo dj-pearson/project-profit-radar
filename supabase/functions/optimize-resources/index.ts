@@ -37,11 +37,10 @@ serve(async (req) => {
 
     logStep("Starting resource optimization", {  company_id, optimization_scope, scope_id });
 
-    // Get optimization configuration with site isolation
+    // Get optimization configuration
     const { data: config, error: configError } = await supabaseClient
       .from('resource_optimization_configs')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .eq('id', config_id || 'default')
       .maybeSingle();
@@ -64,10 +63,10 @@ serve(async (req) => {
 
     const effectiveConfig = config ?? defaultConfig;
 
-    // Create optimization run record with site isolation
+    // Create optimization run record
     const { data: optimizationRun, error: runError } = await supabaseClient
       .from('resource_optimization_runs')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         company_id,
         config_id: config_id,
         run_type: 'manual',
@@ -85,11 +84,10 @@ serve(async (req) => {
 
     logStep("Created optimization run", { run_id: optimizationRun.id });
 
-    // Load company data for optimization with site isolation
+    // Load company data for optimization
     const dataPromises = [
       // Load teams/crews
       supabaseClient.from('teams').select('*')
-          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       // Load projects
       supabaseClient.from('projects').select(`
@@ -97,14 +95,12 @@ serve(async (req) => {
         tasks(*),
         project_team_assignments(*)
       `)
-          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       // Load equipment
       supabaseClient.from('equipment_assignments').select(`
         *,
         projects(name, priority)
       `)
-          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       // Load existing assignments
       supabaseClient.from('project_team_assignments').select(`
@@ -112,7 +108,6 @@ serve(async (req) => {
         projects(name, priority, start_date, end_date),
         teams(name, skills)
       `)
-          // CRITICAL: Site isolation
         .eq('company_id', company_id)
     ];
 
@@ -135,7 +130,7 @@ serve(async (req) => {
       assignments: assignments.length
     });
 
-    // Detect conflicts with site isolation
+    // Detect conflicts
     const conflicts = await detectResourceConflicts(assignments, equipment, supabaseClient, optimizationRun.id);
     
     logStep("Detected conflicts", { count: conflicts.length });
@@ -217,9 +212,9 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
       estimated_savings: optimizationData.summary?.estimated_cost_savings || 0
     });
 
-    // Store optimization results with site isolation
+    // Store optimization results
     const assignmentPromises = optimizationData.optimizations?.map((opt: any) =>
-      supabaseClient.from('optimized_resource_assignments').insert({  // CRITICAL: Site isolation
+      supabaseClient.from('optimized_resource_assignments').insert({
         optimization_run_id: optimizationRun.id,
         company_id,
         resource_type: opt.resourceType,
@@ -249,11 +244,10 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
         optimization_data: optimizationData,
         recommendations: optimizationData.optimizations || []
       })
-        // CRITICAL: Site isolation
       .eq('id', optimizationRun.id);
 
-    // Store metrics with site isolation
-    await supabaseClient.from('resource_optimization_metrics').insert({  // CRITICAL: Site isolation
+    // Store metrics
+    await supabaseClient.from('resource_optimization_metrics').insert({
       company_id,
       optimization_run_id: optimizationRun.id,
       total_resources: teams.length + equipment.length,
@@ -290,7 +284,7 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
   }
 });
 
-async function detectResourceConflicts(assignments: any[], equipment: any[], supabaseClient: any, runId: string, siteId: string): Promise<any[]> {
+async function detectResourceConflicts(assignments: any[], equipment: any[], supabaseClient: any, runId: string): Promise<any[]> {
   const conflicts: any[] = [];
   const resourceMap = new Map();
 
@@ -327,7 +321,7 @@ async function detectResourceConflicts(assignments: any[], equipment: any[], sup
 
         // Check for overlap
         if (start1 < end2 && start2 < end1) {
-          const conflict = {  // CRITICAL: Site isolation
+          const conflict = {
             optimization_run_id: runId,
             company_id: assignment1.company_id,
             conflict_type: 'double_booking',
@@ -344,7 +338,7 @@ async function detectResourceConflicts(assignments: any[], equipment: any[], sup
 
           conflicts.push(conflict);
 
-          // Store in database with site isolation
+          // Store in database
           await supabaseClient.from('resource_conflicts').insert(conflict);
         }
       }

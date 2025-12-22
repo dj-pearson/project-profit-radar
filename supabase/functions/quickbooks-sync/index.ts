@@ -98,24 +98,23 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context with site isolation
+    // Initialize auth context
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
     const { user, supabase: supabaseClient } = authContext;
-    console.log(`[QUICKBOOKS-SYNC] User authenticated: ${user.id}, siteId: ${siteId}`);
+    console.log(`[QUICKBOOKS-SYNC] User authenticated: ${user.id}`);
 
     const { company_id, sync_type = 'incremental' } = await req.json()
 
-    console.log(`Starting ${sync_type} sync for company: ${company_id}, site: ${siteId}`)
+    console.log(`Starting ${sync_type} sync for company: ${company_id}`)
 
-    // Get QuickBooks integration with site isolation
+    // Get QuickBooks integration
     const { data: integration, error: integrationError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .eq('is_connected', true)
       .single()
@@ -139,10 +138,11 @@ serve(async (req) => {
       // Ensure we have a valid access token (refresh if needed)
       const accessToken = await ensureValidToken(supabaseClient, integration)
 
-      // Create sync log entry with site isolation
+      // Create sync log entry
       const { data: syncLog } = await supabaseClient
         .from('quickbooks_sync_logs')
-        .insert({            company_id,
+        .insert({
+          company_id,
           sync_type,
           status: 'running',
           started_at: new Date().toISOString()
@@ -157,7 +157,7 @@ serve(async (req) => {
         ? 'https://quickbooks.api.intuit.com'
         : 'https://sandbox-quickbooks.api.intuit.com'
 
-      // Sync Customers from QuickBooks to our system (with site isolation)
+      // Sync Customers from QuickBooks to our system
       try {
         const customers = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Customer')
         for (const customer of customers) {
@@ -171,7 +171,7 @@ serve(async (req) => {
         errorsCount++
       }
 
-      // Sync Items from QuickBooks to our system (with site isolation)
+      // Sync Items from QuickBooks to our system
       try {
         const items = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Item')
         for (const item of items) {
@@ -185,7 +185,7 @@ serve(async (req) => {
         errorsCount++
       }
 
-      // Sync Expenses (Purchases) from QuickBooks to our system (with site isolation)
+      // Sync Expenses (Purchases) from QuickBooks to our system
       try {
         const purchases = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Purchase')
         for (const purchase of purchases) {
@@ -199,7 +199,7 @@ serve(async (req) => {
         errorsCount++
       }
 
-      // Sync Payments from QuickBooks to our system (with site isolation)
+      // Sync Payments from QuickBooks to our system
       try {
         const payments = await fetchQuickBooksData(baseUrl, integration.realm_id, accessToken, 'Payment')
         for (const payment of payments) {
@@ -213,7 +213,7 @@ serve(async (req) => {
         errorsCount++
       }
 
-      // Sync Invoices from our system to QuickBooks (with site isolation)
+      // Sync Invoices from our system to QuickBooks
       try {
         const localInvoices = await getLocalInvoicesForSync(supabaseClient, company_id, sync_type)
         for (const invoice of localInvoices) {
@@ -315,9 +315,10 @@ async function fetchQuickBooksData(baseUrl: string, realmId: string, accessToken
   return data.QueryResponse?.[entityType] || []
 }
 
-async function syncCustomer(supabaseClient: any, siteId: string, companyId: string, qbCustomer: any) {
-  // Sync customer data to our system with site isolation
-  const customerData = {      qb_customer_id: qbCustomer.Id,
+async function syncCustomer(supabaseClient: any, companyId: string, qbCustomer: any) {
+  // Sync customer data to our system
+  const customerData = {
+    qb_customer_id: qbCustomer.Id,
     company_id: companyId,
     name: qbCustomer.Name,
     email: qbCustomer.PrimaryEmailAddr?.Address,
@@ -329,12 +330,13 @@ async function syncCustomer(supabaseClient: any, siteId: string, companyId: stri
 
   await supabaseClient
     .from('quickbooks_customers')
-    .upsert(customerData, { onConflict: 'qb_customer_id,company_id,site_id' })
+    .upsert(customerData, { onConflict: 'qb_customer_id,company_id' })
 }
 
-async function syncItem(supabaseClient: any, siteId: string, companyId: string, qbItem: any) {
-  // Sync item data to our system with site isolation
-  const itemData = {      qb_item_id: qbItem.Id,
+async function syncItem(supabaseClient: any, companyId: string, qbItem: any) {
+  // Sync item data to our system
+  const itemData = {
+    qb_item_id: qbItem.Id,
     company_id: companyId,
     name: qbItem.Name,
     description: qbItem.Description,
@@ -346,14 +348,13 @@ async function syncItem(supabaseClient: any, siteId: string, companyId: string, 
 
   await supabaseClient
     .from('quickbooks_items')
-    .upsert(itemData, { onConflict: 'qb_item_id,company_id,site_id' })
+    .upsert(itemData, { onConflict: 'qb_item_id,company_id' })
 }
 
-async function getLocalInvoicesForSync(supabaseClient: any, siteId: string, companyId: string, syncType: string) {
+async function getLocalInvoicesForSync(supabaseClient: any, companyId: string, syncType: string) {
   let query = supabaseClient
     .from('invoices')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .is('qb_invoice_id', null) // Only sync invoices not yet in QuickBooks
 
@@ -370,9 +371,10 @@ async function getLocalInvoicesForSync(supabaseClient: any, siteId: string, comp
   return data || []
 }
 
-async function syncExpense(supabaseClient: any, siteId: string, companyId: string, qbPurchase: any) {
-  // Sync expense/purchase data from QuickBooks to our system with site isolation
-  const expenseData = {      qb_expense_id: qbPurchase.Id,
+async function syncExpense(supabaseClient: any, companyId: string, qbPurchase: any) {
+  // Sync expense/purchase data from QuickBooks to our system
+  const expenseData = {
+    qb_expense_id: qbPurchase.Id,
     company_id: companyId,
     vendor_name: qbPurchase.EntityRef?.name || 'Unknown Vendor',
     amount: qbPurchase.TotalAmt || 0,
@@ -387,12 +389,13 @@ async function syncExpense(supabaseClient: any, siteId: string, companyId: strin
 
   await supabaseClient
     .from('quickbooks_expenses')
-    .upsert(expenseData, { onConflict: 'qb_expense_id,company_id,site_id' })
+    .upsert(expenseData, { onConflict: 'qb_expense_id,company_id' })
 }
 
-async function syncPayment(supabaseClient: any, siteId: string, companyId: string, qbPayment: any) {
-  // Sync payment data from QuickBooks to our system with site isolation
-  const paymentData = {      qb_payment_id: qbPayment.Id,
+async function syncPayment(supabaseClient: any, companyId: string, qbPayment: any) {
+  // Sync payment data from QuickBooks to our system
+  const paymentData = {
+    qb_payment_id: qbPayment.Id,
     company_id: companyId,
     customer_name: qbPayment.CustomerRef?.name || 'Unknown Customer',
     amount: qbPayment.TotalAmt || 0,
@@ -407,7 +410,7 @@ async function syncPayment(supabaseClient: any, siteId: string, companyId: strin
 
   await supabaseClient
     .from('quickbooks_payments')
-    .upsert(paymentData, { onConflict: 'qb_payment_id,company_id,site_id' })
+    .upsert(paymentData, { onConflict: 'qb_payment_id,company_id' })
 }
 
 /**
@@ -421,7 +424,7 @@ function escapeQBQueryString(str: string): string {
   return str.replace(/'/g, "''");
 }
 
-async function syncInvoiceToQuickBooks(supabaseClient: any, siteId: string, baseUrl: string, realmId: string, accessToken: string, invoice: any) {
+async function syncInvoiceToQuickBooks(supabaseClient: any, baseUrl: string, realmId: string, accessToken: string, invoice: any) {
   // First, try to find the customer in QuickBooks
   let customerRef = { value: "1" } // Default fallback
 
@@ -492,7 +495,7 @@ async function syncInvoiceToQuickBooks(supabaseClient: any, siteId: string, base
   const result = await response.json()
   const qbInvoice = result.Invoice
 
-  // Update local invoice with QuickBooks ID (with site isolation)
+  // Update local invoice with QuickBooks ID
   if (qbInvoice?.Id) {
     await supabaseClient
       .from('invoices')
@@ -501,7 +504,6 @@ async function syncInvoiceToQuickBooks(supabaseClient: any, siteId: string, base
         qb_sync_token: qbInvoice.SyncToken,
         last_synced_to_qb: new Date().toISOString()
       })
-        // CRITICAL: Site isolation on update
       .eq('id', invoice.id)
   }
 

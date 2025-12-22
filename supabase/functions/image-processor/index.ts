@@ -7,7 +7,6 @@
  * - Multiple resolution generation
  * - Thumbnail creation
  * - Compression optimization
- * - Multi-tenant site isolation
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3';
@@ -70,8 +69,6 @@ interface ProcessingRequest {
   convertToModernFormats?: boolean;
   // Custom quality override
   quality?: number;
-  // Site ID for multi-tenant isolation
-  siteId: string;
   // Company ID
   companyId?: string;
   // Document ID to update
@@ -145,7 +142,7 @@ Deno.serve(async (req) => {
       documentId,
     } = body;
 
-    if (!storagePath || !bucket || !siteId) {
+    if (!storagePath || !bucket) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -218,8 +215,7 @@ Deno.serve(async (req) => {
           transcoding_status: 'completed',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', documentId)
-        ;
+        .eq('id', documentId);
     }
 
     logStep('Processing complete', {
@@ -254,7 +250,6 @@ async function processImage(
     generateResponsiveSizes: boolean;
     convertToModernFormats: boolean;
     quality: number;
-    siteId: string;
     companyId?: string;
   }
 ): Promise<ProcessingResult> {
@@ -380,7 +375,7 @@ async function processImage(
     await supabase
       .from('image_processing_queue')
       .upsert({
-        site_id: options.company_id: options.companyId,
+        company_id: options.companyId,
         original_path: originalPath,
         bucket,
         processing_manifest: processingManifest,

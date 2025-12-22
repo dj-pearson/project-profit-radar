@@ -1,6 +1,5 @@
 /**
  * Audit Log Hook
- * Updated with multi-tenant site_id isolation
  */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,19 +45,18 @@ export const useAuditLog = () => {
   };
 
   const logAuditEvent = async (params: AuditLogParams) => {
-    if (!user || !siteId) return null;
+    if (!user) return null;
 
     try {
       setLoading(true);
       const ip = await getClientIP();
 
-      // Use userProfile from context if available, otherwise fetch with site isolation
+      // Use userProfile from context if available, otherwise fetch
       let companyId = userProfile?.company_id;
       if (!companyId) {
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('company_id')
-            // CRITICAL: Site isolation
           .eq('id', user.id)
           .single();
         companyId = profile?.company_id;
@@ -98,7 +96,7 @@ export const useAuditLog = () => {
   };
 
   const logDataAccess = async (params: DataAccessParams) => {
-    if (!user || !siteId) return null;
+    if (!user) return null;
 
     try {
       setLoading(true);

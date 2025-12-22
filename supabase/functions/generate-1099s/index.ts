@@ -47,16 +47,15 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id });
 
     const requestData: Generate1099Request = await req.json();
-    logStep("Request data received", { 
+    logStep("Request data received", {
       tax_year: requestData.tax_year,
       contractor_count: requestData.contractor_ids?.length
     });
 
-    // Get user's company with site isolation
+    // Get user's company
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('company_id, role')
-        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -68,11 +67,10 @@ serve(async (req) => {
       throw new Error("Insufficient permissions to generate 1099s");
     }
 
-    // Build contractor filter with site isolation
+    // Build contractor filter
     let contractorFilter = supabaseClient
       .from('contractors')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('company_id', profile.company_id)
       .eq('is_active', true);
 
@@ -89,11 +87,10 @@ serve(async (req) => {
     const contractorSummaries: ContractorPaymentSummary[] = [];
 
     for (const contractor of contractors || []) {
-      // Get payments for this contractor in the tax year with site isolation
+      // Get payments for this contractor in the tax year
       const { data: payments, error: paymentsError } = await supabaseClient
         .from('contractor_payments')
         .select('amount, payment_date')
-          // CRITICAL: Site isolation
         .eq('contractor_id', contractor.id)
         .eq('company_id', profile.company_id)
         .eq('is_1099_reportable', true)
@@ -123,8 +120,8 @@ serve(async (req) => {
 
     logStep("Payment summaries calculated", { summaries_count: contractorSummaries.length });
 
-    // Generate 1099-NEC forms data with site isolation
-    const forms1099Data = contractorSummaries.map(summary => ({  // CRITICAL: Site isolation
+    // Generate 1099-NEC forms data
+    const forms1099Data = contractorSummaries.map(summary => ({
       contractor_id: summary.contractor_id,
       contractor_name: summary.contractor_name,
       contractor_tax_id: summary.tax_id,
@@ -141,11 +138,11 @@ serve(async (req) => {
       status: 'draft'
     }));
 
-    // Store 1099 records with site isolation
+    // Store 1099 records
     const { error: formsError } = await supabaseClient
       .from('forms_1099')
       .upsert(forms1099Data, {
-        onConflict: 'site_id,contractor_id,tax_year',
+        onConflict: 'contractor_id,tax_year',
         ignoreDuplicates: false
       });
 

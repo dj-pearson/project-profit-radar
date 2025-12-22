@@ -12,24 +12,6 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-        const body = await req.json().catch(() => ({}));
-    let siteId = body.site_id;
-
-    = await supabase
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-
-      if (!site?.id) {
-        return new Response(
-          JSON.stringify({ error: 'BuildDesk site not found. Please provide site_id.' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
-      }
-      siteId = site.id;
-    }
-
     const blogPosts = [
       {
         title: "Construction CRM Implementation Guide",
@@ -352,7 +334,7 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     let skipped = 0;
 
     for (const post of blogPosts) {
-      // Check if post already exists for this site (multi-tenant isolation)
+      // Check if post already exists
       const { data: existing } = await supabase
         .from('blog_posts')
         .select('id')
@@ -360,14 +342,14 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
         .maybeSingle();
 
       if (existing) {
-        console.log(`Post ${post.slug} already exists for site ${siteId}, skipping...`);
+        console.log(`Post ${post.slug} already exists, skipping...`);
         skipped++;
         continue;
       }
 
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('blog_posts')
-        .insert([{ ...post, }])
+        .insert([{ ...post }])
         .select();
       
       if (error) {
@@ -382,7 +364,7 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Content creation complete for site ${siteId}! Created: ${created}, Skipped: ${skipped}`,
+        message: `Content creation complete! Created: ${created}, Skipped: ${skipped}`,
         created,
         skipped
       }),

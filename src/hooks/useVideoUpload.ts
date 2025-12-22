@@ -63,14 +63,13 @@ export interface UseVideoUploadOptions {
  * Hook to fetch upload configuration for video files
  */
 export function useUploadConfig(fileCategory: string = 'video') {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: [ companyId, fileCategory],
+    queryKey: ['upload-config', companyId, fileCategory],
     queryFn: async () => {
             const { data, error } = await supabase.rpc('get_upload_config', {
-        p_
         p_company_id: companyId || null,
         p_file_category: fileCategory,
       });
@@ -78,7 +77,7 @@ export function useUploadConfig(fileCategory: string = 'video') {
       if (error) throw error;
       return data as UploadConfig[] | null;
     },
-    enabled: !!siteId,
+    enabled: !!companyId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
@@ -191,7 +190,7 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
     onError,
   } = options;
 
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -347,11 +346,11 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
  * Hook to fetch project videos
  */
 export function useProjectVideos(projectId: string | undefined) {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['project_videos', projectId, siteId, companyId],
+    queryKey: ['project_videos', projectId, companyId],
     queryFn: async () => {
             const { data, error } = await supabase
         .from('project_videos')
@@ -374,7 +373,7 @@ export function useProjectVideos(projectId: string | undefined) {
  * Hook to delete a video
  */
 export function useDeleteVideo() {
-  const {  userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 

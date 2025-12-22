@@ -5,11 +5,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-site-key',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -30,15 +27,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-        const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
-    const { data: siteData } = await supabaseClient
-      .from('sites')
-      .select('id')
-      .eq('key', siteKey)
-      .single();
-
-        logStep("Site resolved", { siteKey });
-
     const { affiliate_code, referee_email } = await req.json();
 
     if (!affiliate_code || !referee_email) {
@@ -47,8 +35,8 @@ serve(async (req) => {
 
     logStep("Processing referral", { affiliate_code, referee_email });
 
-    // Get affiliate code details with site isolation
-    let affiliateQuery = supabaseClient
+    // Get affiliate code details
+    const { data: affiliateCodeData, error: affiliateError } = await supabaseClient
       .from('affiliate_codes')
       .select(`
         *,
@@ -56,13 +44,8 @@ serve(async (req) => {
         companies!inner(*)
       `)
       .eq('affiliate_code', affiliate_code)
-      .eq('is_active', true);
-
-    if (siteId) {
-      affiliateQuery = affiliateQuery;  // CRITICAL: Site isolation
-    }
-
-    const { data: affiliateCodeData, error: affiliateError } = await affiliateQuery.single();
+      .eq('is_active', true)
+      .single();
 
     if (affiliateError || !affiliateCodeData) {
       logStep("Invalid affiliate code", { error: affiliateError });
@@ -73,19 +56,14 @@ serve(async (req) => {
       company: affiliateCodeData.companies.name,
       program: affiliateCodeData.affiliate_programs.name });
 
-    // Check if referral already exists for this email and affiliate code with site isolation
-    let existingReferralQuery = supabaseClient
+    // Check if referral already exists for this email and affiliate code
+    const { data: existingReferral } = await supabaseClient
       .from('affiliate_referrals')
       .select('*')
       .eq('affiliate_code_id', affiliateCodeData.id)
       .eq('referee_email', referee_email)
-      .eq('referral_status', 'pending');
-
-    if (siteId) {
-      existingReferralQuery = existingReferralQuery;  // CRITICAL: Site isolation
-    }
-
-    const { data: existingReferral } = await existingReferralQuery.single();
+      .eq('referral_status', 'pending')
+      .single();
 
     if (existingReferral) {
       logStep("Referral already exists", { referral_id: existingReferral.id });
@@ -99,10 +77,11 @@ serve(async (req) => {
       });
     }
 
-    // Create new referral record with site isolation
+    // Create new referral record
     const { data: referral, error: referralError } = await supabaseClient
       .from('affiliate_referrals')
-      .insert({          affiliate_code_id: affiliateCodeData.id,
+      .insert({
+        affiliate_code_id: affiliateCodeData.id,
         referrer_company_id: affiliateCodeData.company_id,
         referee_email: referee_email,
         referrer_reward_months: affiliateCodeData.affiliate_programs.referrer_reward_months,
@@ -117,20 +96,14 @@ serve(async (req) => {
       throw new Error("Failed to create referral");
     }
 
-    // Update affiliate code stats with site isolation
-    let updateQuery = supabaseClient
+    // Update affiliate code stats
+    await supabaseClient
       .from('affiliate_codes')
       .update({
         total_referrals: affiliateCodeData.total_referrals + 1,
         updated_at: new Date().toISOString()
       })
       .eq('id', affiliateCodeData.id);
-
-    if (siteId) {
-      updateQuery = updateQuery;  // CRITICAL: Site isolation on update
-    }
-
-    await updateQuery;
 
     logStep("Referral tracked successfully", { referral_id: referral.id });
 

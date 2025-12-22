@@ -69,17 +69,16 @@ export interface UpdateTaskData {
 
 class TaskService {
   /**
-   * Get tasks with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get tasks
    * @param filters - Optional filters for status, assigned_to, project_id, search
    */
-  async getTasks(siteId: string, filters?: {
+  async getTasks(filters?: {
     status?: string[];
     assigned_to?: string;
     project_id?: string;
     search?: string;
   }): Promise<TaskWithDetails[]> {
-        // Use Supabase foreign key joins to fetch related data in a single query
+    // Use Supabase foreign key joins to fetch related data in a single query
     let query = supabase
       .from('tasks')
       .select(`
@@ -90,7 +89,6 @@ class TaskService {
         assigned_to_profile:user_profiles!assigned_to(id, first_name, last_name, email),
         created_by_profile:user_profiles!created_by(id, first_name, last_name, email)
       `)
-        // CRITICAL: Site isolation
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -120,15 +118,13 @@ class TaskService {
   }
 
   /**
-   * Get a single task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get a single task
    * @param id - Task ID
    */
-  async getTask(siteId: string, id: string): Promise<TaskWithDetails | null> {
-        const { data, error } = await supabase
+  async getTask(id: string): Promise<TaskWithDetails | null> {
+    const { data, error } = await supabase
       .from('tasks')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('id', id)
       .maybeSingle();
 
@@ -141,12 +137,12 @@ class TaskService {
     const task = data as Task;
 
     const projectPromise = task.project_id
-      ? supabase.from('projects').select('id, name, site_id').eq('id', task.project_id).maybeSingle()
+      ? supabase.from('projects').select('id, name').eq('id', task.project_id).maybeSingle()
       : Promise.resolve({ data: null, error: null } as { data: any; error: null });
 
     const userIds = [task.assigned_to, task.created_by].filter((v): v is string => !!v);
     const profilesPromise = userIds.length
-      ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
+      ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
       : Promise.resolve({ data: [], error: null } as { data: any[]; error: null });
 
     const [projectRes, profilesRes] = await Promise.all([projectPromise, profilesPromise]);
@@ -166,18 +162,16 @@ class TaskService {
   }
 
   /**
-   * Create a task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Create a task
    * @param taskData - Task data to create
    */
-  async createTask(siteId: string, taskData: CreateTaskData): Promise<Task> {
-        const { data: { user } } = await supabase.auth.getUser();
+  async createTask(taskData: CreateTaskData): Promise<Task> {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('company_id')
-        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -186,7 +180,7 @@ class TaskService {
     const { data, error } = await supabase
       .from('tasks')
       .insert({
-        ...taskData,  // CRITICAL: Site isolation
+        ...taskData,
         company_id: userProfile.company_id,
         created_by: user.id,
         assigned_to: taskData.assigned_to || user.id,
@@ -204,16 +198,14 @@ class TaskService {
   }
 
   /**
-   * Update a task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Update a task
    * @param id - Task ID
    * @param updates - Task data to update
    */
-  async updateTask(siteId: string, id: string, updates: UpdateTaskData): Promise<Task> {
-        const { data, error } = await supabase
+  async updateTask(id: string, updates: UpdateTaskData): Promise<Task> {
+    const { data, error } = await supabase
       .from('tasks')
       .update(updates)
-        // CRITICAL: Site isolation
       .eq('id', id)
       .select()
       .single();
@@ -226,15 +218,13 @@ class TaskService {
   }
 
   /**
-   * Delete a task with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Delete a task
    * @param id - Task ID
    */
-  async deleteTask(siteId: string, id: string): Promise<void> {
-        const { error } = await supabase
+  async deleteTask(id: string): Promise<void> {
+    const { error } = await supabase
       .from('tasks')
       .delete()
-        // CRITICAL: Site isolation
       .eq('id', id);
 
     if (error) {
@@ -243,18 +233,16 @@ class TaskService {
   }
 
   /**
-   * Get task comments with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get task comments
    * @param taskId - Task ID
    */
-  async getTaskComments(siteId: string, taskId: string) {
-        const { data, error } = await supabase
+  async getTaskComments(taskId: string) {
+    const { data, error } = await supabase
       .from('task_comments')
       .select(`
         *,
         user_profiles!task_comments_user_id_fkey(first_name, last_name, email)
       `)
-        // CRITICAL: Site isolation
       .eq('task_id', taskId)
       .order('created_at', { ascending: true });
 
@@ -266,18 +254,17 @@ class TaskService {
   }
 
   /**
-   * Add task comment with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Add task comment
    * @param taskId - Task ID
    * @param comment - Comment text
    */
-  async addTaskComment(siteId: string, taskId: string, comment: string) {
-        const { data: { user } } = await supabase.auth.getUser();
+  async addTaskComment(taskId: string, comment: string) {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('task_comments')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         task_id: taskId,
         user_id: user.id,
         comment
@@ -296,33 +283,30 @@ class TaskService {
   }
 
   /**
-   * Get tasks assigned to current user with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get tasks assigned to current user
    * @param status - Optional status filter
    */
-  async getMyTasks(siteId: string, status?: string[]): Promise<TaskWithDetails[]> {
-        const { data: { user } } = await supabase.auth.getUser();
+  async getMyTasks(status?: string[]): Promise<TaskWithDetails[]> {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    return this.getTasks(siteId, {
+    return this.getTasks({
       assigned_to: user.id,
       status
     });
   }
 
   /**
-   * Get tasks created by current user with multi-tenant site_id isolation
-   * @param siteId - REQUIRED: Site ID for multi-tenant isolation
+   * Get tasks created by current user
    * @param status - Optional status filter
    */
-  async getTasksCreatedByMe(siteId: string, status?: string[]): Promise<TaskWithDetails[]> {
-        const { data: { user } } = await supabase.auth.getUser();
+  async getTasksCreatedByMe(status?: string[]): Promise<TaskWithDetails[]> {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     let query = supabase
       .from('tasks')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('created_by', user.id)
       .order('created_at', { ascending: false });
 
@@ -350,10 +334,10 @@ class TaskService {
 
     const [projectsRes, profilesRes] = await Promise.all([
       projectIds.length
-        ? supabase.from('projects').select('id, name, site_id').in('id', projectIds)
+        ? supabase.from('projects').select('id, name').in('id', projectIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
       userIds.length
-        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
+        ? supabase.from('user_profiles').select('id, first_name, last_name, email').in('id', userIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
     ]);
 

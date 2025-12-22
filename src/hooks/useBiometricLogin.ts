@@ -123,10 +123,6 @@ export const useBiometricLogin = (): UseBiometricLoginReturn => {
       return { success: false, error: 'User not authenticated' };
     }
 
-    if (!siteId) {
-      return { success: false, error: 'Site not configured' };
-    }
-
     setState(prev => ({ ...prev, loading: true }));
 
     try {
@@ -146,7 +142,6 @@ export const useBiometricLogin = (): UseBiometricLoginReturn => {
       const result = await biometricAuthService.enableBiometricLogin({
         email: user.email || '',
         userId: user.id,
-        siteId,
         deviceTrustId,
       });
 
@@ -168,7 +163,7 @@ export const useBiometricLogin = (): UseBiometricLoginReturn => {
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
-  }, [user, siteId, trustCurrentDevice]);
+  }, [user, trustCurrentDevice]);
 
   const disableBiometricLogin = useCallback(async (): Promise<void> => {
     setState(prev => ({ ...prev, loading: true }));

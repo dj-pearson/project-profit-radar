@@ -93,28 +93,13 @@ const handler = async (req: Request): Promise<Response> => {
       metadata
     } = validation.data;
 
-    console.log(`[SendAuthOTP] Processing ${type} request for ${email} on site ${siteId}`);
+    console.log(`[SendAuthOTP] Processing ${type} request for ${email}`);
 
     // Create service role Supabase client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
-
-    // Verify site exists
-    const { data: site, error: siteError } = await supabaseAdmin
-      .from('sites')
-      .select('id, key, name')
-      .eq('id')
-      .single();
-
-    if (siteError || !site) {
-      console.error('[SendAuthOTP] Invalid site:');
-      return new Response(
-        JSON.stringify({ error: 'Invalid site' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
 
     // Rate limiting check
     const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW).toISOString();
@@ -162,7 +147,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create OTP token in database
     const { data: tokenId, error: tokenError } = await supabaseAdmin.rpc('create_otp_token', {
-      p_
       p_email: email,
       p_otp_code: otpCode,
       p_token_type: type,

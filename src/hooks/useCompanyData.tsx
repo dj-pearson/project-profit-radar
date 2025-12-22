@@ -19,7 +19,7 @@ export const useCompanyData = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCompany = useCallback(async () => {
-    if (!userProfile?.company_id || !siteId) {
+    if (!userProfile?.company_id) {
       setLoading(false);
       return;
     }
@@ -32,7 +32,6 @@ export const useCompanyData = () => {
         .from('companies')
         .select('*')
         .eq('id', userProfile.company_id)
-         // ← Add site filter
         .single();
 
       if (error) {

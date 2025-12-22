@@ -56,15 +56,16 @@ serve(async (req) => {
     // Generate QR code
     const qrCodeDataUrl = await QRCode.toDataURL(secret.toString());
 
-    // Store the secret (temporarily) in user_security table with site isolation
+    // Store the secret (temporarily) in user_security table
     const { error: updateError } = await supabaseClient
       .from("user_security")
-      .upsert({          user_id: user_id,
+      .upsert({
+        user_id: user_id,
         two_factor_secret: secret.secret,
         two_factor_enabled: false, // Not enabled until verified
         updated_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,site_id'  // Update conflict resolution for multi-tenant
+        onConflict: 'user_id'
       });
 
     if (updateError) {
@@ -72,8 +73,9 @@ serve(async (req) => {
       throw new Error("Failed to initialize MFA setup");
     }
 
-    // Log security event with site isolation
-    await supabaseClient.from("security_logs").insert({        user_id: user_id,
+    // Log security event
+    await supabaseClient.from("security_logs").insert({
+      user_id: user_id,
       event_type: "mfa_setup_initiated",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
       user_agent: req.headers.get("user-agent"),

@@ -19,7 +19,7 @@ serve(async (req) => {
   try {
     logStep("Function started", { method: req.method });
 
-    // Initialize auth context with site isolation
+    // Initialize auth context
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
@@ -28,7 +28,7 @@ serve(async (req) => {
     const { user, supabase } = authContext;
     logStep("User authenticated", { userId: user.id });
 
-    // Get user profile to check role with site isolation
+    // Get user profile to check role
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role, company_id')
@@ -47,12 +47,11 @@ serve(async (req) => {
     if (method === "GET") {
       const projectId = url.searchParams.get('project_id');
 
-      // Query with site isolation
       let query = supabase
         .from('daily_reports')
         .select(`
           *,
-          projects!inner(name, company_id, site_id)
+          projects!inner(name, company_id)
         `)
         .eq('projects.company_id', userProfile.company_id)
         .order('date', { ascending: false });
@@ -77,14 +76,14 @@ serve(async (req) => {
       const { action } = body;
 
       if (action === "list") {
-        // POST request for listing daily reports with site isolation
+        // POST request for listing daily reports
         const projectId = body.project_id;
 
         let query = supabase
           .from('daily_reports')
           .select(`
             *,
-            projects!inner(name, company_id, site_id)
+            projects!inner(name, company_id)
           `)
           .eq('projects.company_id', userProfile.company_id)
           .order('date', { ascending: false });
@@ -124,8 +123,8 @@ serve(async (req) => {
           delays_issues: body.delays_issues,
           safety_incidents: body.safety_incidents,
           date: reportDate,
-          created_by: user.id,
-          site_id: siteId          };
+          created_by: user.id
+        };
 
         const { data: newReport, error: createError } = await supabase
           .from('daily_reports')
@@ -167,7 +166,6 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', reportId)
-            // CRITICAL: Site isolation on update
           .select(`
             *,
             projects(name)
@@ -195,8 +193,7 @@ serve(async (req) => {
         const { error: deleteError } = await supabase
           .from('daily_reports')
           .delete()
-          .eq('id', reportId)
-          ;  // CRITICAL: Site isolation on delete
+          .eq('id', reportId);
 
         if (deleteError) {
           logStep("Daily report deletion error", { error: deleteError.message });
