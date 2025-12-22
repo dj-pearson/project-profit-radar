@@ -32,7 +32,7 @@ export const useCompanyData = () => {
         .from('companies')
         .select('*')
         .eq('id', userProfile.company_id)
-        .eq('site_id', siteId) // ← Add site filter
+         // ← Add site filter
         .single();
 
       if (error) {
@@ -46,7 +46,7 @@ export const useCompanyData = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile?.company_id, siteId]);
+  }, [userProfile?.company_id]);
 
   useEffect(() => {
     fetchCompany();

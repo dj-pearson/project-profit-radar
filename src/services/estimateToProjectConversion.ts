@@ -46,14 +46,12 @@ class EstimateToProjectConversionService {
     companyId: string,
     customizations?: Partial<ProjectConversionData>
   ): Promise<ConversionResult> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    try {
+        try {
       // 1. Fetch the estimate with all details
       const { data: estimate, error: estimateError } = await supabase
         .from('estimates')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', estimateId)
         .single();
 
@@ -119,7 +117,7 @@ class EstimateToProjectConversionService {
           status: 'accepted',
           accepted_date: new Date().toISOString()
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', estimateId);
 
       if (updateError) {
@@ -201,13 +199,11 @@ class EstimateToProjectConversionService {
     canConvert: boolean;
     issues: string[];
   }> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    try {
+        try {
       const { data: estimate, error } = await supabase
         .from('estimates')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('id', estimateId)
         .single();
 

@@ -32,9 +32,7 @@ export const useOfflineSync = () => {
   });
 
   const { toast } = useToast();
-  const { siteId } = useAuth();
-
-  useEffect(() => {
+    useEffect(() => {
     // Load pending sync data on mount
     loadPendingSyncData();
 
@@ -301,8 +299,7 @@ export const useOfflineSync = () => {
   };
 
   const syncTimeEntry = async (item: OfflineData) => {
-    if (!siteId) throw new Error('No site_id available for sync');
-    const { error } = await supabase
+        const { error } = await supabase
       .from('time_entries')
       .insert({
         ...item.data,
@@ -313,8 +310,7 @@ export const useOfflineSync = () => {
   };
 
   const syncDailyReport = async (item: OfflineData) => {
-    if (!siteId) throw new Error('No site_id available for sync');
-    const { error } = await supabase
+        const { error } = await supabase
       .from('daily_reports')
       .insert({
         ...item.data,
@@ -325,8 +321,7 @@ export const useOfflineSync = () => {
   };
 
   const syncExpense = async (item: OfflineData) => {
-    if (!siteId) throw new Error('No site_id available for sync');
-    const { error } = await supabase
+        const { error } = await supabase
       .from('expenses')
       .insert({
         ...item.data,
@@ -337,8 +332,7 @@ export const useOfflineSync = () => {
   };
 
   const syncSafetyIncident = async (item: OfflineData) => {
-    if (!siteId) throw new Error('No site_id available for sync');
-    const { error } = await supabase
+        const { error } = await supabase
       .from('safety_incidents')
       .insert({
         ...item.data,

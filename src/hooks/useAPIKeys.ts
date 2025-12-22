@@ -67,11 +67,9 @@ export function useAPIKeys(options?: { enabled?: boolean }) {
   const {  user } = useAuth();
 
   return useQuery({
-    queryKey: ['api-keys', siteId],
+    queryKey: ['api-keys'],
     queryFn: async (): Promise<APIKey[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Use the secure view which masks sensitive data
+            // Use the secure view which masks sensitive data
       const { data, error } = await supabase
         .from('api_keys')
         .select(`
@@ -103,7 +101,7 @@ export function useAPIKeys(options?: { enabled?: boolean }) {
         security_metadata: key.security_metadata || {},
       })) as APIKey[];
     },
-    enabled: !!siteId && !!user && (options?.enabled !== false),
+    enabled: !!user && (options?.enabled !== false),
   });
 }
 
@@ -116,8 +114,7 @@ export function useCreateAPIKey() {
 
   return useMutation({
     mutationFn: async (request: CreateAPIKeyRequest): Promise<CreateAPIKeyResponse> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!user) throw new Error('Not authenticated');
+            if (!user) throw new Error('Not authenticated');
 
       // Get user's company_id
       const { data: profile, error: profileError } = await supabase
@@ -157,14 +154,11 @@ export function useCreateAPIKey() {
  * Hook to rotate an API key
  */
 export function useRotateAPIKey() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<RotateKeyResponse> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase.rpc('rotate_api_key', {
+            const { data, error } = await supabase.rpc('rotate_api_key', {
         p_api_key_id: keyId,
       });
 
@@ -185,21 +179,18 @@ export function useRotateAPIKey() {
  * Hook to toggle API key active status
  */
 export function useToggleAPIKey() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ keyId, isActive }: { keyId: string; isActive: boolean }): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('api_keys')
         .update({
           is_active: isActive,
           updated_at: new Date().toISOString(),
         })
         .eq('id', keyId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -213,18 +204,15 @@ export function useToggleAPIKey() {
  * Hook to delete an API key
  */
 export function useDeleteAPIKey() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('api_keys')
         .delete()
         .eq('id', keyId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -238,8 +226,7 @@ export function useDeleteAPIKey() {
  * Hook to update API key settings
  */
 export function useUpdateAPIKey() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -249,16 +236,14 @@ export function useUpdateAPIKey() {
       keyId: string;
       updates: Partial<Pick<APIKey, 'key_name' | 'permissions' | 'rate_limit_per_hour' | 'expires_at'>>;
     }): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('api_keys')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
         .eq('id', keyId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -272,9 +257,7 @@ export function useUpdateAPIKey() {
  * Hook to get rate limit status for an API key
  */
 export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
+    return useQuery({
     queryKey: ['api-key-rate-limit', keyId],
     queryFn: async (): Promise<RateLimitStatus> => {
       if (!siteId || !keyId) throw new Error('Missing required parameters');
@@ -315,7 +298,7 @@ export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enable
         is_limited: currentUsage >= rateLimit,
       };
     },
-    enabled: !!siteId && !!keyId && (options?.enabled !== false),
+    enabled: !!keyId && (options?.enabled !== false),
     refetchInterval: 60000, // Refresh every minute
   });
 }
@@ -324,14 +307,10 @@ export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enable
  * Hook to get API key usage statistics
  */
 export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['api-key-stats', siteId, keyId],
+    return useQuery({
+    queryKey: [ keyId],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('api_keys')
         .select('id, key_name, usage_count, last_used_at, is_active');
 
@@ -339,7 +318,7 @@ export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) 
         query = query.eq('id', keyId);
       }
 
-      query = query.eq('site_id', siteId);
+      query = query;
 
       const { data, error } = await query;
 
@@ -365,7 +344,7 @@ export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) 
         keys: data || [],
       };
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -377,8 +356,7 @@ export function useRetrieveAPIKey() {
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<string> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!user) throw new Error('Not authenticated');
+            if (!user) throw new Error('Not authenticated');
 
       // Check if user is root admin
       const { data: profile } = await supabase
@@ -405,14 +383,10 @@ export function useRetrieveAPIKey() {
  * Hook to get sensitive data access log
  */
 export function useSensitiveDataAccessLog(options?: { limit?: number; enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['sensitive-data-access-log', siteId, options?.limit],
+    return useQuery({
+    queryKey: [ options?.limit],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('sensitive_data_access_log')
         .select('*')
         .order('created_at', { ascending: false })
@@ -421,7 +395,7 @@ export function useSensitiveDataAccessLog(options?: { limit?: number; enabled?: 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 

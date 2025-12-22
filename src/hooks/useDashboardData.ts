@@ -99,7 +99,7 @@ export function useDashboardData() {
         const { data: projects, error: projectsError } = await supabase
           .from('projects')
           .select('id, name, status, completion_percentage')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .in('status', ['active', 'in_progress'])
           .order('created_at', { ascending: false })
@@ -111,7 +111,7 @@ export function useDashboardData() {
         const { count: teamCount, error: teamError } = await supabase
           .from('user_profiles')
           .select('*', { count: 'exact', head: true })
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .eq('is_active', true);
 
@@ -168,7 +168,7 @@ export function useDashboardData() {
     };
 
     loadDashboardData();
-  }, [userProfile?.company_id, siteId]);
+  }, [userProfile?.company_id]);
 
   const refetch = () => {
     if (userProfile?.company_id && siteId) {

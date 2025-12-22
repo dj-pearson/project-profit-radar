@@ -59,7 +59,7 @@ export const useDailyReportTemplates = () => {
 
   // Query templates for company with site_id isolation
   const { data: templates, isLoading: loadingTemplates } = useQuery({
-    queryKey: ['daily-report-templates', userProfile?.company_id, siteId],
+    queryKey: ['daily-report-templates', userProfile?.company_id],
     queryFn: async () => {
       if (!userProfile?.company_id || !siteId) return [];
 
@@ -73,14 +73,12 @@ export const useDailyReportTemplates = () => {
       if (error) throw error;
       return data as DailyReportTemplate[];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
   });
 
   // Query template task presets with site_id isolation
   const getTemplatePresets = async (templateId: string) => {
-    if (!siteId) throw new Error('No site_id available');
-
-    const { data, error } = await supabase
+        const { data, error } = await supabase
       .from('template_task_presets')
       .select('*')
       .eq('template_id', templateId)
@@ -132,9 +130,7 @@ export const useDailyReportTemplates = () => {
   // Update template mutation with site_id isolation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<DailyReportTemplate> }) => {
-      if (!siteId) throw new Error('Site ID not found');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('daily_report_templates')
         .update({
           ...updates,
@@ -166,9 +162,7 @@ export const useDailyReportTemplates = () => {
   // Delete template mutation with site_id isolation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!siteId) throw new Error('Site ID not found');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('daily_report_templates')
         .update({ is_active: false })
         .eq('id', id);
@@ -244,9 +238,7 @@ export const useDailyReportTemplates = () => {
     taskDescription: string | null,
     displayOrder: number
   ) => {
-    if (!siteId) throw new Error('Site ID not found');
-
-    const { data, error} = await supabase
+        const { data, error} = await supabase
       .from('template_task_presets')
       .insert({
         template_id: templateId,
@@ -263,9 +255,7 @@ export const useDailyReportTemplates = () => {
 
   // Delete task preset with site_id isolation
   const deleteTemplateTaskPreset = async (presetId: string) => {
-    if (!siteId) throw new Error('Site ID not found');
-
-    const { error } = await supabase
+        const { error } = await supabase
       .from('template_task_presets')
       .delete()
       .eq('id', presetId);

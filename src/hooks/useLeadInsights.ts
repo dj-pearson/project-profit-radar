@@ -130,10 +130,9 @@ export function useLeadScore(leadId: string, options?: { enabled?: boolean }) {
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['lead-score', siteId, leadId],
+    queryKey: [ leadId],
     queryFn: async (): Promise<LeadScore> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -148,7 +147,7 @@ export function useLeadScore(leadId: string, options?: { enabled?: boolean }) {
 
       return response.data as LeadScore;
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
     staleTime: 5 * 60 * 1000, // Consider fresh for 5 minutes
   });
 }
@@ -162,8 +161,7 @@ export function useBatchLeadScoring() {
 
   return useMutation({
     mutationFn: async (leadIds: string[]): Promise<LeadScore[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -181,7 +179,7 @@ export function useBatchLeadScoring() {
     onSuccess: (scores) => {
       // Update individual lead score caches
       for (const score of scores) {
-        queryClient.setQueryData(['lead-score', siteId, score.lead_id], score);
+        queryClient.setQueryData([ score.lead_id], score);
       }
       queryClient.invalidateQueries({ queryKey: ['lead-insights'] });
     },
@@ -195,10 +193,9 @@ export function useLeadInsights(leadId: string, options?: { enabled?: boolean })
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['lead-insights', siteId, leadId],
+    queryKey: [ leadId],
     queryFn: async (): Promise<LeadInsight[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -213,7 +210,7 @@ export function useLeadInsights(leadId: string, options?: { enabled?: boolean })
 
       return (response.data?.insights || []) as LeadInsight[];
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
   });
 }
 
@@ -224,10 +221,9 @@ export function useLeadRecommendations(leadId: string, options?: { enabled?: boo
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['lead-recommendations', siteId, leadId],
+    queryKey: [ leadId],
     queryFn: async (): Promise<AIRecommendation[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -242,7 +238,7 @@ export function useLeadRecommendations(leadId: string, options?: { enabled?: boo
 
       return (response.data?.recommendations || []) as AIRecommendation[];
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
   });
 }
 
@@ -253,10 +249,9 @@ export function useLeadPredictions(leadId: string, options?: { enabled?: boolean
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['lead-predictions', siteId, leadId],
+    queryKey: [ leadId],
     queryFn: async (): Promise<LeadPrediction[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -271,7 +266,7 @@ export function useLeadPredictions(leadId: string, options?: { enabled?: boolean
 
       return (response.data?.predictions || []) as LeadPrediction[];
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
   });
 }
 
@@ -282,10 +277,9 @@ export function useEngagementAnalysis(leadId: string, options?: { enabled?: bool
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['engagement-analysis', siteId, leadId],
+    queryKey: [ leadId],
     queryFn: async (): Promise<EngagementAnalysis> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -300,7 +294,7 @@ export function useEngagementAnalysis(leadId: string, options?: { enabled?: bool
 
       return response.data as EngagementAnalysis;
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
   });
 }
 
@@ -311,10 +305,9 @@ export function useSimilarLeads(leadId: string, options?: { limit?: number; enab
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['similar-leads', siteId, leadId, options?.limit],
+    queryKey: [ leadId, options?.limit],
     queryFn: async (): Promise<SimilarLead[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -330,7 +323,7 @@ export function useSimilarLeads(leadId: string, options?: { limit?: number; enab
 
       return (response.data?.similar_leads || []) as SimilarLead[];
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
   });
 }
 
@@ -341,14 +334,10 @@ export function useLeadActivityTimeline(
   leadId: string,
   options?: { days?: number; enabled?: boolean }
 ) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['lead-activity-timeline', siteId, leadId, options?.days],
+    return useQuery({
+    queryKey: [ leadId, options?.days],
     queryFn: async (): Promise<LeadActivityTimeline[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get lead activities
+            // Get lead activities
       const { data: activities, error } = await supabase
         .from('crm_activities')
         .select('*')
@@ -392,7 +381,7 @@ export function useLeadActivityTimeline(
 
       return Array.from(timeline.values());
     },
-    enabled: !!siteId && !!leadId && (options?.enabled !== false),
+    enabled: !!leadId && (options?.enabled !== false),
   });
 }
 
@@ -403,10 +392,9 @@ export function useLeadComparison(leadIds: string[], options?: { enabled?: boole
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['lead-comparison', siteId, leadIds],
+    queryKey: [ leadIds],
     queryFn: async (): Promise<LeadComparison[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
       if (leadIds.length === 0) return [];
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
@@ -423,7 +411,6 @@ export function useLeadComparison(leadIds: string[], options?: { enabled?: boole
       return (response.data?.comparisons || []) as LeadComparison[];
     },
     enabled:
-      !!siteId &&
       leadIds.length > 0 &&
       !!session?.access_token &&
       (options?.enabled !== false),
@@ -437,10 +424,9 @@ export function usePipelineHealthAnalysis(options?: { enabled?: boolean }) {
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['pipeline-health', siteId],
+    queryKey: ['pipeline-health'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -463,7 +449,7 @@ export function usePipelineHealthAnalysis(options?: { enabled?: boolean }) {
         quick_wins: Array<{ lead_id: string; lead_name: string; potential_value: number }>;
       };
     },
-    enabled: !!siteId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!session?.access_token && (options?.enabled !== false),
     staleTime: 10 * 60 * 1000, // Consider fresh for 10 minutes
   });
 }
@@ -472,17 +458,13 @@ export function usePipelineHealthAnalysis(options?: { enabled?: boolean }) {
  * Hook to get score distribution across leads
  */
 export function useScoreDistribution(options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['score-distribution', siteId],
+    return useQuery({
+    queryKey: ['score-distribution'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data: leads, error } = await supabase
+            const { data: leads, error } = await supabase
         .from('leads')
         .select('id, score, status')
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
 
@@ -509,7 +491,7 @@ export function useScoreDistribution(options?: { enabled?: boolean }) {
             : 0,
       };
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -522,8 +504,7 @@ export function useRefreshLeadScore() {
 
   return useMutation({
     mutationFn: async (leadId: string): Promise<LeadScore> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!session?.access_token) throw new Error('Not authenticated');
+            if (!session?.access_token) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
@@ -540,9 +521,9 @@ export function useRefreshLeadScore() {
       return response.data as LeadScore;
     },
     onSuccess: (score) => {
-      queryClient.setQueryData(['lead-score', siteId, score.lead_id], score);
-      queryClient.invalidateQueries({ queryKey: ['lead-insights', siteId, score.lead_id] });
-      queryClient.invalidateQueries({ queryKey: ['score-distribution', siteId] });
+      queryClient.setQueryData([ score.lead_id], score);
+      queryClient.invalidateQueries({ queryKey: [ score.lead_id] });
+      queryClient.invalidateQueries({ queryKey: ['score-distribution'] });
     },
   });
 }

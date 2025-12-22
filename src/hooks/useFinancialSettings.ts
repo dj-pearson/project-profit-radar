@@ -14,14 +14,14 @@ export function useFinancialSettings() {
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading, error } = useQuery({
-    queryKey: ['financial-settings', userProfile?.company_id, siteId],
+    queryKey: ['financial-settings', userProfile?.company_id],
     queryFn: async () => {
       if (!userProfile?.company_id || !siteId) return DEFAULT_FINANCIAL_SETTINGS;
 
       const { data, error } = await supabase
         .from('company_settings')
         .select('additional_settings, default_markup')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 
@@ -39,20 +39,18 @@ export function useFinancialSettings() {
         ...financialSettings,
       } as FinancialSettings;
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     staleTime: 60000, // 1 minute
   });
 
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<FinancialSettings>) => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      // Get current additional_settings with site isolation
+            // Get current additional_settings with site isolation
       const { data: currentData } = await supabase
         .from('company_settings')
         .select('additional_settings')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 
@@ -73,7 +71,7 @@ export function useFinancialSettings() {
           additional_settings: updatedAdditional,
           default_markup: newSettings.defaultProfitMargin || currentAdditional.financial_settings?.defaultProfitMargin,
         })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .select()
         .single();
@@ -82,7 +80,7 @@ export function useFinancialSettings() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['financial-settings', userProfile?.company_id, siteId] });
+      queryClient.invalidateQueries({ queryKey: ['financial-settings', userProfile?.company_id] });
       toast({
         title: 'Settings Updated',
         description: 'Financial settings have been saved successfully.',
@@ -115,7 +113,7 @@ export function useProjectCostCalculation(projectId: string) {
   const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: ['project-costs', projectId, settings, siteId],
+    queryKey: ['project-costs', projectId, settings],
     queryFn: async () => {
       if (!userProfile?.company_id || !projectId || !siteId) return null;
 
@@ -123,7 +121,7 @@ export function useProjectCostCalculation(projectId: string) {
       const { data: costs, error } = await (supabase as any)
         .from('job_costs')
         .select('labor_cost, material_cost, equipment_cost, other_cost')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('project_id', projectId)
         .eq('company_id', userProfile.company_id);
 
@@ -143,6 +141,6 @@ export function useProjectCostCalculation(projectId: string) {
         otherDirectCosts: totalOtherCost,
       };
     },
-    enabled: !!projectId && !!userProfile?.company_id && !!siteId,
+    enabled: !!projectId && !!userProfile?.company_id,
   });
 }

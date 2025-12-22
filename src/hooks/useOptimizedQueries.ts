@@ -12,12 +12,10 @@ export const useOptimizedProjects = (options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.projects, siteId],
+    queryKey: [...queryKeys.projects],
     queryFn: async () => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('projects')
         .select(`
           id,
@@ -32,14 +30,14 @@ export const useOptimizedProjects = (options?: Partial<UseQueryOptions>) => {
           created_at,
           updated_at
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     staleTime: 3 * 60 * 1000, // 3 minutes
     ...options,
   });
@@ -52,12 +50,10 @@ export const useOptimizedProject = (projectId: string, options?: Partial<UseQuer
   const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.project(projectId), siteId],
+    queryKey: [...queryKeys.project(projectId)],
     queryFn: async () => {
       if (!userProfile?.company_id || !projectId) throw new Error('Missing required data');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('projects')
         .select(`
           *,
@@ -86,7 +82,7 @@ export const useOptimizedProject = (projectId: string, options?: Partial<UseQuer
           )
         `)
         .eq('id', projectId)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .limit(10, { foreignTable: 'recent_expenses' })
         .limit(5, { foreignTable: 'recent_documents' })
@@ -97,7 +93,7 @@ export const useOptimizedProject = (projectId: string, options?: Partial<UseQuer
       if (error) throw error;
       return data;
     },
-    enabled: !!userProfile?.company_id && !!projectId && !!siteId,
+    enabled: !!userProfile?.company_id && !!projectId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     ...options,
   });
@@ -110,12 +106,10 @@ export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.invoices, siteId],
+    queryKey: [...queryKeys.invoices],
     queryFn: async () => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('invoices')
         .select(`
           id,
@@ -127,7 +121,7 @@ export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
           project_id,
           created_at
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false })
         .limit(100); // Reasonable limit for performance
@@ -135,7 +129,7 @@ export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
@@ -148,37 +142,35 @@ export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.dashboardData, siteId],
+    queryKey: [...queryKeys.dashboardData],
     queryFn: async () => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      // Use parallel queries for better performance - all with site isolation
+            // Use parallel queries for better performance - all with site isolation
       const [projectsRes, invoicesRes, expensesRes, tasksRes] = await Promise.all([
         supabase
           .from('projects')
           .select('id, status, budget, completion_percentage')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id),
 
         supabase
           .from('invoices')
           .select('id, amount, status, due_date')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()),
 
         supabase
           .from('expenses')
           .select('id, amount, expense_date')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .gte('expense_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
 
         supabase
           .from('tasks')
           .select('id, status, priority, due_date, project_id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .neq('status', 'completed')
       ]);
@@ -217,7 +209,7 @@ export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
         lastUpdated: new Date().toISOString(),
       };
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     staleTime: 2 * 60 * 1000, // 2 minutes
     ...options,
   });
@@ -230,12 +222,10 @@ export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) =>
   const { userProfile } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.opportunities, siteId],
+    queryKey: [...queryKeys.opportunities],
     queryFn: async () => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('opportunities')
         .select(`
           id,
@@ -248,14 +238,14 @@ export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) =>
           contact_name,
           project_type
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
@@ -270,9 +260,7 @@ export const useOptimizedProjectMutation = () => {
 
   return useMutation({
     mutationFn: async (projectData: any) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('projects')
         .insert([{
           ...projectData,  // CRITICAL: Include site_id on insert
@@ -286,8 +274,8 @@ export const useOptimizedProjectMutation = () => {
     },
     onSuccess: (data) => {
       // Update cache optimistically
-      queryClient.setQueryData([...queryKeys.projects, siteId], (old: any[] = []) => [data, ...old]);
-      queryClient.setQueryData([...queryKeys.project(data.id), siteId], data);
+      queryClient.setQueryData([...queryKeys.projects], (old: any[] = []) => [data, ...old]);
+      queryClient.setQueryData([...queryKeys.project(data.id)], data);
 
       // Invalidate related queries
       invalidateQueries.dashboard();
@@ -306,9 +294,7 @@ export const useOptimizedTaskMutation = () => {
 
   return useMutation({
     mutationFn: async ({ projectId, taskData }: { projectId: string; taskData: any }) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('tasks')
         .insert([{
           ...taskData,
@@ -323,7 +309,7 @@ export const useOptimizedTaskMutation = () => {
     },
     onSuccess: (data, variables) => {
       // Update project cache with new task
-      queryClient.setQueryData([...queryKeys.project(variables.projectId), siteId], (old: any) => {
+      queryClient.setQueryData([...queryKeys.project(variables.projectId)], (old: any) => {
         if (!old) return old;
         return {
           ...old,
@@ -348,9 +334,7 @@ export const useOptimizedInvoiceMutation = () => {
 
   return useMutation({
     mutationFn: async (invoiceData: any) => {
-      if (!siteId) throw new Error('No site ID - multi-tenant isolation required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('invoices')
         .insert([{
           ...invoiceData,  // CRITICAL: Include site_id on insert
@@ -364,7 +348,7 @@ export const useOptimizedInvoiceMutation = () => {
     },
     onSuccess: (data) => {
       // Update invoices cache
-      queryClient.setQueryData([...queryKeys.invoices, siteId], (old: any[] = []) => [data, ...old]);
+      queryClient.setQueryData([...queryKeys.invoices], (old: any[] = []) => [data, ...old]);
 
       // Invalidate financial and dashboard data
       invalidateQueries.financial();

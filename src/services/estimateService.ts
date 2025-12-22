@@ -43,9 +43,7 @@ export interface EstimateStats {
 
 class EstimateService {
   async getEstimates(siteId: string, companyId?: string): Promise<Estimate[]> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    let query = supabase
+        let query = supabase
       .from("estimates")
       .select(`
         *,
@@ -69,9 +67,7 @@ class EstimateService {
   }
 
   async getEstimateStats(siteId: string, companyId?: string): Promise<EstimateStats> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    const estimates = await this.getEstimates(siteId, companyId);
+        const estimates = await this.getEstimates(siteId, companyId);
     
     const totalEstimates = estimates.length;
     
@@ -137,9 +133,7 @@ class EstimateService {
     description?: string;
     valid_until?: string;
   }): Promise<Estimate> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    const { data: userProfile } = await supabase
+        const { data: userProfile } = await supabase
       .from("user_profiles")
       .select("company_id")
       .eq("site_id", siteId)  // CRITICAL: Site isolation
@@ -180,9 +174,7 @@ class EstimateService {
   }
 
   async updateEstimate(siteId: string, estimateId: string, updates: Partial<Estimate>): Promise<Estimate> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    const { data, error } = await supabase
+        const { data, error } = await supabase
       .from("estimates")
       .update(updates)
       .eq("site_id", siteId)  // CRITICAL: Site isolation
@@ -202,9 +194,7 @@ class EstimateService {
   }
 
   async deleteEstimate(siteId: string, estimateId: string): Promise<void> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    const { error } = await supabase
+        const { error } = await supabase
       .from("estimates")
       .delete()
       .eq("site_id", siteId)  // CRITICAL: Site isolation

@@ -69,7 +69,7 @@ export const useEquipmentQRScanning = () => {
 
   // Query equipment with QR codes with site_id isolation
   const { data: equipmentWithQR, isLoading: loadingEquipment } = useQuery({
-    queryKey: ['equipment-with-qr', userProfile?.company_id, siteId],
+    queryKey: ['equipment-with-qr', userProfile?.company_id],
     queryFn: async () => {
       if (!userProfile?.company_id || !siteId) return [];
 
@@ -84,12 +84,12 @@ export const useEquipmentQRScanning = () => {
       if (error) throw error;
       return data as EquipmentWithQR[];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
   });
 
   // Query recent scan events with site_id isolation
   const { data: recentScans, isLoading: loadingScans } = useQuery({
-    queryKey: ['recent-equipment-scans', userProfile?.company_id, siteId],
+    queryKey: ['recent-equipment-scans', userProfile?.company_id],
     queryFn: async () => {
       if (!userProfile?.company_id || !siteId) return [];
 
@@ -102,7 +102,7 @@ export const useEquipmentQRScanning = () => {
       if (error) throw error;
       return data as ScanEvent[];
     },
-    enabled: !!userProfile?.company_id && !!siteId,
+    enabled: !!userProfile?.company_id,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 

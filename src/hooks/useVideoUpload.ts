@@ -67,11 +67,9 @@ export function useUploadConfig(fileCategory: string = 'video') {
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['upload_config', siteId, companyId, fileCategory],
+    queryKey: [ companyId, fileCategory],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase.rpc('get_upload_config', {
+            const { data, error } = await supabase.rpc('get_upload_config', {
         p_
         p_company_id: companyId || null,
         p_file_category: fileCategory,
@@ -205,11 +203,7 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File): Promise<VideoUploadResult> => {
-      if (!siteId || !companyId) {
-        throw new Error('Authentication required');
-      }
-
-      setIsUploading(true);
+            setIsUploading(true);
       setProgress(0);
 
       // Extract metadata
@@ -359,11 +353,7 @@ export function useProjectVideos(projectId: string | undefined) {
   return useQuery({
     queryKey: ['project_videos', projectId, siteId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !projectId) {
-        throw new Error('Missing required parameters');
-      }
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('project_videos')
         .select(`
           *,
@@ -376,7 +366,7 @@ export function useProjectVideos(projectId: string | undefined) {
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!companyId && !!projectId,
+    enabled: !!companyId && !!projectId,
   });
 }
 
@@ -390,11 +380,7 @@ export function useDeleteVideo() {
 
   return useMutation({
     mutationFn: async ({ documentId, filePath }: { documentId: string; filePath?: string }) => {
-      if (!siteId || !companyId) {
-        throw new Error('Authentication required');
-      }
-
-      // Delete from storage if file path provided
+            // Delete from storage if file path provided
       if (filePath) {
         const { error: storageError } = await supabase.storage
           .from('project-documents')

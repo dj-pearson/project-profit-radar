@@ -196,14 +196,10 @@ export function useMarketingCampaigns(
   filters?: CampaignFilters,
   options?: { enabled?: boolean }
 ) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['marketing-campaigns', siteId, filters],
+    return useQuery({
+    queryKey: [ filters],
     queryFn: async (): Promise<MarketingCampaign[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('email_campaigns')
         .select('*')
         .order('created_at', { ascending: false });
@@ -235,7 +231,7 @@ export function useMarketingCampaigns(
       if (error) throw error;
       return (data || []) as MarketingCampaign[];
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -243,14 +239,10 @@ export function useMarketingCampaigns(
  * Hook to fetch a single campaign
  */
 export function useMarketingCampaign(campaignId: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['marketing-campaign', siteId, campaignId],
+    return useQuery({
+    queryKey: [ campaignId],
     queryFn: async (): Promise<MarketingCampaign | null> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_campaigns')
         .select('*')
         .eq('id', campaignId)
@@ -259,7 +251,7 @@ export function useMarketingCampaign(campaignId: string, options?: { enabled?: b
       if (error && error.code !== 'PGRST116') throw error;
       return data as MarketingCampaign | null;
     },
-    enabled: !!siteId && !!campaignId && (options?.enabled !== false),
+    enabled: !!campaignId && (options?.enabled !== false),
   });
 }
 
@@ -272,9 +264,7 @@ export function useCreateMarketingCampaign() {
 
   return useMutation({
     mutationFn: async (request: CreateCampaignRequest): Promise<MarketingCampaign> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get user's company_id
+            // Get user's company_id
       let companyId: string | null = null;
       if (user) {
         const { data: profile } = await supabase
@@ -313,8 +303,7 @@ export function useCreateMarketingCampaign() {
  * Hook to update a marketing campaign
  */
 export function useUpdateMarketingCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -324,9 +313,7 @@ export function useUpdateMarketingCampaign() {
       id: string;
       updates: Partial<CreateCampaignRequest>;
     }): Promise<MarketingCampaign> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_campaigns')
         .update({
           ...updates,
@@ -341,7 +328,7 @@ export function useUpdateMarketingCampaign() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['marketing-campaigns'] });
-      queryClient.invalidateQueries({ queryKey: ['marketing-campaign', siteId, data.id] });
+      queryClient.invalidateQueries({ queryKey: [ data.id] });
     },
   });
 }
@@ -350,18 +337,15 @@ export function useUpdateMarketingCampaign() {
  * Hook to delete a marketing campaign
  */
 export function useDeleteMarketingCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (campaignId: string): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('email_campaigns')
         .delete()
         .eq('id', campaignId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -375,8 +359,7 @@ export function useDeleteMarketingCampaign() {
  * Hook to toggle campaign active status
  */
 export function useToggleCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -386,16 +369,14 @@ export function useToggleCampaign() {
       campaignId: string;
       isActive: boolean;
     }): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('email_campaigns')
         .update({
           is_active: isActive,
           updated_at: new Date().toISOString(),
         })
         .eq('id', campaignId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -420,9 +401,7 @@ export function useDuplicateCampaign() {
       campaignId: string;
       newName?: string;
     }): Promise<MarketingCampaign> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get the original campaign
+            // Get the original campaign
       const { data: original, error: fetchError } = await supabase
         .from('email_campaigns')
         .select('*')
@@ -476,19 +455,15 @@ export function useDuplicateCampaign() {
  * Hook to get campaign statistics
  */
 export function useCampaignStats(options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['campaign-stats', siteId],
+    return useQuery({
+    queryKey: ['campaign-stats'],
     queryFn: async (): Promise<CampaignStats> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_campaigns')
         .select(
           'is_active, total_sent, total_delivered, total_opened, total_clicked, total_unsubscribed, total_bounced'
         )
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
 
@@ -514,7 +489,7 @@ export function useCampaignStats(options?: { enabled?: boolean }) {
         total_bounced: totalBounced,
       };
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -522,19 +497,15 @@ export function useCampaignStats(options?: { enabled?: boolean }) {
  * Hook to get campaign performance metrics
  */
 export function useCampaignPerformance(campaignId?: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['campaign-performance', siteId, campaignId],
+    return useQuery({
+    queryKey: [ campaignId],
     queryFn: async (): Promise<CampaignPerformance[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('email_campaigns')
         .select(
           'id, campaign_name, total_sent, total_delivered, total_opened, total_clicked, total_unsubscribed, total_bounced'
         )
-        .eq('site_id', siteId);
+        ;
 
       if (campaignId) {
         query = query.eq('id', campaignId);
@@ -567,7 +538,7 @@ export function useCampaignPerformance(campaignId?: string, options?: { enabled?
         };
       });
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -578,14 +549,10 @@ export function useCampaignEmailSends(
   campaignId: string,
   options?: { limit?: number; status?: EmailStatus; enabled?: boolean }
 ) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['campaign-email-sends', siteId, campaignId, options?.status],
+    return useQuery({
+    queryKey: [ campaignId, options?.status],
     queryFn: async (): Promise<EmailSend[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('email_sends')
         .select('*')
         .eq('campaign_id', campaignId)
@@ -601,7 +568,7 @@ export function useCampaignEmailSends(
       if (error) throw error;
       return (data || []) as EmailSend[];
     },
-    enabled: !!siteId && !!campaignId && (options?.enabled !== false),
+    enabled: !!campaignId && (options?.enabled !== false),
   });
 }
 
@@ -609,14 +576,10 @@ export function useCampaignEmailSends(
  * Hook to get email sequences
  */
 export function useEmailSequences(options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['email-sequences', siteId],
+    return useQuery({
+    queryKey: ['email-sequences'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_campaigns')
         .select('sequence_name, sequence_order, id, campaign_name, is_active')
         .not('sequence_name', 'is', null)
@@ -654,7 +617,7 @@ export function useEmailSequences(options?: { enabled?: boolean }) {
 
       return Object.values(sequences);
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -672,8 +635,7 @@ export function useSendTestEmail() {
       campaignId: string;
       testEmail: string;
     }): Promise<{ success: boolean; message: string }> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!user) throw new Error('Not authenticated');
+            if (!user) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('send-scheduled-emails', {
         body: {
@@ -696,8 +658,7 @@ export function useSendTestEmail() {
  * Hook to schedule a campaign send
  */
 export function useScheduleCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -709,9 +670,7 @@ export function useScheduleCampaign() {
       scheduledFor: string;
       audienceFilter?: Record<string, unknown>;
     }): Promise<{ queued_count: number }> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const response = await supabase.functions.invoke('send-scheduled-emails', {
+            const response = await supabase.functions.invoke('send-scheduled-emails', {
         body: {
           action: 'schedule_campaign',
           campaign_id: campaignId,
@@ -736,14 +695,10 @@ export function useScheduleCampaign() {
  * Hook to get campaign A/B test variants
  */
 export function useCampaignABTests(campaignId: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['campaign-ab-tests', siteId, campaignId],
+    return useQuery({
+    queryKey: [ campaignId],
     queryFn: async (): Promise<ABTestVariant[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get variants for this campaign (campaigns with same base name but different variants)
+            // Get variants for this campaign (campaigns with same base name but different variants)
       const { data: baseCampaign } = await supabase
         .from('email_campaigns')
         .select('campaign_name')
@@ -778,7 +733,7 @@ export function useCampaignABTests(campaignId: string, options?: { enabled?: boo
         },
       }));
     },
-    enabled: !!siteId && !!campaignId && (options?.enabled !== false),
+    enabled: !!campaignId && (options?.enabled !== false),
   });
 }
 
@@ -805,9 +760,7 @@ export function useCreateABTestVariant() {
       htmlContent?: string;
       trafficPercentage: number;
     }): Promise<MarketingCampaign> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get the base campaign
+            // Get the base campaign
       const { data: baseCampaign, error: fetchError } = await supabase
         .from('email_campaigns')
         .select('*')
@@ -826,7 +779,7 @@ export function useCreateABTestVariant() {
             ab_test_traffic_percentage: 100 - trafficPercentage,
           })
           .eq('id', baseCampaignId)
-          .eq('site_id', siteId);
+          ;
       }
 
       // Create variant
@@ -877,14 +830,10 @@ export function useCreateABTestVariant() {
  * Hook to get unsubscribe statistics
  */
 export function useUnsubscribeStats(options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['unsubscribe-stats', siteId],
+    return useQuery({
+    queryKey: ['unsubscribe-stats'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_unsubscribes')
         .select('reason, unsubscribe_type, created_at')
         .order('created_at', { ascending: false })
@@ -908,7 +857,7 @@ export function useUnsubscribeStats(options?: { enabled?: boolean }) {
         by_type: byType,
       };
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 

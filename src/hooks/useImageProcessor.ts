@@ -153,14 +153,10 @@ export function useProcessImage() {
  * Hook to get processing queue status
  */
 export function useProcessingQueue(options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['processing-queue', siteId],
+    return useQuery({
+    queryKey: ['processing-queue'],
     queryFn: async (): Promise<ProcessingQueueItem[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('image_processing_queue')
         .select('*')
         .order('created_at', { ascending: false })
@@ -169,7 +165,7 @@ export function useProcessingQueue(options?: { enabled?: boolean }) {
       if (error) throw error;
       return (data as ProcessingQueueItem[]) || [];
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
     refetchInterval: 5000, // Poll every 5 seconds for updates
   });
 }
@@ -178,14 +174,10 @@ export function useProcessingQueue(options?: { enabled?: boolean }) {
  * Hook to get pending processing jobs count
  */
 export function usePendingProcessingCount() {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['processing-queue-count', siteId],
+    return useQuery({
+    queryKey: ['processing-queue-count'],
     queryFn: async (): Promise<number> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { count, error } = await supabase
+            const { count, error } = await supabase
         .from('image_processing_queue')
         .select('*', { count: 'exact', head: true })
         .in('status', ['pending', 'processing']);
@@ -202,14 +194,10 @@ export function usePendingProcessingCount() {
  * Hook to get processed images
  */
 export function useProcessedImages(documentId?: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['processed-images', siteId, documentId],
+    return useQuery({
+    queryKey: [ documentId],
     queryFn: async (): Promise<ProcessedImage[]> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('processed_images')
         .select('*')
         .order('created_at', { ascending: false });
@@ -223,7 +211,7 @@ export function useProcessedImages(documentId?: string, options?: { enabled?: bo
       if (error) throw error;
       return (data as ProcessedImage[]) || [];
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }
 
@@ -231,14 +219,10 @@ export function useProcessedImages(documentId?: string, options?: { enabled?: bo
  * Hook to get a single processed image by original path
  */
 export function useProcessedImage(originalPath: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['processed-image', siteId, originalPath],
+    return useQuery({
+    queryKey: [ originalPath],
     queryFn: async (): Promise<ProcessedImage | null> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('processed_images')
         .select('*')
         .eq('original_path', originalPath)
@@ -247,7 +231,7 @@ export function useProcessedImage(originalPath: string, options?: { enabled?: bo
       if (error && error.code !== 'PGRST116') throw error;
       return data as ProcessedImage | null;
     },
-    enabled: !!siteId && !!originalPath && (options?.enabled !== false),
+    enabled: !!originalPath && (options?.enabled !== false),
   });
 }
 
@@ -293,14 +277,11 @@ export function useOptimizedImageUrl(
  * Hook to cancel a processing job
  */
 export function useCancelProcessingJob() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (jobId: string): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('image_processing_queue')
         .delete()
         .eq('id', jobId)
@@ -319,14 +300,11 @@ export function useCancelProcessingJob() {
  * Hook to retry a failed processing job
  */
 export function useRetryProcessingJob() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (jobId: string): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('image_processing_queue')
         .update({
           status: 'pending',
@@ -350,18 +328,15 @@ export function useRetryProcessingJob() {
  * Hook to delete a processed image record
  */
 export function useDeleteProcessedImage() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (imageId: string): Promise<void> => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('processed_images')
         .delete()
         .eq('id', imageId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -375,18 +350,14 @@ export function useDeleteProcessedImage() {
  * Hook to get image processing statistics
  */
 export function useImageProcessingStats() {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['image-processing-stats', siteId],
+    return useQuery({
+    queryKey: ['image-processing-stats'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get queue stats
+            // Get queue stats
       const { data: queueData, error: queueError } = await supabase
         .from('image_processing_queue')
         .select('status')
-        .eq('site_id', siteId);
+        ;
 
       if (queueError) throw queueError;
 
@@ -394,7 +365,7 @@ export function useImageProcessingStats() {
       const { data: processedData, error: processedError } = await supabase
         .from('processed_images')
         .select('original_size, total_processed_size, savings_percentage')
-        .eq('site_id', siteId);
+        ;
 
       if (processedError) throw processedError;
 

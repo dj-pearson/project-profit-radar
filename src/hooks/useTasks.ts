@@ -15,13 +15,10 @@ export const useTasks = (filters?: {
   project_id?: string;
   search?: string;
 }) => {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['tasks', filters, siteId],
+    return useQuery({
+    queryKey: ['tasks', filters],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTasks(siteId, filters);  // Pass siteId to service
+            return taskService.getTasks(siteId, filters);  // Pass siteId to service
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!siteId,
@@ -29,26 +26,20 @@ export const useTasks = (filters?: {
 };
 
 export const useTask = (id: string) => {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['task', id, siteId],
+    return useQuery({
+    queryKey: ['task', id],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTask(siteId, id);  // Pass siteId to service
+            return taskService.getTask(siteId, id);  // Pass siteId to service
     },
-    enabled: !!id && !!siteId,
+    enabled: !!id,
   });
 };
 
 export const useMyTasks = (status?: string[]) => {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['my-tasks', status, siteId],
+    return useQuery({
+    queryKey: ['my-tasks', status],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getMyTasks(siteId, status);  // Pass siteId to service
+            return taskService.getMyTasks(siteId, status);  // Pass siteId to service
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnMount: 'always',
@@ -57,13 +48,10 @@ export const useMyTasks = (status?: string[]) => {
 };
 
 export const useTasksCreatedByMe = (status?: string[]) => {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['tasks-created-by-me', status, siteId],
+    return useQuery({
+    queryKey: ['tasks-created-by-me', status],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTasksCreatedByMe(siteId, status);  // Pass siteId to service
+            return taskService.getTasksCreatedByMe(siteId, status);  // Pass siteId to service
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchOnMount: 'always',
@@ -72,13 +60,11 @@ export const useTasksCreatedByMe = (status?: string[]) => {
 };
 
 export const useCreateTask = () => {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (taskData: CreateTaskData) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.createTask(siteId, taskData);  // Pass siteId to service
+            return taskService.createTask(siteId, taskData);  // Pass siteId to service
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -100,13 +86,11 @@ export const useCreateTask = () => {
 };
 
 export const useUpdateTask = () => {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: UpdateTaskData }) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.updateTask(siteId, id, updates);  // Pass siteId to service
+            return taskService.updateTask(siteId, id, updates);  // Pass siteId to service
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -129,13 +113,11 @@ export const useUpdateTask = () => {
 };
 
 export const useDeleteTask = () => {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.deleteTask(siteId, id);  // Pass siteId to service
+            return taskService.deleteTask(siteId, id);  // Pass siteId to service
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -157,26 +139,21 @@ export const useDeleteTask = () => {
 };
 
 export const useTaskComments = (taskId: string) => {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['task-comments', taskId, siteId],
+    return useQuery({
+    queryKey: ['task-comments', taskId],
     queryFn: () => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.getTaskComments(siteId, taskId);  // Pass siteId to service
+            return taskService.getTaskComments(siteId, taskId);  // Pass siteId to service
     },
-    enabled: !!taskId && !!siteId,
+    enabled: !!taskId,
   });
 };
 
 export const useAddTaskComment = () => {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ taskId, comment }: { taskId: string; comment: string }) => {
-      if (!siteId) throw new Error('Site ID is required');
-      return taskService.addTaskComment(siteId, taskId, comment);  // Pass siteId to service
+            return taskService.addTaskComment(siteId, taskId, comment);  // Pass siteId to service
     },
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['task-comments', taskId] });

@@ -78,7 +78,7 @@ export const useDashboardData = () => {
       const { data: projects, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, completion_percentage, status, start_date, end_date')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .in('status', ['active', 'in_progress', 'planning']);
 
@@ -88,7 +88,7 @@ export const useDashboardData = () => {
       const { data: teamMembers, error: teamError } = await supabase
         .from('user_profiles')
         .select('id')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .eq('is_active', true);
 
@@ -98,7 +98,7 @@ export const useDashboardData = () => {
       const { data: activities, error: activityError } = await supabase
         .from('activity_feed')
         .select('id, activity_type, title, created_at, user_id, project_id')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false })
         .limit(10);

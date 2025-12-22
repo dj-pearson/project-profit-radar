@@ -51,17 +51,13 @@ export const useDigitalInspections = (projectId?: string) => {
       if (error) throw error;
       return data as QualityInspection[];
     },
-    enabled: !!siteId && !!userProfile?.company_id,
+    enabled: !!userProfile?.company_id,
   });
 
   // Create inspection with site_id and company_id isolation
   const createInspection = useMutation({
     mutationFn: async (inspection: any) => {
-      if (!siteId || !userProfile?.company_id) {
-        throw new Error('Site ID and Company ID required');
-      }
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('quality_inspections')
         .insert([{
           ...inspection,
@@ -89,9 +85,7 @@ export const useDigitalInspections = (projectId?: string) => {
   // Update inspection with site_id isolation
   const updateInspection = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      if (!siteId) throw new Error('Site ID required');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('quality_inspections')
         .update(updates)
         .eq('id', id)
@@ -117,9 +111,7 @@ export const useDigitalInspections = (projectId?: string) => {
   // Delete inspection with site_id isolation
   const deleteInspection = useMutation({
     mutationFn: async (id: string) => {
-      if (!siteId) throw new Error('Site ID required');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('quality_inspections')
         .delete()
         .eq('id', id);

@@ -58,14 +58,10 @@ export interface LeadFilters {
 }
 
 export function useLeads(filters?: LeadFilters, options?: Omit<UseQueryOptions<Lead[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['leads', siteId, filters],
+    return useQuery({
+    queryKey: [ filters],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false });
@@ -97,16 +93,14 @@ export function useLeads(filters?: LeadFilters, options?: Omit<UseQueryOptions<L
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
     ...options,
   });
 }
 
 export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptions<Lead | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['lead', leadId, siteId],
+    return useQuery({
+    queryKey: ['lead', leadId],
     queryFn: async () => {
       if (!siteId || !leadId) throw new Error('Missing site_id or lead_id');
 
@@ -119,20 +113,17 @@ export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptio
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!leadId && (options?.enabled !== false),
+    enabled: !!leadId && (options?.enabled !== false),
     ...options,
   });
 }
 
 export function useCreateLead() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (lead: Omit<LeadInsert, 'site_id'>) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('leads')
         .insert({ ...lead, })
         .select()
@@ -152,14 +143,11 @@ export function useCreateLead() {
 }
 
 export function useUpdateLead() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: LeadUpdate & { id: string }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('leads')
         .update(updates)
         .eq('id', id)
@@ -181,18 +169,15 @@ export function useUpdateLead() {
 }
 
 export function useDeleteLead() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (leadId: string) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('leads')
         .delete()
         .eq('id', leadId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -223,7 +208,7 @@ export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOpt
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['contacts', siteId, companyId, filters],
+    queryKey: [ companyId, filters],
     queryFn: async () => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -253,7 +238,7 @@ export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOpt
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -277,7 +262,7 @@ export function useContact(contactId: string | undefined, options?: Omit<UseQuer
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!companyId && !!contactId && (options?.enabled !== false),
+    enabled: !!companyId && !!contactId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -386,7 +371,7 @@ export function useOpportunities(filters?: OpportunityFilters, options?: Omit<Us
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['opportunities', siteId, companyId, filters],
+    queryKey: [ companyId, filters],
     queryFn: async () => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -419,7 +404,7 @@ export function useOpportunities(filters?: OpportunityFilters, options?: Omit<Us
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -443,7 +428,7 @@ export function useOpportunity(opportunityId: string | undefined, options?: Omit
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!companyId && !!opportunityId && (options?.enabled !== false),
+    enabled: !!companyId && !!opportunityId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -551,7 +536,7 @@ export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<D
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['deals', siteId, companyId, filters],
+    queryKey: [ companyId, filters],
     queryFn: async () => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -581,7 +566,7 @@ export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<D
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -605,7 +590,7 @@ export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptio
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!companyId && !!dealId && (options?.enabled !== false),
+    enabled: !!companyId && !!dealId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -708,14 +693,10 @@ export interface CampaignFilters {
 }
 
 export function useEmailCampaigns(filters?: CampaignFilters, options?: Omit<UseQueryOptions<EmailCampaign[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['email_campaigns', siteId, filters],
+    return useQuery({
+    queryKey: [ filters],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      let query = supabase
+            let query = supabase
         .from('email_campaigns')
         .select('*')
         .order('created_at', { ascending: false });
@@ -737,16 +718,14 @@ export function useEmailCampaigns(filters?: CampaignFilters, options?: Omit<UseQ
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
     ...options,
   });
 }
 
 export function useEmailCampaign(campaignId: string | undefined, options?: Omit<UseQueryOptions<EmailCampaign | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['email_campaign', campaignId, siteId],
+    return useQuery({
+    queryKey: ['email_campaign', campaignId],
     queryFn: async () => {
       if (!siteId || !campaignId) throw new Error('Missing required IDs');
 
@@ -759,20 +738,17 @@ export function useEmailCampaign(campaignId: string | undefined, options?: Omit<
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!campaignId && (options?.enabled !== false),
+    enabled: !!campaignId && (options?.enabled !== false),
     ...options,
   });
 }
 
 export function useCreateEmailCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (campaign: Omit<EmailCampaignInsert, 'site_id'>) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_campaigns')
         .insert({ ...campaign, })
         .select()
@@ -792,14 +768,11 @@ export function useCreateEmailCampaign() {
 }
 
 export function useUpdateEmailCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: EmailCampaignUpdate & { id: string }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('email_campaigns')
         .update(updates)
         .eq('id', id)
@@ -821,18 +794,15 @@ export function useUpdateEmailCampaign() {
 }
 
 export function useDeleteEmailCampaign() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (campaignId: string) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('email_campaigns')
         .delete()
         .eq('id', campaignId)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
     },
@@ -862,7 +832,7 @@ export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQ
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['email_templates', siteId, companyId, filters],
+    queryKey: [ companyId, filters],
     queryFn: async () => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -889,7 +859,7 @@ export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQ
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -994,7 +964,7 @@ export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['workflow_definitions', siteId, companyId, filters],
+    queryKey: [ companyId, filters],
     queryFn: async () => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -1018,7 +988,7 @@ export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -1042,7 +1012,7 @@ export function useWorkflowDefinition(workflowId: string | undefined, options?: 
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId && !!companyId && !!workflowId && (options?.enabled !== false),
+    enabled: !!companyId && !!workflowId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -1150,7 +1120,7 @@ export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQu
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['crm_activities', siteId, companyId, filters],
+    queryKey: [ companyId, filters],
     queryFn: async () => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -1180,7 +1150,7 @@ export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQu
       if (error) throw error;
       return data || [];
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     ...options,
   });
 }
@@ -1291,7 +1261,7 @@ export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, E
   const companyId = userProfile?.company_id;
 
   return useQuery({
-    queryKey: ['pipeline_stats', siteId, companyId],
+    queryKey: [ companyId],
     queryFn: async (): Promise<PipelineStats> => {
       if (!siteId || !companyId) throw new Error('No site_id or company_id available');
 
@@ -1299,7 +1269,7 @@ export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, E
       const { data: leads, error: leadsError } = await supabase
         .from('leads')
         .select('id, status, lead_source, converted_at')
-        .eq('site_id', siteId);
+        ;
 
       if (leadsError) throw leadsError;
 
@@ -1355,7 +1325,7 @@ export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, E
         bySource,
       };
     },
-    enabled: !!siteId && !!companyId && (options?.enabled !== false),
+    enabled: !!companyId && (options?.enabled !== false),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
@@ -1386,13 +1356,9 @@ export function useLeadScore(leadId: string | undefined, options?: Omit<UseQuery
   const {  session } = useAuth();
 
   return useQuery({
-    queryKey: ['lead_score', leadId, siteId],
+    queryKey: ['lead_score', leadId],
     queryFn: async (): Promise<LeadScore | null> => {
-      if (!siteId || !leadId || !session?.access_token) {
-        throw new Error('Missing required data');
-      }
-
-      // Call the AI lead scoring edge function
+            // Call the AI lead scoring edge function
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-lead-score`, {
         method: 'POST',
         headers: {
@@ -1409,7 +1375,7 @@ export function useLeadScore(leadId: string | undefined, options?: Omit<UseQuery
 
       return response.json();
     },
-    enabled: !!siteId && !!leadId && !!session?.access_token && (options?.enabled !== false),
+    enabled: !!leadId && !!session?.access_token && (options?.enabled !== false),
     staleTime: 10 * 60 * 1000, // 10 minutes
     ...options,
   });
@@ -1470,7 +1436,7 @@ export function useConvertLeadToOpportunity() {
           converted_at: new Date().toISOString(),
         })
         .eq('id', leadId)
-        .eq('site_id', siteId);
+        ;
 
       if (updateError) throw updateError;
 
@@ -1493,8 +1459,7 @@ export function useConvertLeadToOpportunity() {
 // ============================================================================
 
 export function useBulkUpdateLeads() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -1504,9 +1469,7 @@ export function useBulkUpdateLeads() {
       leadIds: string[];
       updates: Partial<LeadUpdate>;
     }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('leads')
         .update(updates)
         .in('id', leadIds)
@@ -1526,18 +1489,15 @@ export function useBulkUpdateLeads() {
 }
 
 export function useBulkDeleteLeads() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (leadIds: string[]) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('leads')
         .delete()
         .in('id', leadIds)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
       return leadIds.length;
@@ -1557,14 +1517,11 @@ export function useBulkDeleteLeads() {
 // ============================================================================
 
 export function useBulkUpdateContacts() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ contactIds, updates }: { contactIds: string[]; updates: Partial<ContactUpdate> }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('contacts')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', contactIds)
@@ -1584,18 +1541,15 @@ export function useBulkUpdateContacts() {
 }
 
 export function useBulkDeleteContacts() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (contactIds: string[]) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('contacts')
         .delete()
         .in('id', contactIds)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
       return contactIds.length;
@@ -1611,14 +1565,11 @@ export function useBulkDeleteContacts() {
 }
 
 export function useMergeContacts() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ primaryId, secondaryIds }: { primaryId: string; secondaryIds: string[] }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get primary contact
+            // Get primary contact
       const { data: primary, error: primaryError } = await supabase
         .from('contacts')
         .select('*')
@@ -1632,7 +1583,7 @@ export function useMergeContacts() {
         .from('contacts')
         .select('*')
         .in('id', secondaryIds)
-        .eq('site_id', siteId);
+        ;
 
       if (secondariesError) throw secondariesError;
 
@@ -1649,7 +1600,7 @@ export function useMergeContacts() {
         .from('contacts')
         .update({ ...mergedData, updated_at: new Date().toISOString() })
         .eq('id', primaryId)
-        .eq('site_id', siteId);
+        ;
 
       if (updateError) throw updateError;
 
@@ -1658,14 +1609,14 @@ export function useMergeContacts() {
         .from('crm_activities')
         .update({ contact_id: primaryId })
         .in('contact_id', secondaryIds)
-        .eq('site_id', siteId);
+        ;
 
       // Delete secondary contacts
       const { error: deleteError } = await supabase
         .from('contacts')
         .delete()
         .in('id', secondaryIds)
-        .eq('site_id', siteId);
+        ;
 
       if (deleteError) throw deleteError;
 
@@ -1687,14 +1638,11 @@ export function useMergeContacts() {
 // ============================================================================
 
 export function useBulkUpdateOpportunities() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ opportunityIds, updates }: { opportunityIds: string[]; updates: Partial<OpportunityUpdate> }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('opportunities')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', opportunityIds)
@@ -1714,18 +1662,15 @@ export function useBulkUpdateOpportunities() {
 }
 
 export function useBulkDeleteOpportunities() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (opportunityIds: string[]) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('opportunities')
         .delete()
         .in('id', opportunityIds)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
       return opportunityIds.length;
@@ -1746,9 +1691,7 @@ export function useConvertOpportunityToDeal() {
 
   return useMutation({
     mutationFn: async (opportunityId: string) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get the opportunity
+            // Get the opportunity
       const { data: opportunity, error: fetchError } = await supabase
         .from('opportunities')
         .select('*')
@@ -1786,7 +1729,7 @@ export function useConvertOpportunityToDeal() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', opportunityId)
-        .eq('site_id', siteId);
+        ;
 
       return deal;
     },
@@ -1806,14 +1749,11 @@ export function useConvertOpportunityToDeal() {
 // ============================================================================
 
 export function useBulkUpdateDeals() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ dealIds, updates }: { dealIds: string[]; updates: Partial<DealUpdate> }) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('deals')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', dealIds)
@@ -1833,18 +1773,15 @@ export function useBulkUpdateDeals() {
 }
 
 export function useBulkDeleteDeals() {
-  const { siteId } = useAuth();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (dealIds: string[]) => {
-      if (!siteId) throw new Error('No site_id available');
-
-      const { error } = await supabase
+            const { error } = await supabase
         .from('deals')
         .delete()
         .in('id', dealIds)
-        .eq('site_id', siteId);
+        ;
 
       if (error) throw error;
       return dealIds.length;
@@ -1872,13 +1809,10 @@ export interface GlobalSearchResult {
 }
 
 export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['crm-search', siteId, query],
+    return useQuery({
+    queryKey: [ query],
     queryFn: async (): Promise<GlobalSearchResult[]> => {
-      if (!siteId) throw new Error('No site_id available');
-      if (!query || query.length < 2) return [];
+            if (!query || query.length < 2) return [];
 
       const searchPattern = `%${query}%`;
       const results: GlobalSearchResult[] = [];
@@ -1949,7 +1883,7 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
 
       return results;
     },
-    enabled: !!siteId && !!query && query.length >= 2 && (options?.enabled !== false),
+    enabled: !!query && query.length >= 2 && (options?.enabled !== false),
   });
 }
 
@@ -1958,14 +1892,10 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
 // ============================================================================
 
 export function useCRMDashboardStats(options?: { enabled?: boolean }) {
-  const { siteId } = useAuth();
-
-  return useQuery({
-    queryKey: ['crm-dashboard-stats', siteId],
+    return useQuery({
+    queryKey: ['crm-dashboard-stats'],
     queryFn: async () => {
-      if (!siteId) throw new Error('No site_id available');
-
-      // Get counts in parallel
+            // Get counts in parallel
       const [
         { count: leadCount },
         { count: contactCount },
@@ -1976,10 +1906,10 @@ export function useCRMDashboardStats(options?: { enabled?: boolean }) {
         { data: opportunityValues },
         { data: dealValues },
       ] = await Promise.all([
-        supabase.from('leads').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
-        supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
-        supabase.from('opportunities').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
-        supabase.from('deals').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
+        supabase.from('leads').select('*', { count: 'exact', head: true }),
+        supabase.from('contacts').select('*', { count: 'exact', head: true }),
+        supabase.from('opportunities').select('*', { count: 'exact', head: true }),
+        supabase.from('deals').select('*', { count: 'exact', head: true }),
         supabase.from('leads').select('id, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         supabase.from('crm_activities').select('id, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         supabase.from('opportunities').select('value').not('value', 'is', null),
@@ -2001,6 +1931,6 @@ export function useCRMDashboardStats(options?: { enabled?: boolean }) {
         pipeline_value: totalOpportunityValue + totalDealValue,
       };
     },
-    enabled: !!siteId && (options?.enabled !== false),
+    enabled: (options?.enabled !== false),
   });
 }

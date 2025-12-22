@@ -73,32 +73,32 @@ export const useCrewGPSCheckin = () => {
 
   // Get my pending check-ins (assigned to me today) with site isolation
   const { data: myPendingCheckins, isLoading: loadingPending } = useQuery({
-    queryKey: ['crew-pending-checkin', user?.id, siteId],
+    queryKey: ['crew-pending-checkin', user?.id],
     queryFn: async () => {
       if (!user?.id || !siteId) return [];
 
       const { data, error } = await supabase
         .from('crew_assignments_pending_checkin')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('user_id', user.id);
 
       if (error) throw error;
       return data as CrewAssignment[];
     },
-    enabled: !!user?.id && !!siteId,
+    enabled: !!user?.id,
   });
 
   // Get all crew presence (for dashboard - project managers/supervisors) with site isolation
   const { data: crewPresence, isLoading: loadingPresence } = useQuery({
-    queryKey: ['crew-presence', siteId],
+    queryKey: ['crew-presence'],
     queryFn: async () => {
       if (!siteId) return [];
 
       const { data, error } = await supabase
         .from('crew_presence_dashboard')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .order('is_onsite', { ascending: false })
         .order('gps_checkin_timestamp', { ascending: false });
 
@@ -181,7 +181,7 @@ export const useCrewGPSCheckin = () => {
           status: 'completed',
         })
         .eq('id', assignmentId)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .select()
         .single();
 

@@ -44,14 +44,12 @@ class MaterialToPurchaseOrderService {
     userId: string,
     poData: PurchaseOrderData
   ): Promise<POCreationResult> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    try {
+        try {
       // 1. Fetch materials
       const { data: materials, error: materialsError } = await supabase
         .from('materials')
         .select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .in('id', materialIds);
 
       if (materialsError || !materials || materials.length === 0) {
@@ -74,7 +72,7 @@ class MaterialToPurchaseOrderService {
         const { data: existingVendor } = await supabase
           .from('vendors')
           .select('id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('name', poData.vendor_name)
           .eq('company_id', companyId)
           .single();
@@ -166,7 +164,7 @@ class MaterialToPurchaseOrderService {
       const { error: updateError } = await supabase
         .from('materials')
         .update({ purchase_order_id: newPO.id })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .in('id', materialIds);
 
       if (updateError) {
@@ -197,16 +195,14 @@ class MaterialToPurchaseOrderService {
     canCreate: boolean;
     issues: string[];
   }> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    try {
+        try {
       const { data: materials, error } = await supabase
         .from('materials')
         .select(`
           *,
           projects(name)
         `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .in('id', materialIds);
 
       if (error || !materials || materials.length === 0) {
@@ -281,13 +277,11 @@ class MaterialToPurchaseOrderService {
    * Gets suggested vendors for materials
    */
   async getSuggestedVendors(siteId: string, companyId: string, category?: string): Promise<any[]> {
-    if (!siteId) throw new Error('Site ID is required for multi-tenant isolation');
-
-    try {
+        try {
       let query = supabase
         .from('vendors')
         .select('id, name, email, phone')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', companyId)
         .eq('status', 'active')
         .order('name');

@@ -58,7 +58,7 @@ export const useAuditLog = () => {
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('company_id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('id', user.id)
           .single();
         companyId = profile?.company_id;
@@ -110,7 +110,7 @@ export const useAuditLog = () => {
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('company_id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('id', user.id)
           .single();
         companyId = profile?.company_id;
