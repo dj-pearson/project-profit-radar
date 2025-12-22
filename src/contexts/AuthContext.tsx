@@ -202,18 +202,24 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.error('Error signing out:', error);
     }
 
-    // Show toast notification
-    toast({
-      title: "Session Expired",
-      description: "Your session has expired. Please sign in again.",
-      variant: "destructive",
-      duration: 5000,
-    });
-
-    // Redirect to auth page (web only)
+    // Only redirect if not already on auth page to prevent redirect loops
     const location = getWindowLocation();
     if (location) {
-      location.href = '/auth';
+      const currentPath = location.pathname;
+      const isOnAuthPage = currentPath === '/auth' || currentPath === '/login' || currentPath === '/reset-password';
+
+      if (!isOnAuthPage) {
+        // Show toast notification only when redirecting
+        toast({
+          title: "Session Expired",
+          description: "Your session has expired. Please sign in again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        location.href = '/auth';
+      } else {
+        logger.debug('Already on auth page, skipping redirect');
+      }
     }
   }, [toast]);
 

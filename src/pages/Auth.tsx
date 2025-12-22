@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock, RefreshCw, KeyRound } from "lucide-react";
 import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
+
+// Redirect loop detection constants
+const REDIRECT_LOOP_KEY = 'bd.auth.redirectLoop';
+const REDIRECT_LOOP_THRESHOLD = 3; // Max redirects in time window
+const REDIRECT_LOOP_WINDOW = 10000; // 10 seconds
 
 // OTP verification flow states
 type OTPFlowState =
@@ -63,6 +68,8 @@ const Auth = () => {
   });
 
   const otpResendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasAttemptedRedirect = useRef(false);
+  const redirectStabilityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     signIn,
@@ -76,16 +83,72 @@ const Auth = () => {
     resendOTP,
     user,
     userProfile,
+    session,
     loading: authLoading
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Cleanup resend timer on unmount
+  // Detect and prevent redirect loops
+  const checkRedirectLoop = useCallback((): boolean => {
+    try {
+      const stored = sessionStorage.getItem(REDIRECT_LOOP_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        const now = Date.now();
+
+        // Clean up old entries outside the time window
+        const recentRedirects = data.timestamps.filter(
+          (ts: number) => now - ts < REDIRECT_LOOP_WINDOW
+        );
+
+        if (recentRedirects.length >= REDIRECT_LOOP_THRESHOLD) {
+          console.warn('Redirect loop detected, blocking redirect');
+          // Clear the loop data after detecting
+          sessionStorage.removeItem(REDIRECT_LOOP_KEY);
+          return true; // Loop detected
+        }
+
+        // Update with cleaned data
+        sessionStorage.setItem(REDIRECT_LOOP_KEY, JSON.stringify({
+          timestamps: recentRedirects
+        }));
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Record a redirect attempt
+  const recordRedirectAttempt = useCallback(() => {
+    try {
+      const stored = sessionStorage.getItem(REDIRECT_LOOP_KEY);
+      const data = stored ? JSON.parse(stored) : { timestamps: [] };
+      data.timestamps.push(Date.now());
+      sessionStorage.setItem(REDIRECT_LOOP_KEY, JSON.stringify(data));
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  // Clear redirect loop tracking on successful stable auth
+  const clearRedirectLoopTracking = useCallback(() => {
+    try {
+      sessionStorage.removeItem(REDIRECT_LOOP_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (otpResendTimerRef.current) {
         clearInterval(otpResendTimerRef.current);
+      }
+      if (redirectStabilityTimer.current) {
+        clearTimeout(redirectStabilityTimer.current);
       }
     };
   }, []);
@@ -140,57 +203,108 @@ const Auth = () => {
     if (errorRecovery || refresh) {
       // Replace URL without parameters to avoid redirect issues
       window.history.replaceState({}, '', '/auth');
+      // Clear any loop tracking when we hit recovery mode
+      clearRedirectLoopTracking();
       return;
     }
 
     // Wait until auth profile has finished loading
-    if (!user || authLoading) return;
+    if (!user || authLoading) {
+      // Reset redirect attempt flag when user logs out
+      hasAttemptedRedirect.current = false;
+      return;
+    }
 
     // Don't redirect to dashboard if this is a password recovery session
     if (type === 'recovery') {
       return;
     }
 
-
-    // Check if there's a pending checkout
-    const pendingCheckout = localStorage.getItem('pendingCheckout');
-    if (pendingCheckout && redirect === 'checkout') {
-      try {
-        const checkout = JSON.parse(pendingCheckout);
-        // Check if checkout is not expired (1 hour)
-        if (Date.now() - checkout.timestamp < 3600000) {
-          // Clear the stored checkout
-          localStorage.removeItem('pendingCheckout');
-          clearRememberedRoute();
-          // Navigate to pricing which will auto-trigger checkout since user is now authenticated
-          navigate('/pricing');
-          return;
-        } else {
-          // Expired, clear it
-          localStorage.removeItem('pendingCheckout');
-        }
-      } catch (e) {
-        console.error('Error parsing pending checkout:', e);
-        localStorage.removeItem('pendingCheckout');
-      }
-    }
-
-    // If user doesn't have a company in their profile (and isn't root_admin), redirect to setup
-    if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
-      clearRememberedRoute();
-      navigate('/setup');
+    // Prevent redirect loops - check if we've redirected too many times recently
+    if (checkRedirectLoop()) {
+      console.warn('Auth: Redirect loop detected, staying on auth page');
+      // Clear auth state to break the loop
+      hasAttemptedRedirect.current = true;
       return;
     }
 
-    // Get return URL from query params or remembered route
-    const returnUrl = getReturnUrl(urlParams, '/dashboard');
+    // Prevent multiple redirect attempts in the same render cycle
+    if (hasAttemptedRedirect.current) {
+      return;
+    }
 
-    // Clear route memory after successful redirect
-    clearRememberedRoute();
+    // Require a valid session before redirecting (not just user object)
+    // This prevents redirects during transitional auth states
+    if (!session) {
+      console.debug('Auth: User exists but no session, waiting for stable auth state');
+      return;
+    }
 
-    // Navigate to the return URL
-    navigate(returnUrl);
-  }, [user, userProfile, authLoading, navigate]);
+    // Add a small stability delay before redirecting
+    // This prevents redirects during rapid auth state changes
+    if (redirectStabilityTimer.current) {
+      clearTimeout(redirectStabilityTimer.current);
+    }
+
+    redirectStabilityTimer.current = setTimeout(() => {
+      // Double-check we still have valid auth state after the delay
+      if (!user || !session || authLoading) {
+        return;
+      }
+
+      // Mark that we've attempted a redirect
+      hasAttemptedRedirect.current = true;
+      recordRedirectAttempt();
+
+      // Check if there's a pending checkout
+      const pendingCheckout = localStorage.getItem('pendingCheckout');
+      if (pendingCheckout && redirect === 'checkout') {
+        try {
+          const checkout = JSON.parse(pendingCheckout);
+          // Check if checkout is not expired (1 hour)
+          if (Date.now() - checkout.timestamp < 3600000) {
+            // Clear the stored checkout
+            localStorage.removeItem('pendingCheckout');
+            clearRememberedRoute();
+            clearRedirectLoopTracking();
+            // Navigate to pricing which will auto-trigger checkout since user is now authenticated
+            navigate('/pricing');
+            return;
+          } else {
+            // Expired, clear it
+            localStorage.removeItem('pendingCheckout');
+          }
+        } catch (e) {
+          console.error('Error parsing pending checkout:', e);
+          localStorage.removeItem('pendingCheckout');
+        }
+      }
+
+      // If user doesn't have a company in their profile (and isn't root_admin), redirect to setup
+      if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
+        clearRememberedRoute();
+        clearRedirectLoopTracking();
+        navigate('/setup');
+        return;
+      }
+
+      // Get return URL from query params or remembered route
+      const returnUrl = getReturnUrl(urlParams, '/dashboard');
+
+      // Clear route memory after successful redirect
+      clearRememberedRoute();
+      clearRedirectLoopTracking();
+
+      // Navigate to the return URL
+      navigate(returnUrl);
+    }, 100); // 100ms stability delay
+
+    return () => {
+      if (redirectStabilityTimer.current) {
+        clearTimeout(redirectStabilityTimer.current);
+      }
+    };
+  }, [user, userProfile, session, authLoading, navigate, checkRedirectLoop, recordRedirectAttempt, clearRedirectLoopTracking]);
 
   const validatePasswordInput = (pwd: string) => {
     const errors: string[] = [];
