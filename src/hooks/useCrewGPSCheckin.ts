@@ -75,7 +75,7 @@ export const useCrewGPSCheckin = () => {
   const { data: myPendingCheckins, isLoading: loadingPending } = useQuery({
     queryKey: ['crew-pending-checkin', user?.id],
     queryFn: async () => {
-      if (!user?.id || !siteId) return [];
+      if (!user?.id) return [];
 
       const { data, error } = await supabase
         .from('crew_assignments_pending_checkin')

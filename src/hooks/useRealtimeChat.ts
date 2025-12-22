@@ -47,7 +47,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
   // Load channels for the company with site_id isolation
   const loadChannels = useCallback(async () => {
-    if (!userProfile?.company_id || !siteId) return;
+    if (!userProfile?.company_id) return;
 
     try {
       // Get channels user is member of with site_id isolation
@@ -87,7 +87,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
   // Load messages for a specific channel with site_id isolation
   const loadMessages = useCallback(async (channelId: string) => {
-    if (!userProfile || !siteId) return;
+    if (!userProfile) return;
 
     try {
       setLoading(true);
@@ -129,7 +129,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
   // Send a message with site_id isolation
   const sendMessage = useCallback(async (content: string, replyTo?: string) => {
-    if (!userProfile || !activeChannel || !content.trim() || !siteId) return;
+    if (!userProfile || !activeChannel || !content.trim()) return;
 
     try {
       setSending(true);
@@ -159,7 +159,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
   // Send a file message with site_id isolation
   const sendFile = useCallback(async (file: File) => {
-    if (!userProfile || !activeChannel || !siteId) return;
+    if (!userProfile || !activeChannel) return;
 
     try {
       setSending(true);
@@ -209,7 +209,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
   // Create a new channel with site_id isolation
   const createChannel = useCallback(async (name: string, description?: string, projectId?: string, isPrivate = false) => {
-    if (!userProfile || !siteId) return;
+    if (!userProfile) return;
 
     try {
       const { data, error } = await supabase
@@ -252,7 +252,7 @@ export const useRealtimeChat = (channelId?: string) => {
 
   // Set up real-time subscriptions with site_id isolation
   useEffect(() => {
-    if (!userProfile || !siteId) return;
+    if (!userProfile) return;
 
     // Subscribe to new messages - filter by site_id and company_id
     const messageChannel = supabase

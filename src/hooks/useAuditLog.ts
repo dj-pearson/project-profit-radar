@@ -46,7 +46,7 @@ export const useAuditLog = () => {
   };
 
   const logAuditEvent = async (params: AuditLogParams) => {
-    if (!user || !siteId) return null;
+    if (!user) return null;
 
     try {
       setLoading(true);
@@ -98,7 +98,7 @@ export const useAuditLog = () => {
   };
 
   const logDataAccess = async (params: DataAccessParams) => {
-    if (!user || !siteId) return null;
+    if (!user) return null;
 
     try {
       setLoading(true);

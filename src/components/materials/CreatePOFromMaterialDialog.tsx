@@ -115,7 +115,7 @@ export const CreatePOFromMaterialDialog = ({
   };
 
   const loadVendors = async () => {
-    if (!userProfile?.company_id || !siteId) return;
+    if (!userProfile?.company_id) return;
 
     try {
       const vendorList = await materialToPOService.getSuggestedVendors(
@@ -129,7 +129,7 @@ export const CreatePOFromMaterialDialog = ({
   };
 
   const handleCreate = async () => {
-    if (!userProfile?.company_id || !user?.id || !siteId || !canCreate) return;
+    if (!userProfile?.company_id || !user?.id || !canCreate) return;
 
     // Validate vendor
     if (!vendorId && !vendorName.trim()) {

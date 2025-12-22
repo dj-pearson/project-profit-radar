@@ -72,7 +72,7 @@ export const ConvertToProjectDialog = ({
   }, [isOpen, estimateId]);
 
   const loadEstimatePreview = async () => {
-    if (!estimateId || !siteId) return;
+    if (!estimateId) return;
 
     setLoading(true);
     try {
@@ -102,7 +102,7 @@ export const ConvertToProjectDialog = ({
   };
 
   const handleConvert = async () => {
-    if (!estimateId || !userProfile?.company_id || !siteId || !canConvert) return;
+    if (!estimateId || !userProfile?.company_id || !canConvert) return;
 
     setConverting(true);
     try {

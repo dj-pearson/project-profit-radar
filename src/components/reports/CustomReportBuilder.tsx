@@ -225,19 +225,19 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
       let query;
       switch (config.dataSource) {
         case 'projects':
-          query = supabase.from('projects').select('*').eq('site_id', siteId);
+          query = supabase.from('projects').select('*');
           break;
         case 'job_costs':
-          query = supabase.from('job_costs').select('*').eq('site_id', siteId);
+          query = supabase.from('job_costs').select('*');
           break;
         case 'time_entries':
-          query = supabase.from('time_entries').select('*').eq('site_id', siteId);
+          query = supabase.from('time_entries').select('*');
           break;
         case 'expenses':
-          query = supabase.from('expenses').select('*').eq('site_id', siteId);
+          query = supabase.from('expenses').select('*');
           break;
         case 'invoices':
-          query = supabase.from('invoices').select('*').eq('site_id', siteId);
+          query = supabase.from('invoices').select('*');
           break;
         default:
           throw new Error('Invalid data source');

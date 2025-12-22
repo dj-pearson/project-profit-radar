@@ -65,7 +65,7 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
 
   const loadDashboardData = useCallback(async () => {
-    if (!userProfile?.company_id || !siteId) {
+    if (!userProfile?.company_id) {
       setLoading(false);
       return;
     }

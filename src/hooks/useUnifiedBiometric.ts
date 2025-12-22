@@ -228,7 +228,7 @@ export function useUnifiedBiometric(): UseUnifiedBiometricReturn {
 
   // Enable biometric login
   const enableBiometricLogin = useCallback(async (): Promise<boolean> => {
-    if (!user || !siteId) {
+    if (!user) {
       toast({
         title: 'Error',
         description: 'You must be logged in to enable biometric login',

@@ -260,7 +260,7 @@ export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enable
     return useQuery({
     queryKey: ['api-key-rate-limit', keyId],
     queryFn: async (): Promise<RateLimitStatus> => {
-      if (!siteId || !keyId) throw new Error('Missing required parameters');
+      if (!keyId) throw new Error('Missing required parameters');
 
       // Get the API key with rate limit
       const { data: keyData, error: keyError } = await supabase

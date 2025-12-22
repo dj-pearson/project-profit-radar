@@ -16,7 +16,7 @@ export function useFinancialSettings() {
   const { data: settings, isLoading, error } = useQuery({
     queryKey: ['financial-settings', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return DEFAULT_FINANCIAL_SETTINGS;
+      if (!userProfile?.company_id) return DEFAULT_FINANCIAL_SETTINGS;
 
       const { data, error } = await supabase
         .from('company_settings')
@@ -115,7 +115,7 @@ export function useProjectCostCalculation(projectId: string) {
   return useQuery({
     queryKey: ['project-costs', projectId, settings],
     queryFn: async () => {
-      if (!userProfile?.company_id || !projectId || !siteId) return null;
+      if (!userProfile?.company_id || !projectId) return null;
 
       // Fetch project cost data with site isolation
       const { data: costs, error } = await (supabase as any)

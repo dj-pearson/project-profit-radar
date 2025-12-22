@@ -35,7 +35,7 @@ export const useDigitalInspections = (projectId?: string) => {
   const { data: inspections, isLoading } = useQuery({
     queryKey: ['quality-inspections', projectId, siteId, userProfile?.company_id],
     queryFn: async () => {
-      if (!siteId || !userProfile?.company_id) return [];
+      if (!userProfile?.company_id) return [];
 
       let query = supabase
         .from('quality_inspections')

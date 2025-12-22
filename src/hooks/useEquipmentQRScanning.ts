@@ -71,7 +71,7 @@ export const useEquipmentQRScanning = () => {
   const { data: equipmentWithQR, isLoading: loadingEquipment } = useQuery({
     queryKey: ['equipment-with-qr', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return [];
+      if (!userProfile?.company_id) return [];
 
       // Note: equipment_with_qr view should be filtered by site_id via RLS
       // Adding explicit filter for extra security
@@ -91,7 +91,7 @@ export const useEquipmentQRScanning = () => {
   const { data: recentScans, isLoading: loadingScans } = useQuery({
     queryKey: ['recent-equipment-scans', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return [];
+      if (!userProfile?.company_id) return [];
 
       // Note: recent_equipment_scans view should be filtered by site_id via RLS
       const { data, error } = await supabase

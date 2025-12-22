@@ -102,7 +102,7 @@ export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptio
     return useQuery({
     queryKey: ['lead', leadId],
     queryFn: async () => {
-      if (!siteId || !leadId) throw new Error('Missing site_id or lead_id');
+      if (!leadId) throw new Error('Missing site_id or lead_id');
 
       const { data, error } = await supabase
         .from('leads')
@@ -210,7 +210,7 @@ export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOpt
   return useQuery({
     queryKey: [ companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       let query = supabase
         .from('contacts')
@@ -250,7 +250,7 @@ export function useContact(contactId: string | undefined, options?: Omit<UseQuer
   return useQuery({
     queryKey: ['contact', contactId, siteId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !contactId) throw new Error('Missing required IDs');
+      if (!companyId || !contactId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('contacts')
@@ -274,7 +274,7 @@ export function useCreateContact() {
 
   return useMutation({
     mutationFn: async (contact: Omit<ContactInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('contacts')
@@ -302,7 +302,7 @@ export function useUpdateContact() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ContactUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('contacts')
@@ -333,7 +333,7 @@ export function useDeleteContact() {
 
   return useMutation({
     mutationFn: async (contactId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { error } = await supabase
         .from('contacts')
@@ -373,7 +373,7 @@ export function useOpportunities(filters?: OpportunityFilters, options?: Omit<Us
   return useQuery({
     queryKey: [ companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       let query = supabase
         .from('opportunities')
@@ -416,7 +416,7 @@ export function useOpportunity(opportunityId: string | undefined, options?: Omit
   return useQuery({
     queryKey: ['opportunity', opportunityId, siteId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !opportunityId) throw new Error('Missing required IDs');
+      if (!companyId || !opportunityId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('opportunities')
@@ -440,7 +440,7 @@ export function useCreateOpportunity() {
 
   return useMutation({
     mutationFn: async (opportunity: Omit<OpportunityInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('opportunities')
@@ -468,7 +468,7 @@ export function useUpdateOpportunity() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: OpportunityUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('opportunities')
@@ -499,7 +499,7 @@ export function useDeleteOpportunity() {
 
   return useMutation({
     mutationFn: async (opportunityId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { error } = await supabase
         .from('opportunities')
@@ -538,7 +538,7 @@ export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<D
   return useQuery({
     queryKey: [ companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       let query = supabase
         .from('deals')
@@ -578,7 +578,7 @@ export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptio
   return useQuery({
     queryKey: ['deal', dealId, siteId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !dealId) throw new Error('Missing required IDs');
+      if (!companyId || !dealId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('deals')
@@ -602,7 +602,7 @@ export function useCreateDeal() {
 
   return useMutation({
     mutationFn: async (deal: Omit<DealInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('deals')
@@ -630,7 +630,7 @@ export function useUpdateDeal() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: DealUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('deals')
@@ -661,7 +661,7 @@ export function useDeleteDeal() {
 
   return useMutation({
     mutationFn: async (dealId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { error } = await supabase
         .from('deals')
@@ -727,7 +727,7 @@ export function useEmailCampaign(campaignId: string | undefined, options?: Omit<
     return useQuery({
     queryKey: ['email_campaign', campaignId],
     queryFn: async () => {
-      if (!siteId || !campaignId) throw new Error('Missing required IDs');
+      if (!campaignId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('email_campaigns')
@@ -834,7 +834,7 @@ export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQ
   return useQuery({
     queryKey: [ companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       let query = supabase
         .from('email_templates')
@@ -871,7 +871,7 @@ export function useCreateEmailTemplate() {
 
   return useMutation({
     mutationFn: async (template: Omit<EmailTemplateInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('email_templates')
@@ -899,7 +899,7 @@ export function useUpdateEmailTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: EmailTemplateUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('email_templates')
@@ -929,7 +929,7 @@ export function useDeleteEmailTemplate() {
 
   return useMutation({
     mutationFn: async (templateId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { error } = await supabase
         .from('email_templates')
@@ -966,7 +966,7 @@ export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit
   return useQuery({
     queryKey: [ companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       let query = supabase
         .from('workflow_definitions')
@@ -1000,7 +1000,7 @@ export function useWorkflowDefinition(workflowId: string | undefined, options?: 
   return useQuery({
     queryKey: ['workflow_definition', workflowId, siteId, companyId],
     queryFn: async () => {
-      if (!siteId || !companyId || !workflowId) throw new Error('Missing required IDs');
+      if (!companyId || !workflowId) throw new Error('Missing required IDs');
 
       const { data, error } = await supabase
         .from('workflow_definitions')
@@ -1024,7 +1024,7 @@ export function useCreateWorkflowDefinition() {
 
   return useMutation({
     mutationFn: async (workflow: Omit<WorkflowDefinitionInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('workflow_definitions')
@@ -1052,7 +1052,7 @@ export function useUpdateWorkflowDefinition() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: WorkflowDefinitionUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('workflow_definitions')
@@ -1083,7 +1083,7 @@ export function useDeleteWorkflowDefinition() {
 
   return useMutation({
     mutationFn: async (workflowId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { error } = await supabase
         .from('workflow_definitions')
@@ -1122,7 +1122,7 @@ export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQu
   return useQuery({
     queryKey: [ companyId, filters],
     queryFn: async () => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       let query = supabase
         .from('crm_activities')
@@ -1162,7 +1162,7 @@ export function useCreateCRMActivity() {
 
   return useMutation({
     mutationFn: async (activity: Omit<CRMActivityInsert, 'site_id' | 'company_id'>) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('crm_activities')
@@ -1190,7 +1190,7 @@ export function useUpdateCRMActivity() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: CRMActivityUpdate & { id: string }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { data, error } = await supabase
         .from('crm_activities')
@@ -1220,7 +1220,7 @@ export function useDeleteCRMActivity() {
 
   return useMutation({
     mutationFn: async (activityId: string) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       const { error } = await supabase
         .from('crm_activities')
@@ -1263,7 +1263,7 @@ export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, E
   return useQuery({
     queryKey: [ companyId],
     queryFn: async (): Promise<PipelineStats> => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       // Fetch leads
       const { data: leads, error: leadsError } = await supabase
@@ -1398,7 +1398,7 @@ export function useConvertLeadToOpportunity() {
       leadId: string;
       opportunityData: Partial<OpportunityInsert>;
     }) => {
-      if (!siteId || !companyId) throw new Error('No site_id or company_id available');
+      if (!companyId) throw new Error('No site_id or company_id available');
 
       // Get the lead data
       const { data: lead, error: leadError } = await supabase

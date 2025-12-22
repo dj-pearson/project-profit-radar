@@ -371,7 +371,7 @@ export const useBackgroundSync = () => {
 
   // Set up real-time subscriptions for critical data with site isolation
   React.useEffect(() => {
-    if (!userProfile?.company_id || !siteId) return;
+    if (!userProfile?.company_id) return;
 
     const channels: any[] = [];
 

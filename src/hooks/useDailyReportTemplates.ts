@@ -61,7 +61,7 @@ export const useDailyReportTemplates = () => {
   const { data: templates, isLoading: loadingTemplates } = useQuery({
     queryKey: ['daily-report-templates', userProfile?.company_id],
     queryFn: async () => {
-      if (!userProfile?.company_id || !siteId) return [];
+      if (!userProfile?.company_id) return [];
 
       const { data, error } = await supabase
         .from('daily_report_templates')

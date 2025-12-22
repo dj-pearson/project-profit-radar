@@ -86,7 +86,7 @@ export function useDashboardData() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!userProfile?.company_id || !siteId) {
+    if (!userProfile?.company_id) {
       setLoading(false);
       return;
     }

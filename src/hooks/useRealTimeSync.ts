@@ -96,7 +96,7 @@ export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
   };
 
   const subscribe = useCallback(() => {
-    if (!userProfile?.company_id || !siteId) return;
+    if (!userProfile?.company_id) return;
 
     channelsRef.current.forEach((channel) => {
       supabase.removeChannel(channel);
