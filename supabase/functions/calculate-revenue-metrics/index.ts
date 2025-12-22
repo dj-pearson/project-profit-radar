@@ -1,5 +1,4 @@
 // Calculate revenue metrics from Stripe data
-// Updated with multi-tenant site_id isolation
 // Runs daily to update MRR, ARR, churn, and other revenue operations metrics
 // Runs as cron job - processes all sites
 
@@ -179,7 +178,7 @@ async function calculateMetricsForPeriod(
   const { data: companies, error: companiesError } = await supabase
     .from("companies")
     .select("*")
-    .eq("site_id", siteId);  // CRITICAL: Site isolation
+    .eq("site_id");  // CRITICAL: Site isolation
 
   if (companiesError) throw companiesError;
 

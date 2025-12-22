@@ -9,7 +9,7 @@ import { FinancialSettings, DEFAULT_FINANCIAL_SETTINGS } from '@/utils/financial
  * Updated with multi-tenant site_id isolation
  */
 export function useFinancialSettings() {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -112,7 +112,7 @@ export function useFinancialSettings() {
  */
 export function useProjectCostCalculation(projectId: string) {
   const { settings } = useFinancialSettings();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
     queryKey: ['project-costs', projectId, settings, siteId],

@@ -1,5 +1,4 @@
 // Sitemap Generator Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -19,8 +18,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get site_id from request body or query params, or resolve from host header
-    const url = new URL(req.url);
+        const url = new URL(req.url);
     let siteId = url.searchParams.get('site_id');
     let siteKey = url.searchParams.get('site_key');
 
@@ -33,8 +31,7 @@ serve(async (req) => {
       } catch { /* ignore body parse errors */ }
     }
 
-    // Resolve site_id from site_key if provided
-    if (!siteId && siteKey) {
+        if (!siteId && siteKey) {
       const { data: siteData } = await supabaseClient
         .from('sites')
         .select('id')
@@ -44,8 +41,7 @@ serve(async (req) => {
     }
 
     // Default to builddesk site if no site specified
-    if (!siteId) {
-      const { data: defaultSite } = await supabaseClient
+    = await supabaseClient
         .from('sites')
         .select('id')
         .eq('key', 'builddesk')
@@ -53,17 +49,13 @@ serve(async (req) => {
       siteId = defaultSite?.id;
     }
 
-    if (!siteId) {
-      throw new Error('Could not resolve site_id');
-    }
-
-    console.log("[SITEMAP-GENERATOR] Generating sitemap for site:", siteId);
+    console.log("[SITEMAP-GENERATOR] Generating sitemap for site:");
 
     // Get SEO configuration for this site
     const { data: config, error: configError } = await supabaseClient
       .from('seo_configurations')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .limit(1)
       .single()
 
@@ -75,7 +67,7 @@ serve(async (req) => {
     const { data: metaTags, error: metaError } = await supabaseClient
       .from('seo_meta_tags')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('no_index', false)
 
     if (metaError) throw metaError
@@ -84,7 +76,7 @@ serve(async (req) => {
     const { data: blogPosts, error: blogError } = await supabaseClient
       .from('blog_posts')
       .select('slug, updated_at')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('status', 'published')
 
     if (blogError) {

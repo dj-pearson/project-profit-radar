@@ -1,5 +1,4 @@
 // Blog Social Integration Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { aiService } from "../_shared/ai-service.ts";
@@ -15,14 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    console.log("[BLOG-SOCIAL] User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    console.log("[BLOG-SOCIAL] User authenticated", { userId: user.id });
 
     const { blogContent, companyId } = await req.json();
 
@@ -33,8 +31,7 @@ serve(async (req) => {
 
     // Save to database with site isolation
     for (const post of socialContent) {
-      await supabase.from('social_media_posts').insert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      await supabase.from('social_media_posts').insert({  // CRITICAL: Site isolation
         company_id: companyId,
         platform: post.platform,
         content: post.content,

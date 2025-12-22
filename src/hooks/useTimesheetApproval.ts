@@ -213,10 +213,9 @@ export const useTimesheetApproval = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.rpc('bulk_approve_timesheets', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
-        timesheet_ids: ids,
-        approver_id: user.id,
-        notes: notes || null,
+        p_timesheet_ids: ids,
+        p_approver_id: user.id,
+        p_notes: notes || null,
       });
 
       if (error) throw error;
@@ -249,9 +248,8 @@ export const useTimesheetApproval = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.rpc('bulk_reject_timesheets', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
-        timesheet_ids: ids,
-        rejector_id: user.id,
+        p_timesheet_ids: ids,
+        p_rejector_id: user.id,
         rejection_reason: reason,
       });
 

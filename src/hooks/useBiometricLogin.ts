@@ -58,7 +58,7 @@ export const useBiometricLogin = (): UseBiometricLoginReturn => {
     initializing: true,
   });
 
-  const { user, siteId } = useAuth();
+  const { user } = useAuth();
   const { trustCurrentDevice, getCurrentDeviceId } = useDeviceTrust();
 
   // Initialize on mount

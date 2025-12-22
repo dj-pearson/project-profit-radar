@@ -13,7 +13,7 @@ export interface Company {
 }
 
 export const useCompanyData = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

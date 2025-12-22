@@ -14,7 +14,7 @@ import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
-import { getSiteConfig, getCurrentSiteId, clearSiteCache, type SiteConfig } from "@/lib/site-resolver";
+// Site-resolver removed - single-tenant architecture
 import type { ReactNode, FC } from "react";
 
 // Platform-safe window location helpers
@@ -96,8 +96,6 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userProfile: UserProfile | null;
-  siteId: string | null;
-  siteConfig: SiteConfig | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
@@ -135,8 +133,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [siteId, setSiteId] = useState<string | null>(null);
-  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
+  // Removed: siteId and siteConfig - single-tenant architecture
   const [loading, setLoading] = useState(true);
   const [profileFetching, setProfileFetching] = useState(false);
   const [isProfileFetchInProgress, setIsProfileFetchInProgress] = useState(false);
@@ -151,21 +148,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-  // Initialize site config on mount
-  useEffect(() => {
-    const initializeSite = async () => {
-      const config = await getSiteConfig();
-      if (config) {
-        setSiteConfig(config);
-        setSiteId(config.id);
-        logger.debug(`Site initialized: ${config.key} (${config.id})`);
-      } else {
-        logger.error('Failed to initialize site config');
-      }
-    };
-    
-    initializeSite();
-  }, []);
+  // Removed: Site initialization - single-tenant architecture
 
   // Clear all session-related state and redirect to auth
   const handleSessionExpired = useCallback(async (reason: string = 'Session expired') => {
@@ -420,11 +403,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           tenant_id: data.tenant_id,
         });
         
-        // Update site context if needed
-        if (data.site_id && data.site_id !== siteId) {
-          logger.debug(`Updating site context to: ${data.site_id}`);
-          setSiteId(data.site_id);
-        }
+        // Removed: Site context update - single-tenant architecture
         
         // Set Sentry user context for error tracking
         setSentryUser({
@@ -750,14 +729,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in...");
       setLoading(true);
 
-      // Get current site ID before authentication
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        logger.error("Unable to determine site_id");
-        setLoading(false);
-        return { error: "Unable to determine site. Please try again." };
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -767,16 +738,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.error("Sign in error:", error);
         setLoading(false);
         return { error: error.message };
-      }
-
-      // Update user metadata to include site_id
-      if (data.user && !data.user.app_metadata?.site_id) {
-        logger.debug(`Setting site_id ${currentSiteId} for user ${data.user.id}`);
-        await supabase.auth.updateUser({
-          data: {
-            site_id: currentSiteId,
-          },
-        });
       }
 
       logger.debug("Sign in successful");
@@ -796,13 +757,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setLoading(true);
 
       // Resolve current site so OAuth users are scoped to the correct tenant/site
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        logger.error("Unable to determine site_id during Google sign in");
-        setLoading(false);
-        return { error: "Unable to determine site. Please try again." };
-      }
-
       const location = getWindowLocation();
       const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
 
@@ -810,9 +764,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          data: {
-            site_id: currentSiteId,
-          },
         },
       });
 
@@ -838,14 +789,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in with Apple...");
       setLoading(true);
 
-      // Resolve current site so OAuth users are scoped to the correct tenant/site
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        logger.error("Unable to determine site_id during Apple sign in");
-        setLoading(false);
-        return { error: "Unable to determine site. Please try again." };
-      }
-
       const location = getWindowLocation();
       const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
 
@@ -853,9 +796,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         provider: 'apple',
         options: {
           redirectTo: redirectUrl,
-          data: {
-            site_id: currentSiteId,
-          },
         },
       });
 
@@ -883,13 +823,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);
 
-        // Resolve current site so new users are scoped to the correct tenant/site
-        const currentSiteId = await getCurrentSiteId();
-        if (!currentSiteId) {
-          logger.error("Unable to determine site_id during sign up");
-          setLoading(false);
-          return { error: "Unable to determine site. Please try again." };
-        }
+        // Removed: site_id resolution - single-tenant architecture
 
         // Call our custom signup edge function (doesn't trigger Supabase email)
         const response = await fetch(
@@ -905,7 +839,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
               password,
               firstName: userData?.first_name || "",
               lastName: userData?.last_name || "",
-              siteId: currentSiteId,
               role: userData?.role || "admin",
             }),
           }
@@ -981,10 +914,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       logger.debug("AuthContext: Requesting password reset via OTP flow...");
 
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        return { error: "Unable to determine site. Please try again." };
-      }
+      // Removed: site_id resolution - single-tenant architecture
 
       // Call our custom reset password edge function
       const response = await fetch(
@@ -998,7 +928,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           body: JSON.stringify({
             action: "request",
             email,
-            siteId: currentSiteId,
           }),
         }
       );
@@ -1027,10 +956,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       logger.debug("AuthContext: Verifying reset OTP and updating password...");
 
-      const currentSiteId = await getCurrentSiteId();
-      if (!currentSiteId) {
-        return { success: false, error: "Unable to determine site. Please try again." };
-      }
+      // Removed: site_id resolution - single-tenant architecture
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
@@ -1045,7 +971,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             email,
             otpCode,
             newPassword,
-            siteId: currentSiteId,
           }),
         }
       );
@@ -1101,10 +1026,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const sendOTP = useCallback(
     async (options: SendOTPOptions): Promise<{ error?: string; expiresInMinutes?: number }> => {
       try {
-        const currentSiteId = await getCurrentSiteId();
-        if (!currentSiteId) {
-          return { error: "Unable to determine site. Please try again." };
-        }
+        // Removed: site_id resolution - single-tenant architecture
 
         logger.debug(`Sending OTP for ${options.type} to ${options.email}`);
 
@@ -1118,7 +1040,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             },
             body: JSON.stringify({
               ...options,
-              siteId: currentSiteId,
             }),
           }
         );
@@ -1143,10 +1064,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const verifyOTP = useCallback(
     async (options: VerifyOTPOptions): Promise<VerifyOTPResult> => {
       try {
-        const currentSiteId = await getCurrentSiteId();
-        if (!currentSiteId) {
-          return { success: false, error: "Unable to determine site. Please try again." };
-        }
+        // Removed: site_id resolution - single-tenant architecture
 
         logger.debug(`Verifying OTP for ${options.type}`);
 
@@ -1160,7 +1078,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             },
             body: JSON.stringify({
               ...options,
-              siteId: currentSiteId,
             }),
           }
         );
@@ -1200,8 +1117,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       user,
       session,
       userProfile,
-      siteId,
-      siteConfig,
       loading: effectiveLoading,
       signIn,
       signInWithGoogle,
@@ -1220,8 +1135,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       user,
       session,
       userProfile,
-      siteId,
-      siteConfig,
       effectiveLoading,
       signIn,
       signInWithGoogle,

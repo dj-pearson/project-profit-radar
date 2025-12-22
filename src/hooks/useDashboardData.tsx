@@ -58,7 +58,7 @@ export interface DashboardData {
 }
 
 export const useDashboardData = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);

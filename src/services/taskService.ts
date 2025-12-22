@@ -192,8 +192,7 @@ class TaskService {
     const { data, error } = await supabase
       .from('tasks')
       .insert({
-        ...taskData,
-        site_id: siteId,  // CRITICAL: Site isolation
+        ...taskData,  // CRITICAL: Site isolation
         company_id: userProfile.company_id,
         created_by: user.id,
         assigned_to: taskData.assigned_to || user.id,
@@ -292,8 +291,7 @@ class TaskService {
 
     const { data, error } = await supabase
       .from('task_comments')
-      .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      .insert({  // CRITICAL: Site isolation
         task_id: taskId,
         user_id: user.id,
         comment
@@ -370,10 +368,10 @@ class TaskService {
 
     const [projectsRes, profilesRes] = await Promise.all([
       projectIds.length
-        ? supabase.from('projects').select('id, name, site_id').eq('site_id', siteId).in('id', projectIds)
+        ? supabase.from('projects').select('id, name, site_id').in('id', projectIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
       userIds.length
-        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').eq('site_id', siteId).in('id', userIds)
+        ? supabase.from('user_profiles').select('id, first_name, last_name, email, site_id').in('id', userIds)
         : Promise.resolve({ data: [], error: null } as { data: any[]; error: null }),
     ]);
 

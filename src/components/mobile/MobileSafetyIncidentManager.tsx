@@ -92,7 +92,7 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
   const [showCamera, setShowCamera] = useState(false);
 
   const { toast } = useToast();
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
   const { isOnline, saveOfflineData } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
   const [isRecording, setIsRecording] = useState(false);
@@ -194,7 +194,6 @@ const MobileSafetyIncidentManager: React.FC<MobileSafetyIncidentManagerProps> = 
         incident_time: new Date().toTimeString().split(' ')[0],
         reported_by: user?.id,
         company_id: userProfile?.company_id,
-        site_id: siteId,
         injured_person_name: incidentData.injured_person_name || null,
         injured_person_job_title: incidentData.injured_person_job_title || null,
         body_part_affected: incidentData.body_part_affected || null,

@@ -40,38 +40,28 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
-    // Extract site_id from JWT metadata for multi-tenant isolation
-    const siteId = user.app_metadata?.site_id || user.user_metadata?.site_id;
-    if (!siteId) {
-      throw new Error("Site ID not found in user context. Multi-tenant isolation required.");
-    }
-
-    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
+            logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { invoice_id, amount, description, success_url, cancel_url } = await req.json();
     if (!invoice_id || !amount) {
       throw new Error("invoice_id and amount are required");
     }
 
-    // Get user's company and payment settings with site_id isolation
-    const { data: userProfile, error: profileError } = await supabaseClient
+        const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('company_id')
-      .eq('site_id', siteId)
       .eq('id', user.id)
       .single();
 
     if (profileError) throw profileError;
     if (!userProfile?.company_id) throw new Error("User company not found");
 
-    logStep("User company found", { company_id: userProfile.company_id, siteId });
+    logStep("User company found", { company_id: userProfile.company_id });
 
-    // Get company payment settings with site_id isolation
-    let paymentSettings: any;
+        let paymentSettings: any;
     const { data: paymentSettingsData, error: settingsError } = await supabaseClient
       .from('company_payment_settings')
       .select('*')
-      .eq('site_id', siteId)
       .eq('company_id', userProfile.company_id)
       .eq('is_active', true)
       .single();
@@ -158,9 +148,7 @@ serve(async (req) => {
         invoice_id,
         processor_type: paymentSettings.processor_type,
         original_amount: amount.toString(),
-        company_id: userProfile.company_id,
-        site_id: siteId
-      }
+        company_id: userProfile.company_id, }
     };
 
     if (paymentSettings.processor_type === 'pearson_stripe') {

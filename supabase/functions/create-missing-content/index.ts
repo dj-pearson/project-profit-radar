@@ -12,13 +12,10 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get site_id from request body or default to BuildDesk site for seeding
-    const body = await req.json().catch(() => ({}));
+        const body = await req.json().catch(() => ({}));
     let siteId = body.site_id;
 
-    if (!siteId) {
-      // Get BuildDesk site_id for default content seeding
-      const { data: site } = await supabase
+    = await supabase
         .from('sites')
         .select('id')
         .eq('key', 'builddesk')
@@ -359,7 +356,6 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
       const { data: existing } = await supabase
         .from('blog_posts')
         .select('id')
-        .eq('site_id', siteId)
         .eq('slug', post.slug)
         .maybeSingle();
 
@@ -369,10 +365,9 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
         continue;
       }
 
-      // Create the blog post with site_id for multi-tenant isolation
-      const { data, error } = await supabase
+            const { data, error } = await supabase
         .from('blog_posts')
-        .insert([{ ...post, site_id: siteId }])
+        .insert([{ ...post, }])
         .select();
       
       if (error) {
@@ -388,7 +383,6 @@ Remember that ROI isn't just about immediate financial returns - consider long-t
       JSON.stringify({
         success: true,
         message: `Content creation complete for site ${siteId}! Created: ${created}, Skipped: ${skipped}`,
-        site_id: siteId,
         created,
         skipped
       }),

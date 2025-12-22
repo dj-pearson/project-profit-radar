@@ -1,5 +1,4 @@
 // Webhook Delivery Worker Edge Function
-// Updated with multi-tenant site_id isolation
 // Delivers webhook events to registered endpoints with retry logic
 // Runs as cron job - processes all sites
 
@@ -65,8 +64,7 @@ serve(async (req) => {
           .select('*')
           .eq('id', delivery_id)
 
-        // Apply site isolation if site_id provided
-        if (site_id) {
+                if (site_id) {
           query = query.eq('site_id', site_id)  // CRITICAL: Site isolation
         }
 
@@ -100,8 +98,7 @@ serve(async (req) => {
         .select('*')
         .eq('id', delivery.endpoint_id)
 
-      // Use delivery's site_id for isolation
-      if (delivery.site_id) {
+            if (delivery.site_id) {
         endpointQuery = endpointQuery.eq('site_id', delivery.site_id)  // CRITICAL: Site isolation
       }
 
@@ -314,7 +311,7 @@ async function updateDeliveryRecord(
     .eq('id', deliveryId)
 
   if (siteId) {
-    updateQuery = updateQuery.eq('site_id', siteId)  // CRITICAL: Site isolation on update
+    updateQuery = updateQuery  // CRITICAL: Site isolation on update
   }
 
   await updateQuery
@@ -333,7 +330,7 @@ async function updateEndpointStats(
     .eq('id', endpointId)
 
   if (siteId) {
-    selectQuery = selectQuery.eq('site_id', siteId)  // CRITICAL: Site isolation
+    selectQuery = selectQuery  // CRITICAL: Site isolation
   }
 
   const { data: endpoint } = await selectQuery.single()
@@ -364,7 +361,7 @@ async function updateEndpointStats(
     .eq('id', endpointId)
 
   if (siteId) {
-    updateQuery = updateQuery.eq('site_id', siteId)  // CRITICAL: Site isolation on update
+    updateQuery = updateQuery  // CRITICAL: Site isolation on update
   }
 
   await updateQuery

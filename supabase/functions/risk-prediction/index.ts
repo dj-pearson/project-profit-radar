@@ -1,5 +1,4 @@
 // Risk Prediction Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 
@@ -45,14 +44,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req)
+        const authContext = await initializeAuthContext(req)
     if (!authContext) {
       return errorResponse('Unauthorized', 401)
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext
-    console.log('[RISK-PREDICTION] User authenticated', { userId: user.id, siteId })
+    const { user, supabase: supabaseClient } = authContext
+    console.log('[RISK-PREDICTION] User authenticated', { userId: user.id })
 
     const { tenant_id, project_id, user_id } = await req.json() as RiskPredictionRequest
 
@@ -66,7 +64,7 @@ serve(async (req) => {
     const { data: project, error: projectError } = await supabaseClient
       .from('projects')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', project_id)
       .single()
 
@@ -78,7 +76,7 @@ serve(async (req) => {
     const { data: historicalProjects, error: histError } = await supabaseClient
       .from('projects')
       .select('id, budget, actual_cost, start_date, end_date, status')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('tenant_id', tenant_id)
       .eq('status', 'completed')
       .limit(50)
@@ -87,21 +85,21 @@ serve(async (req) => {
     const { data: timeEntries } = await supabaseClient
       .from('time_entries')
       .select('hours_worked, created_at')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('project_id', project_id)
 
     // 4. Get safety incidents with site isolation
     const { data: safetyIncidents } = await supabaseClient
       .from('osha_300_log')
       .select('severity, incident_date')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('project_id', project_id)
 
     // 5. Get change orders with site isolation
     const { data: changeOrders } = await supabaseClient
       .from('change_orders')
       .select('amount, status')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('project_id', project_id)
 
     // 6. Calculate risk scores
@@ -135,8 +133,7 @@ serve(async (req) => {
     // 10. Save risk prediction to database with site isolation
     const { data: riskPrediction, error: insertError } = await supabaseClient
       .from('risk_predictions')
-      .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      .insert({  // CRITICAL: Site isolation
         tenant_id,
         project_id,
         overall_risk_score: riskScores.overall,
@@ -161,8 +158,7 @@ serve(async (req) => {
     }
 
     // 11. Save risk factors with site isolation
-    const factorsToInsert = riskFactors.map(factor => ({
-      site_id: siteId,  // CRITICAL: Site isolation
+    const factorsToInsert = riskFactors.map(factor => ({  // CRITICAL: Site isolation
       risk_prediction_id: riskPrediction.id,
       ...factor
     }))
@@ -176,8 +172,7 @@ serve(async (req) => {
     }
 
     // 12. Save recommendations with site isolation
-    const recsToInsert = recommendations.map(rec => ({
-      site_id: siteId,  // CRITICAL: Site isolation
+    const recsToInsert = recommendations.map(rec => ({  // CRITICAL: Site isolation
       risk_prediction_id: riskPrediction.id,
       ...rec
     }))
@@ -191,7 +186,7 @@ serve(async (req) => {
     }
 
     // 13. Create alerts for high-risk areas with site isolation
-    const alerts = generateAlerts(project as ProjectData, riskScores, siteId, tenant_id, project_id, riskPrediction.id)
+    const alerts = generateAlerts(project as ProjectData, riskScores, tenant_id, project_id, riskPrediction.id)
 
     if (alerts.length > 0) {
       const { error: alertsError } = await supabaseClient

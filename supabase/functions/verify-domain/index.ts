@@ -91,11 +91,8 @@ serve(async (req) => {
       );
     }
 
-    // Resolve site_id if not provided - try to get from tenant or default to BuildDesk
-    let siteId = site_id;
-    if (!siteId) {
-      // Try to get site_id from tenant record first
-      const { data: tenantForSite } = await supabase
+        let siteId = site_id;
+    = await supabase
         .from('tenants')
         .select('site_id')
         .eq('id', tenant_id)
@@ -103,9 +100,7 @@ serve(async (req) => {
 
       siteId = tenantForSite?.site_id;
 
-      // Fall back to BuildDesk site if tenant doesn't have site_id
-      if (!siteId) {
-        const { data: defaultSite } = await supabase
+            = await supabase
           .from('sites')
           .select('id')
           .eq('key', 'builddesk')
@@ -114,15 +109,13 @@ serve(async (req) => {
       }
     }
 
-    // Verify the tenant exists with site_id isolation
-    let tenantQuery = supabase
+        let tenantQuery = supabase
       .from('tenants')
       .select('id, custom_domain')
       .eq('id', tenant_id);
 
-    // Add site_id filter if available for multi-tenant isolation
-    if (siteId) {
-      tenantQuery = tenantQuery.eq('site_id', siteId);
+        if (siteId) {
+      tenantQuery = tenantQuery;
     }
 
     const { data: tenant, error: tenantError } = await tenantQuery.single();
@@ -142,8 +135,7 @@ serve(async (req) => {
 
     // Update tenant record if verified
     if (dnsResult.verified) {
-      // Build update query with site_id isolation
-      let updateQuery = supabase
+            let updateQuery = supabase
         .from('tenants')
         .update({
           custom_domain: domain,
@@ -151,9 +143,8 @@ serve(async (req) => {
         })
         .eq('id', tenant_id);
 
-      // Add site_id filter for multi-tenant isolation
-      if (siteId) {
-        updateQuery = updateQuery.eq('site_id', siteId);
+            if (siteId) {
+        updateQuery = updateQuery;
       }
 
       const { error: updateError } = await updateQuery;
@@ -172,8 +163,7 @@ serve(async (req) => {
         );
       }
 
-      // Log the verification event with site_id for multi-tenant isolation
-      const auditLogEntry: Record<string, any> = {
+            const auditLogEntry: Record<string, any> = {
         tenant_id,
         action: 'domain_verified',
         resource_type: 'tenant',
@@ -181,8 +171,7 @@ serve(async (req) => {
         details: { domain, verified: true },
       };
 
-      // Include site_id in audit log if available
-      if (siteId) {
+            if (siteId) {
         auditLogEntry.site_id = siteId;
       }
 

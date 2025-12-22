@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
 
 const Setup = () => {
-  const { user, userProfile, refreshProfile, loading, siteId } = useAuth();
+  const { user, userProfile, refreshProfile, loading } = useAuth();
   const navigate = useNavigate();
   const [setupLoading, setSetupLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -116,7 +116,6 @@ const Setup = () => {
           company_size: companySize,
           annual_revenue_range: annualRevenue,
           license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
-          site_id: siteId,
           tenant_id: userProfile?.tenant_id || null,
         };
         console.log('🔍 Setup Debug - Insert Payload:', insertPayload);
@@ -153,7 +152,6 @@ const Setup = () => {
           .from('user_profiles')
           .update({
             company_id: company.id,
-            site_id: siteId,
             tenant_id: userProfile?.tenant_id || null,
           })
           .eq('id', user.id);

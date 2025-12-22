@@ -127,7 +127,7 @@ export interface SimilarLead {
  * Hook to get AI-powered lead score
  */
 export function useLeadScore(leadId: string, options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['lead-score', siteId, leadId],
@@ -139,7 +139,6 @@ export function useLeadScore(leadId: string, options?: { enabled?: boolean }) {
         body: {
           action: 'score_lead',
           lead_id: leadId,
-          site_id: siteId,
         },
       });
 
@@ -158,7 +157,7 @@ export function useLeadScore(leadId: string, options?: { enabled?: boolean }) {
  * Hook to batch score multiple leads
  */
 export function useBatchLeadScoring() {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -170,7 +169,6 @@ export function useBatchLeadScoring() {
         body: {
           action: 'batch_score',
           lead_ids: leadIds,
-          site_id: siteId,
         },
       });
 
@@ -194,7 +192,7 @@ export function useBatchLeadScoring() {
  * Hook to get lead insights
  */
 export function useLeadInsights(leadId: string, options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['lead-insights', siteId, leadId],
@@ -206,7 +204,6 @@ export function useLeadInsights(leadId: string, options?: { enabled?: boolean })
         body: {
           action: 'get_insights',
           lead_id: leadId,
-          site_id: siteId,
         },
       });
 
@@ -224,7 +221,7 @@ export function useLeadInsights(leadId: string, options?: { enabled?: boolean })
  * Hook to get AI recommendations for a lead
  */
 export function useLeadRecommendations(leadId: string, options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['lead-recommendations', siteId, leadId],
@@ -236,7 +233,6 @@ export function useLeadRecommendations(leadId: string, options?: { enabled?: boo
         body: {
           action: 'get_recommendations',
           lead_id: leadId,
-          site_id: siteId,
         },
       });
 
@@ -254,7 +250,7 @@ export function useLeadRecommendations(leadId: string, options?: { enabled?: boo
  * Hook to get lead predictions
  */
 export function useLeadPredictions(leadId: string, options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['lead-predictions', siteId, leadId],
@@ -266,7 +262,6 @@ export function useLeadPredictions(leadId: string, options?: { enabled?: boolean
         body: {
           action: 'get_predictions',
           lead_id: leadId,
-          site_id: siteId,
         },
       });
 
@@ -284,7 +279,7 @@ export function useLeadPredictions(leadId: string, options?: { enabled?: boolean
  * Hook to get engagement analysis for a lead
  */
 export function useEngagementAnalysis(leadId: string, options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['engagement-analysis', siteId, leadId],
@@ -296,7 +291,6 @@ export function useEngagementAnalysis(leadId: string, options?: { enabled?: bool
         body: {
           action: 'analyze_engagement',
           lead_id: leadId,
-          site_id: siteId,
         },
       });
 
@@ -314,7 +308,7 @@ export function useEngagementAnalysis(leadId: string, options?: { enabled?: bool
  * Hook to find similar leads
  */
 export function useSimilarLeads(leadId: string, options?: { limit?: number; enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['similar-leads', siteId, leadId, options?.limit],
@@ -326,7 +320,6 @@ export function useSimilarLeads(leadId: string, options?: { limit?: number; enab
         body: {
           action: 'find_similar',
           lead_id: leadId,
-          site_id: siteId,
           limit: options?.limit || 10,
         },
       });
@@ -359,7 +352,6 @@ export function useLeadActivityTimeline(
       const { data: activities, error } = await supabase
         .from('crm_activities')
         .select('*')
-        .eq('site_id', siteId)
         .eq('lead_id', leadId)
         .gte(
           'created_at',
@@ -408,7 +400,7 @@ export function useLeadActivityTimeline(
  * Hook to compare multiple leads
  */
 export function useLeadComparison(leadIds: string[], options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['lead-comparison', siteId, leadIds],
@@ -421,7 +413,6 @@ export function useLeadComparison(leadIds: string[], options?: { enabled?: boole
         body: {
           action: 'compare_leads',
           lead_ids: leadIds,
-          site_id: siteId,
         },
       });
 
@@ -443,7 +434,7 @@ export function useLeadComparison(leadIds: string[], options?: { enabled?: boole
  * Hook to get pipeline health analysis
  */
 export function usePipelineHealthAnalysis(options?: { enabled?: boolean }) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['pipeline-health', siteId],
@@ -454,7 +445,6 @@ export function usePipelineHealthAnalysis(options?: { enabled?: boolean }) {
       const response = await supabase.functions.invoke('ml-lead-scoring', {
         body: {
           action: 'analyze_pipeline',
-          site_id: siteId,
         },
       });
 
@@ -527,7 +517,7 @@ export function useScoreDistribution(options?: { enabled?: boolean }) {
  * Hook to refresh lead score
  */
 export function useRefreshLeadScore() {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -539,7 +529,6 @@ export function useRefreshLeadScore() {
         body: {
           action: 'score_lead',
           lead_id: leadId,
-          site_id: siteId,
           force_refresh: true,
         },
       });

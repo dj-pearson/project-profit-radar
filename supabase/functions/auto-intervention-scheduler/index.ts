@@ -1,5 +1,4 @@
 // Automated Intervention Scheduler
-// Updated with multi-tenant site_id isolation
 // Runs hourly to schedule automated interventions based on account health and trial status
 // Runs as cron job - processes all sites
 

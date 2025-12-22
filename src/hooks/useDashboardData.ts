@@ -67,7 +67,7 @@ interface DashboardData {
 }
 
 export function useDashboardData() {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const [data, setData] = useState<DashboardData>({
     kpis: {
       activeProjects: 0,

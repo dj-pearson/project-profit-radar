@@ -69,16 +69,12 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json() as AutomationRequest;
-    const { trigger, entityType, entityId, siteId, companyId, metadata } = body;
+    const { trigger, entityType, entityId, companyId, metadata } = body;
 
-    logStep('Processing automation request', { trigger, entityType, entityId, siteId });
-
-    if (!siteId) {
-      throw new Error('site_id is required for multi-tenant isolation');
-    }
+    logStep('Processing automation request', { trigger, entityType, entityId });
 
     // Find matching automation rules
-    const automations = await findMatchingAutomations(supabase, siteId, trigger, entityType, companyId);
+    const automations = await findMatchingAutomations(supabase, trigger, entityType, companyId);
 
     if (automations.length === 0) {
       logStep('No matching automations found');
@@ -94,7 +90,7 @@ Deno.serve(async (req) => {
     logStep(`Found ${automations.length} matching automations`);
 
     // Get entity data
-    const entityData = await getEntityData(supabase, entityType, entityId, siteId, companyId);
+    const entityData = await getEntityData(supabase, entityType, entityId, companyId);
     if (!entityData) {
       throw new Error(`Entity not found: ${entityType}/${entityId}`);
     }
@@ -107,7 +103,6 @@ Deno.serve(async (req) => {
           supabase,
           automation,
           entityData,
-          siteId,
           companyId,
           metadata
         );
@@ -157,7 +152,6 @@ async function findMatchingAutomations(
   let query = supabase
     .from('email_automations')
     .select('*')
-    .eq('site_id', siteId)
     .eq('trigger_type', trigger)
     .eq('entity_type', entityType)
     .eq('is_active', true);
@@ -189,7 +183,7 @@ async function getEntityData(
     .from(tableName)
     .select('*')
     .eq('id', entityId)
-    .eq('site_id', siteId);
+    ;
 
   if (companyId) {
     query = query.eq('company_id', companyId);
@@ -232,7 +226,7 @@ async function processAutomation(
   }
 
   // Check if user is unsubscribed
-  const isUnsubscribed = await checkUnsubscribed(supabase, siteId, recipientEmail);
+  const isUnsubscribed = await checkUnsubscribed(supabase, recipientEmail);
   if (isUnsubscribed) {
     logStep('Recipient is unsubscribed', { email: recipientEmail });
     return { success: true, skipped: true, reason: 'unsubscribed' };
@@ -243,7 +237,7 @@ async function processAutomation(
   let subject = config.subject;
 
   if (config.templateId) {
-    const template = await getEmailTemplate(supabase, config.templateId, siteId, companyId);
+    const template = await getEmailTemplate(supabase, config.templateId, companyId);
     if (template) {
       htmlContent = template.content;
       subject = template.subject || subject;
@@ -274,7 +268,6 @@ async function processAutomation(
   const { data: queuedEmail, error: queueError } = await supabase
     .from('email_queue')
     .insert({
-      site_id: siteId,
       company_id: companyId,
       campaign_id: config.campaignId,
       automation_id: automation.id as string,
@@ -307,7 +300,6 @@ async function processAutomation(
   await supabase
     .from('crm_activities')
     .insert({
-      site_id: siteId,
       company_id: companyId,
       activity_type: 'email',
       description: `Automated email "${subject}" queued for ${recipientEmail}`,
@@ -351,7 +343,6 @@ async function checkUnsubscribed(
   const { data } = await supabase
     .from('email_unsubscribes')
     .select('id')
-    .eq('site_id', siteId)
     .eq('email', email)
     .eq('is_active', true)
     .single();
@@ -369,7 +360,7 @@ async function getEmailTemplate(
     .from('email_templates')
     .select('*')
     .eq('id', templateId)
-    .eq('site_id', siteId);
+    ;
 
   if (companyId) {
     query = query.eq('company_id', companyId);
@@ -435,7 +426,6 @@ export async function enrollInDripCampaign(
     .from('email_campaigns')
     .select('*')
     .eq('id', campaignId)
-    .eq('site_id', siteId)
     .single();
 
   if (campaignError || !campaign) {
@@ -448,7 +438,6 @@ export async function enrollInDripCampaign(
     .from(tableName)
     .select('*')
     .eq('id', entityId)
-    .eq('site_id', siteId)
     .single();
 
   if (entityError || !entity) {
@@ -466,7 +455,6 @@ export async function enrollInDripCampaign(
     .select('id')
     .eq('campaign_id', campaignId)
     .eq('entity_id', entityId)
-    .eq('site_id', siteId)
     .single();
 
   if (existing) {
@@ -477,7 +465,6 @@ export async function enrollInDripCampaign(
   const { data: enrollment, error: enrollError } = await supabase
     .from('campaign_enrollments')
     .insert({
-      site_id: siteId,
       company_id: companyId,
       campaign_id: campaignId,
       entity_type: entityType,
@@ -495,7 +482,7 @@ export async function enrollInDripCampaign(
   }
 
   // Schedule first email
-  await scheduleNextCampaignEmail(supabase, enrollment, campaign, entity, siteId, companyId);
+  await scheduleNextCampaignEmail(supabase, enrollment, campaign, entity, companyId);
 
   return {
     success: true,
@@ -544,7 +531,6 @@ async function scheduleNextCampaignEmail(
   await supabase
     .from('email_queue')
     .insert({
-      site_id: siteId,
       company_id: companyId,
       campaign_id: campaign.id as string,
       enrollment_id: enrollment.id as string,

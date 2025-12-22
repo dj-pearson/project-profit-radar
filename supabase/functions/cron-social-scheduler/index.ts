@@ -1,5 +1,4 @@
 // CRON Social Scheduler Edge Function
-// Updated with multi-tenant site_id isolation (cron job pattern)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -90,8 +89,7 @@ serve(async (req) => {
             },
             body: JSON.stringify({
               company_id: config.company_id,
-              site_id: site.id,  // CRITICAL: Pass site_id to downstream function
-              manual_trigger: false, // This is a scheduled trigger
+              site_id: site.id,                manual_trigger: false, // This is a scheduled trigger
             }),
           });
 

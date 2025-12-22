@@ -141,7 +141,6 @@ Deno.serve(async (req) => {
       generateResponsiveSizes = true,
       convertToModernFormats = true,
       quality,
-      siteId,
       companyId,
       documentId,
     } = body;
@@ -153,7 +152,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    logStep('Processing image', { storagePath, bucket, siteId });
+    logStep('Processing image', { storagePath, bucket });
 
     // Download the original image
     const { data: imageData, error: downloadError } = await supabase.storage
@@ -205,7 +204,6 @@ Deno.serve(async (req) => {
         generateResponsiveSizes,
         convertToModernFormats,
         quality: quality || CONFIG.quality.webp,
-        siteId,
         companyId,
       }
     );
@@ -221,7 +219,7 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', documentId)
-        .eq('site_id', siteId);
+        ;
     }
 
     logStep('Processing complete', {
@@ -382,8 +380,7 @@ async function processImage(
     await supabase
       .from('image_processing_queue')
       .upsert({
-        site_id: options.siteId,
-        company_id: options.companyId,
+        site_id: options.company_id: options.companyId,
         original_path: originalPath,
         bucket,
         processing_manifest: processingManifest,

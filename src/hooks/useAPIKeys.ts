@@ -64,7 +64,7 @@ export interface RateLimitStatus {
  * Hook to fetch API keys for the current company
  */
 export function useAPIKeys(options?: { enabled?: boolean }) {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
 
   return useQuery({
     queryKey: ['api-keys', siteId],
@@ -93,7 +93,6 @@ export function useAPIKeys(options?: { enabled?: boolean }) {
           updated_at,
           security_metadata
         `)
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -112,7 +111,7 @@ export function useAPIKeys(options?: { enabled?: boolean }) {
  * Hook to create a new API key
  */
 export function useCreateAPIKey() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -134,7 +133,7 @@ export function useCreateAPIKey() {
       // Call the create_api_key function
       const { data, error } = await supabase.rpc('create_api_key', {
         p_company_id: profile.company_id,
-        p_site_id: siteId,
+        p_
         p_key_name: request.key_name,
         p_permissions: request.permissions || ['read'],
         p_expires_at: request.expires_at || null,
@@ -285,7 +284,6 @@ export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enable
         .from('api_keys')
         .select('rate_limit_per_hour')
         .eq('id', keyId)
-        .eq('site_id', siteId)
         .single();
 
       if (keyError) throw keyError;
@@ -375,7 +373,7 @@ export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) 
  * Hook to retrieve a recoverable API key (root admin only)
  */
 export function useRetrieveAPIKey() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<string> => {
@@ -417,7 +415,6 @@ export function useSensitiveDataAccessLog(options?: { limit?: number; enabled?: 
       const { data, error } = await supabase
         .from('sensitive_data_access_log')
         .select('*')
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false })
         .limit(options?.limit || 100);
 

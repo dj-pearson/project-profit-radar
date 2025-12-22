@@ -27,7 +27,7 @@ export interface UseRealTimeSyncOptions {
 }
 
 export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const channelsRef = useRef<Map<string, RealtimeChannel>>(new Map());
   const { subscriptions, enableCrossModuleSync = true, enableNotifications = true, onError } = options;
 

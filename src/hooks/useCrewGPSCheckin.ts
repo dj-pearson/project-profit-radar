@@ -66,7 +66,7 @@ interface GPSCheckInResult {
 }
 
 export const useCrewGPSCheckin = () => {
-  const { user, siteId } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { location, error: gpsError, requestLocation } = useGPSLocation();

@@ -96,10 +96,10 @@ serve(async (req) => {
       return errorResponse("Unauthorized", 401);
     }
 
-    const { user, siteId, supabase } = authContext;
+    const { user, supabase } = authContext;
 
     // Verify admin access
-    const isUserAdmin = await isAdmin(supabase, user.id, siteId);
+    const isUserAdmin = await isAdmin(supabase, user.id);
     if (!isUserAdmin) {
       return errorResponse("Admin access required", 403);
     }
@@ -191,8 +191,7 @@ serve(async (req) => {
         const { data, error } = await supabase
           .from("sso_connections")
           .insert({
-            tenant_id: siteId,
-            provider: validation.data.provider,
+            tenant_id: provider: validation.data.provider,
             display_name: validation.data.display_name,
             config: validation.data.config,
             allowed_domains: validation.data.allowed_domains,
@@ -211,7 +210,6 @@ serve(async (req) => {
 
         // Log the action
         await supabase.from("security_logs").insert({
-          site_id: siteId,
           user_id: user.id,
           event_type: "sso_connection_created",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -281,7 +279,6 @@ serve(async (req) => {
 
         // Log the action
         await supabase.from("security_logs").insert({
-          site_id: siteId,
           user_id: user.id,
           event_type: "sso_connection_updated",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
@@ -317,7 +314,6 @@ serve(async (req) => {
 
         // Log the action
         await supabase.from("security_logs").insert({
-          site_id: siteId,
           user_id: user.id,
           event_type: "sso_connection_deleted",
           ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),

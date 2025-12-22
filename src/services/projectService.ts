@@ -131,8 +131,7 @@ class ProjectService {
     const { data, error } = await supabase
       .from('projects')
       .insert([{
-        ...projectData,
-        site_id: siteId,  // CRITICAL: Site isolation
+        ...projectData,  // CRITICAL: Site isolation
         completion_percentage: 0,
         geofence_radius_meters: 100
       }])
@@ -192,8 +191,7 @@ class ProjectService {
 
     // Use database aggregation function for better performance
     const { data, error } = await supabase.rpc('get_project_stats', {
-      p_site_id: siteId,  // CRITICAL: Site isolation
-      company_id: companyId
+      p_company_id: companyId
     });
 
     if (error) throw error;

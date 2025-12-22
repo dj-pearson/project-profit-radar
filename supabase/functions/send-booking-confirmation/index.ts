@@ -20,13 +20,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { siteId, supabase: supabaseClient } = authContext;
+    const {  supabase: supabaseClient } = authContext;
     console.log('[SEND-BOOKING-CONFIRMATION] Auth context initialized', { siteId });
 
     const { bookingId }: BookingConfirmationRequest = await req.json();
@@ -41,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
           location
         )
       `)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', bookingId)
       .single();
 

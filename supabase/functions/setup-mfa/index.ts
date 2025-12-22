@@ -1,5 +1,4 @@
 // Setup MFA Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { TOTP } from "https://deno.land/x/otpauth@v9.2.4/dist/otpauth.esm.js";
 import QRCode from "https://esm.sh/qrcode@1.5.4";
@@ -23,13 +22,12 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
 
     // SECURITY: Validate request body
     const requestBody = await req.json();
@@ -61,9 +59,7 @@ serve(async (req) => {
     // Store the secret (temporarily) in user_security table with site isolation
     const { error: updateError } = await supabaseClient
       .from("user_security")
-      .upsert({
-        site_id: siteId,  // CRITICAL: Include site_id
-        user_id: user_id,
+      .upsert({          user_id: user_id,
         two_factor_secret: secret.secret,
         two_factor_enabled: false, // Not enabled until verified
         updated_at: new Date().toISOString(),
@@ -77,9 +73,7 @@ serve(async (req) => {
     }
 
     // Log security event with site isolation
-    await supabaseClient.from("security_logs").insert({
-      site_id: siteId,  // CRITICAL: Include site_id
-      user_id: user_id,
+    await supabaseClient.from("security_logs").insert({        user_id: user_id,
       event_type: "mfa_setup_initiated",
       ip_address: req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"),
       user_agent: req.headers.get("user-agent"),

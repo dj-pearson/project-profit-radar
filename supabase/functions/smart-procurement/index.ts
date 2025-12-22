@@ -1,5 +1,4 @@
 // Smart Procurement Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 
@@ -23,14 +22,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req)
+        const authContext = await initializeAuthContext(req)
     if (!authContext) {
       return errorResponse('Unauthorized', 401)
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext
-    console.log('[SMART-PROCUREMENT] User authenticated', { userId: user.id, siteId })
+    const { user, supabase: supabaseClient } = authContext
+    console.log('[SMART-PROCUREMENT] User authenticated', { userId: user.id })
 
     const { tenant_id, project_id, action } = await req.json()
 
@@ -43,11 +41,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'forecast_materials':
-        return await forecastMaterials(supabaseClient, siteId, tenant_id, project_id)
+        return await forecastMaterials(supabaseClient, tenant_id, project_id)
       case 'optimize_suppliers':
-        return await optimizeSuppliers(supabaseClient, siteId, tenant_id)
+        return await optimizeSuppliers(supabaseClient, tenant_id)
       case 'generate_recommendations':
-        return await generateRecommendations(supabaseClient, siteId, tenant_id, project_id)
+        return await generateRecommendations(supabaseClient, tenant_id, project_id)
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action. Use: forecast_materials, optimize_suppliers, generate_recommendations' }),
@@ -65,13 +63,13 @@ serve(async (req) => {
 })
 
 async function forecastMaterials(supabase: any, siteId: string, tenant_id: string, project_id?: string) {
-  console.log('[SMART-PROCUREMENT] Forecasting materials', { siteId, tenant_id, project_id })
+  console.log('[SMART-PROCUREMENT] Forecasting materials', {  tenant_id, project_id })
 
   // Get historical material usage from projects with site isolation
   let query = supabase
     .from('projects')
     .select('id, name, materials_used:financial_records(material_name, quantity, unit, created_at)')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('status', 'completed')
     .limit(10)
@@ -119,9 +117,7 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
     const recommendedOrderDate = new Date(forecastDate)
     recommendedOrderDate.setDate(recommendedOrderDate.getDate() - leadTime)
 
-    const forecast = {
-      site_id: siteId,  // CRITICAL: Include site_id
-      tenant_id,
+    const forecast = {        tenant_id,
       project_id,
       material_name: materialName,
       material_category: stats.category,
@@ -134,8 +130,7 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
       recommended_order_date: recommendedOrderDate.toISOString().split('T')[0]
     }
 
-    // Insert forecast into database with site_id
-    const { error: insertError } = await supabase
+        const { error: insertError } = await supabase
       .from('material_forecasts')
       .insert(forecast)
 
@@ -157,13 +152,13 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
 }
 
 async function optimizeSuppliers(supabase: any, siteId: string, tenant_id: string) {
-  console.log('[SMART-PROCUREMENT] Optimizing suppliers', { siteId, tenant_id })
+  console.log('[SMART-PROCUREMENT] Optimizing suppliers', {  tenant_id })
 
   // Get all suppliers with site isolation
   const { data: suppliers, error: suppError } = await supabase
     .from('supplier_catalog')
     .select('*')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('is_active', true)
 
@@ -203,13 +198,13 @@ async function optimizeSuppliers(supabase: any, siteId: string, tenant_id: strin
 }
 
 async function generateRecommendations(supabase: any, siteId: string, tenant_id: string, project_id?: string) {
-  console.log('[SMART-PROCUREMENT] Generating purchase recommendations', { siteId, tenant_id, project_id })
+  console.log('[SMART-PROCUREMENT] Generating purchase recommendations', {  tenant_id, project_id })
 
   // Get active forecasts with site isolation
   let forecastQuery = supabase
     .from('material_forecasts')
     .select('*')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .gte('forecast_date', new Date().toISOString().split('T')[0])
     .order('forecast_date', { ascending: true })
@@ -232,7 +227,7 @@ async function generateRecommendations(supabase: any, siteId: string, tenant_id:
     const { data: suppliers, error: suppError } = await supabase
       .from('supplier_catalog')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('tenant_id', tenant_id)
       .eq('material_name', forecast.material_name)
       .eq('is_active', true)
@@ -262,9 +257,7 @@ async function generateRecommendations(supabase: any, siteId: string, tenant_id:
       estimatedSavings = Math.max(estimatedSavings, alternativeCost - estimatedCost)
     }
 
-    const recommendation = {
-      site_id: siteId,  // CRITICAL: Include site_id
-      tenant_id,
+    const recommendation = {        tenant_id,
       project_id: forecast.project_id,
       material_name: forecast.material_name,
       recommended_quantity: forecast.forecast_quantity,
@@ -280,8 +273,7 @@ async function generateRecommendations(supabase: any, siteId: string, tenant_id:
       status: 'pending'
     }
 
-    // Insert recommendation with site_id
-    const { error: insertError } = await supabase
+        const { error: insertError } = await supabase
       .from('purchase_recommendations')
       .insert(recommendation)
 

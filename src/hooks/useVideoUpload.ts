@@ -63,7 +63,7 @@ export interface UseVideoUploadOptions {
  * Hook to fetch upload configuration for video files
  */
 export function useUploadConfig(fileCategory: string = 'video') {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -72,7 +72,7 @@ export function useUploadConfig(fileCategory: string = 'video') {
       if (!siteId) throw new Error('No site_id available');
 
       const { data, error } = await supabase.rpc('get_upload_config', {
-        p_site_id: siteId,
+        p_
         p_company_id: companyId || null,
         p_file_category: fileCategory,
       });
@@ -193,7 +193,7 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
     onError,
   } = options;
 
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -264,7 +264,6 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
           const { data: document, error: docError } = await supabase
             .from('documents')
             .insert({
-              site_id: siteId,
               company_id: companyId,
               project_id: projectId || null,
               name: file.name,
@@ -287,7 +286,6 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
             // If project ID provided, also create project_videos record
             if (projectId) {
               await supabase.from('project_videos').insert({
-                site_id: siteId,
                 company_id: companyId,
                 project_id: projectId,
                 document_id: documentId,
@@ -355,7 +353,7 @@ export function useVideoUpload(options: UseVideoUploadOptions = {}) {
  * Hook to fetch project videos
  */
 export function useProjectVideos(projectId: string | undefined) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -372,7 +370,6 @@ export function useProjectVideos(projectId: string | undefined) {
           document:documents(*)
         `)
         .eq('project_id', projectId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('display_order', { ascending: true });
 
@@ -387,7 +384,7 @@ export function useProjectVideos(projectId: string | undefined) {
  * Hook to delete a video
  */
 export function useDeleteVideo() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -413,7 +410,6 @@ export function useDeleteVideo() {
         .from('documents')
         .delete()
         .eq('id', documentId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (docError) throw docError;

@@ -206,7 +206,6 @@ export function useMarketingCampaigns(
       let query = supabase
         .from('email_campaigns')
         .select('*')
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false });
 
       if (filters?.campaign_type) {
@@ -255,7 +254,6 @@ export function useMarketingCampaign(campaignId: string, options?: { enabled?: b
         .from('email_campaigns')
         .select('*')
         .eq('id', campaignId)
-        .eq('site_id', siteId)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
@@ -269,7 +267,7 @@ export function useMarketingCampaign(campaignId: string, options?: { enabled?: b
  * Hook to create a new marketing campaign
  */
 export function useCreateMarketingCampaign() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -291,7 +289,6 @@ export function useCreateMarketingCampaign() {
         .from('email_campaigns')
         .insert({
           ...request,
-          site_id: siteId,
           company_id: companyId,
           from_name: request.from_name || 'BuildDesk Team',
           from_email: request.from_email || 'hello@build-desk.com',
@@ -336,7 +333,6 @@ export function useUpdateMarketingCampaign() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('site_id', siteId)
         .select()
         .single();
 
@@ -413,7 +409,7 @@ export function useToggleCampaign() {
  * Hook to duplicate a campaign
  */
 export function useDuplicateCampaign() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -431,7 +427,6 @@ export function useDuplicateCampaign() {
         .from('email_campaigns')
         .select('*')
         .eq('id', campaignId)
-        .eq('site_id', siteId)
         .single();
 
       if (fetchError) throw fetchError;
@@ -440,7 +435,6 @@ export function useDuplicateCampaign() {
       const { data, error } = await supabase
         .from('email_campaigns')
         .insert({
-          site_id: siteId,
           company_id: original.company_id,
           campaign_name: newName || `${original.campaign_name} (Copy)`,
           campaign_description: original.campaign_description,
@@ -625,7 +619,6 @@ export function useEmailSequences(options?: { enabled?: boolean }) {
       const { data, error } = await supabase
         .from('email_campaigns')
         .select('sequence_name, sequence_order, id, campaign_name, is_active')
-        .eq('site_id', siteId)
         .not('sequence_name', 'is', null)
         .order('sequence_name')
         .order('sequence_order');
@@ -669,7 +662,7 @@ export function useEmailSequences(options?: { enabled?: boolean }) {
  * Hook to send a test email
  */
 export function useSendTestEmail() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -686,7 +679,6 @@ export function useSendTestEmail() {
         body: {
           action: 'send_test',
           campaign_id: campaignId,
-          site_id: siteId,
           test_email: testEmail,
         },
       });
@@ -723,7 +715,6 @@ export function useScheduleCampaign() {
         body: {
           action: 'schedule_campaign',
           campaign_id: campaignId,
-          site_id: siteId,
           scheduled_for: scheduledFor,
           audience_filter: audienceFilter,
         },
@@ -757,7 +748,6 @@ export function useCampaignABTests(campaignId: string, options?: { enabled?: boo
         .from('email_campaigns')
         .select('campaign_name')
         .eq('id', campaignId)
-        .eq('site_id', siteId)
         .single();
 
       if (!baseCampaign) return [];
@@ -765,7 +755,6 @@ export function useCampaignABTests(campaignId: string, options?: { enabled?: boo
       const { data, error } = await supabase
         .from('email_campaigns')
         .select('*')
-        .eq('site_id', siteId)
         .eq('ab_test_enabled', true)
         .ilike('campaign_name', `${baseCampaign.campaign_name}%`);
 
@@ -797,7 +786,7 @@ export function useCampaignABTests(campaignId: string, options?: { enabled?: boo
  * Hook to create A/B test variant
  */
 export function useCreateABTestVariant() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -823,7 +812,6 @@ export function useCreateABTestVariant() {
         .from('email_campaigns')
         .select('*')
         .eq('id', baseCampaignId)
-        .eq('site_id', siteId)
         .single();
 
       if (fetchError) throw fetchError;
@@ -845,7 +833,6 @@ export function useCreateABTestVariant() {
       const { data, error } = await supabase
         .from('email_campaigns')
         .insert({
-          site_id: siteId,
           company_id: baseCampaign.company_id,
           campaign_name: `${baseCampaign.campaign_name} - Variant ${variantName}`,
           campaign_description: baseCampaign.campaign_description,

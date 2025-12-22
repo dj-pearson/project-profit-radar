@@ -1,5 +1,4 @@
 // Calculate Health Scores Edge Function
-// Updated with multi-tenant site_id isolation
 // Runs daily via cron job - processes all companies within each site
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -118,7 +117,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   const { data: users, error: usersError } = await supabase
     .from("user_profiles")
     .select("id, last_login, is_active")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", company.id);
 
   if (usersError) throw usersError;
@@ -127,7 +126,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   const { data: settings } = await supabase
     .from("company_settings")
     .select("*")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .single();
 
@@ -135,7 +134,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   const { data: projects } = await supabase
     .from("projects")
     .select("id, status, updated_at")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", company.id);
 
   // Get recent activity (last 30 days) with site isolation
@@ -145,7 +144,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   const { data: recentActivity } = await supabase
     .from("user_activity_timeline")
     .select("user_id")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .gte("timestamp", thirtyDaysAgo.toISOString());
 
@@ -153,7 +152,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   const { data: supportTickets } = await supabase
     .from("support_tickets")
     .select("id, status")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .gte("created_at", thirtyDaysAgo.toISOString());
 
@@ -181,7 +180,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   const { data: previousScore } = await supabase
     .from("account_health_scores")
     .select("score")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -203,9 +202,7 @@ async function calculateCompanyHealthScore(supabase: any, company: Company, site
   // Insert new health score with site isolation
   const { error: insertError } = await supabase
     .from("account_health_scores")
-    .insert({
-      site_id: siteId,  // CRITICAL: Include site_id
-      company_id: company.id,
+    .insert({        company_id: company.id,
       score: overallScore,
       login_frequency_score: components.loginFrequency,
       feature_adoption_score: components.featureAdoption,

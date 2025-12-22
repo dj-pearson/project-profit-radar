@@ -30,15 +30,14 @@ const sendOTPSchema = z.object({
     'reset_password',
     'reauthentication',
   ]),
-  siteId: z.string().uuid('Invalid site ID'),
-  // Optional fields for specific flows
+    // Optional fields for specific flows
   recipientName: z.string().max(100).optional(),
   newEmail: z.string().email().optional(),
   inviterName: z.string().max(100).optional(),
   inviterUserId: z.string().uuid().optional(),
   companyId: z.string().uuid().optional(),
   companyName: z.string().max(200).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.any()).optional()
 });
 
 // Expiration times for different token types (in minutes)
@@ -48,7 +47,7 @@ const EXPIRATION_TIMES: Record<AuthEmailType, number> = {
   magic_link: 10,
   change_email: 15,
   reset_password: 10,
-  reauthentication: 5,
+  reauthentication: 5
 };
 
 // Rate limiting: max requests per email per hour
@@ -85,14 +84,13 @@ const handler = async (req: Request): Promise<Response> => {
     const {
       email,
       type,
-      siteId,
       recipientName,
       newEmail,
       inviterName,
       inviterUserId,
       companyId,
       companyName,
-      metadata,
+      metadata
     } = validation.data;
 
     console.log(`[SendAuthOTP] Processing ${type} request for ${email} on site ${siteId}`);
@@ -107,11 +105,11 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: site, error: siteError } = await supabaseAdmin
       .from('sites')
       .select('id, key, name')
-      .eq('id', siteId)
+      .eq('id')
       .single();
 
     if (siteError || !site) {
-      console.error('[SendAuthOTP] Invalid site:', siteId);
+      console.error('[SendAuthOTP] Invalid site:');
       return new Response(
         JSON.stringify({ error: 'Invalid site' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -123,7 +121,6 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: recentTokens, error: rateError } = await supabaseAdmin
       .from('auth_otp_codes')
       .select('id')
-      .eq('site_id', siteId)
       .ilike('email', email)
       .eq('token_type', type)
       .gte('created_at', oneHourAgo);
@@ -165,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Create OTP token in database
     const { data: tokenId, error: tokenError } = await supabaseAdmin.rpc('create_otp_token', {
-      p_site_id: siteId,
+      p_
       p_email: email,
       p_otp_code: otpCode,
       p_token_type: type,
@@ -176,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
       p_company_id: companyId || null,
       p_metadata: metadata || {},
       p_ip: clientIP,
-      p_user_agent: userAgent,
+      p_user_agent: userAgent
     });
 
     if (tokenError) {
@@ -189,8 +186,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[SendAuthOTP] Token created: ${tokenId}`);
 
-    // Get site email configuration
-    const siteConfig = await getSiteEmailConfig(supabaseAdmin, siteId);
+    // Get email configuration (single-tenant)
+    const siteConfig = await getSiteEmailConfig();
 
     // Generate email content
     const emailContent = generateAuthEmail(
@@ -202,7 +199,7 @@ const handler = async (req: Request): Promise<Response> => {
         expiresInMinutes,
         inviterName,
         companyName,
-        newEmail,
+        newEmail
       },
       siteConfig
     );
@@ -212,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
       {
         to: email,
         subject: emailContent.subject,
-        html: emailContent.html,
+        html: emailContent.html
       },
       siteConfig
     );
@@ -237,7 +234,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         message: 'Verification code sent successfully',
-        expiresInMinutes,
+        expiresInMinutes
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );

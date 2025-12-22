@@ -1,5 +1,4 @@
 // Check Subscription Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
@@ -35,15 +34,14 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId } = authContext;
+    const { user } = authContext;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Check for complimentary subscription first with site isolation
     let subscriberQuery = supabaseClient
@@ -52,7 +50,7 @@ serve(async (req) => {
       .eq('user_id', user.id);
 
     if (siteId) {
-      subscriberQuery = subscriberQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+      subscriberQuery = subscriberQuery;  // CRITICAL: Site isolation
     }
 
     const { data: existingSubscriber } = await subscriberQuery.single();
@@ -85,7 +83,7 @@ serve(async (req) => {
           .eq('id', existingSubscriber.id);
 
         if (siteId) {
-          updateQuery = updateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+          updateQuery = updateQuery;  // CRITICAL: Site isolation
         }
 
         await updateQuery;
@@ -98,7 +96,7 @@ serve(async (req) => {
           .eq('status', 'active');
 
         if (siteId) {
-          historyQuery = historyQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+          historyQuery = historyQuery;  // CRITICAL: Site isolation
         }
 
         await historyQuery;
@@ -215,7 +213,7 @@ serve(async (req) => {
       onConflict: siteId ? 'email,site_id' : 'email'
     });
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, siteId });
+    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,

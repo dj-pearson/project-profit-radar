@@ -70,7 +70,7 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
   const recordedChunksRef = useRef<Blob[]>([]);
 
   const { toast } = useToast();
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
 
   useEffect(() => {
     loadProjects();
@@ -489,7 +489,6 @@ const VoiceNotes: React.FC<VoiceNotesProps> = ({
         .from('documents')
         .insert({
           company_id: userProfile?.company_id,
-          site_id: siteId,
           project_id: note.projectId,
           name: note.title,
           description: `${note.description}\nDuration: ${Math.floor(note.duration / 60)}:${(note.duration % 60).toString().padStart(2, '0')}\nTags: ${note.tags.join(', ')}\n${note.transcription ? `Transcription: ${note.transcription}` : ''}`,

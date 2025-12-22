@@ -1,7 +1,5 @@
 // Stripe Webhook Handler
-// Updated with multi-tenant site_id isolation
 // Note: This is a webhook endpoint called by Stripe, not user-authenticated
-// Site_id is determined from subscriber records linked to stripe_customer_id
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
@@ -12,7 +10,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
-// Default site_id for BuildDesk (will be resolved dynamically in production)
 const DEFAULT_BUILDDESK_SITE_KEY = 'builddesk';
 
 const logStep = (step: string, details?: any) => {
@@ -61,24 +58,16 @@ serve(async (req) => {
 
     logStep("Processing event", { type: event.type, id: event.id });
 
-    // Get the default site_id for BuildDesk (webhook is platform-level)
-    const { data: siteData } = await supabaseClient
+        const { data: siteData } = await supabaseClient
       .from('sites')
       .select('id')
       .eq('key', DEFAULT_BUILDDESK_SITE_KEY)
       .single();
 
-    const siteId = siteData?.id;
-    if (!siteId) {
-      logStep("Warning: BuildDesk site not found, webhook processing without site isolation");
-    }
-
-    // Log webhook event with site isolation
+        // Log webhook event with site isolation
     await supabaseClient
       .from("webhook_events")
-      .upsert({
-        site_id: siteId,  // CRITICAL: Include site_id
-        stripe_event_id: event.id,
+      .upsert({          stripe_event_id: event.id,
         event_type: event.type,
         event_data: event.data,
         processed: false,
@@ -86,7 +75,7 @@ serve(async (req) => {
       }, { onConflict: "stripe_event_id" });
 
     try {
-      await processWebhookEvent(event, supabaseClient, stripe, siteId);
+      await processWebhookEvent(event, supabaseClient, stripe);
 
       // Mark as processed with site isolation
       await supabaseClient
@@ -96,7 +85,7 @@ serve(async (req) => {
           processed_at: new Date().toISOString()
         })
         .eq("stripe_event_id", event.id)
-        .eq("site_id", siteId);  // CRITICAL: Site isolation on update
+        .eq("site_id");  // CRITICAL: Site isolation on update
 
       logStep("Event processed successfully", { type: event.type });
       return new Response(JSON.stringify({ received: true }), {
@@ -116,7 +105,7 @@ serve(async (req) => {
           last_processing_error: errorObj.message
         })
         .eq("stripe_event_id", event.id)
-        .eq("site_id", siteId);  // CRITICAL: Site isolation on update
+        .eq("site_id");  // CRITICAL: Site isolation on update
 
       throw error;
     }
@@ -135,23 +124,23 @@ async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, str
   switch (event.type) {
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
-      await handleSubscriptionChange(event.data.object as Stripe.Subscription, supabaseClient, siteId);
+      await handleSubscriptionChange(event.data.object as Stripe.Subscription, supabaseClient);
       break;
 
     case 'customer.subscription.deleted':
-      await handleSubscriptionCancellation(event.data.object as Stripe.Subscription, supabaseClient, siteId);
+      await handleSubscriptionCancellation(event.data.object as Stripe.Subscription, supabaseClient);
       break;
 
     case 'invoice.payment_failed':
-      await handlePaymentFailure(event.data.object as Stripe.Invoice, supabaseClient, stripe, siteId);
+      await handlePaymentFailure(event.data.object as Stripe.Invoice, supabaseClient, stripe);
       break;
 
     case 'invoice.payment_succeeded':
-      await handlePaymentSuccess(event.data.object as Stripe.Invoice, supabaseClient, siteId);
+      await handlePaymentSuccess(event.data.object as Stripe.Invoice, supabaseClient);
       break;
 
     case 'customer.subscription.trial_will_end':
-      await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabaseClient, siteId);
+      await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabaseClient);
       break;
 
     default:
@@ -167,7 +156,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     .eq("stripe_customer_id", subscription.customer);
 
   if (siteId) {
-    query = query.eq("site_id", siteId);  // CRITICAL: Site isolation
+    query = query.eq("site_id");  // CRITICAL: Site isolation
   }
 
   const customer = await query.single();
@@ -193,7 +182,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
       .eq("stripe_customer_id", subscription.customer);
 
     if (siteId) {
-      updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
+      updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
     }
 
     await updateQuery;
@@ -212,7 +201,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
     .eq("stripe_customer_id", subscription.customer);
 
   if (siteId) {
-    query = query.eq("site_id", siteId);  // CRITICAL: Site isolation on update
+    query = query.eq("site_id");  // CRITICAL: Site isolation on update
   }
 
   await query;
@@ -228,7 +217,7 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
     .eq("stripe_customer_id", invoice.customer);
 
   if (siteId) {
-    subscriberQuery = subscriberQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+    subscriberQuery = subscriberQuery.eq("site_id");  // CRITICAL: Site isolation
   }
 
   const subscriber = await subscriberQuery.single();
@@ -242,7 +231,7 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
       .eq("stripe_invoice_id", invoice.id);
 
     if (siteId) {
-      failureQuery = failureQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+      failureQuery = failureQuery.eq("site_id");  // CRITICAL: Site isolation
     }
 
     const existingFailure = await failureQuery.single();
@@ -254,9 +243,7 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
 
       await supabaseClient
         .from("payment_failures")
-        .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
-          subscriber_id: subscriber.data.id,
+        .insert({            subscriber_id: subscriber.data.id,
           stripe_invoice_id: invoice.id,
           failure_reason: invoice.last_finalization_error?.message || "Payment failed",
           attempt_count: 1,
@@ -280,7 +267,7 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
         .eq("id", existingFailure.data.id);
 
       if (siteId) {
-        updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
+        updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
       }
 
       await updateQuery;
@@ -298,7 +285,7 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
     .eq("stripe_customer_id", invoice.customer);
 
   if (siteId) {
-    subscriberQuery = subscriberQuery.eq("site_id", siteId);  // CRITICAL: Site isolation
+    subscriberQuery = subscriberQuery.eq("site_id");  // CRITICAL: Site isolation
   }
 
   const subscriber = await subscriberQuery.single();
@@ -315,7 +302,7 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
       .is("resolved_at", null);
 
     if (siteId) {
-      updateQuery = updateQuery.eq("site_id", siteId);  // CRITICAL: Site isolation on update
+      updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
     }
 
     await updateQuery;
@@ -324,5 +311,5 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
 
 async function handleTrialWillEnd(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
   // Could trigger email notifications here
-  logStep("Trial ending soon", { customerId: subscription.customer, trialEnd: subscription.trial_end, siteId });
+  logStep("Trial ending soon", { customerId: subscription.customer, trialEnd: subscription.trial_end });
 }

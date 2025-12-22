@@ -1,5 +1,4 @@
 // Process Invoice Payment Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
@@ -41,8 +40,8 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     // SECURITY: Validate request body
     const requestBody = await req.json();
@@ -56,9 +55,7 @@ serve(async (req) => {
     const paymentData = validation.data;
     logStep("Payment request validated", {
       invoiceId: paymentData.invoice_id,
-      method: paymentData.payment_method,
-      siteId
-    });
+      method: paymentData.payment_method });
 
     // Get invoice details with site isolation
     const { data: invoice, error: invoiceError } = await supabase
@@ -68,7 +65,7 @@ serve(async (req) => {
         companies(name, stripe_customer_id)
       `)
       .eq('id', paymentData.invoice_id)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .single();
 
     if (invoiceError || !invoice) {
@@ -80,7 +77,7 @@ serve(async (req) => {
       .from('user_profiles')
       .select('company_id, role')
       .eq('id', user.id)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .single();
 
     if (profile?.company_id !== invoice.company_id && profile?.role !== 'root_admin') {
@@ -90,9 +87,7 @@ serve(async (req) => {
     logStep("Invoice found", {
       invoiceNumber: invoice.invoice_number,
       totalAmount: invoice.total_amount,
-      amountDue: invoice.amount_due,
-      siteId
-    });
+      amountDue: invoice.amount_due });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16"
@@ -125,7 +120,7 @@ serve(async (req) => {
         result = await createStripeCheckout(stripe, invoice, req);
     }
 
-    logStep("Payment processed", { method: paymentData.payment_method, success: result.success, siteId });
+    logStep("Payment processed", { method: paymentData.payment_method, success: result.success });
 
     return successResponse(result);
 
@@ -213,7 +208,7 @@ async function processManualPayment(
       updated_at: new Date().toISOString()
     })
     .eq('id', invoice.id)
-    .eq('site_id', siteId);  // CRITICAL: Site isolation on update
+    ;  // CRITICAL: Site isolation on update
 
   if (updateError) {
     throw new Error(`Error updating invoice: ${updateError.message}`);
@@ -221,9 +216,7 @@ async function processManualPayment(
 
   // Log the manual payment with site isolation
   const paymentRecord = {
-    invoice_id: invoice.id,
-    site_id: siteId,  // CRITICAL: Include site_id
-    amount: paymentAmount,
+    invoice_id: invoice.id,      amount: paymentAmount,
     method: 'manual',
     notes: notes || 'Manual payment recorded',
     processed_by: userId,

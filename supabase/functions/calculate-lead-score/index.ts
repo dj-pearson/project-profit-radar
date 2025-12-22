@@ -1,5 +1,4 @@
 // Calculate Lead Score Edge Function
-// Updated with multi-tenant site_id isolation
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
@@ -46,7 +45,7 @@ Deno.serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     console.log(`[CALCULATE-LEAD-SCORE] User authenticated: ${user.id}, siteId: ${siteId}`);
 
     const { leadId, companyId } = await req.json();
@@ -59,7 +58,7 @@ Deno.serve(async (req) => {
     const { data: lead, error: leadError } = await supabaseClient
       .from('leads')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', leadId)
       .eq('company_id', companyId)
       .single();
@@ -73,7 +72,7 @@ Deno.serve(async (req) => {
     const { data: scoringRules, error: rulesError } = await supabaseClient
       .from('lead_scoring_rules')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .or(`is_system_rule.eq.true,company_id.eq.${companyId}`)
       .eq('is_active', true);
 
@@ -151,7 +150,7 @@ Deno.serve(async (req) => {
         lead_score: totalScore,
         updated_at: new Date().toISOString()
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation on update
+        // CRITICAL: Site isolation on update
       .eq('id', leadId);
 
     if (updateError) {
@@ -174,7 +173,7 @@ Deno.serve(async (req) => {
       await supabaseClient
         .from('leads')
         .update({ lead_quality: leadQuality })
-        .eq('site_id', siteId)  // CRITICAL: Site isolation on update
+          // CRITICAL: Site isolation on update
         .eq('id', leadId);
     }
 

@@ -48,8 +48,7 @@ serve(async (req) => {
     const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
     const sevenDaysFromNow = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
 
-    // Include site_id for multi-tenant isolation in all downstream operations
-    let query = supabaseClient
+        let query = supabaseClient
       .from('subscribers')
       .select(`
         id,
@@ -97,8 +96,7 @@ serve(async (req) => {
 
       if (!notificationType) continue;
 
-      // Check if we already sent this type of notification with site_id isolation
-      const { data: existingNotifications } = await supabaseClient
+            const { data: existingNotifications } = await supabaseClient
         .from('renewal_notifications')
         .select('notification_type')
         .eq('site_id', subscriber.site_id)
@@ -113,8 +111,7 @@ serve(async (req) => {
         continue;
       }
 
-      // Get user profile for name with site_id isolation
-      const { data: profile } = await supabaseClient
+            const { data: profile } = await supabaseClient
         .from('user_profiles')
         .select('first_name, last_name')
         .eq('site_id', subscriber.site_id)
@@ -198,8 +195,7 @@ serve(async (req) => {
         continue;
       }
 
-      // Record the notification with site_id for multi-tenant isolation
-      await supabaseClient
+            await supabaseClient
         .from('renewal_notifications')
         .insert({
           site_id: subscriber.site_id,
@@ -208,8 +204,7 @@ serve(async (req) => {
           subscription_end_date: subscriber.subscription_end
         });
 
-      // Update the last notification timestamp with site_id isolation
-      await supabaseClient
+            await supabaseClient
         .from('subscribers')
         .update({ renewal_notification_sent_at: new Date().toISOString() })
         .eq('site_id', subscriber.site_id)

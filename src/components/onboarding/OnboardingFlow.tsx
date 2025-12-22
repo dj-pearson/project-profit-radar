@@ -268,7 +268,6 @@ export const OnboardingFlow = () => {
           subscription_tier: formData.selectedPlan as 'starter' | 'professional' | 'enterprise',
           subscription_status: 'trial',
           // Multi-tenant scoping - use resolved siteId from AuthContext
-          site_id: siteId,
           tenant_id: userProfile?.tenant_id || null,
         })
         .select()
@@ -282,7 +281,6 @@ export const OnboardingFlow = () => {
         .update({
           company_id: company.id,
           // Ensure site_id is set on user profile for future RLS checks
-          site_id: siteId,
           tenant_id: userProfile?.tenant_id || null,
           // Store onboarding preferences for dashboard personalization
           preferences: {

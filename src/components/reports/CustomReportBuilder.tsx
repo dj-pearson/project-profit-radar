@@ -109,7 +109,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   initialConfig
 }) => {
   const { toast } = useToast();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   
   const [config, setConfig] = useState<ReportConfig>({
     name: '',

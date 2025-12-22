@@ -149,8 +149,7 @@ export const logSecurityEvent = async (
   details: Record<string, unknown>,
   riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'medium'
 ): Promise<string | null> => {
-  return logAuditEvent({
-    siteId,
+  return logAuditEvent({ 
     userId,
     companyId,
     actionType: eventType,
@@ -188,8 +187,7 @@ export const logAuthEvent = async (
     signup: 'low'
   };
 
-  return logAuditEvent({
-    siteId,
+  return logAuditEvent({ 
     userId,
     companyId,
     actionType: action,
@@ -216,8 +214,7 @@ export const logUserManagementEvent = async (
   targetUserName: string,
   changes?: Record<string, unknown>
 ): Promise<string | null> => {
-  return logAuditEvent({
-    siteId,
+  return logAuditEvent({ 
     userId,
     companyId,
     actionType,

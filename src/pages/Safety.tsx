@@ -62,7 +62,7 @@ const Safety = () => {
   const [loading, setLoading] = useState(true);
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
   const [showChecklistDialog, setShowChecklistDialog] = useState(false);
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -90,7 +90,6 @@ const Safety = () => {
         .from('safety_incidents')
         .select('*')
         .eq('company_id', profile.company_id)
-        .eq('site_id', siteId)
         .gte('incident_date', `${currentYear}-01-01`)
         .lte('incident_date', `${currentYear}-12-31`)
         .order('incident_date', { ascending: true });
@@ -224,7 +223,6 @@ const Safety = () => {
           .from('safety_incidents')
           .select('id, incident_type, severity, incident_date, status')
           .eq('company_id', profile.company_id)
-          .eq('site_id', siteId)
           .order('incident_date', { ascending: false })
           .limit(5),
 

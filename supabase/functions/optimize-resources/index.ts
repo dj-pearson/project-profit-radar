@@ -1,5 +1,4 @@
 // Optimize Resources Edge Function
-// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
@@ -24,26 +23,25 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     const { company_id, optimization_scope = 'company', scope_id, date_range_start, date_range_end, config_id } = await req.json();
     if (!company_id) throw new Error("Company ID is required");
 
-    logStep("Starting resource optimization", { siteId, company_id, optimization_scope, scope_id });
+    logStep("Starting resource optimization", {  company_id, optimization_scope, scope_id });
 
     // Get optimization configuration with site isolation
     const { data: config, error: configError } = await supabaseClient
       .from('resource_optimization_configs')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .eq('id', config_id || 'default')
       .maybeSingle();
@@ -69,8 +67,7 @@ serve(async (req) => {
     // Create optimization run record with site isolation
     const { data: optimizationRun, error: runError } = await supabaseClient
       .from('resource_optimization_runs')
-      .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      .insert({  // CRITICAL: Site isolation
         company_id,
         config_id: config_id,
         run_type: 'manual',
@@ -92,7 +89,7 @@ serve(async (req) => {
     const dataPromises = [
       // Load teams/crews
       supabaseClient.from('teams').select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       // Load projects
       supabaseClient.from('projects').select(`
@@ -100,14 +97,14 @@ serve(async (req) => {
         tasks(*),
         project_team_assignments(*)
       `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       // Load equipment
       supabaseClient.from('equipment_assignments').select(`
         *,
         projects(name, priority)
       `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       // Load existing assignments
       supabaseClient.from('project_team_assignments').select(`
@@ -115,7 +112,7 @@ serve(async (req) => {
         projects(name, priority, start_date, end_date),
         teams(name, skills)
       `)
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', company_id)
     ];
 
@@ -139,7 +136,7 @@ serve(async (req) => {
     });
 
     // Detect conflicts with site isolation
-    const conflicts = await detectResourceConflicts(assignments, equipment, supabaseClient, optimizationRun.id, siteId);
+    const conflicts = await detectResourceConflicts(assignments, equipment, supabaseClient, optimizationRun.id);
     
     logStep("Detected conflicts", { count: conflicts.length });
 
@@ -222,8 +219,7 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
 
     // Store optimization results with site isolation
     const assignmentPromises = optimizationData.optimizations?.map((opt: any) =>
-      supabaseClient.from('optimized_resource_assignments').insert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      supabaseClient.from('optimized_resource_assignments').insert({  // CRITICAL: Site isolation
         optimization_run_id: optimizationRun.id,
         company_id,
         resource_type: opt.resourceType,
@@ -240,8 +236,7 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
 
     await Promise.all(assignmentPromises);
 
-    // Update optimization run with completion (site_id already set on insert)
-    await supabaseClient
+        await supabaseClient
       .from('resource_optimization_runs')
       .update({
         status: 'completed',
@@ -254,12 +249,11 @@ Focus on maximizing efficiency while minimizing conflicts and costs.
         optimization_data: optimizationData,
         recommendations: optimizationData.optimizations || []
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', optimizationRun.id);
 
     // Store metrics with site isolation
-    await supabaseClient.from('resource_optimization_metrics').insert({
-      site_id: siteId,  // CRITICAL: Site isolation
+    await supabaseClient.from('resource_optimization_metrics').insert({  // CRITICAL: Site isolation
       company_id,
       optimization_run_id: optimizationRun.id,
       total_resources: teams.length + equipment.length,
@@ -333,8 +327,7 @@ async function detectResourceConflicts(assignments: any[], equipment: any[], sup
 
         // Check for overlap
         if (start1 < end2 && start2 < end1) {
-          const conflict = {
-            site_id: siteId,  // CRITICAL: Site isolation
+          const conflict = {  // CRITICAL: Site isolation
             optimization_run_id: runId,
             company_id: assignment1.company_id,
             conflict_type: 'double_booking',

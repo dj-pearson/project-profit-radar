@@ -97,7 +97,7 @@ export type ImageSize = keyof typeof IMAGE_SIZES;
  * Hook to process an image through the edge function
  */
 export function useProcessImage() {
-  const { session, siteId } = useAuth();
+  const { session } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -163,7 +163,6 @@ export function useProcessingQueue(options?: { enabled?: boolean }) {
       const { data, error } = await supabase
         .from('image_processing_queue')
         .select('*')
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -189,7 +188,6 @@ export function usePendingProcessingCount() {
       const { count, error } = await supabase
         .from('image_processing_queue')
         .select('*', { count: 'exact', head: true })
-        .eq('site_id', siteId)
         .in('status', ['pending', 'processing']);
 
       if (error) throw error;
@@ -214,7 +212,6 @@ export function useProcessedImages(documentId?: string, options?: { enabled?: bo
       let query = supabase
         .from('processed_images')
         .select('*')
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false });
 
       if (documentId) {
@@ -244,7 +241,6 @@ export function useProcessedImage(originalPath: string, options?: { enabled?: bo
       const { data, error } = await supabase
         .from('processed_images')
         .select('*')
-        .eq('site_id', siteId)
         .eq('original_path', originalPath)
         .single();
 
@@ -308,7 +304,6 @@ export function useCancelProcessingJob() {
         .from('image_processing_queue')
         .delete()
         .eq('id', jobId)
-        .eq('site_id', siteId)
         .in('status', ['pending']); // Can only cancel pending jobs
 
       if (error) throw error;
@@ -340,7 +335,6 @@ export function useRetryProcessingJob() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', jobId)
-        .eq('site_id', siteId)
         .eq('status', 'failed');
 
       if (error) throw error;
@@ -437,7 +431,7 @@ export function useImageProcessingStats() {
  * Upload and process an image in one step
  */
 export function useUploadAndProcessImage() {
-  const { session, siteId } = useAuth();
+  const { session } = useAuth();
   const processImage = useProcessImage();
 
   return useMutation({

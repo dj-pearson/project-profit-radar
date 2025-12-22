@@ -178,8 +178,7 @@ serve(async (req) => {
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', apiKey.id)
 
-    // Return success with user context including site_id for multi-tenant isolation
-    return new Response(
+        return new Response(
       JSON.stringify({
         success: true,
         site_id: apiKey.site_id,

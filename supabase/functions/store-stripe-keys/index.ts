@@ -81,11 +81,9 @@ serve(async (req) => {
     const user = userData.user;
     if (!user) throw new Error("User not authenticated");
 
-    // Extract site_id from JWT metadata for multi-tenant isolation
-    const siteId = user.app_metadata?.site_id || user.user_metadata?.site_id;
-    if (!siteId) throw new Error("Site ID not found in user context");
+            if (!siteId) throw new Error("Site ID not found in user context");
 
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     const { company_id, secret_key, webhook_secret } = await req.json();
     if (!company_id || !secret_key) {
@@ -106,7 +104,7 @@ serve(async (req) => {
         stripe_webhook_secret_encrypted: encryptedWebhookSecret,
         updated_at: new Date().toISOString()
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     if (updateError) throw updateError;

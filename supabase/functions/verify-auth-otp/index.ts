@@ -39,12 +39,11 @@ const verifyOTPSchema = z.object({
     'reset_password',
     'reauthentication',
   ]),
-  siteId: z.string().uuid('Invalid site ID'),
-  // For confirm_signup and invite_user - the password to set
+    // For confirm_signup and invite_user - the password to set
   password: z.string().min(8).optional(),
   // For invite_user - user details
   firstName: z.string().max(100).optional(),
-  lastName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional()
 });
 
 const handler = async (req: Request): Promise<Response> => {
@@ -75,7 +74,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, otpCode, type, siteId, password, firstName, lastName } = validation.data;
+    const { email, otpCode, type, password, firstName, lastName } = validation.data;
 
     console.log(`[VerifyAuthOTP] Verifying ${type} OTP for ${email}`);
 
@@ -87,10 +86,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Verify OTP code using database function
     const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {
-      p_site_id: siteId,
+      p_
       p_email: email,
       p_otp_code: otpCode,
-      p_token_type: type,
+      p_token_type: type
     });
 
     if (verifyError) {
@@ -146,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
         actionResult = {
           verified: true,
           emailConfirmed: true,
-          userId: authUser.id,
+          userId: authUser.id
         };
         break;
       }
@@ -168,12 +167,10 @@ const handler = async (req: Request): Promise<Response> => {
           user_metadata: {
             first_name: firstName || result.metadata?.first_name,
             last_name: lastName || result.metadata?.last_name,
-            site_id: siteId,
-            invited_by: result.inviter_user_id,
+            invited_by: result.inviter_user_id
           },
           app_metadata: {
-            site_id: siteId,
-          },
+          }
         });
 
         if (createError) {
@@ -189,12 +186,11 @@ const handler = async (req: Request): Promise<Response> => {
           .from('user_profiles')
           .insert({
             id: newUser.user.id,
-            site_id: siteId,
             company_id: result.company_id,
             first_name: firstName || result.metadata?.first_name || '',
             last_name: lastName || result.metadata?.last_name || '',
             email: email,
-            role: result.metadata?.role || 'office_staff',
+            role: result.metadata?.role || 'office_staff'
           });
 
         if (profileError) {
@@ -205,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
           verified: true,
           userCreated: true,
           userId: newUser.user.id,
-          companyId: result.company_id,
+          companyId: result.company_id
         };
         break;
       }
@@ -224,7 +220,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Generate a magic link token for the user
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
           type: 'magiclink',
-          email: email,
+          email: email
         });
 
         if (linkError) {
@@ -240,7 +236,7 @@ const handler = async (req: Request): Promise<Response> => {
           userId: authUser.id,
           // Return the token properties for frontend to use
           accessToken: linkData.properties?.access_token,
-          refreshToken: linkData.properties?.refresh_token,
+          refreshToken: linkData.properties?.refresh_token
         };
         break;
       }
@@ -268,7 +264,7 @@ const handler = async (req: Request): Promise<Response> => {
           authUser.id,
           {
             email: result.new_email,
-            email_confirm: true,
+            email_confirm: true
           }
         );
 
@@ -290,7 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
           verified: true,
           emailChanged: true,
           newEmail: result.new_email,
-          userId: authUser.id,
+          userId: authUser.id
         };
         break;
       }
@@ -324,7 +320,7 @@ const handler = async (req: Request): Promise<Response> => {
           actionResult = {
             verified: true,
             passwordReset: true,
-            userId: authUser.id,
+            userId: authUser.id
           };
         } else {
           // Just confirm OTP is valid - password will be set in a follow-up request
@@ -332,7 +328,7 @@ const handler = async (req: Request): Promise<Response> => {
             verified: true,
             canResetPassword: true,
             userId: authUser.id,
-            tokenId: result.token_id,
+            tokenId: result.token_id
           };
         }
         break;
@@ -343,7 +339,7 @@ const handler = async (req: Request): Promise<Response> => {
         actionResult = {
           verified: true,
           reauthenticated: true,
-          tokenId: result.token_id,
+          tokenId: result.token_id
         };
         break;
       }
@@ -354,7 +350,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        ...actionResult,
+        ...actionResult
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );

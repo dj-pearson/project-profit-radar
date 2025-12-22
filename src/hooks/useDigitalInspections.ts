@@ -27,7 +27,7 @@ export interface QualityInspection {
 }
 
 export const useDigitalInspections = (projectId?: string) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -40,7 +40,6 @@ export const useDigitalInspections = (projectId?: string) => {
       let query = supabase
         .from('quality_inspections')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
@@ -66,7 +65,6 @@ export const useDigitalInspections = (projectId?: string) => {
         .from('quality_inspections')
         .insert([{
           ...inspection,
-          site_id: siteId,
           company_id: userProfile.company_id,
         }])
         .select()
@@ -96,7 +94,6 @@ export const useDigitalInspections = (projectId?: string) => {
       const { data, error } = await supabase
         .from('quality_inspections')
         .update(updates)
-        .eq('site_id', siteId)
         .eq('id', id)
         .select()
         .single();
@@ -125,7 +122,6 @@ export const useDigitalInspections = (projectId?: string) => {
       const { error } = await supabase
         .from('quality_inspections')
         .delete()
-        .eq('site_id', siteId)
         .eq('id', id);
 
       if (error) throw error;

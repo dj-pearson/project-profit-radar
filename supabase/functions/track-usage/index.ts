@@ -1,5 +1,4 @@
 // Track Usage Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
@@ -28,14 +27,13 @@ serve(async (req) => {
   try {
     logStep("Usage tracking request received");
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     const { metric_type, metric_value, company_id, user_id }: UsageTrackingRequest = await req.json();
     
@@ -43,7 +41,7 @@ serve(async (req) => {
       throw new Error("metric_type and metric_value are required");
     }
 
-    logStep("Tracking usage", { siteId, metric_type, metric_value, company_id, user_id });
+    logStep("Tracking usage", {  metric_type, metric_value, company_id, user_id });
 
     // Get current billing period (start of month to end of month)
     const now = new Date();
@@ -59,7 +57,7 @@ serve(async (req) => {
       const { data: profile } = await supabaseClient
         .from("user_profiles")
         .select("company_id")
-        .eq("site_id", siteId)  // CRITICAL: Site isolation
+        .eq("site_id")  // CRITICAL: Site isolation
         .eq("id", user.id)
         .single();
 
@@ -76,7 +74,7 @@ serve(async (req) => {
     const { data: existingUsage } = await supabaseClient
       .from("usage_metrics")
       .select("*")
-      .eq("site_id", siteId)  // CRITICAL: Site isolation
+      .eq("site_id")  // CRITICAL: Site isolation
       .eq("company_id", targetCompanyId)
       .eq("user_id", targetUserId)
       .eq("metric_type", metric_type)
@@ -94,7 +92,7 @@ serve(async (req) => {
           metric_value: newValue,
           updated_at: new Date().toISOString()
         })
-        .eq("site_id", siteId)  // CRITICAL: Site isolation
+        .eq("site_id")  // CRITICAL: Site isolation
         .eq("id", existingUsage.id);
 
       logStep("Updated existing usage record", { id: existingUsage.id, newValue });
@@ -102,8 +100,7 @@ serve(async (req) => {
       // Create new record with site isolation
       const { data: newUsage } = await supabaseClient
         .from("usage_metrics")
-        .insert({
-          site_id: siteId,  // CRITICAL: Site isolation
+        .insert({  // CRITICAL: Site isolation
           company_id: targetCompanyId,
           user_id: targetUserId,
           metric_type,
@@ -118,7 +115,7 @@ serve(async (req) => {
     }
 
     // Check for usage alerts/limits with site isolation
-    await checkUsageAlerts(targetCompanyId, metric_type, supabaseClient, siteId);
+    await checkUsageAlerts(targetCompanyId, metric_type, supabaseClient);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -140,7 +137,7 @@ async function checkUsageAlerts(companyId: string, metricType: string, supabaseC
   const { data: company } = await supabaseClient
     .from("companies")
     .select("subscription_tier")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("id", companyId)
     .single();
 
@@ -181,7 +178,7 @@ async function checkUsageAlerts(companyId: string, metricType: string, supabaseC
   const { data: usage } = await supabaseClient
     .from("usage_metrics")
     .select("metric_value")
-    .eq("site_id", siteId)  // CRITICAL: Site isolation
+    .eq("site_id")  // CRITICAL: Site isolation
     .eq("company_id", companyId)
     .eq("metric_type", metricType)
     .eq("billing_period_start", billingPeriodStart.toISOString().split('T')[0])

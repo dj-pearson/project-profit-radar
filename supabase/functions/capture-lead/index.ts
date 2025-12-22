@@ -1,7 +1,5 @@
 // Lead Capture Edge Function (Public Endpoint)
-// Updated with multi-tenant site_id isolation
 // Note: This is a public endpoint called from marketing forms
-// Site_id is determined from X-Site-Key header or referrer domain
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -53,20 +51,14 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get site_id from header or default to BuildDesk
-    const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
+        const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
     const { data: siteData } = await supabaseClient
       .from('sites')
       .select('id')
       .eq('key', siteKey)
       .single();
 
-    const siteId = siteData?.id;
-    if (!siteId) {
-      logStep("Warning: Site not found, using default isolation");
-    }
-
-    logStep("Site resolved", { siteKey, siteId });
+        logStep("Site resolved", { siteKey });
 
     const requestData: LeadCaptureRequest = await req.json();
     const {
@@ -94,7 +86,7 @@ serve(async (req) => {
       throw new Error("Email is required");
     }
 
-    logStep("Processing lead capture", { email, interestType, siteId });
+    logStep("Processing lead capture", { email, interestType });
 
     // Check if lead already exists with site isolation
     let existingLeadQuery = supabaseClient
@@ -103,7 +95,7 @@ serve(async (req) => {
       .eq('email', email);
 
     if (siteId) {
-      existingLeadQuery = existingLeadQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+      existingLeadQuery = existingLeadQuery;  // CRITICAL: Site isolation
     }
 
     const { data: existingLead } = await existingLeadQuery.single();
@@ -139,21 +131,19 @@ serve(async (req) => {
         .eq('id', existingLead.id);
 
       if (siteId) {
-        updateQuery = updateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation on update
+        updateQuery = updateQuery;  // CRITICAL: Site isolation on update
       }
 
       const { data: updatedLead, error: updateError } = await updateQuery.select().single();
 
       if (updateError) throw updateError;
       leadId = updatedLead.id;
-      logStep("Updated existing lead", { leadId, siteId });
+      logStep("Updated existing lead", { leadId });
     } else {
       // Create new lead with site isolation
       const { data: newLead, error: createError } = await supabaseClient
         .from('leads')
-        .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
-          email,
+        .insert({            email,
           first_name: firstName || null,
           last_name: lastName || null,
           company_name: companyName || null,
@@ -177,7 +167,7 @@ serve(async (req) => {
       if (createError) throw createError;
       leadId = newLead.id;
       isNewLead = true;
-      logStep("Created new lead", { leadId, siteId });
+      logStep("Created new lead", { leadId });
     }
 
     // Track activity with site isolation
@@ -187,9 +177,7 @@ serve(async (req) => {
 
     await supabaseClient
       .from('lead_activities')
-      .insert({
-        site_id: siteId,  // CRITICAL: Include site_id
-        lead_id: leadId,
+      .insert({          lead_id: leadId,
         activity_type: activityType,
         activity_data: {
           interest_type: interestType,
@@ -203,9 +191,7 @@ serve(async (req) => {
     // Track conversion event with site isolation
     await supabaseClient
       .from('conversion_events')
-      .insert({
-        site_id: siteId,  // CRITICAL: Include site_id
-        event_type: 'lead_captured',
+      .insert({          event_type: 'lead_captured',
         event_step: 1,
         funnel_name: 'marketing_funnel',
         utm_source,
@@ -224,9 +210,7 @@ serve(async (req) => {
     if (isNewLead && (utm_source || utm_medium || utm_campaign)) {
       await supabaseClient
         .from('user_attribution')
-        .insert({
-          site_id: siteId,  // CRITICAL: Include site_id
-          // Note: We'll need to link this later when user signs up
+        .insert({            // Note: We'll need to link this later when user signs up
           first_touch_utm_source: utm_source,
           first_touch_utm_medium: utm_medium,
           first_touch_utm_campaign: utm_campaign,

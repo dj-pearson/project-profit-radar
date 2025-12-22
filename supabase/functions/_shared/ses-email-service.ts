@@ -113,9 +113,22 @@ export async function sendEmail(
 }
 
 /**
- * Get site email configuration from database or defaults
+ * Get site email configuration - single-tenant version
+ * Always returns default BuildDesk configuration
  */
 export async function getSiteEmailConfig(
+  supabase?: any
+): Promise<SiteEmailConfig> {
+  // Single-tenant: always return default config
+  console.log('[SES] Using default BuildDesk configuration');
+  return DEFAULT_SITE_CONFIG;
+}
+
+/**
+ * DEPRECATED: Multi-tenant version (kept for reference)
+ * Get site email configuration from database or defaults
+ */
+export async function getSiteEmailConfigMultiTenant(
   supabase: any,
   siteId: string
 ): Promise<SiteEmailConfig> {

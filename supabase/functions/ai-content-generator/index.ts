@@ -14,14 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId } = authContext;
-    console.log('[AI-CONTENT-GENERATOR] User authenticated', { userId: user.id, siteId });
+    const { user } = authContext;
+    console.log('[AI-CONTENT-GENERATOR] User authenticated', { userId: user.id });
 
     const { prompt, system_prompt, model_alias, content_type } = await req.json();
 

@@ -18,16 +18,14 @@ import { generateAuthEmail, generateOTPCode } from '../_shared/auth-email-templa
 
 // Validation schemas
 const requestResetSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  siteId: z.string().uuid('Invalid site ID'),
-});
+  email: z.string().email('Invalid email address')
+  });
 
 const verifyResetSchema = z.object({
   email: z.string().email('Invalid email address'),
   otpCode: z.string().length(6, 'OTP code must be 6 digits'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
-  siteId: z.string().uuid('Invalid site ID'),
-});
+  newPassword: z.string().min(8, 'Password must be at least 8 characters')
+  });
 
 const OTP_EXPIRY_MINUTES = 10;
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
@@ -93,7 +91,7 @@ async function handleRequestReset(
     );
   }
 
-  const { email, siteId } = validation.data;
+  const { email } = validation.data;
 
   console.log(`[ResetPasswordOTP] Request reset for ${email} on site ${siteId}`);
 
@@ -101,11 +99,11 @@ async function handleRequestReset(
   const { data: site, error: siteError } = await supabaseAdmin
     .from('sites')
     .select('id, key, name')
-    .eq('id', siteId)
+    .eq('id')
     .single();
 
   if (siteError || !site) {
-    console.error('[ResetPasswordOTP] Invalid site:', siteId);
+    console.error('[ResetPasswordOTP] Invalid site:');
     return new Response(
       JSON.stringify({ error: 'Invalid site' }),
       { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
@@ -122,7 +120,7 @@ async function handleRequestReset(
       JSON.stringify({
         success: true,
         message: 'If an account exists with this email, a verification code will be sent.',
-        expiresInMinutes: OTP_EXPIRY_MINUTES,
+        expiresInMinutes: OTP_EXPIRY_MINUTES
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
@@ -133,7 +131,6 @@ async function handleRequestReset(
   const { data: recentCodes } = await supabaseAdmin
     .from('auth_otp_codes')
     .select('id')
-    .eq('site_id', siteId)
     .ilike('email', email)
     .eq('token_type', 'reset_password')
     .gte('created_at', oneHourAgo);
@@ -157,14 +154,14 @@ async function handleRequestReset(
 
   // Store OTP in database
   const { data: otpId, error: otpError } = await supabaseAdmin.rpc('create_otp_token', {
-    p_site_id: siteId,
+    p_
     p_email: email.toLowerCase(),
     p_otp_code: otpCode,
     p_token_type: 'reset_password',
     p_expires_in_minutes: OTP_EXPIRY_MINUTES,
     p_metadata: { user_id: authUser.user.id },
     p_ip: clientIP,
-    p_user_agent: userAgent,
+    p_user_agent: userAgent
   });
 
   if (otpError) {
@@ -175,8 +172,8 @@ async function handleRequestReset(
     );
   }
 
-  // Get site email configuration
-  const siteConfig = await getSiteEmailConfig(supabaseAdmin, siteId);
+  // Get email configuration (single-tenant)
+  const siteConfig = await getSiteEmailConfig();
 
   // Generate email content
   const emailContent = generateAuthEmail(
@@ -184,7 +181,7 @@ async function handleRequestReset(
       type: 'reset_password',
       recipientEmail: email,
       otpCode,
-      expiresInMinutes: OTP_EXPIRY_MINUTES,
+      expiresInMinutes: OTP_EXPIRY_MINUTES
     },
     siteConfig
   );
@@ -194,7 +191,7 @@ async function handleRequestReset(
     {
       to: email,
       subject: emailContent.subject,
-      html: emailContent.html,
+      html: emailContent.html
     },
     siteConfig
   );
@@ -219,7 +216,7 @@ async function handleRequestReset(
     JSON.stringify({
       success: true,
       message: 'Verification code sent. Please check your email.',
-      expiresInMinutes: OTP_EXPIRY_MINUTES,
+      expiresInMinutes: OTP_EXPIRY_MINUTES
     }),
     { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
   );
@@ -241,16 +238,16 @@ async function handleVerifyReset(
     );
   }
 
-  const { email, otpCode, newPassword, siteId } = validation.data;
+  const { email, otpCode, newPassword } = validation.data;
 
   console.log(`[ResetPasswordOTP] Verify reset for ${email}`);
 
   // Verify OTP code
   const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {
-    p_site_id: siteId,
+    p_
     p_email: email,
     p_otp_code: otpCode,
-    p_token_type: 'reset_password',
+    p_token_type: 'reset_password'
   });
 
   if (verifyError) {
@@ -300,7 +297,7 @@ async function handleVerifyReset(
   return new Response(
     JSON.stringify({
       success: true,
-      message: 'Password has been reset successfully. You can now sign in.',
+      message: 'Password has been reset successfully. You can now sign in.'
     }),
     { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
   );

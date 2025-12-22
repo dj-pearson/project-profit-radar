@@ -15,13 +15,12 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { siteId, supabase: supabaseClient } = authContext;
+    const {  supabase: supabaseClient } = authContext;
     console.log('[SEND-INTERVENTION-EMAIL] Auth context initialized', { siteId });
 
     const { userId, predictionId } = await req.json();
@@ -30,7 +29,7 @@ serve(async (req) => {
     const { data: user, error: userError } = await supabaseClient
       .from("user_profiles")
       .select("email, first_name, last_name")
-      .eq("site_id", siteId)  // CRITICAL: Site isolation
+      .eq("site_id")  // CRITICAL: Site isolation
       .eq("id", userId)
       .single();
 
@@ -39,7 +38,7 @@ serve(async (req) => {
     const { data: prediction, error: predictionError } = await supabaseClient
       .from("churn_predictions")
       .select("*")
-      .eq("site_id", siteId)  // CRITICAL: Site isolation
+      .eq("site_id")  // CRITICAL: Site isolation
       .eq("id", predictionId)
       .single();
 
@@ -133,8 +132,7 @@ serve(async (req) => {
     }
 
     // Log intervention in database with site isolation
-    await supabaseClient.from("intervention_logs").insert({
-      site_id: siteId,  // CRITICAL: Site isolation
+    await supabaseClient.from("intervention_logs").insert({  // CRITICAL: Site isolation
       user_id: userId,
       prediction_id: predictionId,
       intervention_type: "email",

@@ -23,8 +23,7 @@ serve(async (req) => {
     const { topic, company_id, queue_id, action, customSettings, site_id, site_key } = body;
 
     // Handle both payload formats:
-    // 1. Direct format: { topic, company_id, queue_id, site_id }
-    // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...}, site_key }
+        // 2. Make.com format: { action: "generate-auto-content", topic: "", customSettings: {...}, site_key }
 
     let finalTopic = topic;
     let finalCompanyId = company_id || customSettings?.company_id;
@@ -35,8 +34,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Resolve site_id for multi-tenant isolation
-    let siteId = site_id || customSettings?.site_id;
+        let siteId = site_id || customSettings?.site_id;
     if (!siteId && site_key) {
       const { data: siteData } = await supabaseClient
         .from('sites')
@@ -48,17 +46,12 @@ serve(async (req) => {
     }
 
     // Fall back to default BuildDesk site if no site specified
-    if (!siteId) {
-      const { data: defaultSite } = await supabaseClient
+    = await supabaseClient
         .from('sites')
         .select('id')
         .eq('key', 'builddesk')
         .single();
       siteId = defaultSite?.id;
-    }
-
-    if (!siteId) {
-      throw new Error('Site not found. Provide site_id or site_key in the request body.');
     }
 
     logStep("Site context resolved", { siteId });
@@ -82,7 +75,6 @@ serve(async (req) => {
       topic: finalTopic,
       company_id: finalCompanyId,
       queue_id: finalQueueId,
-      site_id: siteId,
       action: action || 'direct'
     });
 
@@ -92,13 +84,12 @@ serve(async (req) => {
       const { data: companies } = await supabaseClient
         .from('companies')
         .select('id')
-        .eq('site_id', siteId)
         .limit(1)
         .single();
 
       if (companies) {
         finalCompanyId = companies.id;
-        logStep("Using default company", { company_id: finalCompanyId, site_id: siteId });
+        logStep("Using default company", { company_id: finalCompanyId, });
       } else {
         throw new Error('No company found for this site. Please provide a company_id.');
       }
@@ -116,9 +107,7 @@ serve(async (req) => {
       contentLength: blogContent.content?.length || 0
     });
 
-    // Store the generated content in database with site_id for multi-tenant isolation
-    const insertData = {
-      site_id: siteId,
+        const insertData = {
       company_id: finalCompanyId,
       queue_id: finalQueueId,
       title: blogContent.title,
@@ -148,8 +137,7 @@ serve(async (req) => {
     
     logStep("Blog post created successfully", { id: blogPost.id, title: blogPost.title });
 
-    // Update queue item status to completed with site_id isolation (only if queue_id was provided)
-    if (finalQueueId) {
+        if (finalQueueId) {
       const { error: updateError } = await supabaseClient
         .from('blog_generation_queue')
         .update({
@@ -157,7 +145,6 @@ serve(async (req) => {
           completed_at: new Date().toISOString(),
           error_message: null
         })
-        .eq('site_id', siteId)
         .eq('id', finalQueueId);
 
       if (updateError) {

@@ -86,7 +86,7 @@ function detectEnvironment(): RuntimeEnvironment {
  * Unified Biometric Authentication Hook
  */
 export function useUnifiedBiometric(): UseUnifiedBiometricReturn {
-  const { user, siteId } = useAuth();
+  const { user } = useAuth();
   const [state, setState] = useState<UnifiedBiometricState>({
     isLoading: true,
     capabilities: null,

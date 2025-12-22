@@ -49,7 +49,7 @@ interface DeviceTrustState {
 }
 
 export const useDeviceTrust = () => {
-  const { user, siteId } = useAuth();
+  const { user } = useAuth();
   const [state, setState] = useState<DeviceTrustState>({
     trustedDevices: [],
     activeSessions: [],
@@ -205,7 +205,6 @@ export const useDeviceTrust = () => {
         .from('trusted_devices')
         .upsert({
           user_id: user.id,
-          site_id: siteId,
           device_id: deviceId,
           device_name: deviceName || `${navigator.platform} - ${parseUserAgent(navigator.userAgent).browser}`,
           device_type: deviceType,

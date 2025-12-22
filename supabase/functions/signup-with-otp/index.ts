@@ -6,7 +6,7 @@
  *
  * Flow:
  * 1. Create user via Admin API (email_confirm: false)
- * 2. Create user profile with site_id isolation
+ * 2. Create user profile
  * 3. Generate OTP and store in auth_otp_codes table
  * 4. Send OTP email via Amazon SES
  */
@@ -24,7 +24,6 @@ const signupSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  siteId: z.string().uuid('Invalid site ID'),
   role: z.string().optional().default('admin'),
 });
 
@@ -67,30 +66,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, password, firstName, lastName, siteId, role } = validation.data;
+    const { email, password, firstName, lastName, role } = validation.data;
 
-    console.log(`[SignupWithOTP] Processing signup for ${email} on site ${siteId}`);
+    console.log(`[SignupWithOTP] Processing signup for ${email}`);
 
     // Create service role Supabase client (bypasses RLS)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
-
-    // Verify site exists
-    const { data: site, error: siteError } = await supabaseAdmin
-      .from('sites')
-      .select('id, key, name')
-      .eq('id', siteId)
-      .single();
-
-    if (siteError || !site) {
-      console.error('[SignupWithOTP] Invalid site:', siteId);
-      return new Response(
-        JSON.stringify({ error: 'Invalid site' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
 
     // Check if user already exists
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
@@ -113,10 +97,8 @@ const handler = async (req: Request): Promise<Response> => {
       user_metadata: {
         first_name: firstName,
         last_name: lastName,
-        site_id: siteId,
       },
       app_metadata: {
-        site_id: siteId,
       },
     });
 
@@ -135,7 +117,6 @@ const handler = async (req: Request): Promise<Response> => {
       .from('user_profiles')
       .insert({
         id: newUser.user.id,
-        site_id: siteId,
         first_name: firstName,
         last_name: lastName,
         email: email.toLowerCase(),
@@ -159,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Store OTP in database
     const { data: otpId, error: otpError } = await supabaseAdmin.rpc('create_otp_token', {
-      p_site_id: siteId,
+      p_
       p_email: email.toLowerCase(),
       p_otp_code: otpCode,
       p_token_type: 'confirm_signup',
@@ -179,8 +160,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get site email configuration
-    const siteConfig = await getSiteEmailConfig(supabaseAdmin, siteId);
+    // Get email configuration (single-tenant)
+    const siteConfig = await getSiteEmailConfig();
 
     // Generate email content
     const emailContent = generateAuthEmail(

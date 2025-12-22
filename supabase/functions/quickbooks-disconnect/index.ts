@@ -19,14 +19,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log("[QUICKBOOKS-DISCONNECT] User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log("[QUICKBOOKS-DISCONNECT] User authenticated", { userId: user.id });
 
     const { company_id } = await req.json()
 
@@ -38,7 +37,7 @@ serve(async (req) => {
     const { data: integration, error: fetchError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('access_token, refresh_token')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .single()
 
@@ -91,7 +90,7 @@ serve(async (req) => {
         last_error_message: null,
         updated_at: new Date().toISOString(),
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('company_id', company_id)
 
     if (updateError) {
@@ -101,8 +100,7 @@ serve(async (req) => {
     // Log the disconnection with site isolation
     await supabaseClient
       .from('quickbooks_sync_logs')
-      .insert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      .insert({  // CRITICAL: Site isolation
         company_id: company_id,
         sync_type: 'disconnection',
         status: 'success',

@@ -68,7 +68,6 @@ export function useLeads(filters?: LeadFilters, options?: Omit<UseQueryOptions<L
       let query = supabase
         .from('leads')
         .select('*')
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false });
 
       // Apply filters
@@ -115,7 +114,6 @@ export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptio
         .from('leads')
         .select('*')
         .eq('id', leadId)
-        .eq('site_id', siteId)
         .single();
 
       if (error) throw error;
@@ -136,7 +134,7 @@ export function useCreateLead() {
 
       const { data, error } = await supabase
         .from('leads')
-        .insert({ ...lead, site_id: siteId })
+        .insert({ ...lead, })
         .select()
         .single();
 
@@ -165,7 +163,6 @@ export function useUpdateLead() {
         .from('leads')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .select()
         .single();
 
@@ -222,7 +219,7 @@ export interface ContactFilters {
 }
 
 export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOptions<Contact[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -233,7 +230,6 @@ export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOpt
       let query = supabase
         .from('contacts')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
@@ -263,7 +259,7 @@ export function useContacts(filters?: ContactFilters, options?: Omit<UseQueryOpt
 }
 
 export function useContact(contactId: string | undefined, options?: Omit<UseQueryOptions<Contact | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -275,7 +271,6 @@ export function useContact(contactId: string | undefined, options?: Omit<UseQuer
         .from('contacts')
         .select('*')
         .eq('id', contactId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .single();
 
@@ -288,7 +283,7 @@ export function useContact(contactId: string | undefined, options?: Omit<UseQuer
 }
 
 export function useCreateContact() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -298,7 +293,7 @@ export function useCreateContact() {
 
       const { data, error } = await supabase
         .from('contacts')
-        .insert({ ...contact, site_id: siteId, company_id: companyId })
+        .insert({ ...contact, company_id: companyId })
         .select()
         .single();
 
@@ -316,7 +311,7 @@ export function useCreateContact() {
 }
 
 export function useUpdateContact() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -328,7 +323,6 @@ export function useUpdateContact() {
         .from('contacts')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .select()
         .single();
@@ -348,7 +342,7 @@ export function useUpdateContact() {
 }
 
 export function useDeleteContact() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -360,7 +354,6 @@ export function useDeleteContact() {
         .from('contacts')
         .delete()
         .eq('id', contactId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -389,7 +382,7 @@ export interface OpportunityFilters {
 }
 
 export function useOpportunities(filters?: OpportunityFilters, options?: Omit<UseQueryOptions<Opportunity[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -400,7 +393,6 @@ export function useOpportunities(filters?: OpportunityFilters, options?: Omit<Us
       let query = supabase
         .from('opportunities')
         .select('*, contact:contacts(*)')
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
@@ -433,7 +425,7 @@ export function useOpportunities(filters?: OpportunityFilters, options?: Omit<Us
 }
 
 export function useOpportunity(opportunityId: string | undefined, options?: Omit<UseQueryOptions<Opportunity | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -445,7 +437,6 @@ export function useOpportunity(opportunityId: string | undefined, options?: Omit
         .from('opportunities')
         .select('*, contact:contacts(*)')
         .eq('id', opportunityId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .single();
 
@@ -458,7 +449,7 @@ export function useOpportunity(opportunityId: string | undefined, options?: Omit
 }
 
 export function useCreateOpportunity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -468,7 +459,7 @@ export function useCreateOpportunity() {
 
       const { data, error } = await supabase
         .from('opportunities')
-        .insert({ ...opportunity, site_id: siteId, company_id: companyId })
+        .insert({ ...opportunity, company_id: companyId })
         .select()
         .single();
 
@@ -486,7 +477,7 @@ export function useCreateOpportunity() {
 }
 
 export function useUpdateOpportunity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -498,7 +489,6 @@ export function useUpdateOpportunity() {
         .from('opportunities')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .select()
         .single();
@@ -518,7 +508,7 @@ export function useUpdateOpportunity() {
 }
 
 export function useDeleteOpportunity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -530,7 +520,6 @@ export function useDeleteOpportunity() {
         .from('opportunities')
         .delete()
         .eq('id', opportunityId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -558,7 +547,7 @@ export interface DealFilters {
 }
 
 export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<Deal[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -569,7 +558,6 @@ export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<D
       let query = supabase
         .from('deals')
         .select('*, contact:contacts(*), primary_contact:contacts!deals_primary_contact_id_fkey(*)')
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
@@ -599,7 +587,7 @@ export function useDeals(filters?: DealFilters, options?: Omit<UseQueryOptions<D
 }
 
 export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptions<Deal | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -611,7 +599,6 @@ export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptio
         .from('deals')
         .select('*, contact:contacts(*)')
         .eq('id', dealId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .single();
 
@@ -624,7 +611,7 @@ export function useDeal(dealId: string | undefined, options?: Omit<UseQueryOptio
 }
 
 export function useCreateDeal() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -634,7 +621,7 @@ export function useCreateDeal() {
 
       const { data, error } = await supabase
         .from('deals')
-        .insert({ ...deal, site_id: siteId, company_id: companyId })
+        .insert({ ...deal, company_id: companyId })
         .select()
         .single();
 
@@ -652,7 +639,7 @@ export function useCreateDeal() {
 }
 
 export function useUpdateDeal() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -664,7 +651,6 @@ export function useUpdateDeal() {
         .from('deals')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .select()
         .single();
@@ -684,7 +670,7 @@ export function useUpdateDeal() {
 }
 
 export function useDeleteDeal() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -696,7 +682,6 @@ export function useDeleteDeal() {
         .from('deals')
         .delete()
         .eq('id', dealId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -733,7 +718,6 @@ export function useEmailCampaigns(filters?: CampaignFilters, options?: Omit<UseQ
       let query = supabase
         .from('email_campaigns')
         .select('*')
-        .eq('site_id', siteId)
         .order('created_at', { ascending: false });
 
       if (filters?.campaign_type) {
@@ -770,7 +754,6 @@ export function useEmailCampaign(campaignId: string | undefined, options?: Omit<
         .from('email_campaigns')
         .select('*')
         .eq('id', campaignId)
-        .eq('site_id', siteId)
         .single();
 
       if (error) throw error;
@@ -791,7 +774,7 @@ export function useCreateEmailCampaign() {
 
       const { data, error } = await supabase
         .from('email_campaigns')
-        .insert({ ...campaign, site_id: siteId })
+        .insert({ ...campaign, })
         .select()
         .single();
 
@@ -820,7 +803,6 @@ export function useUpdateEmailCampaign() {
         .from('email_campaigns')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .select()
         .single();
 
@@ -876,7 +858,7 @@ export interface TemplateFilters {
 }
 
 export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQueryOptions<EmailTemplate[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -887,7 +869,6 @@ export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQ
       let query = supabase
         .from('email_templates')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
@@ -914,7 +895,7 @@ export function useEmailTemplates(filters?: TemplateFilters, options?: Omit<UseQ
 }
 
 export function useCreateEmailTemplate() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -924,7 +905,7 @@ export function useCreateEmailTemplate() {
 
       const { data, error } = await supabase
         .from('email_templates')
-        .insert({ ...template, site_id: siteId, company_id: companyId })
+        .insert({ ...template, company_id: companyId })
         .select()
         .single();
 
@@ -942,7 +923,7 @@ export function useCreateEmailTemplate() {
 }
 
 export function useUpdateEmailTemplate() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -954,7 +935,6 @@ export function useUpdateEmailTemplate() {
         .from('email_templates')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .select()
         .single();
@@ -973,7 +953,7 @@ export function useUpdateEmailTemplate() {
 }
 
 export function useDeleteEmailTemplate() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -985,7 +965,6 @@ export function useDeleteEmailTemplate() {
         .from('email_templates')
         .delete()
         .eq('id', templateId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -1011,7 +990,7 @@ export interface WorkflowFilters {
 }
 
 export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit<UseQueryOptions<WorkflowDefinition[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -1022,7 +1001,6 @@ export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit
       let query = supabase
         .from('workflow_definitions')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
@@ -1046,7 +1024,7 @@ export function useWorkflowDefinitions(filters?: WorkflowFilters, options?: Omit
 }
 
 export function useWorkflowDefinition(workflowId: string | undefined, options?: Omit<UseQueryOptions<WorkflowDefinition | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -1058,7 +1036,6 @@ export function useWorkflowDefinition(workflowId: string | undefined, options?: 
         .from('workflow_definitions')
         .select('*')
         .eq('id', workflowId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .single();
 
@@ -1071,7 +1048,7 @@ export function useWorkflowDefinition(workflowId: string | undefined, options?: 
 }
 
 export function useCreateWorkflowDefinition() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1081,7 +1058,7 @@ export function useCreateWorkflowDefinition() {
 
       const { data, error } = await supabase
         .from('workflow_definitions')
-        .insert({ ...workflow, site_id: siteId, company_id: companyId })
+        .insert({ ...workflow, company_id: companyId })
         .select()
         .single();
 
@@ -1099,7 +1076,7 @@ export function useCreateWorkflowDefinition() {
 }
 
 export function useUpdateWorkflowDefinition() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1111,7 +1088,6 @@ export function useUpdateWorkflowDefinition() {
         .from('workflow_definitions')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .select()
         .single();
@@ -1131,7 +1107,7 @@ export function useUpdateWorkflowDefinition() {
 }
 
 export function useDeleteWorkflowDefinition() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1143,7 +1119,6 @@ export function useDeleteWorkflowDefinition() {
         .from('workflow_definitions')
         .delete()
         .eq('id', workflowId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -1171,7 +1146,7 @@ export interface ActivityFilters {
 }
 
 export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQueryOptions<CRMActivity[], Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -1182,7 +1157,6 @@ export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQu
       let query = supabase
         .from('crm_activities')
         .select('*, lead:leads(*)')
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .order('activity_date', { ascending: false });
 
@@ -1212,7 +1186,7 @@ export function useCRMActivities(filters?: ActivityFilters, options?: Omit<UseQu
 }
 
 export function useCreateCRMActivity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1222,7 +1196,7 @@ export function useCreateCRMActivity() {
 
       const { data, error } = await supabase
         .from('crm_activities')
-        .insert({ ...activity, site_id: siteId, company_id: companyId })
+        .insert({ ...activity, company_id: companyId })
         .select()
         .single();
 
@@ -1240,7 +1214,7 @@ export function useCreateCRMActivity() {
 }
 
 export function useUpdateCRMActivity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1252,7 +1226,6 @@ export function useUpdateCRMActivity() {
         .from('crm_activities')
         .update(updates)
         .eq('id', id)
-        .eq('site_id', siteId)
         .eq('company_id', companyId)
         .select()
         .single();
@@ -1271,7 +1244,7 @@ export function useUpdateCRMActivity() {
 }
 
 export function useDeleteCRMActivity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1283,7 +1256,6 @@ export function useDeleteCRMActivity() {
         .from('crm_activities')
         .delete()
         .eq('id', activityId)
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (error) throw error;
@@ -1315,7 +1287,7 @@ export interface PipelineStats {
 }
 
 export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
 
   return useQuery({
@@ -1335,7 +1307,6 @@ export function usePipelineStats(options?: Omit<UseQueryOptions<PipelineStats, E
       const { data: opportunities, error: oppsError } = await supabase
         .from('opportunities')
         .select('id, stage, estimated_value')
-        .eq('site_id', siteId)
         .eq('company_id', companyId);
 
       if (oppsError) throw oppsError;
@@ -1412,7 +1383,7 @@ export interface LeadScore {
 }
 
 export function useLeadScore(leadId: string | undefined, options?: Omit<UseQueryOptions<LeadScore | null, Error>, 'queryKey' | 'queryFn'>) {
-  const { siteId, session } = useAuth();
+  const {  session } = useAuth();
 
   return useQuery({
     queryKey: ['lead_score', leadId, siteId],
@@ -1449,7 +1420,7 @@ export function useLeadScore(leadId: string | undefined, options?: Omit<UseQuery
 // ============================================================================
 
 export function useConvertLeadToOpportunity() {
-  const { siteId, userProfile } = useAuth();
+  const {  userProfile } = useAuth();
   const companyId = userProfile?.company_id;
   const queryClient = useQueryClient();
 
@@ -1468,7 +1439,6 @@ export function useConvertLeadToOpportunity() {
         .from('leads')
         .select('*')
         .eq('id', leadId)
-        .eq('site_id', siteId)
         .single();
 
       if (leadError) throw leadError;
@@ -1484,7 +1454,6 @@ export function useConvertLeadToOpportunity() {
           stage: opportunityData.stage || 'qualification',
           risk_level: opportunityData.risk_level || 'medium',
           lead_id: leadId,
-          site_id: siteId,
           company_id: companyId,
           ...opportunityData,
         })
@@ -1541,7 +1510,6 @@ export function useBulkUpdateLeads() {
         .from('leads')
         .update(updates)
         .in('id', leadIds)
-        .eq('site_id', siteId)
         .select();
 
       if (error) throw error;
@@ -1600,7 +1568,6 @@ export function useBulkUpdateContacts() {
         .from('contacts')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', contactIds)
-        .eq('site_id', siteId)
         .select();
 
       if (error) throw error;
@@ -1656,7 +1623,6 @@ export function useMergeContacts() {
         .from('contacts')
         .select('*')
         .eq('id', primaryId)
-        .eq('site_id', siteId)
         .single();
 
       if (primaryError) throw primaryError;
@@ -1732,7 +1698,6 @@ export function useBulkUpdateOpportunities() {
         .from('opportunities')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', opportunityIds)
-        .eq('site_id', siteId)
         .select();
 
       if (error) throw error;
@@ -1776,7 +1741,7 @@ export function useBulkDeleteOpportunities() {
 }
 
 export function useConvertOpportunityToDeal() {
-  const { siteId, user } = useAuth();
+  const {  user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -1788,7 +1753,6 @@ export function useConvertOpportunityToDeal() {
         .from('opportunities')
         .select('*')
         .eq('id', opportunityId)
-        .eq('site_id', siteId)
         .single();
 
       if (fetchError) throw fetchError;
@@ -1797,7 +1761,6 @@ export function useConvertOpportunityToDeal() {
       const { data: deal, error: createError } = await supabase
         .from('deals')
         .insert({
-          site_id: siteId,
           company_id: opportunity.company_id,
           opportunity_id: opportunityId,
           contact_id: opportunity.contact_id,
@@ -1854,7 +1817,6 @@ export function useBulkUpdateDeals() {
         .from('deals')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .in('id', dealIds)
-        .eq('site_id', siteId)
         .select();
 
       if (error) throw error;
@@ -1925,7 +1887,6 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
       const { data: leads } = await supabase
         .from('leads')
         .select('id, first_name, last_name, email, company_name')
-        .eq('site_id', siteId)
         .or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},email.ilike.${searchPattern},company_name.ilike.${searchPattern}`)
         .limit(10);
 
@@ -1942,7 +1903,6 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
       const { data: contacts } = await supabase
         .from('contacts')
         .select('id, first_name, last_name, email, company')
-        .eq('site_id', siteId)
         .or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},email.ilike.${searchPattern},company.ilike.${searchPattern}`)
         .limit(10);
 
@@ -1959,7 +1919,6 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
       const { data: opportunities } = await supabase
         .from('opportunities')
         .select('id, name, value')
-        .eq('site_id', siteId)
         .ilike('name', searchPattern)
         .limit(10);
 
@@ -1976,7 +1935,6 @@ export function useCRMGlobalSearch(query: string, options?: { enabled?: boolean 
       const { data: deals } = await supabase
         .from('deals')
         .select('id, deal_name, deal_value')
-        .eq('site_id', siteId)
         .ilike('deal_name', searchPattern)
         .limit(10);
 
@@ -2022,10 +1980,10 @@ export function useCRMDashboardStats(options?: { enabled?: boolean }) {
         supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
         supabase.from('opportunities').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
         supabase.from('deals').select('*', { count: 'exact', head: true }).eq('site_id', siteId),
-        supabase.from('leads').select('id, created_at').eq('site_id', siteId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        supabase.from('crm_activities').select('id, created_at').eq('site_id', siteId).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        supabase.from('opportunities').select('value').eq('site_id', siteId).not('value', 'is', null),
-        supabase.from('deals').select('deal_value').eq('site_id', siteId).not('deal_value', 'is', null),
+        supabase.from('leads').select('id, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('crm_activities').select('id, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('opportunities').select('value').not('value', 'is', null),
+        supabase.from('deals').select('deal_value').not('deal_value', 'is', null),
       ]);
 
       const totalOpportunityValue = opportunityValues?.reduce((sum, o) => sum + (o.value || 0), 0) || 0;

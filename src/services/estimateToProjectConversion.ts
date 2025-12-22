@@ -73,8 +73,7 @@ class EstimateToProjectConversionService {
       }
 
       // 3. Prepare project data from estimate
-      const projectData: any = {
-        site_id: siteId,  // CRITICAL: Site isolation
+      const projectData: any = {  // CRITICAL: Site isolation
         company_id: companyId,
         name: customizations?.name || estimate.title,
         client_name: estimate.client_name,
@@ -132,8 +131,7 @@ class EstimateToProjectConversionService {
       if (estimate.notes) {
         await supabase
           .from('project_notes')
-          .insert({
-            site_id: siteId,  // CRITICAL: Site isolation
+          .insert({  // CRITICAL: Site isolation
             project_id: newProject.id,
             note: `Estimate Notes: ${estimate.notes}`,
             created_by: (await supabase.auth.getUser()).data.user?.id
@@ -165,8 +163,7 @@ class EstimateToProjectConversionService {
   ): Promise<void> {
     try {
       // Group line items by category for job cost structure
-      const costEntries = lineItems.map((item) => ({
-        site_id: siteId,  // CRITICAL: Site isolation
+      const costEntries = lineItems.map((item) => ({  // CRITICAL: Site isolation
         project_id: projectId,
         company_id: companyId,
         cost_code: item.category || 'General',

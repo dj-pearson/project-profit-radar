@@ -37,7 +37,7 @@ interface ChatChannel {
 }
 
 export const useRealtimeChat = (channelId?: string) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [channels, setChannels] = useState<ChatChannel[]>([]);
@@ -54,7 +54,6 @@ export const useRealtimeChat = (channelId?: string) => {
       const { data: memberChannels, error: memberError } = await supabase
         .from('chat_channel_members')
         .select('channel_id')
-        .eq('site_id', siteId)
         .eq('user_id', userProfile.id);
 
       if (memberError) throw memberError;
@@ -69,7 +68,6 @@ export const useRealtimeChat = (channelId?: string) => {
       const { data, error } = await supabase
         .from('chat_channels')
         .select('*')
-        .eq('site_id', siteId)
         .in('id', channelIds)
         .eq('company_id', userProfile.company_id)
         .is('archived_at', null)
@@ -103,7 +101,6 @@ export const useRealtimeChat = (channelId?: string) => {
             email
           )
         `)
-        .eq('site_id', siteId)
         .eq('channel_id', channelId)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -115,7 +112,6 @@ export const useRealtimeChat = (channelId?: string) => {
       await supabase
         .from('chat_channel_members')
         .update({ last_read_at: new Date().toISOString() })
-        .eq('site_id', siteId)
         .eq('channel_id', channelId)
         .eq('user_id', userProfile.id);
 
@@ -140,7 +136,6 @@ export const useRealtimeChat = (channelId?: string) => {
       const { error } = await supabase
         .from('chat_messages')
         .insert({
-          site_id: siteId,
           channel_id: activeChannel.id,
           user_id: userProfile.id,
           company_id: userProfile.company_id,
@@ -189,7 +184,6 @@ export const useRealtimeChat = (channelId?: string) => {
       const { error } = await supabase
         .from('chat_messages')
         .insert({
-          site_id: siteId,
           channel_id: activeChannel.id,
           user_id: userProfile.id,
           company_id: userProfile.company_id,
@@ -221,7 +215,6 @@ export const useRealtimeChat = (channelId?: string) => {
       const { data, error } = await supabase
         .from('chat_channels')
         .insert({
-          site_id: siteId,
           company_id: userProfile.company_id,
           project_id: projectId,
           name,
@@ -239,7 +232,6 @@ export const useRealtimeChat = (channelId?: string) => {
       await supabase
         .from('chat_channel_members')
         .insert({
-          site_id: siteId,
           channel_id: data.id,
           user_id: userProfile.id,
           company_id: userProfile.company_id,

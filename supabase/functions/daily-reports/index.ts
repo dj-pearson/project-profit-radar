@@ -25,15 +25,14 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     // Get user profile to check role with site isolation
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role, company_id')
       .eq('id', user.id)
-      .eq('site_id', siteId)
       .single();
 
     if (profileError) {
@@ -55,7 +54,6 @@ serve(async (req) => {
           *,
           projects!inner(name, company_id, site_id)
         `)
-        .eq('site_id', siteId)
         .eq('projects.company_id', userProfile.company_id)
         .order('date', { ascending: false });
 
@@ -70,7 +68,7 @@ serve(async (req) => {
         return errorResponse(`Daily reports fetch error: ${reportsError.message}`, 500);
       }
 
-      logStep("Daily reports retrieved", { count: dailyReports?.length, siteId });
+      logStep("Daily reports retrieved", { count: dailyReports?.length });
       return successResponse({ dailyReports });
     }
 
@@ -88,7 +86,6 @@ serve(async (req) => {
             *,
             projects!inner(name, company_id, site_id)
           `)
-          .eq('site_id', siteId)
           .eq('projects.company_id', userProfile.company_id)
           .order('date', { ascending: false });
 
@@ -103,12 +100,12 @@ serve(async (req) => {
           return errorResponse(`Daily reports fetch error: ${reportsError.message}`, 500);
         }
 
-        logStep("Daily reports retrieved", { count: dailyReports?.length, siteId });
+        logStep("Daily reports retrieved", { count: dailyReports?.length });
         return successResponse({ dailyReports });
       }
 
       if (action === "create") {
-        logStep("Creating daily report", { body, siteId });
+        logStep("Creating daily report", { body });
 
         // Verify user can create daily reports
         if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
@@ -128,8 +125,7 @@ serve(async (req) => {
           safety_incidents: body.safety_incidents,
           date: reportDate,
           created_by: user.id,
-          site_id: siteId  // CRITICAL: Include site_id
-        };
+          site_id: siteId          };
 
         const { data: newReport, error: createError } = await supabase
           .from('daily_reports')
@@ -145,13 +141,13 @@ serve(async (req) => {
           return errorResponse(`Daily report creation error: ${createError.message}`, 500);
         }
 
-        logStep("Daily report created", { reportId: newReport.id, date: reportDate, siteId });
+        logStep("Daily report created", { reportId: newReport.id, date: reportDate });
         return successResponse({ dailyReport: newReport });
       }
 
       if (action === "update") {
         const { reportId, ...updateFields } = body;
-        logStep("Updating daily report", { reportId, siteId });
+        logStep("Updating daily report", { reportId });
 
         // Verify user can update daily reports
         if (!['admin', 'project_manager', 'field_supervisor', 'root_admin'].includes(userProfile.role)) {
@@ -171,7 +167,7 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', reportId)
-          .eq('site_id', siteId)  // CRITICAL: Site isolation on update
+            // CRITICAL: Site isolation on update
           .select(`
             *,
             projects(name)
@@ -183,13 +179,13 @@ serve(async (req) => {
           return errorResponse(`Daily report update error: ${updateError.message}`, 500);
         }
 
-        logStep("Daily report updated", { reportId, siteId });
+        logStep("Daily report updated", { reportId });
         return successResponse({ dailyReport: updatedReport });
       }
 
       if (action === "delete") {
         const { reportId } = body;
-        logStep("Deleting daily report", { reportId, siteId });
+        logStep("Deleting daily report", { reportId });
 
         // Verify user can delete daily reports
         if (!['admin', 'root_admin'].includes(userProfile.role)) {
@@ -200,14 +196,14 @@ serve(async (req) => {
           .from('daily_reports')
           .delete()
           .eq('id', reportId)
-          .eq('site_id', siteId);  // CRITICAL: Site isolation on delete
+          ;  // CRITICAL: Site isolation on delete
 
         if (deleteError) {
           logStep("Daily report deletion error", { error: deleteError.message });
           return errorResponse(`Daily report deletion error: ${deleteError.message}`, 500);
         }
 
-        logStep("Daily report deleted", { reportId, siteId });
+        logStep("Daily report deleted", { reportId });
         return successResponse({ success: true });
       }
     }

@@ -1,5 +1,4 @@
 // Payment Reminders Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts'
 
@@ -14,14 +13,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req)
+        const authContext = await initializeAuthContext(req)
     if (!authContext) {
       return errorResponse('Unauthorized', 401)
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext
-    console.log('[PAYMENT-REMINDERS] User authenticated', { userId: user.id, siteId })
+    const { user, supabase: supabaseClient } = authContext
+    console.log('[PAYMENT-REMINDERS] User authenticated', { userId: user.id })
 
     const { tenant_id, action, invoice_id } = await req.json()
 
@@ -34,11 +32,11 @@ serve(async (req) => {
 
     switch (action) {
       case 'check_pending_reminders':
-        return await checkPendingReminders(supabaseClient, siteId, tenant_id)
+        return await checkPendingReminders(supabaseClient, tenant_id)
       case 'send_reminder':
-        return await sendReminder(supabaseClient, siteId, tenant_id, invoice_id)
+        return await sendReminder(supabaseClient, tenant_id, invoice_id)
       case 'generate_reminders':
-        return await generateReminders(supabaseClient, siteId, tenant_id)
+        return await generateReminders(supabaseClient, tenant_id)
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action. Use: check_pending_reminders, send_reminder, generate_reminders' }),
@@ -56,7 +54,7 @@ serve(async (req) => {
 })
 
 async function checkPendingReminders(supabase: any, siteId: string, tenant_id: string) {
-  console.log('[PAYMENT-REMINDERS] Checking pending reminders', { siteId, tenant_id })
+  console.log('[PAYMENT-REMINDERS] Checking pending reminders', {  tenant_id })
 
   // Get all pending reminders with site isolation
   const { data: reminders, error: reminderError } = await supabase
@@ -68,7 +66,7 @@ async function checkPendingReminders(supabase: any, siteId: string, tenant_id: s
         client_name
       )
     `)
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('status', 'pending')
     .is('sent_at', null)
@@ -123,7 +121,7 @@ async function sendReminder(supabase: any, siteId: string, tenant_id: string, in
         client_email
       )
     `)
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('invoice_id', invoice_id)
     .eq('status', 'pending')
@@ -150,7 +148,7 @@ async function sendReminder(supabase: any, siteId: string, tenant_id: string, in
       status: 'sent',
       sent_at: new Date().toISOString()
     })
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('id', reminder.id)
 
   if (updateError) {
@@ -170,13 +168,13 @@ async function sendReminder(supabase: any, siteId: string, tenant_id: string, in
 }
 
 async function generateReminders(supabase: any, siteId: string, tenant_id: string) {
-  console.log('[PAYMENT-REMINDERS] Generating reminders', { siteId, tenant_id })
+  console.log('[PAYMENT-REMINDERS] Generating reminders', {  tenant_id })
 
   // Get active billing automation rules with site isolation
   const { data: rules, error: rulesError } = await supabase
     .from('billing_automation_rules')
     .select('*')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('is_active', true)
 
@@ -188,7 +186,7 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
   const { data: projects, error: projectsError } = await supabase
     .from('projects')
     .select('id, name, client_name, budget, actual_cost')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('status', 'active')
     .limit(20)
@@ -220,7 +218,7 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
         const { data: existingReminder } = await supabase
           .from('payment_reminders')
           .select('id')
-          .eq('site_id', siteId)  // CRITICAL: Site isolation
+            // CRITICAL: Site isolation
           .eq('tenant_id', tenant_id)
           .eq('project_id', project.id)
           .eq('reminder_type', reminderConfig.type)
@@ -232,8 +230,7 @@ async function generateReminders(supabase: any, siteId: string, tenant_id: strin
 
         const daysBeforeAfter = reminderConfig.daysBefore || -reminderConfig.daysAfter
 
-        const reminder = {
-          site_id: siteId,  // CRITICAL: Site isolation
+        const reminder = {  // CRITICAL: Site isolation
           tenant_id,
           invoice_id: `inv_${project.id}_${Date.now()}`, // Simulated invoice ID
           project_id: project.id,

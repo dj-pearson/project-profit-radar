@@ -9,7 +9,7 @@ import { toast } from '@/hooks/use-toast';
  * Optimized project queries with intelligent caching and multi-tenant isolation
  */
 export const useOptimizedProjects = (options?: Partial<UseQueryOptions>) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
     queryKey: [...queryKeys.projects, siteId],
@@ -49,7 +49,7 @@ export const useOptimizedProjects = (options?: Partial<UseQueryOptions>) => {
  * Optimized single project query with related data and multi-tenant isolation
  */
 export const useOptimizedProject = (projectId: string, options?: Partial<UseQueryOptions>) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
     queryKey: [...queryKeys.project(projectId), siteId],
@@ -107,7 +107,7 @@ export const useOptimizedProject = (projectId: string, options?: Partial<UseQuer
  * Optimized financial data queries with multi-tenant isolation
  */
 export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
     queryKey: [...queryKeys.invoices, siteId],
@@ -145,7 +145,7 @@ export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
  * Optimized dashboard data with aggregations and multi-tenant isolation
  */
 export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
     queryKey: [...queryKeys.dashboardData, siteId],
@@ -227,7 +227,7 @@ export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
  * Optimized CRM queries with multi-tenant isolation
  */
 export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useQuery({
     queryKey: [...queryKeys.opportunities, siteId],
@@ -266,7 +266,7 @@ export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) =>
  */
 export const useOptimizedProjectMutation = () => {
   const queryClient = useQueryClient();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useMutation({
     mutationFn: async (projectData: any) => {
@@ -275,8 +275,7 @@ export const useOptimizedProjectMutation = () => {
       const { data, error } = await supabase
         .from('projects')
         .insert([{
-          ...projectData,
-          site_id: siteId,  // CRITICAL: Include site_id on insert
+          ...projectData,  // CRITICAL: Include site_id on insert
           company_id: userProfile?.company_id
         }])
         .select()
@@ -303,7 +302,7 @@ export const useOptimizedProjectMutation = () => {
 
 export const useOptimizedTaskMutation = () => {
   const queryClient = useQueryClient();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useMutation({
     mutationFn: async ({ projectId, taskData }: { projectId: string; taskData: any }) => {
@@ -313,8 +312,7 @@ export const useOptimizedTaskMutation = () => {
         .from('tasks')
         .insert([{
           ...taskData,
-          project_id: projectId,
-          site_id: siteId,  // CRITICAL: Include site_id on insert
+          project_id: projectId,  // CRITICAL: Include site_id on insert
           company_id: userProfile?.company_id
         }])
         .select()
@@ -346,7 +344,7 @@ export const useOptimizedTaskMutation = () => {
 
 export const useOptimizedInvoiceMutation = () => {
   const queryClient = useQueryClient();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   return useMutation({
     mutationFn: async (invoiceData: any) => {
@@ -355,8 +353,7 @@ export const useOptimizedInvoiceMutation = () => {
       const { data, error } = await supabase
         .from('invoices')
         .insert([{
-          ...invoiceData,
-          site_id: siteId,  // CRITICAL: Include site_id on insert
+          ...invoiceData,  // CRITICAL: Include site_id on insert
           company_id: userProfile?.company_id
         }])
         .select()
@@ -386,7 +383,7 @@ export const useOptimizedInvoiceMutation = () => {
  */
 export const useBackgroundSync = () => {
   const queryClient = useQueryClient();
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
 
   // Set up real-time subscriptions for critical data with site isolation
   React.useEffect(() => {

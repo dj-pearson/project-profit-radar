@@ -46,7 +46,7 @@ export const ConvertToProjectDialog = ({
   onClose,
   onSuccess
 }: ConvertToProjectDialogProps) => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 

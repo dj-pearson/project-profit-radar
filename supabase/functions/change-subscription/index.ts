@@ -1,5 +1,4 @@
 // Change Subscription Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
@@ -28,15 +27,14 @@ serve(async (req) => {
   try {
     logStep("Subscription change started");
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     const changeRequest: SubscriptionChangeRequest = await req.json();
     logStep("Change request received", {
@@ -48,7 +46,7 @@ serve(async (req) => {
     const { data: subscriber } = await supabaseClient
       .from('subscribers')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('user_id', user.id)
       .single();
 
@@ -184,7 +182,7 @@ serve(async (req) => {
         subscription_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('user_id', user.id);
 
     logStep("Supabase record updated");

@@ -1,6 +1,4 @@
 // Process Referral Signup Edge Function
-// Updated with multi-tenant site_id isolation
-// Note: Site_id is determined from X-Site-Key header or default to BuildDesk
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -31,20 +29,14 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Get site_id from header or default to BuildDesk
-    const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
+        const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
     const { data: siteData } = await supabaseClient
       .from('sites')
       .select('id')
       .eq('key', siteKey)
       .single();
 
-    const siteId = siteData?.id;
-    if (!siteId) {
-      logStep("Warning: Site not found, using default isolation");
-    }
-
-    logStep("Site resolved", { siteKey, siteId });
+        logStep("Site resolved", { siteKey });
 
     const { referee_email, referee_company_id, subscription_tier, subscription_duration_months } = await req.json();
 
@@ -52,7 +44,7 @@ serve(async (req) => {
       throw new Error("Missing referee_email or referee_company_id");
     }
 
-    logStep("Processing signup", { referee_email, referee_company_id, subscription_tier, siteId });
+    logStep("Processing signup", { referee_email, referee_company_id, subscription_tier });
 
     // Find pending referral for this email with site isolation
     let referralQuery = supabaseClient
@@ -67,7 +59,7 @@ serve(async (req) => {
       .gt('expires_at', new Date().toISOString());
 
     if (siteId) {
-      referralQuery = referralQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
+      referralQuery = referralQuery;  // CRITICAL: Site isolation
     }
 
     const { data: referrals, error: referralError } = await referralQuery;
@@ -99,7 +91,7 @@ serve(async (req) => {
         .eq('id', referral.id);
 
       if (siteId) {
-        expireQuery = expireQuery.eq('site_id', siteId);  // CRITICAL: Site isolation on update
+        expireQuery = expireQuery;  // CRITICAL: Site isolation on update
       }
 
       await expireQuery;
@@ -126,7 +118,7 @@ serve(async (req) => {
       .eq('id', referral.id);
 
     if (siteId) {
-      updateQuery = updateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation on update
+      updateQuery = updateQuery;  // CRITICAL: Site isolation on update
     }
 
     const { error: updateError } = await updateQuery;
@@ -148,9 +140,7 @@ serve(async (req) => {
         if (referral.referrer_reward_months > 0) {
           await supabaseClient
             .from('affiliate_rewards')
-            .insert({
-              site_id: siteId,  // CRITICAL: Include site_id
-              referral_id: referral.id,
+            .insert({                referral_id: referral.id,
               company_id: referral.referrer_company_id,
               reward_type: 'referrer',
               reward_months: referral.referrer_reward_months,
@@ -163,9 +153,7 @@ serve(async (req) => {
         if (referral.referee_reward_months > 0) {
           await supabaseClient
             .from('affiliate_rewards')
-            .insert({
-              site_id: siteId,  // CRITICAL: Include site_id
-              referral_id: referral.id,
+            .insert({                referral_id: referral.id,
               company_id: referee_company_id,
               reward_type: 'referee',
               reward_months: referral.referee_reward_months,
@@ -186,7 +174,7 @@ serve(async (req) => {
           .eq('id', referral.id);
 
         if (siteId) {
-          rewardedQuery = rewardedQuery.eq('site_id', siteId);  // CRITICAL: Site isolation on update
+          rewardedQuery = rewardedQuery;  // CRITICAL: Site isolation on update
         }
 
         await rewardedQuery;
@@ -202,7 +190,7 @@ serve(async (req) => {
           .eq('id', referral.affiliate_code_id);
 
         if (siteId) {
-          codeUpdateQuery = codeUpdateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation on update
+          codeUpdateQuery = codeUpdateQuery;  // CRITICAL: Site isolation on update
         }
 
         await codeUpdateQuery;

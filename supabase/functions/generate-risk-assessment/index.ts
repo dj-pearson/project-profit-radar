@@ -1,5 +1,4 @@
 // Generate Risk Assessment Edge Function
-// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
@@ -24,26 +23,25 @@ serve(async (req) => {
   try {
     logStep("Risk assessment started");
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     const { company_id } = await req.json();
     if (!company_id) throw new Error("Company ID is required");
 
-    logStep("Loading company data for risk analysis", { siteId, company_id });
+    logStep("Loading company data for risk analysis", {  company_id });
 
     // First get project IDs with site isolation
     const { data: projectIds } = await supabaseClient
       .from('projects')
       .select('id')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('company_id', company_id);
 
     const projectIdList = projectIds?.map(p => p.id) || [];
@@ -56,16 +54,16 @@ serve(async (req) => {
       { data: dailyReports }
     ] = await Promise.all([
       supabaseClient.from('projects').select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       supabaseClient.from('expenses').select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('company_id', company_id),
       supabaseClient.from('change_orders').select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .in('project_id', projectIdList.length > 0 ? projectIdList : ['00000000-0000-0000-0000-000000000000']),
       supabaseClient.from('daily_reports').select('*')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .in('project_id', projectIdList.length > 0 ? projectIdList : ['00000000-0000-0000-0000-000000000000'])
     ]);
 

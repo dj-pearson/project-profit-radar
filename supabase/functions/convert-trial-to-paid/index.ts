@@ -1,5 +1,4 @@
 // Convert Trial to Paid Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
@@ -29,24 +28,23 @@ serve(async (req) => {
   try {
     logStep("Trial conversion started");
 
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
+    const { user, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, siteId });
+    logStep("User authenticated", { userId: user.id });
 
     const { company_id, subscription_tier, billing_period, payment_method_id }: ConversionRequest = await req.json();
-    logStep("Conversion request", { siteId, company_id, subscription_tier, billing_period });
+    logStep("Conversion request", {  company_id, subscription_tier, billing_period });
 
     // Verify user has access to this company with site isolation
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('company_id, role')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -58,7 +56,7 @@ serve(async (req) => {
     const { data: company } = await supabaseClient
       .from('companies')
       .select('id, name, subscription_status, trial_end_date')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', company_id)
       .single();
 
@@ -194,7 +192,7 @@ serve(async (req) => {
         subscription_tier,
         updated_at: new Date().toISOString()
       })
-      .eq("site_id", siteId)  // CRITICAL: Site isolation
+      .eq("site_id")  // CRITICAL: Site isolation
       .eq("id", company_id);
 
     logStep("Updated company status to converting", { company_id });

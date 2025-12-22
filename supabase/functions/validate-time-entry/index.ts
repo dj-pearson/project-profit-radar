@@ -1,5 +1,4 @@
 // Validate Time Entry Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
@@ -143,18 +142,17 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log('[VALIDATE-TIME-ENTRY] User authenticated', { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log('[VALIDATE-TIME-ENTRY] User authenticated', { userId: user.id });
 
     // Parse request body
     const body = await req.json();
-    console.log('[VALIDATE-TIME-ENTRY] Validating time entry:', { siteId, user_id: user.id });
+    console.log('[VALIDATE-TIME-ENTRY] Validating time entry:', {  user_id: user.id });
 
     // Validate input
     const validation = validateTimeEntry(body);
@@ -170,8 +168,7 @@ serve(async (req) => {
     const { data, error } = await supabaseClient
       .from('time_entries')
       .insert({
-        ...validation.data,
-        site_id: siteId,  // CRITICAL: Site isolation
+        ...validation.data,  // CRITICAL: Site isolation
         user_id: user.id,
       })
       .select()

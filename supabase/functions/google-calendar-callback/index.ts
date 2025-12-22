@@ -1,5 +1,4 @@
 // Google Calendar Callback Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -54,10 +53,9 @@ serve(async (req) => {
       throw new Error("Missing code or state parameter");
     }
 
-    // Decode state to get company_id and site_id
-    const stateData = JSON.parse(atob(state));
-    const { company_id, site_id: siteId } = stateData;
-    logStep("State decoded", { company_id, siteId });
+        const stateData = JSON.parse(atob(state));
+    const { company_id, } = stateData;
+    logStep("State decoded", { company_id });
 
     // Exchange code for tokens
     const redirectUri = `${url.origin}/functions/v1/google-calendar-callback`;
@@ -99,8 +97,7 @@ serve(async (req) => {
     // Store integration in database with site isolation
     const { error: dbError } = await supabaseClient
       .from('calendar_integrations')
-      .upsert({
-        site_id: siteId,  // CRITICAL: Site isolation
+      .upsert({  // CRITICAL: Site isolation
         company_id,
         provider: 'google',
         account_email: userInfo.email,

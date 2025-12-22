@@ -1,5 +1,4 @@
 // Generate Blog Content Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
@@ -12,20 +11,19 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log("[GENERATE-BLOG-CONTENT] User authenticated", { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log("[GENERATE-BLOG-CONTENT] User authenticated", { userId: user.id });
 
     // Check for root_admin role with site isolation
     const { data: userProfile } = await supabaseClient
       .from('user_profiles')
       .select('role')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -164,8 +162,7 @@ ${secondary_keywords.length > 0 ? `
     const metaDescription = plainText.substring(0, 155) + '...';
 
     // Save to database with site isolation
-    const contentData = {
-      site_id: siteId,  // CRITICAL: Site isolation
+    const contentData = {  // CRITICAL: Site isolation
       title: topic,
       slug,
       content_html: generatedContent,

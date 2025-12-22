@@ -1,5 +1,4 @@
 // Process Blog Generation Queue Edge Function
-// Updated with multi-tenant site_id isolation (cron job pattern)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
@@ -73,13 +72,11 @@ serve(async (req) => {
             })
             .eq('id', item.id);
 
-          // Generate blog content with site_id
-          const { data: result, error: genError } = await supabaseClient.functions.invoke('enhanced-blog-ai-fixed', {
+                    const { data: result, error: genError } = await supabaseClient.functions.invoke('enhanced-blog-ai-fixed', {
             body: {
               action: 'generate-auto-content',
               topic: item.suggested_topic || 'Construction Management Best Practices',
-              site_id: site.id,  // Pass site_id to downstream function
-              customSettings: {
+              site_id: site.id,                customSettings: {
                 company_id: item.company_id,
                 queue_id: item.id,
                 site_id: site.id,

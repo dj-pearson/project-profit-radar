@@ -22,15 +22,12 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Extract site_id from JWT metadata for multi-tenant isolation
-    const siteId = user.app_metadata?.site_id || user.user_metadata?.site_id;
-    if (!siteId) {
-      return new Response(JSON.stringify({ error: 'Site ID not found in user context' }),
+            ),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const { data: userProfile } = await supabaseClient
-      .from('user_profiles').select('role').eq('site_id', siteId).eq('id', user.id).single();
+      .from('user_profiles').select('role').eq('id', user.id).single();
 
     if (!userProfile || userProfile.role !== 'root_admin') {
       return new Response(JSON.stringify({ error: 'Access denied' }),
@@ -43,11 +40,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Get property and credentials with site_id isolation
-    const { data: property, error: propError } = await supabaseClient
+        const { data: property, error: propError } = await supabaseClient
       .from('gsc_properties')
       .select('*, gsc_oauth_credentials(*)')
-      .eq('site_id', siteId)
       .eq('id', property_id)
       .single();
 
@@ -120,7 +115,6 @@ serve(async (req) => {
 
     const queryData = await queryResponse.json();
     const keywordRecords = (queryData.rows || []).map((row: any) => ({
-      site_id: siteId,
       property_id,
       query: row.keys[0],
       impressions: row.impressions,
@@ -154,7 +148,6 @@ serve(async (req) => {
     if (pageResponse.ok) {
       const pageData = await pageResponse.json();
       pageRecords = (pageData.rows || []).map((row: any) => ({
-        site_id: siteId,
         property_id,
         page_url: row.keys[0],
         impressions: row.impressions,
@@ -195,8 +188,7 @@ serve(async (req) => {
       }
     }
 
-    // Update property last sync time with site_id isolation
-    await supabaseClient
+        await supabaseClient
       .from('gsc_properties')
       .update({
         last_sync_at: new Date().toISOString(),
@@ -206,7 +198,6 @@ serve(async (req) => {
           return next.toISOString();
         })(),
       })
-      .eq('site_id', siteId)
       .eq('id', property_id);
 
     return new Response(JSON.stringify({

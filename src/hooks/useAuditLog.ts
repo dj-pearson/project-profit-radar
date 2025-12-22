@@ -31,7 +31,7 @@ interface DataAccessParams {
 }
 
 export const useAuditLog = () => {
-  const { user, userProfile, siteId } = useAuth();
+  const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const getClientIP = async (): Promise<string | null> => {
@@ -70,7 +70,6 @@ export const useAuditLog = () => {
       }
 
       const { data, error } = await supabase.rpc('log_audit_event', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
         p_company_id: companyId,
         p_user_id: user.id,
         p_action_type: params.actionType,
@@ -123,7 +122,6 @@ export const useAuditLog = () => {
       }
 
       const { data, error } = await supabase.rpc('log_data_access', {
-        p_site_id: siteId,  // CRITICAL: Pass site_id to RPC
         p_company_id: companyId,
         p_user_id: user.id,
         p_data_type: params.dataType,

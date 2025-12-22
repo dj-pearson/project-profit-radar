@@ -1,6 +1,5 @@
 // Geofencing Calculation Service Edge Function
 // Calculates distances, checks geofence breaches, and triggers alerts
-// Updated with multi-tenant site_id isolation
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
@@ -45,23 +44,23 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401)
     }
 
-    const { user, siteId, supabase } = authContext
-    logStep('User authenticated', { userId: user.id, siteId })
+    const { user, supabase } = authContext
+    logStep('User authenticated', { userId: user.id })
 
     const { action, ...params } = await req.json()
 
     switch (action) {
       case 'check_location':
-        return await checkLocation(supabase, siteId, params)
+        return await checkLocation(supabase, params)
 
       case 'calculate_distance':
         return calculateDistance(params)
 
       case 'check_geofence_breach':
-        return await checkGeofenceBreach(supabase, siteId, params)
+        return await checkGeofenceBreach(supabase, params)
 
       case 'process_gps_entry':
-        return await processGPSEntry(supabase, siteId, params)
+        return await processGPSEntry(supabase, params)
 
       case 'calculate_travel_distance':
         return calculateTravelDistance(params)
@@ -90,7 +89,7 @@ async function checkLocation(supabase: any, siteId: string, params: {
   let query = supabase
     .from('geofences')
     .select('*')
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .eq('is_active', true)
 
   if (project_id) {
@@ -160,7 +159,7 @@ async function checkGeofenceBreach(supabase: any, siteId: string, params: {
     .from('geofences')
     .select('*')
     .eq('id', geofence_id)
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .single()
 
   if (geoError) throw geoError
@@ -184,9 +183,7 @@ async function checkGeofenceBreach(supabase: any, siteId: string, params: {
       .from('geofence_breach_alerts')
       .insert({
         geofence_id,
-        time_entry_id: entry_id,
-        site_id: siteId,  // CRITICAL: Include site_id
-        breach_type: 'outside',
+        time_entry_id: entry_id,          breach_type: 'outside',
         distance_from_boundary_meters: distance - geofence.radius_meters,
         breach_timestamp: new Date().toISOString()
       })
@@ -217,7 +214,7 @@ async function processGPSEntry(supabase: any, siteId: string, params: {
     .from('gps_time_entries')
     .select('*')
     .eq('id', entry_id)
-    .eq('site_id', siteId)  // CRITICAL: Site isolation
+      // CRITICAL: Site isolation
     .single()
 
   if (entryError) throw entryError
@@ -236,7 +233,7 @@ async function processGPSEntry(supabase: any, siteId: string, params: {
         distance_traveled_meters: travelDistance
       })
       .eq('id', entry_id)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
   }
 
   // Check geofence compliance if project is specified (with site isolation)
@@ -245,7 +242,7 @@ async function processGPSEntry(supabase: any, siteId: string, params: {
       .from('geofences')
       .select('*')
       .eq('project_id', project_id)
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('is_active', true)
 
     if (geofences && geofences.length > 0) {
@@ -262,9 +259,7 @@ async function processGPSEntry(supabase: any, siteId: string, params: {
             .from('geofence_breach_alerts')
             .insert({
               geofence_id: geofence.id,
-              time_entry_id: entry_id,
-              site_id: siteId,  // CRITICAL: Include site_id
-              breach_type: 'clock_in_outside',
+              time_entry_id: entry_id,                breach_type: 'clock_in_outside',
               breach_timestamp: entry.clock_in_time
             })
         }

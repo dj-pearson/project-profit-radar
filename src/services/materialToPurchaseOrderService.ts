@@ -85,8 +85,7 @@ class MaterialToPurchaseOrderService {
           // Create new vendor
           const { data: newVendor, error: vendorError } = await supabase
             .from('vendors')
-            .insert({
-              site_id: siteId,  // CRITICAL: Site isolation
+            .insert({  // CRITICAL: Site isolation
               company_id: companyId,
               name: poData.vendor_name,
               vendor_type: 'supplier',
@@ -117,8 +116,7 @@ class MaterialToPurchaseOrderService {
       // 4. Create purchase order
       const { data: newPO, error: poError } = await supabase
         .from('purchase_orders')
-        .insert({
-          site_id: siteId,  // CRITICAL: Site isolation
+        .insert({  // CRITICAL: Site isolation
           company_id: companyId,
           vendor_id: vendorId,
           project_id: poData.project_id || materials[0].project_id || null,
@@ -142,8 +140,7 @@ class MaterialToPurchaseOrderService {
       }
 
       // 5. Create PO line items from materials
-      const lineItems = materials.map((material) => ({
-        site_id: siteId,  // CRITICAL: Site isolation
+      const lineItems = materials.map((material) => ({  // CRITICAL: Site isolation
         purchase_order_id: newPO.id,
         material_id: material.id,
         description: material.name,

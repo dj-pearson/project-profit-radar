@@ -190,8 +190,7 @@ Deno.serve(async (req) => {
 
     logStep('Scoring lead', { lead_id, user_id: user.id });
 
-    // Get user's site_id from profile
-    const { data: userProfile } = await supabase
+        const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('site_id, company_id')
       .eq('user_id', user.id)
@@ -204,14 +203,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const siteId = userProfile.site_id;
-
-    // Get lead data with site isolation
+        // Get lead data with site isolation
     const { data: lead, error: leadError } = await supabase
       .from('leads')
       .select('*')
       .eq('id', lead_id)
-      .eq('site_id', siteId)
       .single();
 
     if (leadError || !lead) {
@@ -227,7 +223,6 @@ Deno.serve(async (req) => {
       .from('crm_activities')
       .select('*')
       .eq('lead_id', lead_id)
-      .eq('site_id', siteId)
       .order('activity_date', { ascending: false })
       .limit(50);
 
@@ -248,7 +243,7 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq('id', lead_id)
-      .eq('site_id', siteId);
+      ;
 
     if (updateError) {
       logStep('Failed to update lead score', { error: updateError.message });
@@ -256,7 +251,6 @@ Deno.serve(async (req) => {
 
     // Log scoring activity
     await supabase.from('crm_activities').insert({
-      site_id: siteId,
       company_id: userProfile.company_id,
       lead_id: lead_id,
       activity_type: 'scoring',

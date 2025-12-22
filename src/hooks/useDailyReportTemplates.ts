@@ -53,7 +53,7 @@ export interface AutoPopulationResult {
 }
 
 export const useDailyReportTemplates = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,7 +66,6 @@ export const useDailyReportTemplates = () => {
       const { data, error } = await supabase
         .from('daily_report_templates')
         .select('*')
-        .eq('site_id', siteId)
         .eq('company_id', userProfile.company_id)
         .eq('is_active', true)
         .order('name');
@@ -84,7 +83,6 @@ export const useDailyReportTemplates = () => {
     const { data, error } = await supabase
       .from('template_task_presets')
       .select('*')
-      .eq('site_id', siteId)
       .eq('template_id', templateId)
       .order('display_order');
 
@@ -106,7 +104,6 @@ export const useDailyReportTemplates = () => {
         .from('daily_report_templates')
         .insert({
           ...template,
-          site_id: siteId,
           company_id: userProfile.company_id,
           created_by: userProfile.id,
         })
@@ -143,7 +140,6 @@ export const useDailyReportTemplates = () => {
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq('site_id', siteId)
         .eq('id', id)
         .select()
         .single();
@@ -175,7 +171,6 @@ export const useDailyReportTemplates = () => {
       const { error } = await supabase
         .from('daily_report_templates')
         .update({ is_active: false })
-        .eq('site_id', siteId)
         .eq('id', id);
 
       if (error) throw error;
@@ -254,7 +249,6 @@ export const useDailyReportTemplates = () => {
     const { data, error} = await supabase
       .from('template_task_presets')
       .insert({
-        site_id: siteId,
         template_id: templateId,
         task_name: taskName,
         task_description: taskDescription,
@@ -274,7 +268,6 @@ export const useDailyReportTemplates = () => {
     const { error } = await supabase
       .from('template_task_presets')
       .delete()
-      .eq('site_id', siteId)
       .eq('id', presetId);
 
     if (error) throw error;

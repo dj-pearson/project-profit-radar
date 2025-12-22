@@ -1,6 +1,5 @@
 // AI Estimating Engine Edge Function
 // Generates project cost estimates using ML predictions and historical data
-// Updated with multi-tenant site_id isolation
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
@@ -43,8 +42,8 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401)
     }
 
-    const { user, siteId, supabase } = authContext
-    logStep('User authenticated', { userId: user.id, siteId })
+    const { user, supabase } = authContext
+    logStep('User authenticated', { userId: user.id })
 
     const requestData: EstimateRequest = await req.json()
 
@@ -56,12 +55,12 @@ serve(async (req) => {
       estimated_duration_days = 30
     } = requestData
 
-    logStep('Estimate request received', { project_name, project_type, square_footage, siteId })
+    logStep('Estimate request received', { project_name, project_type, square_footage })
 
     // Step 1: Find similar historical projects (with site isolation)
     const { data: similarProjects, error: similarError } = await supabase
       .rpc('get_similar_projects', {
-        p_site_id: siteId,  // CRITICAL: Site isolation
+        p_  // CRITICAL: Site isolation
         p_project_type: project_type,
         p_square_footage: square_footage,
         p_location_zip: location_zip
@@ -77,7 +76,7 @@ serve(async (req) => {
     const { data: marketData, error: marketError } = await supabase
       .from('market_pricing_data')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('project_type', project_type)
       .or(`location_zip.eq.${location_zip},location_region.eq.nationwide`)
       .order('valid_from', { ascending: false })
@@ -100,7 +99,7 @@ serve(async (req) => {
     // Step 4: Get win rate for this project type (with site isolation)
     const { data: winRateData } = await supabase
       .rpc('get_win_rate_by_project_type', {
-        p_site_id: siteId,  // CRITICAL: Site isolation
+        p_  // CRITICAL: Site isolation
         p_project_type: project_type
       })
 
@@ -119,9 +118,7 @@ serve(async (req) => {
     // Step 6: Create AI estimate record (with site isolation)
     const { data: estimate, error: estimateError } = await supabase
       .from('ai_estimates')
-      .insert({
-        site_id: siteId,  // CRITICAL: Include site_id
-        user_id: user.id,
+      .insert({          user_id: user.id,
         estimate_name: project_name,
         project_type,
         square_footage,
@@ -145,7 +142,7 @@ serve(async (req) => {
       .select()
       .single()
 
-    logStep('Estimate created', { estimateId: estimate?.id, siteId })
+    logStep('Estimate created', { estimateId: estimate?.id })
 
     if (estimateError) throw estimateError
 
@@ -162,9 +159,7 @@ serve(async (req) => {
       .from('estimate_predictions')
       .insert(
         lineItems.map(item => ({
-          ai_estimate_id: estimate.id,
-          site_id: siteId,  // CRITICAL: Include site_id
-          ...item
+          ai_estimate_id: estimate.id,            ...item
         }))
       )
 
@@ -172,7 +167,7 @@ serve(async (req) => {
       logStep('Error creating line items', { error: lineItemError.message })
     }
 
-    logStep('Line items created', { count: lineItems.length, siteId })
+    logStep('Line items created', { count: lineItems.length })
 
     return successResponse({
       estimate: {

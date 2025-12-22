@@ -55,7 +55,7 @@ export const CreatePOFromMaterialDialog = ({
   onClose,
   onSuccess
 }: CreatePOFromMaterialDialogProps) => {
-  const { userProfile, user, siteId } = useAuth();
+  const { userProfile, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 

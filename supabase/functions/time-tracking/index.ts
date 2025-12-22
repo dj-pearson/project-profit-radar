@@ -26,8 +26,8 @@ serve(async (req) => {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
-    const { user, siteId, supabase } = authContext;
-    logStep("User authenticated", { userId: user.id, siteId });
+    const { user, supabase } = authContext;
+    logStep("User authenticated", { userId: user.id });
 
     const url = new URL(req.url);
     const method = req.method;
@@ -45,13 +45,12 @@ serve(async (req) => {
               tasks(name),
               cost_codes(code, name)
             `)
-            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .order('start_time', { ascending: false });
 
           if (entriesError) throw new Error(`Time entries fetch error: ${entriesError.message}`);
           
-          logStep("Time entries retrieved", { count: timeEntries?.length, siteId });
+          logStep("Time entries retrieved", { count: timeEntries?.length });
           return successResponse({ timeEntries });
         }
 
@@ -65,12 +64,11 @@ serve(async (req) => {
               tasks(name),
               cost_codes(code, name)
             `)
-            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .is('end_time', null)
             .maybeSingle();
 
-          logStep("Active entry retrieved", { hasActive: !!activeEntry, siteId });
+          logStep("Active entry retrieved", { hasActive: !!activeEntry });
           return successResponse({ activeEntry });
         }
 
@@ -85,7 +83,6 @@ serve(async (req) => {
           const { data: existingEntry } = await supabase
             .from('time_entries')
             .select('id')
-            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .is('end_time', null)
             .maybeSingle();
@@ -96,7 +93,6 @@ serve(async (req) => {
 
           const timeEntryData = {
             ...body,
-            site_id: siteId,
             user_id: user.id,
             start_time: new Date().toISOString()
           };
@@ -114,7 +110,7 @@ serve(async (req) => {
 
           if (createError) throw new Error(`Time entry creation error: ${createError.message}`);
 
-          logStep("Time entry started", { entryId: newEntry.id, siteId });
+          logStep("Time entry started", { entryId: newEntry.id });
           return successResponse({ timeEntry: newEntry });
         }
 
@@ -128,7 +124,6 @@ serve(async (req) => {
             .from('time_entries')
             .select('start_time, break_duration')
             .eq('id', entryId)
-            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .single();
 
@@ -147,7 +142,6 @@ serve(async (req) => {
               total_hours: Number(totalHours.toFixed(2))
             })
             .eq('id', entryId)
-            .eq('site_id', siteId)
             .eq('user_id', user.id)
             .select(`
               *,
@@ -159,7 +153,7 @@ serve(async (req) => {
 
           if (updateError) throw new Error(`Time entry update error: ${updateError.message}`);
 
-          logStep("Time entry stopped", { entryId, totalHours, siteId });
+          logStep("Time entry stopped", { entryId, totalHours });
           return successResponse({ timeEntry: updatedEntry });
         }
 

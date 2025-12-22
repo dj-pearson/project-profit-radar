@@ -1,5 +1,4 @@
 // Calculate Bid Analytics Edge Function
-// Updated with multi-tenant site_id isolation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 
@@ -14,24 +13,23 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context - extracts user AND site_id from JWT
-    const authContext = await initializeAuthContext(req);
+        const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
 
-    const { user, siteId, supabase: supabaseClient } = authContext;
-    console.log('[CALCULATE-BID-ANALYTICS] User authenticated', { userId: user.id, siteId });
+    const { user, supabase: supabaseClient } = authContext;
+    console.log('[CALCULATE-BID-ANALYTICS] User authenticated', { userId: user.id });
 
     const { company_id, period = 'monthly', start_date, end_date } = await req.json();
 
-    console.log('Calculating bid analytics for:', { siteId, company_id, period, start_date, end_date });
+    console.log('Calculating bid analytics for:', {  company_id, period, start_date, end_date });
 
     // Get bid submissions for the period with site isolation
     const { data: bids, error: bidsError } = await supabaseClient
       .from('bid_submissions')
       .select('*')
-      .eq('site_id', siteId)  // CRITICAL: Site isolation
+        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .gte('submitted_at', start_date)
       .lte('submitted_at', end_date);
@@ -98,8 +96,7 @@ serve(async (req) => {
     };
 
     // Create analytics record with site isolation
-    const analyticsData = {
-      site_id: siteId,  // CRITICAL: Site isolation
+    const analyticsData = {  // CRITICAL: Site isolation
       company_id,
       analysis_period: period,
       period_start: start_date,

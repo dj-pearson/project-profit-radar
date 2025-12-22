@@ -62,7 +62,7 @@ export interface ProcessScanParams {
 }
 
 export const useEquipmentQRScanning = () => {
-  const { userProfile, siteId } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [lastScannedEquipment, setLastScannedEquipment] = useState<EquipmentWithQR | null>(null);

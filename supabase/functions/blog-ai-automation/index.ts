@@ -1,5 +1,4 @@
 // Blog AI Automation Edge Function
-// Updated with multi-tenant site_id isolation
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
@@ -81,8 +80,7 @@ serve(async (req) => {
     const { action, topic, customSettings, site_id, site_key } = body;
     logStep("Request parsed", { action, topic, authMethod, site_id, site_key });
 
-    // Resolve site_id - can be passed directly or resolved from site_key
-    let siteId = site_id;
+        let siteId = site_id;
     if (!siteId && site_key) {
       const { data: siteData } = await supabaseClient
         .from('sites')
@@ -94,8 +92,7 @@ serve(async (req) => {
     }
 
     // Fall back to default BuildDesk site if no site specified
-    if (!siteId) {
-      const { data: defaultSite } = await supabaseClient
+    = await supabaseClient
         .from('sites')
         .select('id')
         .eq('key', 'builddesk')
@@ -103,10 +100,7 @@ serve(async (req) => {
       siteId = defaultSite?.id;
     }
 
-    if (!siteId) {
-      return new Response(JSON.stringify({
-        error: "Site not found. Provide either 'site_id' or 'site_key' in the request body."
-      }), {
+    ), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -116,7 +110,7 @@ serve(async (req) => {
 
     // Handle different actions
     if (action === 'generate-auto-content' || action === 'test-generation') {
-      return await generateBlogContent(supabaseClient, siteId, topic, customSettings);
+      return await generateBlogContent(supabaseClient, topic, customSettings);
     }
 
     return new Response(JSON.stringify({
@@ -148,7 +142,7 @@ async function generateBlogContent(
   topic?: string,
   customSettings?: any
 ): Promise<Response> {
-  logStep("Starting content generation", { siteId, topic });
+  logStep("Starting content generation", {  topic });
 
   // Check Claude API key
   const claudeKey = Deno.env.get('CLAUDE_API_KEY');
@@ -234,7 +228,7 @@ Make the content authoritative, actionable, and valuable for construction profes
       const { data: existingPost } = await supabaseClient
         .from('blog_posts')
         .select('id')
-        .eq('site_id', siteId)  // CRITICAL: Site isolation
+          // CRITICAL: Site isolation
         .eq('slug', uniqueSlug)
         .maybeSingle();
 
@@ -249,8 +243,7 @@ Make the content authoritative, actionable, and valuable for construction profes
     // Create the blog post in database with site isolation
     const { data: blogPost, error: postError } = await supabaseClient
       .from('blog_posts')
-      .insert([{
-        site_id: siteId,  // CRITICAL: Site isolation
+      .insert([{  // CRITICAL: Site isolation
         title: parsed.title,
         slug: uniqueSlug,
         body: parsed.body,
