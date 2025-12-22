@@ -39,14 +39,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Initialize auth context with site isolation
+    // Initialize auth context
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
     }
 
     const { user, supabase: supabaseClient } = authContext;
-    console.log(`[CALCULATE-LEAD-SCORE] User authenticated: ${user.id}, siteId: ${siteId}`);
+    console.log(`[CALCULATE-LEAD-SCORE] User authenticated: ${user.id}`);
 
     const { leadId, companyId } = await req.json();
 
@@ -54,11 +54,10 @@ Deno.serve(async (req) => {
       return errorResponse('Lead ID and Company ID are required', 400);
     }
 
-    // Get the lead data with site isolation
+    // Get the lead data
     const { data: lead, error: leadError } = await supabaseClient
       .from('leads')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('id', leadId)
       .eq('company_id', companyId)
       .single();
@@ -68,11 +67,10 @@ Deno.serve(async (req) => {
       return errorResponse('Lead not found or access denied', 404);
     }
 
-    // Get scoring rules for the company with site isolation (system rules + company-specific rules)
+    // Get scoring rules for the company (system rules + company-specific rules)
     const { data: scoringRules, error: rulesError } = await supabaseClient
       .from('lead_scoring_rules')
       .select('*')
-        // CRITICAL: Site isolation
       .or(`is_system_rule.eq.true,company_id.eq.${companyId}`)
       .eq('is_active', true);
 
@@ -143,14 +141,13 @@ Deno.serve(async (req) => {
     // Ensure score doesn't go below 0
     totalScore = Math.max(0, totalScore);
 
-    // Update the lead with the new score (with site isolation)
+    // Update the lead with the new score
     const { error: updateError } = await supabaseClient
       .from('leads')
       .update({
         lead_score: totalScore,
         updated_at: new Date().toISOString()
       })
-        // CRITICAL: Site isolation on update
       .eq('id', leadId);
 
     if (updateError) {
@@ -168,16 +165,15 @@ Deno.serve(async (req) => {
       leadQuality = 'marketing_qualified';
     }
 
-    // Update lead quality if it has changed (with site isolation)
+    // Update lead quality if it has changed
     if (lead.lead_quality !== leadQuality) {
       await supabaseClient
         .from('leads')
         .update({ lead_quality: leadQuality })
-          // CRITICAL: Site isolation on update
         .eq('id', leadId);
     }
 
-    console.log(`Calculated score for lead ${leadId}: ${totalScore} points (site: ${siteId})`);
+    console.log(`Calculated score for lead ${leadId}: ${totalScore} points`);
 
     return successResponse({
       leadId,

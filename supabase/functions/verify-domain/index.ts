@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 interface VerifyDomainRequest {
-  site_id?: string;  // For multi-tenant isolation
   tenant_id: string;
   domain: string;
 }
@@ -79,7 +78,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request body
-    const { site_id, tenant_id, domain }: VerifyDomainRequest = await req.json();
+    const { tenant_id, domain }: VerifyDomainRequest = await req.json();
 
     if (!tenant_id || !domain) {
       return new Response(
@@ -91,34 +90,12 @@ serve(async (req) => {
       );
     }
 
-        let siteId = site_id;
-    = await supabase
-        .from('tenants')
-        .select('site_id')
-        .eq('id', tenant_id)
-        .single();
-
-      siteId = tenantForSite?.site_id;
-
-            = await supabase
-          .from('sites')
-          .select('id')
-          .eq('key', 'builddesk')
-          .single();
-        siteId = defaultSite?.id;
-      }
-    }
-
-        let tenantQuery = supabase
+    // Get tenant
+    const { data: tenant, error: tenantError } = await supabase
       .from('tenants')
       .select('id, custom_domain')
-      .eq('id', tenant_id);
-
-        if (siteId) {
-      tenantQuery = tenantQuery;
-    }
-
-    const { data: tenant, error: tenantError } = await tenantQuery.single();
+      .eq('id', tenant_id)
+      .single();
 
     if (tenantError || !tenant) {
       return new Response(
@@ -135,19 +112,13 @@ serve(async (req) => {
 
     // Update tenant record if verified
     if (dnsResult.verified) {
-            let updateQuery = supabase
+      const { error: updateError } = await supabase
         .from('tenants')
         .update({
           custom_domain: domain,
           domain_verified: true,
         })
         .eq('id', tenant_id);
-
-            if (siteId) {
-        updateQuery = updateQuery;
-      }
-
-      const { error: updateError } = await updateQuery;
 
       if (updateError) {
         console.error('Failed to update tenant:', updateError);
@@ -163,19 +134,14 @@ serve(async (req) => {
         );
       }
 
-            const auditLogEntry: Record<string, any> = {
+      // Record audit log
+      await supabase.from('audit_logs').insert({
         tenant_id,
         action: 'domain_verified',
         resource_type: 'tenant',
         resource_id: tenant_id,
         details: { domain, verified: true },
-      };
-
-            if (siteId) {
-        auditLogEntry.site_id = siteId;
-      }
-
-      await supabase.from('audit_logs').insert(auditLogEntry);
+      });
     }
 
     return new Response(

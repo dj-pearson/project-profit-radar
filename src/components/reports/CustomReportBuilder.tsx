@@ -217,11 +217,6 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
         throw new Error('No company found');
       }
 
-      // Build query based on data source with site isolation
-      if (!siteId) {
-        throw new Error('No site_id available');
-      }
-
       let query;
       switch (config.dataSource) {
         case 'projects':

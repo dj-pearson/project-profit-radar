@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface QualityInspection {
   id: string;
-  site_id: string;
   company_id: string;
   project_id: string;
   inspection_number: string;
@@ -31,9 +30,9 @@ export const useDigitalInspections = (projectId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch inspections with site_id and company_id isolation
+  // Fetch inspections
   const { data: inspections, isLoading } = useQuery({
-    queryKey: ['quality-inspections', projectId, siteId, userProfile?.company_id],
+    queryKey: ['quality-inspections', projectId, userProfile?.company_id],
     queryFn: async () => {
       if (!userProfile?.company_id) return [];
 
@@ -54,10 +53,10 @@ export const useDigitalInspections = (projectId?: string) => {
     enabled: !!userProfile?.company_id,
   });
 
-  // Create inspection with site_id and company_id isolation
+  // Create inspection
   const createInspection = useMutation({
     mutationFn: async (inspection: any) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('quality_inspections')
         .insert([{
           ...inspection,
@@ -82,10 +81,10 @@ export const useDigitalInspections = (projectId?: string) => {
     },
   });
 
-  // Update inspection with site_id isolation
+  // Update inspection
   const updateInspection = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-            const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('quality_inspections')
         .update(updates)
         .eq('id', id)
@@ -108,7 +107,7 @@ export const useDigitalInspections = (projectId?: string) => {
     },
   });
 
-  // Delete inspection with site_id isolation
+  // Delete inspection
   const deleteInspection = useMutation({
     mutationFn: async (id: string) => {
             const { error } = await supabase

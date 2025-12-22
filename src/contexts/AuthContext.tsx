@@ -817,8 +817,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);
 
-        // Removed: site_id resolution - single-tenant architecture
-
         // Call our custom signup edge function (doesn't trigger Supabase email)
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/signup-with-otp`,
@@ -908,8 +906,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       logger.debug("AuthContext: Requesting password reset via OTP flow...");
 
-      // Removed: site_id resolution - single-tenant architecture
-
       // Call our custom reset password edge function
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
@@ -949,8 +945,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       logger.debug("AuthContext: Verifying reset OTP and updating password...");
-
-      // Removed: site_id resolution - single-tenant architecture
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
@@ -1020,8 +1014,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const sendOTP = useCallback(
     async (options: SendOTPOptions): Promise<{ error?: string; expiresInMinutes?: number }> => {
       try {
-        // Removed: site_id resolution - single-tenant architecture
-
         logger.debug(`Sending OTP for ${options.type} to ${options.email}`);
 
         const response = await fetch(
@@ -1058,8 +1050,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const verifyOTP = useCallback(
     async (options: VerifyOTPOptions): Promise<VerifyOTPResult> => {
       try {
-        // Removed: site_id resolution - single-tenant architecture
-
         logger.debug(`Verifying OTP for ${options.type}`);
 
         const response = await fetch(

@@ -34,7 +34,7 @@ serve(async (req) => {
   try {
     logStep("Payment processing started");
 
-    // Initialize auth context with site isolation
+    // Initialize auth context
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401);
@@ -57,7 +57,7 @@ serve(async (req) => {
       invoiceId: paymentData.invoice_id,
       method: paymentData.payment_method });
 
-    // Get invoice details with site isolation
+    // Get invoice details
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
@@ -65,19 +65,17 @@ serve(async (req) => {
         companies(name, stripe_customer_id)
       `)
       .eq('id', paymentData.invoice_id)
-        // CRITICAL: Site isolation
       .single();
 
     if (invoiceError || !invoice) {
       return errorResponse("Invoice not found or access denied", 404);
     }
 
-    // Verify user has access to this invoice with site isolation
+    // Verify user has access to this invoice
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('company_id, role')
       .eq('id', user.id)
-        // CRITICAL: Site isolation
       .single();
 
     if (profile?.company_id !== invoice.company_id && profile?.role !== 'root_admin') {
@@ -110,8 +108,7 @@ serve(async (req) => {
           invoice,
           paymentData.manual_payment_amount || 0,
           paymentData.manual_payment_notes,
-          user.id,
-          siteId  // Pass siteId for isolation
+          user.id
         );
         break;
 
@@ -188,8 +185,7 @@ async function processManualPayment(
   invoice: any,
   paymentAmount: number,
   notes: string | undefined,
-  userId: string,
-  siteId: string  // Added for site isolation
+  userId: string
 ) {
   if (paymentAmount <= 0 || paymentAmount > invoice.amount_due) {
     throw new Error("Invalid payment amount");
@@ -198,7 +194,7 @@ async function processManualPayment(
   const newAmountPaid = invoice.amount_paid + paymentAmount;
   const isFullyPaid = newAmountPaid >= invoice.total_amount;
 
-  // Update invoice with site isolation
+  // Update invoice
   const { error: updateError } = await supabaseClient
     .from('invoices')
     .update({
@@ -207,16 +203,16 @@ async function processManualPayment(
       paid_at: isFullyPaid ? new Date().toISOString() : null,
       updated_at: new Date().toISOString()
     })
-    .eq('id', invoice.id)
-    ;  // CRITICAL: Site isolation on update
+    .eq('id', invoice.id);
 
   if (updateError) {
     throw new Error(`Error updating invoice: ${updateError.message}`);
   }
 
-  // Log the manual payment with site isolation
+  // Log the manual payment
   const paymentRecord = {
-    invoice_id: invoice.id,      amount: paymentAmount,
+    invoice_id: invoice.id,
+    amount: paymentAmount,
     method: 'manual',
     notes: notes || 'Manual payment recorded',
     processed_by: userId,

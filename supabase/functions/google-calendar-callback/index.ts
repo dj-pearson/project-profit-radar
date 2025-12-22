@@ -53,8 +53,8 @@ serve(async (req) => {
       throw new Error("Missing code or state parameter");
     }
 
-        const stateData = JSON.parse(atob(state));
-    const { company_id, } = stateData;
+    const stateData = JSON.parse(atob(state));
+    const { company_id } = stateData;
     logStep("State decoded", { company_id });
 
     // Exchange code for tokens
@@ -94,10 +94,10 @@ serve(async (req) => {
     const userInfo = await userInfoResponse.json();
     logStep("User info received", { email: userInfo.email });
 
-    // Store integration in database with site isolation
+    // Store integration in database
     const { error: dbError } = await supabaseClient
       .from('calendar_integrations')
-      .upsert({  // CRITICAL: Site isolation
+      .upsert({
         company_id,
         provider: 'google',
         account_email: userInfo.email,
@@ -107,7 +107,7 @@ serve(async (req) => {
         is_active: true,
         sync_enabled: true,
       }, {
-        onConflict: 'site_id,company_id,provider,account_email'  // Updated conflict resolution
+        onConflict: 'company_id,provider,account_email'
       });
 
     if (dbError) {

@@ -1,6 +1,5 @@
 /**
  * Timesheet Approval Hook
- * Updated with multi-tenant site_id isolation
  */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -45,40 +44,36 @@ export const useTimesheetApproval = () => {
     const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Fetch pending timesheets with site isolation
+  // Fetch pending timesheets
   const { data: pendingTimesheets, isLoading: isPendingLoading } = useQuery({
     queryKey: ['pending-timesheets'],
     queryFn: async () => {
             const { data, error } = await supabase
         .from('pending_timesheet_approvals')
         .select('*')
-          // CRITICAL: Site isolation
         .order('submitted_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as TimesheetEntry[];
     },
-    enabled: !!siteId,
   });
 
-  // Fetch approved timesheets with site isolation
+  // Fetch approved timesheets
   const { data: approvedTimesheets, isLoading: isApprovedLoading } = useQuery({
     queryKey: ['approved-timesheets'],
     queryFn: async () => {
             const { data, error } = await supabase
         .from('approved_timesheets')
         .select('*')
-          // CRITICAL: Site isolation
         .order('approved_at', { ascending: false });
 
       if (error) throw error;
       return data;
     },
-    enabled: !!siteId,
   });
 
-  // Fetch timesheet detail with site isolation
+  // Fetch timesheet detail
   const fetchTimesheetDetail = async (id: string) => {
         const { data, error } = await supabase
       .from('time_entries')
@@ -89,7 +84,6 @@ export const useTimesheetApproval = () => {
         cost_code:cost_codes(code, description),
         approver:user_profiles!time_entries_approved_by_fkey(full_name, email)
       `)
-        // CRITICAL: Site isolation
       .eq('id', id)
       .single();
 
@@ -97,7 +91,7 @@ export const useTimesheetApproval = () => {
     return data;
   };
 
-  // Fetch approval history with site isolation
+  // Fetch approval history
   const fetchApprovalHistory = async (timeEntryId: string) => {
         const { data, error } = await supabase
       .from('timesheet_approval_history')
@@ -105,7 +99,6 @@ export const useTimesheetApproval = () => {
         *,
         performed_by_user:user_profiles!timesheet_approval_history_performed_by_fkey(full_name, email)
       `)
-        // CRITICAL: Site isolation
       .eq('time_entry_id', timeEntryId)
       .order('performed_at', { ascending: false });
 
@@ -113,7 +106,7 @@ export const useTimesheetApproval = () => {
     return data as TimesheetApprovalHistoryEntry[];
   };
 
-  // Approve single timesheet with site isolation
+  // Approve single timesheet
   const approveMutation = useMutation({
     mutationFn: async ({ id, notes }: { id: string; notes?: string }) => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -127,7 +120,6 @@ export const useTimesheetApproval = () => {
           approved_at: new Date().toISOString(),
           approval_notes: notes || null,
         })
-          // CRITICAL: Site isolation on update
         .eq('id', id)
         .select()
         .single();
@@ -152,7 +144,7 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Reject single timesheet with site isolation
+  // Reject single timesheet
   const rejectMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -166,7 +158,6 @@ export const useTimesheetApproval = () => {
           approved_at: new Date().toISOString(),
           rejection_reason: reason,
         })
-          // CRITICAL: Site isolation on update
         .eq('id', id)
         .select()
         .single();
@@ -191,7 +182,7 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Bulk approve timesheets with site isolation
+  // Bulk approve timesheets
   const bulkApproveMutation = useMutation({
     mutationFn: async ({ ids, notes }: { ids: string[]; notes?: string }) => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -224,7 +215,7 @@ export const useTimesheetApproval = () => {
     },
   });
 
-  // Bulk reject timesheets with site isolation
+  // Bulk reject timesheets
   const bulkRejectMutation = useMutation({
     mutationFn: async ({ ids, reason }: { ids: string[]; reason: string }) => {
             const { data: { user } } = await supabase.auth.getUser();

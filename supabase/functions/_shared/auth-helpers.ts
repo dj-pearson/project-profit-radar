@@ -1,5 +1,5 @@
 /**
- * Shared authentication and site isolation helpers for Edge Functions
+ * Shared authentication helpers for Edge Functions
  *
  * Usage:
  * import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
@@ -7,7 +7,7 @@
  * const authContext = await initializeAuthContext(req);
  * if (!authContext) return errorResponse('Unauthorized', 401);
  *
- * const { siteId, supabase } = authContext;
+ * const { user, supabase } = authContext;
  */
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -22,15 +22,14 @@ const DEFAULT_SECURE_CORS = {
 
 export interface AuthContext {
   user: any;
-  siteId: string;
   supabase: SupabaseClient;
 }
 
 /**
- * Initialize authenticated Supabase client and extract site_id from JWT
- * 
+ * Initialize authenticated Supabase client
+ *
  * @param req - The incoming request
- * @returns AuthContext with user, siteId, and authenticated supabase client, or null if auth fails
+ * @returns AuthContext with user and authenticated supabase client, or null if auth fails
  */
 export async function initializeAuthContext(
   req: Request
@@ -57,16 +56,9 @@ export async function initializeAuthContext(
     return null;
   }
 
-  // Extract site_id from JWT (app_metadata or user_metadata)
-  const siteId = user.app_metadata?.site_id || user.user_metadata?.site_id;
-  if (!siteId) {
-    console.error('[Auth] Missing site_id in JWT for user:', user.email);
-    return null;
-  }
+  console.log(`[Auth] User ${user.email} authenticated`);
 
-  console.log(`[Auth] User ${user.email} authenticated for site: ${siteId}`);
-
-  return { user, siteId, supabase };
+  return { user, supabase };
 }
 
 /**
@@ -127,27 +119,24 @@ export function successResponse(data: any, request?: Request): Response {
 }
 
 /**
- * Verify user has access to a specific company within their site
- * 
+ * Verify user has access to a specific company
+ *
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
  * @param companyId - Company ID to check
- * @param siteId - Site ID to verify
  * @returns true if user has access, false otherwise
  */
 export async function verifyCompanyAccess(
   supabase: SupabaseClient,
   userId: string,
-  companyId: string,
-  siteId: string
+  companyId: string
 ): Promise<boolean> {
   // Try user_profiles table first
   const { data: userProfile, error: profileError } = await supabase
     .from('user_profiles')
-    .select('company_id, site_id')
+    .select('company_id')
     .eq('id', userId)
     .eq('company_id', companyId)
-    .eq('site_id', siteId)
     .single();
 
   if (!profileError && userProfile) {
@@ -157,10 +146,9 @@ export async function verifyCompanyAccess(
   // Fallback to profiles table if user_profiles doesn't exist
   const { data: profile, error: altError } = await supabase
     .from('profiles')
-    .select('company_id, site_id')
+    .select('company_id')
     .eq('user_id', userId)
     .eq('company_id', companyId)
-    .eq('site_id', siteId)
     .single();
 
   return !altError && !!profile;
@@ -168,23 +156,20 @@ export async function verifyCompanyAccess(
 
 /**
  * Get user's role within their company
- * 
+ *
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
- * @param siteId - Site ID
  * @returns User's role or null
  */
 export async function getUserRole(
   supabase: SupabaseClient,
-  userId: string,
-  siteId: string
+  userId: string
 ): Promise<string | null> {
   // Try user_profiles table first
   const { data: userProfile } = await supabase
     .from('user_profiles')
     .select('role')
     .eq('id', userId)
-    .eq('site_id', siteId)
     .single();
 
   if (userProfile?.role) {
@@ -196,7 +181,6 @@ export async function getUserRole(
     .from('profiles')
     .select('role')
     .eq('user_id', userId)
-    .eq('site_id', siteId)
     .single();
 
   return profile?.role || null;
@@ -204,24 +188,22 @@ export async function getUserRole(
 
 /**
  * Check if user is an admin (admin or root_admin)
- * 
+ *
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
- * @param siteId - Site ID
  * @returns true if user is admin, false otherwise
  */
 export async function isAdmin(
   supabase: SupabaseClient,
-  userId: string,
-  siteId: string
+  userId: string
 ): Promise<boolean> {
-  const role = await getUserRole(supabase, userId, siteId);
+  const role = await getUserRole(supabase, userId);
   return role === 'admin' || role === 'root_admin';
 }
 
 /**
- * Check if user is a root admin (cross-site access)
- * 
+ * Check if user is a root admin
+ *
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
  * @returns true if user is root_admin, false otherwise
@@ -230,7 +212,6 @@ export async function isRootAdmin(
   supabase: SupabaseClient,
   userId: string
 ): Promise<boolean> {
-  // Root admin check doesn't filter by site_id
   const { data: userProfile } = await supabase
     .from('user_profiles')
     .select('role')
@@ -248,29 +229,6 @@ export async function isRootAdmin(
     .single();
 
   return profile?.role === 'root_admin';
-}
-
-/**
- * Get site information by domain
- * Used during authentication to determine which site the user is accessing
- * 
- * @param supabase - Supabase client (can be unauthenticated)
- * @param domain - Domain name (e.g., 'build-desk.com')
- * @returns Site object or null
- */
-export async function getSiteByDomain(
-  supabase: SupabaseClient,
-  domain: string
-): Promise<any | null> {
-  const { data, error } = await supabase
-    .rpc('get_site_by_domain', { p_domain: domain });
-
-  if (error) {
-    console.error('[Site] Error getting site by domain:', error);
-    return null;
-  }
-
-  return data;
 }
 
 /**
@@ -294,9 +252,9 @@ export function corsResponse(request?: Request): Response {
  *
  * Usage:
  * export default withAuth(async (req, authContext) => {
- *   const { siteId, supabase } = authContext;
+ *   const { user, supabase } = authContext;
  *   // Your function logic here
- *   return successResponse({ message: 'Hello from ' + siteId }, req);
+ *   return successResponse({ message: 'Hello from ' + user.email }, req);
  * });
  */
 export function withAuth(

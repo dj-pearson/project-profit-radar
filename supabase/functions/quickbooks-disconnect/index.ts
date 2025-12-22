@@ -1,6 +1,5 @@
 /**
  * QuickBooks Disconnect Handler
- * Updated with multi-tenant site_id isolation
  *
  * Revokes OAuth tokens and disconnects QuickBooks integration.
  */
@@ -33,11 +32,10 @@ serve(async (req) => {
       throw new Error('Company ID is required')
     }
 
-    // Get current integration data to revoke the token with site isolation
+    // Get current integration data to revoke the token
     const { data: integration, error: fetchError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('access_token, refresh_token')
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .single()
 
@@ -72,7 +70,7 @@ serve(async (req) => {
       }
     }
 
-    // Clear integration data in database with site isolation
+    // Clear integration data in database
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
@@ -90,17 +88,16 @@ serve(async (req) => {
         last_error_message: null,
         updated_at: new Date().toISOString(),
       })
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
 
     if (updateError) {
       throw new Error('Failed to disconnect: ' + updateError.message)
     }
 
-    // Log the disconnection with site isolation
+    // Log the disconnection
     await supabaseClient
       .from('quickbooks_sync_logs')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         company_id: company_id,
         sync_type: 'disconnection',
         status: 'success',

@@ -77,7 +77,6 @@ const SOURCE_SCORES: Record<string, number> = {
 
 interface Lead {
   id: string;
-  site_id: string;
   email: string;
   first_name?: string;
   last_name?: string;
@@ -190,20 +189,20 @@ Deno.serve(async (req) => {
 
     logStep('Scoring lead', { lead_id, user_id: user.id });
 
-        const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabase
       .from('user_profiles')
-      .select('site_id, company_id')
+      .select('company_id')
       .eq('user_id', user.id)
       .single();
 
-    if (!userProfile?.site_id) {
-      return new Response(JSON.stringify({ error: 'User site not found' }), {
+    if (!userProfile?.company_id) {
+      return new Response(JSON.stringify({ error: 'User company not found' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-        // Get lead data with site isolation
+    // Get lead data
     const { data: lead, error: leadError } = await supabase
       .from('leads')
       .select('*')
@@ -242,8 +241,7 @@ Deno.serve(async (req) => {
         lead_temperature: score.quality_tier,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', lead_id)
-      ;
+      .eq('id', lead_id);
 
     if (updateError) {
       logStep('Failed to update lead score', { error: updateError.message });

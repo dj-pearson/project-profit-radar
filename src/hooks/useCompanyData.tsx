@@ -32,7 +32,6 @@ export const useCompanyData = () => {
         .from('companies')
         .select('*')
         .eq('id', userProfile.company_id)
-         // ← Add site filter
         .single();
 
       if (error) {

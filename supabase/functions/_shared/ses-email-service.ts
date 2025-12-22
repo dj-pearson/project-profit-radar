@@ -23,7 +23,6 @@ export interface EmailOptions {
 }
 
 export interface SiteEmailConfig {
-  siteId: string;
   siteName: string;
   fromEmail: string;
   fromName: string;
@@ -35,7 +34,6 @@ export interface SiteEmailConfig {
 
 // Default BuildDesk configuration
 const DEFAULT_SITE_CONFIG: SiteEmailConfig = {
-  siteId: 'builddesk',
   siteName: 'BuildDesk',
   fromEmail: 'noreply@build-desk.com',
   fromName: 'BuildDesk',
@@ -113,53 +111,12 @@ export async function sendEmail(
 }
 
 /**
- * Get site email configuration - single-tenant version
+ * Get site email configuration
  * Always returns default BuildDesk configuration
  */
-export async function getSiteEmailConfig(
-  supabase?: any
-): Promise<SiteEmailConfig> {
-  // Single-tenant: always return default config
+export async function getSiteEmailConfig(): Promise<SiteEmailConfig> {
   console.log('[SES] Using default BuildDesk configuration');
   return DEFAULT_SITE_CONFIG;
-}
-
-/**
- * DEPRECATED: Multi-tenant version (kept for reference)
- * Get site email configuration from database or defaults
- */
-export async function getSiteEmailConfigMultiTenant(
-  supabase: any,
-  siteId: string
-): Promise<SiteEmailConfig> {
-  try {
-    const { data: site, error } = await supabase
-      .from('sites')
-      .select('id, key, name, domain, config')
-      .eq('id', siteId)
-      .single();
-
-    if (error || !site) {
-      console.log('[SES] Using default site config for:', siteId);
-      return DEFAULT_SITE_CONFIG;
-    }
-
-    const config = site.config || {};
-
-    return {
-      siteId: site.id,
-      siteName: site.name || 'BuildDesk',
-      fromEmail: config.email?.from || `noreply@${site.domain}`,
-      fromName: config.email?.fromName || site.name || 'BuildDesk',
-      supportEmail: config.email?.support || `support@${site.domain}`,
-      logoUrl: config.branding?.logo || 'https://build-desk.com/logo.png',
-      primaryColor: config.branding?.primaryColor || '#F97316',
-      domain: site.domain || 'build-desk.com',
-    };
-  } catch (error) {
-    console.error('[SES] Error fetching site config:', error);
-    return DEFAULT_SITE_CONFIG;
-  }
 }
 
 export { DEFAULT_SITE_CONFIG };

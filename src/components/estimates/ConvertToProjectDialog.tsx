@@ -76,7 +76,7 @@ export const ConvertToProjectDialog = ({
 
     setLoading(true);
     try {
-      const preview = await estimateConversionService.getConversionPreview(siteId, estimateId);
+      const preview = await estimateConversionService.getConversionPreview(estimateId);
 
       setEstimate(preview.estimate);
       setCanConvert(preview.canConvert);
@@ -116,7 +116,6 @@ export const ConvertToProjectDialog = ({
       };
 
       const result = await estimateConversionService.convertEstimateToProject(
-        siteId,  // CRITICAL: Site isolation
         estimateId,
         userProfile.company_id,
         customizations

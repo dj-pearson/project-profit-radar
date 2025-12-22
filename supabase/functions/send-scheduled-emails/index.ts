@@ -59,7 +59,6 @@ serve(async (req) => {
           *,
           email_campaigns (*)
         `)
-        .eq('site_id', site.id)  // CRITICAL: Site isolation
         .eq('status', 'pending')
         .lte('scheduled_for', new Date().toISOString())
         .order('priority', { ascending: true })
@@ -84,11 +83,10 @@ serve(async (req) => {
 
       for (const queuedEmail of pendingEmails) {
         try {
-          // Check if user has unsubscribed with site isolation
+          // Check if user has unsubscribed
           const { data: unsubscribed } = await supabaseClient
             .from('email_unsubscribes')
             .select('id')
-            .eq('site_id', site.id)  // CRITICAL: Site isolation
             .eq('email', queuedEmail.recipient_email)
             .eq('is_active', true)
             .single();
@@ -104,11 +102,10 @@ serve(async (req) => {
           continue;
         }
 
-        // Check user preferences with site isolation
+        // Check user preferences
           const { data: preferences } = await supabaseClient
             .from('email_preferences')
             .select('*')
-            .eq('site_id', site.id)  // CRITICAL: Site isolation
             .eq('user_id', queuedEmail.user_id)
             .single();
 
@@ -142,11 +139,10 @@ serve(async (req) => {
         });
 
           if (sendResult.success) {
-            // Create email send record with site isolation
+            // Create email send record
             const { data: emailSend } = await supabaseClient
               .from('email_sends')
               .insert({
-                site_id: site.id,  // CRITICAL: Site isolation
                 campaign_id: queuedEmail.campaign_id,
                 user_id: queuedEmail.user_id,
                 recipient_email: queuedEmail.recipient_email,
@@ -205,11 +201,10 @@ serve(async (req) => {
           })
           .eq('id', queuedEmail.id);
 
-          // Create failed email send record with site isolation
+          // Create failed email send record
           await supabaseClient
             .from('email_sends')
             .insert({
-              site_id: site.id,  // CRITICAL: Site isolation
               campaign_id: queuedEmail.campaign_id,
               user_id: queuedEmail.user_id,
               recipient_email: queuedEmail.recipient_email,

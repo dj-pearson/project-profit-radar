@@ -62,17 +62,6 @@ const Setup = () => {
     setSetupLoading(true);
 
       try {
-        // Validate siteId is available (required for multi-tenant isolation)
-        if (!siteId) {
-          toast({
-            variant: "destructive",
-            title: "Configuration Error",
-            description: "Unable to determine site. Please refresh the page and try again."
-          });
-          setSetupLoading(false);
-          return;
-        }
-
         // DEBUG: Log authentication state
         console.log('🔍 Setup Debug - Start:', {
           timestamp: new Date().toISOString(),
@@ -80,7 +69,6 @@ const Setup = () => {
           userEmail: user?.email,
           userProfile: userProfile?.id,
           userRole: userProfile?.role,
-          siteId,
           hasSession: !!user,
           supabaseUrl: import.meta.env.VITE_SUPABASE_URL
         });
@@ -147,7 +135,7 @@ const Setup = () => {
           throw companyError;
         }
 
-        // Update user profile with company_id and ensure site_id is set
+        // Update user profile with company_id
         const { error: profileError } = await supabase
           .from('user_profiles')
           .update({

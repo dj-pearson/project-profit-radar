@@ -1,6 +1,5 @@
 /**
  * QuickBooks OAuth Callback Handler
- * Updated with multi-tenant site_id isolation
  *
  * Exchanges authorization code for access/refresh tokens
  * and stores them in the database.
@@ -63,11 +62,10 @@ serve(async (req) => {
       throw new Error('QuickBooks credentials not configured')
     }
 
-    // Verify state parameter matches stored state with site isolation
+    // Verify state parameter matches stored state
     const { data: integration, error: stateError } = await supabaseClient
       .from('quickbooks_integrations')
       .select('oauth_state')
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .single()
 
@@ -141,7 +139,7 @@ serve(async (req) => {
       }
     }
 
-    // Update integration record with tokens with site isolation
+    // Update integration record with tokens
     const { error: updateError } = await supabaseClient
       .from('quickbooks_integrations')
       .update({
@@ -157,7 +155,6 @@ serve(async (req) => {
         last_sync_status: 'never',
         updated_at: now.toISOString(),
       })
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
 
     if (updateError) {
@@ -165,10 +162,10 @@ serve(async (req) => {
       throw new Error('Failed to save connection. Please try again.')
     }
 
-    // Log the successful connection with site isolation
+    // Log the successful connection
     await supabaseClient
       .from('quickbooks_sync_logs')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         company_id: company_id,
         sync_type: 'connection',
         status: 'success',

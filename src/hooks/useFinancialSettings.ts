@@ -6,7 +6,6 @@ import { FinancialSettings, DEFAULT_FINANCIAL_SETTINGS } from '@/utils/financial
 
 /**
  * Hook to manage company financial settings
- * Updated with multi-tenant site_id isolation
  */
 export function useFinancialSettings() {
   const { userProfile } = useAuth();
@@ -21,7 +20,6 @@ export function useFinancialSettings() {
       const { data, error } = await supabase
         .from('company_settings')
         .select('additional_settings, default_markup')
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 
@@ -46,11 +44,10 @@ export function useFinancialSettings() {
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<FinancialSettings>) => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-            // Get current additional_settings with site isolation
+            // Get current additional_settings
       const { data: currentData } = await supabase
         .from('company_settings')
         .select('additional_settings')
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .maybeSingle();
 
@@ -71,7 +68,6 @@ export function useFinancialSettings() {
           additional_settings: updatedAdditional,
           default_markup: newSettings.defaultProfitMargin || currentAdditional.financial_settings?.defaultProfitMargin,
         })
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .select()
         .single();
@@ -106,7 +102,6 @@ export function useFinancialSettings() {
 
 /**
  * Hook to calculate project costs using company settings
- * Updated with multi-tenant site_id isolation
  */
 export function useProjectCostCalculation(projectId: string) {
   const { settings } = useFinancialSettings();
@@ -117,11 +112,10 @@ export function useProjectCostCalculation(projectId: string) {
     queryFn: async () => {
       if (!userProfile?.company_id || !projectId) return null;
 
-      // Fetch project cost data with site isolation
+      // Fetch project cost data
       const { data: costs, error } = await (supabase as any)
         .from('job_costs')
         .select('labor_cost, material_cost, equipment_cost, other_cost')
-          // CRITICAL: Site isolation
         .eq('project_id', projectId)
         .eq('company_id', userProfile.company_id);
 

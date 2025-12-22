@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 // Types
 export interface MarketingCampaign {
   id: string;
-  site_id: string;
   company_id?: string;
   campaign_name: string;
   campaign_description?: string;
@@ -196,8 +195,8 @@ export function useMarketingCampaigns(
   filters?: CampaignFilters,
   options?: { enabled?: boolean }
 ) {
-    return useQuery({
-    queryKey: [ filters],
+  return useQuery({
+    queryKey: ['marketing-campaigns', filters],
     queryFn: async (): Promise<MarketingCampaign[]> => {
             let query = supabase
         .from('email_campaigns')
@@ -239,8 +238,8 @@ export function useMarketingCampaigns(
  * Hook to fetch a single campaign
  */
 export function useMarketingCampaign(campaignId: string, options?: { enabled?: boolean }) {
-    return useQuery({
-    queryKey: [ campaignId],
+  return useQuery({
+    queryKey: ['marketing-campaign', campaignId],
     queryFn: async (): Promise<MarketingCampaign | null> => {
             const { data, error } = await supabase
         .from('email_campaigns')
@@ -259,7 +258,7 @@ export function useMarketingCampaign(campaignId: string, options?: { enabled?: b
  * Hook to create a new marketing campaign
  */
 export function useCreateMarketingCampaign() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -303,7 +302,7 @@ export function useCreateMarketingCampaign() {
  * Hook to update a marketing campaign
  */
 export function useUpdateMarketingCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -328,7 +327,7 @@ export function useUpdateMarketingCampaign() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['marketing-campaigns'] });
-      queryClient.invalidateQueries({ queryKey: [ data.id] });
+      queryClient.invalidateQueries({ queryKey: ['marketing-campaign', data.id] });
     },
   });
 }
@@ -337,15 +336,14 @@ export function useUpdateMarketingCampaign() {
  * Hook to delete a marketing campaign
  */
 export function useDeleteMarketingCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (campaignId: string): Promise<void> => {
             const { error } = await supabase
         .from('email_campaigns')
         .delete()
-        .eq('id', campaignId)
-        ;
+        .eq('id', campaignId);
 
       if (error) throw error;
     },
@@ -359,7 +357,7 @@ export function useDeleteMarketingCampaign() {
  * Hook to toggle campaign active status
  */
 export function useToggleCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -375,8 +373,7 @@ export function useToggleCampaign() {
           is_active: isActive,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', campaignId)
-        ;
+        .eq('id', campaignId);
 
       if (error) throw error;
     },
@@ -390,7 +387,7 @@ export function useToggleCampaign() {
  * Hook to duplicate a campaign
  */
 export function useDuplicateCampaign() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -455,15 +452,14 @@ export function useDuplicateCampaign() {
  * Hook to get campaign statistics
  */
 export function useCampaignStats(options?: { enabled?: boolean }) {
-    return useQuery({
+  return useQuery({
     queryKey: ['campaign-stats'],
     queryFn: async (): Promise<CampaignStats> => {
             const { data, error } = await supabase
         .from('email_campaigns')
         .select(
           'is_active, total_sent, total_delivered, total_opened, total_clicked, total_unsubscribed, total_bounced'
-        )
-        ;
+        );
 
       if (error) throw error;
 
@@ -497,15 +493,14 @@ export function useCampaignStats(options?: { enabled?: boolean }) {
  * Hook to get campaign performance metrics
  */
 export function useCampaignPerformance(campaignId?: string, options?: { enabled?: boolean }) {
-    return useQuery({
-    queryKey: [ campaignId],
+  return useQuery({
+    queryKey: ['campaign-performance', campaignId],
     queryFn: async (): Promise<CampaignPerformance[]> => {
             let query = supabase
         .from('email_campaigns')
         .select(
           'id, campaign_name, total_sent, total_delivered, total_opened, total_clicked, total_unsubscribed, total_bounced'
-        )
-        ;
+        );
 
       if (campaignId) {
         query = query.eq('id', campaignId);
@@ -549,8 +544,8 @@ export function useCampaignEmailSends(
   campaignId: string,
   options?: { limit?: number; status?: EmailStatus; enabled?: boolean }
 ) {
-    return useQuery({
-    queryKey: [ campaignId, options?.status],
+  return useQuery({
+    queryKey: ['campaign-email-sends', campaignId, options?.status],
     queryFn: async (): Promise<EmailSend[]> => {
             let query = supabase
         .from('email_sends')
@@ -576,7 +571,7 @@ export function useCampaignEmailSends(
  * Hook to get email sequences
  */
 export function useEmailSequences(options?: { enabled?: boolean }) {
-    return useQuery({
+  return useQuery({
     queryKey: ['email-sequences'],
     queryFn: async () => {
             const { data, error } = await supabase
@@ -625,7 +620,7 @@ export function useEmailSequences(options?: { enabled?: boolean }) {
  * Hook to send a test email
  */
 export function useSendTestEmail() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -658,7 +653,7 @@ export function useSendTestEmail() {
  * Hook to schedule a campaign send
  */
 export function useScheduleCampaign() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -695,8 +690,8 @@ export function useScheduleCampaign() {
  * Hook to get campaign A/B test variants
  */
 export function useCampaignABTests(campaignId: string, options?: { enabled?: boolean }) {
-    return useQuery({
-    queryKey: [ campaignId],
+  return useQuery({
+    queryKey: ['campaign-ab-tests', campaignId],
     queryFn: async (): Promise<ABTestVariant[]> => {
             // Get variants for this campaign (campaigns with same base name but different variants)
       const { data: baseCampaign } = await supabase
@@ -741,7 +736,7 @@ export function useCampaignABTests(campaignId: string, options?: { enabled?: boo
  * Hook to create A/B test variant
  */
 export function useCreateABTestVariant() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -778,8 +773,7 @@ export function useCreateABTestVariant() {
             ab_test_variant: 'A',
             ab_test_traffic_percentage: 100 - trafficPercentage,
           })
-          .eq('id', baseCampaignId)
-          ;
+          .eq('id', baseCampaignId);
       }
 
       // Create variant
@@ -830,7 +824,7 @@ export function useCreateABTestVariant() {
  * Hook to get unsubscribe statistics
  */
 export function useUnsubscribeStats(options?: { enabled?: boolean }) {
-    return useQuery({
+  return useQuery({
     queryKey: ['unsubscribe-stats'],
     queryFn: async () => {
             const { data, error } = await supabase

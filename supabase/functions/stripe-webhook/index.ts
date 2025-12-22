@@ -3,14 +3,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
-import { getSiteByDomain } from '../_shared/auth-helpers.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
-
-const DEFAULT_BUILDDESK_SITE_KEY = 'builddesk';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -58,16 +55,11 @@ serve(async (req) => {
 
     logStep("Processing event", { type: event.type, id: event.id });
 
-        const { data: siteData } = await supabaseClient
-      .from('sites')
-      .select('id')
-      .eq('key', DEFAULT_BUILDDESK_SITE_KEY)
-      .single();
-
-        // Log webhook event with site isolation
+    // Log webhook event
     await supabaseClient
       .from("webhook_events")
-      .upsert({          stripe_event_id: event.id,
+      .upsert({
+        stripe_event_id: event.id,
         event_type: event.type,
         event_data: event.data,
         processed: false,
@@ -77,15 +69,14 @@ serve(async (req) => {
     try {
       await processWebhookEvent(event, supabaseClient, stripe);
 
-      // Mark as processed with site isolation
+      // Mark as processed
       await supabaseClient
         .from("webhook_events")
         .update({
           processed: true,
           processed_at: new Date().toISOString()
         })
-        .eq("stripe_event_id", event.id)
-        .eq("site_id");  // CRITICAL: Site isolation on update
+        .eq("stripe_event_id", event.id);
 
       logStep("Event processed successfully", { type: event.type });
       return new Response(JSON.stringify({ received: true }), {
@@ -97,15 +88,14 @@ serve(async (req) => {
       const errorObj = error as Error;
       logStep("Error processing event", { type: event.type, error: errorObj.message });
 
-      // Update processing attempt with site isolation
+      // Update processing attempt
       await supabaseClient
         .from("webhook_events")
         .update({
           processing_attempts: 1,
           last_processing_error: errorObj.message
         })
-        .eq("stripe_event_id", event.id)
-        .eq("site_id");  // CRITICAL: Site isolation on update
+        .eq("stripe_event_id", event.id);
 
       throw error;
     }
@@ -120,7 +110,7 @@ serve(async (req) => {
   }
 });
 
-async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, stripe: Stripe, siteId: string | null) {
+async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, stripe: Stripe) {
   switch (event.type) {
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
@@ -148,20 +138,15 @@ async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, str
   }
 }
 
-async function handleSubscriptionChange(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
-  // Query subscribers with site isolation
-  let query = supabaseClient
+async function handleSubscriptionChange(subscription: Stripe.Subscription, supabaseClient: any) {
+  // Query subscribers
+  const { data: customer } = await supabaseClient
     .from("subscribers")
     .select("*")
-    .eq("stripe_customer_id", subscription.customer);
+    .eq("stripe_customer_id", subscription.customer)
+    .single();
 
-  if (siteId) {
-    query = query.eq("site_id");  // CRITICAL: Site isolation
-  }
-
-  const customer = await query.single();
-
-  if (customer.data) {
+  if (customer) {
     const priceId = subscription.items.data[0].price.id;
     const amount = subscription.items.data[0].price.unit_amount || 0;
 
@@ -169,8 +154,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     if (amount >= 59900) subscriptionTier = "enterprise";
     else if (amount >= 29900) subscriptionTier = "professional";
 
-    // Update with site isolation
-    let updateQuery = supabaseClient
+    // Update subscriber
+    await supabaseClient
       .from("subscribers")
       .update({
         subscribed: subscription.status === "active",
@@ -180,17 +165,11 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
         updated_at: new Date().toISOString()
       })
       .eq("stripe_customer_id", subscription.customer);
-
-    if (siteId) {
-      updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
-    }
-
-    await updateQuery;
   }
 }
 
-async function handleSubscriptionCancellation(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
-  let query = supabaseClient
+async function handleSubscriptionCancellation(subscription: Stripe.Subscription, supabaseClient: any) {
+  await supabaseClient
     .from("subscribers")
     .update({
       subscribed: false,
@@ -199,51 +178,36 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
       updated_at: new Date().toISOString()
     })
     .eq("stripe_customer_id", subscription.customer);
-
-  if (siteId) {
-    query = query.eq("site_id");  // CRITICAL: Site isolation on update
-  }
-
-  await query;
 }
 
-async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any, stripe: Stripe, siteId: string | null) {
+async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any, stripe: Stripe) {
   if (!invoice.subscription) return;
 
-  // Query subscriber with site isolation
-  let subscriberQuery = supabaseClient
+  // Query subscriber
+  const { data: subscriber } = await supabaseClient
     .from("subscribers")
     .select("*")
-    .eq("stripe_customer_id", invoice.customer);
+    .eq("stripe_customer_id", invoice.customer)
+    .single();
 
-  if (siteId) {
-    subscriberQuery = subscriberQuery.eq("site_id");  // CRITICAL: Site isolation
-  }
-
-  const subscriber = await subscriberQuery.single();
-
-  if (subscriber.data) {
-    // Check if failure already exists with site isolation
-    let failureQuery = supabaseClient
+  if (subscriber) {
+    // Check if failure already exists
+    const { data: existingFailure } = await supabaseClient
       .from("payment_failures")
       .select("*")
-      .eq("subscriber_id", subscriber.data.id)
-      .eq("stripe_invoice_id", invoice.id);
+      .eq("subscriber_id", subscriber.id)
+      .eq("stripe_invoice_id", invoice.id)
+      .single();
 
-    if (siteId) {
-      failureQuery = failureQuery.eq("site_id");  // CRITICAL: Site isolation
-    }
-
-    const existingFailure = await failureQuery.single();
-
-    if (!existingFailure.data) {
-      // Create new payment failure record with site isolation
+    if (!existingFailure) {
+      // Create new payment failure record
       const nextRetry = new Date();
       nextRetry.setHours(nextRetry.getHours() + 24); // Retry in 24 hours
 
       await supabaseClient
         .from("payment_failures")
-        .insert({            subscriber_id: subscriber.data.id,
+        .insert({
+          subscriber_id: subscriber.id,
           stripe_invoice_id: invoice.id,
           failure_reason: invoice.last_finalization_error?.message || "Payment failed",
           attempt_count: 1,
@@ -251,12 +215,12 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           dunning_status: "active"
         });
     } else {
-      // Update existing failure with site isolation
-      const newAttemptCount = existingFailure.data.attempt_count + 1;
+      // Update existing failure
+      const newAttemptCount = existingFailure.attempt_count + 1;
       const nextRetry = new Date();
       nextRetry.setDate(nextRetry.getDate() + newAttemptCount); // Exponential backoff
 
-      let updateQuery = supabaseClient
+      await supabaseClient
         .from("payment_failures")
         .update({
           attempt_count: newAttemptCount,
@@ -264,52 +228,35 @@ async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any
           dunning_status: newAttemptCount >= 3 ? "suspended" : "active",
           failure_reason: invoice.last_finalization_error?.message || "Payment failed"
         })
-        .eq("id", existingFailure.data.id);
-
-      if (siteId) {
-        updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
-      }
-
-      await updateQuery;
+        .eq("id", existingFailure.id);
     }
   }
 }
 
-async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any, siteId: string | null) {
+async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any) {
   if (!invoice.subscription) return;
 
-  // Query subscriber with site isolation
-  let subscriberQuery = supabaseClient
+  // Query subscriber
+  const { data: subscriber } = await supabaseClient
     .from("subscribers")
     .select("*")
-    .eq("stripe_customer_id", invoice.customer);
+    .eq("stripe_customer_id", invoice.customer)
+    .single();
 
-  if (siteId) {
-    subscriberQuery = subscriberQuery.eq("site_id");  // CRITICAL: Site isolation
-  }
-
-  const subscriber = await subscriberQuery.single();
-
-  if (subscriber.data) {
-    // Resolve any payment failures with site isolation
-    let updateQuery = supabaseClient
+  if (subscriber) {
+    // Resolve any payment failures
+    await supabaseClient
       .from("payment_failures")
       .update({
         dunning_status: "resolved",
         resolved_at: new Date().toISOString()
       })
-      .eq("subscriber_id", subscriber.data.id)
+      .eq("subscriber_id", subscriber.id)
       .is("resolved_at", null);
-
-    if (siteId) {
-      updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
-    }
-
-    await updateQuery;
   }
 }
 
-async function handleTrialWillEnd(subscription: Stripe.Subscription, supabaseClient: any, siteId: string | null) {
+async function handleTrialWillEnd(subscription: Stripe.Subscription, supabaseClient: any) {
   // Could trigger email notifications here
   logStep("Trial ending soon", { customerId: subscription.customer, trialEnd: subscription.trial_end });
 }

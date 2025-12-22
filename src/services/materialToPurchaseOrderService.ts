@@ -1,7 +1,5 @@
 /**
  * Material to Purchase Order Service
- * Updated with multi-tenant site_id isolation
- * All methods require siteId as first parameter for complete isolation
  */
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,18 +36,16 @@ class MaterialToPurchaseOrderService {
    * Creates a purchase order from material request(s)
    */
   async createPOFromMaterials(
-    siteId: string,
     materialIds: string[],
     companyId: string,
     userId: string,
     poData: PurchaseOrderData
   ): Promise<POCreationResult> {
-        try {
+    try {
       // 1. Fetch materials
       const { data: materials, error: materialsError } = await supabase
         .from('materials')
         .select('*')
-          // CRITICAL: Site isolation
         .in('id', materialIds);
 
       if (materialsError || !materials || materials.length === 0) {
@@ -72,7 +68,6 @@ class MaterialToPurchaseOrderService {
         const { data: existingVendor } = await supabase
           .from('vendors')
           .select('id')
-            // CRITICAL: Site isolation
           .eq('name', poData.vendor_name)
           .eq('company_id', companyId)
           .single();
@@ -83,7 +78,7 @@ class MaterialToPurchaseOrderService {
           // Create new vendor
           const { data: newVendor, error: vendorError } = await supabase
             .from('vendors')
-            .insert({  // CRITICAL: Site isolation
+            .insert({
               company_id: companyId,
               name: poData.vendor_name,
               vendor_type: 'supplier',
@@ -114,7 +109,7 @@ class MaterialToPurchaseOrderService {
       // 4. Create purchase order
       const { data: newPO, error: poError } = await supabase
         .from('purchase_orders')
-        .insert({  // CRITICAL: Site isolation
+        .insert({
           company_id: companyId,
           vendor_id: vendorId,
           project_id: poData.project_id || materials[0].project_id || null,
@@ -138,7 +133,7 @@ class MaterialToPurchaseOrderService {
       }
 
       // 5. Create PO line items from materials
-      const lineItems = materials.map((material) => ({  // CRITICAL: Site isolation
+      const lineItems = materials.map((material) => ({
         purchase_order_id: newPO.id,
         material_id: material.id,
         description: material.name,
@@ -164,7 +159,6 @@ class MaterialToPurchaseOrderService {
       const { error: updateError } = await supabase
         .from('materials')
         .update({ purchase_order_id: newPO.id })
-          // CRITICAL: Site isolation
         .in('id', materialIds);
 
       if (updateError) {
@@ -189,20 +183,19 @@ class MaterialToPurchaseOrderService {
   /**
    * Gets preview data for PO creation
    */
-  async getPOPreview(siteId: string, materialIds: string[]): Promise<{
+  async getPOPreview(materialIds: string[]): Promise<{
     materials: MaterialData[] | null;
     totalCost: number;
     canCreate: boolean;
     issues: string[];
   }> {
-        try {
+    try {
       const { data: materials, error } = await supabase
         .from('materials')
         .select(`
           *,
           projects(name)
         `)
-          // CRITICAL: Site isolation
         .in('id', materialIds);
 
       if (error || !materials || materials.length === 0) {
@@ -276,12 +269,11 @@ class MaterialToPurchaseOrderService {
   /**
    * Gets suggested vendors for materials
    */
-  async getSuggestedVendors(siteId: string, companyId: string, category?: string): Promise<any[]> {
-        try {
+  async getSuggestedVendors(companyId: string, category?: string): Promise<any[]> {
+    try {
       let query = supabase
         .from('vendors')
         .select('id, name, email, phone')
-          // CRITICAL: Site isolation
         .eq('company_id', companyId)
         .eq('status', 'active')
         .order('name');

@@ -84,11 +84,9 @@ export const CreatePOFromMaterialDialog = ({
   }, [isOpen, materialIds]);
 
   const loadPreview = async () => {
-    if (!siteId) return;
-
     setLoading(true);
     try {
-      const preview = await materialToPOService.getPOPreview(siteId, materialIds);
+      const preview = await materialToPOService.getPOPreview(materialIds);
 
       setMaterials(preview.materials || []);
       setTotalCost(preview.totalCost);
@@ -119,7 +117,6 @@ export const CreatePOFromMaterialDialog = ({
 
     try {
       const vendorList = await materialToPOService.getSuggestedVendors(
-        siteId,  // CRITICAL: Site isolation
         userProfile.company_id
       );
       setVendors(vendorList);
@@ -153,7 +150,6 @@ export const CreatePOFromMaterialDialog = ({
       };
 
       const result = await materialToPOService.createPOFromMaterials(
-        siteId,  // CRITICAL: Site isolation
         materialIds,
         userProfile.company_id,
         user.id,

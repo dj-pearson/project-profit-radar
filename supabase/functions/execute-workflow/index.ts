@@ -60,9 +60,10 @@ Deno.serve(async (req) => {
 })
 
 async function startExecution(supabase: any, workflowId: string, triggerData: Record<string, any>) {
-    const { data: workflow, error: workflowError } = await supabase
+  const { data: workflow, error: workflowError } = await supabase
     .from('workflow_definitions')
-    .select('*, site_id')      .eq('id', workflowId)
+    .select('*')
+    .eq('id', workflowId)
     .single()
 
   if (workflowError) throw workflowError
@@ -73,7 +74,7 @@ async function startExecution(supabase: any, workflowId: string, triggerData: Re
     const step = steps[i]
 
     try {
-      // Create step execution record with site isolation
+      // Create step execution record
       const stepInsertData: any = {
         company_id: execution.company_id,
         execution_id: execution.id,
@@ -82,10 +83,6 @@ async function startExecution(supabase: any, workflowId: string, triggerData: Re
         step_type: step.type,
         step_config: step.config,
         started_at: new Date().toISOString()
-      }
-
-      if (siteId) {
-        stepInsertData.site_id = siteId  // CRITICAL: Site isolation
       }
 
       const { data: stepExecution, error: stepError } = await supabase

@@ -23,13 +23,12 @@ serve(async (req) => {
 
     const { company_id, period = 'monthly', start_date, end_date } = await req.json();
 
-    console.log('Calculating bid analytics for:', {  company_id, period, start_date, end_date });
+    console.log('Calculating bid analytics for:', { company_id, period, start_date, end_date });
 
-    // Get bid submissions for the period with site isolation
+    // Get bid submissions for the period
     const { data: bids, error: bidsError } = await supabaseClient
       .from('bid_submissions')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('company_id', company_id)
       .gte('submitted_at', start_date)
       .lte('submitted_at', end_date);
@@ -95,8 +94,8 @@ serve(async (req) => {
       bid_cost_efficiency: totalBidCosts > 0 ? totalWonValue / totalBidCosts : 0
     };
 
-    // Create analytics record with site isolation
-    const analyticsData = {  // CRITICAL: Site isolation
+    // Create analytics record
+    const analyticsData = {
       company_id,
       analysis_period: period,
       period_start: start_date,
@@ -116,11 +115,11 @@ serve(async (req) => {
       performance_trends: performanceTrends
     };
 
-    // Insert or update analytics record with site isolation
+    // Insert or update analytics record
     const { data: analytics, error: analyticsError } = await supabaseClient
       .from('bid_analytics')
       .upsert(analyticsData, {
-        onConflict: 'site_id,company_id,analysis_period,period_start,period_end'
+        onConflict: 'company_id,analysis_period,period_start,period_end'
       })
       .select()
       .single();

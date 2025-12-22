@@ -93,22 +93,7 @@ async function handleRequestReset(
 
   const { email } = validation.data;
 
-  console.log(`[ResetPasswordOTP] Request reset for ${email} on site ${siteId}`);
-
-  // Verify site exists
-  const { data: site, error: siteError } = await supabaseAdmin
-    .from('sites')
-    .select('id, key, name')
-    .eq('id')
-    .single();
-
-  if (siteError || !site) {
-    console.error('[ResetPasswordOTP] Invalid site:');
-    return new Response(
-      JSON.stringify({ error: 'Invalid site' }),
-      { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-    );
-  }
+  console.log(`[ResetPasswordOTP] Request reset for ${email}`);
 
   // Check if user exists - but don't reveal this to prevent enumeration
   const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
@@ -154,7 +139,6 @@ async function handleRequestReset(
 
   // Store OTP in database
   const { data: otpId, error: otpError } = await supabaseAdmin.rpc('create_otp_token', {
-    p_
     p_email: email.toLowerCase(),
     p_otp_code: otpCode,
     p_token_type: 'reset_password',
@@ -244,7 +228,6 @@ async function handleVerifyReset(
 
   // Verify OTP code
   const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {
-    p_
     p_email: email,
     p_otp_code: otpCode,
     p_token_type: 'reset_password'

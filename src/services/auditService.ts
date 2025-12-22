@@ -10,7 +10,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuditLogParams {
-  siteId: string;
   userId: string;
   companyId: string;
   actionType: string;
@@ -26,7 +25,6 @@ interface AuditLogParams {
 }
 
 interface DataAccessLogParams {
-  siteId: string;
   userId: string;
   companyId: string;
   dataType: string;
@@ -59,7 +57,7 @@ const getClientIP = async (): Promise<string | null> => {
  * Can be used in contexts where hooks are not available
  */
 export const logAuditEvent = async (params: AuditLogParams): Promise<string | null> => {
-  if (!params.siteId || !params.userId || !params.companyId) {
+  if (!params.userId || !params.companyId) {
     console.error('Missing required params for audit logging');
     return null;
   }
@@ -68,7 +66,6 @@ export const logAuditEvent = async (params: AuditLogParams): Promise<string | nu
     const ip = await getClientIP();
 
     const { data, error } = await supabase.rpc('log_audit_event', {
-      p_site_id: params.siteId,
       p_company_id: params.companyId,
       p_user_id: params.userId,
       p_action_type: params.actionType,
@@ -102,7 +99,7 @@ export const logAuditEvent = async (params: AuditLogParams): Promise<string | nu
  * Log a data access event directly to the database
  */
 export const logDataAccess = async (params: DataAccessLogParams): Promise<string | null> => {
-  if (!params.siteId || !params.userId || !params.companyId) {
+  if (!params.userId || !params.companyId) {
     console.error('Missing required params for data access logging');
     return null;
   }
@@ -111,7 +108,6 @@ export const logDataAccess = async (params: DataAccessLogParams): Promise<string
     const ip = await getClientIP();
 
     const { data, error } = await supabase.rpc('log_data_access', {
-      p_site_id: params.siteId,
       p_company_id: params.companyId,
       p_user_id: params.userId,
       p_data_type: params.dataType,
@@ -142,14 +138,13 @@ export const logDataAccess = async (params: DataAccessLogParams): Promise<string
  * Convenience function for logging security events
  */
 export const logSecurityEvent = async (
-  siteId: string,
   userId: string,
   companyId: string,
   eventType: string,
   details: Record<string, unknown>,
   riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'medium'
 ): Promise<string | null> => {
-  return logAuditEvent({ 
+  return logAuditEvent({
     userId,
     companyId,
     actionType: eventType,
@@ -165,7 +160,6 @@ export const logSecurityEvent = async (
  * Convenience function for logging authentication events
  */
 export const logAuthEvent = async (
-  siteId: string,
   userId: string,
   companyId: string,
   action: 'login' | 'logout' | 'login_failed' | 'password_reset' | 'signup',
@@ -187,7 +181,7 @@ export const logAuthEvent = async (
     signup: 'low'
   };
 
-  return logAuditEvent({ 
+  return logAuditEvent({
     userId,
     companyId,
     actionType: action,
@@ -206,7 +200,6 @@ export const logAuthEvent = async (
  * Convenience function for logging user management events
  */
 export const logUserManagementEvent = async (
-  siteId: string,
   userId: string,
   companyId: string,
   actionType: string,
@@ -214,7 +207,7 @@ export const logUserManagementEvent = async (
   targetUserName: string,
   changes?: Record<string, unknown>
 ): Promise<string | null> => {
-  return logAuditEvent({ 
+  return logAuditEvent({
     userId,
     companyId,
     actionType,

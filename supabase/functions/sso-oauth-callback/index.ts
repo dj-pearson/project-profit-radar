@@ -325,7 +325,6 @@ serve(async (req) => {
         last_name: userInfo.lastName || "",
         role: ssoConnection.default_role || "office_staff",
         is_active: true,
-        site_id: ssoConnection.tenant_id,
       });
     }
 

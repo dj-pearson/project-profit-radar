@@ -4,11 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-site-key',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Default site key for BuildDesk
-const DEFAULT_SITE_KEY = 'builddesk';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -29,15 +26,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-        const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
-    const { data: siteData } = await supabaseClient
-      .from('sites')
-      .select('id')
-      .eq('key', siteKey)
-      .single();
-
-        logStep("Site resolved", { siteKey });
-
     const { referee_email, referee_company_id, subscription_tier, subscription_duration_months } = await req.json();
 
     if (!referee_email || !referee_company_id) {
@@ -46,8 +34,8 @@ serve(async (req) => {
 
     logStep("Processing signup", { referee_email, referee_company_id, subscription_tier });
 
-    // Find pending referral for this email with site isolation
-    let referralQuery = supabaseClient
+    // Find pending referral for this email
+    const { data: referrals, error: referralError } = await supabaseClient
       .from('affiliate_referrals')
       .select(`
         *,
@@ -57,12 +45,6 @@ serve(async (req) => {
       .eq('referee_email', referee_email)
       .eq('referral_status', 'pending')
       .gt('expires_at', new Date().toISOString());
-
-    if (siteId) {
-      referralQuery = referralQuery;  // CRITICAL: Site isolation
-    }
-
-    const { data: referrals, error: referralError } = await referralQuery;
 
     if (referralError || !referrals || referrals.length === 0) {
       logStep("No valid pending referrals found");
@@ -82,19 +64,13 @@ serve(async (req) => {
     if (referral.referrer_company_id === referee_company_id) {
       logStep("Self-referral detected, marking as invalid");
 
-      let expireQuery = supabaseClient
+      await supabaseClient
         .from('affiliate_referrals')
         .update({
           referral_status: 'expired',
           updated_at: new Date().toISOString()
         })
         .eq('id', referral.id);
-
-      if (siteId) {
-        expireQuery = expireQuery;  // CRITICAL: Site isolation on update
-      }
-
-      await expireQuery;
 
       return new Response(JSON.stringify({
         success: true,
@@ -105,8 +81,8 @@ serve(async (req) => {
       });
     }
 
-    // Update referral with signup details with site isolation
-    let updateQuery = supabaseClient
+    // Update referral with signup details
+    const { error: updateError } = await supabaseClient
       .from('affiliate_referrals')
       .update({
         referee_company_id: referee_company_id,
@@ -116,12 +92,6 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', referral.id);
-
-    if (siteId) {
-      updateQuery = updateQuery;  // CRITICAL: Site isolation on update
-    }
-
-    const { error: updateError } = await updateQuery;
 
     if (updateError) {
       logStep("Error updating referral", { error: updateError });
@@ -135,12 +105,13 @@ serve(async (req) => {
       // Check minimum subscription duration requirement
       const minDuration = referral.affiliate_programs?.min_subscription_duration_months || 1;
       if (subscription_duration_months >= minDuration) {
-        
-        // Create reward for referrer with site isolation
+
+        // Create reward for referrer
         if (referral.referrer_reward_months > 0) {
           await supabaseClient
             .from('affiliate_rewards')
-            .insert({                referral_id: referral.id,
+            .insert({
+              referral_id: referral.id,
               company_id: referral.referrer_company_id,
               reward_type: 'referrer',
               reward_months: referral.referrer_reward_months,
@@ -149,11 +120,12 @@ serve(async (req) => {
             });
         }
 
-        // Create reward for referee with site isolation
+        // Create reward for referee
         if (referral.referee_reward_months > 0) {
           await supabaseClient
             .from('affiliate_rewards')
-            .insert({                referral_id: referral.id,
+            .insert({
+              referral_id: referral.id,
               company_id: referee_company_id,
               reward_type: 'referee',
               reward_months: referral.referee_reward_months,
@@ -162,8 +134,8 @@ serve(async (req) => {
             });
         }
 
-        // Update referral status to rewarded with site isolation
-        let rewardedQuery = supabaseClient
+        // Update referral status to rewarded
+        await supabaseClient
           .from('affiliate_referrals')
           .update({
             referral_status: 'rewarded',
@@ -173,14 +145,8 @@ serve(async (req) => {
           })
           .eq('id', referral.id);
 
-        if (siteId) {
-          rewardedQuery = rewardedQuery;  // CRITICAL: Site isolation on update
-        }
-
-        await rewardedQuery;
-
-        // Update affiliate code successful referrals count with site isolation
-        let codeUpdateQuery = supabaseClient
+        // Update affiliate code successful referrals count
+        await supabaseClient
           .from('affiliate_codes')
           .update({
             successful_referrals: referral.affiliate_codes.successful_referrals + 1,
@@ -188,12 +154,6 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('id', referral.affiliate_code_id);
-
-        if (siteId) {
-          codeUpdateQuery = codeUpdateQuery;  // CRITICAL: Site isolation on update
-        }
-
-        await codeUpdateQuery;
 
         logStep("Rewards created successfully");
       } else {

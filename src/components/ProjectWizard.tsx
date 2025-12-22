@@ -302,7 +302,6 @@ const ProjectWizard: React.FC<ProjectWizardProps> = ({
         permit_numbers:
           formData.permitNumbers.length > 0 ? formData.permitNumbers : null,
         company_id: userProfile.company_id,
-        site_id: userProfile.site_id || null,
         created_by: user.id,
       };
 

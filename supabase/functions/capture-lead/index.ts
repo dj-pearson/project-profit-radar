@@ -51,15 +51,6 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-        const siteKey = req.headers.get("x-site-key") || DEFAULT_SITE_KEY;
-    const { data: siteData } = await supabaseClient
-      .from('sites')
-      .select('id')
-      .eq('key', siteKey)
-      .single();
-
-        logStep("Site resolved", { siteKey });
-
     const requestData: LeadCaptureRequest = await req.json();
     const {
       email,
@@ -88,17 +79,12 @@ serve(async (req) => {
 
     logStep("Processing lead capture", { email, interestType });
 
-    // Check if lead already exists with site isolation
-    let existingLeadQuery = supabaseClient
+    // Check if lead already exists
+    const { data: existingLead } = await supabaseClient
       .from('leads')
       .select('*')
-      .eq('email', email);
-
-    if (siteId) {
-      existingLeadQuery = existingLeadQuery;  // CRITICAL: Site isolation
-    }
-
-    const { data: existingLead } = await existingLeadQuery.single();
+      .eq('email', email)
+      .single();
 
     let leadId: string;
     let isNewLead = false;
@@ -124,26 +110,22 @@ serve(async (req) => {
       if (!existingLead.utm_medium && utm_medium) updateData.utm_medium = utm_medium;
       if (!existingLead.utm_campaign && utm_campaign) updateData.utm_campaign = utm_campaign;
 
-      // Update with site isolation
-      let updateQuery = supabaseClient
+      const { data: updatedLead, error: updateError } = await supabaseClient
         .from('leads')
         .update(updateData)
-        .eq('id', existingLead.id);
-
-      if (siteId) {
-        updateQuery = updateQuery;  // CRITICAL: Site isolation on update
-      }
-
-      const { data: updatedLead, error: updateError } = await updateQuery.select().single();
+        .eq('id', existingLead.id)
+        .select()
+        .single();
 
       if (updateError) throw updateError;
       leadId = updatedLead.id;
       logStep("Updated existing lead", { leadId });
     } else {
-      // Create new lead with site isolation
+      // Create new lead
       const { data: newLead, error: createError } = await supabaseClient
         .from('leads')
-        .insert({            email,
+        .insert({
+          email,
           first_name: firstName || null,
           last_name: lastName || null,
           company_name: companyName || null,
@@ -170,14 +152,15 @@ serve(async (req) => {
       logStep("Created new lead", { leadId });
     }
 
-    // Track activity with site isolation
+    // Track activity
     const activityType = downloadedResource ? 'resource_downloaded' :
                         interestType === 'newsletter' ? 'newsletter_signup' :
                         'lead_captured';
 
     await supabaseClient
       .from('lead_activities')
-      .insert({          lead_id: leadId,
+      .insert({
+        lead_id: leadId,
         activity_type: activityType,
         activity_data: {
           interest_type: interestType,
@@ -188,10 +171,11 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent')
       });
 
-    // Track conversion event with site isolation
+    // Track conversion event
     await supabaseClient
       .from('conversion_events')
-      .insert({          event_type: 'lead_captured',
+      .insert({
+        event_type: 'lead_captured',
         event_step: 1,
         funnel_name: 'marketing_funnel',
         utm_source,
@@ -206,11 +190,12 @@ serve(async (req) => {
         }
       });
 
-    // Store attribution if new lead with site isolation
+    // Store attribution if new lead
     if (isNewLead && (utm_source || utm_medium || utm_campaign)) {
       await supabaseClient
         .from('user_attribution')
-        .insert({            // Note: We'll need to link this later when user signs up
+        .insert({
+          // Note: We'll need to link this later when user signs up
           first_touch_utm_source: utm_source,
           first_touch_utm_medium: utm_medium,
           first_touch_utm_campaign: utm_campaign,

@@ -30,7 +30,6 @@ export const useOptimizedProjects = (options?: Partial<UseQueryOptions>) => {
           created_at,
           updated_at
         `)
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('updated_at', { ascending: false });
 
@@ -44,7 +43,7 @@ export const useOptimizedProjects = (options?: Partial<UseQueryOptions>) => {
 };
 
 /**
- * Optimized single project query with related data and multi-tenant isolation
+ * Optimized single project query with related data
  */
 export const useOptimizedProject = (projectId: string, options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
@@ -82,7 +81,6 @@ export const useOptimizedProject = (projectId: string, options?: Partial<UseQuer
           )
         `)
         .eq('id', projectId)
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .limit(10, { foreignTable: 'recent_expenses' })
         .limit(5, { foreignTable: 'recent_documents' })
@@ -100,7 +98,7 @@ export const useOptimizedProject = (projectId: string, options?: Partial<UseQuer
 };
 
 /**
- * Optimized financial data queries with multi-tenant isolation
+ * Optimized financial data queries
  */
 export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
@@ -121,7 +119,6 @@ export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
           project_id,
           created_at
         `)
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false })
         .limit(100); // Reasonable limit for performance
@@ -136,7 +133,7 @@ export const useOptimizedInvoices = (options?: Partial<UseQueryOptions>) => {
 };
 
 /**
- * Optimized dashboard data with aggregations and multi-tenant isolation
+ * Optimized dashboard data with aggregations
  */
 export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
@@ -145,32 +142,28 @@ export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
     queryKey: [...queryKeys.dashboardData],
     queryFn: async () => {
       if (!userProfile?.company_id) throw new Error('No company ID');
-            // Use parallel queries for better performance - all with site isolation
+            // Use parallel queries for better performance
       const [projectsRes, invoicesRes, expensesRes, tasksRes] = await Promise.all([
         supabase
           .from('projects')
           .select('id, status, budget, completion_percentage')
-            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id),
 
         supabase
           .from('invoices')
           .select('id, amount, status, due_date')
-            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()),
 
         supabase
           .from('expenses')
           .select('id, amount, expense_date')
-            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .gte('expense_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
 
         supabase
           .from('tasks')
           .select('id, status, priority, due_date, project_id')
-            // CRITICAL: Site isolation
           .eq('company_id', userProfile.company_id)
           .neq('status', 'completed')
       ]);
@@ -216,7 +209,7 @@ export const useOptimizedDashboard = (options?: Partial<UseQueryOptions>) => {
 };
 
 /**
- * Optimized CRM queries with multi-tenant isolation
+ * Optimized CRM queries
  */
 export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) => {
   const { userProfile } = useAuth();
@@ -238,7 +231,6 @@ export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) =>
           contact_name,
           project_type
         `)
-          // CRITICAL: Site isolation
         .eq('company_id', userProfile.company_id)
         .order('created_at', { ascending: false });
 
@@ -252,7 +244,7 @@ export const useOptimizedOpportunities = (options?: Partial<UseQueryOptions>) =>
 };
 
 /**
- * Optimized mutation hooks with automatic cache updates and multi-tenant isolation
+ * Optimized mutation hooks with automatic cache updates
  */
 export const useOptimizedProjectMutation = () => {
   const queryClient = useQueryClient();
@@ -263,7 +255,7 @@ export const useOptimizedProjectMutation = () => {
             const { data, error } = await supabase
         .from('projects')
         .insert([{
-          ...projectData,  // CRITICAL: Include site_id on insert
+          ...projectData,
           company_id: userProfile?.company_id
         }])
         .select()
@@ -298,7 +290,7 @@ export const useOptimizedTaskMutation = () => {
         .from('tasks')
         .insert([{
           ...taskData,
-          project_id: projectId,  // CRITICAL: Include site_id on insert
+          project_id: projectId,
           company_id: userProfile?.company_id
         }])
         .select()
@@ -337,7 +329,7 @@ export const useOptimizedInvoiceMutation = () => {
             const { data, error } = await supabase
         .from('invoices')
         .insert([{
-          ...invoiceData,  // CRITICAL: Include site_id on insert
+          ...invoiceData,
           company_id: userProfile?.company_id
         }])
         .select()
@@ -363,19 +355,19 @@ export const useOptimizedInvoiceMutation = () => {
 };
 
 /**
- * Background sync hook for real-time updates with multi-tenant isolation
+ * Background sync hook for real-time updates
  */
 export const useBackgroundSync = () => {
   const queryClient = useQueryClient();
   const { userProfile } = useAuth();
 
-  // Set up real-time subscriptions for critical data with site isolation
+  // Set up real-time subscriptions for critical data
   React.useEffect(() => {
     if (!userProfile?.company_id) return;
 
     const channels: any[] = [];
 
-    // Projects subscription with site isolation
+    // Projects subscription
     const projectsChannel = supabase
       .channel('projects-changes')
       .on(
@@ -384,22 +376,18 @@ export const useBackgroundSync = () => {
           event: '*',
           schema: 'public',
           table: 'projects',
-          filter: `site_id=eq.${siteId}`,  // CRITICAL: Filter by site_id
+          filter: `company_id=eq.${userProfile.company_id}`,
         },
         (payload) => {
-          // Only process if same company
-          if ((payload as any).new?.company_id === userProfile.company_id ||
-              (payload as any).old?.company_id === userProfile.company_id) {
-            invalidateQueries.projects();
-            invalidateQueries.dashboard();
-          }
+          invalidateQueries.projects();
+          invalidateQueries.dashboard();
         }
       )
       .subscribe();
 
     channels.push(projectsChannel);
 
-    // Tasks subscription with site isolation
+    // Tasks subscription
     const tasksChannel = supabase
       .channel('tasks-changes')
       .on(
@@ -408,17 +396,13 @@ export const useBackgroundSync = () => {
           event: '*',
           schema: 'public',
           table: 'tasks',
-          filter: `site_id=eq.${siteId}`,  // CRITICAL: Filter by site_id
+          filter: `company_id=eq.${userProfile.company_id}`,
         },
         (payload) => {
-          // Only process if same company
-          if ((payload as any).new?.company_id === userProfile.company_id ||
-              (payload as any).old?.company_id === userProfile.company_id) {
-            if ((payload as any).new?.project_id) {
-              invalidateQueries.project((payload as any).new.project_id);
-            }
-            invalidateQueries.dashboard();
+          if ((payload as any).new?.project_id) {
+            invalidateQueries.project((payload as any).new.project_id);
           }
+          invalidateQueries.dashboard();
         }
       )
       .subscribe();
@@ -428,7 +412,7 @@ export const useBackgroundSync = () => {
     return () => {
       channels.forEach(channel => supabase.removeChannel(channel));
     };
-  }, [userProfile?.company_id, siteId, queryClient]);
+  }, [userProfile?.company_id, queryClient]);
 };
 
 /**

@@ -192,8 +192,7 @@ const Safety = () => {
         supabase
           .from('safety_incidents')
           .select('id, status')
-          .eq('company_id', profile.company_id)
-          ,
+          .eq('company_id', profile.company_id),
         
         // Completed checklists this month
         supabase

@@ -74,7 +74,7 @@ export const useDashboardData = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch basic project data with site isolation
+      // Fetch basic project data
       const { data: projects, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, budget, completion_percentage, status, start_date, end_date')
@@ -159,7 +159,7 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [userProfile?.company_id, siteId, toast]);
+  }, [userProfile?.company_id, toast]);
 
   useEffect(() => {
     loadDashboardData();

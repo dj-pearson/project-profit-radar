@@ -23,7 +23,6 @@ interface DemoRequest {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
-  site_id?: string;    site_key?: string; // Optional site_key from request
 }
 
 const logStep = (step: string, details?: any) => {
@@ -47,24 +46,6 @@ serve(async (req) => {
 
     const requestData: DemoRequest = await req.json();
 
-        let siteId = requestData.site_id;
-    if (!siteId && requestData.site_key) {
-      const { data: siteData } = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', requestData.site_key)
-        .single();
-      siteId = siteData?.id;
-    }
-    = await supabaseClient
-        .from('sites')
-        .select('id')
-        .eq('key', 'builddesk')
-        .single();
-      siteId = defaultSite?.id;
-    }
-
-    logStep("Site resolved", { siteId });
     const {
       email,
       firstName,
@@ -90,11 +71,10 @@ serve(async (req) => {
 
     logStep("Processing demo request", { email, companyName });
 
-    // Check if lead already exists with site isolation
+    // Check if lead already exists
     const { data: existingLead } = await supabaseClient
       .from('leads')
       .select('id')
-        // CRITICAL: Site isolation
       .eq('email', email)
       .single();
 
@@ -128,10 +108,10 @@ serve(async (req) => {
       leadId = updatedLead.id;
       logStep("Updated existing lead", { leadId });
     } else {
-      // Create new lead with site isolation
+      // Create new lead
       const { data: newLead, error: createError } = await supabaseClient
         .from('leads')
-        .insert({  // CRITICAL: Site isolation
+        .insert({
           email,
           first_name: firstName,
           last_name: lastName,
@@ -156,10 +136,10 @@ serve(async (req) => {
       logStep("Created new lead", { leadId });
     }
 
-    // Create demo request record with site isolation
+    // Create demo request record
     const { data: demoRequest, error: demoError } = await supabaseClient
       .from('demo_requests')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         lead_id: leadId,
         email,
         first_name: firstName,
@@ -180,10 +160,10 @@ serve(async (req) => {
 
     logStep("Created demo request", { demoRequestId: demoRequest.id });
 
-    // Track activity with site isolation
+    // Track activity
     await supabaseClient
       .from('lead_activities')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         lead_id: leadId,
         activity_type: 'demo_request',
         activity_data: {
@@ -194,10 +174,10 @@ serve(async (req) => {
         }
       });
 
-    // Track conversion event with site isolation
+    // Track conversion event
     await supabaseClient
       .from('conversion_events')
-      .insert({  // CRITICAL: Site isolation
+      .insert({
         event_type: 'demo_requested',
         event_step: 2,
         funnel_name: 'sales_funnel',

@@ -119,14 +119,14 @@ serve(async (req) => {
 
     logStep("Stripe checkout session created", { sessionId: session.id, url: session.url });
 
-    // Update company subscription status to 'pending' if company_id provided with site isolation
+    // Update company subscription status to 'pending' if company_id provided
     if (company_id) {
       const supabaseService = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
-      let updateQuery = supabaseService
+      await supabaseService
         .from("companies")
         .update({
           subscription_tier,
@@ -134,12 +134,6 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq("id", company_id);
-
-      if (siteId) {
-        updateQuery = updateQuery.eq("site_id");  // CRITICAL: Site isolation on update
-      }
-
-      await updateQuery;
 
       logStep("Updated company subscription status", { company_id, status: "pending" });
     }

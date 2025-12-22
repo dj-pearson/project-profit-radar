@@ -38,7 +38,7 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize auth context with site isolation
+    // Initialize auth context
     const authContext = await initializeAuthContext(req)
     if (!authContext) {
       return errorResponse('Unauthorized - Missing or invalid authentication', 401)
@@ -76,8 +76,8 @@ serve(async (req) => {
   }
 })
 
-// Check if a location is within any active geofences (with site isolation)
-async function checkLocation(supabase: any, siteId: string, params: {
+// Check if a location is within any active geofences
+async function checkLocation(supabase: any, params: {
   lat: number
   lng: number
   user_id?: string
@@ -85,11 +85,10 @@ async function checkLocation(supabase: any, siteId: string, params: {
 }) {
   const { lat, lng, user_id, project_id } = params
 
-  // Get active geofences with site isolation
+  // Get active geofences
   let query = supabase
     .from('geofences')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('is_active', true)
 
   if (project_id) {
@@ -145,8 +144,8 @@ function calculateDistance(params: {
   })
 }
 
-// Check for geofence breaches (with site isolation)
-async function checkGeofenceBreach(supabase: any, siteId: string, params: {
+// Check for geofence breaches
+async function checkGeofenceBreach(supabase: any, params: {
   entry_id: string
   geofence_id: string
   lat: number
@@ -154,12 +153,11 @@ async function checkGeofenceBreach(supabase: any, siteId: string, params: {
 }) {
   const { entry_id, geofence_id, lat, lng } = params
 
-  // Get geofence details with site isolation
+  // Get geofence details
   const { data: geofence, error: geoError } = await supabase
     .from('geofences')
     .select('*')
     .eq('id', geofence_id)
-      // CRITICAL: Site isolation
     .single()
 
   if (geoError) throw geoError
@@ -173,7 +171,7 @@ async function checkGeofenceBreach(supabase: any, siteId: string, params: {
     : isPointInPolygon({ lat, lng }, geofence.polygon_coords || [])
 
   if (!isInside) {
-    // Create breach alert with site isolation
+    // Create breach alert
     const distance = calculateHaversineDistance(
       { lat, lng },
       { lat: geofence.center_lat, lng: geofence.center_lng }
@@ -183,7 +181,8 @@ async function checkGeofenceBreach(supabase: any, siteId: string, params: {
       .from('geofence_breach_alerts')
       .insert({
         geofence_id,
-        time_entry_id: entry_id,          breach_type: 'outside',
+        time_entry_id: entry_id,
+        breach_type: 'outside',
         distance_from_boundary_meters: distance - geofence.radius_meters,
         breach_timestamp: new Date().toISOString()
       })
@@ -201,20 +200,19 @@ async function checkGeofenceBreach(supabase: any, siteId: string, params: {
   })
 }
 
-// Process GPS entry and calculate distances (with site isolation)
-async function processGPSEntry(supabase: any, siteId: string, params: {
+// Process GPS entry and calculate distances
+async function processGPSEntry(supabase: any, params: {
   entry_id: string
   user_id: string
   project_id?: string
 }) {
   const { entry_id, user_id, project_id } = params
 
-  // Get the GPS entry with site isolation
+  // Get the GPS entry
   const { data: entry, error: entryError } = await supabase
     .from('gps_time_entries')
     .select('*')
     .eq('id', entry_id)
-      // CRITICAL: Site isolation
     .single()
 
   if (entryError) throw entryError
@@ -226,23 +224,21 @@ async function processGPSEntry(supabase: any, siteId: string, params: {
       { lat: entry.clock_out_lat, lng: entry.clock_out_lng }
     )
 
-    // Update entry with calculated distance (with site isolation)
+    // Update entry with calculated distance
     await supabase
       .from('gps_time_entries')
       .update({
         distance_traveled_meters: travelDistance
       })
-      .eq('id', entry_id)
-        // CRITICAL: Site isolation
+      .eq('id', entry_id);
   }
 
-  // Check geofence compliance if project is specified (with site isolation)
+  // Check geofence compliance if project is specified
   if (project_id) {
     const { data: geofences } = await supabase
       .from('geofences')
       .select('*')
       .eq('project_id', project_id)
-        // CRITICAL: Site isolation
       .eq('is_active', true)
 
     if (geofences && geofences.length > 0) {
@@ -254,12 +250,13 @@ async function processGPSEntry(supabase: any, siteId: string, params: {
         )
 
         if (!isInGeofence) {
-          // Create breach alert with site isolation
+          // Create breach alert
           await supabase
             .from('geofence_breach_alerts')
             .insert({
               geofence_id: geofence.id,
-              time_entry_id: entry_id,                breach_type: 'clock_in_outside',
+              time_entry_id: entry_id,
+              breach_type: 'clock_in_outside',
               breach_timestamp: entry.clock_in_time
             })
         }

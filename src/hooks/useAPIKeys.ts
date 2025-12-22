@@ -12,7 +12,6 @@ import { supabase } from '@/integrations/supabase/client';
 export interface APIKey {
   id: string;
   company_id: string;
-  site_id: string;
   key_name: string;
   api_key_prefix: string;
   hash_preview?: string;
@@ -64,7 +63,7 @@ export interface RateLimitStatus {
  * Hook to fetch API keys for the current company
  */
 export function useAPIKeys(options?: { enabled?: boolean }) {
-  const {  user } = useAuth();
+  const { user } = useAuth();
 
   return useQuery({
     queryKey: ['api-keys'],
@@ -75,7 +74,6 @@ export function useAPIKeys(options?: { enabled?: boolean }) {
         .select(`
           id,
           company_id,
-          site_id,
           key_name,
           api_key_prefix,
           hash_algorithm,
@@ -109,7 +107,7 @@ export function useAPIKeys(options?: { enabled?: boolean }) {
  * Hook to create a new API key
  */
 export function useCreateAPIKey() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -130,7 +128,6 @@ export function useCreateAPIKey() {
       // Call the create_api_key function
       const { data, error } = await supabase.rpc('create_api_key', {
         p_company_id: profile.company_id,
-        p_
         p_key_name: request.key_name,
         p_permissions: request.permissions || ['read'],
         p_expires_at: request.expires_at || null,
@@ -154,7 +151,7 @@ export function useCreateAPIKey() {
  * Hook to rotate an API key
  */
 export function useRotateAPIKey() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<RotateKeyResponse> => {
@@ -179,7 +176,7 @@ export function useRotateAPIKey() {
  * Hook to toggle API key active status
  */
 export function useToggleAPIKey() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ keyId, isActive }: { keyId: string; isActive: boolean }): Promise<void> => {
@@ -189,8 +186,7 @@ export function useToggleAPIKey() {
           is_active: isActive,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', keyId)
-        ;
+        .eq('id', keyId);
 
       if (error) throw error;
     },
@@ -204,15 +200,14 @@ export function useToggleAPIKey() {
  * Hook to delete an API key
  */
 export function useDeleteAPIKey() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<void> => {
             const { error } = await supabase
         .from('api_keys')
         .delete()
-        .eq('id', keyId)
-        ;
+        .eq('id', keyId);
 
       if (error) throw error;
     },
@@ -226,7 +221,7 @@ export function useDeleteAPIKey() {
  * Hook to update API key settings
  */
 export function useUpdateAPIKey() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -242,8 +237,7 @@ export function useUpdateAPIKey() {
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', keyId)
-        ;
+        .eq('id', keyId);
 
       if (error) throw error;
     },
@@ -257,7 +251,7 @@ export function useUpdateAPIKey() {
  * Hook to get rate limit status for an API key
  */
 export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enabled?: boolean }) {
-    return useQuery({
+  return useQuery({
     queryKey: ['api-key-rate-limit', keyId],
     queryFn: async (): Promise<RateLimitStatus> => {
       if (!keyId) throw new Error('Missing required parameters');
@@ -307,8 +301,8 @@ export function useAPIKeyRateLimit(keyId: string | undefined, options?: { enable
  * Hook to get API key usage statistics
  */
 export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) {
-    return useQuery({
-    queryKey: [ keyId],
+  return useQuery({
+    queryKey: ['api-key-stats', keyId],
     queryFn: async () => {
             let query = supabase
         .from('api_keys')
@@ -317,8 +311,6 @@ export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) 
       if (keyId) {
         query = query.eq('id', keyId);
       }
-
-      query = query;
 
       const { data, error } = await query;
 
@@ -352,7 +344,7 @@ export function useAPIKeyStats(keyId?: string, options?: { enabled?: boolean }) 
  * Hook to retrieve a recoverable API key (root admin only)
  */
 export function useRetrieveAPIKey() {
-  const {  user } = useAuth();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (keyId: string): Promise<string> => {
@@ -383,8 +375,8 @@ export function useRetrieveAPIKey() {
  * Hook to get sensitive data access log
  */
 export function useSensitiveDataAccessLog(options?: { limit?: number; enabled?: boolean }) {
-    return useQuery({
-    queryKey: [ options?.limit],
+  return useQuery({
+    queryKey: ['sensitive-data-access-log', options?.limit],
     queryFn: async () => {
             const { data, error } = await supabase
         .from('sensitive_data_access_log')

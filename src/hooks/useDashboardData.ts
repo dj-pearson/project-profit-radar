@@ -1,6 +1,5 @@
 /**
  * Dashboard Data Hook
- * Updated with multi-tenant site_id isolation
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,7 +94,7 @@ export function useDashboardData() {
       try {
         setLoading(true);
 
-        // Load projects with site isolation
+        // Load projects
         const { data: projects, error: projectsError } = await supabase
           .from('projects')
           .select('id, name, status, completion_percentage')
@@ -171,7 +170,7 @@ export function useDashboardData() {
   }, [userProfile?.company_id]);
 
   const refetch = () => {
-    if (userProfile?.company_id && siteId) {
+    if (userProfile?.company_id) {
       setLoading(true);
       setError(null);
     }

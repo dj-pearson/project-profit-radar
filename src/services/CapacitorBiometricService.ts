@@ -48,7 +48,6 @@ export type BiometricErrorCode =
 export interface StoredCredentials {
   email: string;
   userId: string;
-  siteId: string;
   lastAuthenticated: string;
   deviceTrustId?: string;
 }

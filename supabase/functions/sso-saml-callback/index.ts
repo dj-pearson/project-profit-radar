@@ -273,7 +273,6 @@ serve(async (req) => {
         last_name: assertion.lastName || "",
         role: matchedConnection.default_role || "office_staff",
         is_active: true,
-        site_id: matchedConnection.tenant_id,
       });
     }
 

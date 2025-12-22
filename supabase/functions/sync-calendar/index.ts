@@ -35,11 +35,10 @@ serve(async (req) => {
       throw new Error("Integration ID and Company ID are required");
     }
 
-    // Get integration details with site isolation
+    // Get integration details
     const { data: integration, error: integrationError } = await supabaseClient
       .from('calendar_integrations')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('id', integration_id)
       .eq('company_id', company_id)
       .single();
@@ -58,11 +57,11 @@ serve(async (req) => {
       throw new Error(`Unsupported provider: ${integration.provider}`);
     }
 
-    // Store events in database with site isolation
+    // Store events in database
     for (const event of events) {
       await supabaseClient
         .from('calendar_events')
-        .upsert({  // CRITICAL: Site isolation
+        .upsert({
           company_id,
           title: event.title,
           start_time: event.start_time,
@@ -72,15 +71,14 @@ serve(async (req) => {
           external_id: event.external_id,
           integration_id,
         }, {
-          onConflict: 'external_id,integration_id,site_id'
+          onConflict: 'external_id,integration_id'
         });
     }
 
-    // Update last sync time with site isolation
+    // Update last sync time
     await supabaseClient
       .from('calendar_integrations')
       .update({ last_sync: new Date().toISOString() })
-        // CRITICAL: Site isolation
       .eq('id', integration_id);
 
     logStep("Sync completed", { eventsCount: events.length });

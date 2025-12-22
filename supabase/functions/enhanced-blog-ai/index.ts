@@ -52,7 +52,7 @@ serve(async (req) => {
   try {
     logStep("Enhanced Blog AI Function started", { method: req.method });
 
-        const authContext = await initializeAuthContext(req);
+    const authContext = await initializeAuthContext(req);
     if (!authContext) {
       return errorResponse('Unauthorized', 401);
     }
@@ -60,11 +60,10 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     logStep("User authenticated", { userId: user.id });
 
-    // Check if user is root admin with site isolation
+    // Check if user is root admin
     const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('role, company_id')
-        // CRITICAL: Site isolation
       .eq('id', user.id)
       .single();
 
@@ -115,18 +114,16 @@ serve(async (req) => {
 
 async function handleAutoGeneration(
   supabaseClient: any,
-  siteId: string,
   companyId: string,
   suggestedTopic?: string,
   customSettings?: Partial<GenerationSettings>
 ) {
-  logStep("Starting auto generation", {  companyId, suggestedTopic });
+  logStep("Starting auto generation", { companyId, suggestedTopic });
 
-  // Get generation settings with site isolation
+  // Get generation settings
   const { data: settings, error: settingsError } = await supabaseClient
     .from('blog_auto_generation_settings')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .single();
 
@@ -146,10 +143,10 @@ async function handleAutoGeneration(
   // Generate content using the selected AI provider
   const generatedContent = await generateContentWithAI(finalSettings, selectedTopic || "construction industry best practices", companyId, supabaseClient);
 
-  // Create blog post with site isolation
+  // Create blog post
   const { data: blogPost, error: postError } = await supabaseClient
     .from('blog_posts')
-    .insert([{  // CRITICAL: Site isolation
+    .insert([{
       title: generatedContent.title,
       slug: generateSlug(generatedContent.title),
       body: generatedContent.body,
@@ -165,10 +162,10 @@ async function handleAutoGeneration(
 
   if (postError) throw postError;
 
-  // Record topic history for diversity tracking with site isolation
+  // Record topic history for diversity tracking
   await recordTopicHistory(supabaseClient, companyId, blogPost.id, selectedTopic || '', generatedContent, finalSettings);
 
-  // Analyze content with site isolation
+  // Analyze content
   await analyzeGeneratedContent(supabaseClient, blogPost.id, generatedContent, finalSettings);
 
   // Send notifications if enabled
@@ -188,18 +185,16 @@ async function handleAutoGeneration(
 
 async function handleManualGeneration(
   supabaseClient: any,
-  siteId: string,
   companyId: string,
   suggestedTopic?: string,
   customSettings?: Partial<GenerationSettings>
 ) {
-  logStep("Starting manual content generation", {  companyId, suggestedTopic });
+  logStep("Starting manual content generation", { companyId, suggestedTopic });
 
-  // Get generation settings or use defaults if not configured with site isolation
+  // Get generation settings or use defaults if not configured
   const { data: settings, error: settingsError } = await supabaseClient
     .from('blog_auto_generation_settings')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .single();
 
@@ -251,17 +246,15 @@ async function handleManualGeneration(
 
 async function generateDiverseTopic(
   supabaseClient: any,
-  siteId: string,
   companyId: string,
   settings: GenerationSettings
 ): Promise<string> {
-  logStep("Generating diverse topic", {  companyId });
+  logStep("Generating diverse topic", { companyId });
 
-  // Get recent topics based on analysis depth with site isolation
+  // Get recent topics based on analysis depth
   let recentTopicsQuery = supabaseClient
     .from('blog_topic_history')
     .select('primary_topic, secondary_topics, keywords_used, created_at')
-      // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .gte('created_at', new Date(Date.now() - settings.minimum_topic_gap_days * 24 * 60 * 60 * 1000).toISOString())
     .order('created_at', { ascending: false });
@@ -366,17 +359,15 @@ Please respond with ONLY the topic title (no quotes, no explanations).`;
 async function generateContentWithAI(
   settings: GenerationSettings,
   topic: string,
-  siteId: string,
   companyId: string,
   supabaseClient: any
 ): Promise<BlogContent> {
   logStep("Generating content with AI", { provider: settings.preferred_ai_provider, model: settings.preferred_model, topic });
 
-  // Get existing content context for diversity with site isolation
+  // Get existing content context for diversity
   const { data: existingPosts } = await supabaseClient
     .from('blog_posts')
     .select('title, excerpt, body')
-      // CRITICAL: Site isolation
     .limit(settings.content_analysis_depth === 'full' ? 10 : 5);
 
   const existingContext = existingPosts?.map((p: any) => 
@@ -823,27 +814,25 @@ Remember that ${topic.toLowerCase()} is not a one-time implementation but an ong
   };
 }
 
-async function processQueueItem(supabaseClient: any, siteId: string, queueId: string) {
-  logStep("Processing queue item", {  queueId });
+async function processQueueItem(supabaseClient: any, queueId: string) {
+  logStep("Processing queue item", { queueId });
 
-  // Get queue item with site isolation
+  // Get queue item
   const { data: queueItem, error: queueError } = await supabaseClient
     .from('blog_generation_queue')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('id', queueId)
     .single();
 
   if (queueError) throw queueError;
 
-  // Update status to processing with site isolation
+  // Update status to processing
   await supabaseClient
     .from('blog_generation_queue')
     .update({
       status: 'processing',
       processing_started_at: new Date().toISOString()
     })
-      // CRITICAL: Site isolation
     .eq('id', queueId);
 
   try {
@@ -855,7 +844,7 @@ async function processQueueItem(supabaseClient: any, siteId: string, queueId: st
       queueItem.content_parameters
     );
 
-    // Update queue item with success with site isolation
+    // Update queue item with success
     await supabaseClient
       .from('blog_generation_queue')
       .update({
@@ -863,7 +852,6 @@ async function processQueueItem(supabaseClient: any, siteId: string, queueId: st
         processing_completed_at: new Date().toISOString(),
         generated_blog_id: JSON.parse(await result.text()).blogPost.id
       })
-        // CRITICAL: Site isolation
       .eq('id', queueId);
 
     return new Response(JSON.stringify({ success: true }), {
@@ -871,7 +859,7 @@ async function processQueueItem(supabaseClient: any, siteId: string, queueId: st
     });
 
   } catch (error) {
-    // Update queue item with error with site isolation
+    // Update queue item with error
     await supabaseClient
       .from('blog_generation_queue')
       .update({
@@ -880,7 +868,6 @@ async function processQueueItem(supabaseClient: any, siteId: string, queueId: st
         error_message: error instanceof Error ? error.message : 'Unknown error',
         retry_count: queueItem.retry_count + 1
       })
-        // CRITICAL: Site isolation
       .eq('id', queueId);
 
     throw error;
@@ -889,7 +876,6 @@ async function processQueueItem(supabaseClient: any, siteId: string, queueId: st
 
 async function recordTopicHistory(
   supabaseClient: any,
-  siteId: string,
   companyId: string,
   blogPostId: string,
   topic: string,
@@ -898,7 +884,7 @@ async function recordTopicHistory(
 ) {
   await supabaseClient
     .from('blog_topic_history')
-    .insert([{  // CRITICAL: Site isolation
+    .insert([{
       company_id: companyId,
       blog_post_id: blogPostId,
       primary_topic: topic,
@@ -915,7 +901,6 @@ async function recordTopicHistory(
 
 async function analyzeGeneratedContent(
   supabaseClient: any,
-  siteId: string,
   blogPostId: string,
   content: BlogContent,
   settings: GenerationSettings
@@ -926,7 +911,7 @@ async function analyzeGeneratedContent(
 
   await supabaseClient
     .from('blog_content_analysis')
-    .insert([{  // CRITICAL: Site isolation
+    .insert([{
       blog_post_id: blogPostId,
       word_count: wordCount,
       readability_score: 7.5, // TODO: Calculate actual readability
@@ -952,11 +937,10 @@ async function sendGenerationNotification(
   logStep("Sending generation notification", { emails, blogPostId: blogPost.id });
 }
 
-async function analyzeContentDiversity(supabaseClient: any, siteId: string, companyId: string) {
+async function analyzeContentDiversity(supabaseClient: any, companyId: string) {
   const { data: topicHistory } = await supabaseClient
     .from('blog_topic_history')
     .select('primary_topic, created_at, topic_category')
-      // CRITICAL: Site isolation
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -982,14 +966,11 @@ async function analyzeContentDiversity(supabaseClient: any, siteId: string, comp
   });
 }
 
-async function updateModelConfiguration(supabaseClient: any, siteId: string, config: any) {
-  // Update AI model configurations with site isolation
+async function updateModelConfiguration(supabaseClient: any, config: any) {
+  // Update AI model configurations
   const { error } = await supabaseClient
     .from('ai_model_configurations')
-    .upsert({
-      ...config,
-      site_id: siteId  // CRITICAL: Site isolation
-    });
+    .upsert(config);
 
   if (error) throw error;
 
@@ -1000,7 +981,6 @@ async function updateModelConfiguration(supabaseClient: any, siteId: string, con
 
 async function testGeneration(
   supabaseClient: any,
-  siteId: string,
   companyId: string,
   topic: string,
   settings: any

@@ -62,14 +62,13 @@ serve(async (req) => {
   }
 })
 
-async function forecastMaterials(supabase: any, siteId: string, tenant_id: string, project_id?: string) {
-  console.log('[SMART-PROCUREMENT] Forecasting materials', {  tenant_id, project_id })
+async function forecastMaterials(supabase: any, tenant_id: string, project_id?: string) {
+  console.log('[SMART-PROCUREMENT] Forecasting materials', { tenant_id, project_id })
 
-  // Get historical material usage from projects with site isolation
+  // Get historical material usage from projects
   let query = supabase
     .from('projects')
     .select('id, name, materials_used:financial_records(material_name, quantity, unit, created_at)')
-      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('status', 'completed')
     .limit(10)
@@ -117,7 +116,8 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
     const recommendedOrderDate = new Date(forecastDate)
     recommendedOrderDate.setDate(recommendedOrderDate.getDate() - leadTime)
 
-    const forecast = {        tenant_id,
+    const forecast = {
+      tenant_id,
       project_id,
       material_name: materialName,
       material_category: stats.category,
@@ -130,7 +130,7 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
       recommended_order_date: recommendedOrderDate.toISOString().split('T')[0]
     }
 
-        const { error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from('material_forecasts')
       .insert(forecast)
 
@@ -151,14 +151,13 @@ async function forecastMaterials(supabase: any, siteId: string, tenant_id: strin
   )
 }
 
-async function optimizeSuppliers(supabase: any, siteId: string, tenant_id: string) {
-  console.log('[SMART-PROCUREMENT] Optimizing suppliers', {  tenant_id })
+async function optimizeSuppliers(supabase: any, tenant_id: string) {
+  console.log('[SMART-PROCUREMENT] Optimizing suppliers', { tenant_id })
 
-  // Get all suppliers with site isolation
+  // Get all suppliers
   const { data: suppliers, error: suppError } = await supabase
     .from('supplier_catalog')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .eq('is_active', true)
 
@@ -197,14 +196,13 @@ async function optimizeSuppliers(supabase: any, siteId: string, tenant_id: strin
   )
 }
 
-async function generateRecommendations(supabase: any, siteId: string, tenant_id: string, project_id?: string) {
-  console.log('[SMART-PROCUREMENT] Generating purchase recommendations', {  tenant_id, project_id })
+async function generateRecommendations(supabase: any, tenant_id: string, project_id?: string) {
+  console.log('[SMART-PROCUREMENT] Generating purchase recommendations', { tenant_id, project_id })
 
-  // Get active forecasts with site isolation
+  // Get active forecasts
   let forecastQuery = supabase
     .from('material_forecasts')
     .select('*')
-      // CRITICAL: Site isolation
     .eq('tenant_id', tenant_id)
     .gte('forecast_date', new Date().toISOString().split('T')[0])
     .order('forecast_date', { ascending: true })
@@ -223,11 +221,10 @@ async function generateRecommendations(supabase: any, siteId: string, tenant_id:
   const recommendations = []
 
   for (const forecast of forecasts || []) {
-    // Find best supplier for this material with site isolation
+    // Find best supplier for this material
     const { data: suppliers, error: suppError } = await supabase
       .from('supplier_catalog')
       .select('*')
-        // CRITICAL: Site isolation
       .eq('tenant_id', tenant_id)
       .eq('material_name', forecast.material_name)
       .eq('is_active', true)
@@ -257,7 +254,8 @@ async function generateRecommendations(supabase: any, siteId: string, tenant_id:
       estimatedSavings = Math.max(estimatedSavings, alternativeCost - estimatedCost)
     }
 
-    const recommendation = {        tenant_id,
+    const recommendation = {
+      tenant_id,
       project_id: forecast.project_id,
       material_name: forecast.material_name,
       recommended_quantity: forecast.forecast_quantity,
@@ -273,7 +271,7 @@ async function generateRecommendations(supabase: any, siteId: string, tenant_id:
       status: 'pending'
     }
 
-        const { error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from('purchase_recommendations')
       .insert(recommendation)
 
