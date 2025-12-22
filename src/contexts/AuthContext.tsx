@@ -33,8 +33,6 @@ interface UserProfile {
   last_name?: string;
   phone?: string;
   company_id?: string;
-  site_id?: string;
-  tenant_id?: string;
   role:
     | "root_admin"
     | "admin"
@@ -336,7 +334,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         const fetchPromise = supabase
           .from("user_profiles")
-          .select("id, email, first_name, last_name, phone, company_id, site_id, tenant_id, role, is_active")
+          .select("id, email, first_name, last_name, phone, company_id, role, is_active")
           .eq("id", userId)
           .maybeSingle(); // Use maybeSingle() to handle cases where user doesn't exist
 
@@ -399,8 +397,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         logger.debug('Profile fetched successfully:', {
           role: (data as any).role,
-          site_id: data.site_id,
-          tenant_id: data.tenant_id,
         });
         
         // Removed: Site context update - single-tenant architecture
@@ -410,8 +406,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           id: data.id,
           email: data.email,
           role: (data as any).role,
-          site_id: data.site_id,
-          tenant_id: data.tenant_id,
         });
         
         // SECURITY: Use sessionStorage instead of localStorage for PII
