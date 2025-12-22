@@ -102,7 +102,7 @@ export function useLead(leadId: string | undefined, options?: Omit<UseQueryOptio
   return useQuery({
     queryKey: ['lead', leadId],
     queryFn: async () => {
-      if (!leadId) throw new Error('Missing lead_id');
+      if (!leadId) throw new Error('Missing site_id or lead_id');
 
       const { data, error } = await supabase
         .from('leads')
