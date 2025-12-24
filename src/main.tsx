@@ -5,18 +5,18 @@ import "./index.css";
 import './styles/accessibility.css';
 import { logger } from "./lib/logger";
 import { validateEnvironment } from "./lib/envValidation";
+import { initSentry } from "./lib/sentry";
 
 // Validate environment variables immediately (lightweight)
 if (typeof window !== 'undefined') {
   validateEnvironment();
 }
 
+// Initialize Sentry immediately for error tracking
+initSentry();
+
 // Defer non-critical initializations until after first paint
 const initDeferredServices = () => {
-  // Import and initialize Sentry (lazy loaded ~200KB savings)
-  import("./lib/sentry").then(({ initSentry }) => {
-    initSentry();
-  });
 
   // Initialize resource optimizations
   import("./utils/resourcePrioritization").then(({ initializeResourceOptimizations }) => {

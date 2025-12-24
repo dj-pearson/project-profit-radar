@@ -4,18 +4,17 @@
  */
 
 import { Route } from 'react-router-dom';
+import { LazyTimeTracking, LazyCRMDashboard } from '@/utils/lazyRoutes';
 
 // Team Management
 import TeamManagement from '@/pages/TeamManagement';
 import CrewScheduling from '@/pages/CrewScheduling';
 import CrewCheckin from '@/pages/CrewCheckin';
 import CrewPresence from '@/pages/CrewPresence';
-import TimeTracking from '@/pages/TimeTracking';
 import Timesheets from '@/pages/Timesheets';
 import Support from '@/pages/Support';
 
 // CRM
-import CRMDashboard from '@/pages/CRMDashboard';
 import CRMLeads from '@/pages/CRMLeads';
 import CRMContacts from '@/pages/CRMContacts';
 import CRMOpportunities from '@/pages/CRMOpportunities';
@@ -35,12 +34,12 @@ export const peopleRoutes = (
     <Route path="/crew-scheduling" element={<CrewScheduling />} />
     <Route path="/crew-checkin" element={<CrewCheckin />} />
     <Route path="/crew-presence" element={<CrewPresence />} />
-    <Route path="/time-tracking" element={<TimeTracking />} />
+    <Route path="/time-tracking" element={<LazyTimeTracking />} />
     <Route path="/timesheets" element={<Timesheets />} />
     <Route path="/support" element={<Support />} />
 
     {/* CRM */}
-    <Route path="/crm" element={<CRMDashboard />} />
+    <Route path="/crm" element={<LazyCRMDashboard />} />
     <Route path="/crm/leads" element={<CRMLeads />} />
     <Route path="/crm/leads/:id" element={<LeadDetailPage />} />
     <Route path="/crm/contacts" element={<CRMContacts />} />
