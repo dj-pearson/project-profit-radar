@@ -2,11 +2,26 @@
 
 # Default security headers for all pages
 /*
+  # Prevent clickjacking attacks
   X-Frame-Options: DENY
+
+  # Prevent MIME type sniffing
   X-Content-Type-Options: nosniff
+
+  # Enable XSS protection (legacy browsers)
   X-XSS-Protection: 1; mode=block
+
+  # Control referrer information
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+  # Force HTTPS (2 years = 63072000 seconds)
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+  # Permissions Policy - restrict browser features
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self), payment=(self), usb=(), interest-cohort=()
+
+  # Content Security Policy - comprehensive protection
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://*.stripe.com https://*.sentry.io https://*.posthog.com https://js.stripe.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co https://*.stripe.com https://*.sentry.io https://*.posthog.com wss://*.supabase.co; frame-src 'self' https://*.stripe.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # Cache control for hashed assets (aggressive caching)
 /assets/*
