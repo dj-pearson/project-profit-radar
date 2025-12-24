@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { cn } from '@/lib/utils';
 
 interface BreadcrumbItem {
@@ -13,12 +14,14 @@ interface BreadcrumbsNavigationProps {
   items?: BreadcrumbItem[];
   className?: string;
   showHome?: boolean;
+  includeSchema?: boolean;
 }
 
 export const BreadcrumbsNavigation: React.FC<BreadcrumbsNavigationProps> = ({
   items,
   className,
-  showHome = true
+  showHome = true,
+  includeSchema = true
 }) => {
   const location = useLocation();
   
@@ -75,44 +78,57 @@ export const BreadcrumbsNavigation: React.FC<BreadcrumbsNavigationProps> = ({
 
   if (breadcrumbItems.length <= 1) return null;
 
+  // Generate structured data for SEO
+  const structuredData = generateBreadcrumbStructuredData(breadcrumbItems);
+
   return (
-    <nav 
-      className={cn("flex items-center space-x-2 text-sm", className)}
-      aria-label="Breadcrumb"
-    >
-      <ol className="flex items-center space-x-2">
-        {breadcrumbItems.map((item, index) => (
-          <li key={index} className="flex items-center space-x-2">
-            {index > 0 && (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            )}
-            
-            {item.href ? (
-              <Link
-                to={item.href}
-                className="text-muted-foreground hover:text-construction-orange transition-colors"
-              >
-                {index === 0 && showHome ? (
-                  <div className="flex items-center space-x-1">
-                    <Home className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </div>
-                ) : (
-                  item.label
-                )}
-              </Link>
-            ) : (
-              <span 
-                className="text-construction-dark font-medium"
-                aria-current="page"
-              >
-                {item.label}
-              </span>
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <>
+      {includeSchema && (
+        <Helmet>
+          <script type="application/ld+json">
+            {JSON.stringify(structuredData)}
+          </script>
+        </Helmet>
+      )}
+
+      <nav
+        className={cn("flex items-center space-x-2 text-sm", className)}
+        aria-label="Breadcrumb"
+      >
+        <ol className="flex items-center space-x-2">
+          {breadcrumbItems.map((item, index) => (
+            <li key={index} className="flex items-center space-x-2">
+              {index > 0 && (
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              )}
+
+              {item.href ? (
+                <Link
+                  to={item.href}
+                  className="text-muted-foreground hover:text-construction-orange transition-colors"
+                >
+                  {index === 0 && showHome ? (
+                    <div className="flex items-center space-x-1">
+                      <Home className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </div>
+                  ) : (
+                    item.label
+                  )}
+                </Link>
+              ) : (
+                <span
+                  className="text-construction-dark font-medium"
+                  aria-current="page"
+                >
+                  {item.label}
+                </span>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </>
   );
 };
 
