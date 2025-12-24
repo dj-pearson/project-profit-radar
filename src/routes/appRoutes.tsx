@@ -25,6 +25,8 @@ import {
   LazyAuth,
   LazySetup,
   LazyCheckoutSuccess,
+  LazyPaymentSuccess,
+  LazyPaymentCancelled,
   LazyTools,
   LazyResources,
   LazyBlogPost,
@@ -51,6 +53,8 @@ export const appRoutes = (
     <Route path="/auth" element={<LazyAuth />} />
     <Route path="/setup" element={<LazySetup />} />
     <Route path="/checkout/success" element={<LazyCheckoutSuccess />} />
+    <Route path="/payment-success" element={<LazyPaymentSuccess />} />
+    <Route path="/payment-cancelled" element={<LazyPaymentCancelled />} />
 
     {/* Hubs */}
     <Route path="/projects-hub" element={<LazyProjectsHub />} />

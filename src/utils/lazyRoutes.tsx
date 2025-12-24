@@ -22,6 +22,8 @@ export const LazyIndex = createLazyRoute(() => import('@/pages/Index'));
 export const LazyAuth = createLazyRoute(() => import('@/pages/Auth'));
 export const LazySetup = createLazyRoute(() => import('@/pages/Setup'));
 export const LazyCheckoutSuccess = createLazyRoute(() => import('@/pages/CheckoutSuccess'));
+export const LazyPaymentSuccess = createLazyRoute(() => import('@/pages/PaymentSuccess'));
+export const LazyPaymentCancelled = createLazyRoute(() => import('@/pages/PaymentCancelled'));
 export const LazyDashboard = createLazyRoute(() => import('@/pages/Dashboard'));
 
 // Hub pages
