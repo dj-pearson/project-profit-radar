@@ -2,6 +2,7 @@
 // Note: This is a public endpoint called from marketing forms
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -102,6 +103,32 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // SECURITY: Rate limiting to prevent abuse
+    const clientIP = getClientIP(req);
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'capture-lead',
+      maxRequests: 10, // Allow 10 leads per minute per IP
+      windowMinutes: 1,
+    });
+
+    if (!rateLimitResult.allowed) {
+      logStep("Rate limit exceeded", { ip: clientIP, count: rateLimitResult.requestCount });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Too many requests. Please try again later.'
+      }), {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(rateLimitResult.retryAfter),
+          "X-RateLimit-Limit": String(rateLimitResult.limit),
+          "X-RateLimit-Remaining": String(Math.max(0, rateLimitResult.limit - rateLimitResult.requestCount)),
+        },
+        status: 429,
+      });
+    }
 
     const requestData: LeadCaptureRequest = await req.json();
 
