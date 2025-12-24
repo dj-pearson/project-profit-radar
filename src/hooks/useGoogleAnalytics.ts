@@ -87,8 +87,9 @@ const loadGoogleAnalytics = (trackingId: string) => {
   script1.src = `https://www.googletagmanager.com/gtag/js?id=${trackingId}`;
   document.head.appendChild(script1);
   
+  // Security: Using textContent instead of innerHTML to prevent script injection
   const script2 = document.createElement('script');
-  script2.innerHTML = `
+  script2.textContent = `
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
