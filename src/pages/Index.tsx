@@ -9,6 +9,8 @@ import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, cre
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import ModernSection from "@/components/ui/ModernSection";
+import { AggregateRatingSchema } from "@/components/seo/AggregateRatingSchema";
+import { BreadcrumbsNavigation } from "@/components/BreadcrumbsNavigation";
 
 // Lazy load below-the-fold components
 const FinancialHealthCheckBanner = lazy(() => import("@/components/FinancialHealthCheckBanner"));
@@ -55,6 +57,26 @@ const Index = () => {
           ])]}
           lastModified="2025-11-11"
         />
+
+        {/* Enhanced SEO: Aggregate Rating Schema for Rich Snippets */}
+        <AggregateRatingSchema
+          schemaType="SoftwareApplication"
+          itemName="BuildDesk - Construction Management Software"
+          itemDescription="Real-time job costing and construction management software for contractors"
+          itemImage="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/builddesk-logo.png"
+          itemUrl="https://builddesk.com"
+        />
+
+        {/* Enhanced SEO: Breadcrumb Navigation with Schema */}
+        <BreadcrumbsNavigation
+          items={[
+            { label: 'Home', href: '/', isActive: true }
+          ]}
+          showHome={true}
+          includeSchema={true}
+          className="sr-only"
+        />
+
         <SkipLink href="#main-content">Skip to main content</SkipLink>
         <SkipLink href="#navigation">Skip to navigation</SkipLink>
 

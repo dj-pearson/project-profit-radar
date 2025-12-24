@@ -1,4 +1,5 @@
 import { Star, TrendingUp, Users, Award } from "lucide-react";
+import { AggregateRatingSchema } from "@/components/seo/AggregateRatingSchema";
 
 
 const SocialProof = () => {
@@ -45,12 +46,12 @@ const SocialProof = () => {
       {/* Trust Indicators */}
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm">
-          <div className="flex">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-construction-orange text-construction-orange" />
-            ))}
-          </div>
-          <span className="text-sm font-medium">Rated 4.9/5 by Construction Pros</span>
+          <AggregateRatingSchema
+            showVisual={true}
+            className="flex items-center gap-2"
+            schemaType="SoftwareApplication"
+          />
+          <span className="text-sm font-medium ml-2">by Construction Pros</span>
         </div>
 
         <h2 className="text-3xl sm:text-4xl font-bold text-construction-dark dark:text-white">

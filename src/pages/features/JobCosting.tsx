@@ -6,6 +6,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PageSEO, createHowToSchema, createFAQSchema } from '@/components/seo/PageSEO';
 import { GEOOptimizedFAQ } from '@/components/seo/GEOOptimizedFAQ';
+import { BreadcrumbsNavigation } from '@/components/BreadcrumbsNavigation';
+import { AggregateRatingSchema } from '@/components/seo/AggregateRatingSchema';
 
 const JobCostingPage = () => {
   const faqs = [
@@ -71,9 +73,28 @@ const JobCostingPage = () => {
         ]}
       />
 
+      {/* Enhanced SEO: Aggregate Rating Schema */}
+      <AggregateRatingSchema
+        schemaType="SoftwareApplication"
+        itemName="BuildDesk Job Costing Software"
+        itemDescription="Real-time job costing software for construction contractors"
+      />
+
       <Header />
 
       <main>
+        {/* Breadcrumb Navigation */}
+        <div className="container mx-auto px-4 pt-4">
+          <BreadcrumbsNavigation
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Features', href: '/features' },
+              { label: 'Job Costing', isActive: true }
+            ]}
+            includeSchema={true}
+          />
+        </div>
+
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-background via-background to-secondary py-20">
           <div className="container mx-auto px-4">
