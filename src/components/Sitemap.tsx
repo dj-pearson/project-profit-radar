@@ -43,18 +43,20 @@ const Sitemap = () => {
   }, []);
 
   // Return the XML content as pre-formatted text
+  // Security: Using text content instead of dangerouslySetInnerHTML to prevent XSS
   return (
-    <pre 
-      style={{ 
-        fontFamily: 'monospace', 
-        whiteSpace: 'pre-wrap', 
-        margin: 0, 
+    <pre
+      style={{
+        fontFamily: 'monospace',
+        whiteSpace: 'pre-wrap',
+        margin: 0,
         padding: 0,
         background: 'white',
         color: 'black'
       }}
-      dangerouslySetInnerHTML={{ __html: sitemapContent }}
-    />
+    >
+      {sitemapContent}
+    </pre>
   );
 };
 
