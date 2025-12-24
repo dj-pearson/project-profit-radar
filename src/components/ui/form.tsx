@@ -9,6 +9,7 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form"
+import { AlertCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -142,8 +143,8 @@ FormDescription.displayName = "FormDescription"
 
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, ...props }, ref) => {
+  React.HTMLAttributes<HTMLParagraphElement> & { showIcon?: boolean }
+>(({ className, children, showIcon = true, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message) : children
 
@@ -155,9 +156,10 @@ const FormMessage = React.forwardRef<
     <p
       ref={ref}
       id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
+      className={cn("text-sm font-medium text-destructive flex items-center gap-1.5", className)}
       {...props}
     >
+      {showIcon && <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />}
       {body}
     </p>
   )
