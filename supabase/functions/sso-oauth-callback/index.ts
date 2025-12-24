@@ -42,6 +42,54 @@ interface UserInfo {
   providerId: string;
 }
 
+/**
+ * Validate redirect URL to prevent open redirect attacks
+ * Security: Only allow internal paths or whitelisted domains
+ */
+function isValidRedirectUrl(url: string | null | undefined, siteUrl: string): string {
+  if (!url || typeof url !== 'string') {
+    return `${siteUrl}/dashboard`;
+  }
+
+  try {
+    // If it's a relative path, it's safe (starts with /)
+    if (url.startsWith('/')) {
+      // Remove any protocol attempts in the path
+      if (url.match(/^\/\/(.*)/)) {
+        // This is a protocol-relative URL, reject it
+        console.warn('[Security] Rejected protocol-relative URL:', url);
+        return `${siteUrl}/dashboard`;
+      }
+      return `${siteUrl}${url}`;
+    }
+
+    // Parse the URL to check if it's absolute
+    const parsedUrl = new URL(url);
+    const parsedSiteUrl = new URL(siteUrl);
+
+    // Whitelist of allowed redirect domains
+    const allowedDomains = [
+      parsedSiteUrl.hostname,
+      'build-desk.com',
+      'www.build-desk.com',
+      'builddesk.pearsonperformance.workers.dev',
+    ];
+
+    // Check if the URL's hostname is in the whitelist
+    if (allowedDomains.includes(parsedUrl.hostname)) {
+      return url;
+    }
+
+    // External URL detected, reject it
+    console.warn('[Security] Rejected external redirect URL:', url, 'from hostname:', parsedUrl.hostname);
+    return `${siteUrl}/dashboard`;
+  } catch (error) {
+    // Invalid URL format, use default
+    console.warn('[Security] Invalid redirect URL format:', url);
+    return `${siteUrl}/dashboard`;
+  }
+}
+
 // Fetch user info from provider
 async function fetchUserInfo(
   provider: string,
@@ -332,12 +380,15 @@ serve(async (req) => {
     await supabaseClient.from("oauth_pending_states").delete().eq("state", state);
 
     // Create session via magic link
+    // Security: Validate return URL to prevent open redirect attacks
+    const safeRedirectUrl = isValidRedirectUrl(storedState.return_url, siteUrl);
+
     const { data: sessionData, error: sessionError } =
       await supabaseClient.auth.admin.generateLink({
         type: "magiclink",
         email: userInfo.email,
         options: {
-          redirectTo: storedState.return_url || `${siteUrl}/dashboard`,
+          redirectTo: safeRedirectUrl,
         },
       });
 
@@ -373,7 +424,10 @@ serve(async (req) => {
     });
 
     // Redirect to magic link (establishes session)
-    return Response.redirect(sessionData.properties?.action_link || `${siteUrl}/dashboard`);
+    // Security: Validate the magic link URL before redirecting
+    const magicLinkUrl = sessionData.properties?.action_link;
+    const finalRedirectUrl = isValidRedirectUrl(magicLinkUrl, siteUrl);
+    return Response.redirect(finalRedirectUrl);
   } catch (error) {
     console.error("[OAuth] Callback error:", error);
     const siteUrl = Deno.env.get("SITE_URL") || "https://build-desk.com";

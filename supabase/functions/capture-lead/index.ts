@@ -2,6 +2,7 @@
 // Note: This is a public endpoint called from marketing forms
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, getClientIP } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,50 @@ const logStep = (step: string, details?: any) => {
   console.log(`[LEAD-CAPTURE] ${step}${detailsStr}`);
 };
 
+/**
+ * Sanitize string input to prevent injection attacks
+ * Security: Removes potentially dangerous characters and limits length
+ */
+const sanitizeString = (input: string | undefined, maxLength: number = 255): string | null => {
+  if (!input || typeof input !== 'string') return null;
+
+  // Trim and limit length
+  let sanitized = input.trim().substring(0, maxLength);
+
+  // Remove null bytes and other control characters
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  // Remove or escape potentially dangerous SQL/HTML characters
+  // Note: Supabase handles SQL injection, but this adds defense in depth
+  sanitized = sanitized
+    .replace(/[<>]/g, '') // Remove HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/data:/gi, ''); // Remove data: protocol
+
+  return sanitized || null;
+};
+
+/**
+ * Validate email format
+ * Security: Ensures email is in valid format before processing
+ */
+const isValidEmail = (email: string): boolean => {
+  if (!email || typeof email !== 'string') return false;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+/**
+ * Validate phone format (optional, allows common formats)
+ * Security: Ensures phone contains only valid characters
+ */
+const sanitizePhone = (phone: string | undefined): string | null => {
+  if (!phone || typeof phone !== 'string') return null;
+  // Allow only digits, spaces, dashes, parentheses, plus sign
+  const cleaned = phone.replace(/[^0-9\s\-\(\)\+]/g, '').trim();
+  return cleaned.length > 0 && cleaned.length <= 20 ? cleaned : null;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -45,37 +90,74 @@ serve(async (req) => {
   try {
     logStep("Lead capture started");
 
+    // SECURITY NOTE: Using SERVICE_ROLE_KEY to bypass RLS for public lead capture
+    // This is necessary because:
+    // 1. This is a public endpoint (no user authentication)
+    // 2. Leads table requires company_id which unauthenticated users don't have
+    // 3. Input validation and sanitization (below) provides security
+    //
+    // RECOMMENDATION: Consider migrating to anon key with RLS policies that allow
+    // public inserts to leads table with null company_id for better security
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    const requestData: LeadCaptureRequest = await req.json();
-    const {
-      email,
-      firstName,
-      lastName,
-      companyName,
-      phone,
-      companySize,
-      industry,
-      leadSource = 'website',
-      interestType = 'just_browsing',
-      downloadedResource,
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_content,
-      utm_term,
-      landingPage,
-      referrer
-    } = requestData;
+    // SECURITY: Rate limiting to prevent abuse
+    const clientIP = getClientIP(req);
+    const rateLimitResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP,
+      endpoint: 'capture-lead',
+      maxRequests: 10, // Allow 10 leads per minute per IP
+      windowMinutes: 1,
+    });
 
-    // Validate required fields
-    if (!email) {
-      throw new Error("Email is required");
+    if (!rateLimitResult.allowed) {
+      logStep("Rate limit exceeded", { ip: clientIP, count: rateLimitResult.requestCount });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Too many requests. Please try again later.'
+      }), {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(rateLimitResult.retryAfter),
+          "X-RateLimit-Limit": String(rateLimitResult.limit),
+          "X-RateLimit-Remaining": String(Math.max(0, rateLimitResult.limit - rateLimitResult.requestCount)),
+        },
+        status: 429,
+      });
     }
+
+    const requestData: LeadCaptureRequest = await req.json();
+
+    // Security: Validate and sanitize all input fields
+    const rawEmail = requestData.email;
+
+    // Validate email format first
+    if (!rawEmail || !isValidEmail(rawEmail)) {
+      throw new Error("Valid email is required");
+    }
+
+    // Sanitize all string inputs
+    const email = sanitizeString(rawEmail, 255) || rawEmail.toLowerCase().trim();
+    const firstName = sanitizeString(requestData.firstName, 100);
+    const lastName = sanitizeString(requestData.lastName, 100);
+    const companyName = sanitizeString(requestData.companyName, 200);
+    const phone = sanitizePhone(requestData.phone);
+    const companySize = sanitizeString(requestData.companySize, 50);
+    const industry = sanitizeString(requestData.industry, 100);
+    const leadSource = sanitizeString(requestData.leadSource, 50) || 'website';
+    const interestType = sanitizeString(requestData.interestType, 50) || 'just_browsing';
+    const downloadedResource = sanitizeString(requestData.downloadedResource, 200);
+    const utm_source = sanitizeString(requestData.utm_source, 100);
+    const utm_medium = sanitizeString(requestData.utm_medium, 100);
+    const utm_campaign = sanitizeString(requestData.utm_campaign, 200);
+    const utm_content = sanitizeString(requestData.utm_content, 200);
+    const utm_term = sanitizeString(requestData.utm_term, 100);
+    const landingPage = sanitizeString(requestData.landingPage, 500);
+    const referrer = sanitizeString(requestData.referrer, 500);
 
     logStep("Processing lead capture", { email, interestType });
 

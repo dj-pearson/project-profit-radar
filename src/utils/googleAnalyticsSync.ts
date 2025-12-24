@@ -67,8 +67,9 @@ const loadGoogleAnalyticsScript = (trackingId: string) => {
   document.head.appendChild(script1);
   
   // Create configuration script
+  // Security: Using textContent instead of innerHTML to prevent script injection
   const script2 = document.createElement('script');
-  script2.innerHTML = `
+  script2.textContent = `
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
