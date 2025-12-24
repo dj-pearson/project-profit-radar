@@ -86,20 +86,34 @@ export const TenantManagement = () => {
 
       if (tenantsError) throw tenantsError;
 
-      // Load user counts for each tenant
+      // Load user counts for each tenant with proper error handling
       const tenantsWithCounts = await Promise.all(
         (tenantsData || []).map(async (tenant) => {
-          const { count: userCount } = await supabase
-            .from('tenant_users')
-            .select('*', { count: 'exact', head: true })
-            .eq('tenant_id', tenant.id)
-            .eq('is_active', true);
+          try {
+            const { count: userCount, error } = await supabase
+              .from('tenant_users')
+              .select('*', { count: 'exact', head: true })
+              .eq('tenant_id', tenant.id)
+              .eq('is_active', true);
 
-          return {
-            ...tenant,
-            user_count: userCount || 0,
-            project_count: 0, // TODO: Add actual project count
-          };
+            if (error) {
+              console.error(`Error fetching user count for tenant ${tenant.id}:`, error);
+            }
+
+            return {
+              ...tenant,
+              user_count: userCount || 0,
+              project_count: 0, // TODO: Add actual project count
+            };
+          } catch (error) {
+            console.error(`Error processing tenant ${tenant.id}:`, error);
+            // Return tenant with zero counts on error to prevent data loss
+            return {
+              ...tenant,
+              user_count: 0,
+              project_count: 0,
+            };
+          }
         })
       );
 

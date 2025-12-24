@@ -115,26 +115,39 @@ const Companies = () => {
 
       if (error) throw error;
 
-      // Get user counts for each company
+      // Get user counts for each company with proper error handling
       const companiesWithCounts = await Promise.all(
         (companiesData || []).map(async (company) => {
-          const { count: userCount } = await supabase
-            .from('user_profiles')
-            .select('*', { count: 'exact', head: true })
-            .eq('company_id', company.id);
+          try {
+            const [userResult, projectResult] = await Promise.all([
+              supabase
+                .from('user_profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('company_id', company.id),
+              supabase
+                .from('projects')
+                .select('*', { count: 'exact', head: true })
+                .eq('company_id', company.id)
+            ]);
 
-          const { count: projectCount } = await supabase
-            .from('projects')
-            .select('*', { count: 'exact', head: true })
-            .eq('company_id', company.id);
-
-          return {
-            ...company,
-            _count: {
-              users: userCount || 0,
-              projects: projectCount || 0
-            }
-          };
+            return {
+              ...company,
+              _count: {
+                users: userResult.count || 0,
+                projects: projectResult.count || 0
+              }
+            };
+          } catch (error) {
+            console.error(`Error fetching counts for company ${company.id}:`, error);
+            // Return company with zero counts on error to prevent data loss
+            return {
+              ...company,
+              _count: {
+                users: 0,
+                projects: 0
+              }
+            };
+          }
         })
       );
 
