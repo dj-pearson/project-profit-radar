@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Critical: Preconnect to external domains -->
+    <!-- Critical: Preconnect to external domains for performance (SEO ranking factor) -->
     <link rel="preconnect" href="https://api.build-desk.com" crossorigin>
+    <link rel="preconnect" href="https://ilhzuvemiuyfuxfegtlv.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 
     <!-- Self-Hosted Fonts - Only preload critical weight (400), load stylesheet async -->
     <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
@@ -87,7 +91,7 @@
     }
     </script>
 
-    <!-- WebSite Schema -->
+    <!-- WebSite Schema with SiteNavigationElement for enhanced sitelinks -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -102,7 +106,84 @@
           "urlTemplate": "https://builddesk.com/search?q={search_term_string}"
         },
         "query-input": "required name=search_term_string"
-      }
+      },
+      "hasPart": [
+        {
+          "@type": "WebPage",
+          "@id": "https://builddesk.com/features",
+          "name": "Features",
+          "url": "https://builddesk.com/features",
+          "description": "Comprehensive construction management features for contractors"
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://builddesk.com/pricing",
+          "name": "Pricing",
+          "url": "https://builddesk.com/pricing",
+          "description": "Affordable pricing for construction software"
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://builddesk.com/resources",
+          "name": "Resources",
+          "url": "https://builddesk.com/resources",
+          "description": "Construction management guides and resources"
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://builddesk.com/blog",
+          "name": "Blog",
+          "url": "https://builddesk.com/blog",
+          "description": "Construction industry insights and tips"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Site Navigation Schema for enhanced site structure understanding -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SiteNavigationElement",
+      "name": "Main Navigation",
+      "hasPart": [
+        {
+          "@type": "WebPage",
+          "name": "Features",
+          "url": "https://builddesk.com/features",
+          "description": "Job costing, scheduling, mobile tracking, OSHA compliance"
+        },
+        {
+          "@type": "WebPage",
+          "name": "Pricing",
+          "url": "https://builddesk.com/pricing",
+          "description": "$350/month unlimited users"
+        },
+        {
+          "@type": "WebPage",
+          "name": "Solutions",
+          "url": "https://builddesk.com/solutions",
+          "description": "Industry-specific construction software solutions"
+        },
+        {
+          "@type": "WebPage",
+          "name": "Resources",
+          "url": "https://builddesk.com/resources",
+          "description": "Guides, templates, and best practices"
+        },
+        {
+          "@type": "WebPage",
+          "name": "Knowledge Base",
+          "url": "https://builddesk.com/knowledge-base",
+          "description": "Documentation and help articles"
+        },
+        {
+          "@type": "WebPage",
+          "name": "ROI Calculator",
+          "url": "https://builddesk.com/roi-calculator",
+          "description": "Calculate your potential savings"
+        }
+      ]
     }
     </script>
 
