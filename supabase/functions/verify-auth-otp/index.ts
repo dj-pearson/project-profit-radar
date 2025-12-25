@@ -86,7 +86,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Verify OTP code using database function
     const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {
-      p_
       p_email: email,
       p_otp_code: otpCode,
       p_token_type: type

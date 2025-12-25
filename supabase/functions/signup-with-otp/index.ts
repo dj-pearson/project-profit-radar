@@ -140,7 +140,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Store OTP in database
     const { data: otpId, error: otpError } = await supabaseAdmin.rpc('create_otp_token', {
-      p_
       p_email: email.toLowerCase(),
       p_otp_code: otpCode,
       p_token_type: 'confirm_signup',
