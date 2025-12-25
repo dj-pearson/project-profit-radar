@@ -1,39 +1,48 @@
+# BuildDesk Robots.txt
+# https://builddesk.com
+
 User-agent: *
 Allow: /
 
-# Block authenticated/app pages from indexing
+# Block authenticated/app pages
 Disallow: /dashboard/
-Disallow: /dashboard
 Disallow: /admin/
-Disallow: /admin
 Disallow: /auth/
-Disallow: /auth
 Disallow: /setup/
-Disallow: /setup
 Disallow: /api/
+Disallow: /payment-center/
 
-# Block URL parameters that cause duplicate content
+# Block URL parameters that create duplicate content
 Disallow: /*?*refreshed=
 Disallow: /*?*v=
-Disallow: /*?utm_
+Disallow: /*?*timestamp=
+Disallow: /*?*cache=
 
-# Block internal testing pages if any
+# Block testing/internal pages
 Disallow: /testing/
 Disallow: /test/
+Disallow: /debug/
 
-# Allow all marketing and public pages
+# Allow all marketing pages explicitly
 Allow: /features
 Allow: /pricing
 Allow: /blog
 Allow: /resources
-Allow: /knowledge-base
+Allow: /topics
+Allow: /faq
+Allow: /solutions
 
-# Sitemap
+# Allow marketing URL parameters
+Allow: /*?utm_source=
+Allow: /*?utm_medium=
+Allow: /*?utm_campaign=
+Allow: /*?ref=
+
+# Sitemap location
 Sitemap: https://builddesk.com/sitemap.xml
 
-# LLM/AI-friendly information file
-# See: https://llmstxt.org/
+# LLM discovery support
 LLMs-txt: https://builddesk.com/.well-known/llms.txt
 
-# Crawl-delay for polite crawling (optional)
-# Crawl-delay: 1
+# Crawl delay (optional - be gentle on servers)
+Crawl-delay: 1
