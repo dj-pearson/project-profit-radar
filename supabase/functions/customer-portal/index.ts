@@ -1,12 +1,9 @@
 // Customer Portal Edge Function
+// SECURITY: Uses secure CORS whitelist
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -14,6 +11,8 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -21,9 +20,9 @@ serve(async (req) => {
   try {
     logStep("Customer portal request started");
 
-        const authContext = await initializeAuthContext(req);
+    const authContext = await initializeAuthContext(req);
     if (!authContext) {
-      return errorResponse('Unauthorized', 401);
+      return errorResponse('Unauthorized', 401, req);
     }
 
     const { user, supabase: supabaseClient } = authContext;
@@ -31,11 +30,10 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Get user's subscription info with site isolation
+    // SECURITY: Get user's subscription info with site isolation
     const { data: subscriber } = await supabaseClient
       .from('subscribers')
       .select('stripe_customer_id')
-        // CRITICAL: Site isolation
       .eq('user_id', user.id)
       .single();
 
@@ -45,26 +43,31 @@ serve(async (req) => {
 
     logStep("Stripe customer found", { customerId: subscriber.stripe_customer_id });
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
-      apiVersion: "2023-10-16" 
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("Stripe configuration error");
+    }
+
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16"
     });
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
-    
+    const origin = req.headers.get("origin") || "https://build-desk.com";
+
     // Create customer portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscriber.stripe_customer_id,
       return_url: `${origin}/dashboard`,
     });
 
-    logStep("Customer portal session created", { 
+    logStep("Customer portal session created", {
       sessionId: portalSession.id,
-      url: portalSession.url 
+      url: portalSession.url
     });
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: true,
-      url: portalSession.url 
+      url: portalSession.url
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
@@ -73,9 +76,10 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in customer-portal", { message: errorMessage });
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: errorMessage 
+    // SECURITY: Return generic error message to client
+    return new Response(JSON.stringify({
+      success: false,
+      error: "Failed to open customer portal"
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
