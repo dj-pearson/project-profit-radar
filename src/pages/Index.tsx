@@ -11,6 +11,7 @@ import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSch
 import ModernSection from "@/components/ui/ModernSection";
 import { AggregateRatingSchema } from "@/components/seo/AggregateRatingSchema";
 import { BreadcrumbsNavigation } from "@/components/BreadcrumbsNavigation";
+import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
 
 // Lazy load below-the-fold components
 const FinancialHealthCheckBanner = lazy(() => import("@/components/FinancialHealthCheckBanner"));
@@ -65,6 +66,13 @@ const Index = () => {
           itemDescription="Real-time job costing and construction management software for contractors"
           itemImage="https://ilhzuvemiuyfuxfegtlv.supabase.co/storage/v1/object/public/assets/builddesk-logo.png"
           itemUrl="https://builddesk.com"
+        />
+
+        {/* Enhanced SEO: Comprehensive SaaS Product Schema with Subscription Details */}
+        <SaaSProductSchema
+          includeReviews={true}
+          includeOffers={true}
+          includeFeatures={true}
         />
 
         {/* Enhanced SEO: Breadcrumb Navigation with Schema */}
