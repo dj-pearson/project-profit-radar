@@ -7,6 +7,7 @@ import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSni
 import Pricing from "@/components/Pricing";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
 import StickyDemoCTA from "@/components/StickyDemoCTA";
+import { SaaSProductSchema } from "@/components/seo/SaaSProductSchema";
 
 const PricingPage = () => {
   // Structured data for pricing page
@@ -47,6 +48,14 @@ const PricingPage = () => {
         schema={[breadcrumbSchema, productSchema]}
         lastModified="2025-11-07"
       />
+
+      {/* Enhanced SEO: Comprehensive SaaS Product Schema for Rich Results */}
+      <SaaSProductSchema
+        includeReviews={true}
+        includeOffers={true}
+        includeFeatures={true}
+      />
+
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
         <main className="py-12">
