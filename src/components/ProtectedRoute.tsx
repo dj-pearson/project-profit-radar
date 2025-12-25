@@ -19,7 +19,8 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
   const authState = useAuth();
   const { user, userProfile, loading } = authState;
   const location = useLocation();
-  const [localRedirectCount, setLocalRedirectCount] = useState(0);
+  // SECURITY FIX: Use ref instead of state to prevent setState during render
+  const localRedirectCountRef = useRef(0);
   const [forceLoading, setForceLoading] = useState(false);
   const [emergencyMode, setEmergencyMode] = useState(false);
   const [profileWaitTime, setProfileWaitTime] = useState(0);
@@ -65,11 +66,12 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     }
 
     lastRenderTime.current = now;
-  }, []); // Added empty dependency array to prevent infinite loop
+  }, []); // Empty dependency array to prevent infinite loop
 
   // Emergency circuit breaker - only count actual redirects
   const incrementRedirectCount = () => {
     globalRedirectCount++;
+    localRedirectCountRef.current++;
 
     if (globalRedirectCount > 5) {
       console.error("Redirect limit reached, opening circuit breaker");
@@ -87,6 +89,17 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     accessGrantedLogged.current = false;
   }, [user?.id]);
 
+  // Reset local redirect count when auth state stabilizes
+  useEffect(() => {
+    if (user && userProfile && !loading) {
+      // Auth is stable, reset counters
+      localRedirectCountRef.current = 0;
+      if (globalRedirectCount > 0) {
+        globalRedirectCount = 0;
+      }
+    }
+  }, [user, userProfile, loading]);
+
   // Profile wait timer for authenticated users without profiles
   useEffect(() => {
     if (user && !userProfile && !loading) {
@@ -99,7 +112,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
       // Reset wait time when user changes or profile loads
       setProfileWaitTime(0);
     }
-  }, [user, userProfile, loading]); // Removed profileWaitTime from deps to prevent infinite loop
+  }, [user, userProfile, loading]);
 
   // Circuit breaker is open - force loading state
   if (isCircuitOpen || emergencyMode || forceLoading) {
@@ -131,14 +144,13 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     // Remember current route before redirecting
     rememberCurrentRoute(location);
 
-    if (localRedirectCount >= 2) {
+    if (localRedirectCountRef.current >= 2) {
       console.error("Local redirect limit reached, forcing auth page");
       window.location.href = "/auth";
       return null;
     }
 
     incrementRedirectCount();
-    setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
   }
 
@@ -160,7 +172,7 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     }
 
     // Profile failed to load after waiting
-    if (localRedirectCount >= 1) {
+    if (localRedirectCountRef.current >= 1) {
       console.error("Profile not loaded after waiting, forcing page refresh");
       window.location.reload();
       return null;
@@ -169,7 +181,6 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
     // Remember current route before redirecting
     rememberCurrentRoute(location);
     incrementRedirectCount();
-    setLocalRedirectCount((prev) => prev + 1);
     return <Navigate to="/auth" replace />;
   }
 
@@ -192,16 +203,6 @@ export const RouteGuard: FC<RouteGuardProps> = ({ children, routePath }) => {
   // Success - allow access (log only once per session)
   if (!accessGrantedLogged.current) {
     accessGrantedLogged.current = true;
-  }
-
-  // Reset global counter on successful access
-  if (globalRedirectCount > 0) {
-    globalRedirectCount = 0;
-  }
-
-  // Reset local counter on successful access (only if needed to prevent re-renders)
-  if (localRedirectCount > 0) {
-    setLocalRedirectCount(0);
   }
 
   return <>{children}</>;

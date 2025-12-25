@@ -878,11 +878,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
-      setSiteId(null);
       successfulProfiles.current.clear();
-
-      // Clear site cache
-      clearSiteCache();
 
       // Clear Sentry user context
       clearSentryUser();
