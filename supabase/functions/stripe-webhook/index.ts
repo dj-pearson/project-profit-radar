@@ -1,11 +1,14 @@
 // Stripe Webhook Handler
 // Note: This is a webhook endpoint called by Stripe, not user-authenticated
+// SECURITY: Webhooks are verified using Stripe signature - no CORS needed for Stripe calls
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
+// Webhook endpoints from Stripe don't need CORS (server-to-server)
+// But we keep minimal headers for potential health checks
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://build-desk.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
@@ -142,7 +145,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
   // Query subscribers
   const { data: customer } = await supabaseClient
     .from("subscribers")
-    .select("*")
+    .select("*, user_id")
     .eq("stripe_customer_id", subscription.customer)
     .single();
 
@@ -154,21 +157,72 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription, supab
     if (amount >= 59900) subscriptionTier = "enterprise";
     else if (amount >= 29900) subscriptionTier = "professional";
 
+    const isActive = subscription.status === "active";
+    const billingPeriod = subscription.items.data[0].price.recurring?.interval === "year" ? "annual" : "monthly";
+    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
     // Update subscriber
     await supabaseClient
       .from("subscribers")
       .update({
-        subscribed: subscription.status === "active",
+        subscribed: isActive,
         subscription_tier: subscriptionTier,
-        subscription_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        billing_period: subscription.items.data[0].price.recurring?.interval === "year" ? "annual" : "monthly",
+        subscription_end: subscriptionEnd,
+        billing_period: billingPeriod,
         updated_at: new Date().toISOString()
       })
       .eq("stripe_customer_id", subscription.customer);
+
+    logStep("Updated subscriber record", {
+      customerId: subscription.customer,
+      tier: subscriptionTier,
+      status: subscription.status
+    });
+
+    // CRITICAL: Also update the company's subscription status
+    // Find the company through the user profile
+    if (customer.user_id) {
+      const { data: userProfile } = await supabaseClient
+        .from("user_profiles")
+        .select("company_id")
+        .eq("id", customer.user_id)
+        .single();
+
+      if (userProfile?.company_id) {
+        const companyStatus = isActive ? "active" :
+          (subscription.status === "past_due" ? "grace_period" :
+          (subscription.status === "canceled" ? "suspended" : "pending"));
+
+        await supabaseClient
+          .from("companies")
+          .update({
+            subscription_tier: subscriptionTier,
+            subscription_status: companyStatus,
+            stripe_customer_id: subscription.customer as string,
+            stripe_subscription_id: subscription.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", userProfile.company_id);
+
+        logStep("Updated company subscription status", {
+          companyId: userProfile.company_id,
+          status: companyStatus,
+          tier: subscriptionTier
+        });
+      }
+    }
   }
 }
 
 async function handleSubscriptionCancellation(subscription: Stripe.Subscription, supabaseClient: any) {
+  // Get subscriber data first to find the company
+  const { data: customer } = await supabaseClient
+    .from("subscribers")
+    .select("*, user_id")
+    .eq("stripe_customer_id", subscription.customer)
+    .single();
+
+  // Update subscriber
   await supabaseClient
     .from("subscribers")
     .update({
@@ -178,6 +232,29 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription,
       updated_at: new Date().toISOString()
     })
     .eq("stripe_customer_id", subscription.customer);
+
+  logStep("Subscription cancelled", { customerId: subscription.customer });
+
+  // Also update the company's subscription status
+  if (customer?.user_id) {
+    const { data: userProfile } = await supabaseClient
+      .from("user_profiles")
+      .select("company_id")
+      .eq("id", customer.user_id)
+      .single();
+
+    if (userProfile?.company_id) {
+      await supabaseClient
+        .from("companies")
+        .update({
+          subscription_status: "suspended",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", userProfile.company_id);
+
+      logStep("Updated company to suspended", { companyId: userProfile.company_id });
+    }
+  }
 }
 
 async function handlePaymentFailure(invoice: Stripe.Invoice, supabaseClient: any, stripe: Stripe) {
