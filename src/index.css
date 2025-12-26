@@ -128,29 +128,29 @@ All colors MUST be HSL.
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
-  /* Animation utilities */
-  --transition-duration: 0.3s;
-  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
-  
+
+  /* Animation and Accessibility CSS custom properties */
+  :root {
+    --transition-duration: 0.3s;
+    --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+    --focus-ring-width: 2px;
+    --focus-ring-color: hsl(var(--ring));
+    --focus-ring-offset: 2px;
+    --touch-target-min: 44px;
+  }
+
   /* Font Loading Optimization */
   .fonts-loading * {
     font-display: swap;
   }
-  
+
   .fonts-loaded {
     font-family: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, Helvetica, Arial, sans-serif;
   }
-  
+
   .fonts-fallback * {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Avenir, Helvetica, Arial, sans-serif !important;
   }
-  
-  /* Accessibility variables */
-  --focus-ring-width: 2px;
-  --focus-ring-color: hsl(var(--ring));
-  --focus-ring-offset: 2px;
-  --touch-target-min: 44px;
 }
 
 /* Accessibility Classes */
