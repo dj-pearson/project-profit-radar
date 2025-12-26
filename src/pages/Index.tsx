@@ -23,9 +23,27 @@ const ClientLogosSection = lazy(() => import("@/components/TestimonialsSection")
 const CaseStudiesSection = lazy(() => import("@/components/CaseStudiesSection").then(m => ({ default: m.CaseStudiesSection })));
 const StickyDemoCTA = lazy(() => import("@/components/StickyDemoCTA"));
 
-// Minimal loading fallback
-const SectionFallback = ({ height = "h-64" }: { height?: string }) => (
-  <div className={`${height} bg-muted/30 animate-pulse rounded-lg`} />
+interface SectionFallbackProps {
+  height?: string;
+  /** Accessible label for the loading section */
+  label?: string;
+}
+
+/**
+ * Accessible loading fallback for lazy-loaded sections
+ */
+const SectionFallback = ({
+  height = "h-64",
+  label = "Loading section"
+}: SectionFallbackProps) => (
+  <div
+    className={`${height} bg-muted/30 animate-pulse rounded-lg flex items-center justify-center`}
+    role="status"
+    aria-busy="true"
+    aria-label={label}
+  >
+    <span className="sr-only">{label}, please wait...</span>
+  </div>
 );
 
 const Index = () => {
@@ -113,51 +131,51 @@ const Index = () => {
 
           {/* Trust Signals - BEFORE pricing for better conversion */}
           <ModernSection background="glass">
-            <Suspense fallback={<SectionFallback height="h-96" />}>
+            <Suspense fallback={<SectionFallback height="h-96" label="Loading testimonials" />}>
               <TestimonialsSection />
             </Suspense>
           </ModernSection>
 
           <ModernSection>
-            <Suspense fallback={<SectionFallback height="h-64" />}>
+            <Suspense fallback={<SectionFallback height="h-64" label="Loading case studies" />}>
               <CaseStudiesSection />
             </Suspense>
           </ModernSection>
 
           {/* Pricing - Main conversion point */}
-          <PerformanceLazyWrapper fallback={<SectionFallback height="h-96" />}>
+          <PerformanceLazyWrapper fallback={<SectionFallback height="h-96" label="Loading pricing" />}>
             <ModernSection direction="up" background="mesh" id="pricing">
               <LazyPricing />
             </ModernSection>
           </PerformanceLazyWrapper>
 
-          <PerformanceLazyWrapper fallback={<SectionFallback height="h-64" />}>
+          <PerformanceLazyWrapper fallback={<SectionFallback height="h-64" label="Loading industries" />}>
             <ModernSection direction="left">
               <LazyIndustries />
             </ModernSection>
           </PerformanceLazyWrapper>
 
           <ModernSection>
-            <Suspense fallback={<SectionFallback height="h-32" />}>
+            <Suspense fallback={<SectionFallback height="h-32" label="Loading client logos" />}>
               <ClientLogosSection />
             </Suspense>
           </ModernSection>
 
           {/* Financial Health Check CTA Banner - Secondary conversion */}
           <ModernSection direction="left" className="py-12">
-            <Suspense fallback={<SectionFallback height="h-48" />}>
+            <Suspense fallback={<SectionFallback height="h-48" label="Loading financial health check" />}>
               <FinancialHealthCheckBanner />
             </Suspense>
           </ModernSection>
 
           <ModernSection>
-            <Suspense fallback={<SectionFallback height="h-64" />}>
+            <Suspense fallback={<SectionFallback height="h-64" label="Loading implementation steps" />}>
               <Implementation />
             </Suspense>
           </ModernSection>
 
           <ModernSection className="mb-20">
-            <Suspense fallback={<SectionFallback height="h-96" />}>
+            <Suspense fallback={<SectionFallback height="h-96" label="Loading FAQ" />}>
               <FAQ />
             </Suspense>
           </ModernSection>
@@ -165,7 +183,7 @@ const Index = () => {
 
         <OrganizationSchema />
         <SoftwareSchema />
-        <Suspense fallback={<SectionFallback height="h-64" />}>
+        <Suspense fallback={<SectionFallback height="h-64" label="Loading footer" />}>
           <Footer />
         </Suspense>
 
