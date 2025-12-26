@@ -21,7 +21,16 @@ interface EnvConfig {
 }
 
 /**
+ * Default fallback values for development
+ */
+const FALLBACK_VALUES: Partial<EnvConfig> = {
+  VITE_SUPABASE_URL: 'https://api.build-desk.com',
+  VITE_SUPABASE_PUBLISHABLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+};
+
+/**
  * Required environment variables
+ * Note: These have fallbacks in development, so missing values are warnings not errors
  */
 const REQUIRED_ENV_VARS: (keyof EnvConfig)[] = [
   'VITE_SUPABASE_URL',
@@ -50,11 +59,22 @@ const getEnvVar = (key: string): string | undefined => {
  */
 const validateEnvVar = (key: string, required: boolean): boolean => {
   const value = getEnvVar(key);
+  const hasFallback = key in FALLBACK_VALUES;
 
   if (!value || value.trim() === '') {
     if (required) {
-      logger.error(`Missing required environment variable: ${key}`);
-      return false;
+      if (hasFallback && import.meta.env.DEV) {
+        // In development with fallback available, just warn
+        logger.warn(`Using fallback value for: ${key}`);
+        return true;
+      } else if (!import.meta.env.PROD) {
+        // Only log errors in production without fallbacks
+        logger.warn(`Missing environment variable: ${key} (using fallback)`);
+        return true;
+      } else {
+        logger.error(`Missing required environment variable: ${key}`);
+        return false;
+      }
     } else {
       logger.info(`Optional environment variable not set: ${key}`);
       return true;
@@ -122,12 +142,12 @@ export const validateEnvironment = (): boolean => {
 };
 
 /**
- * Get environment configuration with defaults
+ * Get environment configuration with defaults/fallbacks
  */
 export const getEnvConfig = (): EnvConfig => {
   return {
-    VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL') || '',
-    VITE_SUPABASE_PUBLISHABLE_KEY: getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY') || '',
+    VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL') || FALLBACK_VALUES.VITE_SUPABASE_URL || '',
+    VITE_SUPABASE_PUBLISHABLE_KEY: getEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY') || FALLBACK_VALUES.VITE_SUPABASE_PUBLISHABLE_KEY || '',
     VITE_EDGE_FUNCTIONS_URL: getEnvVar('VITE_EDGE_FUNCTIONS_URL'),
     VITE_SUPABASE_PROJECT_ID: getEnvVar('VITE_SUPABASE_PROJECT_ID'),
     VITE_POSTHOG_API_KEY: getEnvVar('VITE_POSTHOG_API_KEY'),

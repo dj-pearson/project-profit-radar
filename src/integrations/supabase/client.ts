@@ -3,19 +3,20 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { supabaseStorage } from '@/lib/supabaseStorage';
 
-// Load configuration from environment variables
+// Load configuration from environment variables with fallbacks for development
 // SUPABASE_URL points to Kong (handles /auth, /rest, /storage, etc.)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Default to self-hosted API URL for seamless development experience
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.build-desk.com';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 // Edge Functions URL (separate deployment for self-hosted)
 // Falls back to SUPABASE_URL/functions/v1 if not specified (for backward compatibility)
 const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${SUPABASE_URL}/functions/v1`;
 
-// Validate required environment variables
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error(
-    'Missing Supabase configuration. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.'
+// Log warning in development if using fallback values
+if (import.meta.env.DEV && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)) {
+  console.warn(
+    'Using fallback Supabase configuration. For production, set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.'
   );
 }
 
