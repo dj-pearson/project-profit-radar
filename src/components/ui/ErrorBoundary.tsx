@@ -2,6 +2,7 @@
  * Error Boundary
  * React Error Boundary for graceful error handling
  * Catches errors in child components and displays fallback UI
+ * Integrates with Sentry for production error tracking
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { captureException } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -38,7 +40,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error Boundary caught an error:', error, errorInfo);
+    // Log to console in development
+    if (import.meta.env.DEV) {
+      console.error('Error Boundary caught an error:', error, errorInfo);
+    }
 
     this.setState({
       error,
@@ -48,7 +53,11 @@ export class ErrorBoundary extends Component<Props, State> {
     // Call optional error callback
     this.props.onError?.(error, errorInfo);
 
-    // TODO: Log to error reporting service (Sentry, LogRocket, etc.)
+    // Report to Sentry for production error tracking
+    captureException(error, {
+      componentStack: errorInfo.componentStack,
+      boundary: 'ErrorBoundary',
+    });
   }
 
   private handleReset = () => {
@@ -95,7 +104,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
 
               {/* Error Details (Development only) */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="border rounded-lg p-4 bg-gray-50">
                   <summary className="cursor-pointer font-semibold text-sm mb-2 flex items-center gap-2">
                     <Bug className="h-4 w-4" />

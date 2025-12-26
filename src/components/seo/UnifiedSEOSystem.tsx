@@ -212,14 +212,15 @@ export const UnifiedSEOSystem: React.FC<UnifiedSEOProps> = ({
             source: dbConfig ? 'database' : enterpriseConfig ? 'enterprise' : 'manual'
           });
         }
-      } catch (error) {
+      } catch {
+        // Silently fail - analytics is non-critical
       }
     }
   }, [enableAnalytics, isLoading, location.pathname]);
 
-  if (isLoading) {
-    return null; // Don't render anything while loading
-  }
+  // IMPORTANT: Never return null - always render meta tags immediately
+  // This ensures search engines and social crawlers can always see meta content
+  // The initial render uses defaults, subsequent renders update with loaded data
 
   return (
     <Helmet>

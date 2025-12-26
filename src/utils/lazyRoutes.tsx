@@ -9,10 +9,15 @@ export const createLazyRoute = (importFn: () => Promise<{ default: React.Compone
 };
 
 /**
- * Common loading component for all lazy routes
+ * Common loading component for all lazy routes with accessibility support
  */
 export const RouteLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
+  <div
+    className="min-h-screen flex items-center justify-center"
+    role="status"
+    aria-busy="true"
+    aria-label="Loading page content"
+  >
     <LoadingState message="Loading page..." />
   </div>
 );
@@ -262,13 +267,47 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
 ];
 
 /**
+ * Route import functions for preloading
+ * Store the import functions separately so they can be called for preloading
+ */
+const routeImports = {
+  index: () => import('@/pages/Index'),
+  auth: () => import('@/pages/Auth'),
+  dashboard: () => import('@/pages/Dashboard'),
+  projects: () => import('@/pages/Projects'),
+} as const;
+
+/**
  * Preload high-priority routes for better perceived performance
+ * Uses dynamic imports to prefetch route chunks in the background
  */
 export const preloadHighPriorityRoutes = () => {
-  // Note: React.lazy components don't have a preload method
-  // This function is kept for future implementation if needed
-  // Return early as preloading is not currently implemented
-  return;
+  // Use requestIdleCallback if available, otherwise use setTimeout
+  const schedulePreload = (callback: () => void) => {
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(callback, { timeout: 2000 });
+    } else {
+      setTimeout(callback, 100);
+    }
+  };
+
+  // Preload critical routes in order of priority
+  schedulePreload(() => {
+    // Preload dashboard first as it's the main destination after auth
+    routeImports.dashboard().catch(() => {
+      // Silently fail - preloading is an optimization, not critical
+    });
+  });
+
+  schedulePreload(() => {
+    // Preload auth page for returning users
+    routeImports.auth().catch(() => {});
+  });
+
+  schedulePreload(() => {
+    // Preload projects as it's a frequently accessed page
+    routeImports.projects().catch(() => {});
+  });
 };
 
 /**

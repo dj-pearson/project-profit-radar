@@ -1,14 +1,24 @@
 import { cn } from "@/lib/utils"
 
+interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Accessible label for the skeleton loading state */
+  label?: string;
+}
+
 function Skeleton({
   className,
+  label,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: SkeletonProps) {
   return (
     <div
       className={cn("animate-pulse rounded-md bg-muted", className)}
+      role="status"
+      aria-label={label || "Loading content"}
       {...props}
-    />
+    >
+      {label && <span className="sr-only">{label}</span>}
+    </div>
   )
 }
 
@@ -120,7 +130,13 @@ export const FormSkeleton = () => (
 );
 
 export const DashboardSkeleton = () => (
-  <div className="space-y-6">
+  <div
+    className="space-y-6 p-6"
+    role="status"
+    aria-busy="true"
+    aria-label="Loading dashboard content"
+  >
+    <span className="sr-only">Loading dashboard, please wait...</span>
     <StatsGridSkeleton />
     <div className="grid gap-6 md:grid-cols-2">
       <div className="space-y-4">
@@ -143,15 +159,27 @@ export const DashboardSkeleton = () => (
   </div>
 );
 
-export const LoadingSpinner = ({ size = "default" }: { size?: "sm" | "default" | "lg" }) => {
+export const LoadingSpinner = ({
+  size = "default",
+  label = "Loading"
+}: {
+  size?: "sm" | "default" | "lg";
+  label?: string;
+}) => {
   const sizeClasses = {
     sm: "h-4 w-4",
-    default: "h-6 w-6", 
+    default: "h-6 w-6",
     lg: "h-8 w-8"
   };
-  
+
   return (
-    <div className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-muted border-t-primary`} />
+    <div
+      className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-muted border-t-primary`}
+      role="status"
+      aria-label={label}
+    >
+      <span className="sr-only">{label}</span>
+    </div>
   );
 };
 
