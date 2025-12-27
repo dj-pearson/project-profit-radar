@@ -173,6 +173,19 @@ supabase secrets list
 | `STRIPE_PUBLISHABLE_KEY` | Stripe public key | Some checkout functions |
 | `STRIPE_ENCRYPTION_KEY` | Key for encrypting stored Stripe data | `store-stripe-keys` |
 
+### Stripe Price IDs (Set after running setup script)
+
+Run `scripts/setup-stripe-products.sh` (or `.ps1` on Windows) to create products and get these IDs.
+
+| Secret | Description | Amount | Used By |
+|--------|-------------|--------|---------|
+| `STRIPE_PRICE_STARTER_MONTHLY` | Starter plan monthly price ID | $149/month | `create-stripe-checkout` |
+| `STRIPE_PRICE_STARTER_ANNUAL` | Starter plan annual price ID | $1,490/year | `create-stripe-checkout` |
+| `STRIPE_PRICE_PROFESSIONAL_MONTHLY` | Professional plan monthly price ID | $299/month | `create-stripe-checkout` |
+| `STRIPE_PRICE_PROFESSIONAL_ANNUAL` | Professional plan annual price ID | $2,990/year | `create-stripe-checkout` |
+| `STRIPE_PRICE_ENTERPRISE_MONTHLY` | Enterprise plan monthly price ID | $599/month | `create-stripe-checkout` |
+| `STRIPE_PRICE_ENTERPRISE_ANNUAL` | Enterprise plan annual price ID | $5,990/year | `create-stripe-checkout` |
+
 ### Email Services
 
 | Secret | Description | Used By |
@@ -370,6 +383,16 @@ VITE_EDGE_FUNCTIONS_URL=https://functions.build-desk.com
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `RESEND_API_KEY`
+
+**Stripe Product/Price Setup:**
+1. Run `scripts/setup-stripe-products.sh` (or `.ps1` on Windows)
+2. Set the following secrets in Supabase:
+   - `STRIPE_PRICE_STARTER_MONTHLY`
+   - `STRIPE_PRICE_STARTER_ANNUAL`
+   - `STRIPE_PRICE_PROFESSIONAL_MONTHLY`
+   - `STRIPE_PRICE_PROFESSIONAL_ANNUAL`
+   - `STRIPE_PRICE_ENTERPRISE_MONTHLY`
+   - `STRIPE_PRICE_ENTERPRISE_ANNUAL`
 
 ### Full Feature Set
 
