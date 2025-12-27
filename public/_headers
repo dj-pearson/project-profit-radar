@@ -86,9 +86,12 @@
 /sw.js
   Cache-Control: public, max-age=86400, must-revalidate
 
-# HTML pages - no cache to ensure fresh content
+# HTML pages - NEVER cache to prevent asset hash mismatches
 /
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0
 
 /*.html
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0
+  
+/404.html
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0

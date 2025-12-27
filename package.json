@@ -33,6 +33,7 @@
     "performance:audit": "node scripts/performance-audit.js",
     "performance:budget": "node scripts/check-performance-budget.js",
     "images:optimize": "node scripts/convert-images-to-webp.js",
+    "cache:purge": "node scripts/purge-cloudflare-cache.js",
     "performance:ci": "npm run build && npm run performance:budget && npm run performance:audit",
     "lighthouse": "lhci autorun",
     "lighthouse:collect": "lhci collect",
