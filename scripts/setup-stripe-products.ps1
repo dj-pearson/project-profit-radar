@@ -9,7 +9,8 @@
 
 param(
     [switch]$LiveMode = $false,
-    [switch]$DryRun = $false
+    [switch]$DryRun = $false,
+    [string]$ApiKey = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -145,16 +146,19 @@ function Invoke-StripeCommand {
     }
 
     $fullCommand = "stripe $Command"
-    if (-not $LiveMode) {
-        # Test mode is default in Stripe CLI when authenticated
+    if ($LiveMode) {
+        $fullCommand += " --live"
+    }
+    if ($ApiKey) {
+        $fullCommand += " --api-key $ApiKey"
     }
 
     try {
-        $result = Invoke-Expression $fullCommand 2>&1
+        $output = Invoke-Expression $fullCommand 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) {
-            throw "Stripe CLI returned error: $result"
+            throw "Stripe CLI returned error: $output"
         }
-        return $result
+        return $output.Trim()
     }
     catch {
         Write-Host "     [ERROR] $($_.Exception.Message)" -ForegroundColor Red
@@ -173,12 +177,12 @@ function Create-StripeProduct {
     # Build features string for metadata
     $featuresJson = ($Product.Features | ConvertTo-Json -Compress) -replace '"', '\"'
 
-    $command = @(
-        "products create"
-        "--name=`"$($Product.Name)`""
-        "--description=`"$($Product.Description)`""
-        "--metadata[tier]=$($Product.Name -replace 'BuildDesk ', '' -replace ' ', '_' | ForEach-Object { $_.ToLower() })"
-    ) -join " "
+    $tierValue = $Product.Name -replace 'BuildDesk ', '' -replace ' ', '_' | ForEach-Object { $_.ToLower() }
+    
+    $command = "products create " +
+        "-d `"name=$($Product.Name)`" " +
+        "-d `"description=$($Product.Description)`" " +
+        "-d `"metadata[tier]=$tierValue`""
 
     $result = Invoke-StripeCommand -Command $command -Description "Creating product"
     $productData = $result | ConvertFrom-Json
@@ -200,16 +204,14 @@ function Create-StripePrice {
     $tierKey = $Tier.ToLower()
     $intervalKey = if ($Price.Interval -eq "month") { "monthly" } else { "annual" }
 
-    $command = @(
-        "prices create"
-        "--product=$ProductId"
-        "--currency=usd"
-        "--unit-amount=$($Price.Amount)"
-        "--recurring[interval]=$($Price.Interval)"
-        "--nickname=`"$($Price.Nickname)`""
-        "--metadata[tier]=$tierKey"
-        "--metadata[billing_period]=$intervalKey"
-    ) -join " "
+    $command = "prices create " +
+        "-d `"product=$ProductId`" " +
+        "-d `"currency=usd`" " +
+        "-d `"unit_amount=$($Price.Amount)`" " +
+        "-d `"recurring[interval]=$($Price.Interval)`" " +
+        "-d `"nickname=$($Price.Nickname)`" " +
+        "-d `"metadata[tier]=$tierKey`" " +
+        "-d `"metadata[billing_period]=$intervalKey`""
 
     $result = Invoke-StripeCommand -Command $command -Description "Creating price"
     $priceData = $result | ConvertFrom-Json
@@ -227,15 +229,13 @@ function Create-PaymentLink {
 
     Write-Host "  Creating payment link for: $Nickname" -ForegroundColor Cyan
 
-    $command = @(
-        "payment_links create"
-        "--line-items[0][price]=$PriceId"
-        "--line-items[0][quantity]=1"
-        "--allow-promotion-codes"
-        "--billing-address-collection=auto"
-        "--after-completion[type]=redirect"
-        "--after-completion[redirect][url]=https://build-desk.com/setup?session_id={CHECKOUT_SESSION_ID}"
-    ) -join " "
+    $command = "payment_links create " +
+        "-d `"line_items[0][price]=$PriceId`" " +
+        "-d `"line_items[0][quantity]=1`" " +
+        "-d `"allow_promotion_codes=true`" " +
+        "-d `"billing_address_collection=auto`" " +
+        "-d `"after_completion[type]=redirect`" " +
+        "-d `"after_completion[redirect][url]=https://build-desk.com/setup?session_id={CHECKOUT_SESSION_ID}`""
 
     $result = Invoke-StripeCommand -Command $command -Description "Creating payment link"
     $linkData = $result | ConvertFrom-Json
