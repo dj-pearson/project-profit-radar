@@ -36,6 +36,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SafeHtml } from '@/components/ui/safe-html';
 
 export interface FAQItem {
   /**
@@ -293,9 +294,9 @@ export const InteractiveFAQ: React.FC<InteractiveFAQProps> = ({
                       currentTheme.answer
                     )}
                   >
-                    <div
+                    <SafeHtml
+                      content={faq.answer}
                       className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
-                      dangerouslySetInnerHTML={{ __html: faq.answer }}
                     />
 
                     {/* Optional: Show keywords for SEO */}
