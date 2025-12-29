@@ -13,7 +13,7 @@ interface MobileBottomNavProps {
 }
 
 /**
- * Mobile bottom navigation with thumb-friendly positioning
+ * Mobile bottom navigation with thumb-friendly positioning and safe area support
  */
 export function MobileBottomNav({ items }: MobileBottomNavProps) {
   const location = useLocation();
@@ -22,11 +22,14 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0',
-        'bg-background border-t',
+        'bg-background/95 backdrop-blur-sm border-t',
         'md:hidden', // Only show on mobile
         'z-50',
-        'safe-area-inset-bottom'
+        'safe-area-bottom-nav safe-area-x'
       )}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
     >
       <div className="flex items-center justify-around h-16">
         {items.map((item) => (
@@ -56,25 +59,40 @@ function NavButton({ icon: Icon, label, href, active }: NavButtonProps) {
       to={href}
       className={cn(
         'flex flex-col items-center justify-center',
-        'min-w-[64px] min-h-[44px]',
+        'min-w-[64px] min-h-[48px] py-2 px-3',
         'space-y-1',
-        'transition-colors',
-        active ? 'text-primary' : 'text-muted-foreground',
-        'active:scale-95 transition-transform'
+        'transition-all duration-150',
+        'touch-manipulation',
+        active
+          ? 'text-primary scale-105'
+          : 'text-muted-foreground hover:text-foreground',
+        'active:scale-95 active:opacity-70',
+        'rounded-lg'
       )}
+      aria-current={active ? 'page' : undefined}
     >
-      <Icon className="h-5 w-5" />
-      <span className="text-xs font-medium">{label}</span>
+      <Icon className={cn('h-5 w-5', active && 'drop-shadow-sm')} />
+      <span className={cn(
+        'text-xs font-medium leading-tight',
+        active && 'font-semibold'
+      )}>
+        {label}
+      </span>
     </Link>
   );
 }
 
 /**
- * Wrapper to add padding for mobile bottom navigation
+ * Wrapper to add padding for mobile bottom navigation with safe area support
  */
 export function MobileBottomNavWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pb-16 md:pb-0">
+    <div
+      className="pb-20 md:pb-0"
+      style={{
+        paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+      }}
+    >
       {children}
     </div>
   );

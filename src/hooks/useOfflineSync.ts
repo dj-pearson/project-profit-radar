@@ -14,7 +14,32 @@ export interface OfflineData {
   synced: boolean;
   retryCount: number;
   lastAttempt?: string;
+  nextRetryAt?: string;
   error?: string;
+}
+
+// Constants for exponential backoff
+const MAX_RETRY_COUNT = 5;
+const INITIAL_BACKOFF_MS = 1000; // 1 second
+const MAX_BACKOFF_MS = 60000; // 60 seconds
+const BACKOFF_MULTIPLIER = 2;
+
+/**
+ * Calculate the next retry delay using exponential backoff
+ */
+function calculateBackoff(retryCount: number): number {
+  const backoff = INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, retryCount);
+  return Math.min(backoff, MAX_BACKOFF_MS);
+}
+
+/**
+ * Check if an item is ready for retry based on backoff timing
+ */
+function isReadyForRetry(item: OfflineData): boolean {
+  if (item.synced) return false;
+  if (item.retryCount >= MAX_RETRY_COUNT) return false;
+  if (!item.nextRetryAt) return true;
+  return new Date().getTime() >= new Date(item.nextRetryAt).getTime();
 }
 
 interface OfflineState {
@@ -173,9 +198,8 @@ export const useOfflineSync = () => {
     setOfflineState(prev => ({ ...prev, syncInProgress: true }));
 
     try {
-      const itemsToSync = offlineState.pendingSync.filter(item => 
-        !item.synced && item.retryCount < 3
-      );
+      // Filter items that are ready for retry using exponential backoff
+      const itemsToSync = offlineState.pendingSync.filter(isReadyForRetry);
 
       if (itemsToSync.length === 0) {
         setOfflineState(prev => ({ ...prev, syncInProgress: false }));
@@ -192,14 +216,25 @@ export const useOfflineSync = () => {
         } catch (error) {
           console.error(`Failed to sync item ${item.id}:`, error);
           failedCount++;
-          
-          // Update retry count and error
+
+          // Calculate next retry time using exponential backoff
+          const backoffMs = calculateBackoff(item.retryCount);
+          const nextRetryAt = new Date(Date.now() + backoffMs).toISOString();
+
+          // Update retry count, error, and next retry time
           const updatedItem: OfflineData = {
             ...item,
             retryCount: item.retryCount + 1,
             lastAttempt: new Date().toISOString(),
+            nextRetryAt,
             error: error instanceof Error ? error.message : 'Unknown error'
           };
+
+          // Log backoff info
+          console.log(
+            `Item ${item.id} failed. Retry ${updatedItem.retryCount}/${MAX_RETRY_COUNT}. ` +
+            `Next retry in ${backoffMs / 1000}s`
+          );
 
           // Save updated item
           await Filesystem.writeFile({
@@ -212,7 +247,7 @@ export const useOfflineSync = () => {
           // Update state
           setOfflineState(prev => ({
             ...prev,
-            pendingSync: prev.pendingSync.map(p => 
+            pendingSync: prev.pendingSync.map(p =>
               p.id === item.id ? updatedItem : p
             )
           }));
@@ -237,9 +272,15 @@ export const useOfflineSync = () => {
       }
 
       if (failedCount > 0) {
+        const permanentlyFailed = offlineState.pendingSync.filter(
+          item => item.retryCount >= MAX_RETRY_COUNT
+        ).length;
+
         toast({
           title: "Sync Issues",
-          description: `${failedCount} items failed to sync and will be retried`,
+          description: permanentlyFailed > 0
+            ? `${failedCount} items failed. ${permanentlyFailed} exceeded max retries.`
+            : `${failedCount} items failed and will be retried with backoff`,
           variant: "destructive"
         });
       }
@@ -399,7 +440,7 @@ export const useOfflineSync = () => {
   const getStorageInfo = useCallback(async () => {
     try {
       const deviceInfo = await Device.getInfo();
-      
+
       // Get offline data size
       const { files } = await Filesystem.readdir({
         path: 'offline-sync',
@@ -411,12 +452,24 @@ export const useOfflineSync = () => {
         return sum + (file.name.length * 100); // Rough estimate
       }, 0);
 
+      const pendingItems = offlineState.pendingSync.filter(item => !item.synced);
+      const failedItems = pendingItems.filter(item => item.error);
+      const awaitingRetry = pendingItems.filter(item =>
+        item.nextRetryAt && new Date(item.nextRetryAt) > new Date()
+      );
+      const permanentlyFailed = pendingItems.filter(
+        item => item.retryCount >= MAX_RETRY_COUNT
+      );
+
       return {
         platform: deviceInfo.platform,
-        pendingItems: offlineState.pendingSync.length,
+        pendingItems: pendingItems.length,
         estimatedSize: `${Math.round(totalSize / 1024)}KB`,
         lastSync: offlineState.lastSyncTime,
-        failedItems: offlineState.pendingSync.filter(item => item.error).length
+        failedItems: failedItems.length,
+        awaitingRetry: awaitingRetry.length,
+        permanentlyFailed: permanentlyFailed.length,
+        readyForRetry: pendingItems.filter(isReadyForRetry).length
       };
 
     } catch (error) {
