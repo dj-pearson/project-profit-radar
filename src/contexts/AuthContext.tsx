@@ -8,6 +8,7 @@ import React, {
   useRef,
 } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
@@ -43,6 +44,27 @@ interface UserProfile {
     | "client_portal";
   is_active: boolean;
 }
+
+// SECURITY: Zod schema for validating cached user profile data
+// This prevents type confusion and injection attacks from tampered sessionStorage
+const UserProfileSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email().max(255),
+  first_name: z.string().max(100).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  company_id: z.string().uuid().optional().nullable(),
+  role: z.enum([
+    "root_admin",
+    "admin",
+    "project_manager",
+    "field_supervisor",
+    "office_staff",
+    "accounting",
+    "client_portal",
+  ]),
+  is_active: z.boolean(),
+});
 
 // OTP types for email verification flows
 type OTPType =
@@ -487,8 +509,18 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           try {
             const stored = sessionStorage.getItem(`bd.userProfile.${session.user.id}`);
             if (stored) {
-              const parsed = JSON.parse(stored);
-              logger.debug("Initial session: Using stored profile (will refresh in background)");
+              // SECURITY: Validate cached data with Zod schema to prevent injection attacks
+              const rawParsed = JSON.parse(stored);
+              const parseResult = UserProfileSchema.safeParse(rawParsed);
+
+              if (!parseResult.success) {
+                logger.warn("Cached profile validation failed, removing corrupted data:", parseResult.error.errors);
+                sessionStorage.removeItem(`bd.userProfile.${session.user.id}`);
+                throw new Error("Invalid cached profile data");
+              }
+
+              const parsed = parseResult.data as UserProfile;
+              logger.debug("Initial session: Using validated stored profile (will refresh in background)");
               setUserProfile(parsed);
               successfulProfiles.current.set(parsed.id, parsed);
 
