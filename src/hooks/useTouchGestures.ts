@@ -18,6 +18,10 @@ interface TouchGestureOptions {
   swipeThreshold?: number;
   longPressThreshold?: number;
   pinchThreshold?: number;
+  /** Use passive listeners for better scroll performance (default: false for backwards compatibility) */
+  passive?: boolean;
+  /** Prevent default behavior during gestures (ignored if passive is true) */
+  preventDefault?: boolean;
 }
 
 export const useTouchGestures = (
@@ -32,7 +36,9 @@ export const useTouchGestures = (
     onLongPress,
     swipeThreshold = 50,
     longPressThreshold = 500,
-    pinchThreshold = 0.1
+    pinchThreshold = 0.1,
+    passive = false,
+    preventDefault = true
   } = options;
 
   const [isGesturing, setIsGesturing] = useState(false);
@@ -85,8 +91,11 @@ export const useTouchGestures = (
   }, [calculateDistance, onLongPress, longPressThreshold]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    e.preventDefault(); // Prevent scrolling during gestures
-    
+    // Only prevent default if not using passive listeners and preventDefault is enabled
+    if (!passive && preventDefault) {
+      e.preventDefault();
+    }
+
     const touch = e.touches[0];
     const state = gestureState.current;
     
@@ -125,7 +134,7 @@ export const useTouchGestures = (
         deltaY
       });
     }
-  }, [calculateDistance, onPinch, onPan, pinchThreshold]);
+  }, [calculateDistance, onPinch, onPan, pinchThreshold, passive, preventDefault]);
 
   const handleTouchEnd = useCallback((e: TouchEvent) => {
     const state = gestureState.current;
@@ -179,16 +188,20 @@ export const useTouchGestures = (
     const element = elementRef.current;
     if (!element) return;
 
-    element.addEventListener('touchstart', handleTouchStart, { passive: false });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
-    element.addEventListener('touchend', handleTouchEnd, { passive: false });
+    // Use passive listeners for better scroll performance when possible
+    // Note: passive: true means we can't call preventDefault()
+    const listenerOptions = { passive };
+
+    element.addEventListener('touchstart', handleTouchStart, listenerOptions);
+    element.addEventListener('touchmove', handleTouchMove, listenerOptions);
+    element.addEventListener('touchend', handleTouchEnd, listenerOptions);
 
     return () => {
       element.removeEventListener('touchstart', handleTouchStart);
       element.removeEventListener('touchmove', handleTouchMove);
       element.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, passive]);
 
   return {
     isGesturing

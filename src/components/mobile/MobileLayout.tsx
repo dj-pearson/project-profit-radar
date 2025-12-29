@@ -24,11 +24,14 @@ export function MobileLayout({
     <div
       className={cn(
         'w-full min-h-screen',
+        'safe-area-top safe-area-x',
         withPadding && 'px-4 py-4 md:px-6 md:py-6',
-        withBottomNav && 'pb-20 md:pb-6', // Extra padding for bottom nav on mobile
-        'safe-area-inset',
+        withBottomNav && 'md:pb-6',
         className
       )}
+      style={withBottomNav && isMobile ? {
+        paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+      } : undefined}
     >
       {children}
     </div>
