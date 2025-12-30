@@ -15,6 +15,12 @@ import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
+import {
+  checkLoginAttempt,
+  recordFailedLogin,
+  clearFailedAttempts,
+  getLockoutMessage,
+} from "@/lib/security/loginProtection";
 // Site-resolver removed - single-tenant architecture
 import type { ReactNode, FC } from "react";
 
@@ -761,6 +767,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("Signing in...");
       setLoading(true);
 
+      // SECURITY: Check if login attempt is allowed (brute force protection)
+      const attemptCheck = await checkLoginAttempt(email);
+      if (!attemptCheck.allowed) {
+        logger.warn("Login blocked due to account lockout");
+        setLoading(false);
+        return { error: getLockoutMessage(attemptCheck) };
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -768,8 +782,25 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
       if (error) {
         logger.error("Sign in error:", error);
+        // SECURITY: Record failed login attempt
+        const failResult = await recordFailedLogin(email);
         setLoading(false);
-        return { error: error.message };
+
+        // Return lockout message if account is now locked
+        if (!failResult.allowed) {
+          return { error: getLockoutMessage(failResult) };
+        }
+
+        // Add warning about remaining attempts if low
+        const warningMessage = failResult.message
+          ? `${error.message}. ${failResult.message}`
+          : error.message;
+        return { error: warningMessage };
+      }
+
+      // SECURITY: Clear failed attempts on successful login
+      if (data.user) {
+        await clearFailedAttempts(data.user.id);
       }
 
       logger.debug("Sign in successful");
