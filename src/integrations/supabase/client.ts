@@ -3,27 +3,49 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { supabaseStorage } from '@/lib/supabaseStorage';
 
-// Load configuration from environment variables with fallbacks for development
+// Load configuration from environment variables
 // SUPABASE_URL points to Kong (handles /auth, /rest, /storage, etc.)
-// Default to self-hosted API URL for seamless development experience
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.build-desk.com';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+// SECURITY: Validate required environment variables in production
+// In production, missing credentials should fail loudly rather than falling back to insecure defaults
+if (import.meta.env.PROD) {
+  if (!SUPABASE_URL) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: VITE_SUPABASE_URL environment variable is required in production. ' +
+      'Application cannot start without proper Supabase configuration.'
+    );
+  }
+  if (!SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error(
+      'CRITICAL SECURITY ERROR: VITE_SUPABASE_PUBLISHABLE_KEY environment variable is required in production. ' +
+      'Application cannot start without proper Supabase configuration.'
+    );
+  }
+}
+
+// Development fallbacks - only used when env vars are not set in development mode
+const DEV_FALLBACK_URL = 'https://api.build-desk.com';
+const RESOLVED_SUPABASE_URL = SUPABASE_URL || DEV_FALLBACK_URL;
+const RESOLVED_SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || '';
 
 // Edge Functions URL (separate deployment for self-hosted)
 // Falls back to SUPABASE_URL/functions/v1 if not specified (for backward compatibility)
-const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${SUPABASE_URL}/functions/v1`;
+const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${RESOLVED_SUPABASE_URL}/functions/v1`;
 
 // Log warning in development if using fallback values
-if (import.meta.env.DEV && (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)) {
+if (import.meta.env.DEV && (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY)) {
   console.warn(
-    'Using fallback Supabase configuration. For production, set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.'
+    '[SECURITY WARNING] Using development fallback Supabase configuration. ' +
+    'Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables for proper configuration.'
   );
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(RESOLVED_SUPABASE_URL, RESOLVED_SUPABASE_KEY, {
   auth: {
     storage: supabaseStorage,
     persistSession: true,
@@ -98,9 +120,9 @@ export const invokeEdgeFunction = async <T = any>(
  * Configuration info (for debugging)
  */
 export const getSupabaseConfig = () => ({
-  mainApiUrl: SUPABASE_URL,
+  mainApiUrl: RESOLVED_SUPABASE_URL,
   edgeFunctionsUrl: EDGE_FUNCTIONS_URL,
-  isSelfHosted: !SUPABASE_URL.includes('supabase.co'),
+  isSelfHosted: !RESOLVED_SUPABASE_URL.includes('supabase.co'),
 });
 
 // Log configuration in development
