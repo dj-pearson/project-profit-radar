@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -156,10 +156,51 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     };
   }, [selectedProject]);
 
-  // Recalculate summary when costs change
+  // Memoized current project lookup
+  const currentProject = useMemo(() =>
+    projects.find(p => p.id === selectedProject),
+    [projects, selectedProject]
+  );
+
+  // Memoized cost summary calculation
+  const memoizedCostSummary = useMemo(() => {
+    if (!currentProject) {
+      return {
+        totalCost: 0,
+        laborCost: 0,
+        materialCost: 0,
+        equipmentCost: 0,
+        otherCost: 0,
+        budgetVariance: 0,
+        budgetVariancePercentage: 0
+      };
+    }
+
+    const totalCost = jobCosts.reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
+    const laborCost = jobCosts.reduce((sum, cost) => sum + (cost.labor_cost || 0), 0);
+    const materialCost = jobCosts.reduce((sum, cost) => sum + (cost.material_cost || 0), 0);
+    const equipmentCost = jobCosts.reduce((sum, cost) => sum + (cost.equipment_cost || 0), 0);
+    const otherCost = jobCosts.reduce((sum, cost) => sum + (cost.other_cost || 0), 0);
+
+    const budget = currentProject.budget || 0;
+    const budgetVariance = budget - totalCost;
+    const budgetVariancePercentage = budget > 0 ? (budgetVariance / budget) * 100 : 0;
+
+    return {
+      totalCost,
+      laborCost,
+      materialCost,
+      equipmentCost,
+      otherCost,
+      budgetVariance,
+      budgetVariancePercentage
+    };
+  }, [jobCosts, currentProject]);
+
+  // Update costSummary state when memoized value changes
   useEffect(() => {
-    calculateCostSummary();
-  }, [jobCosts, selectedProject]);
+    setCostSummary(memoizedCostSummary);
+  }, [memoizedCostSummary]);
 
   const loadData = async () => {
     console.time('loadData');
@@ -287,35 +328,6 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     console.timeEnd('handleRealTimeUpdate');
   }, []);
 
-  const calculateCostSummary = () => {
-    console.time('calculateCostSummary');
-    const currentProject = projects.find(p => p.id === selectedProject);
-    if (!currentProject) {
-      console.timeEnd('calculateCostSummary');
-      return;
-    }
-
-    const totalCost = jobCosts.reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
-    const laborCost = jobCosts.reduce((sum, cost) => sum + (cost.labor_cost || 0), 0);
-    const materialCost = jobCosts.reduce((sum, cost) => sum + (cost.material_cost || 0), 0);
-    const equipmentCost = jobCosts.reduce((sum, cost) => sum + (cost.equipment_cost || 0), 0);
-    const otherCost = jobCosts.reduce((sum, cost) => sum + (cost.other_cost || 0), 0);
-    
-    const budget = currentProject.budget || 0;
-    const budgetVariance = budget - totalCost;
-    const budgetVariancePercentage = budget > 0 ? (budgetVariance / budget) * 100 : 0;
-
-    setCostSummary({
-      totalCost,
-      laborCost,
-      materialCost,
-      equipmentCost,
-      otherCost,
-      budgetVariance,
-      budgetVariancePercentage
-    });
-    console.timeEnd('calculateCostSummary');
-  };
 
   const handleProjectChange = (projectId: string) => {
     setSelectedProject(projectId);
@@ -471,16 +483,17 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     }
   };
 
-  const getVarianceColor = (percentage: number) => {
+  // Memoized helper functions
+  const getVarianceColor = useCallback((percentage: number) => {
     if (percentage > 10) return 'text-green-600';
     if (percentage > 0) return 'text-yellow-600';
     return 'text-red-600';
-  };
+  }, []);
 
-  const getVarianceIcon = (percentage: number) => {
+  const getVarianceIcon = useCallback((percentage: number) => {
     if (percentage > 0) return <TrendingUp className="h-4 w-4" />;
     return <TrendingDown className="h-4 w-4" />;
-  };
+  }, []);
 
   // Load job costs when project changes
   useEffect(() => {
@@ -499,8 +512,6 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       </div>
     );
   }
-
-  const currentProject = projects.find(p => p.id === selectedProject);
 
   return (
     <div className="space-y-6">
