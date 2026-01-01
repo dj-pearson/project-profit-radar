@@ -149,9 +149,14 @@ const MobileDailyReportManager: React.FC<MobileDailyReportProps> = ({
   const { isOnline, saveOfflineData } = useOfflineSync();
   const { position, getCurrentPosition } = useGeolocation();
 
+  // Load projects and get position only once on mount
   useEffect(() => {
     getCurrentPosition();
     loadProjects();
+  }, []);
+
+  // Recalculate total hours when crew members change
+  useEffect(() => {
     calculateTotalHours();
   }, [reportData.crew_members]);
 

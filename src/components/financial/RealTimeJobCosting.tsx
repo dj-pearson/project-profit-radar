@@ -176,22 +176,28 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       };
     }
 
-    const totalCost = jobCosts.reduce((sum, cost) => sum + (cost.total_cost || 0), 0);
-    const laborCost = jobCosts.reduce((sum, cost) => sum + (cost.labor_cost || 0), 0);
-    const materialCost = jobCosts.reduce((sum, cost) => sum + (cost.material_cost || 0), 0);
-    const equipmentCost = jobCosts.reduce((sum, cost) => sum + (cost.equipment_cost || 0), 0);
-    const otherCost = jobCosts.reduce((sum, cost) => sum + (cost.other_cost || 0), 0);
+    // Single pass through the array to calculate all cost totals
+    const costs = jobCosts.reduce((acc, cost) => {
+      acc.totalCost += cost.total_cost || 0;
+      acc.laborCost += cost.labor_cost || 0;
+      acc.materialCost += cost.material_cost || 0;
+      acc.equipmentCost += cost.equipment_cost || 0;
+      acc.otherCost += cost.other_cost || 0;
+      return acc;
+    }, {
+      totalCost: 0,
+      laborCost: 0,
+      materialCost: 0,
+      equipmentCost: 0,
+      otherCost: 0
+    });
 
     const budget = currentProject.budget || 0;
-    const budgetVariance = budget - totalCost;
+    const budgetVariance = budget - costs.totalCost;
     const budgetVariancePercentage = budget > 0 ? (budgetVariance / budget) * 100 : 0;
 
     return {
-      totalCost,
-      laborCost,
-      materialCost,
-      equipmentCost,
-      otherCost,
+      ...costs,
       budgetVariance,
       budgetVariancePercentage
     };
