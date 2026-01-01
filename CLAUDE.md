@@ -77,7 +77,7 @@ BuildDesk is a comprehensive construction management platform designed for small
 ```
 /home/user/project-profit-radar/
 ├── src/
-│   ├── components/              # 115+ domain-specific component directories
+│   ├── components/              # 117+ domain-specific component directories
 │   │   ├── ui/                  # shadcn/ui components
 │   │   ├── financial/           # Financial management
 │   │   ├── dashboard/           # Dashboard components
@@ -98,7 +98,7 @@ BuildDesk is a comprehensive construction management platform designed for small
 │   │   ├── seo/                 # SEO components
 │   │   ├── testing/             # Test utilities
 │   │   └── [90+ more domains]   # See full list below
-│   ├── pages/                   # Route pages (260+ pages)
+│   ├── pages/                   # Route pages (262+ pages)
 │   │   ├── admin/               # Admin pages
 │   │   ├── features/            # Feature showcase pages
 │   │   ├── settings/            # Settings pages
@@ -133,13 +133,13 @@ BuildDesk is a comprehensive construction management platform designed for small
 │   ├── templates/               # Email templates
 │   └── test/                    # Test setup files
 ├── supabase/
-│   ├── functions/               # 154+ Edge functions
+│   ├── functions/               # 166+ Edge functions
 │   │   ├── stripe-webhooks/     # Payment processing
 │   │   ├── ai-*/                # AI-powered features
 │   │   ├── analytics-*/         # Analytics APIs
 │   │   ├── blog-*/              # Blog automation
 │   │   └── [140+ more]          # API endpoints
-│   ├── migrations/              # Database migrations (339+)
+│   ├── migrations/              # Database migrations (369+)
 │   └── config.toml              # Supabase configuration
 ├── tests/
 │   └── e2e/                     # Playwright E2E tests
@@ -300,7 +300,7 @@ npm run mcp:supabase           # Run Supabase MCP server
 
 ## Database Architecture
 
-### Core Tables (339+ migrations)
+### Core Tables (369+ migrations)
 **Company & Users**:
 - `companies`: Company profiles and subscription info
 - `user_profiles`: User accounts with role-based access
@@ -499,7 +499,7 @@ npm run expo:build:android       # Cloud build
 
 ## API Architecture
 
-### Supabase Edge Functions (154+)
+### Supabase Edge Functions (166+)
 Located in `/supabase/functions/`, categorized by domain:
 
 **Payments & Billing**:
@@ -1242,8 +1242,8 @@ const { data, error } = await supabase
 
 ---
 
-**Last Updated**: 2025-12-22
-**Version**: 2.3
+**Last Updated**: 2026-01-01
+**Version**: 2.4
 **Platform Status**: ~95% Complete (Phase 5 in progress)
 **Architecture**: Single-tenant with company-level isolation
 **Next Milestone**: Production Launch & App Store Submissions
