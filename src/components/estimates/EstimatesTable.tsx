@@ -30,6 +30,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EstimateForm } from "./EstimateForm";
 import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +73,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   const [loading, setLoading] = useState(true);
   const [editingEstimate, setEditingEstimate] = useState<string | null>(null);
   const [convertingEstimate, setConvertingEstimate] = useState<string | null>(null);
+  const [deletingEstimate, setDeletingEstimate] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -175,8 +186,6 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
   };
 
   const handleDelete = async (estimateId: string) => {
-    if (!confirm("Are you sure you want to delete this estimate?")) return;
-
     try {
       const { error } = await supabase
         .from("estimates")
@@ -190,6 +199,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
         description: "The estimate has been deleted successfully.",
       });
 
+      setDeletingEstimate(null);
       fetchEstimates();
       onEstimateChange?.();
     } catch (error) {
@@ -356,8 +366,8 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
                         <Archive className="mr-2 h-4 w-4" />
                         Archive
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDelete(estimate.id)}
+                      <DropdownMenuItem
+                        onClick={() => setDeletingEstimate(estimate.id)}
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -403,6 +413,27 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
           onEstimateChange?.();
         }}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingEstimate} onOpenChange={(open) => !open && setDeletingEstimate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Estimate</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this estimate? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingEstimate && handleDelete(deletingEstimate)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

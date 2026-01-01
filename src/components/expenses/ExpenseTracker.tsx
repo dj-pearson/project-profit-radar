@@ -17,7 +17,17 @@ import { LoadingState, TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { expenseSchema, type ExpenseInput } from '@/lib/validations';
 
@@ -72,6 +82,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
   const [pageSize, setPageSize] = useState(20);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
 
   // Form with validation
   const {
@@ -204,10 +215,10 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this expense?')) {
-      deleteExpense.mutate(id);
-    }
+  const confirmDelete = (id: string) => {
+    deleteExpense.mutate(id, {
+      onSuccess: () => setDeletingExpenseId(null),
+    });
   };
 
   const totalExpenses = expensesData?.data.reduce((sum, exp) => sum + exp.amount, 0) || 0;
@@ -440,8 +451,14 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                     <Button
                       type="submit"
                       disabled={createExpense.isPending || updateExpense.isPending}
+                      className="gap-2"
                     >
-                      {editingExpense ? 'Update' : 'Create'} Expense
+                      {(createExpense.isPending || updateExpense.isPending) && (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      )}
+                      {createExpense.isPending || updateExpense.isPending
+                        ? 'Saving...'
+                        : editingExpense ? 'Update Expense' : 'Create Expense'}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -517,7 +534,7 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleDelete(expense.id)}
+                              onClick={() => setDeletingExpenseId(expense.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -541,6 +558,27 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingExpenseId} onOpenChange={(open) => !open && setDeletingExpenseId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this expense? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingExpenseId && confirmDelete(deletingExpenseId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
