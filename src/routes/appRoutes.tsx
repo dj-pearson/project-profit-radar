@@ -1,9 +1,12 @@
 /**
  * Core Application Routes
  * Main app navigation, dashboards, hubs, and settings
+ *
+ * ⚡ Performance: All routes are lazy-loaded to reduce initial bundle size
  */
 
 import { Route } from 'react-router-dom';
+import { lazy } from 'react';
 import {
   LazyIndex,
   LazyDashboard,
@@ -32,15 +35,15 @@ import {
   LazyBlogPost,
 } from '@/utils/lazyRoutes';
 
-// Non-lazy imports
-import { ReferralProgram } from '@/pages/ReferralProgram';
-import { IntegrationMarketplace } from '@/pages/IntegrationMarketplace';
-import { WorkflowAutomation } from '@/pages/WorkflowAutomation';
-import { AIInsights } from '@/pages/AIInsights';
-import MobileShowcase from '@/pages/MobileShowcase';
-import AdvancedMobileShowcase from '@/pages/AdvancedMobileShowcase';
-import { VisualProjectManagementPage } from '@/pages/VisualProjectManagementPage';
-import { CustomDomain } from '@/pages/settings/CustomDomain';
+// Lazy-loaded feature pages
+const ReferralProgram = lazy(() => import('@/pages/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
+const IntegrationMarketplace = lazy(() => import('@/pages/IntegrationMarketplace').then(m => ({ default: m.IntegrationMarketplace })));
+const WorkflowAutomation = lazy(() => import('@/pages/WorkflowAutomation').then(m => ({ default: m.WorkflowAutomation })));
+const AIInsights = lazy(() => import('@/pages/AIInsights').then(m => ({ default: m.AIInsights })));
+const MobileShowcase = lazy(() => import('@/pages/MobileShowcase'));
+const AdvancedMobileShowcase = lazy(() => import('@/pages/AdvancedMobileShowcase'));
+const VisualProjectManagementPage = lazy(() => import('@/pages/VisualProjectManagementPage').then(m => ({ default: m.VisualProjectManagementPage })));
+const CustomDomain = lazy(() => import('@/pages/settings/CustomDomain').then(m => ({ default: m.CustomDomain })));
 
 export const appRoutes = (
   <>

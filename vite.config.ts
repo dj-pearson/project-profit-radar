@@ -127,53 +127,109 @@ export default defineConfig(({ mode }) => ({
     // Performance optimizations
     rollupOptions: {
       output: {
-        // More granular chunking for better caching
-        manualChunks: {
-          // Core framework
-          'react-core': ['react', 'react-dom'],
-          'react-router': ['react-router-dom'],
-          
-          // UI framework  
-          'ui-core': [
-            '@radix-ui/react-slot',
-            '@radix-ui/react-dialog', 
-            '@radix-ui/react-dropdown-menu'
-          ],
-          'ui-extended': [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-tooltip'
-          ],
-          
-          // Utilities
-          'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
-          'date-utils': ['date-fns'],
-          
-          // Feature chunks
-          'forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'auth': ['@supabase/supabase-js'],
-          'charts': ['recharts'],
-          'documents': ['jspdf', 'jspdf-autotable', 'xlsx'],
-          'query': ['@tanstack/react-query'],
-          'three': ['three', '@react-three/fiber', '@react-three/drei'],
-          'dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities', '@hello-pangea/dnd'],
-          'media': ['qr-scanner', 'qrcode', 'signature_pad', 'tesseract.js'],
-          'markdown': ['react-markdown'],
-          
-          // Performance and monitoring
-          'performance': [
-            '@/components/performance/LazyComponents',
-            '@/hooks/usePerformanceMonitor'
-          ],
-          
-          // SEO and analytics
-          'seo': [
-            'react-helmet-async',
-            '@/components/SEOMetaTags',
-            '@/components/EnhancedSchemaMarkup'
-          ]
+        // Optimized chunking strategy for better performance
+        manualChunks: (id) => {
+          // Node modules chunking
+          if (id.includes('node_modules')) {
+            // Core React - smallest possible initial bundle
+            if (id.includes('react-dom') || id.includes('/react/')) {
+              return 'react-core';
+            }
+
+            // Router - needed for navigation
+            if (id.includes('react-router')) {
+              return 'react-router';
+            }
+
+            // Core UI components (Radix) - essential
+            if (id.includes('@radix-ui/react-slot') ||
+                id.includes('@radix-ui/react-dialog') ||
+                id.includes('@radix-ui/react-dropdown-menu')) {
+              return 'ui-core';
+            }
+
+            // Extended UI components - load on demand
+            if (id.includes('@radix-ui')) {
+              return 'ui-extended';
+            }
+
+            // Utilities - small, commonly used
+            if (id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+              return 'utils';
+            }
+
+            // Date utilities
+            if (id.includes('date-fns')) {
+              return 'date-utils';
+            }
+
+            // Forms - load when forms are used
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('/zod/')) {
+              return 'forms';
+            }
+
+            // Auth/Supabase - load on auth pages
+            if (id.includes('@supabase')) {
+              return 'auth';
+            }
+
+            // TanStack Query - data fetching
+            if (id.includes('@tanstack/react-query')) {
+              return 'query';
+            }
+
+            // Charts - heavy, load only when needed
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'charts';
+            }
+
+            // 3D - very heavy, load only for 3D views
+            if (id.includes('three') || id.includes('@react-three')) {
+              return 'three';
+            }
+
+            // Documents - heavy, load for export features
+            if (id.includes('jspdf') || id.includes('xlsx')) {
+              return 'documents';
+            }
+
+            // Drag and drop - load for interactive features
+            if (id.includes('@dnd-kit') || id.includes('@hello-pangea/dnd')) {
+              return 'dnd';
+            }
+
+            // Media processing - heavy, load on demand
+            if (id.includes('qr-scanner') || id.includes('qrcode') ||
+                id.includes('signature_pad') || id.includes('tesseract')) {
+              return 'media';
+            }
+
+            // Markdown - load for content pages
+            if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype')) {
+              return 'markdown';
+            }
+
+            // Sentry and monitoring - can be deferred
+            if (id.includes('@sentry')) {
+              return 'monitoring';
+            }
+
+            // PostHog analytics - can be deferred
+            if (id.includes('posthog')) {
+              return 'analytics';
+            }
+
+            // SEO
+            if (id.includes('react-helmet-async')) {
+              return 'seo';
+            }
+
+            // Remaining vendor code
+            return 'vendor';
+          }
+
+          // App code chunking - let Vite handle route-based splitting
+          return undefined;
         },
         
         // Optimized file naming for better caching

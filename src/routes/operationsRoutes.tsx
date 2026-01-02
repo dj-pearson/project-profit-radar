@@ -1,35 +1,38 @@
 /**
  * Operations Routes
  * Safety, compliance, permits, equipment, and operational workflows
+ *
+ * ⚡ Performance: All routes are lazy-loaded to reduce initial bundle size
  */
 
 import { Route } from 'react-router-dom';
+import { lazy } from 'react';
 
-// Safety & Compliance
-import Safety from '@/pages/Safety';
-import ComplianceAudit from '@/pages/ComplianceAudit';
-import GDPRCompliance from '@/pages/GDPRCompliance';
+// Safety & Compliance - Lazy loaded
+const Safety = lazy(() => import('@/pages/Safety'));
+const ComplianceAudit = lazy(() => import('@/pages/ComplianceAudit'));
+const GDPRCompliance = lazy(() => import('@/pages/GDPRCompliance'));
 
-// Permits & Regulations
-import PermitManagement from '@/pages/PermitManagement';
-import EnvironmentalPermitting from '@/pages/EnvironmentalPermitting';
-import BondInsuranceManagement from '@/pages/BondInsuranceManagement';
-import WarrantyManagement from '@/pages/WarrantyManagement';
-import PublicProcurement from '@/pages/PublicProcurement';
+// Permits & Regulations - Lazy loaded
+const PermitManagement = lazy(() => import('@/pages/PermitManagement'));
+const EnvironmentalPermitting = lazy(() => import('@/pages/EnvironmentalPermitting'));
+const BondInsuranceManagement = lazy(() => import('@/pages/BondInsuranceManagement'));
+const WarrantyManagement = lazy(() => import('@/pages/WarrantyManagement'));
+const PublicProcurement = lazy(() => import('@/pages/PublicProcurement'));
 
-// Operations
-import ServiceDispatch from '@/pages/ServiceDispatch';
-import CalendarSync from '@/pages/CalendarSync';
-import EquipmentManagement from '@/pages/EquipmentManagement';
-import EquipmentQRLabels from '@/pages/EquipmentQRLabels';
-import AutomatedWorkflows from '@/pages/AutomatedWorkflows';
+// Operations - Lazy loaded
+const ServiceDispatch = lazy(() => import('@/pages/ServiceDispatch'));
+const CalendarSync = lazy(() => import('@/pages/CalendarSync'));
+const EquipmentManagement = lazy(() => import('@/pages/EquipmentManagement'));
+const EquipmentQRLabels = lazy(() => import('@/pages/EquipmentQRLabels'));
+const AutomatedWorkflows = lazy(() => import('@/pages/AutomatedWorkflows'));
 
-// Advanced Features
-import SmartClientUpdatesPage from '@/pages/SmartClientUpdatesPage';
-import MaterialOrchestrationPage from '@/pages/MaterialOrchestrationPage';
-import TradeHandoffPage from '@/pages/TradeHandoffPage';
-import AIQualityControlPage from '@/pages/AIQualityControlPage';
-import KnowledgeBase from '@/pages/KnowledgeBase';
+// Advanced Features - Lazy loaded
+const SmartClientUpdatesPage = lazy(() => import('@/pages/SmartClientUpdatesPage'));
+const MaterialOrchestrationPage = lazy(() => import('@/pages/MaterialOrchestrationPage'));
+const TradeHandoffPage = lazy(() => import('@/pages/TradeHandoffPage'));
+const AIQualityControlPage = lazy(() => import('@/pages/AIQualityControlPage'));
+const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase'));
 
 export const operationsRoutes = (
   <>
