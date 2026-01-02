@@ -1,9 +1,12 @@
 /**
  * Project Management Routes
  * Projects, tasks, scheduling, documents, and project-related features
+ *
+ * ⚡ Performance: All routes are lazy-loaded to reduce initial bundle size
  */
 
 import { Route } from 'react-router-dom';
+import { lazy } from 'react';
 import {
   LazyProjects,
   LazyProjectDetail,
@@ -21,7 +24,9 @@ import {
   LazyMaterialTracking,
   LazyEquipment,
 } from '@/utils/lazyRoutes';
-import DailyReportTemplates from '@/pages/DailyReportTemplates';
+
+// Lazy-loaded pages
+const DailyReportTemplates = lazy(() => import('@/pages/DailyReportTemplates'));
 
 export const projectRoutes = (
   <>

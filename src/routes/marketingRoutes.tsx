@@ -1,89 +1,93 @@
 /**
  * Marketing & Landing Page Routes
  * Public-facing pages, pricing, features, comparisons, and resources
+ *
+ * ⚡ Performance: All marketing routes are lazy-loaded to reduce initial bundle size
+ * These pages are only loaded when users navigate to them.
  */
 
 import { Route } from 'react-router-dom';
+import { lazy } from 'react';
 
-// Marketing pages
-import PricingPage from '@/pages/Pricing';
-import PaymentCenter from '@/pages/PaymentCenter';
-import FeaturesPage from '@/pages/Features';
-import BlogPage from '@/pages/Blog';
-import Resources from '@/pages/Resources';
-import Solutions from '@/pages/Solutions';
-import FAQ from '@/pages/FAQ';
+// Marketing pages - Lazy loaded
+const PricingPage = lazy(() => import('@/pages/Pricing'));
+const PaymentCenter = lazy(() => import('@/pages/PaymentCenter'));
+const FeaturesPage = lazy(() => import('@/pages/Features'));
+const BlogPage = lazy(() => import('@/pages/Blog'));
+const Resources = lazy(() => import('@/pages/Resources'));
+const Solutions = lazy(() => import('@/pages/Solutions'));
+const FAQ = lazy(() => import('@/pages/FAQ'));
 
-// Industry-specific pages
-import PlumbingContractorSoftware from '@/pages/PlumbingContractorSoftware';
-import HVACContractorSoftware from '@/pages/HVACContractorSoftware';
-import ElectricalContractorSoftware from '@/pages/ElectricalContractorSoftware';
-import CommercialContractors from '@/pages/CommercialContractors';
-import ResidentialContractors from '@/pages/ResidentialContractors';
+// Industry-specific pages - Lazy loaded
+const PlumbingContractorSoftware = lazy(() => import('@/pages/PlumbingContractorSoftware'));
+const HVACContractorSoftware = lazy(() => import('@/pages/HVACContractorSoftware'));
+const ElectricalContractorSoftware = lazy(() => import('@/pages/ElectricalContractorSoftware'));
+const CommercialContractors = lazy(() => import('@/pages/CommercialContractors'));
+const ResidentialContractors = lazy(() => import('@/pages/ResidentialContractors'));
 
-// Feature-specific pages
-import JobCostingSoftware from '@/pages/JobCostingSoftware';
-import JobCostingSoftwareDetailed from '@/pages/JobCostingSoftwareDetailed';
-import ConstructionManagementSoftwarePage from '@/pages/ConstructionManagementSoftwarePage';
-import OSHAComplianceSoftware from '@/pages/OSHAComplianceSoftware';
-import ConstructionFieldManagement from '@/pages/ConstructionFieldManagement';
-import ConstructionSchedulingSoftware from '@/pages/ConstructionSchedulingSoftware';
-import ConstructionProjectManagementSoftware from '@/pages/ConstructionProjectManagementSoftware';
+// Feature-specific pages - Lazy loaded
+const JobCostingSoftware = lazy(() => import('@/pages/JobCostingSoftware'));
+const JobCostingSoftwareDetailed = lazy(() => import('@/pages/JobCostingSoftwareDetailed'));
+const ConstructionManagementSoftwarePage = lazy(() => import('@/pages/ConstructionManagementSoftwarePage'));
+const OSHAComplianceSoftware = lazy(() => import('@/pages/OSHAComplianceSoftware'));
+const ConstructionFieldManagement = lazy(() => import('@/pages/ConstructionFieldManagement'));
+const ConstructionSchedulingSoftware = lazy(() => import('@/pages/ConstructionSchedulingSoftware'));
+const ConstructionProjectManagementSoftware = lazy(() => import('@/pages/ConstructionProjectManagementSoftware'));
 
-// New SEO-optimized feature pages
-import JobCostingPage from '@/pages/features/JobCosting';
-import RealTimeBudgetingPage from '@/pages/features/RealTimeBudgeting';
-import FinancialManagementPage from '@/pages/features/FinancialManagement';
+// New SEO-optimized feature pages - Lazy loaded
+const JobCostingPage = lazy(() => import('@/pages/features/JobCosting'));
+const RealTimeBudgetingPage = lazy(() => import('@/pages/features/RealTimeBudgeting'));
+const FinancialManagementPage = lazy(() => import('@/pages/features/FinancialManagement'));
 
-// Comparison pages
-import ProcoreAlternative from '@/pages/ProcoreAlternative';
-import ProcoreAlternativeDetailed from '@/pages/ProcoreAlternativeDetailed';
-import BuildertrendAlternative from '@/pages/BuildertrendAlternative';
-import BuildertrendAlternativeDetailed from '@/pages/BuildertrendAlternativeDetailed';
-import BuildDeskVsBuildertrend from '@/pages/BuildDeskVsBuildertrend';
-import BuildDeskVsCoConstruct from '@/pages/BuildDeskVsCoConstruct';
+// Comparison pages - Lazy loaded
+const ProcoreAlternative = lazy(() => import('@/pages/ProcoreAlternative'));
+const ProcoreAlternativeDetailed = lazy(() => import('@/pages/ProcoreAlternativeDetailed'));
+const BuildertrendAlternative = lazy(() => import('@/pages/BuildertrendAlternative'));
+const BuildertrendAlternativeDetailed = lazy(() => import('@/pages/BuildertrendAlternativeDetailed'));
+const BuildDeskVsBuildertrend = lazy(() => import('@/pages/BuildDeskVsBuildertrend'));
+const BuildDeskVsCoConstruct = lazy(() => import('@/pages/BuildDeskVsCoConstruct'));
 
-// Resource pages
-import BestConstructionManagementSoftware2025 from '@/pages/resources/BestConstructionManagementSoftware2025';
-import JobCostingConstructionGuide from '@/pages/resources/JobCostingConstructionGuide';
-import OSHASafetyLogsPlaybook from '@/pages/resources/OSHASafetyLogsPlaybook';
-import ConstructionSchedulingSoftwareGuide from '@/pages/resources/ConstructionSchedulingSoftwareGuide';
-import ConstructionDailyLogsGuide from '@/pages/resources/ConstructionDailyLogsGuide';
-import ProcoreVsBuildDeskComparison from '@/pages/resources/ProcoreVsBuildDeskComparison';
-import QuickBooksIntegrationGuide from '@/pages/resources/QuickBooksIntegrationGuide';
-import ConstructionMobileAppGuide from '@/pages/resources/ConstructionMobileAppGuide';
+// Resource pages - Lazy loaded
+const BestConstructionManagementSoftware2025 = lazy(() => import('@/pages/resources/BestConstructionManagementSoftware2025'));
+const JobCostingConstructionGuide = lazy(() => import('@/pages/resources/JobCostingConstructionGuide'));
+const OSHASafetyLogsPlaybook = lazy(() => import('@/pages/resources/OSHASafetyLogsPlaybook'));
+const ConstructionSchedulingSoftwareGuide = lazy(() => import('@/pages/resources/ConstructionSchedulingSoftwareGuide'));
+const ConstructionDailyLogsGuide = lazy(() => import('@/pages/resources/ConstructionDailyLogsGuide'));
+const ProcoreVsBuildDeskComparison = lazy(() => import('@/pages/resources/ProcoreVsBuildDeskComparison'));
+const QuickBooksIntegrationGuide = lazy(() => import('@/pages/resources/QuickBooksIntegrationGuide'));
+const ConstructionMobileAppGuide = lazy(() => import('@/pages/resources/ConstructionMobileAppGuide'));
 
-// Phase 2: Financial Intelligence content pillar
-import FinancialIntelligenceGuide from '@/pages/resources/FinancialIntelligenceGuide';
-import RealCostDelayedJobCosting from '@/pages/resources/RealCostDelayedJobCosting';
+// Phase 2: Financial Intelligence content pillar - Lazy loaded
+const FinancialIntelligenceGuide = lazy(() => import('@/pages/resources/FinancialIntelligenceGuide'));
+const RealCostDelayedJobCosting = lazy(() => import('@/pages/resources/RealCostDelayedJobCosting'));
 
-// Phase 3: Financial Intelligence supporting articles
-import BudgetVsActualTrackingGuide from '@/pages/resources/BudgetVsActualTrackingGuide';
-import QuickBooksLimitationsConstruction from '@/pages/resources/QuickBooksLimitationsConstruction';
-import CashFlowManagementGuide from '@/pages/resources/CashFlowManagementGuide';
-import CalculateTrueProjectProfitability from '@/pages/resources/CalculateTrueProjectProfitability';
-import ReadingFinancialStatementsGuide from '@/pages/resources/ReadingFinancialStatementsGuide';
-import ConstructionROICalculatorGuide from '@/pages/resources/ConstructionROICalculatorGuide';
+// Phase 3: Financial Intelligence supporting articles - Lazy loaded
+const BudgetVsActualTrackingGuide = lazy(() => import('@/pages/resources/BudgetVsActualTrackingGuide'));
+const QuickBooksLimitationsConstruction = lazy(() => import('@/pages/resources/QuickBooksLimitationsConstruction'));
+const CashFlowManagementGuide = lazy(() => import('@/pages/resources/CashFlowManagementGuide'));
+const CalculateTrueProjectProfitability = lazy(() => import('@/pages/resources/CalculateTrueProjectProfitability'));
+const ReadingFinancialStatementsGuide = lazy(() => import('@/pages/resources/ReadingFinancialStatementsGuide'));
+const ConstructionROICalculatorGuide = lazy(() => import('@/pages/resources/ConstructionROICalculatorGuide'));
 
-// Phase 4: Comparison and competitive content
-import BestConstructionSoftwareSmallBusiness2025 from '@/pages/resources/BestConstructionSoftwareSmallBusiness2025';
-import QuickBooksVsConstructionSoftware from '@/pages/resources/QuickBooksVsConstructionSoftware';
-import JobCostingSoftwareComparison from '@/pages/resources/JobCostingSoftwareComparison';
-import ProcoreAlternativeGEO from '@/pages/resources/ProcoreAlternativeGEO';
-import BuildertrendAlternativeGEO from '@/pages/resources/BuildertrendAlternativeGEO';
+// Phase 4: Comparison and competitive content - Lazy loaded
+const BestConstructionSoftwareSmallBusiness2025 = lazy(() => import('@/pages/resources/BestConstructionSoftwareSmallBusiness2025'));
+const QuickBooksVsConstructionSoftware = lazy(() => import('@/pages/resources/QuickBooksVsConstructionSoftware'));
+const JobCostingSoftwareComparison = lazy(() => import('@/pages/resources/JobCostingSoftwareComparison'));
+const ProcoreAlternativeGEO = lazy(() => import('@/pages/resources/ProcoreAlternativeGEO'));
+const BuildertrendAlternativeGEO = lazy(() => import('@/pages/resources/BuildertrendAlternativeGEO'));
 
-// Phase 4: Ultimate Guides
-import CompleteGuideConstructionJobCosting from '@/pages/resources/CompleteGuideConstructionJobCosting';
-import ConstructionFinancialManagementGuide from '@/pages/resources/ConstructionFinancialManagementGuide';
+// Phase 4: Ultimate Guides - Lazy loaded
+const CompleteGuideConstructionJobCosting = lazy(() => import('@/pages/resources/CompleteGuideConstructionJobCosting'));
+const ConstructionFinancialManagementGuide = lazy(() => import('@/pages/resources/ConstructionFinancialManagementGuide'));
 
-// Topic pages
-import ConstructionManagementBasics from '@/pages/topics/ConstructionManagementBasics';
-import SafetyAndOSHACompliance from '@/pages/topics/SafetyAndOSHACompliance';
+// Topic pages - Lazy loaded
+const ConstructionManagementBasics = lazy(() => import('@/pages/topics/ConstructionManagementBasics'));
+const SafetyAndOSHACompliance = lazy(() => import('@/pages/topics/SafetyAndOSHACompliance'));
 
-// Free Tools
-import ProfitabilityCalculator from '@/pages/ProfitabilityCalculator';
-import FinancialHealthCheckPage from '@/pages/FinancialHealthCheck';
-import ROICalculatorLanding from '@/pages/ROICalculatorLanding';
+// Free Tools - Lazy loaded
+const ProfitabilityCalculator = lazy(() => import('@/pages/ProfitabilityCalculator'));
+const FinancialHealthCheckPage = lazy(() => import('@/pages/FinancialHealthCheck'));
+const ROICalculatorLanding = lazy(() => import('@/pages/ROICalculatorLanding'));
 
 export const marketingRoutes = (
   <>
