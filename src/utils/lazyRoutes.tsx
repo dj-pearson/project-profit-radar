@@ -263,12 +263,39 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
 
 /**
  * Preload high-priority routes for better perceived performance
+ * This triggers the import() calls to start loading the chunks in the background
  */
 export const preloadHighPriorityRoutes = () => {
-  // Note: React.lazy components don't have a preload method
-  // This function is kept for future implementation if needed
-  // Return early as preloading is not currently implemented
-  return;
+  // Use requestIdleCallback to avoid blocking the main thread
+  const preload = () => {
+    // Preload core pages that users are most likely to navigate to
+    const preloadImports = [
+      () => import('@/pages/Index'),
+      () => import('@/pages/Auth'),
+      () => import('@/pages/Dashboard'),
+      () => import('@/pages/hubs/ProjectsHub'),
+      () => import('@/pages/Projects'),
+    ];
+
+    // Stagger preloads to avoid network congestion
+    preloadImports.forEach((importFn, index) => {
+      setTimeout(() => {
+        importFn().catch(() => {
+          // Silently ignore preload errors - they'll be handled when the route is actually visited
+        });
+      }, index * 100); // 100ms delay between each preload
+    });
+  };
+
+  // Defer preloading until browser is idle
+  if (typeof window !== 'undefined') {
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(preload, { timeout: 5000 });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(preload, 1000);
+    }
+  }
 };
 
 /**

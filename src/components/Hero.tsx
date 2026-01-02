@@ -1,11 +1,14 @@
-import { useState, useRef, useEffect, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, ComponentType } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Ruler } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 
-// Lazy load 3D component - only loads on desktop when needed
-const PremiumBlueprint3D = lazy(() => import("@/components/3d/PremiumBlueprint3D"));
+// Type for the 3D component props
+interface Blueprint3DProps {
+  isBuildMode: boolean;
+  onToggleMode: () => void;
+}
 
 // Static fallback for mobile - lightweight placeholder
 const Hero3DFallback = () => (
@@ -40,6 +43,7 @@ const useIsMobile = () => {
 
 const Hero = () => {
   const [isBuildMode, setIsBuildMode] = useState(false);
+  const [Blueprint3D, setBlueprint3D] = useState<ComponentType<Blueprint3DProps> | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -47,6 +51,29 @@ const Hero = () => {
   const badgeRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
+
+  // Conditionally load 3D component only on desktop to save ~1.3MB on mobile
+  useEffect(() => {
+    if (isMobile) return; // Don't load 3D on mobile devices
+
+    // Defer 3D loading until after initial render
+    const load3D = () => {
+      import("@/components/3d/PremiumBlueprint3D")
+        .then((module) => {
+          setBlueprint3D(() => module.default);
+        })
+        .catch(() => {
+          // Silently fail - fallback will be shown
+        });
+    };
+
+    // Use requestIdleCallback to avoid blocking the main thread
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(load3D, { timeout: 3000 });
+    } else {
+      setTimeout(load3D, 500);
+    }
+  }, [isMobile]);
 
   // Defer GSAP loading - only load on desktop after first paint
   useEffect(() => {
@@ -194,12 +221,14 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Interactive 3D Experience - Now enabled on all devices with mobile optimizations */}
+          {/* Interactive 3D Experience - Only loads on desktop to save ~1.3MB on mobile */}
           <div className="relative order-1 lg:order-2 h-[400px] sm:h-[500px] lg:h-[700px] w-full">
             <div className="absolute inset-0 bg-gradient-to-tr from-construction-orange/5 to-blue-500/5 rounded-[2rem] transform rotate-3 scale-95 blur-2xl -z-10" />
-            <Suspense fallback={<Hero3DFallback />}>
-              <PremiumBlueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
-            </Suspense>
+            {Blueprint3D ? (
+              <Blueprint3D isBuildMode={isBuildMode} onToggleMode={() => setIsBuildMode(!isBuildMode)} />
+            ) : (
+              <Hero3DFallback />
+            )}
           </div>
         </ResponsiveGrid>
       </ResponsiveContainer>
