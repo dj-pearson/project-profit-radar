@@ -893,7 +893,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             },
             body: JSON.stringify({
               email,
@@ -978,7 +978,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             action: "request",
@@ -1017,7 +1017,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             action: "verify",
@@ -1087,7 +1087,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             },
             body: JSON.stringify({
               ...options,
@@ -1123,7 +1123,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             },
             body: JSON.stringify({
               ...options,
