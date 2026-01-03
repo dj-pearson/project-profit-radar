@@ -119,7 +119,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             action: 'verify',
@@ -177,7 +177,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             action: 'verify_backup',

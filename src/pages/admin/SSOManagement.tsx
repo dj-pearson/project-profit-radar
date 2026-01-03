@@ -116,7 +116,7 @@ export const SSOManagement = () => {
               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${session.session.access_token}`,
-                apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
               },
               body: JSON.stringify({ action: 'list' }),
             }
@@ -194,7 +194,7 @@ export const SSOManagement = () => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             action: 'update',
@@ -245,7 +245,7 @@ export const SSOManagement = () => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             action: 'delete',
@@ -344,7 +344,7 @@ export const SSOManagement = () => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             user_id: user.id,
