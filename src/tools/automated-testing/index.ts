@@ -27,6 +27,25 @@
  *   performanceTesting: true,
  * });
  * const report = await orchestrator.run();
+ *
+ * // Parallel execution
+ * const runner = new ParallelRunner(config);
+ * await runner.initialize();
+ * const reports = await runner.runAll(testPage);
+ *
+ * // Watch mode
+ * const watchMode = createWatchMode(config);
+ * watchMode.setTestRunner(testRunner);
+ * await watchMode.start();
+ *
+ * // Environment management
+ * const envManager = createEnvironmentManager('./environments.json');
+ * envManager.setEnvironment('staging');
+ *
+ * // Metrics and trending
+ * const storage = new MetricsStorage();
+ * const run = storage.storeRun(reports, { duration: 5000 });
+ * const trends = storage.getTrendReport();
  * ```
  */
 
@@ -36,6 +55,14 @@ export {
   createTester,
   runSmokeTest,
   runFullTest,
+  ParallelRunner,
+  TestFilterManager,
+  EnvironmentManager,
+  createEnvironmentManager,
+  BaselineManager,
+  baselineCommands,
+  WatchMode,
+  createWatchMode,
 } from './core';
 
 // Configuration
@@ -74,6 +101,7 @@ export type {
   ErrorClassification,
   ViewportConfig,
   AuthConfig,
+  PerformanceMetrics,
 } from './types';
 
 // Crawlers
@@ -88,6 +116,7 @@ export {
   AccessibilityTester,
   AuthTester,
   VisualTester,
+  ApiTester,
 } from './testers';
 
 // Monitors
@@ -98,6 +127,19 @@ export { ReportGenerator } from './reporters';
 
 // Analyzers
 export { HookAnalyzer } from './analyzers';
+
+// Fixtures
+export {
+  FixtureManager,
+  SMOKE_TEST_FIXTURES,
+  FULL_TEST_FIXTURES,
+  DEFAULT_TEST_USER,
+  DEFAULT_TEST_COMPANY,
+  DEFAULT_TEST_PROJECT,
+} from './fixtures';
+
+// Storage
+export { MetricsStorage } from './storage';
 
 // Utils
 export { Logger, helpers } from './utils';
