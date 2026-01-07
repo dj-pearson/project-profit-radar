@@ -5,7 +5,7 @@
  * Command-line interface for running automated tests.
  *
  * Usage:
- *   npx ts-node src/tools/automated-testing/cli.ts [options]
+ *   npx tsx src/tools/automated-testing/cli.ts [options]
  *
  * Options:
  *   --url, -u          Base URL to test (required)
@@ -22,9 +22,9 @@
  *   --help, -h         Show help
  *
  * Examples:
- *   npx ts-node cli.ts --url http://localhost:8080
- *   npx ts-node cli.ts --url http://localhost:8080 --preset full
- *   npx ts-node cli.ts --url http://localhost:8080 --depth deep --max-pages 100
+ *   npx tsx cli.ts --url http://localhost:8080
+ *   npx tsx cli.ts --url http://localhost:8080 --preset full
+ *   npx tsx cli.ts --url http://localhost:8080 --depth deep --max-pages 100
  */
 
 import { TestOrchestrator, createTester, getPreset, DEFAULT_CONFIG } from './index';
@@ -124,7 +124,7 @@ function showHelp(): void {
 ╚═══════════════════════════════════════════════════════════════════╝
 
 USAGE:
-  npx ts-node src/tools/automated-testing/cli.ts [options]
+  npx tsx src/tools/automated-testing/cli.ts [options]
 
 REQUIRED OPTIONS:
   --url, -u <url>        Base URL to test
@@ -153,22 +153,22 @@ OPTIONAL OPTIONS:
 
 EXAMPLES:
   # Quick smoke test
-  npx ts-node cli.ts --url http://localhost:8080
+  npx tsx cli.ts --url http://localhost:8080
 
   # Full test with all features
-  npx ts-node cli.ts --url http://localhost:8080 --preset full
+  npx tsx cli.ts --url http://localhost:8080 --preset full
 
   # Custom configuration
-  npx ts-node cli.ts --url http://localhost:8080 --depth deep --max-pages 100
+  npx tsx cli.ts --url http://localhost:8080 --depth deep --max-pages 100
 
   # Mobile testing
-  npx ts-node cli.ts --url http://localhost:8080 --preset mobile
+  npx tsx cli.ts --url http://localhost:8080 --preset mobile
 
   # CI/CD pipeline
-  npx ts-node cli.ts --url http://localhost:8080 --preset ci
+  npx tsx cli.ts --url http://localhost:8080 --preset ci
 
   # Performance audit only
-  npx ts-node cli.ts --url http://localhost:8080 --preset performance --no-a11y
+  npx tsx cli.ts --url http://localhost:8080 --preset performance --no-a11y
 
 OUTPUT:
   Reports are generated in multiple formats:

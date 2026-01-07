@@ -18,12 +18,30 @@ export class EdgeFunctionTester {
   private logger: Logger;
   private config: TestConfig;
   private supabaseUrl: string;
+  private edgeFunctionsUrl: string;
 
   constructor(config: TestConfig, logger?: Logger) {
     this.config = config;
     this.logger = logger || new Logger({ context: 'EdgeFunctionTester' });
-    // Default Supabase URL - should be configured
-    this.supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:54321';
+    
+    // Support multiple ways to configure Supabase URL for flexibility
+    // Priority: config.supabaseUrl > SUPABASE_URL env var > VITE_SUPABASE_URL (from .env) > localhost fallback
+    this.supabaseUrl = 
+      (config as any).supabaseUrl || 
+      process.env.SUPABASE_URL || 
+      process.env.VITE_SUPABASE_URL || 
+      'http://localhost:54321';
+    
+    // Edge functions URL can be separate for self-hosted setups
+    // Priority: config.edgeFunctionsUrl > EDGE_FUNCTIONS_URL > default path
+    this.edgeFunctionsUrl = 
+      (config as any).edgeFunctionsUrl || 
+      process.env.EDGE_FUNCTIONS_URL || 
+      process.env.VITE_EDGE_FUNCTIONS_URL || 
+      `${this.supabaseUrl}/functions/v1`;
+    
+    this.logger.debug(`Supabase URL: ${this.supabaseUrl}`);
+    this.logger.debug(`Edge Functions URL: ${this.edgeFunctionsUrl}`);
   }
 
   /**
@@ -95,10 +113,21 @@ export class EdgeFunctionTester {
       sourceCode.includes('verifyJwt') ||
       sourceCode.includes('authHeader');
 
+    // Construct endpoint URL
+    // If edgeFunctionsUrl already includes /v1 or /functions/v1, don't duplicate it
+    let endpoint: string;
+    if (this.edgeFunctionsUrl.includes('/functions/v1')) {
+      endpoint = `${this.edgeFunctionsUrl}/${name}`;
+    } else if (this.edgeFunctionsUrl.endsWith('/v1')) {
+      endpoint = `${this.edgeFunctionsUrl}/${name}`;
+    } else {
+      endpoint = `${this.edgeFunctionsUrl}/${name}`;
+    }
+    
     return {
       name,
       path: functionPath,
-      endpoint: `${this.supabaseUrl}/functions/v1/${name}`,
+      endpoint,
       methods,
       requiresAuth,
       sourceCode: sourceCode.substring(0, 5000), // Truncate for storage

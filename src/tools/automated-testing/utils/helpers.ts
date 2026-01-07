@@ -485,6 +485,25 @@ export function withTimeout<T>(promise: Promise<T>, ms: number, message?: string
   return Promise.race([promise, timeout]);
 }
 
+/**
+ * Debounce a function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  return function (this: any, ...args: Parameters<T>): void {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+
 // ============================================================================
 // Data Utilities
 // ============================================================================
@@ -582,6 +601,7 @@ export default {
   retry,
   parallelLimit,
   withTimeout,
+  debounce,
   deepClone,
   groupBy,
   countBy,
