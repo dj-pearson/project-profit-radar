@@ -48,7 +48,7 @@ export const NotificationPermission = () => {
   }
 
   return (
-    <div className="fixed top-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
+    <aside aria-label="Notification permission" className="fixed top-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
       <Card className="p-4 bg-card border shadow-lg">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
@@ -56,7 +56,7 @@ export const NotificationPermission = () => {
               <Bell className="w-5 h-5 text-primary" />
             </div>
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-foreground">
               Stay Updated
@@ -64,9 +64,9 @@ export const NotificationPermission = () => {
             <p className="text-xs text-muted-foreground mt-1">
               Enable notifications to get project updates and reminders
             </p>
-            
+
             <div className="flex gap-2 mt-3">
-              <Button 
+              <Button
                 onClick={requestPermission}
                 size="sm"
                 className="text-xs"
@@ -74,7 +74,7 @@ export const NotificationPermission = () => {
                 <Bell className="w-3 h-3 mr-1" />
                 Enable
               </Button>
-              <Button 
+              <Button
                 onClick={handleDismiss}
                 variant="ghost"
                 size="sm"
@@ -84,7 +84,7 @@ export const NotificationPermission = () => {
               </Button>
             </div>
           </div>
-          
+
           <Button
             onClick={handleDismiss}
             variant="ghost"
@@ -95,6 +95,6 @@ export const NotificationPermission = () => {
           </Button>
         </div>
       </Card>
-    </div>
+    </aside>
   );
 };

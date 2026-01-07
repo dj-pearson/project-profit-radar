@@ -44,7 +44,7 @@ export const PWAInstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
+    <aside aria-label="Install application" className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
       <Card className="p-4 bg-card border shadow-lg">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
@@ -91,6 +91,6 @@ export const PWAInstallPrompt = () => {
           </Button>
         </div>
       </Card>
-    </div>
+    </aside>
   );
 };

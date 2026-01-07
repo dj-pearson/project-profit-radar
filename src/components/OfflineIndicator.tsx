@@ -36,7 +36,7 @@ export const OfflineIndicator = () => {
   }
 
   return (
-    <div className="fixed top-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
+    <aside aria-label="Connection status" className="fixed top-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-80">
       <Alert className={`${isOffline ? 'border-destructive bg-destructive/10' : 'border-green-500 bg-green-50'}`}>
         <div className="flex items-center gap-2">
           {isOffline ? (
@@ -49,6 +49,6 @@ export const OfflineIndicator = () => {
           </AlertDescription>
         </div>
       </Alert>
-    </div>
+    </aside>
   );
 };

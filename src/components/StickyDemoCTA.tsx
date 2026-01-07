@@ -26,7 +26,8 @@ export const StickyDemoCTA: React.FC<StickyDemoCTAProps> = ({ className }) => {
   if (!isVisible) return null;
 
   return (
-    <div 
+    <aside
+      aria-label="Call to action"
       className={cn(
         "fixed bottom-4 right-4 z-50 bg-background border border-border rounded-lg shadow-lg p-4 max-w-sm transition-all duration-300 animate-slide-up",
         "bg-gradient-to-r from-construction-light/90 to-construction-orange/10 backdrop-blur-sm",
@@ -84,7 +85,7 @@ export const StickyDemoCTA: React.FC<StickyDemoCTAProps> = ({ className }) => {
           ✓ No credit card required • ✓ Setup in 30 minutes
         </p>
       </div>
-    </div>
+    </aside>
   );
 };
 
