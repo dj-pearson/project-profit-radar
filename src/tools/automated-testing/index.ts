@@ -86,6 +86,8 @@ export {
   EdgeFunctionTester,
   PerformanceTester,
   AccessibilityTester,
+  AuthTester,
+  VisualTester,
 } from './testers';
 
 // Monitors
@@ -93,6 +95,9 @@ export { ConsoleMonitor, NetworkMonitor } from './monitors';
 
 // Reporters
 export { ReportGenerator } from './reporters';
+
+// Analyzers
+export { HookAnalyzer } from './analyzers';
 
 // Utils
 export { Logger, helpers } from './utils';
