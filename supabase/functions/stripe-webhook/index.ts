@@ -136,6 +136,29 @@ async function processWebhookEvent(event: Stripe.Event, supabaseClient: any, str
       await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabaseClient);
       break;
 
+    // Refund events
+    case 'charge.refunded':
+      await handleChargeRefunded(event.data.object as Stripe.Charge, supabaseClient);
+      break;
+
+    case 'refund.created':
+    case 'refund.updated':
+      await handleRefundEvent(event.data.object as Stripe.Refund, supabaseClient);
+      break;
+
+    // Dispute/Chargeback events
+    case 'charge.dispute.created':
+      await handleDisputeCreated(event.data.object as Stripe.Dispute, supabaseClient);
+      break;
+
+    case 'charge.dispute.updated':
+      await handleDisputeUpdated(event.data.object as Stripe.Dispute, supabaseClient);
+      break;
+
+    case 'charge.dispute.closed':
+      await handleDisputeClosed(event.data.object as Stripe.Dispute, supabaseClient);
+      break;
+
     default:
       logStep("Unhandled event type", { type: event.type });
   }
@@ -336,4 +359,158 @@ async function handlePaymentSuccess(invoice: Stripe.Invoice, supabaseClient: any
 async function handleTrialWillEnd(subscription: Stripe.Subscription, supabaseClient: any) {
   // Could trigger email notifications here
   logStep("Trial ending soon", { customerId: subscription.customer, trialEnd: subscription.trial_end });
+}
+
+// Refund Handlers
+async function handleChargeRefunded(charge: Stripe.Charge, supabaseClient: any) {
+  logStep("Charge refunded", { chargeId: charge.id, amountRefunded: charge.amount_refunded });
+
+  // Find and update the refund record
+  const { data: refund } = await supabaseClient
+    .from("refunds")
+    .select("id")
+    .eq("stripe_charge_id", charge.id)
+    .single();
+
+  if (refund) {
+    await supabaseClient
+      .from("refunds")
+      .update({
+        status: "succeeded",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", refund.id);
+
+    logStep("Updated refund record", { refundId: refund.id });
+  }
+}
+
+async function handleRefundEvent(refund: Stripe.Refund, supabaseClient: any) {
+  logStep("Refund event", { refundId: refund.id, status: refund.status });
+
+  // Find and update the refund record by Stripe refund ID
+  const { data: existingRefund } = await supabaseClient
+    .from("refunds")
+    .select("id")
+    .eq("stripe_refund_id", refund.id)
+    .single();
+
+  if (existingRefund) {
+    const statusMap: Record<string, string> = {
+      'succeeded': 'succeeded',
+      'pending': 'processing',
+      'failed': 'failed',
+      'canceled': 'canceled'
+    };
+
+    await supabaseClient
+      .from("refunds")
+      .update({
+        status: statusMap[refund.status] || refund.status,
+        failure_reason: refund.failure_reason || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", existingRefund.id);
+
+    logStep("Updated refund from webhook", { refundId: existingRefund.id, status: refund.status });
+  }
+}
+
+// Dispute/Chargeback Handlers
+async function handleDisputeCreated(dispute: Stripe.Dispute, supabaseClient: any) {
+  logStep("Dispute created", { disputeId: dispute.id, amount: dispute.amount, reason: dispute.reason });
+
+  // Check if dispute already exists
+  const { data: existing } = await supabaseClient
+    .from("chargebacks")
+    .select("id")
+    .eq("stripe_dispute_id", dispute.id)
+    .single();
+
+  if (!existing) {
+    // Create new chargeback record
+    await supabaseClient
+      .from("chargebacks")
+      .insert({
+        stripe_dispute_id: dispute.id,
+        stripe_charge_id: dispute.charge as string,
+        stripe_payment_intent_id: dispute.payment_intent as string,
+        amount: dispute.amount / 100,
+        currency: dispute.currency,
+        reason: dispute.reason,
+        status: dispute.status,
+        evidence_due_by: dispute.evidence_details?.due_by
+          ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+          : null,
+        fee_amount: 15.00,
+        net_impact: (dispute.amount / 100) + 15.00
+      });
+
+    logStep("Created chargeback record", { disputeId: dispute.id });
+  }
+}
+
+async function handleDisputeUpdated(dispute: Stripe.Dispute, supabaseClient: any) {
+  logStep("Dispute updated", { disputeId: dispute.id, status: dispute.status });
+
+  const statusMap: Record<string, string> = {
+    'warning_needs_response': 'warning_needs_response',
+    'warning_under_review': 'warning_under_review',
+    'warning_closed': 'warning_closed',
+    'needs_response': 'needs_response',
+    'under_review': 'under_review',
+    'charge_refunded': 'charge_refunded',
+    'won': 'won',
+    'lost': 'lost'
+  };
+
+  await supabaseClient
+    .from("chargebacks")
+    .update({
+      status: statusMap[dispute.status] || dispute.status,
+      evidence_due_by: dispute.evidence_details?.due_by
+        ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+        : null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_dispute_id", dispute.id);
+}
+
+async function handleDisputeClosed(dispute: Stripe.Dispute, supabaseClient: any) {
+  logStep("Dispute closed", { disputeId: dispute.id, status: dispute.status });
+
+  const isWon = dispute.status === 'won';
+  const isLost = dispute.status === 'lost';
+
+  await supabaseClient
+    .from("chargebacks")
+    .update({
+      status: dispute.status,
+      resolved_at: new Date().toISOString(),
+      fee_applied: isLost,
+      updated_at: new Date().toISOString()
+    })
+    .eq("stripe_dispute_id", dispute.id);
+
+  // If lost, record the chargeback fee
+  if (isLost) {
+    const { data: chargeback } = await supabaseClient
+      .from("chargebacks")
+      .select("company_id, amount, fee_amount")
+      .eq("stripe_dispute_id", dispute.id)
+      .single();
+
+    if (chargeback?.company_id) {
+      await supabaseClient
+        .from("chargeback_fees")
+        .insert({
+          company_id: chargeback.company_id,
+          chargeback_amount: chargeback.amount,
+          fee_type: 'chargeback_loss',
+          status: 'applied'
+        });
+    }
+  }
+
+  logStep("Dispute closed and processed", { disputeId: dispute.id, won: isWon, lost: isLost });
 }
