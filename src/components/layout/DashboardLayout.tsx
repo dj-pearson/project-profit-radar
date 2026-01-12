@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useImpersonation } from '@/hooks/useImpersonation';
 import TrialStatusBanner from '@/components/TrialStatusBanner';
 import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
+import { SkipLinks } from '@/components/accessibility/SkipLinks';
 import { Home, Building2, DollarSign, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -51,24 +52,38 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <SidebarProvider>
+      {/* Skip Links for keyboard navigation */}
+      <SkipLinks />
+
       <ImpersonationBanner />
       <div className={cn(
         "min-h-screen bg-background flex w-full",
         isImpersonating && "pt-20" // Add padding when impersonation banner is showing
       )}>
+        {/* Navigation Sidebar */}
         <SimplifiedSidebar />
 
         <div className="flex-1 flex flex-col">
-          {/* Mobile-First Header */}
-          <header className={cn(
-            "sticky z-30 border-b bg-background/95 backdrop-blur-sm",
-            isImpersonating ? "top-20" : "top-0" // Adjust header position when banner is showing
-          )}>
+          {/* Dashboard Header */}
+          <header
+            className={cn(
+              "sticky z-30 border-b bg-background/95 backdrop-blur-sm",
+              isImpersonating ? "top-20" : "top-0"
+            )}
+            role="banner"
+            aria-label="Dashboard header"
+          >
             <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6">
               {/* Left: Menu + Title */}
               <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <SidebarTrigger className="flex-shrink-0" />
-                <h1 className="text-base md:text-xl lg:text-2xl font-bold truncate">
+                <SidebarTrigger
+                  className="flex-shrink-0"
+                  aria-label="Toggle navigation menu"
+                />
+                <h1
+                  className="text-base md:text-xl lg:text-2xl font-bold truncate"
+                  id="page-title"
+                >
                   {title}
                 </h1>
               </div>
@@ -78,7 +93,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {actions}
 
                 {/* Desktop User Info */}
-                <span className="hidden lg:block text-sm text-muted-foreground max-w-[150px] truncate">
+                <span
+                  className="hidden lg:block text-sm text-muted-foreground max-w-[150px] truncate"
+                  aria-label={`Logged in as ${userProfile?.first_name || user?.email}`}
+                >
                   {userProfile?.first_name || user?.email}
                 </span>
 
@@ -90,6 +108,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   size="sm"
                   className="hidden md:flex h-9"
                   onClick={handleSignOut}
+                  aria-label="Sign out of your account"
                 >
                   Sign Out
                 </Button>
@@ -100,6 +119,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   size="sm"
                   className="md:hidden h-9 px-3"
                   onClick={handleSignOut}
+                  aria-label="Sign out"
                 >
                   Exit
                 </Button>
@@ -108,10 +128,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </header>
 
           {/* Main Content Area */}
-          <main className={cn(
-            'flex-1 overflow-auto',
-            showBottomNav && isMobile && 'pb-16', // Space for bottom nav
-          )}>
+          <main
+            id="main-content"
+            className={cn(
+              'flex-1 overflow-auto',
+              showBottomNav && isMobile && 'pb-16', // Space for bottom nav
+            )}
+            role="main"
+            aria-labelledby="page-title"
+            tabIndex={-1}
+          >
             <ResponsiveContainer className="py-4 md:py-6" padding="sm">
               {showTrialBanner && <TrialStatusBanner />}
               {children}
@@ -120,7 +146,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           {/* Mobile Bottom Navigation */}
           {showBottomNav && isMobile && (
-            <MobileBottomNav items={bottomNavItems} />
+            <nav
+              aria-label="Mobile navigation"
+              role="navigation"
+            >
+              <MobileBottomNav items={bottomNavItems} />
+            </nav>
           )}
         </div>
       </div>

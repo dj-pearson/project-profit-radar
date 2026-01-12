@@ -18,33 +18,36 @@ interface KPICardProps {
   progress?: number;
   target?: number;
   className?: string;
+  /** Accessible label for screen readers */
+  ariaLabel?: string;
 }
 
-export const KPICard = ({ 
-  title, 
-  value, 
-  change, 
+export const KPICard = ({
+  title,
+  value,
+  change,
   changeLabel,
   changeType,
-  subtitle, 
+  subtitle,
   icon,
   trend = 'neutral',
   status = 'info',
   progress,
   target,
-  className 
+  className,
+  ariaLabel
 }: KPICardProps) => {
   const getTrendIcon = () => {
-    const trendToUse = changeType === 'positive' ? 'up' : 
+    const trendToUse = changeType === 'positive' ? 'up' :
                        changeType === 'negative' ? 'down' : trend;
-                       
+
     switch (trendToUse) {
       case 'up':
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
+        return <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />;
       case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
+        return <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />;
       default:
-        return <Minus className="h-4 w-4 text-muted-foreground" />;
+        return <Minus className="h-4 w-4 text-muted-foreground" aria-hidden="true" />;
     }
   };
 
@@ -73,14 +76,54 @@ export const KPICard = ({
     return val;
   };
 
+  // Generate screen reader text for the KPI
+  const getScreenReaderText = () => {
+    let text = `${title}: ${formatValue(value)}`;
+    if (change !== undefined) {
+      const trendText = changeType === 'positive' || trend === 'up' ? 'increased' :
+                        changeType === 'negative' || trend === 'down' ? 'decreased' : 'unchanged';
+      text += `, ${trendText} by ${typeof change === 'number' ? Math.abs(change) + '%' : change}`;
+    }
+    if (subtitle) {
+      text += `, ${subtitle}`;
+    }
+    if (progress !== undefined) {
+      text += `, progress ${progress}%${target ? ` of ${target}` : ''}`;
+    }
+    if (status === 'warning') {
+      text += ', attention required';
+    } else if (status === 'danger') {
+      text += ', action needed';
+    }
+    return text;
+  };
+
+  const cardId = `kpi-${title.toLowerCase().replace(/\s+/g, '-')}`;
+
   return (
-    <Card className={cn("relative overflow-hidden", className)}>
+    <Card
+      className={cn("relative overflow-hidden", className)}
+      role="region"
+      aria-labelledby={`${cardId}-title`}
+      aria-describedby={`${cardId}-description`}
+    >
+      {/* Screen reader only description */}
+      <span id={`${cardId}-description`} className="sr-only">
+        {ariaLabel || getScreenReaderText()}
+      </span>
+
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle
+          id={`${cardId}-title`}
+          className="text-sm font-medium text-muted-foreground"
+        >
           {title}
         </CardTitle>
         {icon && (
-          <div className={cn("p-2 rounded-md", getStatusColor())}>
+          <div
+            className={cn("p-2 rounded-md", getStatusColor())}
+            aria-hidden="true"
+          >
             {React.isValidElement(icon) ? icon : React.createElement(icon as React.ComponentType, { className: "h-4 w-4" })}
           </div>
         )}
@@ -88,7 +131,10 @@ export const KPICard = ({
       <CardContent>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-2xl font-bold">
+            <div
+              className="text-2xl font-bold"
+              aria-label={`Value: ${formatValue(value)}`}
+            >
               {formatValue(value)}
             </div>
             {subtitle && (
@@ -97,15 +143,21 @@ export const KPICard = ({
               </p>
             )}
           </div>
-          
+
           {(change !== undefined || changeLabel) && (
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1"
+              aria-label={change !== undefined ?
+                `Change: ${typeof change === 'number' ? (change > 0 ? '+' : '') + change + '%' : change}` :
+                changeLabel
+              }
+            >
               {getTrendIcon()}
               <div className="text-xs">
                 {change !== undefined && (
                   <span className={cn(
                     "font-medium",
-                    (changeType === 'positive' || trend === 'up') ? 'text-green-600' : 
+                    (changeType === 'positive' || trend === 'up') ? 'text-green-600' :
                     (changeType === 'negative' || trend === 'down') ? 'text-red-600' : 'text-muted-foreground'
                   )}>
                     {typeof change === 'number' ? (change > 0 ? '+' : '') + change + '%' : change}
@@ -127,23 +179,32 @@ export const KPICard = ({
                 {progress}%{target && ` of ${target}`}
               </span>
             </div>
-            <Progress 
-              value={progress} 
+            <Progress
+              value={progress}
               className="h-2"
+              aria-label={`Progress: ${progress}%${target ? ` of ${target}` : ''}`}
             />
           </div>
         )}
 
         {status === 'warning' && (
-          <div className="flex items-center gap-1 mt-2 text-xs text-yellow-600">
-            <AlertTriangle className="h-3 w-3" />
+          <div
+            className="flex items-center gap-1 mt-2 text-xs text-yellow-600"
+            role="alert"
+            aria-live="polite"
+          >
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
             <span>Attention required</span>
           </div>
         )}
 
         {status === 'danger' && (
-          <div className="flex items-center gap-1 mt-2 text-xs text-red-600">
-            <AlertTriangle className="h-3 w-3" />
+          <div
+            className="flex items-center gap-1 mt-2 text-xs text-red-600"
+            role="alert"
+            aria-live="assertive"
+          >
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
             <span>Action needed</span>
           </div>
         )}
