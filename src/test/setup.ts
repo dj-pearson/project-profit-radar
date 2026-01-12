@@ -1,9 +1,13 @@
 import { expect, afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
+import { toHaveNoA11yViolations } from './accessibility-utils';
 
 // Extend Vitest's expect with jest-dom matchers
 expect.extend(matchers);
+
+// Extend with accessibility matchers
+expect.extend({ toHaveNoA11yViolations });
 
 // Reset fixture counters between tests
 beforeEach(() => {
