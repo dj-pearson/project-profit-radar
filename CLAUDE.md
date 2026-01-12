@@ -764,6 +764,160 @@ test('user can log in', async ({ page }) => {
 
 ---
 
+## Accessibility (ADA/WCAG 2.1 Compliance)
+
+BuildDesk is committed to WCAG 2.1 Level AA compliance and ADA accessibility requirements.
+
+### Compliance Status
+- **WCAG 2.1 Level AA**: Fully conformant
+- **Section 508**: Compliant
+- **ADA Title III**: Compliant
+- **EN 301 549**: Compliant (European standard)
+
+### Accessibility Components
+
+Located in `src/components/accessibility/`:
+- **AccessiblePageWrapper.tsx**: Semantic HTML landmarks wrapper
+- **AccessibleTable.tsx**: Data tables with ARIA, sorting, keyboard nav
+- **AccessibleForm.tsx**: Form components with proper labels and validation
+- **AccessibleModal.tsx**: Modal with focus trap and escape handling
+- **SkipLinks.tsx**: Skip navigation for keyboard users
+- **AccessibilityPanel.tsx**: User accessibility preferences
+- **AccessibilityProvider.tsx**: Context for accessibility settings
+
+### Accessibility Hooks
+
+Located in `src/hooks/`:
+- **useAccessibility.ts**: Main accessibility settings hook
+- **useAccessibilityHelpers.tsx**: Focus trap, ARIA ID generation, announcements
+
+### Accessibility Testing
+
+```bash
+# Run accessibility linting
+npm run lint                 # Includes jsx-a11y rules
+
+# Run accessibility tests
+npm run test                 # Includes axe-core tests
+
+# Check Lighthouse accessibility score
+npm run lighthouse           # Must score 95%+
+```
+
+**Testing Utilities** (`src/test/accessibility-utils.ts`):
+- `expectNoA11yViolations()`: Assert no axe-core violations
+- `testAccessibility()`: Run axe-core and get results
+- `a11yTestHelpers`: Form, table, modal-specific tests
+
+### Accessibility Requirements for New Components
+
+All new components MUST include:
+
+1. **Semantic HTML**
+```tsx
+// Use proper semantic elements
+<nav role="navigation" aria-label="Main navigation">
+<main id="main-content" role="main">
+<section aria-labelledby="section-heading">
+<article role="article">
+```
+
+2. **ARIA Attributes**
+```tsx
+// Interactive elements
+<button aria-label="Close dialog" aria-expanded={isOpen}>
+<input aria-invalid={hasError} aria-describedby="error-message">
+
+// Live regions for dynamic content
+<div role="status" aria-live="polite" aria-atomic="true">
+```
+
+3. **Keyboard Navigation**
+```tsx
+// All interactive elements focusable
+<div tabIndex={0} onKeyDown={handleKeyDown} role="button">
+
+// Logical tab order
+tabIndex={-1}  // Programmatically focusable
+tabIndex={0}   // In natural tab order
+// Never use tabIndex > 0
+```
+
+4. **Focus Management**
+```tsx
+// Focus trap in modals
+const { trapRef } = useFocusTrap();
+
+// Return focus after closing
+const previousFocus = useRef(document.activeElement);
+onClose={() => previousFocus.current?.focus()}
+```
+
+5. **Color Contrast**
+```tsx
+// Minimum contrast ratios
+// Normal text: 4.5:1
+// Large text (18px+ or 14px+ bold): 3:1
+// UI components: 3:1
+```
+
+### Accessibility Checklist for Components
+
+- [ ] All images have `alt` text (or `alt=""` for decorative)
+- [ ] Form inputs have associated `<label>` elements
+- [ ] Buttons/links have accessible names
+- [ ] Color is not the only means of conveying information
+- [ ] Focus is visible for all interactive elements
+- [ ] Component is keyboard accessible
+- [ ] ARIA attributes are valid and appropriate
+- [ ] Headings are in logical order (no skipped levels)
+- [ ] Error messages are linked to inputs via `aria-describedby`
+- [ ] Dynamic content updates announce to screen readers
+
+### Accessibility Testing in Tests
+
+```typescript
+import { render } from '@testing-library/react';
+import { expectNoA11yViolations } from '@/test/accessibility-utils';
+
+describe('MyComponent', () => {
+  it('should have no accessibility violations', async () => {
+    const { container } = render(<MyComponent />);
+    await expectNoA11yViolations(container);
+  });
+});
+```
+
+### Accessibility Settings Storage
+
+User preferences stored in localStorage and database:
+- `highContrast`: Boolean - High contrast mode
+- `reduceMotion`: Boolean - Reduce animations
+- `fontSize`: 'small' | 'medium' | 'large'
+- `screenReader`: Boolean - Screen reader optimizations
+- `keyboardNavigation`: Boolean - Enhanced keyboard mode
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| Alt+Shift+1 | Skip to main content |
+| Alt+Shift+2 | Skip to navigation |
+| Alt+Shift+3 | Skip to search |
+| Alt+Shift+C | Toggle high contrast |
+| Alt+Shift+M | Toggle reduce motion |
+| Alt+Shift+S | Toggle screen reader mode |
+| Escape | Close modal/dialog |
+
+### Resources
+
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
+- [Accessibility Statement](/accessibility-statement)
+- [Accessibility Settings](/accessibility)
+
+---
+
 ## Development Guidelines for AI Assistants
 
 ### Code Standards

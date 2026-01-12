@@ -28,6 +28,7 @@ const Footer = () => {
   const legalLinks = [
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Terms of Service", href: "/terms-of-service" },
+    { name: "Accessibility", href: "/accessibility-statement" },
     { name: "Security", href: "/security-settings" },
     { name: "GDPR", href: "/gdpr-compliance" },
   ];
@@ -186,6 +187,7 @@ const Footer = () => {
                 © 2025 Build Desk. All rights reserved. | <Link to="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</Link>
               </div>
               <div className="flex items-center gap-6 text-sm text-white/80">
+                <span>WCAG 2.1 AA</span>
                 <span>SOC 2 Certified</span>
                 <span>GDPR Compliant</span>
                 <span>QuickBooks Certified</span>

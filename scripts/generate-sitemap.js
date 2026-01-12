@@ -133,6 +133,8 @@ const seoPages = [
   // Legal Pages (Lower Priority)
   { path: '/privacy-policy', priority: 0.4, changeFreq: 'yearly' },
   { path: '/terms-of-service', priority: 0.4, changeFreq: 'yearly' },
+  { path: '/accessibility-statement', priority: 0.5, changeFreq: 'yearly' },
+  { path: '/accessibility', priority: 0.4, changeFreq: 'monthly' },
 
   // Auth Pages (Low Priority)
   { path: '/auth', priority: 0.2, changeFreq: 'yearly' },

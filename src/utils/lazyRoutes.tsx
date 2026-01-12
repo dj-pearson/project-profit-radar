@@ -153,6 +153,7 @@ export const LazyAIModelManagerPage = createLazyRoute(() => import('@/pages/admi
 // Admin - Tools
 export const LazyScheduleBuilder = createLazyRoute(() => import('@/pages/tools/ScheduleBuilder'));
 export const LazyAccessibilityPage = createLazyRoute(() => import('@/pages/AccessibilityPage'));
+export const LazyAccessibilityStatement = createLazyRoute(() => import('@/pages/AccessibilityStatement'));
 
 // Utility and settings pages
 export const LazyMyTasks = createLazyRoute(() => import('@/pages/MyTasks'));
