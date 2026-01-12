@@ -76,6 +76,7 @@ import {
   // Tools
   LazyScheduleBuilder,
   LazyAccessibilityPage,
+  LazyAccessibilityStatement,
 } from '@/utils/lazyRoutes';
 
 export const adminRoutes = (
@@ -150,5 +151,6 @@ export const adminRoutes = (
     {/* Tools & Utilities */}
     <Route path="/schedule-builder" element={<LazyScheduleBuilder />} />
     <Route path="/accessibility" element={<LazyAccessibilityPage />} />
+    <Route path="/accessibility-statement" element={<LazyAccessibilityStatement />} />
   </>
 );
