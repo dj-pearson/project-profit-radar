@@ -132,7 +132,8 @@ export default defineConfig(({ mode }) => ({
           // Node modules chunking
           if (id.includes('node_modules')) {
             // Core React - smallest possible initial bundle
-            if (id.includes('react-dom') || id.includes('/react/')) {
+            // IMPORTANT: Must match ONLY the react package, not packages containing "react" in the name
+            if (id.includes('react-dom') || id.includes('node_modules/react/') || id.match(/\/react\/index/)) {
               return 'react-core';
             }
 
