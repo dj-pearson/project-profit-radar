@@ -131,32 +131,17 @@ export default defineConfig(({ mode }) => ({
         manualChunks: (id) => {
           // Node modules chunking
           if (id.includes('node_modules')) {
-            // Core React - smallest possible initial bundle
-            // IMPORTANT: Must match ONLY the react package, not packages containing "react" in the name
-            // Match: /node_modules/react/, /node_modules/react-dom/, /node_modules/scheduler/
-            if (
-              id.match(/[\\/]node_modules[\\/]react[\\/]/) ||
-              id.match(/[\\/]node_modules[\\/]react-dom[\\/]/) ||
-              id.match(/[\\/]node_modules[\\/]scheduler[\\/]/)
-            ) {
-              return 'react-core';
-            }
-
+            // React and React-DOM - let Vite handle these with dedupe
+            // Do NOT manually chunk React to avoid breaking dependencies
+            
             // Router - needed for navigation
             if (id.includes('react-router')) {
               return 'react-router';
             }
 
-            // Core UI components (Radix) - essential
-            if (id.includes('@radix-ui/react-slot') ||
-                id.includes('@radix-ui/react-dialog') ||
-                id.includes('@radix-ui/react-dropdown-menu')) {
-              return 'ui-core';
-            }
-
-            // Extended UI components - load on demand
+            // UI components (Radix) - group all together with React
             if (id.includes('@radix-ui')) {
-              return 'ui-extended';
+              return 'ui-components';
             }
 
             // Utilities - small, commonly used
