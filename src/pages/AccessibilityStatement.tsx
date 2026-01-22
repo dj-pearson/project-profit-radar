@@ -137,6 +137,19 @@ const AccessibilityStatement = () => {
                     <li><strong>Americans with Disabilities Act (ADA)</strong> Title III requirements</li>
                     <li><strong>EN 301 549</strong> European accessibility standard</li>
                   </ul>
+                  <p className="mt-4">
+                    For detailed conformance information, see our{' '}
+                    <a
+                      href="/docs/VPAT_WCAG_2.1_BuildDesk.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      Voluntary Product Accessibility Template (VPAT)
+                      <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      <span className="sr-only">(opens in new window)</span>
+                    </a>
+                  </p>
                 </section>
 
                 {/* Accessibility Features */}
