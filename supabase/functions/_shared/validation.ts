@@ -3,7 +3,7 @@
  * SECURITY: All edge functions MUST validate input to prevent injection attacks
  */
 
-import { z } from "zod";
+import { z } from "npm:zod@3";
 
 // Common validation schemas
 export const uuidSchema = z.string().uuid('Invalid UUID format');

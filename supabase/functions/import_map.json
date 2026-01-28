@@ -1,8 +1,0 @@
-{
-  "imports": {
-    "xhr": "https://deno.land/x/xhr@0.1.0/mod.ts",
-    "std/": "https://deno.land/std@0.190.0/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.50.3",
-    "stripe": "https://esm.sh/stripe@14.21.0"
-  }
-}

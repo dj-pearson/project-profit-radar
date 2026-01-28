@@ -1,6 +1,5 @@
-import "xhr";
-import { serve } from "std/http/server.ts";
-import { createClient } from "@supabase/supabase-js";
+// Version: 2.0.1 - Fixed import issues
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiService } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
@@ -10,10 +9,10 @@ const corsHeaders = {
 
 const logStep = (step: string, details?: any) => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [BLOG-AI] ${step}${details ? ` - ${JSON.stringify(details, null, 2)}` : ''}`);
+  console.log(`[${timestamp}] [BLOG-AI-FIXED] ${step}${details ? ` - ${JSON.stringify(details, null, 2)}` : ''}`);
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -176,13 +175,23 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    logStep("Fatal error", { error: error instanceof Error ? error.message : 'Unknown error', stack: error instanceof Error ? error.stack : undefined });
+    logStep("Fatal error", { 
+      error: error instanceof Error ? error.message : 'Unknown error', 
+      stack: error instanceof Error ? error.stack : undefined,
+      errorType: error?.constructor?.name
+    });
     
-    return new Response(JSON.stringify({
+    const errorDetails = {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error?.constructor?.name || 'Unknown',
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : undefined,
       message: "Blog generation failed"
-    }), {
+    };
+    
+    console.error("Full error details:", JSON.stringify(errorDetails, null, 2));
+    
+    return new Response(JSON.stringify(errorDetails), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
