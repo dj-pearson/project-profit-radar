@@ -1,14 +1,9 @@
 // Check Subscription Edge Function
-// Updated with multi-tenant site_id isolation
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+// SECURITY: Uses secure CORS whitelist
+import Stripe from "npm:stripe@14";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from '../_shared/secure-cors.ts';
 
 // Helper logging function for enhanced debugging
 const logStep = (step: string, details?: any) => {
@@ -16,7 +11,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -35,27 +32,21 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
-    // Initialize auth context - extracts user AND site_id from JWT
     const authContext = await initializeAuthContext(req);
     if (!authContext) {
-      return errorResponse('Unauthorized', 401);
+      return errorResponse('Unauthorized', 401, req);
     }
 
-    const { user, siteId } = authContext;
+    const { user } = authContext;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email, siteId });
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Check for complimentary subscription first with site isolation
-    let subscriberQuery = supabaseClient
+    // Check for complimentary subscription first
+    const { data: existingSubscriber } = await supabaseClient
       .from('subscribers')
       .select('*')
-      .eq('user_id', user.id);
-
-    if (siteId) {
-      subscriberQuery = subscriberQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
-    }
-
-    const { data: existingSubscriber } = await subscriberQuery.single();
+      .eq('user_id', user.id)
+      .single();
 
     if (existingSubscriber?.is_complimentary) {
       logStep("Found complimentary subscription", { 
@@ -71,7 +62,7 @@ serve(async (req) => {
       if (isExpired) {
         logStep("Complimentary subscription expired, checking regular subscription");
         // Complimentary expired, remove complimentary status and check regular subscription
-        let updateQuery = supabaseClient
+        await supabaseClient
           .from('subscribers')
           .update({
             is_complimentary: false,
@@ -84,24 +75,12 @@ serve(async (req) => {
           })
           .eq('id', existingSubscriber.id);
 
-        if (siteId) {
-          updateQuery = updateQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
-        }
-
-        await updateQuery;
-
-        // Update history with site isolation
-        let historyQuery = supabaseClient
+        // Update history
+        await supabaseClient
           .from('complimentary_subscription_history')
           .update({ status: 'expired' })
           .eq('subscriber_id', existingSubscriber.id)
           .eq('status', 'active');
-
-        if (siteId) {
-          historyQuery = historyQuery.eq('site_id', siteId);  // CRITICAL: Site isolation
-        }
-
-        await historyQuery;
       } else {
         // Active complimentary subscription
         const tier = existingSubscriber.subscription_tier || 'professional';
@@ -129,7 +108,7 @@ serve(async (req) => {
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
-      const upsertData: any = {
+      await supabaseClient.from("subscribers").upsert({
         email: user.email,
         user_id: user.id,
         stripe_customer_id: null,
@@ -137,14 +116,8 @@ serve(async (req) => {
         subscription_tier: null,
         subscription_end: null,
         updated_at: new Date().toISOString(),
-      };
-
-      if (siteId) {
-        upsertData.site_id = siteId;  // CRITICAL: Site isolation
-      }
-
-      await supabaseClient.from("subscribers").upsert(upsertData, {
-        onConflict: siteId ? 'email,site_id' : 'email'
+      }, {
+        onConflict: 'email'
       });
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -196,7 +169,7 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
-    const subscriptionUpsertData: any = {
+    await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
@@ -205,17 +178,11 @@ serve(async (req) => {
       subscription_end: subscriptionEnd,
       billing_period: billingPeriod,
       updated_at: new Date().toISOString(),
-    };
-
-    if (siteId) {
-      subscriptionUpsertData.site_id = siteId;  // CRITICAL: Site isolation
-    }
-
-    await supabaseClient.from("subscribers").upsert(subscriptionUpsertData, {
-      onConflict: siteId ? 'email,site_id' : 'email'
+    }, {
+      onConflict: 'email'
     });
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, siteId });
+    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
@@ -228,7 +195,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // SECURITY: Return generic error message to client
+    return new Response(JSON.stringify({ error: "Failed to check subscription" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

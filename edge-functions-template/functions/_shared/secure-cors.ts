@@ -1,15 +1,28 @@
 /**
  * CORS Configuration for Supabase Edge Functions
  * SECURITY: Whitelist-based approach to prevent unauthorized access
+ *
+ * For self-hosted deployments, set the ALLOWED_CORS_ORIGINS environment variable
+ * to a comma-separated list of allowed origins.
+ * Example: ALLOWED_CORS_ORIGINS=https://my-domain.com,https://app.my-domain.com
  */
 
-// Whitelist of allowed origins
-const ALLOWED_ORIGINS = [
+// Default allowed origins
+const DEFAULT_ALLOWED_ORIGINS = [
   'https://build-desk.com',
   'https://www.build-desk.com',
   'https://builddesk.pearsonperformance.workers.dev',
   'https://builddesk.pages.dev', // Cloudflare Pages preview
 ];
+
+// Parse custom origins from environment variable (for self-hosted deployments)
+const customOriginsEnv = Deno.env.get('ALLOWED_CORS_ORIGINS');
+const ALLOWED_ORIGINS: string[] = customOriginsEnv
+  ? [...new Set([
+      ...customOriginsEnv.split(',').map(origin => origin.trim()).filter(Boolean),
+      ...DEFAULT_ALLOWED_ORIGINS
+    ])]
+  : [...DEFAULT_ALLOWED_ORIGINS];
 
 // Add localhost only in development
 if (Deno.env.get('ENVIRONMENT') === 'development' || Deno.env.get('DEV') === 'true') {

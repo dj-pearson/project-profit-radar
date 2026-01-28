@@ -1,8 +1,8 @@
 /**
- * Shared authentication helpers for Edge Functions
+ * Shared authentication helpers for Edge Functions (Single-Tenant)
  *
  * Usage:
- * import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts';
+ * import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers-single-tenant.ts';
  *
  * const authContext = await initializeAuthContext(req);
  * if (!authContext) return errorResponse('Unauthorized', 401);
@@ -27,7 +27,7 @@ export interface AuthContext {
 
 /**
  * Initialize authenticated Supabase client
- *
+ * 
  * @param req - The incoming request
  * @returns AuthContext with user and authenticated supabase client, or null if auth fails
  */
@@ -120,7 +120,7 @@ export function successResponse(data: any, request?: Request): Response {
 
 /**
  * Verify user has access to a specific company
- *
+ * 
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
  * @param companyId - Company ID to check
@@ -156,7 +156,7 @@ export async function verifyCompanyAccess(
 
 /**
  * Get user's role within their company
- *
+ * 
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
  * @returns User's role or null
@@ -188,7 +188,7 @@ export async function getUserRole(
 
 /**
  * Check if user is an admin (admin or root_admin)
- *
+ * 
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
  * @returns true if user is admin, false otherwise
@@ -203,7 +203,7 @@ export async function isAdmin(
 
 /**
  * Check if user is a root admin
- *
+ * 
  * @param supabase - Authenticated Supabase client
  * @param userId - User ID
  * @returns true if user is root_admin, false otherwise
@@ -254,7 +254,7 @@ export function corsResponse(request?: Request): Response {
  * export default withAuth(async (req, authContext) => {
  *   const { user, supabase } = authContext;
  *   // Your function logic here
- *   return successResponse({ message: 'Hello from ' + user.email }, req);
+ *   return successResponse({ message: 'Hello' }, req);
  * });
  */
 export function withAuth(

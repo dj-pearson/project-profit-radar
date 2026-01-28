@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3"
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 interface AIModelConfig {
   id: string
