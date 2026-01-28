@@ -5,9 +5,16 @@
  * ⚡ Performance: All admin routes are lazy-loaded to reduce initial bundle size
  * Most users are field workers/contractors and don't access admin features,
  * so we load this code only when needed.
+ *
+ * 🔒 Security: Defense-in-Depth Protection
+ * - Layer 1: Authentication (requireAuth)
+ * - Layer 2: Authorization (allowedRoles, permissions)
+ * - Layer 3: Resource Ownership (via SecureRoute)
+ * - Layer 4: Database RLS (PostgreSQL policies)
  */
 
 import { Route, Navigate } from 'react-router-dom';
+import { SecureRoute } from '@/components/security/SecureRoute';
 import {
   // Company & Security
   LazyCompanySettings,
@@ -81,75 +88,474 @@ import {
 
 export const adminRoutes = (
   <>
-    {/* Company Settings */}
-    <Route path="/company-settings" element={<LazyCompanySettings />} />
-    <Route path="/security-settings" element={<LazySecuritySettings />} />
-    <Route path="/system-admin/settings" element={<LazySystemAdminSettings />} />
-    <Route path="/security-monitoring" element={<LazySecurityMonitoring />} />
-    <Route path="/rate-limiting" element={<LazyRateLimitingDashboard />} />
+    {/* ================================================================
+        COMPANY SETTINGS - Admin & Project Manager access
+        Security: Layer 2 (role-based authorization)
+        ================================================================ */}
+    <Route
+      path="/company-settings"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['settings.read']}
+          allowedRoles={['root_admin', 'admin', 'project_manager']}
+        >
+          <LazyCompanySettings />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/security-settings"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['settings.write']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazySecuritySettings />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/system-admin/settings"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin']}>
+          <LazySystemAdminSettings />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/security-monitoring"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySecurityMonitoring />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/rate-limiting"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyRateLimitingDashboard />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - Users & Companies */}
-    <Route path="/admin/companies" element={<LazyCompanies />} />
-    <Route path="/admin/users" element={<LazyUsers />} />
-    <Route path="/admin/permissions" element={<LazyPermissionManagement />} />
+    {/* ================================================================
+        ADMIN - Users & Companies
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/companies"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyCompanies />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/users"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['users.read']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazyUsers />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/permissions"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['users.write']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazyPermissionManagement />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - Billing & Revenue */}
-    <Route path="/admin/billing" element={<LazyBilling />} />
-    <Route path="/admin/promotions" element={<LazyPromotions />} />
-    <Route path="/upgrade" element={<LazyUpgrade />} />
+    {/* ================================================================
+        ADMIN - Billing & Revenue
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/billing"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyBilling />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/promotions"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyPromotions />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/upgrade"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyUpgrade />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - Analytics */}
-    <Route path="/admin/intelligence" element={<LazyAdminIntelligenceDashboard />} />
-    <Route path="/admin/analytics" element={<LazyAnalytics />} />
-    <Route path="/admin/settings" element={<LazySettings />} />
-    <Route path="/admin/conversion-analytics" element={<LazyConversionAnalytics />} />
-    <Route path="/admin/retention-analytics" element={<LazyRetentionAnalytics />} />
-    <Route path="/admin/revenue-analytics" element={<LazyRevenueAnalytics />} />
-    <Route path="/admin/churn-prediction" element={<LazyChurnPrediction />} />
+    {/* ================================================================
+        ADMIN - Analytics
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/intelligence"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyAdminIntelligenceDashboard />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/analytics"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['reports.read']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazyAnalytics />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/settings"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['settings.write']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazySettings />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/conversion-analytics"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyConversionAnalytics />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/retention-analytics"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyRetentionAnalytics />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/revenue-analytics"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyRevenueAnalytics />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/churn-prediction"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyChurnPrediction />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - Marketing & SEO */}
-    <Route path="/admin/seo" element={<LazySEODashboard />} />
-    <Route path="/admin/seo-management" element={<LazyUnifiedSEODashboard />} />
-    <Route path="/admin/search-traffic-dashboard" element={<LazySearchTrafficDashboard />} />
+    {/* ================================================================
+        ADMIN - Marketing & SEO
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/seo"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySEODashboard />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/seo-management"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyUnifiedSEODashboard />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/search-traffic-dashboard"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySearchTrafficDashboard />
+        </SecureRoute>
+      }
+    />
     <Route path="/admin/seo-analytics" element={<Navigate to="/admin/seo-management" replace />} />
     <Route path="/admin/seo-analytics-legacy" element={<Navigate to="/admin/seo-management" replace />} />
     <Route path="/seo-management" element={<Navigate to="/admin/seo-management" replace />} />
-    <Route path="/blog-manager" element={<LazyBlogManager />} />
-    <Route path="/admin/social-media" element={<LazySocialMediaManager />} />
-    <Route path="/admin/leads" element={<LazyLeadManagementAdmin />} />
-    <Route path="/admin/demos" element={<LazyDemoManagement />} />
-    <Route path="/admin/funnels" element={<LazyFunnelManager />} />
+    <Route
+      path="/blog-manager"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyBlogManager />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/social-media"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySocialMediaManager />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/leads"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['crm.read']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazyLeadManagementAdmin />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/demos"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyDemoManagement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/funnels"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyFunnelManager />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - Knowledge & Support */}
-    <Route path="/knowledge-base-admin" element={<LazyKnowledgeBaseAdmin />} />
-    <Route path="/admin/support-tickets" element={<LazySupportTicketsEnhanced />} />
-    <Route path="/admin/support-tickets-legacy" element={<LazySupportTickets />} />
+    {/* ================================================================
+        ADMIN - Knowledge & Support
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/knowledge-base-admin"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyKnowledgeBaseAdmin />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/support-tickets"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySupportTicketsEnhanced />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/support-tickets-legacy"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySupportTickets />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - Multi-Tenant & Enterprise */}
-    <Route path="/admin/tenants" element={<LazyTenantManagement />} />
-    <Route path="/admin/sso" element={<LazySSOManagement />} />
-    <Route path="/admin/audit" element={<LazyAuditLoggingCompliance />} />
-    <Route path="/admin/gps-tracking" element={<LazyGPSTimeTracking />} />
+    {/* ================================================================
+        ADMIN - Multi-Tenant & Enterprise
+        Security: Layer 2 (strict admin authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/tenants"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin']}>
+          <LazyTenantManagement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/sso"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySSOManagement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/audit"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyAuditLoggingCompliance />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/gps-tracking"
+      element={
+        <SecureRoute
+          requireAuth
+          allowedRoles={['root_admin', 'admin', 'project_manager']}
+        >
+          <LazyGPSTimeTracking />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - API & Developer */}
-    <Route path="/admin/api-keys" element={<LazyAPIKeyManagement />} />
-    <Route path="/admin/webhooks" element={<LazyWebhookManagement />} />
-    <Route path="/admin/developer-portal" element={<LazyDeveloperPortal />} />
+    {/* ================================================================
+        ADMIN - API & Developer
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/api-keys"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyAPIKeyManagement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/webhooks"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyWebhookManagement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/developer-portal"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyDeveloperPortal />
+        </SecureRoute>
+      }
+    />
 
-    {/* Admin - AI & Intelligence */}
-    <Route path="/admin/ai-estimating" element={<LazyAIEstimating />} />
-    <Route path="/admin/risk-prediction" element={<LazyRiskPrediction />} />
-    <Route path="/admin/auto-scheduling" element={<LazyAutoScheduling />} />
-    <Route path="/admin/safety-automation" element={<LazySafetyAutomation />} />
-    <Route path="/admin/smart-procurement" element={<LazySmartProcurement />} />
-    <Route path="/admin/advanced-dashboards" element={<LazyAdvancedDashboards />} />
-    <Route path="/admin/client-portal-pro" element={<LazyClientPortalPro />} />
-    <Route path="/admin/billing-automation" element={<LazyBillingAutomation />} />
-    <Route path="/admin/reporting-engine" element={<LazyReportingEngine />} />
-    <Route path="/admin/ai-models" element={<LazyAIModelManagerPage />} />
+    {/* ================================================================
+        ADMIN - AI & Intelligence
+        Security: Layer 2 (admin-only authorization)
+        ================================================================ */}
+    <Route
+      path="/admin/ai-estimating"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyAIEstimating />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/risk-prediction"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyRiskPrediction />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/auto-scheduling"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyAutoScheduling />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/safety-automation"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySafetyAutomation />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/smart-procurement"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazySmartProcurement />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/advanced-dashboards"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyAdvancedDashboards />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/client-portal-pro"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyClientPortalPro />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/billing-automation"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyBillingAutomation />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/reporting-engine"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['reports.read']}
+          allowedRoles={['root_admin', 'admin']}
+        >
+          <LazyReportingEngine />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/ai-models"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin']}>
+          <LazyAIModelManagerPage />
+        </SecureRoute>
+      }
+    />
 
-    {/* Tools & Utilities */}
-    <Route path="/schedule-builder" element={<LazyScheduleBuilder />} />
+    {/* ================================================================
+        TOOLS & UTILITIES
+        Some are public (accessibility), others require auth
+        ================================================================ */}
+    <Route
+      path="/schedule-builder"
+      element={
+        <SecureRoute
+          requireAuth
+          permissions={['schedule.write']}
+          allowedRoles={['root_admin', 'admin', 'project_manager']}
+        >
+          <LazyScheduleBuilder />
+        </SecureRoute>
+      }
+    />
+    {/* Accessibility pages are public - no auth required */}
     <Route path="/accessibility" element={<LazyAccessibilityPage />} />
     <Route path="/accessibility-statement" element={<LazyAccessibilityStatement />} />
   </>
