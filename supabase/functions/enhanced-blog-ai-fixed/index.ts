@@ -1,4 +1,4 @@
-// Version: 2.0.1 - Fixed import issues
+// Version: 2.0.2 - Export handler for self-hosted Supabase
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiService } from "../_shared/ai-service.ts";
 
@@ -12,7 +12,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[${timestamp}] [BLOG-AI-FIXED] ${step}${details ? ` - ${JSON.stringify(details, null, 2)}` : ''}`);
 };
 
-Deno.serve(async (req) => {
+export default async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-});
+};
 
 function generateSlug(title: string): string {
   return title
