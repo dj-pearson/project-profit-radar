@@ -1,6 +1,6 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import "xhr";
+import { serve } from "std/http/server.ts";
+import { createClient } from "@supabase/supabase-js";
 import { aiService } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
@@ -21,6 +21,8 @@ serve(async (req) => {
   try {
     const body = await req.json();
     const { topic, company_id, queue_id, action, customSettings } = body;
+
+    logStep("Request received", { hasBody: !!body, action, hasTopic: !!topic });
 
     // Handle both payload formats
     let finalTopic = topic;
@@ -76,7 +78,18 @@ serve(async (req) => {
     logStep("Using AI model", { model });
 
     // Use centralized AI service for blog generation
-    const blogContent = await aiService.generateBlogContent(finalTopic, model);
+    let blogContent;
+    try {
+      logStep("Calling AI service generateBlogContent");
+      blogContent = await aiService.generateBlogContent(finalTopic, model);
+      logStep("AI service returned successfully");
+    } catch (aiError) {
+      logStep("AI service error", { 
+        error: aiError instanceof Error ? aiError.message : 'Unknown error',
+        stack: aiError instanceof Error ? aiError.stack : undefined
+      });
+      throw new Error(`AI generation failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}`);
+    }
     
     logStep("Blog content generated", { 
       title: blogContent.title,

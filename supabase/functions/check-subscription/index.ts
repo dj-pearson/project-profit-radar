@@ -1,8 +1,8 @@
 // Check Subscription Edge Function
 // SECURITY: Uses secure CORS whitelist
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { serve } from "std/http/server.ts";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
 

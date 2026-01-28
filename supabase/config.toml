@@ -101,6 +101,9 @@ verify_jwt = false
 [functions.enhanced-blog-ai]
 verify_jwt = true
 
+[functions.enhanced-blog-ai-fixed]
+verify_jwt = false
+
 [functions.create-stripe-checkout]
 verify_jwt = true
 
