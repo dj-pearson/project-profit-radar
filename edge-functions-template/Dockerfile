@@ -37,13 +37,12 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
 
 # Start server with necessary permissions
 # --allow-net: Network access for HTTP server and external APIs
-# --allow-read: Read functions directory
-# --allow-env: Access environment variables
+# --allow-read: Read functions directory  
+# --allow-env: Access ALL environment variables
 # --unstable: Enable Deno unstable APIs
+# -A: Allow all permissions (required for self-hosted with dynamic imports)
 CMD ["deno", "run", \
-  "--allow-net", \
-  "--allow-read", \
-  "--allow-env", \
+  "-A", \
   "--unstable", \
   "server.ts"]
 
