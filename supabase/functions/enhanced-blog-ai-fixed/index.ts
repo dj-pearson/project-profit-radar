@@ -199,11 +199,15 @@ export default async (req: Request) => {
 };
 
 function generateSlug(title: string): string {
-  return title
+  const baseSlug = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim()
-    .substring(0, 100);
+    .substring(0, 80);
+
+  // Add timestamp suffix to ensure uniqueness
+  const timestamp = Date.now().toString(36);
+  return `${baseSlug}-${timestamp}`;
 }
