@@ -237,14 +237,14 @@ export class AIService {
 Return your response as valid JSON in this exact format:
 {
   "title": "SEO-optimized title (60 chars max)",
-  "content": "Full article content in HTML format",
-  "excerpt": "Brief summary (160 chars max)", 
+  "content": "Full article content in Markdown format (use ## for headings, **bold**, *italic*, - for lists, etc.)",
+  "excerpt": "Brief summary (160 chars max)",
   "seo_description": "SEO meta description (160 chars max)",
   "keywords": ["primary keyword", "secondary keyword", "tertiary keyword"],
   "estimated_read_time": 8
 }
 
-Make the content authoritative, actionable, and valuable for construction professionals. Include specific examples, best practices, and practical tips.`
+Make the content authoritative, actionable, and valuable for construction professionals. Include specific examples, best practices, and practical tips. Use proper Markdown formatting with headings (##, ###), bullet points (-), bold (**text**), and other Markdown elements.`
 
     const response = await this.generateSimpleContent(
       `Write a comprehensive blog post about: ${topic}`,
