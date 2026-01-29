@@ -320,7 +320,8 @@ Make the content authoritative, actionable, and valuable for construction profes
    * Normalize blog fields with defaults for any missing fields
    */
   private normalizeBlogFields(parsed: any, topic: string): any {
-    const content = parsed.content || parsed.body || ''
+    const rawContent = parsed.content || parsed.body || ''
+    const content = this.normalizeMarkdown(rawContent)
     const title = parsed.title || this.extractTitleFromContent(content) || topic
 
     return {
@@ -336,7 +337,8 @@ Make the content authoritative, actionable, and valuable for construction profes
   /**
    * Create blog structure from plain markdown/text content
    */
-  private createBlogFromPlainContent(content: string, topic: string): any {
+  private createBlogFromPlainContent(rawContent: string, topic: string): any {
+    const content = this.normalizeMarkdown(rawContent)
     const title = this.extractTitleFromContent(content) || topic
 
     return {
@@ -347,6 +349,57 @@ Make the content authoritative, actionable, and valuable for construction profes
       keywords: [topic.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim()],
       estimated_read_time: this.calculateReadTime(content)
     }
+  }
+
+  /**
+   * Normalize markdown formatting for proper rendering
+   * Ensures proper spacing between elements
+   */
+  private normalizeMarkdown(content: string): string {
+    if (!content) return ''
+
+    let normalized = content
+
+    // Normalize line endings to \n
+    normalized = normalized.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+
+    // Ensure blank line before headings (unless at start)
+    normalized = normalized.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+
+    // Ensure blank line after headings
+    normalized = normalized.replace(/(#{1,6}\s.+)\n([^\n#])/g, '$1\n\n$2')
+
+    // Ensure blank line before lists (unless after heading or another list item)
+    normalized = normalized.replace(/([^\n-*\d#])\n([-*]\s|\d+\.\s)/g, '$1\n\n$2')
+
+    // Ensure blank line after list blocks (detect end of list)
+    normalized = normalized.replace(/([-*]\s.+|^\d+\.\s.+)\n([^\n-*\d\s])/gm, '$1\n\n$2')
+
+    // Ensure blank line before code blocks
+    normalized = normalized.replace(/([^\n])\n(```)/g, '$1\n\n$2')
+
+    // Ensure blank line after code blocks
+    normalized = normalized.replace(/(```)\n([^\n])/g, '$1\n\n$2')
+
+    // Ensure blank line before blockquotes
+    normalized = normalized.replace(/([^\n>])\n(>\s)/g, '$1\n\n$2')
+
+    // Ensure blank line after blockquotes
+    normalized = normalized.replace(/(>\s.+)\n([^\n>])/g, '$1\n\n$2')
+
+    // Ensure blank line before horizontal rules
+    normalized = normalized.replace(/([^\n])\n(---+|___+|\*\*\*+)\n/g, '$1\n\n$2\n')
+
+    // Ensure blank line after horizontal rules
+    normalized = normalized.replace(/\n(---+|___+|\*\*\*+)\n([^\n])/g, '\n$1\n\n$2')
+
+    // Normalize multiple blank lines to maximum of 2
+    normalized = normalized.replace(/\n{3,}/g, '\n\n')
+
+    // Trim leading/trailing whitespace
+    normalized = normalized.trim()
+
+    return normalized
   }
 
   /**
