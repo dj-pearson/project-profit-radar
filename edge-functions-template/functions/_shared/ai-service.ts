@@ -253,7 +253,19 @@ Make the content authoritative, actionable, and valuable for construction profes
     )
 
     try {
-      return JSON.parse(response)
+      // Strip markdown code fences if present (AI sometimes wraps JSON in ```json ... ```)
+      let jsonString = response.trim()
+      if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.slice(7) // Remove ```json
+      } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.slice(3) // Remove ```
+      }
+      if (jsonString.endsWith('```')) {
+        jsonString = jsonString.slice(0, -3) // Remove trailing ```
+      }
+      jsonString = jsonString.trim()
+
+      return JSON.parse(jsonString)
     } catch {
       // Fallback structure if JSON parsing fails
       return {
