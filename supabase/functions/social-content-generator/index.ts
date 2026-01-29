@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+// Self-hosted Supabase: Export handler instead of serve()
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1070,7 +1070,7 @@ async function sendToExternalWebhook(webhookUrl: string, data: any) {
   }
 }
 
-serve(async (req) => {
+export default async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -1296,4 +1296,4 @@ serve(async (req) => {
       }
     );
   }
-});
+};

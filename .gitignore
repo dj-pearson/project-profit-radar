@@ -121,3 +121,4 @@ scripts/migrate-to-selfhosted.ps1
 FIX_OAUTH_REDIRECT_LOOP.md
 URGENT_OAUTH_FIX.md
 .env_backup
+.env_backup
