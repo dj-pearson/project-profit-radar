@@ -264,56 +264,199 @@ Make the content authoritative, actionable, and valuable for construction profes
    * - Partial or malformed JSON
    */
   private parseAndNormalizeBlogResponse(response: string, topic: string): any {
-    const trimmed = response.trim()
+    console.log('[AI-Service] Parsing response, length:', response.length)
 
-    // Strategy 1: Try to extract JSON from code fences
-    const codeBlockPatterns = [
-      /^```json\s*\n?([\s\S]*?)\n?```$/,
-      /^```\s*\n?([\s\S]*?)\n?```$/,
-      /```json\s*\n?([\s\S]*?)\n?```/,
-      /```\s*\n?(\{[\s\S]*?\})\n?```/
+    let content = response.trim()
+
+    // Step 1: Strip markdown code fences if present
+    content = this.stripCodeFences(content)
+    console.log('[AI-Service] After stripping code fences, length:', content.length)
+
+    // Step 2: Try to parse as JSON
+    const jsonResult = this.tryParseJson(content)
+    if (jsonResult) {
+      console.log('[AI-Service] Successfully parsed JSON')
+      return this.normalizeBlogFields(jsonResult, topic)
+    }
+
+    // Step 3: Try to extract JSON object from mixed content
+    const extractedJson = this.extractJsonObject(content)
+    if (extractedJson) {
+      console.log('[AI-Service] Extracted JSON from mixed content')
+      return this.normalizeBlogFields(extractedJson, topic)
+    }
+
+    // Step 4: Treat as plain markdown content
+    console.log('[AI-Service] Could not parse JSON, treating response as plain content')
+    return this.createBlogFromPlainContent(content, topic)
+  }
+
+  /**
+   * Strip markdown code fences from content
+   */
+  private stripCodeFences(content: string): string {
+    let result = content
+
+    // Remove opening code fence (```json or ```) at the start
+    result = result.replace(/^```(?:json)?\s*\n?/, '')
+
+    // Remove closing code fence at the end
+    result = result.replace(/\n?```\s*$/, '')
+
+    // Also handle if there are multiple code blocks - extract the first one
+    const codeBlockMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)(?:\n?```|$)/)
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      // If we found a code block, use its contents
+      result = codeBlockMatch[1].trim()
+    }
+
+    return result.trim()
+  }
+
+  /**
+   * Try to parse content as JSON with multiple strategies
+   */
+  private tryParseJson(content: string): any | null {
+    // Direct parse attempt
+    try {
+      return JSON.parse(content)
+    } catch {
+      // Continue to other strategies
+    }
+
+    // Try to find complete JSON object (handle truncated responses)
+    if (content.includes('{')) {
+      try {
+        const firstBrace = content.indexOf('{')
+        const lastBrace = content.lastIndexOf('}')
+        if (lastBrace > firstBrace) {
+          const jsonCandidate = content.substring(firstBrace, lastBrace + 1)
+          return JSON.parse(jsonCandidate)
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Extract JSON object from content that might have surrounding text
+   */
+  private extractJsonObject(content: string): any | null {
+    // Look for a JSON object with title and content fields
+    const patterns = [
+      // Match from first { to last } that contains title and content
+      /\{[^{}]*"title"\s*:\s*"[^"]*"[^{}]*"content"\s*:\s*"[\s\S]*?"[^{}]*\}/,
+      // More greedy pattern
+      /\{[\s\S]*?"title"\s*:\s*"[^"]*"[\s\S]*?"content"\s*:[\s\S]*\}/,
     ]
 
-    for (const pattern of codeBlockPatterns) {
-      const match = trimmed.match(pattern)
+    for (const pattern of patterns) {
+      const match = content.match(pattern)
       if (match) {
         try {
-          const parsed = JSON.parse(match[1].trim())
-          return this.normalizeBlogFields(parsed, topic)
+          return JSON.parse(match[0])
         } catch {
-          // Continue to next strategy
+          // Try to fix common JSON issues
+          const fixed = this.tryFixJson(match[0])
+          if (fixed) return fixed
         }
       }
     }
 
-    // Strategy 2: Try to parse as raw JSON
-    try {
-      // Check if it starts with { and ends with }
-      if (trimmed.startsWith('{') && trimmed.includes('}')) {
-        // Find the last closing brace
-        const lastBrace = trimmed.lastIndexOf('}')
-        const jsonCandidate = trimmed.substring(0, lastBrace + 1)
-        const parsed = JSON.parse(jsonCandidate)
-        return this.normalizeBlogFields(parsed, topic)
+    // Last resort: find { and try to balance braces
+    const firstBrace = content.indexOf('{')
+    if (firstBrace !== -1) {
+      const jsonCandidate = this.extractBalancedJson(content.substring(firstBrace))
+      if (jsonCandidate) {
+        try {
+          return JSON.parse(jsonCandidate)
+        } catch {
+          const fixed = this.tryFixJson(jsonCandidate)
+          if (fixed) return fixed
+        }
       }
-    } catch {
-      // Continue to next strategy
     }
 
-    // Strategy 3: Try to find JSON object anywhere in the response
-    try {
-      const jsonMatch = trimmed.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/)
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0])
-        return this.normalizeBlogFields(parsed, topic)
+    return null
+  }
+
+  /**
+   * Extract a balanced JSON object (matching braces)
+   */
+  private extractBalancedJson(content: string): string | null {
+    let depth = 0
+    let inString = false
+    let escape = false
+    let start = -1
+
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i]
+
+      if (escape) {
+        escape = false
+        continue
       }
-    } catch {
-      // Continue to next strategy
+
+      if (char === '\\' && inString) {
+        escape = true
+        continue
+      }
+
+      if (char === '"' && !escape) {
+        inString = !inString
+        continue
+      }
+
+      if (!inString) {
+        if (char === '{') {
+          if (depth === 0) start = i
+          depth++
+        } else if (char === '}') {
+          depth--
+          if (depth === 0 && start !== -1) {
+            return content.substring(start, i + 1)
+          }
+        }
+      }
     }
 
-    // Strategy 4: Treat response as plain markdown content
-    console.log('[AI-Service] Could not parse JSON, treating response as plain content')
-    return this.createBlogFromPlainContent(trimmed, topic)
+    // If we have an unclosed object, return what we have
+    if (start !== -1 && depth > 0) {
+      // Try to close it
+      return content.substring(start) + '}'.repeat(depth)
+    }
+
+    return null
+  }
+
+  /**
+   * Try to fix common JSON parsing issues
+   */
+  private tryFixJson(jsonString: string): any | null {
+    try {
+      // Remove trailing commas
+      let fixed = jsonString.replace(/,\s*([}\]])/g, '$1')
+
+      // Try to close unclosed strings and objects
+      const openBraces = (fixed.match(/\{/g) || []).length
+      const closeBraces = (fixed.match(/\}/g) || []).length
+      if (openBraces > closeBraces) {
+        fixed += '}'.repeat(openBraces - closeBraces)
+      }
+
+      // Close unclosed strings (very basic)
+      const quotes = (fixed.match(/"/g) || []).length
+      if (quotes % 2 !== 0) {
+        fixed += '"'
+      }
+
+      return JSON.parse(fixed)
+    } catch {
+      return null
+    }
   }
 
   /**
@@ -414,10 +557,23 @@ Make the content authoritative, actionable, and valuable for construction profes
     const h2Match = content.match(/^##\s+(.+?)(?:\n|$)/m)
     if (h2Match) return h2Match[1].trim()
 
-    // Use first line if it looks like a title (short, no punctuation at end)
-    const firstLine = content.split('\n')[0]?.trim()
-    if (firstLine && firstLine.length < 100 && !firstLine.endsWith('.')) {
-      return firstLine
+    // Use first non-empty, non-code-fence line if it looks like a title
+    const lines = content.split('\n')
+    for (const line of lines) {
+      const trimmedLine = line.trim()
+      // Skip empty lines and code fence markers
+      if (!trimmedLine || trimmedLine.startsWith('```') || trimmedLine === '{') {
+        continue
+      }
+      // Skip lines that look like JSON
+      if (trimmedLine.startsWith('"') || trimmedLine.startsWith('{')) {
+        continue
+      }
+      // Use line if it looks like a title (short, no punctuation at end)
+      if (trimmedLine.length < 100 && !trimmedLine.endsWith('.')) {
+        return trimmedLine
+      }
+      break // Only check first few lines
     }
 
     return null
