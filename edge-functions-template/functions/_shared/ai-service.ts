@@ -220,10 +220,11 @@ export class AIService {
     }
   }
 
-  async generateSimpleContent(prompt: string, systemPrompt?: string, modelIdentifier?: string): Promise<string> {
+  async generateSimpleContent(prompt: string, systemPrompt?: string, modelIdentifier?: string, maxTokens?: number): Promise<string> {
     const request: AIRequest = {
       messages: [{ role: 'user', content: prompt }],
-      system: systemPrompt
+      system: systemPrompt,
+      max_tokens: maxTokens
     }
 
     const response = await this.generateContent(request, modelIdentifier)
@@ -234,22 +235,27 @@ export class AIService {
   async generateBlogContent(topic: string, modelIdentifier?: string): Promise<any> {
     const systemPrompt = `You are an expert content writer specializing in construction management and small business operations. Generate comprehensive, SEO-optimized blog content that provides practical value to construction professionals.
 
-Return your response as valid JSON in this exact format:
+IMPORTANT: Return your response as valid JSON. Do NOT wrap in code fences. Return ONLY the JSON object:
 {
   "title": "SEO-optimized title (60 chars max)",
-  "content": "Full article content in Markdown format (use ## for headings, **bold**, *italic*, - for lists, etc.)",
+  "content": "Full article content in Markdown format (800-1200 words)",
   "excerpt": "Brief summary (160 chars max)",
   "seo_description": "SEO meta description (160 chars max)",
-  "keywords": ["primary keyword", "secondary keyword", "tertiary keyword"],
-  "estimated_read_time": 8
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "estimated_read_time": 5
 }
 
-Make the content authoritative, actionable, and valuable for construction professionals. Include specific examples, best practices, and practical tips. Use proper Markdown formatting with headings (##, ###), bullet points (-), bold (**text**), and other Markdown elements.`
+Guidelines:
+- Content should be 800-1200 words (not longer to avoid truncation)
+- Use ## for headings, **bold**, - for lists
+- Make it practical and actionable for construction professionals
+- Include specific examples and best practices`
 
     const response = await this.generateSimpleContent(
       `Write a comprehensive blog post about: ${topic}`,
       systemPrompt,
-      modelIdentifier
+      modelIdentifier,
+      4000  // Increased token limit for blog content
     )
 
     // Parse and normalize the AI response with multiple fallback strategies
@@ -286,7 +292,14 @@ Make the content authoritative, actionable, and valuable for construction profes
       return this.normalizeBlogFields(extractedJson, topic)
     }
 
-    // Step 4: Treat as plain markdown content
+    // Step 4: Try to extract individual fields from truncated JSON
+    const extractedFields = this.extractFieldsFromTruncatedJson(content)
+    if (extractedFields) {
+      console.log('[AI-Service] Extracted fields from truncated JSON')
+      return this.normalizeBlogFields(extractedFields, topic)
+    }
+
+    // Step 5: Treat as plain markdown content
     console.log('[AI-Service] Could not parse JSON, treating response as plain content')
     return this.createBlogFromPlainContent(content, topic)
   }
@@ -457,6 +470,106 @@ Make the content authoritative, actionable, and valuable for construction profes
     } catch {
       return null
     }
+  }
+
+  /**
+   * Extract fields from truncated/malformed JSON using regex
+   * This is a last-resort parser for when JSON.parse fails
+   */
+  private extractFieldsFromTruncatedJson(content: string): any | null {
+    const result: any = {}
+
+    // Extract title (short string, usually complete)
+    const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/)
+    if (titleMatch) {
+      result.title = titleMatch[1]
+    }
+
+    // Extract excerpt (short string, usually complete)
+    const excerptMatch = content.match(/"excerpt"\s*:\s*"([^"]+)"/)
+    if (excerptMatch) {
+      result.excerpt = excerptMatch[1]
+    }
+
+    // Extract seo_description
+    const seoMatch = content.match(/"seo_description"\s*:\s*"([^"]+)"/)
+    if (seoMatch) {
+      result.seo_description = seoMatch[1]
+    }
+
+    // Extract keywords array
+    const keywordsMatch = content.match(/"keywords"\s*:\s*\[([^\]]+)\]/)
+    if (keywordsMatch) {
+      try {
+        result.keywords = JSON.parse(`[${keywordsMatch[1]}]`)
+      } catch {
+        // Try to extract individual keywords
+        const kwMatches = keywordsMatch[1].match(/"([^"]+)"/g)
+        if (kwMatches) {
+          result.keywords = kwMatches.map(k => k.replace(/"/g, ''))
+        }
+      }
+    }
+
+    // Extract estimated_read_time
+    const readTimeMatch = content.match(/"estimated_read_time"\s*:\s*(\d+)/)
+    if (readTimeMatch) {
+      result.estimated_read_time = parseInt(readTimeMatch[1])
+    }
+
+    // Extract content (the long markdown field - may be truncated)
+    // Find the start of the content field and extract everything until we hit another field or end
+    const contentStart = content.indexOf('"content"')
+    if (contentStart !== -1) {
+      // Find the opening quote after the colon
+      const colonPos = content.indexOf(':', contentStart)
+      if (colonPos !== -1) {
+        const quotePos = content.indexOf('"', colonPos)
+        if (quotePos !== -1) {
+          // Extract content, handling escaped characters
+          let contentValue = ''
+          let i = quotePos + 1
+          let escaped = false
+
+          while (i < content.length) {
+            const char = content[i]
+
+            if (escaped) {
+              // Handle escape sequences
+              switch (char) {
+                case 'n': contentValue += '\n'; break
+                case 't': contentValue += '\t'; break
+                case 'r': contentValue += '\r'; break
+                case '"': contentValue += '"'; break
+                case '\\': contentValue += '\\'; break
+                default: contentValue += char
+              }
+              escaped = false
+            } else if (char === '\\') {
+              escaped = true
+            } else if (char === '"') {
+              // End of string
+              break
+            } else {
+              contentValue += char
+            }
+            i++
+          }
+
+          if (contentValue.length > 0) {
+            result.content = contentValue
+          }
+        }
+      }
+    }
+
+    // Only return if we found at least title or content
+    if (result.title || result.content) {
+      console.log('[AI-Service] Extracted fields from truncated JSON:', Object.keys(result))
+      return result
+    }
+
+    return null
   }
 
   /**
