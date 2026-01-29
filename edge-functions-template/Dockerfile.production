@@ -72,11 +72,14 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl --fail http://localhost:8000/_health || exit 1
 
-# Start server with optimized permissions
+# Start server with all permissions required for edge functions
+# -A grants all permissions (net, read, write, env, etc.)
+# This is necessary because edge functions need to:
+# - Make outbound HTTP requests to external APIs (AI services, Supabase, etc.)
+# - Read function files dynamically
+# - Access various environment variables including API keys
 CMD ["deno", "run", \
-  "--allow-net=:8000,0.0.0.0:8000", \
-  "--allow-read=/app/functions", \
-  "--allow-env=SUPABASE_URL,SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,PORT,DENO_DIR,NODE_ENV", \
+  "-A", \
   "--no-prompt", \
   "server.ts"]
 
