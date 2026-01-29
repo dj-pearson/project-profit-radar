@@ -255,15 +255,23 @@ Make the content authoritative, actionable, and valuable for construction profes
     try {
       // Strip markdown code fences if present (AI sometimes wraps JSON in ```json ... ```)
       let jsonString = response.trim()
-      if (jsonString.startsWith('```json')) {
-        jsonString = jsonString.slice(7) // Remove ```json
-      } else if (jsonString.startsWith('```')) {
-        jsonString = jsonString.slice(3) // Remove ```
+
+      // Use regex to strip code fences more robustly
+      const codeBlockMatch = jsonString.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/);
+      if (codeBlockMatch) {
+        jsonString = codeBlockMatch[1].trim();
+      } else {
+        // Fallback: manual stripping
+        if (jsonString.startsWith('```json')) {
+          jsonString = jsonString.slice(7)
+        } else if (jsonString.startsWith('```')) {
+          jsonString = jsonString.slice(3)
+        }
+        if (jsonString.endsWith('```')) {
+          jsonString = jsonString.slice(0, -3)
+        }
+        jsonString = jsonString.trim()
       }
-      if (jsonString.endsWith('```')) {
-        jsonString = jsonString.slice(0, -3) // Remove trailing ```
-      }
-      jsonString = jsonString.trim()
 
       return JSON.parse(jsonString)
     } catch {
