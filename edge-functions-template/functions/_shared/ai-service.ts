@@ -234,8 +234,6 @@ export class AIService {
   async generateBlogContent(topic: string, modelIdentifier?: string): Promise<any> {
     const systemPrompt = `You are an expert content writer specializing in construction management and small business operations. Generate comprehensive, SEO-optimized blog content that provides practical value to construction professionals.
 
-IMPORTANT: Return ONLY raw JSON, do NOT wrap it in markdown code fences or backticks.
-
 Return your response as valid JSON in this exact format:
 {
   "title": "SEO-optimized title (60 chars max)",
@@ -254,39 +252,162 @@ Make the content authoritative, actionable, and valuable for construction profes
       modelIdentifier
     )
 
-    try {
-      // Strip markdown code fences if present (AI sometimes wraps JSON in ```json ... ```)
-      let jsonString = response.trim()
+    // Parse and normalize the AI response with multiple fallback strategies
+    return this.parseAndNormalizeBlogResponse(response, topic)
+  }
 
-      // Use regex to strip code fences more robustly
-      const codeBlockMatch = jsonString.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/);
-      if (codeBlockMatch) {
-        jsonString = codeBlockMatch[1].trim();
-      } else {
-        // Fallback: manual stripping
-        if (jsonString.startsWith('```json')) {
-          jsonString = jsonString.slice(7)
-        } else if (jsonString.startsWith('```')) {
-          jsonString = jsonString.slice(3)
-        }
-        if (jsonString.endsWith('```')) {
-          jsonString = jsonString.slice(0, -3)
-        }
-        jsonString = jsonString.trim()
-      }
+  /**
+   * Resilient parser that handles multiple AI output formats:
+   * - Raw JSON
+   * - JSON wrapped in markdown code fences
+   * - Plain text/markdown content
+   * - Partial or malformed JSON
+   */
+  private parseAndNormalizeBlogResponse(response: string, topic: string): any {
+    const trimmed = response.trim()
 
-      return JSON.parse(jsonString)
-    } catch {
-      // Fallback structure if JSON parsing fails
-      return {
-        title: topic,
-        content: response,
-        excerpt: response.substring(0, 160),
-        seo_description: `Learn about ${topic} for construction management`,
-        keywords: [topic.toLowerCase()],
-        estimated_read_time: Math.ceil(response.length / 200)
+    // Strategy 1: Try to extract JSON from code fences
+    const codeBlockPatterns = [
+      /^```json\s*\n?([\s\S]*?)\n?```$/,
+      /^```\s*\n?([\s\S]*?)\n?```$/,
+      /```json\s*\n?([\s\S]*?)\n?```/,
+      /```\s*\n?(\{[\s\S]*?\})\n?```/
+    ]
+
+    for (const pattern of codeBlockPatterns) {
+      const match = trimmed.match(pattern)
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[1].trim())
+          return this.normalizeBlogFields(parsed, topic)
+        } catch {
+          // Continue to next strategy
+        }
       }
     }
+
+    // Strategy 2: Try to parse as raw JSON
+    try {
+      // Check if it starts with { and ends with }
+      if (trimmed.startsWith('{') && trimmed.includes('}')) {
+        // Find the last closing brace
+        const lastBrace = trimmed.lastIndexOf('}')
+        const jsonCandidate = trimmed.substring(0, lastBrace + 1)
+        const parsed = JSON.parse(jsonCandidate)
+        return this.normalizeBlogFields(parsed, topic)
+      }
+    } catch {
+      // Continue to next strategy
+    }
+
+    // Strategy 3: Try to find JSON object anywhere in the response
+    try {
+      const jsonMatch = trimmed.match(/\{[\s\S]*"title"[\s\S]*"content"[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        return this.normalizeBlogFields(parsed, topic)
+      }
+    } catch {
+      // Continue to next strategy
+    }
+
+    // Strategy 4: Treat response as plain markdown content
+    console.log('[AI-Service] Could not parse JSON, treating response as plain content')
+    return this.createBlogFromPlainContent(trimmed, topic)
+  }
+
+  /**
+   * Normalize blog fields with defaults for any missing fields
+   */
+  private normalizeBlogFields(parsed: any, topic: string): any {
+    const content = parsed.content || parsed.body || ''
+    const title = parsed.title || this.extractTitleFromContent(content) || topic
+
+    return {
+      title: title,
+      content: content,
+      excerpt: parsed.excerpt || this.generateExcerpt(content),
+      seo_description: parsed.seo_description || parsed.meta_description || this.generateExcerpt(content),
+      keywords: this.normalizeKeywords(parsed.keywords, topic),
+      estimated_read_time: parsed.estimated_read_time || this.calculateReadTime(content)
+    }
+  }
+
+  /**
+   * Create blog structure from plain markdown/text content
+   */
+  private createBlogFromPlainContent(content: string, topic: string): any {
+    const title = this.extractTitleFromContent(content) || topic
+
+    return {
+      title: title,
+      content: content,
+      excerpt: this.generateExcerpt(content),
+      seo_description: this.generateExcerpt(content),
+      keywords: [topic.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim()],
+      estimated_read_time: this.calculateReadTime(content)
+    }
+  }
+
+  /**
+   * Extract title from markdown content (first # heading)
+   */
+  private extractTitleFromContent(content: string): string | null {
+    // Look for # heading at start
+    const h1Match = content.match(/^#\s+(.+?)(?:\n|$)/m)
+    if (h1Match) return h1Match[1].trim()
+
+    // Look for ## heading
+    const h2Match = content.match(/^##\s+(.+?)(?:\n|$)/m)
+    if (h2Match) return h2Match[1].trim()
+
+    // Use first line if it looks like a title (short, no punctuation at end)
+    const firstLine = content.split('\n')[0]?.trim()
+    if (firstLine && firstLine.length < 100 && !firstLine.endsWith('.')) {
+      return firstLine
+    }
+
+    return null
+  }
+
+  /**
+   * Generate excerpt from content (first 160 chars of actual text)
+   */
+  private generateExcerpt(content: string): string {
+    // Remove markdown formatting
+    let text = content
+      .replace(/^#+\s+.+$/gm, '') // Remove headings
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+      .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links
+      .replace(/^[-*]\s+/gm, '') // Remove list markers
+      .replace(/\n+/g, ' ') // Replace newlines with spaces
+      .trim()
+
+    // Get first 160 chars, ending at a word boundary
+    if (text.length <= 160) return text
+    const truncated = text.substring(0, 160)
+    const lastSpace = truncated.lastIndexOf(' ')
+    return (lastSpace > 100 ? truncated.substring(0, lastSpace) : truncated) + '...'
+  }
+
+  /**
+   * Normalize keywords array
+   */
+  private normalizeKeywords(keywords: any, topic: string): string[] {
+    if (Array.isArray(keywords) && keywords.length > 0) {
+      return keywords.map(k => String(k).toLowerCase().trim()).filter(k => k.length > 0)
+    }
+    // Generate default keywords from topic
+    return topic.toLowerCase().split(/\s+/).filter(w => w.length > 3).slice(0, 5)
+  }
+
+  /**
+   * Calculate estimated read time (average 200 words per minute)
+   */
+  private calculateReadTime(content: string): number {
+    const wordCount = content.split(/\s+/).length
+    return Math.max(1, Math.ceil(wordCount / 200))
   }
 }
 
