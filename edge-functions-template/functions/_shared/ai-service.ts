@@ -234,6 +234,8 @@ export class AIService {
   async generateBlogContent(topic: string, modelIdentifier?: string): Promise<any> {
     const systemPrompt = `You are an expert content writer specializing in construction management and small business operations. Generate comprehensive, SEO-optimized blog content that provides practical value to construction professionals.
 
+IMPORTANT: Return ONLY raw JSON, do NOT wrap it in markdown code fences or backticks.
+
 Return your response as valid JSON in this exact format:
 {
   "title": "SEO-optimized title (60 chars max)",
