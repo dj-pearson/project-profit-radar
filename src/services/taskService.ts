@@ -80,16 +80,11 @@ class TaskService {
     project_id?: string;
     search?: string;
   }): Promise<TaskWithDetails[]> {
-    // Fetch tasks with project relationship only (no FK for assigned_to/created_by to user_profiles)
+    // Fetch tasks - use * to get all available columns dynamically
+    // This avoids 400 errors if some columns don't exist in the database
     let query = supabase
       .from('tasks')
-      .select(`
-        id, name, description, status, priority, due_date, assigned_to, created_by,
-        start_date, end_date, estimated_hours, actual_hours, completion_percentage,
-        project_id, phase_id, dependencies, tags, category, created_at, updated_at,
-        company_id, site_id, is_milestone, is_critical_path, duration_days,
-        project:projects!project_id(id, name)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status.length > 0) {
@@ -102,6 +97,7 @@ class TaskService {
       query = query.eq('project_id', filters.project_id);
     }
     if (filters?.search) {
+      // Use 'or' filter for search - handle both 'name' and 'title' columns
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
     }
 
@@ -112,6 +108,25 @@ class TaskService {
 
     const tasks = (data || []) as any[];
     if (tasks.length === 0) return [];
+
+    // Fetch project names separately
+    const projectIds = Array.from(
+      new Set(tasks.map(t => t.project_id).filter((v): v is string => !!v))
+    );
+
+    const projectsMap = new Map<string, string>();
+    if (projectIds.length > 0) {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, name')
+        .in('id', projectIds);
+
+      if (projects) {
+        for (const project of projects) {
+          projectsMap.set(project.id, project.name);
+        }
+      }
+    }
 
     // Fetch user profiles separately since there's no FK relationship
     const userIds = Array.from(
@@ -138,12 +153,14 @@ class TaskService {
     }
 
     // Transform the data to match TaskWithDetails interface
+    // Handle both 'name' and 'title' column names for backwards compatibility
     return tasks.map((task: any) => ({
       ...task,
-      project_name: task.project?.name || null,
+      name: task.name || task.title || 'Untitled Task',
+      project_name: task.project_id ? projectsMap.get(task.project_id) || null : null,
       assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
       created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
-      tags: task.tags || [],
+      tags: Array.isArray(task.tags) ? task.tags : [],
     }));
   }
 
@@ -182,12 +199,14 @@ class TaskService {
       for (const u of profilesRes.data as any[]) profilesMap.set(u.id, u);
     }
 
+    const taskData = task as any;
     return {
-      ...task,
+      ...taskData,
+      name: taskData.name || taskData.title || 'Untitled Task',
       project_name: projectRes.data?.name || null,
       assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
       created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
-      tags: task.tags || [],
+      tags: Array.isArray(taskData.tags) ? taskData.tags : [],
     };
   }
 
@@ -199,26 +218,43 @@ class TaskService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    const { data: userProfile } = await supabase
+    // Fetch user profile - only select company_id which is guaranteed to exist
+    const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('company_id, site_id')
+      .select('company_id')
       .eq('id', user.id)
       .single();
 
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      throw new Error('Failed to load user profile');
+    }
+
     if (!userProfile) throw new Error('User profile not found');
-    if (!userProfile.site_id) throw new Error('User site_id not found');
+
+    // Build insert data with only essential fields
+    const insertData: Record<string, any> = {
+      name: taskData.name,
+      description: taskData.description || null,
+      project_id: taskData.project_id,
+      priority: taskData.priority || 'medium',
+      due_date: taskData.due_date || null,
+      estimated_hours: taskData.estimated_hours || null,
+      company_id: userProfile.company_id,
+      created_by: user.id,
+      assigned_to: taskData.assigned_to || user.id,
+      tags: taskData.tags || [],
+      status: 'open'
+    };
+
+    // Add category if provided
+    if (taskData.category) {
+      insertData.category = taskData.category;
+    }
 
     const { data, error } = await supabase
       .from('tasks')
-      .insert({
-        ...taskData,
-        company_id: userProfile.company_id,
-        site_id: userProfile.site_id,
-        created_by: user.id,
-        assigned_to: taskData.assigned_to || user.id,
-        tags: taskData.tags || [],
-        status: 'open'
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -383,12 +419,14 @@ class TaskService {
       for (const u of profilesRes.data as any[]) profilesMap.set(u.id, u);
     }
 
-    return tasks.map(task => ({
+    // Transform tasks with name/title compatibility
+    return tasks.map((task: any) => ({
       ...task,
+      name: task.name || task.title || 'Untitled Task',
       project_name: task.project_id ? projectsMap.get(task.project_id)?.name || null : null,
       assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
       created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
-      tags: task.tags || []
+      tags: Array.isArray(task.tags) ? task.tags : []
     }));
   }
 }
