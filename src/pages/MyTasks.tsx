@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useMyTasks, useTasksCreatedByMe, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOptimizedProjects } from '@/hooks/useOptimizedQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,8 @@ const MyTasks = () => {
   // Queries
   const assignedTasksQuery = useMyTasks(statusFilter.length > 0 ? statusFilter : undefined);
   const createdTasksQuery = useTasksCreatedByMe(statusFilter.length > 0 ? statusFilter : undefined);
+  const projectsQuery = useOptimizedProjects();
+  const projects = projectsQuery.data || [];
 
   // Mutations
   const createTask = useCreateTask();
@@ -225,12 +228,21 @@ const MyTasks = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+
+      // Validate required fields
+      if (!formData.project_id) {
+        alert('Please select a project');
+        return;
+      }
+
       createTask.mutate({
-        ...formData,
+        name: formData.name,
+        description: formData.description || undefined,
+        project_id: formData.project_id,
+        priority: formData.priority,
         assigned_to: formData.assigned_to || userProfile?.id || '',
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : undefined,
         due_date: formData.due_date || undefined,
-        project_id: formData.project_id || undefined
       });
       setCreateDialogOpen(false);
       setFormData({
@@ -264,7 +276,32 @@ const MyTasks = () => {
                 placeholder="Enter task title"
               />
             </div>
-            
+
+            <div>
+              <Label htmlFor="project_id">Project *</Label>
+              <Select
+                value={formData.project_id}
+                onValueChange={(value) => setFormData({ ...formData, project_id: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {projects.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  No projects available. Create a project first.
+                </p>
+              )}
+            </div>
+
             <div>
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -319,7 +356,7 @@ const MyTasks = () => {
               <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createTask.isPending}>
+              <Button type="submit" disabled={createTask.isPending || !formData.project_id || projects.length === 0}>
                 {createTask.isPending ? 'Creating...' : 'Create Task'}
               </Button>
             </div>
