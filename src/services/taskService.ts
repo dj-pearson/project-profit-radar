@@ -4,7 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface Task {
   id: string;
   company_id: string;
+  site_id: string;
   project_id: string;
+  phase_id?: string | null;
   assigned_to: string | null;
   created_by: string | null;
   name: string;
@@ -78,16 +80,15 @@ class TaskService {
     project_id?: string;
     search?: string;
   }): Promise<TaskWithDetails[]> {
-    // Use Supabase foreign key joins to fetch related data in a single query
+    // Fetch tasks with project relationship only (no FK for assigned_to/created_by to user_profiles)
     let query = supabase
       .from('tasks')
       .select(`
         id, name, description, status, priority, due_date, assigned_to, created_by,
         start_date, end_date, estimated_hours, actual_hours, completion_percentage,
-        project_id, parent_task_id, dependencies, tags, created_at, updated_at,
-        project:projects!project_id(id, name),
-        assigned_to_profile:user_profiles!assigned_to(id, first_name, last_name, email),
-        created_by_profile:user_profiles!created_by(id, first_name, last_name, email)
+        project_id, phase_id, dependencies, tags, category, created_at, updated_at,
+        company_id, site_id, is_milestone, is_critical_path, duration_days,
+        project:projects!project_id(id, name)
       `)
       .order('created_at', { ascending: false });
 
@@ -109,10 +110,39 @@ class TaskService {
       throw new Error(`Error fetching tasks: ${error.message}`);
     }
 
+    const tasks = (data || []) as any[];
+    if (tasks.length === 0) return [];
+
+    // Fetch user profiles separately since there's no FK relationship
+    const userIds = Array.from(
+      new Set(
+        tasks
+          .flatMap(t => [t.assigned_to, t.created_by])
+          .filter((v): v is string => !!v)
+      )
+    );
+
+    const profilesMap = new Map<string, { first_name: string; last_name: string; email: string }>();
+
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, email')
+        .in('id', userIds);
+
+      if (!profilesError && profiles) {
+        for (const profile of profiles) {
+          profilesMap.set(profile.id, profile);
+        }
+      }
+    }
+
     // Transform the data to match TaskWithDetails interface
-    return (data || []).map((task: any) => ({
+    return tasks.map((task: any) => ({
       ...task,
       project_name: task.project?.name || null,
+      assigned_to_profile: task.assigned_to ? profilesMap.get(task.assigned_to) || null : null,
+      created_by_profile: task.created_by ? profilesMap.get(task.created_by) || null : null,
       tags: task.tags || [],
     }));
   }
@@ -171,17 +201,19 @@ class TaskService {
 
     const { data: userProfile } = await supabase
       .from('user_profiles')
-      .select('company_id')
+      .select('company_id, site_id')
       .eq('id', user.id)
       .single();
 
     if (!userProfile) throw new Error('User profile not found');
+    if (!userProfile.site_id) throw new Error('User site_id not found');
 
     const { data, error } = await supabase
       .from('tasks')
       .insert({
         ...taskData,
         company_id: userProfile.company_id,
+        site_id: userProfile.site_id,
         created_by: user.id,
         assigned_to: taskData.assigned_to || user.id,
         tags: taskData.tags || [],
