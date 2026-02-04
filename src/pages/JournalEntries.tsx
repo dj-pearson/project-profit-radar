@@ -446,7 +446,7 @@ export default function JournalEntries() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </header>
 
       {/* Filters */}
       <section aria-label="Entry filters">

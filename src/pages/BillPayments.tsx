@@ -532,7 +532,7 @@ export default function BillPayments() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </header>
 
       {/* Metrics */}
       <section aria-label="Payment metrics" className="grid gap-4 md:grid-cols-3">
