@@ -80,13 +80,19 @@ export class AIServiceV2 {
     this.supabase = createClient(supabaseUrl, supabaseKey);
 
     // Load configuration from Coolify Team Shared Variables
+    const envDefaultModel = Deno.env.get('DEFAULT_AI_MODEL');
+    const envLightweightModel = Deno.env.get('LIGHTWEIGHT_AI_MODEL');
+    
     this.config = {
       defaultProvider: Deno.env.get('AI_DEFAULT_PROVIDER') || 'anthropic',
-      defaultModel: Deno.env.get('DEFAULT_AI_MODEL') || 'claude-sonnet-4-5-20250929',
-      lightweightModel: Deno.env.get('LIGHTWEIGHT_AI_MODEL') || 'claude-3-5-haiku-20241022',
+      defaultModel: envDefaultModel || 'claude-sonnet-4-5-20250929',
+      lightweightModel: envLightweightModel || 'claude-3-5-haiku-20241022',
       maxRetries: parseInt(Deno.env.get('AI_MAX_RETRIES') || '3'),
       timeoutMs: parseInt(Deno.env.get('AI_TIMEOUT_MS') || '30000'),
     };
+
+    console.log(`[AI-Service-V2] Config Source - DEFAULT_AI_MODEL: ${envDefaultModel ? 'ENV VAR ✓' : 'FALLBACK'} (${this.config.defaultModel})`);
+    console.log(`[AI-Service-V2] Config Source - LIGHTWEIGHT_AI_MODEL: ${envLightweightModel ? 'ENV VAR ✓' : 'FALLBACK'} (${this.config.lightweightModel})`);
   }
 
   /**
