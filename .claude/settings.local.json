@@ -10,7 +10,8 @@
       "Bash(src/integrations/supabase/types.ts)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
