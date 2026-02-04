@@ -214,6 +214,8 @@ export class AIServiceV2 {
       'Content-Type': 'application/json',
     };
 
+    console.log(`[AI-Service-V2] Building headers for ${model.model_name} with auth_method: ${model.auth_method}`);
+
     switch (model.auth_method) {
       case 'bearer':
         headers['Authorization'] = `Bearer ${apiKey}`;
@@ -227,6 +229,14 @@ export class AIServiceV2 {
       case 'api-key':
         headers['Authorization'] = `Bearer ${apiKey}`;
         break;
+      default:
+        // Default to x-api-key for Claude/Anthropic
+        if (model.provider.toLowerCase() === 'claude' || model.provider.toLowerCase() === 'anthropic') {
+          headers['x-api-key'] = apiKey;
+          headers['anthropic-version'] = '2023-06-01';
+        } else {
+          headers['Authorization'] = `Bearer ${apiKey}`;
+        }
     }
 
     return headers;
