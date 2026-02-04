@@ -97,8 +97,8 @@ Check what the running container actually sees:
 docker ps | grep gotrue
 
 # Inspect environment variables
-docker exec <gotrue-container-id> env | grep GOTRUE_SITE_URL
-docker exec <gotrue-container-id> env | grep SITE_URL
+docker exec supabase-auth-v0os0wg0gw4ko04ww80sgg08 env | grep GOTRUE_SITE_URL
+docker exec supabase-auth-v0os0wg0gw4ko04ww80sgg08 env | grep SITE_URL
 ```
 
 If it still shows the old value:
