@@ -99,6 +99,31 @@ END $$;
 -- Create index for task_type queries
 CREATE INDEX IF NOT EXISTS idx_ai_models_task_type ON ai_model_configurations(task_type, is_active);
 
+-- Remove duplicate model_name entries before adding unique constraint
+-- Keep only the most recently updated entry for each model_name
+DELETE FROM ai_model_configurations a
+USING ai_model_configurations b
+WHERE a.id < b.id
+AND a.model_name = b.model_name;
+
+-- Ensure unique constraint on model_name exists (check all possible constraint names)
+DO $$
+BEGIN
+  -- Check if ANY unique constraint exists on model_name column
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM pg_constraint c
+    JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+    JOIN pg_class t ON t.oid = c.conrelid
+    WHERE t.relname = 'ai_model_configurations'
+    AND a.attname = 'model_name'
+    AND c.contype = 'u'
+  ) THEN
+    ALTER TABLE ai_model_configurations
+    ADD CONSTRAINT ai_model_configurations_model_name_key UNIQUE (model_name);
+  END IF;
+END $$;
+
 -- Insert Claude Haiku models for lightweight tasks
 INSERT INTO ai_model_configurations (
   provider,
@@ -169,6 +194,12 @@ UPDATE ai_model_configurations
 SET task_type = 'standard'
 WHERE task_type IS NULL AND model_family NOT LIKE '%haiku%';
 
+-- Fix all Claude/Anthropic models to use x-api-key auth method
+UPDATE ai_model_configurations
+SET auth_method = 'x-api-key'
+WHERE (provider = 'claude' OR provider = 'anthropic')
+  AND auth_method != 'x-api-key';
+
 -- Create AI environment configuration table for tracking Coolify variables
 CREATE TABLE IF NOT EXISTS ai_environment_config (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -181,6 +212,30 @@ CREATE TABLE IF NOT EXISTS ai_environment_config (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Remove duplicate config_key entries before adding unique constraint
+DELETE FROM ai_environment_config a
+USING ai_environment_config b
+WHERE a.id < b.id
+AND a.config_key = b.config_key;
+
+-- Ensure unique constraint on config_key exists (check all possible constraint names)
+DO $$
+BEGIN
+  -- Check if ANY unique constraint exists on config_key column
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM pg_constraint c
+    JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+    JOIN pg_class t ON t.oid = c.conrelid
+    WHERE t.relname = 'ai_environment_config'
+    AND a.attname = 'config_key'
+    AND c.contype = 'u'
+  ) THEN
+    ALTER TABLE ai_environment_config
+    ADD CONSTRAINT ai_environment_config_config_key_key UNIQUE (config_key);
+  END IF;
+END $$;
 
 -- Insert standard Coolify variable mappings
 INSERT INTO ai_environment_config (config_key, description, coolify_variable, is_required, config_type, default_value) VALUES
@@ -204,25 +259,45 @@ ALTER TABLE ai_environment_config ENABLE ROW LEVEL SECURITY;
 -- Only root admins can view/modify AI environment config
 -- Only create policy if user_profiles table exists
 DO $$
+DECLARE
+  user_id_column TEXT;
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.tables 
     WHERE table_name = 'user_profiles'
   ) THEN
-    -- Drop existing policy if it exists
-    DROP POLICY IF EXISTS "Root admins can manage AI environment config" ON ai_environment_config;
+    -- Detect the correct user ID column name
+    SELECT column_name INTO user_id_column
+    FROM information_schema.columns
+    WHERE table_name = 'user_profiles'
+    AND column_name IN ('user_id', 'id', 'profile_id')
+    LIMIT 1;
     
-    -- Create the policy
-    CREATE POLICY "Root admins can manage AI environment config"
-    ON ai_environment_config
-    FOR ALL
-    USING (
-      EXISTS (
-        SELECT 1 FROM user_profiles
-        WHERE user_profiles.user_id = auth.uid()
-        AND user_profiles.role = 'root_admin'
-      )
-    );
+    IF user_id_column IS NOT NULL THEN
+      -- Drop existing policy if it exists
+      DROP POLICY IF EXISTS "Root admins can manage AI environment config" ON ai_environment_config;
+      
+      -- Create the policy with the correct column name
+      EXECUTE format('
+        CREATE POLICY "Root admins can manage AI environment config"
+        ON ai_environment_config
+        FOR ALL
+        USING (
+          EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE user_profiles.%I = auth.uid()
+            AND user_profiles.role = ''root_admin''
+          )
+        )', user_id_column);
+    ELSE
+      -- No matching column found, create permissive policy
+      DROP POLICY IF EXISTS "Allow all for ai_environment_config" ON ai_environment_config;
+      
+      CREATE POLICY "Allow all for ai_environment_config"
+      ON ai_environment_config
+      FOR ALL
+      USING (true);
+    END IF;
   ELSE
     -- If user_profiles doesn't exist, create a permissive policy that can be updated later
     DROP POLICY IF EXISTS "Allow all for ai_environment_config" ON ai_environment_config;
