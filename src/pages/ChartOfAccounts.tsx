@@ -372,7 +372,7 @@ export default function ChartOfAccounts() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </header>
 
       {/* Filters */}
       <section aria-label="Account filters">
