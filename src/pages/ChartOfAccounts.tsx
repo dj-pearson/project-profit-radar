@@ -153,12 +153,12 @@ export default function ChartOfAccounts() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Chart of Accounts">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <BookOpen className="h-8 w-8" />
+            <BookOpen className="h-8 w-8" aria-hidden="true" />
             Chart of Accounts
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -168,29 +168,32 @@ export default function ChartOfAccounts() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingAccount(null);
-              setFormData({
-                accountNumber: '',
-                accountName: '',
-                accountType: 'asset',
-                accountSubtype: 'bank',
-                description: '',
-                isActive: true,
-                allowManualEntries: true,
-              });
-            }}>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button
+              aria-label="Create new account"
+              onClick={() => {
+                setEditingAccount(null);
+                setFormData({
+                  accountNumber: '',
+                  accountName: '',
+                  accountType: 'asset',
+                  accountSubtype: 'bank',
+                  description: '',
+                  isActive: true,
+                  allowManualEntries: true,
+                });
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               New Account
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <form onSubmit={handleSubmit}>
+          <DialogContent className="max-w-2xl" aria-describedby="account-dialog-description">
+            <form onSubmit={handleSubmit} aria-label={editingAccount ? 'Edit account form' : 'Create account form'}>
               <DialogHeader>
                 <DialogTitle>
                   {editingAccount ? 'Edit Account' : 'Create New Account'}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="account-dialog-description">
                   {editingAccount
                     ? 'Update account details'
                     : 'Add a new account to your chart of accounts'}
@@ -200,7 +203,7 @@ export default function ChartOfAccounts() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="accountNumber">Account Number</Label>
+                    <Label htmlFor="accountNumber">Account Number *</Label>
                     <Input
                       id="accountNumber"
                       value={formData.accountNumber}
@@ -209,11 +212,12 @@ export default function ChartOfAccounts() {
                       }
                       placeholder="1000"
                       required
+                      aria-required="true"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="accountName">Account Name</Label>
+                    <Label htmlFor="accountName">Account Name *</Label>
                     <Input
                       id="accountName"
                       value={formData.accountName}
@@ -222,20 +226,21 @@ export default function ChartOfAccounts() {
                       }
                       placeholder="Cash"
                       required
+                      aria-required="true"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="accountType">Account Type</Label>
+                    <Label htmlFor="accountType">Account Type *</Label>
                     <Select
                       value={formData.accountType}
                       onValueChange={(value) =>
                         setFormData({ ...formData, accountType: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Select account type">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -261,7 +266,7 @@ export default function ChartOfAccounts() {
                         setFormData({ ...formData, accountSubtype: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Select account subtype">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -370,25 +375,27 @@ export default function ChartOfAccounts() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search accounts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
+      <section aria-label="Account filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4" role="search" aria-label="Search and filter accounts">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <Input
+                    placeholder="Search accounts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8"
+                    aria-label="Search accounts by number or name"
+                  />
+                </div>
               </div>
-            </div>
 
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-[200px]" aria-label="Filter accounts by type">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="asset">Assets</SelectItem>
@@ -402,80 +409,86 @@ export default function ChartOfAccounts() {
           </div>
         </CardContent>
       </Card>
+      </section>
 
       {/* Accounts Table */}
-      {isLoading ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">Loading accounts...</div>
-          </CardContent>
-        </Card>
-      ) : accountsByType && Object.keys(accountsByType).length > 0 ? (
-        <div className="space-y-6">
-          {Object.entries(accountsByType).map(([type, typeAccounts]: [string, any]) => (
-            <Card key={type}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{getAccountTypeLabel(type as any)}</span>
-                  <Badge className={getAccountTypeColor(type)}>
-                    {typeAccounts.length} accounts
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Number</TableHead>
-                      <TableHead>Account Name</TableHead>
-                      <TableHead>Subtype</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {typeAccounts.map((account: any) => (
-                      <TableRow key={account.id}>
-                        <TableCell className="font-mono">
-                          {account.account_number}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {account.account_name}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {account.account_subtype.replace(/_/g, ' ')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(account.current_balance || 0)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(account)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+      <section aria-label="Accounts list">
+        {isLoading ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8" role="status" aria-live="polite">Loading accounts...</div>
+            </CardContent>
+          </Card>
+        ) : accountsByType && Object.keys(accountsByType).length > 0 ? (
+          <div className="space-y-6">
+            {Object.entries(accountsByType).map(([type, typeAccounts]: [string, any]) => (
+              <Card key={type} role="region" aria-labelledby={`account-type-${type}`}>
+                <CardHeader>
+                  <CardTitle id={`account-type-${type}`} className="flex items-center justify-between">
+                    <span>{getAccountTypeLabel(type as any)}</span>
+                    <Badge className={getAccountTypeColor(type)} aria-label={`${typeAccounts.length} accounts`}>
+                      {typeAccounts.length} accounts
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table aria-label={`${getAccountTypeLabel(type as any)} accounts`}>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead scope="col">Number</TableHead>
+                        <TableHead scope="col">Account Name</TableHead>
+                        <TableHead scope="col">Subtype</TableHead>
+                        <TableHead scope="col" className="text-right">Balance</TableHead>
+                        <TableHead scope="col" className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8 text-muted-foreground">
-              No accounts found. Create your first account to get started.
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+                    </TableHeader>
+                    <TableBody>
+                      {typeAccounts.map((account: any) => (
+                        <TableRow key={account.id}>
+                          <TableCell className="font-mono">
+                            {account.account_number}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {account.account_name}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              <span className="sr-only">Subtype: </span>
+                              {account.account_subtype.replace(/_/g, ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            <span className="sr-only">Balance: </span>
+                            {formatCurrency(account.current_balance || 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(account)}
+                              aria-label={`Edit ${account.account_name}`}
+                            >
+                              <Edit className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8 text-muted-foreground" role="status">
+                No accounts found. Create your first account to get started.
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+    </main>
   );
 }

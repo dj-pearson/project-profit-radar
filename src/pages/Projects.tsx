@@ -407,9 +407,14 @@ const Projects = () => {
 
   const ProjectCard = ({ project }: { project: ProjectWithRelations }) => {
     const isSelected = selectedProjects.has(project.id);
+    const projectCardId = `project-${project.id}`;
 
     return (
-      <Card className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}>
+      <Card
+        className={`hover:shadow-md transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+        role="article"
+        aria-labelledby={`${projectCardId}-title`}
+      >
         <CardHeader className="pb-3 px-3 sm:px-6">
           <div className="flex items-start gap-3">
             {/* Checkbox */}
@@ -418,16 +423,17 @@ const Projects = () => {
                 checked={isSelected}
                 onCheckedChange={() => toggleProjectSelection(project.id)}
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Select project ${project.name}`}
               />
             </div>
 
             <div className="flex items-start justify-between gap-2 flex-1 min-w-0">
               <div className="space-y-1 min-w-0 flex-1">
-                <CardTitle className="text-base sm:text-lg leading-tight break-words">
+                <CardTitle id={`${projectCardId}-title`} className="text-base sm:text-lg leading-tight break-words">
                   {project.name}
                 </CardTitle>
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <User className="h-3 w-3 mr-1 shrink-0" />
+                  <User className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
                   <span className="break-words">{project.client_name}</span>
                 </div>
               </div>
@@ -435,31 +441,32 @@ const Projects = () => {
                 <Badge
                   variant={getStatusColor(project.status)}
                   className="text-xs px-1.5 py-0.5"
+                  aria-label={`Status: ${project.status.replace("_", " ")}`}
                 >
                   <span className="hidden sm:inline">
                     {project.status.replace("_", " ")}
                   </span>
-                  <span className="sm:hidden">
+                  <span className="sm:hidden" aria-hidden="true">
                     {project.status.charAt(0).toUpperCase()}
                   </span>
                 </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Project actions menu">
-                  <MoreHorizontal className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={`Actions for project ${project.name}`}>
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                   View Project Details
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                   Edit Project
                 </DropdownMenuItem>
                 {['admin', 'root_admin'].includes(userProfile?.role || '') && (
@@ -469,14 +476,14 @@ const Projects = () => {
                       setSaveTemplateDialogOpen(true);
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Save as Template
                   </DropdownMenuItem>
                 )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                       Delete Project
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
@@ -507,29 +514,37 @@ const Projects = () => {
         <CardContent className="space-y-3 px-3 sm:px-6">
         {project.site_address && (
           <div className="flex items-start text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
+            <MapPin className="h-3 w-3 mr-1 mt-0.5 shrink-0" aria-hidden="true" />
             <span className="break-words">{project.site_address}</span>
           </div>
         )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span>Progress</span>
+            <span id={`${projectCardId}-progress-label`}>Progress</span>
             <span
               className={getHealthColor(
                 project.completion_percentage,
                 project.status
               )}
+              aria-label={`${project.completion_percentage}% complete`}
             >
               {project.completion_percentage}%
             </span>
           </div>
-          <Progress value={project.completion_percentage} className="h-2" />
+          <Progress
+            value={project.completion_percentage}
+            className="h-2"
+            aria-labelledby={`${projectCardId}-progress-label`}
+            aria-valuenow={project.completion_percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
         </div>
 
         {project.budget && (
           <div className="flex items-center text-sm text-muted-foreground">
-            <DollarSign className="h-3 w-3 mr-1 shrink-0" />
+            <DollarSign className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="break-words">
               Budget: ${project.budget.toLocaleString()}
             </span>
@@ -538,12 +553,14 @@ const Projects = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-muted-foreground">
           <div className="flex items-center">
-            <Calendar className="h-3 w-3 mr-1 shrink-0" />
+            <Calendar className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="whitespace-nowrap">
+              <span className="sr-only">Start date: </span>
               {new Date(project.start_date).toLocaleDateString()}
             </span>
           </div>
           <div className="whitespace-nowrap">
+            <span className="sr-only">End date: </span>
             Due: {new Date(project.end_date).toLocaleDateString()}
           </div>
         </div>
@@ -582,32 +599,36 @@ const Projects = () => {
           onClick={handleCreateProject}
           size="sm"
           className="text-sm"
+          aria-label="Create new project"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           <span className="hidden sm:inline">New Project</span>
           <span className="sm:hidden">New</span>
-          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-muted rounded border border-border">
+          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-muted rounded border border-border" aria-hidden="true">
             Ctrl+N
           </kbd>
         </Button>
       </div>
       {/* Search and Filters */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-4 mb-6" role="search" aria-label="Filter projects">
         {/* Main Search Bar */}
         <div className="flex flex-col gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <label htmlFor="project-search" className="sr-only">Search projects</label>
             <Input
+              id="project-search"
               placeholder="Search projects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
+              aria-label="Search projects by name, client, address, or description"
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full">
-                <Filter className="h-4 w-4 mr-2" />
+              <SelectTrigger className="w-full" aria-label="Filter by project status">
+                <Filter className="h-4 w-4 mr-2" aria-hidden="true" />
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -631,8 +652,10 @@ const Projects = () => {
                 variant="outline"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className="flex-1 sm:flex-none"
+                aria-expanded={showAdvancedFilters}
+                aria-controls="advanced-filters"
               >
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                <SlidersHorizontal className="h-4 w-4 mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Advanced</span>
                 <span className="sm:hidden">Filters</span>
               </Button>
@@ -647,8 +670,9 @@ const Projects = () => {
                   variant="ghost"
                   onClick={clearAllFilters}
                   className="flex-1 sm:flex-none"
+                  aria-label="Clear all filters"
                 >
-                  <FilterX className="h-4 w-4 mr-2" />
+                  <FilterX className="h-4 w-4 mr-2" aria-hidden="true" />
                   <span className="hidden sm:inline">Clear</span>
                   <span className="sm:hidden">Clear</span>
                 </Button>
@@ -659,11 +683,11 @@ const Projects = () => {
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <Card className="p-3 sm:p-4">
+          <Card id="advanced-filters" className="p-3 sm:p-4" role="region" aria-label="Advanced filters">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {/* Budget Range */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Budget Range</Label>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium">Budget Range</legend>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Min ($)"
@@ -671,6 +695,7 @@ const Projects = () => {
                     value={budgetMin}
                     onChange={(e) => setBudgetMin(e.target.value)}
                     className="text-sm"
+                    aria-label="Minimum budget"
                   />
                   <Input
                     placeholder="Max ($)"
@@ -678,20 +703,22 @@ const Projects = () => {
                     value={budgetMax}
                     onChange={(e) => setBudgetMax(e.target.value)}
                     className="text-sm"
+                    aria-label="Maximum budget"
                   />
                 </div>
-              </div>
+              </fieldset>
 
               {/* Start Date Range */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Start Date From</Label>
+                <Label id="start-date-label" className="text-sm font-medium">Start Date From</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className="w-full justify-start text-left font-normal"
+                      aria-labelledby="start-date-label"
                     >
-                      <CalendarDays className="mr-2 h-4 w-4" />
+                      <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
                       {startDate ? format(startDate, "PPP") : "Pick start date"}
                     </Button>
                   </PopoverTrigger>
@@ -709,14 +736,15 @@ const Projects = () => {
 
               {/* End Date Range */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">End Date To</Label>
+                <Label id="end-date-label" className="text-sm font-medium">End Date To</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className="w-full justify-start text-left font-normal"
+                      aria-labelledby="end-date-label"
                     >
-                      <CalendarDays className="mr-2 h-4 w-4" />
+                      <CalendarDays className="mr-2 h-4 w-4" aria-hidden="true" />
                       {endDate ? format(endDate, "PPP") : "Pick end date"}
                     </Button>
                   </PopoverTrigger>
@@ -734,10 +762,11 @@ const Projects = () => {
 
               {/* Materials Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Materials</Label>
+                <Label htmlFor="materials-filter" className="text-sm font-medium">Materials</Label>
                 <div className="relative">
-                  <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Package className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
+                    id="materials-filter"
                     placeholder="Search materials..."
                     value={materialFilter}
                     onChange={(e) => setMaterialFilter(e.target.value)}
@@ -748,10 +777,11 @@ const Projects = () => {
 
               {/* Tasks Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Tasks</Label>
+                <Label htmlFor="tasks-filter" className="text-sm font-medium">Tasks</Label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
+                    id="tasks-filter"
                     placeholder="Search tasks..."
                     value={taskFilter}
                     onChange={(e) => setTaskFilter(e.target.value)}
@@ -762,10 +792,11 @@ const Projects = () => {
 
               {/* Documents Filter */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Documents</Label>
+                <Label htmlFor="documents-filter" className="text-sm font-medium">Documents</Label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
+                    id="documents-filter"
                     placeholder="Search documents..."
                     value={documentFilter}
                     onChange={(e) => setDocumentFilter(e.target.value)}
@@ -778,7 +809,7 @@ const Projects = () => {
         )}
 
         {/* Results Count */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-sm text-muted-foreground" role="status" aria-live="polite">
           <span>
             Showing {filteredProjects.length} of {projects.length} projects
           </span>
@@ -802,31 +833,31 @@ const Projects = () => {
       />
 
       {/* Projects Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-          <TabsTrigger value="active" className="text-xs sm:text-sm py-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Projects by status">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto" aria-label="Project status categories">
+          <TabsTrigger value="active" className="text-xs sm:text-sm py-2" aria-label={`Active projects: ${activeProjects.length}`}>
             <span className="hidden sm:inline">
               Active ({activeProjects.length})
             </span>
-            <span className="sm:hidden">Active</span>
+            <span className="sm:hidden" aria-hidden="true">Active</span>
           </TabsTrigger>
-          <TabsTrigger value="completed" className="text-xs sm:text-sm py-2">
+          <TabsTrigger value="completed" className="text-xs sm:text-sm py-2" aria-label={`Completed projects: ${completedProjects.length}`}>
             <span className="hidden sm:inline">
               Completed ({completedProjects.length})
             </span>
-            <span className="sm:hidden">Done</span>
+            <span className="sm:hidden" aria-hidden="true">Done</span>
           </TabsTrigger>
-          <TabsTrigger value="on_hold" className="text-xs sm:text-sm py-2">
+          <TabsTrigger value="on_hold" className="text-xs sm:text-sm py-2" aria-label={`On hold projects: ${onHoldProjects.length}`}>
             <span className="hidden sm:inline">
               On Hold ({onHoldProjects.length})
             </span>
-            <span className="sm:hidden">Hold</span>
+            <span className="sm:hidden" aria-hidden="true">Hold</span>
           </TabsTrigger>
-          <TabsTrigger value="planning" className="text-xs sm:text-sm py-2">
+          <TabsTrigger value="planning" className="text-xs sm:text-sm py-2" aria-label={`Planning projects: ${planningProjects.length}`}>
             <span className="hidden sm:inline">
               Planning ({planningProjects.length})
             </span>
-            <span className="sm:hidden">Plan</span>
+            <span className="sm:hidden" aria-hidden="true">Plan</span>
           </TabsTrigger>
         </TabsList>
 
@@ -834,7 +865,7 @@ const Projects = () => {
           {activeProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No active projects
                 </h3>
@@ -842,7 +873,7 @@ const Projects = () => {
                   Get started by creating your first project.
                 </p>
                 <Button onClick={() => handleCreateProject("empty_state_click")}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Project
                 </Button>
               </CardContent>
@@ -863,7 +894,7 @@ const Projects = () => {
           {completedProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No completed projects
                 </h3>
@@ -888,7 +919,7 @@ const Projects = () => {
           {onHoldProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No projects on hold
                 </h3>
@@ -913,7 +944,7 @@ const Projects = () => {
           {planningProjects.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-semibold mb-2">
                   No projects in planning
                 </h3>
@@ -937,12 +968,15 @@ const Projects = () => {
 
       {/* Edit Project Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="edit-dialog-description">
           <DialogHeader>
             <DialogTitle>Edit Project</DialogTitle>
+            <p id="edit-dialog-description" className="sr-only">
+              Edit project details including name, client, address, status, and dates.
+            </p>
           </DialogHeader>
           {editingProject && (
-            <form onSubmit={handleEditSubmit} className="space-y-4">
+            <form onSubmit={handleEditSubmit} className="space-y-4" aria-label="Edit project form">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Project Name</Label>
@@ -951,6 +985,7 @@ const Projects = () => {
                     name="name"
                     defaultValue={editingProject.name}
                     required
+                    aria-required="true"
                   />
                 </div>
                 <div>
@@ -960,6 +995,7 @@ const Projects = () => {
                     name="client_name"
                     defaultValue={editingProject.client_name}
                     required
+                    aria-required="true"
                   />
                 </div>
               </div>
@@ -1022,6 +1058,7 @@ const Projects = () => {
                     type="date"
                     defaultValue={editingProject.start_date}
                     required
+                    aria-required="true"
                   />
                 </div>
                 <div>
@@ -1032,6 +1069,7 @@ const Projects = () => {
                     type="date"
                     defaultValue={editingProject.end_date}
                     required
+                    aria-required="true"
                   />
                 </div>
               </div>

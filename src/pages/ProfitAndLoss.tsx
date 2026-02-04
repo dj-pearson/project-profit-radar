@@ -131,12 +131,12 @@ export default function ProfitAndLoss() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Profit and Loss Statement">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <TrendingUp className="h-8 w-8" />
+            <TrendingUp className="h-8 w-8" aria-hidden="true" />
             Profit & Loss
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -144,76 +144,81 @@ export default function ProfitAndLoss() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+        <div className="flex gap-2" role="toolbar" aria-label="Report actions">
+          <Button variant="outline" onClick={handlePrint} aria-label="Print profit and loss statement">
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             Print
           </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport} aria-label="Export profit and loss statement">
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-[200px]"
-              />
+      <section aria-label="Report filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select start date for report"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select end date for report"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-[200px]"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* P&L Statement */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Profit & Loss Statement</CardTitle>
-          <CardDescription>
-            {new Date(startDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}{' '}
-            to{' '}
-            {new Date(endDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading P&L statement...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">% of Revenue</TableHead>
-                </TableRow>
-              </TableHeader>
+      <section aria-label="Profit and loss report">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profit & Loss Statement</CardTitle>
+            <CardDescription>
+              {new Date(startDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}{' '}
+              to{' '}
+              {new Date(endDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8" role="status" aria-live="polite">Loading P&L statement...</div>
+            ) : (
+              <Table aria-label="Profit and Loss Statement">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Account</TableHead>
+                    <TableHead scope="col" className="text-right">Amount</TableHead>
+                    <TableHead scope="col" className="text-right">% of Revenue</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {/* REVENUE */}
                 <TableRow>
@@ -359,9 +364,11 @@ export default function ProfitAndLoss() {
           )}
         </CardContent>
       </Card>
+      </section>
 
       {/* Key Metrics Summary */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <section aria-label="Key financial metrics">
+        <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Gross Profit</CardTitle>
@@ -409,7 +416,8 @@ export default function ProfitAndLoss() {
             </p>
           </CardContent>
         </Card>
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }

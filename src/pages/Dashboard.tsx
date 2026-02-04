@@ -123,33 +123,37 @@ const Dashboard = () => {
   if (!hasData && userProfile) {
     return (
       <DashboardLayout title="Dashboard">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
+          <section className="lg:col-span-2" aria-label="Getting started">
             <EmptyDashboard
               userRole={userProfile.role}
               onAction={handleEmptyAction}
             />
-          </div>
-          <div className="lg:col-span-1">
+          </section>
+          <aside className="lg:col-span-1" aria-label="Subscription usage">
             <SubscriptionUsageWidget />
-          </div>
+          </aside>
         </div>
-        <OnboardingChecklist />
+        <section aria-label="Onboarding progress">
+          <OnboardingChecklist />
+        </section>
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout title="Dashboard">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
+        <section className="lg:col-span-2" aria-label="Dashboard overview">
           <RoleDashboard />
-        </div>
-        <div className="lg:col-span-1">
+        </section>
+        <aside className="lg:col-span-1" aria-label="Subscription usage">
           <SubscriptionUsageWidget />
-        </div>
+        </aside>
       </div>
-      <OnboardingChecklist />
+      <section aria-label="Onboarding progress">
+        <OnboardingChecklist />
+      </section>
     </DashboardLayout>
   );
 };

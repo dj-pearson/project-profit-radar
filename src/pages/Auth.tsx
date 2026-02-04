@@ -698,9 +698,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main
+      className="min-h-screen bg-background flex items-center justify-center p-4"
+      role="main"
+      aria-label="Authentication"
+    >
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
+        <header className="text-center mb-6">
           <Link to="/" className="inline-block">
             <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
               Build Desk
@@ -709,12 +713,12 @@ const Auth = () => {
           <p className="text-muted-foreground mt-2">
             Construction Management Platform
           </p>
-        </div>
+        </header>
 
         {/* Plan Context Banner */}
         {pendingPlan && (
-          <Alert className="mb-4 border-construction-blue bg-construction-blue/5">
-            <Shield className="h-4 w-4 text-construction-blue" />
+          <Alert className="mb-4 border-construction-blue bg-construction-blue/5" role="status">
+            <Shield className="h-4 w-4 text-construction-blue" aria-hidden="true" />
             <AlertDescription className="text-construction-dark">
               <strong>Signing up for {pendingPlan.tier.charAt(0).toUpperCase() + pendingPlan.tier.slice(1)} Plan</strong>
               <p className="text-sm mt-1">
@@ -724,14 +728,14 @@ const Auth = () => {
           </Alert>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            <TabsTrigger value="forgot">Reset Password</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" aria-label="Authentication options">
+          <TabsList className="grid w-full grid-cols-3" aria-label="Choose authentication method">
+            <TabsTrigger value="signin" aria-controls="signin-panel">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" aria-controls="signup-panel">Sign Up</TabsTrigger>
+            <TabsTrigger value="forgot" aria-controls="forgot-panel">Reset Password</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="signin">
+          <TabsContent value="signin" id="signin-panel">
             <Card>
               <CardHeader>
                 <CardTitle>Welcome Back</CardTitle>
@@ -740,7 +744,7 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4" aria-label="Sign in form">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -749,6 +753,8 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoComplete="email"
+                      aria-required="true"
                     />
                   </div>
                   <div className="space-y-2">
@@ -759,9 +765,11 @@ const Auth = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      autoComplete="current-password"
+                      aria-required="true"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
                     {loading ? "Signing In..." : "Sign In"}
                   </Button>
                   
@@ -833,7 +841,7 @@ const Auth = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="signup">
+          <TabsContent value="signup" id="signup-panel">
             <Card>
               <CardHeader>
                 <CardTitle>Create Account</CardTitle>
@@ -843,12 +851,12 @@ const Auth = () => {
               </CardHeader>
               <CardContent>
                 {emailSent && emailSentType === 'signup' ? (
-                  <div className="text-center space-y-4">
+                  <div className="text-center space-y-4" role="status" aria-live="polite">
                     {otpFlowState === 'verified' ? (
                       <>
                         <div className="flex justify-center">
                           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
+                            <CheckCircle className="w-8 h-8 text-green-600" aria-hidden="true" />
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -862,7 +870,7 @@ const Auth = () => {
                       <>
                         <div className="flex justify-center">
                           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                            <KeyRound className="w-8 h-8 text-orange-600" />
+                            <KeyRound className="w-8 h-8 text-orange-600" aria-hidden="true" />
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -911,10 +919,11 @@ const Auth = () => {
                             className="p-0 h-auto"
                             onClick={handleResendSignupOTP}
                             disabled={loading || otpResendCooldown > 0}
+                            aria-label={otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown} seconds` : "Resend verification code"}
                           >
                             {otpResendCooldown > 0 ? (
                               <span className="flex items-center gap-1">
-                                <RefreshCw className="h-3 w-3" />
+                                <RefreshCw className="h-3 w-3" aria-hidden="true" />
                                 Resend in {otpResendCooldown}s
                               </span>
                             ) : (
@@ -924,7 +933,7 @@ const Auth = () => {
                         </div>
 
                         <Alert>
-                          <AlertCircle className="h-4 w-4" />
+                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
                           <AlertDescription>
                             Check your spam folder if you don't see the email.
                           </AlertDescription>
@@ -946,10 +955,10 @@ const Auth = () => {
                     )}
                   </div>
                 ) : (
-                  <form onSubmit={handleSignUp} className="space-y-4">
+                  <form onSubmit={handleSignUp} className="space-y-4" aria-label="Create account form">
                     {/* Email Verification Notice */}
-                    <Alert className="border-blue-500 bg-blue-50">
-                      <Mail className="h-4 w-4 text-blue-600" />
+                    <Alert className="border-blue-500 bg-blue-50" role="note">
+                      <Mail className="h-4 w-4 text-blue-600" aria-hidden="true" />
                       <AlertDescription className="text-blue-900">
                         <strong>Email Verification Required</strong>
                         <p className="text-sm mt-1">
@@ -966,6 +975,8 @@ const Auth = () => {
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
                           required
+                          autoComplete="given-name"
+                          aria-required="true"
                         />
                       </div>
                       <div className="space-y-2">
@@ -975,6 +986,8 @@ const Auth = () => {
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
                           required
+                          autoComplete="family-name"
+                          aria-required="true"
                         />
                       </div>
                     </div>
@@ -986,6 +999,8 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        autoComplete="email"
+                        aria-required="true"
                       />
                     </div>
                     <div className="space-y-2">
@@ -1000,11 +1015,15 @@ const Auth = () => {
                         }}
                         required
                         minLength={8}
+                        autoComplete="new-password"
+                        aria-required="true"
+                        aria-describedby={showPasswordRequirements ? "password-requirements" : undefined}
+                        aria-invalid={!passwordValidation.isValid && password.length > 0}
                       />
                       {showPasswordRequirements && (
-                        <div className="space-y-2 p-3 bg-muted rounded-md">
+                        <div id="password-requirements" className="space-y-2 p-3 bg-muted rounded-md" role="status" aria-live="polite">
                           <p className="text-sm font-medium">Password Requirements:</p>
-                          <div className="space-y-1">
+                          <ul className="space-y-1" aria-label="Password requirements checklist">
                             {[
                               { key: 'length', text: 'At least 8 characters' },
                               { key: 'lowercase', text: 'One lowercase letter' },
@@ -1012,23 +1031,24 @@ const Auth = () => {
                               { key: 'number', text: 'One number' },
                               { key: 'special', text: 'One special character' }
                             ].map(req => (
-                              <div key={req.key} className="flex items-center gap-2 text-sm">
+                              <li key={req.key} className="flex items-center gap-2 text-sm">
                                 {getPasswordRequirementStatus(req.key) ? (
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                  <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />
                                 ) : (
-                                  <XCircle className="w-4 h-4 text-red-500" />
+                                  <XCircle className="w-4 h-4 text-red-500" aria-hidden="true" />
                                 )}
                                 <span className={getPasswordRequirementStatus(req.key) ? 'text-green-600' : 'text-red-500'}>
                                   {req.text}
+                                  <span className="sr-only">{getPasswordRequirementStatus(req.key) ? ' - met' : ' - not met'}</span>
                                 </span>
-                              </div>
+                              </li>
                             ))}
-                          </div>
+                          </ul>
                         </div>
                       )}
                     </div>
-                    <Alert className="mb-4">
-                      <Shield className="h-4 w-4" />
+                    <Alert className="mb-4" role="note">
+                      <Shield className="h-4 w-4" aria-hidden="true" />
                       <AlertDescription>
                         After creating your account, you'll receive a 6-digit verification code.
                         Enter the code to verify your email and activate your account.
@@ -1102,7 +1122,7 @@ const Auth = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="forgot">
+          <TabsContent value="forgot" id="forgot-panel">
             <Card>
               <CardHeader>
                 <CardTitle>Reset Password</CardTitle>
@@ -1116,12 +1136,12 @@ const Auth = () => {
               </CardHeader>
               <CardContent>
                 {emailSent && emailSentType === 'reset' ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4" role="status" aria-live="polite">
                     {otpFlowState === 'verified' ? (
                       <div className="text-center space-y-4">
                         <div className="flex justify-center">
                           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
+                            <CheckCircle className="w-8 h-8 text-green-600" aria-hidden="true" />
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -1132,11 +1152,11 @@ const Auth = () => {
                         </div>
                       </div>
                     ) : otpFlowState === 'setting_password' ? (
-                      <form onSubmit={handleSetNewPassword} className="space-y-4">
+                      <form onSubmit={handleSetNewPassword} className="space-y-4" aria-label="Set new password form">
                         <div className="text-center mb-4">
                           <div className="flex justify-center mb-4">
                             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                              <CheckCircle className="w-6 h-6 text-green-600" />
+                              <CheckCircle className="w-6 h-6 text-green-600" aria-hidden="true" />
                             </div>
                           </div>
                           <p className="text-sm text-green-600 font-medium">Code verified! Create your new password.</p>
@@ -1154,11 +1174,15 @@ const Auth = () => {
                             }}
                             required
                             minLength={8}
+                            autoComplete="new-password"
+                            aria-required="true"
+                            aria-describedby={newPassword.length > 0 ? "new-password-requirements" : undefined}
+                            aria-invalid={!newPasswordValidation.isValid && newPassword.length > 0}
                           />
                           {newPassword.length > 0 && (
-                            <div className="space-y-2 p-3 bg-muted rounded-md">
+                            <div id="new-password-requirements" className="space-y-2 p-3 bg-muted rounded-md" role="status" aria-live="polite">
                               <p className="text-sm font-medium">Password Requirements:</p>
-                              <div className="space-y-1">
+                              <ul className="space-y-1" aria-label="Password requirements checklist">
                                 {[
                                   { key: 'length', text: 'At least 8 characters', valid: newPassword.length >= 8 },
                                   { key: 'lowercase', text: 'One lowercase letter', valid: /[a-z]/.test(newPassword) },
@@ -1166,18 +1190,19 @@ const Auth = () => {
                                   { key: 'number', text: 'One number', valid: /\d/.test(newPassword) },
                                   { key: 'special', text: 'One special character', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) }
                                 ].map(req => (
-                                  <div key={req.key} className="flex items-center gap-2 text-sm">
+                                  <li key={req.key} className="flex items-center gap-2 text-sm">
                                     {req.valid ? (
-                                      <CheckCircle className="w-4 h-4 text-green-600" />
+                                      <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />
                                     ) : (
-                                      <XCircle className="w-4 h-4 text-red-500" />
+                                      <XCircle className="w-4 h-4 text-red-500" aria-hidden="true" />
                                     )}
                                     <span className={req.valid ? 'text-green-600' : 'text-red-500'}>
                                       {req.text}
+                                      <span className="sr-only">{req.valid ? ' - met' : ' - not met'}</span>
                                     </span>
-                                  </div>
+                                  </li>
                                 ))}
-                              </div>
+                              </ul>
                             </div>
                           )}
                         </div>
@@ -1191,10 +1216,14 @@ const Auth = () => {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                             minLength={8}
+                            autoComplete="new-password"
+                            aria-required="true"
+                            aria-invalid={confirmPassword.length > 0 && newPassword !== confirmPassword}
+                            aria-describedby={confirmPassword.length > 0 && newPassword !== confirmPassword ? "password-match-error" : undefined}
                           />
                           {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-                            <p className="text-sm text-red-500 flex items-center gap-1">
-                              <XCircle className="w-4 h-4" />
+                            <p id="password-match-error" className="text-sm text-red-500 flex items-center gap-1" role="alert">
+                              <XCircle className="w-4 h-4" aria-hidden="true" />
                               Passwords don't match
                             </p>
                           )}
@@ -1212,7 +1241,7 @@ const Auth = () => {
                       <div className="text-center space-y-4">
                         <div className="flex justify-center">
                           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                            <KeyRound className="w-8 h-8 text-orange-600" />
+                            <KeyRound className="w-8 h-8 text-orange-600" aria-hidden="true" />
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -1231,6 +1260,7 @@ const Auth = () => {
                             onChange={setOtpCode}
                             maxLength={6}
                             disabled={loading || otpFlowState === 'submitted'}
+                            aria-label="Enter 6-digit verification code"
                           >
                             <InputOTPGroup>
                               <InputOTPSlot index={0} />
@@ -1250,6 +1280,7 @@ const Auth = () => {
                           className="w-full"
                           onClick={handleVerifyResetOTP}
                           disabled={loading || otpCode.length !== 6}
+                          aria-busy={loading}
                         >
                           {loading ? "Verifying..." : "Verify Code"}
                         </Button>
@@ -1261,10 +1292,11 @@ const Auth = () => {
                             className="p-0 h-auto"
                             onClick={handleResendResetOTP}
                             disabled={loading || otpResendCooldown > 0}
+                            aria-label={otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown} seconds` : "Resend verification code"}
                           >
                             {otpResendCooldown > 0 ? (
                               <span className="flex items-center gap-1">
-                                <RefreshCw className="h-3 w-3" />
+                                <RefreshCw className="h-3 w-3" aria-hidden="true" />
                                 Resend in {otpResendCooldown}s
                               </span>
                             ) : (
@@ -1274,7 +1306,7 @@ const Auth = () => {
                         </div>
 
                         <Alert>
-                          <AlertCircle className="h-4 w-4" />
+                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
                           <AlertDescription>
                             Check your spam folder if you don't see the email.
                           </AlertDescription>
@@ -1297,9 +1329,9 @@ const Auth = () => {
                     )}
                   </div>
                 ) : (
-                  <form onSubmit={handleForgotPassword} className="space-y-4">
-                    <Alert className="mb-4">
-                      <Clock className="h-4 w-4" />
+                  <form onSubmit={handleForgotPassword} className="space-y-4" aria-label="Reset password form">
+                    <Alert className="mb-4" role="note">
+                      <Clock className="h-4 w-4" aria-hidden="true" />
                       <AlertDescription>
                         You'll receive a 6-digit verification code to reset your password. The code expires after 10 minutes.
                       </AlertDescription>
@@ -1312,9 +1344,11 @@ const Auth = () => {
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
                         required
+                        autoComplete="email"
+                        aria-required="true"
                       />
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
                       {loading ? "Sending Reset Code..." : "Send Reset Code"}
                     </Button>
                     <div className="text-center">
@@ -1333,16 +1367,16 @@ const Auth = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="text-center mt-6">
+        <nav className="text-center mt-6" aria-label="Return navigation">
           <Link
             to="/"
             className="text-sm text-muted-foreground hover:text-construction-blue transition-colors"
           >
             ← Back to Homepage
           </Link>
-        </div>
+        </nav>
       </div>
-    </div>
+    </main>
   );
 };
 

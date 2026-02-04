@@ -211,9 +211,9 @@ const DailyReports = () => {
   if (loading || loadingReports) {
     return (
       <DashboardLayout title="Daily Reports">
-        <div className="flex items-center justify-center h-96">
+        <div className="flex items-center justify-center h-96" role="status" aria-live="polite" aria-label="Loading daily reports">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4" aria-hidden="true"></div>
             <p className="text-muted-foreground">Loading daily reports...</p>
           </div>
         </div>
@@ -223,41 +223,42 @@ const DailyReports = () => {
 
   return (
     <DashboardLayout title="Daily Reports">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <main className="space-y-6" role="main" aria-label="Daily Reports Management">
+        <header className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Daily Project Reports</h2>
             <p className="text-sm text-muted-foreground">Track daily progress and activities</p>
           </div>
           <div className="flex space-x-2">
             {isMobile && (
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => setShowMobileReport(true)}
+                aria-label="Open mobile report form"
               >
-                <Smartphone className="h-4 w-4 mr-2" />
+                <Smartphone className="h-4 w-4 mr-2" aria-hidden="true" />
                 Mobile Report
               </Button>
             )}
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                <Button aria-label="Create new daily report">
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Report
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="create-report-description">
                 <DialogHeader>
                   <DialogTitle>Create Daily Report</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="create-report-description">
                     Record daily progress, crew activity, and any issues for the project.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <form className="space-y-4" aria-label="Create daily report form" onSubmit={(e) => { e.preventDefault(); handleCreateReport(); }}>
                   <div>
                     <Label htmlFor="project">Project *</Label>
-                    <Select value={newReport.project_id} onValueChange={(value) => setNewReport({...newReport, project_id: value})}>
-                      <SelectTrigger>
+                    <Select value={newReport.project_id} onValueChange={(value) => setNewReport({...newReport, project_id: value})} required>
+                      <SelectTrigger aria-required="true" aria-label="Select project">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -277,6 +278,8 @@ const DailyReports = () => {
                       placeholder="Describe the work completed today..."
                       value={newReport.work_performed}
                       onChange={(e) => setNewReport({...newReport, work_performed: e.target.value})}
+                      required
+                      aria-required="true"
                     />
                   </div>
 
@@ -343,13 +346,13 @@ const DailyReports = () => {
                     </div>
 
                     {/* Photo Upload Section */}
-                    <div>
-                      <Label>Photos</Label>
-                      <div className="space-y-4">
+                    <fieldset>
+                      <legend className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Photos</legend>
+                      <div className="space-y-4 mt-2">
                         <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
                           <div className="text-center">
-                            <Camera className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground mb-2">
+                            <Camera className="h-8 w-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
+                            <p className="text-sm text-muted-foreground mb-2" id="photo-upload-hint">
                               Add photos to document progress
                             </p>
                             <input
@@ -362,26 +365,27 @@ const DailyReports = () => {
                               }}
                               className="hidden"
                               id="photo-upload"
+                              aria-describedby="photo-upload-hint"
                             />
                             <label htmlFor="photo-upload">
                               <Button variant="outline" size="sm" asChild>
                                 <span>
-                                  <Upload className="h-4 w-4 mr-2" />
+                                  <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
                                   Select Photos
                                 </span>
                               </Button>
                             </label>
                           </div>
                         </div>
-                        
+
                         {/* Photo Preview */}
                         {selectedPhotos.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-3 gap-2" role="list" aria-label="Selected photos">
                             {selectedPhotos.map((photo, index) => (
-                              <div key={index} className="relative">
+                              <div key={index} className="relative" role="listitem">
                                 <img
                                   src={URL.createObjectURL(photo)}
-                                  alt={`Preview ${index + 1}`}
+                                  alt={`Selected photo ${index + 1} of ${selectedPhotos.length}`}
                                   className="w-full h-20 object-cover rounded border"
                                 />
                                 <Button
@@ -391,39 +395,42 @@ const DailyReports = () => {
                                   onClick={() => {
                                     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
                                   }}
+                                  aria-label={`Remove photo ${index + 1}`}
+                                  type="button"
                                 >
-                                  <X className="h-3 w-3" />
+                                  <X className="h-3 w-3" aria-hidden="true" />
                                 </Button>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                    </div>
+                    </fieldset>
 
                     <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateReport}>
+                    <Button type="submit">
                       Create Report
                     </Button>
                   </div>
-                </div>
+                </form>
               </DialogContent>
               </Dialog>
           </div>
         </div>
         {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <Label htmlFor="project-filter">Filter by Project</Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All projects" />
-                  </SelectTrigger>
+        <section aria-label="Report filters">
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4" role="search" aria-label="Filter daily reports">
+                <div className="flex-1">
+                  <Label htmlFor="project-filter">Filter by Project</Label>
+                  <Select value={selectedProject} onValueChange={setSelectedProject}>
+                    <SelectTrigger aria-label="Select project to filter reports">
+                      <SelectValue placeholder="All projects" />
+                    </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All projects</SelectItem>
                     {projects.map((project) => (
@@ -437,44 +444,48 @@ const DailyReports = () => {
             </div>
           </CardContent>
         </Card>
+        </section>
 
         {/* Reports List */}
-        <div className="space-y-6">
+        <section aria-label="Daily reports list" className="space-y-6">
           {filteredReports.length === 0 ? (
-            <Card>
+            <Card role="region" aria-label="No reports found">
               <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Daily Reports</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedProject ? 'No reports found for selected project' : 'No reports have been created yet'}
                 </p>
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                <Button onClick={() => setIsCreateDialogOpen(true)} aria-label="Create your first daily report">
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create First Report
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6">
-              {filteredReports.map((report) => (
-                <Card key={report.id}>
+            <div className="grid gap-6" role="feed" aria-label="Daily reports">
+              {filteredReports.map((report) => {
+                const reportId = `report-${report.id}`;
+                return (
+                <Card key={report.id} role="article" aria-labelledby={`${reportId}-title`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="flex items-center space-x-2">
-                          <Calendar className="h-5 w-5 text-construction-blue" />
+                        <CardTitle id={`${reportId}-title`} className="flex items-center space-x-2">
+                          <Calendar className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                           <span>{new Date(report.date).toLocaleDateString()}</span>
+                          <span className="sr-only">for {report.projects?.name}</span>
                         </CardTitle>
                         <CardDescription>{report.projects?.name}</CardDescription>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline">
-                          <Users className="h-3 w-3 mr-1" />
+                        <Badge variant="outline" aria-label={`${report.crew_count} crew members`}>
+                          <Users className="h-3 w-3 mr-1" aria-hidden="true" />
                           {report.crew_count} crew
                         </Badge>
                         {report.safety_incidents && (
-                          <Badge variant="destructive">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
+                          <Badge variant="destructive" aria-label="Safety issue reported">
+                            <AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />
                             Safety Issue
                           </Badge>
                         )}
@@ -491,17 +502,17 @@ const DailyReports = () => {
                       {report.weather_conditions && (
                         <div>
                           <h4 className="font-medium mb-1 flex items-center">
-                            <Cloud className="h-4 w-4 mr-1" />
+                            <Cloud className="h-4 w-4 mr-1" aria-hidden="true" />
                             Weather
                           </h4>
                           <p className="text-sm text-muted-foreground">{report.weather_conditions}</p>
                         </div>
                       )}
-                      
+
                       {report.materials_delivered && (
                         <div>
                           <h4 className="font-medium mb-1 flex items-center">
-                            <Truck className="h-4 w-4 mr-1" />
+                            <Truck className="h-4 w-4 mr-1" aria-hidden="true" />
                             Materials Delivered
                           </h4>
                           <p className="text-sm text-muted-foreground">{report.materials_delivered}</p>
@@ -534,18 +545,24 @@ const DailyReports = () => {
                     {report.photos && report.photos.length > 0 && (
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <Camera className="h-4 w-4 mr-1" />
+                          <Camera className="h-4 w-4 mr-1" aria-hidden="true" />
                           Photos ({report.photos.length})
                         </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2" role="list" aria-label={`${report.photos.length} photos`}>
                           {report.photos.map((photo, index) => (
-                            <div key={index} className="relative group">
-                              <img
-                                src={photo}
-                                alt={`Report photo ${index + 1}`}
-                                className="w-full h-20 object-cover rounded border hover:opacity-75 transition-opacity cursor-pointer"
+                            <div key={index} className="relative group" role="listitem">
+                              <button
+                                type="button"
                                 onClick={() => window.open(photo, '_blank')}
-                              />
+                                className="w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                                aria-label={`View photo ${index + 1} of ${report.photos.length} in full size`}
+                              >
+                                <img
+                                  src={photo}
+                                  alt={`Report photo ${index + 1} of ${report.photos.length}`}
+                                  className="w-full h-20 object-cover rounded border hover:opacity-75 transition-opacity cursor-pointer"
+                                />
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -553,25 +570,32 @@ const DailyReports = () => {
                     )}
                   </CardContent>
                 </Card>
-              ))}
+              );
+              })}
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
 
       {/* Mobile Report Modal */}
       {showMobileReport && (
-        <div className="fixed inset-0 bg-background z-50 flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b shrink-0">
-            <h2 className="text-xl font-semibold">Mobile Daily Report</h2>
-            <Button 
-              variant="ghost" 
+        <div
+          className="fixed inset-0 bg-background z-50 flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-report-title"
+        >
+          <header className="flex items-center justify-between p-4 border-b shrink-0">
+            <h2 id="mobile-report-title" className="text-xl font-semibold">Mobile Daily Report</h2>
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => setShowMobileReport(false)}
+              aria-label="Close mobile report form"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </Button>
-          </div>
+          </header>
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="p-4">
               <MobileDailyReport

@@ -195,12 +195,12 @@ const Setup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4" role="main" aria-label="Company Setup">
       <div className="w-full max-w-4xl">
-        <div className="text-center mb-6 sm:mb-8">
+        <header className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-construction-blue">Welcome to Build Desk</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-2">Let's set up your company to get started</p>
-        </div>
+        </header>
 
         <Card>
           <CardHeader>
@@ -210,7 +210,7 @@ const Setup = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCompanySetup} className="space-y-6">
+            <form onSubmit={handleCompanySetup} className="space-y-6" aria-label="Company setup form">
               <div className={mobileFilterClasses.container}>
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Company Name *</Label>
@@ -220,12 +220,13 @@ const Setup = () => {
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="ABC Construction LLC"
                     required
+                    aria-required="true"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="industryType">Industry Type *</Label>
                   <Select value={industryType} onValueChange={setIndustryType} required>
-                    <SelectTrigger>
+                    <SelectTrigger aria-required="true" aria-label="Select industry type">
                       <SelectValue placeholder="Select industry type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -252,7 +253,7 @@ const Setup = () => {
                 <div className="space-y-2">
                   <Label htmlFor="companySize">Company Size</Label>
                   <Select value={companySize} onValueChange={setCompanySize}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Select company size">
                       <SelectValue placeholder="Number of employees" />
                     </SelectTrigger>
                     <SelectContent>
@@ -266,7 +267,7 @@ const Setup = () => {
                 <div className="space-y-2">
                   <Label htmlFor="annualRevenue">Annual Revenue Range</Label>
                   <Select value={annualRevenue} onValueChange={setAnnualRevenue}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Select annual revenue range">
                       <SelectValue placeholder="Select revenue range" />
                     </SelectTrigger>
                     <SelectContent>
@@ -287,13 +288,18 @@ const Setup = () => {
                   value={licenseNumbers}
                   onChange={(e) => setLicenseNumbers(e.target.value)}
                   placeholder="License numbers (comma-separated)"
+                  aria-describedby="license-hint"
                 />
+                <p id="license-hint" className="text-xs text-muted-foreground">
+                  Enter multiple license numbers separated by commas
+                </p>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full text-sm sm:text-base py-2 sm:py-3" 
+              <Button
+                type="submit"
+                className="w-full text-sm sm:text-base py-2 sm:py-3"
                 disabled={setupLoading || !companyName || !industryType}
+                aria-busy={setupLoading}
               >
                 {setupLoading ? 'Setting Up Company...' : 'Complete Setup'}
               </Button>
@@ -301,7 +307,7 @@ const Setup = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </main>
   );
 };
 

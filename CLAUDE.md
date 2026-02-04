@@ -768,18 +768,33 @@ test('user can log in', async ({ page }) => {
 
 BuildDesk is committed to WCAG 2.1 Level AA compliance and ADA accessibility requirements.
 
-### Compliance Status
-- **WCAG 2.1 Level AA**: Fully conformant
-- **Section 508**: Compliant
-- **ADA Title III**: Compliant
-- **EN 301 549**: Compliant (European standard)
+### Current Implementation Status
 
-### Accessibility Components
+**IMPORTANT**: Accessibility infrastructure exists but implementation is **incomplete**.
+
+| Status | Description |
+|--------|-------------|
+| **Infrastructure** | Complete - accessible components, hooks, testing utilities available |
+| **Implementation** | Partial - only ~2% of pages use accessible components |
+| **Target** | WCAG 2.1 Level AA |
+
+**Current State (as of February 2026)**:
+- 2 of 125+ pages use AccessibleModal (MyTasks.tsx, ComponentShowcase.tsx)
+- 1 of 17 form pages use AccessibleForm (MyTasks.tsx)
+- 0 of 14 table pages use AccessibleTable
+- 0 pages use AccessiblePageWrapper
+
+**See**: `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md` for full remediation plan.
+
+### Accessibility Components (Available Infrastructure)
 
 Located in `src/components/accessibility/`:
 - **AccessiblePageWrapper.tsx**: Semantic HTML landmarks wrapper
 - **AccessibleTable.tsx**: Data tables with ARIA, sorting, keyboard nav
 - **AccessibleForm.tsx**: Form components with proper labels and validation
+- **AccessibleFormField.tsx**: Input with labels, aria-invalid, aria-describedby
+- **AccessibleSelect.tsx**: Native select with accessibility features
+- **AccessibleTextarea.tsx**: Textarea with accessibility features
 - **AccessibleModal.tsx**: Modal with focus trap and escape handling
 - **SkipLinks.tsx**: Skip navigation for keyboard users
 - **AccessibilityPanel.tsx**: User accessibility preferences
@@ -790,6 +805,50 @@ Located in `src/components/accessibility/`:
 Located in `src/hooks/`:
 - **useAccessibility.ts**: Main accessibility settings hook
 - **useAccessibilityHelpers.tsx**: Focus trap, ARIA ID generation, announcements
+
+### Example: Applying Accessibility to a Page
+
+See `src/pages/MyTasks.tsx` for a reference implementation:
+
+```tsx
+import {
+  AccessibleModal,
+} from '@/components/accessibility/AccessibleModal';
+import {
+  AccessibleForm,
+  AccessibleFormField,
+  AccessibleSelect,
+  AccessibleTextarea,
+} from '@/components/accessibility/AccessibleForm';
+
+// Replace Dialog with AccessibleModal
+<AccessibleModal
+  isOpen={open}
+  onClose={() => setOpen(false)}
+  title="Create New Task"
+  description="Create a new task and assign it to a team member."
+  footer={<Button type="submit">Create</Button>}
+>
+  <AccessibleForm onSubmit={handleSubmit} ariaLabel="Create task form">
+    <AccessibleFormField name="name" label="Task Title" required />
+    <AccessibleSelect name="priority" label="Priority" options={priorityOptions} />
+    <AccessibleTextarea name="description" label="Description" />
+  </AccessibleForm>
+</AccessibleModal>
+
+// Add ARIA to interactive cards
+<Card role="article" aria-labelledby={`task-title-${task.id}`}>
+  <h3 id={`task-title-${task.id}`}>{task.name}</h3>
+  <Badge aria-label={`Priority: ${task.priority}`}>{task.priority}</Badge>
+  <Icon aria-hidden="true" /> {/* Decorative icons */}
+</Card>
+
+// Label search areas
+<div role="search" aria-label="Filter tasks">
+  <Label htmlFor="search" className="sr-only">Search</Label>
+  <Input id="search" aria-label="Search tasks" />
+</div>
+```
 
 ### Accessibility Testing
 
@@ -911,6 +970,9 @@ User preferences stored in localStorage and database:
 
 ### Resources
 
+- **Compliance Checklist**: `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md` - Page-by-page remediation plan
+- **VPAT Document**: `docs/VPAT_WCAG_2.1_BuildDesk.md` - Voluntary Product Accessibility Template
+- **Reference Implementation**: `src/pages/MyTasks.tsx` - Example of fully accessible page
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
 - [Accessibility Statement](/accessibility-statement)
@@ -1248,15 +1310,15 @@ npm run expo:submit:android
 ## Known Issues & Technical Debt
 
 ### High Priority
-1. **Test coverage**: Increase from current ~10% to 60%+
-2. **Offline sync**: More robust offline queue for mobile
-3. **Performance**: Virtual scrolling for large lists
+1. **Accessibility Implementation**: Only ~2% of pages use accessible components (see `docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md`)
+2. **Test coverage**: Increase from current ~10% to 60%+
+3. **Offline sync**: More robust offline queue for mobile
+4. **Performance**: Virtual scrolling for large lists
 
 ### Medium Priority
 1. **Bundle size**: Further optimization needed (target: <800KB)
-2. **Accessibility**: Full WCAG 2.1 AA compliance
-3. **i18n**: Internationalization support
-4. **Dark mode**: Full dark mode parity
+2. **i18n**: Internationalization support
+3. **Dark mode**: Full dark mode parity
 
 ### Low Priority
 1. **Desktop app**: Electron wrapper

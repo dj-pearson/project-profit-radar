@@ -72,12 +72,12 @@ export default function TrialBalance() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Trial Balance">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <ClipboardList className="h-8 w-8" />
+            <ClipboardList className="h-8 w-8" aria-hidden="true" />
             Trial Balance
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -85,79 +85,83 @@ export default function TrialBalance() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+        <div className="flex gap-2" role="toolbar" aria-label="Report actions">
+          <Button variant="outline" onClick={handlePrint} aria-label="Print trial balance">
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             Print
           </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport} aria-label="Export trial balance">
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="asOfDate">As of Date</Label>
-              <Input
-                id="asOfDate"
-                type="date"
-                value={asOfDate}
-                onChange={(e) => setAsOfDate(e.target.value)}
-                className="w-[200px]"
-              />
-            </div>
+      <section aria-label="Report filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="asOfDate">As of Date</Label>
+                <Input
+                  id="asOfDate"
+                  type="date"
+                  value={asOfDate}
+                  onChange={(e) => setAsOfDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select date for trial balance"
+                />
+              </div>
 
-            {/* Balance Status */}
-            <div className="flex items-center gap-2 ml-auto">
-              {isBalanced ? (
-                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-semibold">Balanced</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg">
-                  <AlertCircle className="h-5 w-5" />
-                  <span className="font-semibold">
-                    Out of Balance: {formatCurrency(difference)}
-                  </span>
-                </div>
-              )}
+              {/* Balance Status */}
+              <div className="flex items-center gap-2 ml-auto">
+                {isBalanced ? (
+                  <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg" role="status" aria-live="polite">
+                    <CheckCircle className="h-5 w-5" aria-hidden="true" />
+                    <span className="font-semibold">Balanced</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg" role="alert">
+                    <AlertCircle className="h-5 w-5" aria-hidden="true" />
+                    <span className="font-semibold">
+                      Out of Balance: {formatCurrency(difference)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Trial Balance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Trial Balance</CardTitle>
-          <CardDescription>
-            As of {new Date(asOfDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading trial balance...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Account Number</TableHead>
-                  <TableHead>Account Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Debit</TableHead>
-                  <TableHead className="text-right">Credit</TableHead>
-                </TableRow>
-              </TableHeader>
+      <section aria-label="Trial balance report">
+        <Card>
+          <CardHeader>
+            <CardTitle>Trial Balance</CardTitle>
+            <CardDescription>
+              As of {new Date(asOfDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8" role="status" aria-live="polite">Loading trial balance...</div>
+            ) : (
+              <Table aria-label="Trial Balance">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Account Number</TableHead>
+                    <TableHead scope="col">Account Name</TableHead>
+                    <TableHead scope="col">Type</TableHead>
+                    <TableHead scope="col" className="text-right">Debit</TableHead>
+                    <TableHead scope="col" className="text-right">Credit</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {accountOrder.map((type) => {
                   const typeAccounts = accountsByType?.[type] || [];
@@ -236,7 +240,7 @@ export default function TrialBalance() {
 
                 {/* Difference (if any) */}
                 {!isBalanced && (
-                  <TableRow className="bg-red-50 font-semibold">
+                  <TableRow className="bg-red-50 font-semibold" role="row" aria-label="Out of balance warning">
                     <TableCell colSpan={3} className="text-red-800">
                       DIFFERENCE (OUT OF BALANCE)
                     </TableCell>
@@ -253,9 +257,11 @@ export default function TrialBalance() {
           )}
         </CardContent>
       </Card>
+      </section>
 
       {/* Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <section aria-label="Trial balance summary">
+        <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Debits</CardTitle>
@@ -287,7 +293,8 @@ export default function TrialBalance() {
             </p>
           </CardContent>
         </Card>
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }

@@ -140,12 +140,12 @@ export default function GeneralLedger() {
   const endingBalance = transactionsWithBalance?.[transactionsWithBalance.length - 1]?.runningBalance || 0;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="General Ledger">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-8 w-8" />
+            <FileText className="h-8 w-8" aria-hidden="true" />
             General Ledger
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -153,28 +153,29 @@ export default function GeneralLedger() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint} disabled={!selectedAccountId}>
-            <Printer className="mr-2 h-4 w-4" />
+        <div className="flex gap-2" role="toolbar" aria-label="Report actions">
+          <Button variant="outline" onClick={handlePrint} disabled={!selectedAccountId} aria-label="Print general ledger">
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             Print
           </Button>
-          <Button variant="outline" onClick={handleExport} disabled={!selectedAccountId}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport} disabled={!selectedAccountId} aria-label="Export general ledger">
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="account">Account</Label>
-              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an account" />
-                </SelectTrigger>
+      <section aria-label="Ledger filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="account">Account</Label>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger aria-label="Select an account to view">
+                    <SelectValue placeholder="Select an account" />
+                  </SelectTrigger>
                 <SelectContent>
                   {accounts?.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
@@ -185,34 +186,36 @@ export default function GeneralLedger() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  aria-label="Select start date for transactions"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  aria-label="Select end date for transactions"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="groupBy">Group By</Label>
-              <Select value={groupBy} onValueChange={(value: any) => setGroupBy(value)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
+            <div className="mt-4 flex items-center gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="groupBy">Group By</Label>
+                <Select value={groupBy} onValueChange={(value: any) => setGroupBy(value)}>
+                  <SelectTrigger className="w-[180px]" aria-label="Select grouping option">
+                    <SelectValue />
+                  </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None (All Transactions)</SelectItem>
                   <SelectItem value="month">Month</SelectItem>
@@ -220,20 +223,22 @@ export default function GeneralLedger() {
               </Select>
             </div>
 
-            {selectedAccount && (
-              <div className="ml-auto">
-                <Badge variant="outline" className="text-sm">
-                  {selectedAccount.account_type.replace(/_/g, ' ')} - {selectedAccount.account_subtype.replace(/_/g, ' ')}
-                </Badge>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {selectedAccount && (
+                <div className="ml-auto">
+                  <Badge variant="outline" className="text-sm" aria-label={`Account type: ${selectedAccount.account_type.replace(/_/g, ' ')}, subtype: ${selectedAccount.account_subtype.replace(/_/g, ' ')}`}>
+                    {selectedAccount.account_type.replace(/_/g, ' ')} - {selectedAccount.account_subtype.replace(/_/g, ' ')}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Account Summary */}
       {selectedAccount && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <section aria-label="Account summary">
+          <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Account</CardTitle>
@@ -275,46 +280,48 @@ export default function GeneralLedger() {
               <p className="text-xs text-muted-foreground">As of {endDate}</p>
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </section>
       )}
 
       {/* Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transactions</CardTitle>
-          <CardDescription>
-            {selectedAccount
-              ? `Showing transactions for ${selectedAccount.account_number} - ${selectedAccount.account_name}`
-              : 'Select an account to view transactions'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!selectedAccountId ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Please select an account to view its general ledger
-            </div>
-          ) : isLoading ? (
-            <div className="text-center py-8">Loading transactions...</div>
-          ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
+      <section aria-label="Account transactions">
+        <Card>
+          <CardHeader>
+            <CardTitle>Transactions</CardTitle>
+            <CardDescription>
+              {selectedAccount
+                ? `Showing transactions for ${selectedAccount.account_number} - ${selectedAccount.account_name}`
+                : 'Select an account to view transactions'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!selectedAccountId ? (
+              <div className="text-center py-8 text-muted-foreground" role="status">
+                Please select an account to view its general ledger
+              </div>
+            ) : isLoading ? (
+              <div className="text-center py-8" role="status" aria-live="polite">Loading transactions...</div>
+            ) : transactionsWithBalance && transactionsWithBalance.length > 0 ? (
             <div className="space-y-6">
               {groupBy === 'month' && groupedTransactions ? (
                 // Grouped by month
                 Object.entries(groupedTransactions).map(([monthKey, monthData]: [string, any]) => (
-                  <div key={monthKey} className="space-y-2">
+                  <div key={monthKey} className="space-y-2" role="region" aria-label={`Transactions for ${monthData.label}`}>
                     <div className="flex items-center gap-2 sticky top-0 bg-background py-2">
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
                       <h3 className="font-semibold">{monthData.label}</h3>
                     </div>
 
-                    <Table>
+                    <Table aria-label={`${monthData.label} transactions`}>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Entry #</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead className="text-right">Debit</TableHead>
-                          <TableHead className="text-right">Credit</TableHead>
-                          <TableHead className="text-right">Balance</TableHead>
+                          <TableHead scope="col">Date</TableHead>
+                          <TableHead scope="col">Entry #</TableHead>
+                          <TableHead scope="col">Description</TableHead>
+                          <TableHead scope="col" className="text-right">Debit</TableHead>
+                          <TableHead scope="col" className="text-right">Credit</TableHead>
+                          <TableHead scope="col" className="text-right">Balance</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -353,15 +360,15 @@ export default function GeneralLedger() {
                 ))
               ) : (
                 // All transactions
-                <Table>
+                <Table aria-label="All transactions">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Entry #</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Debit</TableHead>
-                      <TableHead className="text-right">Credit</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
+                      <TableHead scope="col">Date</TableHead>
+                      <TableHead scope="col">Entry #</TableHead>
+                      <TableHead scope="col">Description</TableHead>
+                      <TableHead scope="col" className="text-right">Debit</TableHead>
+                      <TableHead scope="col" className="text-right">Credit</TableHead>
+                      <TableHead scope="col" className="text-right">Balance</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -413,12 +420,13 @@ export default function GeneralLedger() {
               )}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground" role="status">
               No transactions found for the selected date range
             </div>
           )}
         </CardContent>
       </Card>
-    </div>
+      </section>
+    </main>
   );
 }

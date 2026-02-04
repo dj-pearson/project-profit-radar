@@ -188,27 +188,27 @@ const ResetPassword = () => {
   // Show loading state while validating token
   if (isValidToken === null) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <main className="min-h-screen bg-background flex items-center justify-center p-4" role="main" aria-label="Password Reset">
         <div className="w-full max-w-md">
           <Card>
             <CardContent className="flex items-center justify-center p-8">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-4"></div>
+              <div className="text-center" role="status" aria-live="polite" aria-label="Validating reset link">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-construction-blue mx-auto mb-4" aria-hidden="true"></div>
                 <p className="text-muted-foreground">Validating reset link...</p>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     );
   }
 
   // Show error state for invalid token
   if (!isValidToken) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <main className="min-h-screen bg-background flex items-center justify-center p-4" role="main" aria-label="Invalid Reset Link">
         <div className="w-full max-w-md">
-          <div className="text-center mb-6">
+          <header className="text-center mb-6">
             <Link to="/" className="inline-block">
               <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
                 Build Desk
@@ -217,12 +217,12 @@ const ResetPassword = () => {
             <p className="text-muted-foreground mt-2">
               Construction Management Platform
             </p>
-          </div>
+          </header>
 
-          <Card>
+          <Card role="alert" aria-labelledby="error-title">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="h-5 w-5" />
+              <CardTitle id="error-title" className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="h-5 w-5" aria-hidden="true" />
                 Invalid Reset Link
               </CardTitle>
               <CardDescription>
@@ -231,32 +231,32 @@ const ResetPassword = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
-                <AlertCircle className="h-4 w-4" />
+                <AlertCircle className="h-4 w-4" aria-hidden="true" />
                 <AlertDescription>
                   Please request a new password reset link from the sign-in page.
                 </AlertDescription>
               </Alert>
-              
-              <div className="flex flex-col gap-2">
+
+              <nav className="flex flex-col gap-2" aria-label="Navigation options">
                 <Button asChild>
                   <Link to="/auth">Go to Sign In</Link>
                 </Button>
                 <Button variant="outline" asChild>
                   <Link to="/">Back to Homepage</Link>
                 </Button>
-              </div>
+              </nav>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     );
   }
 
   // Show password reset form for valid token
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4" role="main" aria-label="Set New Password">
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
+        <header className="text-center mb-6">
           <Link to="/" className="inline-block">
             <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
               Build Desk
@@ -265,80 +265,85 @@ const ResetPassword = () => {
           <p className="text-muted-foreground mt-2">
             Construction Management Platform
           </p>
-        </div>
+        </header>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
+              <Lock className="h-5 w-5" aria-hidden="true" />
               Set New Password
             </CardTitle>
-            <CardDescription>
+            <CardDescription id="form-description">
               Enter your new password below. Make sure it's strong and secure.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Alert className="mb-4">
-              <CheckCircle className="h-4 w-4" />
+            <Alert className="mb-4" role="status">
+              <CheckCircle className="h-4 w-4" aria-hidden="true" />
               <AlertDescription>
                 Your reset link has been validated. You can now set a new password.
               </AlertDescription>
             </Alert>
 
-            <form onSubmit={handlePasswordReset} className="space-y-4">
+            <form onSubmit={handlePasswordReset} className="space-y-4" aria-label="Set new password form" aria-describedby="form-description">
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">New Password *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  aria-required="true"
                   minLength={6}
                   placeholder="Enter your new password"
+                  autoComplete="new-password"
+                  aria-describedby="password-requirements"
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">Confirm New Password *</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  aria-required="true"
                   minLength={6}
                   placeholder="Confirm your new password"
+                  autoComplete="new-password"
                 />
               </div>
 
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground" id="password-requirements">
                 <p>Password requirements:</p>
-                <ul className="list-disc list-inside text-xs mt-1 space-y-1">
+                <ul className="list-disc list-inside text-xs mt-1 space-y-1" role="list" aria-label="Password requirements">
                   <li>At least 6 characters long</li>
                   <li>Include uppercase and lowercase letters</li>
                   <li>Include at least one number</li>
                   <li>Include at least one special character</li>
                 </ul>
               </div>
-              
-              <Button type="submit" className="w-full" disabled={loading}>
+
+              <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
                 {loading ? "Updating Password..." : "Update Password"}
               </Button>
-              
-              <div className="text-center">
+
+              <nav className="text-center" aria-label="Additional navigation">
                 <Link
                   to="/auth"
                   className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
                 >
                   Back to Sign In
                 </Link>
-              </div>
+              </nav>
             </form>
           </CardContent>
         </Card>
       </div>
-    </div>
+    </main>
   );
 };
 

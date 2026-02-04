@@ -272,12 +272,12 @@ export default function BillPayments() {
   const numberOfUnpaidBills = bills?.filter((bill: any) => Number(bill.amount_due) > 0).length || 0;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Bill Payments">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <CreditCard className="h-8 w-8" />
+            <CreditCard className="h-8 w-8" aria-hidden="true" />
             Bill Payments
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -287,16 +287,16 @@ export default function BillPayments() {
 
         <Dialog open={isPayDialogOpen} onOpenChange={setIsPayDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button aria-label="Open pay bills dialog">
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               Pay Bills
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <form onSubmit={handleSubmit}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="pay-bills-description">
+            <form onSubmit={handleSubmit} aria-label="Pay bills form">
               <DialogHeader>
                 <DialogTitle>Pay Bills</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="pay-bills-description">
                   Select bills to pay and enter payment details
                 </DialogDescription>
               </DialogHeader>
@@ -535,18 +535,18 @@ export default function BillPayments() {
       </div>
 
       {/* Metrics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <section aria-label="Payment metrics" className="grid gap-4 md:grid-cols-3">
+        <Card role="region" aria-label="Total unpaid bills">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Unpaid Bills</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalUnpaidBills)}</div>
+            <div className="text-2xl font-bold" aria-label={`${formatCurrency(totalUnpaidBills)} total unpaid`}>{formatCurrency(totalUnpaidBills)}</div>
             <p className="text-xs text-muted-foreground">{numberOfUnpaidBills} bills</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="region" aria-label="Payments this month">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Payments This Month</CardTitle>
           </CardHeader>
@@ -556,7 +556,7 @@ export default function BillPayments() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card role="region" aria-label="Average payment">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Average Payment</CardTitle>
           </CardHeader>
@@ -565,59 +565,63 @@ export default function BillPayments() {
             <p className="text-xs text-muted-foreground">Per payment</p>
           </CardContent>
         </Card>
-      </div>
+      </section>
 
       {/* Payment History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-          <CardDescription>Recent bill payments</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {paymentsLoading ? (
-            <div className="text-center py-8">Loading payments...</div>
-          ) : payments && payments.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Payment #</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Bills Paid</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((payment: any) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-mono">{payment.payment_number}</TableCell>
-                    <TableCell>
-                      {new Date(payment.payment_date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{payment.vendor?.name || 'Unknown'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {payment.payment_method.replace(/_/g, ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatCurrency(payment.total_amount)}
-                    </TableCell>
-                    <TableCell>
-                      {payment.applications?.length || 0} bill(s)
-                    </TableCell>
+      <section aria-label="Payment history">
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment History</CardTitle>
+            <CardDescription>Recent bill payments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {paymentsLoading ? (
+              <div className="text-center py-8" role="status" aria-live="polite">Loading payments...</div>
+            ) : payments && payments.length > 0 ? (
+              <Table aria-label="Payment history">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Payment #</TableHead>
+                    <TableHead scope="col">Date</TableHead>
+                    <TableHead scope="col">Vendor</TableHead>
+                    <TableHead scope="col">Method</TableHead>
+                    <TableHead scope="col" className="text-right">Amount</TableHead>
+                    <TableHead scope="col">Bills Paid</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No payments recorded yet
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((payment: any) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-mono">{payment.payment_number}</TableCell>
+                      <TableCell>
+                        {new Date(payment.payment_date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{payment.vendor?.name || 'Unknown'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          <span className="sr-only">Payment method: </span>
+                          {payment.payment_method.replace(/_/g, ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className="sr-only">Amount: </span>
+                        {formatCurrency(payment.total_amount)}
+                      </TableCell>
+                      <TableCell>
+                        {payment.applications?.length || 0} bill(s)
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground" role="status">
+                No payments recorded yet
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+    </main>
   );
 }

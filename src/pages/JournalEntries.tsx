@@ -178,12 +178,12 @@ export default function JournalEntries() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Journal Entries">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Calculator className="h-8 w-8" />
+            <Calculator className="h-8 w-8" aria-hidden="true" />
             Journal Entries
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -193,39 +193,42 @@ export default function JournalEntries() {
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setFormData({
-                entryDate: new Date().toISOString().split('T')[0],
-                description: '',
-                memo: '',
-                lines: [
-                  {
-                    id: Math.random().toString(36).substr(2, 9),
-                    accountId: '',
-                    debitAmount: 0,
-                    creditAmount: 0,
-                    description: '',
-                  },
-                  {
-                    id: Math.random().toString(36).substr(2, 9),
-                    accountId: '',
-                    debitAmount: 0,
-                    creditAmount: 0,
-                    description: '',
-                  },
-                ],
-              });
-              setValidationErrors([]);
-            }}>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button
+              aria-label="Create new journal entry"
+              onClick={() => {
+                setFormData({
+                  entryDate: new Date().toISOString().split('T')[0],
+                  description: '',
+                  memo: '',
+                  lines: [
+                    {
+                      id: Math.random().toString(36).substr(2, 9),
+                      accountId: '',
+                      debitAmount: 0,
+                      creditAmount: 0,
+                      description: '',
+                    },
+                    {
+                      id: Math.random().toString(36).substr(2, 9),
+                      accountId: '',
+                      debitAmount: 0,
+                      creditAmount: 0,
+                      description: '',
+                    },
+                  ],
+                });
+                setValidationErrors([]);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               New Journal Entry
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <form onSubmit={handleSubmit}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="journal-entry-description">
+            <form onSubmit={handleSubmit} aria-label="Create journal entry form">
               <DialogHeader>
                 <DialogTitle>Create Journal Entry</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="journal-entry-description">
                   Create a manual journal entry with balanced debits and credits
                 </DialogDescription>
               </DialogHeader>
@@ -247,7 +250,7 @@ export default function JournalEntries() {
                 {/* Header Fields */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="entryDate">Entry Date</Label>
+                    <Label htmlFor="entryDate">Entry Date *</Label>
                     <Input
                       id="entryDate"
                       type="date"
@@ -256,11 +259,12 @@ export default function JournalEntries() {
                         setFormData({ ...formData, entryDate: e.target.value })
                       }
                       required
+                      aria-required="true"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Description *</Label>
                     <Input
                       id="description"
                       value={formData.description}
@@ -269,6 +273,7 @@ export default function JournalEntries() {
                       }
                       placeholder="E.g., Monthly depreciation"
                       required
+                      aria-required="true"
                     />
                   </div>
                 </div>
@@ -287,28 +292,28 @@ export default function JournalEntries() {
                 </div>
 
                 {/* Journal Entry Lines */}
-                <div className="space-y-2">
+                <fieldset className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Journal Entry Lines</Label>
-                    <Button type="button" onClick={addLine} size="sm" variant="outline">
-                      <Plus className="mr-2 h-4 w-4" />
+                    <legend className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Journal Entry Lines</legend>
+                    <Button type="button" onClick={addLine} size="sm" variant="outline" aria-label="Add new journal entry line">
+                      <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                       Add Line
                     </Button>
                   </div>
 
                   <div className="border rounded-lg overflow-hidden">
-                    <Table>
+                    <Table aria-label="Journal entry lines">
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[250px]">Account</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead className="text-right w-[120px]">Debit</TableHead>
-                          <TableHead className="text-right w-[120px]">Credit</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
+                          <TableHead scope="col" className="w-[250px]">Account</TableHead>
+                          <TableHead scope="col">Description</TableHead>
+                          <TableHead scope="col" className="text-right w-[120px]">Debit</TableHead>
+                          <TableHead scope="col" className="text-right w-[120px]">Credit</TableHead>
+                          <TableHead scope="col" className="w-[50px]"><span className="sr-only">Actions</span></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {formData.lines.map((line) => (
+                        {formData.lines.map((line, index) => (
                           <TableRow key={line.id}>
                             <TableCell>
                               <Select
@@ -321,7 +326,7 @@ export default function JournalEntries() {
                                   });
                                 }}
                               >
-                                <SelectTrigger className="w-full">
+                                <SelectTrigger className="w-full" aria-label={`Select account for line ${index + 1}`}>
                                   <SelectValue placeholder="Select account" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -381,8 +386,9 @@ export default function JournalEntries() {
                                 size="sm"
                                 onClick={() => removeLine(line.id)}
                                 disabled={formData.lines.length <= 2}
+                                aria-label={`Remove line ${index + 1}`}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -393,16 +399,18 @@ export default function JournalEntries() {
                             Totals:
                           </TableCell>
                           <TableCell className="text-right">
+                            <span className="sr-only">Total debits: </span>
                             {formatCurrency(totals.totalDebits)}
                           </TableCell>
                           <TableCell className="text-right">
+                            <span className="sr-only">Total credits: </span>
                             {formatCurrency(totals.totalCredits)}
                           </TableCell>
                           <TableCell>
                             {totals.isBalanced ? (
-                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <CheckCircle className="h-5 w-5 text-green-600" aria-label="Entry is balanced" />
                             ) : (
-                              <span className="text-red-600 text-sm">
+                              <span className="text-red-600 text-sm" role="alert">
                                 Diff: {formatCurrency(Math.abs(totals.difference))}
                               </span>
                             )}
@@ -413,14 +421,14 @@ export default function JournalEntries() {
                   </div>
 
                   {!totals.isBalanced && (
-                    <Alert variant="destructive">
+                    <Alert variant="destructive" role="alert">
                       <AlertDescription>
                         Entry is not balanced. Debits must equal credits.
                         Difference: {formatCurrency(Math.abs(totals.difference))}
                       </AlertDescription>
                     </Alert>
                   )}
-                </div>
+                </fieldset>
               </div>
 
               <DialogFooter>
@@ -441,93 +449,99 @@ export default function JournalEntries() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="posted">Posted</SelectItem>
-                <SelectItem value="voided">Voided</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <section aria-label="Entry filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4" role="search" aria-label="Filter journal entries">
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[200px]" aria-label="Filter by status">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="posted">Posted</SelectItem>
+                  <SelectItem value="voided">Voided</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Journal Entries List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Journal Entries</CardTitle>
-          <CardDescription>
-            View and manage all journal entries
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading journal entries...</div>
-          ) : journalEntries && journalEntries.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Entry Number</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {journalEntries.map((entry: any) => {
-                  const totalDebits = entry.lines?.reduce(
-                    (sum: number, line: any) => sum + Number(line.debit_amount || 0),
-                    0
-                  ) || 0;
+      <section aria-label="Journal entries list">
+        <Card>
+          <CardHeader>
+            <CardTitle>Journal Entries</CardTitle>
+            <CardDescription>
+              View and manage all journal entries
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8" role="status" aria-live="polite">Loading journal entries...</div>
+            ) : journalEntries && journalEntries.length > 0 ? (
+              <Table aria-label="Journal entries">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Entry Number</TableHead>
+                    <TableHead scope="col">Date</TableHead>
+                    <TableHead scope="col">Description</TableHead>
+                    <TableHead scope="col" className="text-right">Amount</TableHead>
+                    <TableHead scope="col">Status</TableHead>
+                    <TableHead scope="col" className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {journalEntries.map((entry: any) => {
+                    const totalDebits = entry.lines?.reduce(
+                      (sum: number, line: any) => sum + Number(line.debit_amount || 0),
+                      0
+                    ) || 0;
 
-                  return (
-                    <TableRow key={entry.id}>
-                      <TableCell className="font-mono">{entry.entry_number}</TableCell>
-                      <TableCell>
-                        {new Date(entry.entry_date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{entry.description}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(totalDebits)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadge(entry.transaction_status)}>
-                          {entry.transaction_status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {entry.transaction_status === 'draft' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePostEntry(entry.id)}
-                          >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Post
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No journal entries found. Create your first entry to get started.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                    return (
+                      <TableRow key={entry.id}>
+                        <TableCell className="font-mono">{entry.entry_number}</TableCell>
+                        <TableCell>
+                          {new Date(entry.entry_date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{entry.description}</TableCell>
+                        <TableCell className="text-right font-mono">
+                          <span className="sr-only">Amount: </span>
+                          {formatCurrency(totalDebits)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusBadge(entry.transaction_status)} aria-label={`Status: ${entry.transaction_status}`}>
+                            {entry.transaction_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {entry.transaction_status === 'draft' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePostEntry(entry.id)}
+                              aria-label={`Post entry ${entry.entry_number}`}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+                              Post
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground" role="status">
+                No journal entries found. Create your first entry to get started.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+    </main>
   );
 }
