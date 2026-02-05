@@ -451,7 +451,7 @@ class AnalyticsEngineService {
 
           return {
             userId: user.id,
-            userName: user.full_name || 'Unknown',
+            userName: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown',
             role: user.role || 'unknown',
             totalHours,
             billableHours,

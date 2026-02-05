@@ -79,10 +79,10 @@ export const useTimesheetApproval = () => {
       .from('time_entries')
       .select(`
         *,
-        worker:user_profiles!time_entries_user_id_fkey(full_name, email, role),
+        worker:user_profiles!time_entries_user_id_fkey(first_name, last_name, email, role),
         project:projects(name, site_address, client_name),
         cost_code:cost_codes(code, description),
-        approver:user_profiles!time_entries_approved_by_fkey(full_name, email)
+        approver:user_profiles!time_entries_approved_by_fkey(first_name, last_name, email)
       `)
       .eq('id', id)
       .single();
@@ -97,7 +97,7 @@ export const useTimesheetApproval = () => {
       .from('timesheet_approval_history')
       .select(`
         *,
-        performed_by_user:user_profiles!timesheet_approval_history_performed_by_fkey(full_name, email)
+        performed_by_user:user_profiles!timesheet_approval_history_performed_by_fkey(first_name, last_name, email)
       `)
       .eq('time_entry_id', timeEntryId)
       .order('performed_at', { ascending: false });

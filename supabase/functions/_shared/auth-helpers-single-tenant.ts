@@ -14,9 +14,19 @@ import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { getCorsHeaders } from './secure-cors.ts';
 
 // Default secure CORS headers (fallback when request not available)
+// Uses environment variable ALLOWED_CORS_ORIGINS or falls back to build-desk.com
+const getDefaultCorsOrigin = () => {
+  const customOrigins = Deno.env.get('ALLOWED_CORS_ORIGINS');
+  if (customOrigins) {
+    const firstOrigin = customOrigins.split(',')[0]?.trim();
+    if (firstOrigin) return firstOrigin;
+  }
+  return 'https://build-desk.com';
+};
+
 const DEFAULT_SECURE_CORS = {
-  'Access-Control-Allow-Origin': 'https://build-desk.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Origin': getDefaultCorsOrigin(),
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 

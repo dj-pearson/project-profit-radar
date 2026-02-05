@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getEdgeFunctionUrl } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
@@ -888,7 +888,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
         // Call our custom signup edge function (doesn't trigger Supabase email)
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/signup-with-otp`,
+          getEdgeFunctionUrl('signup-with-otp'),
           {
             method: "POST",
             headers: {
@@ -973,7 +973,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
       // Call our custom reset password edge function
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
+        getEdgeFunctionUrl('reset-password-otp'),
         {
           method: "POST",
           headers: {
@@ -1012,7 +1012,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       logger.debug("AuthContext: Verifying reset OTP and updating password...");
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password-otp`,
+        getEdgeFunctionUrl('reset-password-otp'),
         {
           method: "POST",
           headers: {
@@ -1082,7 +1082,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.debug(`Sending OTP for ${options.type} to ${options.email}`);
 
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-auth-otp`,
+          getEdgeFunctionUrl('send-auth-otp'),
           {
             method: "POST",
             headers: {
@@ -1118,7 +1118,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         logger.debug(`Verifying OTP for ${options.type}`);
 
         const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-auth-otp`,
+          getEdgeFunctionUrl('verify-auth-otp'),
           {
             method: "POST",
             headers: {
