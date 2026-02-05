@@ -50,8 +50,8 @@ interface Refund {
   created_at: string;
   stripe_refund_id: string | null;
   invoice?: { invoice_number: string };
-  requested_by_user?: { full_name: string };
-  approved_by_user?: { full_name: string };
+  requested_by_user?: { first_name: string; last_name: string };
+  approved_by_user?: { first_name: string; last_name: string };
 }
 
 const REFUND_REASONS = [
@@ -444,7 +444,7 @@ const RefundWorkflow: React.FC = () => {
                       {refund.invoice?.invoice_number || '-'}
                     </TableCell>
                     <TableCell>
-                      {refund.requested_by_user?.full_name || '-'}
+                      {refund.requested_by_user ? `${refund.requested_by_user.first_name || ''} ${refund.requested_by_user.last_name || ''}`.trim() || '-' : '-'}
                     </TableCell>
                     <TableCell>{getStatusBadge(refund.status)}</TableCell>
                     <TableCell>
