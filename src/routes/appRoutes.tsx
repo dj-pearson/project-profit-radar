@@ -7,6 +7,7 @@
 
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
+import { RouteGuard } from '@/components/ProtectedRoute';
 import {
   LazyIndex,
   LazyDashboard,
@@ -52,8 +53,8 @@ export const appRoutes = (
     <Route path="/" element={<LazyIndex />} />
 
     {/* Core App Routes */}
-    <Route path="/dashboard" element={<LazyDashboard />} />
-    <Route path="/my-tasks" element={<LazyMyTasks />} />
+    <Route path="/dashboard" element={<RouteGuard><LazyDashboard /></RouteGuard>} />
+    <Route path="/my-tasks" element={<RouteGuard><LazyMyTasks /></RouteGuard>} />
     <Route path="/auth" element={<LazyAuth />} />
     <Route path="/auth/callback" element={<LazyAuthCallback />} />
     <Route path="/setup" element={<LazySetup />} />
@@ -62,16 +63,16 @@ export const appRoutes = (
     <Route path="/payment-cancelled" element={<LazyPaymentCancelled />} />
 
     {/* Hubs */}
-    <Route path="/projects-hub" element={<LazyProjectsHub />} />
-    <Route path="/financial-hub" element={<LazyFinancialHub />} />
-    <Route path="/people-hub" element={<LazyPeopleHub />} />
-    <Route path="/operations-hub" element={<LazyOperationsHub />} />
-    <Route path="/admin-hub" element={<LazyAdminHub />} />
+    <Route path="/projects-hub" element={<RouteGuard><LazyProjectsHub /></RouteGuard>} />
+    <Route path="/financial-hub" element={<RouteGuard><LazyFinancialHub /></RouteGuard>} />
+    <Route path="/people-hub" element={<RouteGuard><LazyPeopleHub /></RouteGuard>} />
+    <Route path="/operations-hub" element={<RouteGuard><LazyOperationsHub /></RouteGuard>} />
+    <Route path="/admin-hub" element={<RouteGuard><LazyAdminHub /></RouteGuard>} />
 
     {/* Settings */}
-    <Route path="/user-settings" element={<LazyUserSettings />} />
-    <Route path="/subscription-settings" element={<LazySubscriptionSettings />} />
-    <Route path="/settings/custom-domain" element={<CustomDomain />} />
+    <Route path="/user-settings" element={<RouteGuard><LazyUserSettings /></RouteGuard>} />
+    <Route path="/subscription-settings" element={<RouteGuard><LazySubscriptionSettings /></RouteGuard>} />
+    <Route path="/settings/custom-domain" element={<RouteGuard><CustomDomain /></RouteGuard>} />
 
     {/* Features */}
     <Route path="/marketplace" element={<LazyAPIMarketplace />} />

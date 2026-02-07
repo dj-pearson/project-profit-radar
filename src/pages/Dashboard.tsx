@@ -30,14 +30,7 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Redirect unauthenticated users to auth page
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  // Redirect users without company to setup
+  // Redirect users without company to setup (but NOT back to auth - let ProtectedRoute handle that)
   useEffect(() => {
     if (
       !authLoading &&
@@ -51,12 +44,7 @@ const Dashboard = () => {
   }, [user, userProfile, authLoading, navigate]);
 
   // Show loading state while auth or data is loading
-  if (authLoading || dataLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  // Don't render dashboard for unauthenticated users
-  if (!user) {
+  if (authLoading || dataLoading || !user || !userProfile) {
     return <DashboardSkeleton />;
   }
 
