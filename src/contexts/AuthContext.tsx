@@ -816,29 +816,23 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      logger.debug("Signing in with Google...");
+      logger.debug("Signing in with Google via OAuth proxy...");
       setLoading(true);
 
-      // Resolve current site so OAuth users are scoped to the correct tenant/site
+      // Use our custom OAuth proxy edge function to bypass GoTrue's GOTRUE_SITE_URL limitation
+      const edgeFunctionsUrl = getEdgeFunctionUrl('oauth-proxy');
+      const redirectTo = '/dashboard';
+
+      const oauthUrl = `${edgeFunctionsUrl}?action=authorize&provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+
+      gtag.trackAuth('login', 'google');
+
+      // Redirect to OAuth proxy which handles the full flow
       const location = getWindowLocation();
-      const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-        },
-      });
-
-      if (error) {
-        logger.error("Google sign in error:", error);
-        setLoading(false);
-        return { error: error.message };
+      if (location) {
+        location.href = oauthUrl;
       }
 
-      logger.debug("Google sign in successful");
-      gtag.trackAuth('login', 'google');
-      // User will be redirected, loading will be handled by redirect
       return {};
     } catch (error) {
       logger.error("Google sign in exception:", error);
@@ -849,28 +843,23 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const signInWithApple = useCallback(async () => {
     try {
-      logger.debug("Signing in with Apple...");
+      logger.debug("Signing in with Apple via OAuth proxy...");
       setLoading(true);
 
+      // Use our custom OAuth proxy edge function to bypass GoTrue's GOTRUE_SITE_URL limitation
+      const edgeFunctionsUrl = getEdgeFunctionUrl('oauth-proxy');
+      const redirectTo = '/dashboard';
+
+      const oauthUrl = `${edgeFunctionsUrl}?action=authorize&provider=apple&redirect_to=${encodeURIComponent(redirectTo)}`;
+
+      gtag.trackAuth('login', 'apple');
+
+      // Redirect to OAuth proxy which handles the full flow
       const location = getWindowLocation();
-      const redirectUrl = location ? `${location.origin}/dashboard` : 'builddesk://dashboard';
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: redirectUrl,
-        },
-      });
-
-      if (error) {
-        logger.error("Apple sign in error:", error);
-        setLoading(false);
-        return { error: error.message };
+      if (location) {
+        location.href = oauthUrl;
       }
 
-      logger.debug("Apple sign in successful");
-      gtag.trackAuth('login', 'apple');
-      // User will be redirected, loading will be handled by redirect
       return {};
     } catch (error) {
       logger.error("Apple sign in exception:", error);

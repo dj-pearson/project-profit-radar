@@ -26,6 +26,7 @@ import {
   LazyWorkflowManagement,
   LazyWorkflowTesting,
   LazyAuth,
+  LazyAuthCallback,
   LazySetup,
   LazyCheckoutSuccess,
   LazyPaymentSuccess,
@@ -54,6 +55,7 @@ export const appRoutes = (
     <Route path="/dashboard" element={<LazyDashboard />} />
     <Route path="/my-tasks" element={<LazyMyTasks />} />
     <Route path="/auth" element={<LazyAuth />} />
+    <Route path="/auth/callback" element={<LazyAuthCallback />} />
     <Route path="/setup" element={<LazySetup />} />
     <Route path="/checkout/success" element={<LazyCheckoutSuccess />} />
     <Route path="/payment-success" element={<LazyPaymentSuccess />} />
