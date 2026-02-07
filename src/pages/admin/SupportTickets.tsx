@@ -419,7 +419,7 @@ const SupportTickets = () => {
           ))
         )}
       </div>
-    </div>
+    </main>
   );
 };
 
