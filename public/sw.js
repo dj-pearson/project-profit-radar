@@ -93,6 +93,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip external/cross-origin requests (Unsplash, Google, etc.) - let browser handle them
+  // This prevents CSP issues and service worker errors with external resources
+  if (url.origin !== self.location.origin && 
+      !url.hostname.includes('supabase') &&
+      !url.hostname.includes('build-desk.com')) {
+    return;
+  }
+
   // Handle API requests with network-first strategy
   if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
     event.respondWith(networkFirst(request));
@@ -131,8 +139,13 @@ async function cacheFirst(request) {
     }
     return response;
   } catch (error) {
-    // Return offline fallback if available
-    return new Response('Offline', { status: 503 });
+    console.warn('Service Worker: Failed to fetch static asset:', request.url, error);
+    // Return a proper error response for static assets
+    return new Response('Resource unavailable', {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 }
 
@@ -147,8 +160,17 @@ async function networkFirst(request) {
     }
     return response;
   } catch (error) {
+    console.warn('Service Worker: Network request failed, trying cache:', request.url, error);
     const cached = await cache.match(request);
-    return cached || new Response('Offline', { status: 503 });
+    if (cached) {
+      return cached;
+    }
+    // Return a proper error response instead of throwing
+    return new Response(JSON.stringify({ error: 'Network request failed' }), {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
