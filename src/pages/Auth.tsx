@@ -5,15 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
@@ -21,22 +12,40 @@ import {
 } from "@/components/ui/input-otp";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Shield, AlertCircle, CheckCircle, XCircle, Mail, Clock, RefreshCw, KeyRound } from "lucide-react";
+import {
+  Shield,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  RefreshCw,
+  KeyRound,
+  ArrowLeft,
+  Building2,
+  BarChart3,
+  Users,
+  HardHat,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { getReturnUrl, clearRememberedRoute } from "@/lib/routeMemory";
 
 // Redirect loop detection constants
 const REDIRECT_LOOP_KEY = 'bd.auth.redirectLoop';
-const REDIRECT_LOOP_THRESHOLD = 3; // Max redirects in time window
-const REDIRECT_LOOP_WINDOW = 10000; // 10 seconds
+const REDIRECT_LOOP_THRESHOLD = 3;
+const REDIRECT_LOOP_WINDOW = 10000;
 
 // OTP verification flow states
 type OTPFlowState =
-  | 'idle'           // Not in OTP flow
-  | 'sending'        // Sending OTP email
-  | 'verifying'      // Waiting for user to enter OTP
-  | 'submitted'      // OTP submitted, verifying
-  | 'verified'       // OTP verified successfully
-  | 'setting_password'; // Setting new password (for reset)
+  | 'idle'
+  | 'sending'
+  | 'verifying'
+  | 'submitted'
+  | 'verified'
+  | 'setting_password';
+
+// Auth view states
+type AuthView = 'signin' | 'signup' | 'forgot';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -45,7 +54,8 @@ const Auth = () => {
   const [lastName, setLastName] = useState("");
   const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("signin");
+  const [activeView, setActiveView] = useState<AuthView>("signin");
+  const [showPassword, setShowPassword] = useState(false);
   const [passwordValidation, setPasswordValidation] = useState({
     isValid: true,
     errors: [] as string[],
@@ -96,20 +106,14 @@ const Auth = () => {
       if (stored) {
         const data = JSON.parse(stored);
         const now = Date.now();
-
-        // Clean up old entries outside the time window
         const recentRedirects = data.timestamps.filter(
           (ts: number) => now - ts < REDIRECT_LOOP_WINDOW
         );
-
         if (recentRedirects.length >= REDIRECT_LOOP_THRESHOLD) {
           console.warn('Redirect loop detected, blocking redirect');
-          // Clear the loop data after detecting
           sessionStorage.removeItem(REDIRECT_LOOP_KEY);
-          return true; // Loop detected
+          return true;
         }
-
-        // Update with cleaned data
         sessionStorage.setItem(REDIRECT_LOOP_KEY, JSON.stringify({
           timestamps: recentRedirects
         }));
@@ -120,7 +124,6 @@ const Auth = () => {
     }
   }, []);
 
-  // Record a redirect attempt
   const recordRedirectAttempt = useCallback(() => {
     try {
       const stored = sessionStorage.getItem(REDIRECT_LOOP_KEY);
@@ -132,7 +135,6 @@ const Auth = () => {
     }
   }, []);
 
-  // Clear redirect loop tracking on successful stable auth
   const clearRedirectLoopTracking = useCallback(() => {
     try {
       sessionStorage.removeItem(REDIRECT_LOOP_KEY);
@@ -184,14 +186,12 @@ const Auth = () => {
     }
 
     if (tab) {
-      setActiveTab(tab);
+      setActiveView(tab as AuthView);
     }
   }, []);
 
   // Navigate to dashboard after successful authentication
-  // Handle special auth parameters for SEO
   useEffect(() => {
-    // Check for special auth parameters that should show the auth page
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = urlParams.get('type') || hashParams.get('type');
@@ -199,79 +199,59 @@ const Auth = () => {
     const errorRecovery = urlParams.has('error_recovery');
     const refresh = urlParams.has('refresh');
 
-    // If we have error_recovery or refresh parameters, clean the URL for SEO
     if (errorRecovery || refresh) {
-      // Replace URL without parameters to avoid redirect issues
       window.history.replaceState({}, '', '/auth');
-      // Clear any loop tracking when we hit recovery mode
       clearRedirectLoopTracking();
       return;
     }
 
-    // Wait until auth profile has finished loading
     if (!user || authLoading) {
-      // Reset redirect attempt flag when user logs out
       hasAttemptedRedirect.current = false;
       return;
     }
 
-    // Don't redirect to dashboard if this is a password recovery session
     if (type === 'recovery') {
       return;
     }
 
-    // Prevent redirect loops - check if we've redirected too many times recently
     if (checkRedirectLoop()) {
       console.warn('Auth: Redirect loop detected, staying on auth page');
-      // Clear auth state to break the loop
       hasAttemptedRedirect.current = true;
       return;
     }
 
-    // Prevent multiple redirect attempts in the same render cycle
     if (hasAttemptedRedirect.current) {
       return;
     }
 
-    // Require a valid session before redirecting (not just user object)
-    // This prevents redirects during transitional auth states
     if (!session) {
       console.debug('Auth: User exists but no session, waiting for stable auth state');
       return;
     }
 
-    // Add a small stability delay before redirecting
-    // This prevents redirects during rapid auth state changes
     if (redirectStabilityTimer.current) {
       clearTimeout(redirectStabilityTimer.current);
     }
 
     redirectStabilityTimer.current = setTimeout(() => {
-      // Double-check we still have valid auth state after the delay
       if (!user || !session || authLoading) {
         return;
       }
 
-      // Mark that we've attempted a redirect
       hasAttemptedRedirect.current = true;
       recordRedirectAttempt();
 
-      // Check if there's a pending checkout
       const pendingCheckout = localStorage.getItem('pendingCheckout');
       if (pendingCheckout && redirect === 'checkout') {
         try {
           const checkout = JSON.parse(pendingCheckout);
-          // Check if checkout is not expired (1 hour)
           if (Date.now() - checkout.timestamp < 3600000) {
-            // Clear the stored checkout
             localStorage.removeItem('pendingCheckout');
             clearRememberedRoute();
             clearRedirectLoopTracking();
-            // Navigate to pricing which will auto-trigger checkout since user is now authenticated
             navigate('/pricing');
             return;
           } else {
-            // Expired, clear it
             localStorage.removeItem('pendingCheckout');
           }
         } catch (e) {
@@ -280,7 +260,6 @@ const Auth = () => {
         }
       }
 
-      // If user doesn't have a company in their profile (and isn't root_admin), redirect to setup
       if (!userProfile || (!userProfile.company_id && userProfile.role !== 'root_admin')) {
         clearRememberedRoute();
         clearRedirectLoopTracking();
@@ -288,16 +267,11 @@ const Auth = () => {
         return;
       }
 
-      // Get return URL from query params or remembered route
       const returnUrl = getReturnUrl(urlParams, '/dashboard');
-
-      // Clear route memory after successful redirect
       clearRememberedRoute();
       clearRedirectLoopTracking();
-
-      // Navigate to the return URL
       navigate(returnUrl);
-    }, 100); // 100ms stability delay
+    }, 100);
 
     return () => {
       if (redirectStabilityTimer.current) {
@@ -308,225 +282,123 @@ const Auth = () => {
 
   const validatePasswordInput = (pwd: string) => {
     const errors: string[] = [];
-    
     if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
     if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
     if (!/[a-z]/.test(pwd)) errors.push('Password must contain at least one lowercase letter');
     if (!/\d/.test(pwd)) errors.push('Password must contain at least one number');
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) errors.push('Password must contain at least one special character');
-    
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Password must contain at least one special character');
     setPasswordValidation({ isValid: errors.length === 0, errors });
     setShowPasswordRequirements(pwd.length > 0);
   };
 
-  const getPasswordRequirementStatus = (requirement: string) => {
-    const hasLower = /[a-z]/.test(password);
-    const hasUpper = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isLongEnough = password.length >= 8;
-
+  const getPasswordRequirementStatus = (requirement: string, pwd: string = password) => {
     switch (requirement) {
-      case 'length': return isLongEnough;
-      case 'lowercase': return hasLower;
-      case 'uppercase': return hasUpper;
-      case 'number': return hasNumber;
-      case 'special': return hasSpecial;
+      case 'length': return pwd.length >= 8;
+      case 'lowercase': return /[a-z]/.test(pwd);
+      case 'uppercase': return /[A-Z]/.test(pwd);
+      case 'number': return /\d/.test(pwd);
+      case 'special': return /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
       default: return false;
     }
   };
 
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
-
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       return;
     }
-
     setLoading(true);
-
     const { error } = await signIn(email, password);
-
     if (!error) {
-      toast({
-        title: "Welcome back!",
-        description: "You've been successfully signed in.",
-      });
+      toast({ title: "Welcome back!", description: "You've been successfully signed in." });
     }
-
     setLoading(false);
   };
 
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
-
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       return;
     }
-
     if (!passwordValidation.isValid) {
-      toast({
-        variant: "destructive",
-        title: "Password Requirements Not Met",
-        description: passwordValidation.errors[0],
-      });
+      toast({ variant: "destructive", title: "Password Requirements Not Met", description: passwordValidation.errors[0] });
       return;
     }
-
     setLoading(true);
     setOtpFlowState('sending');
-
-    const userData = {
-      first_name: firstName,
-      last_name: lastName,
-      role: "admin",
-    };
-
-    // Create account and send OTP via signup-with-otp edge function
-    // This bypasses Supabase's email system and sends OTP via Amazon SES
+    const userData = { first_name: firstName, last_name: lastName, role: "admin" };
     const result = await signUp(email, password, userData);
-
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Sign Up Failed",
-        description: result.error,
-      });
+      toast({ variant: "destructive", title: "Sign Up Failed", description: result.error });
       setOtpFlowState('idle');
     } else {
-      // OTP was already sent by the signup-with-otp edge function
       setOtpExpiresIn(result.expiresInMinutes || 15);
       setOtpFlowState('verifying');
       setEmailSent(true);
       setEmailSentType('signup');
       startResendCooldown(60);
-      toast({
-        title: "Verification Code Sent!",
-        description: "Please check your email for the 6-digit verification code.",
-      });
+      toast({ title: "Verification Code Sent!", description: "Please check your email for the 6-digit verification code." });
     }
-
     setLoading(false);
   };
 
-  // Handle OTP verification for signup
   const handleVerifySignupOTP = async () => {
     if (otpCode.length !== 6) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Code",
-        description: "Please enter the complete 6-digit verification code.",
-      });
+      toast({ variant: "destructive", title: "Invalid Code", description: "Please enter the complete 6-digit verification code." });
       return;
     }
-
     setLoading(true);
     setOtpFlowState('submitted');
-
-    const result = await verifyOTP({
-      email,
-      otpCode,
-      type: 'confirm_signup',
-    });
-
+    const result = await verifyOTP({ email, otpCode, type: 'confirm_signup' });
     if (result.success && result.emailConfirmed) {
       setOtpFlowState('verified');
-      toast({
-        title: "Email Verified!",
-        description: "Your account has been verified. You can now sign in.",
-      });
-      // Reset form and switch to sign in tab
+      toast({ title: "Email Verified!", description: "Your account has been verified. You can now sign in." });
       setTimeout(() => {
         setOtpFlowState('idle');
         setEmailSent(false);
         setEmailSentType(null);
         setOtpCode("");
         setPassword("");
-        setActiveTab("signin");
+        setActiveView("signin");
       }, 2000);
     } else {
       setOtpFlowState('verifying');
-      toast({
-        variant: "destructive",
-        title: "Verification Failed",
-        description: result.error || "Invalid verification code. Please try again.",
-      });
+      toast({ variant: "destructive", title: "Verification Failed", description: result.error || "Invalid verification code. Please try again." });
     }
-
     setLoading(false);
   };
 
-  // Handle resend OTP for signup
   const handleResendSignupOTP = async () => {
     if (otpResendCooldown > 0) return;
-
     setLoading(true);
-
-    const result = await resendOTP({
-      email,
-      type: 'confirm_signup',
-      recipientName: firstName,
-    });
-
+    const result = await resendOTP({ email, type: 'confirm_signup', recipientName: firstName });
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+      toast({ variant: "destructive", title: "Error", description: result.error });
     } else {
       setOtpExpiresIn(result.expiresInMinutes || 15);
       setOtpCode("");
       startResendCooldown(60);
-      toast({
-        title: "Code Resent!",
-        description: "A new verification code has been sent to your email.",
-      });
+      toast({ title: "Code Resent!", description: "A new verification code has been sent to your email." });
     }
-
     setLoading(false);
   };
 
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(resetEmail)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       return;
     }
-
     setLoading(true);
     setOtpFlowState('sending');
-
-    // Send OTP for password reset via reset-password-otp edge function
-    // This bypasses Supabase's email system and sends OTP via Amazon SES
     const result = await resetPassword(resetEmail);
-
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Reset Failed",
-        description: result.error,
-      });
+      toast({ variant: "destructive", title: "Reset Failed", description: result.error });
       setOtpFlowState('idle');
     } else {
       setOtpExpiresIn(result.expiresInMinutes || 10);
@@ -534,86 +406,45 @@ const Auth = () => {
       setEmailSent(true);
       setEmailSentType('reset');
       startResendCooldown(60);
-      toast({
-        title: "Reset Code Sent!",
-        description: "Please check your email for the 6-digit verification code.",
-      });
+      toast({ title: "Reset Code Sent!", description: "Please check your email for the 6-digit verification code." });
     }
-
     setLoading(false);
   };
 
-  // Validate new password for reset
   const validateNewPassword = (pwd: string) => {
     const errors: string[] = [];
-
     if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
     if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
     if (!/[a-z]/.test(pwd)) errors.push('Password must contain at least one lowercase letter');
     if (!/\d/.test(pwd)) errors.push('Password must contain at least one number');
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) errors.push('Password must contain at least one special character');
-
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Password must contain at least one special character');
     setNewPasswordValidation({ isValid: errors.length === 0, errors });
   };
 
-  // Handle OTP format validation for password reset
-  // Note: Actual OTP verification happens in handleSetNewPassword to avoid
-  // marking the OTP as used before the password is set
   const handleVerifyResetOTP = () => {
     if (otpCode.length !== 6) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Code",
-        description: "Please enter the complete 6-digit verification code.",
-      });
+      toast({ variant: "destructive", title: "Invalid Code", description: "Please enter the complete 6-digit verification code." });
       return;
     }
-
-    // Just validate format and proceed to password entry
-    // The actual OTP verification will happen when setting the new password
     setOtpFlowState('setting_password');
-    toast({
-      title: "Enter New Password",
-      description: "Please create your new password below.",
-    });
+    toast({ title: "Enter New Password", description: "Please create your new password below." });
   };
 
-  // Handle setting new password after OTP entry
-  // This verifies the OTP and sets the new password in one step
   const handleSetNewPassword = async (e: FormEvent) => {
     e.preventDefault();
-
     if (!newPasswordValidation.isValid) {
-      toast({
-        variant: "destructive",
-        title: "Password Requirements Not Met",
-        description: newPasswordValidation.errors[0],
-      });
+      toast({ variant: "destructive", title: "Password Requirements Not Met", description: newPasswordValidation.errors[0] });
       return;
     }
-
     if (newPassword !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Passwords Don't Match",
-        description: "Please make sure your passwords match.",
-      });
+      toast({ variant: "destructive", title: "Passwords Don't Match", description: "Please make sure your passwords match." });
       return;
     }
-
     setLoading(true);
-
-    // Verify OTP and set new password via reset-password-otp edge function
-    // This bypasses Supabase's email system entirely
     const result = await resetPasswordWithOTP(resetEmail, otpCode, newPassword);
-
     if (result.success) {
       setOtpFlowState('verified');
-      toast({
-        title: "Password Reset!",
-        description: "Your password has been updated. You can now sign in.",
-      });
-      // Reset form and switch to sign in tab
+      toast({ title: "Password Reset!", description: "Your password has been updated. You can now sign in." });
       setTimeout(() => {
         setOtpFlowState('idle');
         setEmailSent(false);
@@ -622,354 +453,467 @@ const Auth = () => {
         setResetEmail("");
         setNewPassword("");
         setConfirmPassword("");
-        setActiveTab("signin");
+        setActiveView("signin");
       }, 2000);
     } else {
-      // If OTP verification failed, go back to the OTP entry step
       if (result.error?.toLowerCase().includes('code') || result.error?.toLowerCase().includes('otp')) {
         setOtpFlowState('verifying');
       }
-      toast({
-        variant: "destructive",
-        title: "Reset Failed",
-        description: result.error || "Failed to reset password. Please try again.",
-      });
+      toast({ variant: "destructive", title: "Reset Failed", description: result.error || "Failed to reset password. Please try again." });
     }
-
     setLoading(false);
   };
 
-  // Handle resend OTP for password reset
   const handleResendResetOTP = async () => {
     if (otpResendCooldown > 0) return;
-
     setLoading(true);
-
-    // Resend OTP via reset-password-otp edge function
     const result = await resetPassword(resetEmail);
-
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+      toast({ variant: "destructive", title: "Error", description: result.error });
     } else {
       setOtpExpiresIn(result.expiresInMinutes || 10);
       setOtpCode("");
       startResendCooldown(60);
-      toast({
-        title: "Code Resent!",
-        description: "A new verification code has been sent to your email.",
-      });
+      toast({ title: "Code Resent!", description: "A new verification code has been sent to your email." });
     }
-
     setLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const { error } = await signInWithGoogle();
-    
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign In Failed",
-        description: error,
-      });
+      toast({ variant: "destructive", title: "Google Sign In Failed", description: error });
       setLoading(false);
     }
-    // If successful, user will be redirected by OAuth flow
   };
 
   const handleAppleSignIn = async () => {
     setLoading(true);
     const { error } = await signInWithApple();
-    
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Apple Sign In Failed",
-        description: error,
-      });
+      toast({ variant: "destructive", title: "Apple Sign In Failed", description: error });
       setLoading(false);
     }
-    // If successful, user will be redirected by OAuth flow
   };
+
+  // Password requirement rendering helper
+  const renderPasswordRequirements = (pwd: string, idPrefix: string) => (
+    <div id={`${idPrefix}-requirements`} className="space-y-1.5 p-3 rounded-lg bg-slate-800/50 border border-white/5" role="status" aria-live="polite">
+      <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Password Requirements</p>
+      <ul className="space-y-1" aria-label="Password requirements checklist">
+        {[
+          { key: 'length', text: 'At least 8 characters' },
+          { key: 'lowercase', text: 'One lowercase letter' },
+          { key: 'uppercase', text: 'One uppercase letter' },
+          { key: 'number', text: 'One number' },
+          { key: 'special', text: 'One special character' }
+        ].map(req => {
+          const met = getPasswordRequirementStatus(req.key, pwd);
+          return (
+            <li key={req.key} className="flex items-center gap-2 text-xs">
+              {met ? (
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true" />
+              ) : (
+                <XCircle className="w-3.5 h-3.5 text-slate-500 shrink-0" aria-hidden="true" />
+              )}
+              <span className={met ? 'text-emerald-400' : 'text-slate-500'}>
+                {req.text}
+                <span className="sr-only">{met ? ' - met' : ' - not met'}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+
+  // OTP input rendering helper
+  const renderOTPInput = () => (
+    <div className="flex justify-center py-4">
+      <InputOTP
+        value={otpCode}
+        onChange={setOtpCode}
+        maxLength={6}
+        disabled={loading || otpFlowState === 'submitted'}
+        aria-label="Enter 6-digit verification code"
+      >
+        <InputOTPGroup>
+          <InputOTPSlot index={0} className="border-white/20 text-white bg-white/5" />
+          <InputOTPSlot index={1} className="border-white/20 text-white bg-white/5" />
+          <InputOTPSlot index={2} className="border-white/20 text-white bg-white/5" />
+        </InputOTPGroup>
+        <InputOTPSeparator className="text-white/30" />
+        <InputOTPGroup>
+          <InputOTPSlot index={3} className="border-white/20 text-white bg-white/5" />
+          <InputOTPSlot index={4} className="border-white/20 text-white bg-white/5" />
+          <InputOTPSlot index={5} className="border-white/20 text-white bg-white/5" />
+        </InputOTPGroup>
+      </InputOTP>
+    </div>
+  );
+
+  // OAuth buttons component
+  const renderOAuthButtons = () => (
+    <div className="space-y-3">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-white/10" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-slate-900 px-3 text-slate-500">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+          disabled={loading}
+          onClick={handleGoogleSignIn}
+        >
+          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+          </svg>
+          Google
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+          disabled={loading}
+          onClick={handleAppleSignIn}
+        >
+          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          Apple
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Styled input component for dark theme
+  const inputClassName = "bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:ring-blue-500/20 transition-colors";
 
   return (
     <main
-      className="min-h-screen bg-background flex items-center justify-center p-4"
+      className="min-h-screen flex"
       role="main"
       aria-label="Authentication"
     >
-      <div className="w-full max-w-md">
-        <header className="text-center mb-6">
-          <Link to="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-construction-blue hover:text-construction-orange transition-colors">
-              Build Desk
-            </h1>
-          </Link>
-          <p className="text-muted-foreground mt-2">
-            Construction Management Platform
-          </p>
-        </header>
+      {/* Left Panel - Branding & Hero */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          {/* Grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+              backgroundSize: '60px 60px',
+            }}
+          />
+          {/* Gradient orbs */}
+          <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-orange-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+          <div className="absolute top-2/3 left-1/3 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+        </div>
 
-        {/* Plan Context Banner */}
-        {pendingPlan && (
-          <Alert className="mb-4 border-construction-blue bg-construction-blue/5" role="status">
-            <Shield className="h-4 w-4 text-construction-blue" aria-hidden="true" />
-            <AlertDescription className="text-construction-dark">
-              <strong>Signing up for {pendingPlan.tier.charAt(0).toUpperCase() + pendingPlan.tier.slice(1)} Plan</strong>
-              <p className="text-sm mt-1">
-                {pendingPlan.period === 'annual' ? 'Annual billing' : 'Monthly billing'} • 14-day free trial
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
+          {/* Logo */}
+          <div>
+            <Link to="/" className="inline-flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-white">
+                Build<span className="text-blue-400">Desk</span>
+              </span>
+            </Link>
+          </div>
+
+          {/* Hero text */}
+          <div className="space-y-8 max-w-lg">
+            <div className="space-y-4">
+              <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
+                Build smarter.{' '}
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  Profit more.
+                </span>
+              </h1>
+              <p className="text-lg text-slate-400 leading-relaxed">
+                The construction management platform that gives you real-time financial control without enterprise complexity.
               </p>
-            </AlertDescription>
-          </Alert>
-        )}
+            </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" aria-label="Authentication options">
-          <TabsList className="grid w-full grid-cols-3" aria-label="Choose authentication method">
-            <TabsTrigger value="signin" aria-controls="signin-panel">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" aria-controls="signup-panel">Sign Up</TabsTrigger>
-            <TabsTrigger value="forgot" aria-controls="forgot-panel">Reset Password</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="signin" id="signin-panel">
-            <Card>
-              <CardHeader>
-                <CardTitle>Welcome Back</CardTitle>
-                <CardDescription>
-                  Sign in to your Build Desk account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4" aria-label="Sign in form">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                      aria-required="true"
-                    />
+            {/* Feature highlights */}
+            <div className="grid gap-4">
+              {[
+                { icon: BarChart3, title: 'Real-Time Job Costing', desc: 'Know your margins on every project, every day' },
+                { icon: Users, title: 'Team Collaboration', desc: 'Field to office, everyone stays in sync' },
+                { icon: HardHat, title: 'Built for Construction', desc: 'Purpose-built tools for how you actually work' },
+              ].map((feature) => (
+                <div key={feature.title} className="flex items-start gap-4 group">
+                  <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:border-blue-500/30 transition-colors">
+                    <feature.icon className="w-5 h-5 text-blue-400" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">{feature.title}</h3>
+                    <p className="text-sm text-slate-500">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trust indicators */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-6">
+              <div className="flex -space-x-2">
+                {[
+                  'bg-blue-500', 'bg-emerald-500', 'bg-orange-500', 'bg-purple-500', 'bg-pink-500'
+                ].map((color, i) => (
+                  <div
+                    key={i}
+                    className={`w-8 h-8 rounded-full ${color} border-2 border-slate-900 flex items-center justify-center`}
+                  >
+                    <span className="text-[10px] font-bold text-white">
+                      {['JM', 'SK', 'AR', 'TW', 'LP'][i]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-slate-400">
+                Trusted by <span className="text-white font-medium">500+</span> construction companies
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              <span className="flex items-center gap-1">
+                <Shield className="w-3.5 h-3.5 text-emerald-500" />
+                SOC2 Ready
+              </span>
+              <span className="w-1 h-1 rounded-full bg-slate-700" />
+              <span>256-bit encryption</span>
+              <span className="w-1 h-1 rounded-full bg-slate-700" />
+              <span>99.9% uptime</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Auth Forms */}
+      <div className="w-full lg:w-1/2 xl:w-[45%] bg-slate-900 flex items-center justify-center p-6 sm:p-8 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-white">
+                Build<span className="text-blue-400">Desk</span>
+              </span>
+            </Link>
+          </div>
+
+          {/* Plan Context Banner */}
+          {pendingPlan && (
+            <div className="mb-6 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20" role="status">
+              <div className="flex items-center gap-2 text-blue-400">
+                <Shield className="h-4 w-4" aria-hidden="true" />
+                <span className="text-sm font-medium">
+                  {pendingPlan.tier.charAt(0).toUpperCase() + pendingPlan.tier.slice(1)} Plan
+                </span>
+                <span className="text-blue-400/50 text-xs">
+                  {pendingPlan.period === 'annual' ? 'Annual' : 'Monthly'} - 14-day free trial
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* ===== SIGN IN VIEW ===== */}
+          {activeView === 'signin' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Welcome back</h2>
+                <p className="text-slate-400 mt-1 text-sm">Sign in to your BuildDesk account</p>
+              </div>
+
+              {renderOAuthButtons()}
+
+              <form onSubmit={handleSignIn} className="space-y-4" aria-label="Sign in form">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    aria-required="true"
+                    placeholder="you@company.com"
+                    className={inputClassName}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-slate-300 text-sm">Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => setActiveView("forgot")}
+                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
                       aria-required="true"
+                      placeholder="Enter your password"
+                      className={`${inputClassName} pr-10`}
                     />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
-                    {loading ? "Signing In..." : "Sign In"}
-                  </Button>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* TEMPORARILY DISABLED: Google Sign-In (OAuth redirect issue) */}
-                  {/* <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    disabled={loading}
-                    onClick={handleGoogleSignIn}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    {loading ? "Signing In..." : "Continue with Google"}
-                  </Button> */}
-
-                  {/* TEMPORARILY DISABLED: Apple Sign-In (OAuth redirect issue) */}
-                  {/* <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    disabled={loading}
-                    onClick={handleAppleSignIn}
-                  >
-                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                    </svg>
-                    {loading ? "Signing In..." : "Continue with Apple"}
-                  </Button> */}
-
-                  <div className="text-center">
                     <button
                       type="button"
-                      onClick={() => setActiveTab("forgot")}
-                      className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
-                      Forgot your password?
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
+                  disabled={loading}
+                  aria-busy={loading}
+                >
+                  {loading ? "Signing in..." : "Sign in"}
+                </Button>
+              </form>
 
-          <TabsContent value="signup" id="signup-panel">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Account</CardTitle>
-                <CardDescription>
-                  Get started with Build Desk today
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {emailSent && emailSentType === 'signup' ? (
-                  <div className="text-center space-y-4" role="status" aria-live="polite">
-                    {otpFlowState === 'verified' ? (
-                      <>
+              <p className="text-center text-sm text-slate-500">
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => setActiveView("signup")}
+                  className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                >
+                  Create one
+                </button>
+              </p>
+            </div>
+          )}
+
+          {/* ===== SIGN UP VIEW ===== */}
+          {activeView === 'signup' && (
+            <div className="space-y-6">
+              {emailSent && emailSentType === 'signup' ? (
+                /* OTP Verification for Signup */
+                <div className="space-y-6" role="status" aria-live="polite">
+                  {otpFlowState === 'verified' ? (
+                    <div className="text-center space-y-4 py-8">
+                      <div className="flex justify-center">
+                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                          <CheckCircle className="w-8 h-8 text-emerald-400" aria-hidden="true" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Email Verified!</h3>
+                        <p className="text-slate-400 text-sm mt-1">Redirecting to sign in...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      <button
+                        type="button"
+                        onClick={() => { setEmailSent(false); setEmailSentType(null); setOtpFlowState('idle'); setOtpCode(""); }}
+                        className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
+                      </button>
+
+                      <div className="text-center space-y-2">
                         <div className="flex justify-center">
-                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8 text-green-600" aria-hidden="true" />
+                          <div className="w-14 h-14 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
+                            <KeyRound className="w-7 h-7 text-orange-400" aria-hidden="true" />
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold text-green-600">Email Verified!</h3>
-                          <p className="text-muted-foreground">
-                            Your account has been verified. Redirecting to sign in...
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex justify-center">
-                          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                            <KeyRound className="w-8 h-8 text-orange-600" aria-hidden="true" />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold">Enter Verification Code</h3>
-                          <p className="text-muted-foreground">
-                            We've sent a 6-digit code to <strong>{email}</strong>
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            The code expires in {otpExpiresIn} minutes.
-                          </p>
-                        </div>
-
-                        <div className="flex justify-center py-4">
-                          <InputOTP
-                            value={otpCode}
-                            onChange={setOtpCode}
-                            maxLength={6}
-                            disabled={loading || otpFlowState === 'submitted'}
-                          >
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                            </InputOTPGroup>
-                            <InputOTPSeparator />
-                            <InputOTPGroup>
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
-
-                        <Button
-                          className="w-full"
-                          onClick={handleVerifySignupOTP}
-                          disabled={loading || otpCode.length !== 6}
-                        >
-                          {loading ? "Verifying..." : "Verify Email"}
-                        </Button>
-
-                        <div className="flex items-center justify-center gap-2 text-sm">
-                          <span className="text-muted-foreground">Didn't receive the code?</span>
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto"
-                            onClick={handleResendSignupOTP}
-                            disabled={loading || otpResendCooldown > 0}
-                            aria-label={otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown} seconds` : "Resend verification code"}
-                          >
-                            {otpResendCooldown > 0 ? (
-                              <span className="flex items-center gap-1">
-                                <RefreshCw className="h-3 w-3" aria-hidden="true" />
-                                Resend in {otpResendCooldown}s
-                              </span>
-                            ) : (
-                              "Resend Code"
-                            )}
-                          </Button>
-                        </div>
-
-                        <Alert>
-                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                          <AlertDescription>
-                            Check your spam folder if you don't see the email.
-                          </AlertDescription>
-                        </Alert>
-
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setEmailSent(false);
-                            setEmailSentType(null);
-                            setOtpFlowState('idle');
-                            setOtpCode("");
-                            setActiveTab("signin");
-                          }}
-                        >
-                          Back to Sign In
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <form onSubmit={handleSignUp} className="space-y-4" aria-label="Create account form">
-                    {/* Email Verification Notice */}
-                    <Alert className="border-blue-500 bg-blue-50" role="note">
-                      <Mail className="h-4 w-4 text-blue-600" aria-hidden="true" />
-                      <AlertDescription className="text-blue-900">
-                        <strong>Email Verification Required</strong>
-                        <p className="text-sm mt-1">
-                          After signing up, you'll receive a 6-digit verification code to activate your account.
+                        <h3 className="text-lg font-semibold text-white">Verify your email</h3>
+                        <p className="text-sm text-slate-400">
+                          We sent a 6-digit code to <span className="text-white font-medium">{email}</span>
                         </p>
-                      </AlertDescription>
-                    </Alert>
+                        <p className="text-xs text-slate-500">Expires in {otpExpiresIn} minutes</p>
+                      </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                      {renderOTPInput()}
+
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                        onClick={handleVerifySignupOTP}
+                        disabled={loading || otpCode.length !== 6}
+                      >
+                        {loading ? "Verifying..." : "Verify Email"}
+                      </Button>
+
+                      <div className="flex items-center justify-center gap-2 text-sm">
+                        <span className="text-slate-500">Didn't receive it?</span>
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto text-blue-400 hover:text-blue-300"
+                          onClick={handleResendSignupOTP}
+                          disabled={loading || otpResendCooldown > 0}
+                          aria-label={otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown} seconds` : "Resend verification code"}
+                        >
+                          {otpResendCooldown > 0 ? (
+                            <span className="flex items-center gap-1">
+                              <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                              {otpResendCooldown}s
+                            </span>
+                          ) : "Resend"}
+                        </Button>
+                      </div>
+
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-white/5">
+                        <p className="text-xs text-slate-500 flex items-start gap-2">
+                          <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                          Check your spam folder if you don't see the email.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Signup Form */
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Create your account</h2>
+                    <p className="text-slate-400 mt-1 text-sm">Start your 14-day free trial</p>
+                  </div>
+
+                  {renderOAuthButtons()}
+
+                  <form onSubmit={handleSignUp} className="space-y-4" aria-label="Create account form">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName" className="text-slate-300 text-sm">First name</Label>
                         <Input
                           id="firstName"
                           value={firstName}
@@ -977,10 +921,12 @@ const Auth = () => {
                           required
                           autoComplete="given-name"
                           aria-required="true"
+                          placeholder="John"
+                          className={inputClassName}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName" className="text-slate-300 text-sm">Last name</Label>
                         <Input
                           id="lastName"
                           value={lastName}
@@ -988,11 +934,14 @@ const Auth = () => {
                           required
                           autoComplete="family-name"
                           aria-required="true"
+                          placeholder="Doe"
+                          className={inputClassName}
                         />
                       </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="signupEmail">Email</Label>
+                      <Label htmlFor="signupEmail" className="text-slate-300 text-sm">Work email</Label>
                       <Input
                         id="signupEmail"
                         type="email"
@@ -1001,214 +950,132 @@ const Auth = () => {
                         required
                         autoComplete="email"
                         aria-required="true"
+                        placeholder="you@company.com"
+                        className={inputClassName}
                       />
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="signupPassword">Password</Label>
-                      <Input
-                        id="signupPassword"
-                        type="password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          validatePasswordInput(e.target.value);
-                        }}
-                        required
-                        minLength={8}
-                        autoComplete="new-password"
-                        aria-required="true"
-                        aria-describedby={showPasswordRequirements ? "password-requirements" : undefined}
-                        aria-invalid={!passwordValidation.isValid && password.length > 0}
-                      />
-                      {showPasswordRequirements && (
-                        <div id="password-requirements" className="space-y-2 p-3 bg-muted rounded-md" role="status" aria-live="polite">
-                          <p className="text-sm font-medium">Password Requirements:</p>
-                          <ul className="space-y-1" aria-label="Password requirements checklist">
-                            {[
-                              { key: 'length', text: 'At least 8 characters' },
-                              { key: 'lowercase', text: 'One lowercase letter' },
-                              { key: 'uppercase', text: 'One uppercase letter' },
-                              { key: 'number', text: 'One number' },
-                              { key: 'special', text: 'One special character' }
-                            ].map(req => (
-                              <li key={req.key} className="flex items-center gap-2 text-sm">
-                                {getPasswordRequirementStatus(req.key) ? (
-                                  <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />
-                                ) : (
-                                  <XCircle className="w-4 h-4 text-red-500" aria-hidden="true" />
-                                )}
-                                <span className={getPasswordRequirementStatus(req.key) ? 'text-green-600' : 'text-red-500'}>
-                                  {req.text}
-                                  <span className="sr-only">{getPasswordRequirementStatus(req.key) ? ' - met' : ' - not met'}</span>
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      <Label htmlFor="signupPassword" className="text-slate-300 text-sm">Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="signupPassword"
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            validatePasswordInput(e.target.value);
+                          }}
+                          required
+                          minLength={8}
+                          autoComplete="new-password"
+                          aria-required="true"
+                          aria-describedby={showPasswordRequirements ? "signup-password-requirements" : undefined}
+                          aria-invalid={!passwordValidation.isValid && password.length > 0}
+                          placeholder="Create a strong password"
+                          className={`${inputClassName} pr-10`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {showPasswordRequirements && renderPasswordRequirements(password, "signup-password")}
                     </div>
-                    <Alert className="mb-4" role="note">
-                      <Shield className="h-4 w-4" aria-hidden="true" />
-                      <AlertDescription>
-                        After creating your account, you'll receive a 6-digit verification code.
-                        Enter the code to verify your email and activate your account.
-                      </AlertDescription>
-                    </Alert>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
                       disabled={loading || !passwordValidation.isValid}
                     >
-                      {loading ? "Creating Account..." : "Create Account"}
+                      {loading ? "Creating account..." : "Create account"}
                     </Button>
-                    
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
+
+                    <p className="text-xs text-slate-500 text-center">
+                      By signing up, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                  </form>
+
+                  <p className="text-center text-sm text-slate-500">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setActiveView("signin")}
+                      className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ===== FORGOT PASSWORD VIEW ===== */}
+          {activeView === 'forgot' && (
+            <div className="space-y-6">
+              {emailSent && emailSentType === 'reset' ? (
+                <div className="space-y-5" role="status" aria-live="polite">
+                  {otpFlowState === 'verified' ? (
+                    <div className="text-center space-y-4 py-8">
+                      <div className="flex justify-center">
+                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                          <CheckCircle className="w-8 h-8 text-emerald-400" aria-hidden="true" />
+                        </div>
                       </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                          Or continue with
-                        </span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Password Reset!</h3>
+                        <p className="text-slate-400 text-sm mt-1">Redirecting to sign in...</p>
                       </div>
                     </div>
+                  ) : otpFlowState === 'setting_password' ? (
+                    /* New Password Form */
+                    <div className="space-y-5">
+                      <button
+                        type="button"
+                        onClick={() => setOtpFlowState('verifying')}
+                        className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to code
+                      </button>
 
-                    {/* TEMPORARILY DISABLED: Google Sign-In (OAuth redirect issue) */}
-                    {/* <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full" 
-                      disabled={loading}
-                      onClick={handleGoogleSignIn}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      {loading ? "Signing In..." : "Continue with Google"}
-                    </Button> */}
-
-                    {/* TEMPORARILY DISABLED: Apple Sign-In (OAuth redirect issue) */}
-                    {/* <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full" 
-                      disabled={loading}
-                      onClick={handleAppleSignIn}
-                    >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                      </svg>
-                      {loading ? "Signing In..." : "Continue with Apple"}
-                    </Button> */}
-                  </form>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="forgot" id="forgot-panel">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reset Password</CardTitle>
-                <CardDescription>
-                  {otpFlowState === 'setting_password'
-                    ? 'Enter your new password'
-                    : otpFlowState === 'verifying'
-                    ? 'Enter the verification code'
-                    : 'Enter your email to receive a reset code'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {emailSent && emailSentType === 'reset' ? (
-                  <div className="space-y-4" role="status" aria-live="polite">
-                    {otpFlowState === 'verified' ? (
-                      <div className="text-center space-y-4">
+                      <div className="text-center space-y-2">
                         <div className="flex justify-center">
-                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8 text-green-600" aria-hidden="true" />
+                          <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-emerald-400" aria-hidden="true" />
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold text-green-600">Password Reset!</h3>
-                          <p className="text-muted-foreground">
-                            Your password has been updated. Redirecting to sign in...
-                          </p>
-                        </div>
+                        <h3 className="text-lg font-semibold text-white">Create new password</h3>
+                        <p className="text-sm text-emerald-400/80">Code verified successfully</p>
                       </div>
-                    ) : otpFlowState === 'setting_password' ? (
-                      <form onSubmit={handleSetNewPassword} className="space-y-4" aria-label="Set new password form">
-                        <div className="text-center mb-4">
-                          <div className="flex justify-center mb-4">
-                            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                              <CheckCircle className="w-6 h-6 text-green-600" aria-hidden="true" />
-                            </div>
-                          </div>
-                          <p className="text-sm text-green-600 font-medium">Code verified! Create your new password.</p>
-                        </div>
 
+                      <form onSubmit={handleSetNewPassword} className="space-y-4" aria-label="Set new password form">
                         <div className="space-y-2">
-                          <Label htmlFor="newPassword">New Password</Label>
+                          <Label htmlFor="newPassword" className="text-slate-300 text-sm">New password</Label>
                           <Input
                             id="newPassword"
                             type="password"
                             value={newPassword}
-                            onChange={(e) => {
-                              setNewPassword(e.target.value);
-                              validateNewPassword(e.target.value);
-                            }}
+                            onChange={(e) => { setNewPassword(e.target.value); validateNewPassword(e.target.value); }}
                             required
                             minLength={8}
                             autoComplete="new-password"
                             aria-required="true"
                             aria-describedby={newPassword.length > 0 ? "new-password-requirements" : undefined}
                             aria-invalid={!newPasswordValidation.isValid && newPassword.length > 0}
+                            placeholder="Create a strong password"
+                            className={inputClassName}
                           />
-                          {newPassword.length > 0 && (
-                            <div id="new-password-requirements" className="space-y-2 p-3 bg-muted rounded-md" role="status" aria-live="polite">
-                              <p className="text-sm font-medium">Password Requirements:</p>
-                              <ul className="space-y-1" aria-label="Password requirements checklist">
-                                {[
-                                  { key: 'length', text: 'At least 8 characters', valid: newPassword.length >= 8 },
-                                  { key: 'lowercase', text: 'One lowercase letter', valid: /[a-z]/.test(newPassword) },
-                                  { key: 'uppercase', text: 'One uppercase letter', valid: /[A-Z]/.test(newPassword) },
-                                  { key: 'number', text: 'One number', valid: /\d/.test(newPassword) },
-                                  { key: 'special', text: 'One special character', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) }
-                                ].map(req => (
-                                  <li key={req.key} className="flex items-center gap-2 text-sm">
-                                    {req.valid ? (
-                                      <CheckCircle className="w-4 h-4 text-green-600" aria-hidden="true" />
-                                    ) : (
-                                      <XCircle className="w-4 h-4 text-red-500" aria-hidden="true" />
-                                    )}
-                                    <span className={req.valid ? 'text-green-600' : 'text-red-500'}>
-                                      {req.text}
-                                      <span className="sr-only">{req.valid ? ' - met' : ' - not met'}</span>
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                          {newPassword.length > 0 && renderPasswordRequirements(newPassword, "new-password")}
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">Confirm Password</Label>
+                          <Label htmlFor="confirmPassword" className="text-slate-300 text-sm">Confirm password</Label>
                           <Input
                             id="confirmPassword"
                             type="password"
@@ -1220,10 +1087,12 @@ const Auth = () => {
                             aria-required="true"
                             aria-invalid={confirmPassword.length > 0 && newPassword !== confirmPassword}
                             aria-describedby={confirmPassword.length > 0 && newPassword !== confirmPassword ? "password-match-error" : undefined}
+                            placeholder="Confirm your password"
+                            className={inputClassName}
                           />
                           {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-                            <p id="password-match-error" className="text-sm text-red-500 flex items-center gap-1" role="alert">
-                              <XCircle className="w-4 h-4" aria-hidden="true" />
+                            <p id="password-match-error" className="text-xs text-red-400 flex items-center gap-1" role="alert">
+                              <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                               Passwords don't match
                             </p>
                           )}
@@ -1231,113 +1100,102 @@ const Auth = () => {
 
                         <Button
                           type="submit"
-                          className="w-full"
+                          className="w-full bg-blue-600 hover:bg-blue-500 text-white"
                           disabled={loading || !newPasswordValidation.isValid || newPassword !== confirmPassword}
                         >
-                          {loading ? "Resetting Password..." : "Reset Password"}
+                          {loading ? "Resetting..." : "Reset password"}
                         </Button>
                       </form>
-                    ) : (
-                      <div className="text-center space-y-4">
+                    </div>
+                  ) : (
+                    /* OTP Entry for Reset */
+                    <div className="space-y-5">
+                      <button
+                        type="button"
+                        onClick={() => { setEmailSent(false); setEmailSentType(null); setOtpFlowState('idle'); setOtpCode(""); setResetEmail(""); }}
+                        className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
+                      </button>
+
+                      <div className="text-center space-y-2">
                         <div className="flex justify-center">
-                          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                            <KeyRound className="w-8 h-8 text-orange-600" aria-hidden="true" />
+                          <div className="w-14 h-14 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center">
+                            <KeyRound className="w-7 h-7 text-orange-400" aria-hidden="true" />
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold">Enter Reset Code</h3>
-                          <p className="text-muted-foreground">
-                            We've sent a 6-digit code to <strong>{resetEmail}</strong>
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            The code expires in {otpExpiresIn} minutes.
-                          </p>
-                        </div>
+                        <h3 className="text-lg font-semibold text-white">Enter reset code</h3>
+                        <p className="text-sm text-slate-400">
+                          Code sent to <span className="text-white font-medium">{resetEmail}</span>
+                        </p>
+                        <p className="text-xs text-slate-500">Expires in {otpExpiresIn} minutes</p>
+                      </div>
 
-                        <div className="flex justify-center py-4">
-                          <InputOTP
-                            value={otpCode}
-                            onChange={setOtpCode}
-                            maxLength={6}
-                            disabled={loading || otpFlowState === 'submitted'}
-                            aria-label="Enter 6-digit verification code"
-                          >
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                            </InputOTPGroup>
-                            <InputOTPSeparator />
-                            <InputOTPGroup>
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
+                      {renderOTPInput()}
 
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                        onClick={handleVerifyResetOTP}
+                        disabled={loading || otpCode.length !== 6}
+                        aria-busy={loading}
+                      >
+                        {loading ? "Verifying..." : "Verify code"}
+                      </Button>
+
+                      <div className="flex items-center justify-center gap-2 text-sm">
+                        <span className="text-slate-500">Didn't receive it?</span>
                         <Button
-                          className="w-full"
-                          onClick={handleVerifyResetOTP}
-                          disabled={loading || otpCode.length !== 6}
-                          aria-busy={loading}
+                          variant="link"
+                          className="p-0 h-auto text-blue-400 hover:text-blue-300"
+                          onClick={handleResendResetOTP}
+                          disabled={loading || otpResendCooldown > 0}
+                          aria-label={otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown} seconds` : "Resend verification code"}
                         >
-                          {loading ? "Verifying..." : "Verify Code"}
-                        </Button>
-
-                        <div className="flex items-center justify-center gap-2 text-sm">
-                          <span className="text-muted-foreground">Didn't receive the code?</span>
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto"
-                            onClick={handleResendResetOTP}
-                            disabled={loading || otpResendCooldown > 0}
-                            aria-label={otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown} seconds` : "Resend verification code"}
-                          >
-                            {otpResendCooldown > 0 ? (
-                              <span className="flex items-center gap-1">
-                                <RefreshCw className="h-3 w-3" aria-hidden="true" />
-                                Resend in {otpResendCooldown}s
-                              </span>
-                            ) : (
-                              "Resend Code"
-                            )}
-                          </Button>
-                        </div>
-
-                        <Alert>
-                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                          <AlertDescription>
-                            Check your spam folder if you don't see the email.
-                          </AlertDescription>
-                        </Alert>
-
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setEmailSent(false);
-                            setEmailSentType(null);
-                            setOtpFlowState('idle');
-                            setOtpCode("");
-                            setResetEmail("");
-                            setActiveTab("signin");
-                          }}
-                        >
-                          Back to Sign In
+                          {otpResendCooldown > 0 ? (
+                            <span className="flex items-center gap-1">
+                              <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                              {otpResendCooldown}s
+                            </span>
+                          ) : "Resend"}
                         </Button>
                       </div>
-                    )}
+
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-white/5">
+                        <p className="text-xs text-slate-500 flex items-start gap-2">
+                          <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                          Check your spam folder if you don't see the email.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Reset Password Request Form */
+                <div className="space-y-6">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveView("signin")}
+                      className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors mb-4"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to sign in
+                    </button>
+                    <h2 className="text-2xl font-bold text-white">Reset password</h2>
+                    <p className="text-slate-400 mt-1 text-sm">We'll send you a 6-digit code to verify your identity</p>
                   </div>
-                ) : (
+
                   <form onSubmit={handleForgotPassword} className="space-y-4" aria-label="Reset password form">
-                    <Alert className="mb-4" role="note">
-                      <Clock className="h-4 w-4" aria-hidden="true" />
-                      <AlertDescription>
-                        You'll receive a 6-digit verification code to reset your password. The code expires after 10 minutes.
-                      </AlertDescription>
-                    </Alert>
+                    <div className="p-3 rounded-lg bg-slate-800/50 border border-white/5" role="note">
+                      <p className="text-xs text-slate-400 flex items-start gap-2">
+                        <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-400" aria-hidden="true" />
+                        The verification code expires after 10 minutes.
+                      </p>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="resetEmail">Email</Label>
+                      <Label htmlFor="resetEmail" className="text-slate-300 text-sm">Email address</Label>
                       <Input
                         id="resetEmail"
                         type="email"
@@ -1346,35 +1204,36 @@ const Auth = () => {
                         required
                         autoComplete="email"
                         aria-required="true"
+                        placeholder="you@company.com"
+                        className={inputClassName}
                       />
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
-                      {loading ? "Sending Reset Code..." : "Send Reset Code"}
-                    </Button>
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("signin")}
-                        className="text-sm text-construction-blue hover:text-construction-orange transition-colors"
-                      >
-                        Back to Sign In
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
 
-        <nav className="text-center mt-6" aria-label="Return navigation">
-          <Link
-            to="/"
-            className="text-sm text-muted-foreground hover:text-construction-blue transition-colors"
-          >
-            ← Back to Homepage
-          </Link>
-        </nav>
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                      disabled={loading}
+                      aria-busy={loading}
+                    >
+                      {loading ? "Sending code..." : "Send reset code"}
+                    </Button>
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-white/5">
+            <nav className="flex items-center justify-center gap-4 text-xs text-slate-500" aria-label="Footer navigation">
+              <Link to="/" className="hover:text-slate-300 transition-colors">Home</Link>
+              <span className="w-1 h-1 rounded-full bg-slate-700" />
+              <Link to="/pricing" className="hover:text-slate-300 transition-colors">Pricing</Link>
+              <span className="w-1 h-1 rounded-full bg-slate-700" />
+              <Link to="/features" className="hover:text-slate-300 transition-colors">Features</Link>
+            </nav>
+          </div>
+        </div>
       </div>
     </main>
   );
