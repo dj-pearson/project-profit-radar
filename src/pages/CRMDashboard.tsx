@@ -126,11 +126,12 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="edit-lead-description">
         <DialogHeader>
           <DialogTitle>Edit Lead: {lead.first_name} {lead.last_name}</DialogTitle>
+          <p id="edit-lead-description" className="sr-only">Form to edit lead contact information and status</p>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-label="Edit lead form">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="first_name">First Name</Label>
@@ -285,7 +286,7 @@ const LeadEditDialog: React.FC<LeadEditDialogProps> = ({ lead, onUpdate, childre
               Cancel
             </Button>
             <Button type="submit" className="w-full sm:w-auto">
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-4 w-4 mr-2" aria-hidden="true" />
               Save Changes
             </Button>
           </div>
@@ -325,11 +326,12 @@ const OpportunityEditDialog: React.FC<OpportunityEditDialogProps> = ({ opportuni
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby="edit-opportunity-description">
         <DialogHeader>
           <DialogTitle>Edit Opportunity: {opportunity.name}</DialogTitle>
+          <p id="edit-opportunity-description" className="sr-only">Form to edit opportunity details</p>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-label="Edit opportunity form">
           <div className="space-y-2">
             <Label htmlFor="name">Opportunity Name</Label>
             <Input
@@ -424,7 +426,7 @@ const OpportunityEditDialog: React.FC<OpportunityEditDialogProps> = ({ opportuni
               Cancel
             </Button>
             <Button type="submit">
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-4 w-4 mr-2" aria-hidden="true" />
               Save Changes
             </Button>
           </div>
@@ -893,13 +895,13 @@ const CRMDashboard = () => {
                               <div className="flex flex-col items-end space-y-1">
                                 <div className="flex space-x-2">
                                   {lead.phone && (
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                      <Phone className="h-4 w-4" />
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Call ${lead.first_name} ${lead.last_name}`}>
+                                      <Phone className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                   )}
                                   {lead.email && (
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                      <Mail className="h-4 w-4" />
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Email ${lead.first_name} ${lead.last_name}`}>
+                                      <Mail className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                   )}
                                 </div>
@@ -965,15 +967,16 @@ const CRMDashboard = () => {
                 {/* Filters */}
                 <Card>
                   <CardContent className="pt-6">
-                    <div className={mobileFilterClasses.container}>
+                    <div className={mobileFilterClasses.container} role="search" aria-label="Search and filter leads">
                       <div className="flex-1">
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <Input
                             placeholder="Search leads..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10"
+                            aria-label="Search leads by name, email, or company"
                           />
                         </div>
                       </div>
@@ -1006,8 +1009,8 @@ const CRMDashboard = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button className={mobileButtonClasses.primary} onClick={() => {/* TODO: Add new lead functionality */}}>
-                        <Plus className="h-4 w-4 mr-2" />
+                      <Button className={mobileButtonClasses.primary} onClick={() => {/* TODO: Add new lead functionality */}} aria-label="Add new lead">
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                         New Lead
                       </Button>
                     </div>
@@ -1098,8 +1101,8 @@ const CRMDashboard = () => {
                       <CardTitle>Sales Opportunities</CardTitle>
                       <CardDescription>Track your sales pipeline and close deals</CardDescription>
                     </div>
-                    <Button onClick={() => {/* TODO: Add new opportunity functionality */}}>
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button onClick={() => {/* TODO: Add new opportunity functionality */}} aria-label="Create new opportunity">
+                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                       New Opportunity
                     </Button>
                   </CardHeader>
@@ -1173,8 +1176,8 @@ const CRMDashboard = () => {
                     <CardDescription>Insights into your sales performance</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-12">
-                      <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <div className="text-center py-12" role="status">
+                      <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" aria-hidden="true" />
                       <h3 className="text-lg font-medium mb-2">Reports Coming Soon</h3>
                       <p className="text-muted-foreground mb-4">
                         Advanced analytics and reporting features are being developed.

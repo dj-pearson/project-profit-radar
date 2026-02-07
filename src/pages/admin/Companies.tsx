@@ -243,15 +243,16 @@ const Companies = () => {
       <DashboardLayout title="Companies" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <section className="flex flex-col sm:flex-row gap-4" aria-label="Company filters">
+          <div className="flex-1" role="search" aria-label="Search companies">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
               <Input
                 placeholder="Search companies..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="Search companies"
               />
             </div>
           </div>
@@ -278,7 +279,7 @@ const Companies = () => {
               <SelectItem value="enterprise">Enterprise</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </section>
 
         {/* Companies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -300,21 +301,21 @@ const Companies = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center text-muted-foreground">
-                      <Users className="h-4 w-4 mr-1" />
+                      <Users className="h-4 w-4 mr-1" aria-hidden="true" />
                       Users
                     </span>
                     <span className="font-medium">{company._count?.users || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center text-muted-foreground">
-                      <Building2 className="h-4 w-4 mr-1" />
+                      <Building2 className="h-4 w-4 mr-1" aria-hidden="true" />
                       Projects
                     </span>
                     <span className="font-medium">{company._count?.projects || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
+                      <Calendar className="h-4 w-4 mr-1" aria-hidden="true" />
                       Created
                     </span>
                     <span className="font-medium">
@@ -331,8 +332,9 @@ const Companies = () => {
                         setIsDetailDialogOpen(true);
                         await loadCompanySettings(company.id);
                       }}
+                      aria-label={`View details for ${company.name}`}
                     >
-                      <Eye className="h-3 w-3 mr-1" />
+                      <Eye className="h-3 w-3 mr-1" aria-hidden="true" />
                       View
                     </Button>
                   </div>
@@ -355,10 +357,10 @@ const Companies = () => {
 
       {/* Company Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="company-detail-description">
           <DialogHeader>
             <DialogTitle>Company Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="company-detail-description">
               Detailed information and settings for {selectedCompany?.name}
             </DialogDescription>
           </DialogHeader>

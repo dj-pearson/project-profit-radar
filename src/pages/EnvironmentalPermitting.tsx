@@ -252,7 +252,7 @@ export default function EnvironmentalPermitting() {
         </TabsList>
 
         <div className="flex items-center space-x-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
+          <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             placeholder="Search permits, assessments, or monitoring data..."
             value={searchTerm}
@@ -799,7 +799,7 @@ export default function EnvironmentalPermitting() {
                   Agency coordination activities will appear here
                 </p>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Initiate Coordination
                 </Button>
               </div>

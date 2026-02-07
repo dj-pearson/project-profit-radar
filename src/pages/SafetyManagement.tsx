@@ -155,7 +155,7 @@ export default function SafetyManagement() {
       
       return (
         <Badge variant={statusData.variant} className="flex items-center gap-1">
-          <Icon className="h-3 w-3" />
+          <Icon className="h-3 w-3" aria-hidden="true" />
           {statusData.label}
         </Badge>
       );
@@ -171,7 +171,7 @@ export default function SafetyManagement() {
       
       return (
         <Badge variant={statusData.variant} className="flex items-center gap-1">
-          <Icon className="h-3 w-3" />
+          <Icon className="h-3 w-3" aria-hidden="true" />
           {statusData.label}
         </Badge>
       );
@@ -204,15 +204,15 @@ export default function SafetyManagement() {
              <Dialog>
                <DialogTrigger asChild>
                  <Button className="w-full sm:w-auto">
-                   <Plus className="mr-2 h-4 w-4" />
+                   <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                    <span className="hidden sm:inline">Report Incident</span>
                    <span className="sm:hidden">Report</span>
                  </Button>
                </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="report-incident-description">
                 <DialogHeader>
                   <DialogTitle>Report Safety Incident</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="report-incident-description">
                     Report a workplace safety incident or near miss
                   </DialogDescription>
                 </DialogHeader>
@@ -288,13 +288,14 @@ export default function SafetyManagement() {
            <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analytics</TabsTrigger>
          </TabsList>
 
-         <div className="flex items-center space-x-2">
-           <Search className="h-4 w-4 text-muted-foreground" />
+         <div className="flex items-center space-x-2" role="search" aria-label="Search safety records">
+           <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
            <Input
              placeholder="Search incidents, training, or inspections..."
              value={searchTerm}
              onChange={(e) => setSearchTerm(e.target.value)}
              className="w-full sm:max-w-sm"
+             aria-label="Search incidents, training, or inspections"
            />
          </div>
 
@@ -306,7 +307,7 @@ export default function SafetyManagement() {
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <AlertTriangle className="h-5 w-5" />
+                          <AlertTriangle className="h-5 w-5" aria-hidden="true" />
                           {incident.title}
                         </CardTitle>
                         <CardDescription>
@@ -361,11 +362,11 @@ export default function SafetyManagement() {
                               setEditDialogOpen(true);
                             }}
                           >
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                             Edit
                           </Button>
                           <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                            <FileText className="h-4 w-4 mr-2" />
+                            <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                             Report
                           </Button>
                           <Button size="sm" className="w-full sm:w-auto">
@@ -387,7 +388,7 @@ export default function SafetyManagement() {
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <HardHat className="h-5 w-5" />
+                          <HardHat className="h-5 w-5" aria-hidden="true" />
                           {training.title}
                         </CardTitle>
                         <CardDescription>
@@ -428,7 +429,7 @@ export default function SafetyManagement() {
                            setEditDialogOpen(true);
                          }}
                        >
-                         <Edit className="h-4 w-4 mr-2" />
+                         <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                          Edit
                        </Button>
                        <Button variant="outline" size="sm">
@@ -500,11 +501,11 @@ export default function SafetyManagement() {
                            setEditDialogOpen(true);
                          }}
                        >
-                         <Edit className="h-4 w-4 mr-2" />
+                         <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                          Edit
                        </Button>
                        <Button variant="outline" size="sm">
-                         <FileText className="h-4 w-4 mr-2" />
+                         <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                          View Report
                        </Button>
                        <Button size="sm">

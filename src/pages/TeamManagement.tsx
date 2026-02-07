@@ -312,14 +312,14 @@ const TeamManagement = () => {
         <div className="flex justify-end mb-6">
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
               <Button size="sm" className="shrink-0" onClick={handleInviteClick}>
-                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Invite User</span>
                 <span className="sm:hidden">Invite</span>
               </Button>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md" aria-describedby="invite-dialog-description">
                 <DialogHeader>
                   <DialogTitle>Invite Team Member</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="invite-dialog-description">
                     Add a new team member to your organization
                   </DialogDescription>
                 </DialogHeader>
@@ -332,6 +332,7 @@ const TeamManagement = () => {
                         value={inviteFirstName}
                         onChange={(e) => setInviteFirstName(e.target.value)}
                         required
+                        aria-required="true"
                       />
                     </div>
                     <div className="space-y-2">
@@ -341,6 +342,7 @@ const TeamManagement = () => {
                         value={inviteLastName}
                         onChange={(e) => setInviteLastName(e.target.value)}
                         required
+                        aria-required="true"
                       />
                     </div>
                   </div>
@@ -353,13 +355,14 @@ const TeamManagement = () => {
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
+                      aria-required="true"
                     />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="role">Role *</Label>
-                    <Select value={inviteRole} onValueChange={setInviteRole} required>
-                      <SelectTrigger>
+                    <Select value={inviteRole} onValueChange={setInviteRole} required aria-required="true">
+                      <SelectTrigger aria-label="Select role">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
@@ -414,44 +417,44 @@ const TeamManagement = () => {
         </div>
         
         {/* Team Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <Card>
+        <section aria-label="Team statistics" className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <Card role="region" aria-label="Total members statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Members</p>
                   <p className="text-lg sm:text-2xl font-bold">{teamMembers.length}</p>
                 </div>
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" />
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card role="region" aria-label="Active members statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active</p>
                   <p className="text-lg sm:text-2xl font-bold">{teamMembers.filter(m => m.is_active).length}</p>
                 </div>
-                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card role="region" aria-label="Inactive members statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Inactive</p>
                   <p className="text-lg sm:text-2xl font-bold">{teamMembers.filter(m => !m.is_active).length}</p>
                 </div>
-                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
+                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card role="region" aria-label="Administrators statistic">
             <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -460,11 +463,11 @@ const TeamManagement = () => {
                     {teamMembers.filter(m => ['admin', 'root_admin'].includes(m.role)).length}
                   </p>
                 </div>
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" />
+                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-construction-blue" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Team Members */}
         <Card>
@@ -477,7 +480,7 @@ const TeamManagement = () => {
           <CardContent>
             {teamMembers.length === 0 ? (
               <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <p className="text-muted-foreground">No team members found</p>
               </div>
             ) : (
@@ -505,17 +508,17 @@ const TeamManagement = () => {
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                           <span className="flex items-center truncate">
-                            <Mail className="h-3 w-3 mr-1 shrink-0" />
+                            <Mail className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
                             <span className="truncate">{member.email}</span>
                           </span>
                           {member.phone && (
                             <span className="flex items-center">
-                              <Phone className="h-3 w-3 mr-1 shrink-0" />
+                              <Phone className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
                               {member.phone}
                             </span>
                           )}
                           <span className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1 shrink-0" />
+                            <Calendar className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
                             Joined {new Date(member.created_at).toLocaleDateString()}
                           </span>
                         </div>
@@ -528,21 +531,22 @@ const TeamManagement = () => {
                         size="sm"
                         onClick={() => toggleUserStatus(member.id, member.is_active)}
                         disabled={member.id === user?.id} // Can't deactivate yourself
+                        aria-label={member.is_active ? `Deactivate ${member.first_name} ${member.last_name}` : `Activate ${member.first_name} ${member.last_name}`}
                       >
                         {member.is_active ? (
                           <>
-                            <UserX className="h-4 w-4 mr-1" />
+                            <UserX className="h-4 w-4 mr-1" aria-hidden="true" />
                             Deactivate
                           </>
                         ) : (
                           <>
-                            <UserCheck className="h-4 w-4 mr-1" />
+                            <UserCheck className="h-4 w-4 mr-1" aria-hidden="true" />
                             Activate
                           </>
                         )}
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4 mr-1" />
+                      <Button variant="outline" size="sm" aria-label={`Edit ${member.first_name} ${member.last_name}`}>
+                        <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
                         Edit
                       </Button>
                     </div>
@@ -559,7 +563,7 @@ const TeamManagement = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Crown className="h-4 w-4 text-construction-orange" />
+                  <Crown className="h-4 w-4 text-construction-orange" aria-hidden="true" />
                   <span className="text-sm font-medium">Team Member Limit</span>
                 </div>
                 <div className="flex items-center gap-2">

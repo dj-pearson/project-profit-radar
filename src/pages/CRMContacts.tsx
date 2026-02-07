@@ -257,14 +257,15 @@ const CRMContacts = () => {
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1" role="search" aria-label="Search contacts">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search contacts by name, email, company, or job title..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
+                        aria-label="Search contacts"
                       />
                     </div>
                   </div>
@@ -298,15 +299,15 @@ const CRMContacts = () => {
                     
                     <Dialog open={showNewContactDialog} onOpenChange={setShowNewContactDialog}>
                       <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button aria-label="Create new contact">
+                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                           New Contact
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="new-contact-description">
                         <DialogHeader>
                           <DialogTitle>Create New Contact</DialogTitle>
-                          <DialogDescription>
+                          <DialogDescription id="new-contact-description">
                             Add a new contact to your CRM system.
                           </DialogDescription>
                         </DialogHeader>
@@ -323,6 +324,7 @@ const CRMContacts = () => {
                                   value={newContact.first_name || ''}
                                   onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
                                   placeholder="John"
+                                  aria-required="true"
                                 />
                               </div>
                               <div>
@@ -332,6 +334,7 @@ const CRMContacts = () => {
                                   value={newContact.last_name || ''}
                                   onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
                                   placeholder="Smith"
+                                  aria-required="true"
                                 />
                               </div>
                               <div>
@@ -484,25 +487,25 @@ const CRMContacts = () => {
                       <CardContent className="space-y-3">
                         {contact.company_name && (
                           <div className="flex items-center space-x-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <span className="text-sm">{contact.company_name}</span>
                           </div>
                         )}
                         {contact.email && (
                           <div className="flex items-center space-x-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <span className="text-sm truncate">{contact.email}</span>
                           </div>
                         )}
                         {contact.phone && (
                           <div className="flex items-center space-x-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <Phone className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <span className="text-sm">{contact.phone}</span>
                           </div>
                         )}
                         {(contact.city || contact.state) && (
                           <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <span className="text-sm">
                               {[contact.city, contact.state].filter(Boolean).join(', ')}
                             </span>
@@ -513,11 +516,11 @@ const CRMContacts = () => {
                             Added {formatDate(contact.created_at)}
                           </span>
                           <div className="flex space-x-1">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <Edit className="h-4 w-4" />
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Edit ${contact.first_name} ${contact.last_name}`}>
+                              <Edit className="h-4 w-4" aria-hidden="true" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <Trash2 className="h-4 w-4" />
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Delete ${contact.first_name} ${contact.last_name}`}>
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           </div>
                         </div>

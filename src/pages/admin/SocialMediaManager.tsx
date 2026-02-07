@@ -184,7 +184,7 @@ export const SocialMediaManager: React.FC = () => {
             </div>
 
             {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-6" aria-label="Social media overview">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -251,11 +251,11 @@ export const SocialMediaManager: React.FC = () => {
                   </p>
                 </CardContent>
               </Card>
-            </div>
+            </section>
 
             {/* Main Content */}
-            <Tabs defaultValue="compose" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-7">
+            <Tabs defaultValue="compose" className="space-y-6" aria-label="Social media management sections">
+              <TabsList className="grid w-full grid-cols-7" aria-label="Social media categories">
                 <TabsTrigger value="compose" className="gap-2">
                   <Share2 className="h-4 w-4" />
                   Compose

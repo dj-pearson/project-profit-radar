@@ -422,7 +422,7 @@ const ChangeOrders = () => {
                 onClick={() => navigate('/dashboard')}
                 className={mobileButtonClasses.secondary}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 Back to Dashboard
               </Button>
               <Separator orientation="vertical" className="h-6 hidden sm:block" />
@@ -434,14 +434,14 @@ const ChangeOrders = () => {
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className={mobileButtonClasses.primary}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Change Order
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="change-order-dialog-description">
                 <DialogHeader>
                   <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create Change Order'}</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="change-order-dialog-description">
                     {editingOrder ? 'Update the change order details and approval workflow.' : 'Create a new change order for project modifications that require client approval.'}
                   </DialogDescription>
                 </DialogHeader>
@@ -518,7 +518,7 @@ const ChangeOrders = () => {
                   {/* Approval Assignment Section */}
                   <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                     <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4" />
+                      <Users className="h-4 w-4" aria-hidden="true" />
                       <Label className="text-sm font-medium">Approval Assignment</Label>
                     </div>
                     
@@ -641,13 +641,13 @@ const ChangeOrders = () => {
           {filteredOrders.length === 0 ? (
             <Card className={mobileCardClasses.container}>
               <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className={mobileTextClasses.header}>No Change Orders</h3>
                 <p className={`${mobileTextClasses.muted} mb-4`}>
                   {selectedProject ? 'No change orders found for selected project' : 'No change orders have been created yet'}
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)} className={mobileButtonClasses.primary}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create First Change Order
                 </Button>
               </CardContent>
@@ -661,7 +661,7 @@ const ChangeOrders = () => {
                       <div>
                         <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <div className="flex items-center space-x-2">
-                            <FileText className="h-5 w-5 text-construction-blue" />
+                            <FileText className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                             <span className={mobileTextClasses.cardTitle}>{order.title}</span>
                           </div>
                           <Badge variant="outline" className={mobileCardClasses.badge}>#{order.change_order_number}</Badge>
@@ -673,12 +673,13 @@ const ChangeOrders = () => {
                        <div className={`${mobileCardClasses.badges} gap-2`}>
                          {getStatusBadge(order)}
                          <Badge variant="outline" className={`${mobileCardClasses.badge} font-mono`}>
-                           <DollarSign className="h-3 w-3 mr-1" />
+                           <DollarSign className="h-3 w-3 mr-1" aria-hidden="true" />
                            {order.amount.toLocaleString()}
                          </Badge>
-                         <Button 
-                           variant="outline" 
+                         <Button
+                           variant="outline"
                            size="sm"
+                           aria-label={`Edit change order ${order.title}`}
                            onClick={() => {
                              setNewOrder({
                                project_id: order.project_id,
@@ -694,7 +695,7 @@ const ChangeOrders = () => {
                              setIsCreateDialogOpen(true);
                            }}
                          >
-                           <Edit className="h-4 w-4" />
+                           <Edit className="h-4 w-4" aria-hidden="true" />
                          </Button>
                        </div>
                     </div>
@@ -717,9 +718,9 @@ const ChangeOrders = () => {
                         <h4 className={`${mobileTextClasses.cardTitle} mb-2 flex items-center`}>
                           Internal Approval
                           {order.internal_approved ? (
-                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
+                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" aria-hidden="true" />
                           ) : (
-                            <Clock className="h-4 w-4 ml-2 text-yellow-500" />
+                            <Clock className="h-4 w-4 ml-2 text-yellow-500" aria-hidden="true" />
                           )}
                         </h4>
                         <div className="space-y-2">
@@ -738,7 +739,7 @@ const ChangeOrders = () => {
                                 onClick={() => handleApproval(order.id, 'internal', true)}
                                 className={mobileButtonClasses.secondary}
                               >
-                                <CheckCircle className="h-3 w-3 mr-1" />
+                                <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                                 Approve
                               </Button>
                               <Button 
@@ -747,7 +748,7 @@ const ChangeOrders = () => {
                                 onClick={() => handleRejectWithReason(order.id, 'internal')}
                                 className={mobileButtonClasses.secondary}
                               >
-                                <XCircle className="h-3 w-3 mr-1" />
+                                <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                                 Reject
                               </Button>
                             </div>
@@ -759,9 +760,9 @@ const ChangeOrders = () => {
                         <h4 className="font-medium mb-2 flex items-center">
                           Client Approval
                           {order.client_approved ? (
-                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
+                            <CheckCircle className="h-4 w-4 ml-2 text-green-500" aria-hidden="true" />
                           ) : (
-                            <Clock className="h-4 w-4 ml-2 text-yellow-500" />
+                            <Clock className="h-4 w-4 ml-2 text-yellow-500" aria-hidden="true" />
                           )}
                         </h4>
                         <div className="space-y-2">
@@ -779,7 +780,7 @@ const ChangeOrders = () => {
                                 size="sm" 
                                 onClick={() => handleApproval(order.id, 'client', true)}
                               >
-                                <CheckCircle className="h-3 w-3 mr-1" />
+                                <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                                 Client Approved
                               </Button>
                               <Button 
@@ -787,7 +788,7 @@ const ChangeOrders = () => {
                                 variant="outline"
                                 onClick={() => handleRejectWithReason(order.id, 'client')}
                               >
-                                <XCircle className="h-3 w-3 mr-1" />
+                                <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                                 Client Rejected
                               </Button>
                             </div>
@@ -805,10 +806,10 @@ const ChangeOrders = () => {
 
       {/* Rejection Reason Dialog */}
       <Dialog open={isRejectionDialogOpen} onOpenChange={setIsRejectionDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="rejection-dialog-description">
           <DialogHeader>
             <DialogTitle>Reject Change Order</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="rejection-dialog-description">
               Please provide a reason for rejecting this change order. This will be recorded and visible to all stakeholders.
             </DialogDescription>
           </DialogHeader>
@@ -839,7 +840,7 @@ const ChangeOrders = () => {
                 onClick={submitRejection}
                 disabled={!rejectionReason.trim()}
               >
-                <XCircle className="h-4 w-4 mr-2" />
+                <XCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Reject Change Order
               </Button>
             </div>

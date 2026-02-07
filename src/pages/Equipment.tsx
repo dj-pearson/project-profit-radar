@@ -100,15 +100,15 @@ export default function Equipment() {
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto">
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Add Equipment</span>
                   <span className="sm:hidden">Add</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent aria-describedby="add-equipment-description">
                 <DialogHeader>
                   <DialogTitle>Add New Equipment</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="add-equipment-description">
                     Register new equipment to your fleet
                   </DialogDescription>
                 </DialogHeader>
@@ -120,6 +120,7 @@ export default function Equipment() {
                       placeholder="Enter equipment name"
                       value={newEquipment.name}
                       onChange={(e) => setNewEquipment(prev => ({ ...prev, name: e.target.value }))}
+                      aria-required="true"
                     />
                   </div>
                   <div>
@@ -127,8 +128,9 @@ export default function Equipment() {
                     <Select
                       value={newEquipment.equipment_type}
                       onValueChange={(value) => setNewEquipment(prev => ({ ...prev, equipment_type: value }))}
+                      aria-required="true"
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Select equipment type">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -181,7 +183,7 @@ export default function Equipment() {
                   >
                     {createEquipment.isPending ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                         Adding...
                       </>
                     ) : (
@@ -212,14 +214,15 @@ export default function Equipment() {
             <TabsTrigger value="reports" className="text-xs sm:text-sm">Reports</TabsTrigger>
           </TabsList>
 
-          <div className={mobileFilterClasses.container}>
+          <div className={mobileFilterClasses.container} role="search" aria-label="Search equipment">
             <div className="flex items-center space-x-2 w-full">
-              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
               <Input
                 placeholder="Search equipment..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full"
+                aria-label="Search equipment by name, model, or type"
               />
             </div>
           </div>
@@ -247,7 +250,7 @@ export default function Equipment() {
             ) : filteredEquipment.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Truck className="h-12 w-12 text-muted-foreground mb-4" />
+                  <Truck className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                   <h3 className="text-lg font-semibold mb-2">No Equipment Found</h3>
                   <p className="text-muted-foreground text-center max-w-md">
                     {searchTerm
@@ -256,7 +259,7 @@ export default function Equipment() {
                   </p>
                   {!searchTerm && (
                     <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
-                      <Plus className="mr-2 h-4 w-4" />
+                      <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                       Add Your First Equipment
                     </Button>
                   )}
@@ -270,7 +273,7 @@ export default function Equipment() {
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            <Truck className="h-5 w-5" />
+                            <Truck className="h-5 w-5" aria-hidden="true" />
                             {item.name}
                           </CardTitle>
                           <CardDescription>
@@ -285,14 +288,14 @@ export default function Equipment() {
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <div>
                             <div className="font-medium text-muted-foreground text-xs">Location</div>
                             <div className="text-sm">{item.location || 'Not assigned'}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <div>
                             <div className="font-medium text-muted-foreground text-xs">Last Maintenance</div>
                             <div className="text-sm">
@@ -303,7 +306,7 @@ export default function Equipment() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <div>
                             <div className="font-medium text-muted-foreground text-xs">Next Maintenance</div>
                             <div className="text-sm">
@@ -314,7 +317,7 @@ export default function Equipment() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                          <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <div>
                             <div className="font-medium text-muted-foreground text-xs">Current Value</div>
                             <div className="text-sm">
@@ -334,7 +337,7 @@ export default function Equipment() {
                           size="sm"
                           className="flex-1"
                         >
-                          <Wrench className="h-4 w-4 mr-1 sm:mr-2" />
+                          <Wrench className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
                           <span className="hidden sm:inline">Schedule Maintenance</span>
                           <span className="sm:hidden">Maint.</span>
                         </Button>
@@ -375,7 +378,7 @@ export default function Equipment() {
             ) : !maintenanceRecords || maintenanceRecords.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
+                  <Wrench className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                   <h3 className="text-lg font-semibold mb-2">No Maintenance Records</h3>
                   <p className="text-muted-foreground text-center max-w-md">
                     No maintenance records have been logged yet. Schedule maintenance for your equipment to track service history.
@@ -457,7 +460,7 @@ export default function Equipment() {
             ) : filteredEquipment.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                  <Clock className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
                   <h3 className="text-lg font-semibold mb-2">No Utilization Data</h3>
                   <p className="text-muted-foreground text-center max-w-md">
                     Add equipment to your fleet to start tracking utilization metrics.
@@ -472,7 +475,7 @@ export default function Equipment() {
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            <Truck className="h-5 w-5" />
+                            <Truck className="h-5 w-5" aria-hidden="true" />
                             {item.name}
                           </CardTitle>
                           <CardDescription>
@@ -604,7 +607,7 @@ export default function Equipment() {
                     <>
                       <div className="text-2xl font-bold">{stats?.maintenanceDueSoon || 0}</div>
                       <div className="flex items-center text-xs sm:text-sm text-yellow-600">
-                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        <AlertTriangle className="h-4 w-4 mr-1" aria-hidden="true" />
                         Within 30 days
                       </div>
                     </>

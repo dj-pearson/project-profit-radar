@@ -139,12 +139,12 @@ export default function CashFlowStatement() {
   );
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Cash Flow Statement">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <ArrowRightLeft className="h-8 w-8" />
+            <ArrowRightLeft className="h-8 w-8" aria-hidden="true" />
             Cash Flow Statement
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -152,59 +152,64 @@ export default function CashFlowStatement() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
+        <div className="flex gap-2" role="toolbar" aria-label="Report actions">
+          <Button variant="outline" onClick={handlePrint} aria-label="Print cash flow statement">
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" />
             Print
           </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport} aria-label="Export cash flow statement">
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-[200px]"
-              />
+      <section aria-label="Report filters">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select start date for report"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-[200px]"
+                  aria-label="Select end date for report"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-[200px]"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Cash Flow Metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Operating Activities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              {netCashFromOperating >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
-              )}
+      <section aria-label="Cash flow metrics">
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Operating Activities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                {netCashFromOperating >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
+                )}
               <div className={`text-2xl font-bold ${netCashFromOperating >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(netCashFromOperating)}
               </div>
@@ -219,9 +224,9 @@ export default function CashFlowStatement() {
           <CardContent>
             <div className="flex items-center gap-2">
               {netCashFromInvesting >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
+                <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
               )}
               <div className={`text-2xl font-bold ${netCashFromInvesting >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(netCashFromInvesting)}
@@ -237,9 +242,9 @@ export default function CashFlowStatement() {
           <CardContent>
             <div className="flex items-center gap-2">
               {netCashFromFinancing >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
+                <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
               )}
               <div className={`text-2xl font-bold ${netCashFromFinancing >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(netCashFromFinancing)}
@@ -255,9 +260,9 @@ export default function CashFlowStatement() {
           <CardContent>
             <div className="flex items-center gap-2">
               {netCashChange >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
+                <TrendingDown className="h-4 w-4 text-red-600" aria-hidden="true" />
               )}
               <div className={`text-2xl font-bold ${netCashChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(netCashChange)}
@@ -265,31 +270,33 @@ export default function CashFlowStatement() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </section>
 
       {/* Statement */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Statement of Cash Flows</CardTitle>
-          <CardDescription>
-            {new Date(startDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}{' '}
-            to{' '}
-            {new Date(endDate).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">Loading cash flow statement...</div>
-          ) : (
-            <Table>
+      <section aria-label="Statement of cash flows">
+        <Card>
+          <CardHeader>
+            <CardTitle>Statement of Cash Flows</CardTitle>
+            <CardDescription>
+              {new Date(startDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}{' '}
+              to{' '}
+              {new Date(endDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8" role="status" aria-live="polite">Loading cash flow statement...</div>
+            ) : (
+              <Table aria-label="Cash Flow Statement">
               <TableBody>
                 {/* Operating Activities */}
                 <CashFlowSection
@@ -370,9 +377,11 @@ export default function CashFlowStatement() {
           )}
         </CardContent>
       </Card>
+      </section>
 
       {/* Supplemental Information */}
-      <Card>
+      <aside aria-label="Supplemental cash flow information">
+        <Card>
         <CardHeader>
           <CardTitle>Supplemental Cash Flow Information</CardTitle>
         </CardHeader>
@@ -395,6 +404,7 @@ export default function CashFlowStatement() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </aside>
+    </main>
   );
 }

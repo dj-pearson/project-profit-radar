@@ -73,7 +73,7 @@ export default function EquipmentManagement() {
     const Icon = config?.icon || Clock;
     return (
       <Badge variant={config?.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {config?.label || status}
       </Badge>
     );
@@ -169,7 +169,7 @@ export default function EquipmentManagement() {
             </p>
           </div>
           <Button>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
             Add Equipment
           </Button>
         </div>
@@ -177,18 +177,18 @@ export default function EquipmentManagement() {
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="schedule" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4" aria-hidden="true" />
               Schedule View
             </TabsTrigger>
             <TabsTrigger value="inventory" className="flex items-center gap-2">
-              <Truck className="h-4 w-4" />
+              <Truck className="h-4 w-4" aria-hidden="true" />
               Equipment Bank
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
             <Alert>
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4" aria-hidden="true" />
               <AlertDescription>
                 View and manage equipment assignments across all projects. Click on assignments to edit time periods and quantities.
               </AlertDescription>
@@ -243,19 +243,20 @@ export default function EquipmentManagement() {
 
           <TabsContent value="inventory" className="space-y-6">
             <Alert>
-              <Truck className="h-4 w-4" />
+              <Truck className="h-4 w-4" aria-hidden="true" />
               <AlertDescription>
                 Your equipment bank shows all available equipment. Select an item to view its schedule and assign it to projects.
               </AlertDescription>
             </Alert>
 
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center space-x-2" role="search" aria-label="Search equipment">
+              <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Search equipment, type, or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
+                aria-label="Search equipment by name, type, or location"
               />
             </div>
 
@@ -294,7 +295,7 @@ export default function EquipmentManagement() {
                             }}
                             className="p-2"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           <div className="text-right">
                             <div className={`text-xl font-bold ${getUtilizationColor(utilizationRate)}`}>
@@ -308,12 +309,12 @@ export default function EquipmentManagement() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <span>{item.current_location || 'Location not set'}</span>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <span>{(item.hours_meter || 0).toLocaleString()} hours</span>
                         </div>
 
@@ -352,7 +353,7 @@ export default function EquipmentManagement() {
                             handleManageSchedule(item.id);
                           }}
                         >
-                          <Settings className="h-4 w-4 mr-2" />
+                          <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
                           Manage Schedule
                         </Button>
                       </div>
@@ -364,13 +365,13 @@ export default function EquipmentManagement() {
 
             {filteredEquipment.length === 0 && !searchTerm && (
               <div className="text-center py-12">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <p className="text-lg font-medium mb-2">No Equipment Found</p>
                 <p className="text-muted-foreground mb-4">
                   Add your first piece of equipment to start tracking
                 </p>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Add Equipment
                 </Button>
               </div>

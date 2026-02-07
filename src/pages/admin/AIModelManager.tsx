@@ -5,7 +5,9 @@ import AIModelManager from '@/components/admin/AIModelManager';
 const AIModelManagerPage = () => {
   return (
     <DashboardLayout title="AI Model Management">
-      <AIModelManager />
+      <section aria-label="AI Model Management">
+        <AIModelManager />
+      </section>
     </DashboardLayout>
   );
 };

@@ -346,11 +346,12 @@ const CRMOpportunities = () => {
     <DashboardLayout title="Sales Opportunities">
             
             {/* Pipeline Summary */}
-            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-blue-600" />
+            <section aria-label="Pipeline summary">
+              <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} className="mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-2">
+                      <Target className="h-5 w-5 text-blue-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Pipeline</p>
                       <p className="text-2xl font-bold">{formatCurrency(totalPipelineValue)}</p>
@@ -361,7 +362,7 @@ const CRMOpportunities = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <DollarSign className="h-5 w-5 text-green-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Weighted Value</p>
                       <p className="text-2xl font-bold">{formatCurrency(totalWeightedValue)}</p>
@@ -372,7 +373,7 @@ const CRMOpportunities = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                    <TrendingUp className="h-5 w-5 text-purple-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Opportunities</p>
                       <p className="text-2xl font-bold">{filteredOpportunities.length}</p>
@@ -383,11 +384,11 @@ const CRMOpportunities = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <Percent className="h-5 w-5 text-orange-600" />
+                    <Percent className="h-5 w-5 text-orange-600" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Avg. Probability</p>
                       <p className="text-2xl font-bold">
-                        {filteredOpportunities.length > 0 
+                        {filteredOpportunities.length > 0
                           ? Math.round(filteredOpportunities.reduce((sum, opp) => sum + opp.probability_percent, 0) / filteredOpportunities.length)
                           : 0
                         }%
@@ -396,20 +397,22 @@ const CRMOpportunities = () => {
                   </div>
                 </CardContent>
               </Card>
-            </ResponsiveGrid>
+              </ResponsiveGrid>
+            </section>
 
             {/* Filters and Actions */}
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1" role="search" aria-label="Search opportunities">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search opportunities by name, description, or project type..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
+                        aria-label="Search opportunities"
                       />
                     </div>
                   </div>
@@ -445,15 +448,15 @@ const CRMOpportunities = () => {
                     
                     <Dialog open={showNewOpportunityDialog} onOpenChange={setShowNewOpportunityDialog}>
                       <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button aria-label="Create new opportunity">
+                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                           New Opportunity
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="new-opportunity-description">
                         <DialogHeader>
                           <DialogTitle>Create New Opportunity</DialogTitle>
-                          <DialogDescription>
+                          <DialogDescription id="new-opportunity-description">
                             Add a new sales opportunity to your pipeline.
                           </DialogDescription>
                         </DialogHeader>
@@ -470,6 +473,7 @@ const CRMOpportunities = () => {
                                   value={newOpportunity.name || ''}
                                   onChange={(e) => setNewOpportunity({...newOpportunity, name: e.target.value})}
                                   placeholder="Main Street Office Building"
+                                  aria-required="true"
                                 />
                               </div>
                               <div>
@@ -513,6 +517,7 @@ const CRMOpportunities = () => {
                                   value={newOpportunity.estimated_value || ''}
                                   onChange={(e) => setNewOpportunity({...newOpportunity, estimated_value: Number(e.target.value)})}
                                   placeholder="150000"
+                                  aria-required="true"
                                 />
                               </div>
                               <div>
@@ -719,18 +724,18 @@ const CRMOpportunities = () => {
 
                           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-3">
                             <div className="flex items-center space-x-2">
-                              <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                               <span className="text-sm">{opportunity.project_type?.replace('_', ' ') || 'General Construction'}</span>
                             </div>
                             {opportunity.expected_close_date && (
                               <div className="flex items-center space-x-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                 <span className="text-sm">Close: {formatDate(opportunity.expected_close_date)}</span>
                               </div>
                             )}
                             {opportunity.bid_required && (
                               <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                                 <span className="text-sm">Bid Required</span>
                                 {opportunity.bid_due_date && (
                                   <span className="text-xs text-orange-600">
@@ -740,7 +745,7 @@ const CRMOpportunities = () => {
                               </div>
                             )}
                             <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                               <span className="text-sm">Created: {formatDate(opportunity.created_at)}</span>
                             </div>
                           </div>
@@ -754,8 +759,8 @@ const CRMOpportunities = () => {
                           )}
 
                           {opportunity.risk_factors && opportunity.risk_factors.length > 0 && (
-                            <div className="flex items-center space-x-2 mb-3">
-                              <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            <div className="flex items-center space-x-2 mb-3" role="alert">
+                              <AlertTriangle className="h-4 w-4 text-orange-500" aria-hidden="true" />
                               <p className="text-sm text-orange-600">
                                 Risk factors identified
                               </p>
@@ -770,18 +775,20 @@ const CRMOpportunities = () => {
                                   size="sm"
                                   onClick={() => handleConvertToProject(opportunity)}
                                   className="bg-green-600 hover:bg-green-700"
+                                  aria-label={`Convert ${opportunity.name} to project`}
                                 >
-                                  <Building2 className="h-4 w-4 mr-2" />
+                                  <Building2 className="h-4 w-4 mr-2" aria-hidden="true" />
                                   Convert to Project
                                 </Button>
                               )}
                               {(opportunity.stage === 'proposal' || opportunity.stage === 'negotiation') && (
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => navigate(`/estimates?opportunity=${opportunity.id}`)}
+                                  aria-label={`Create estimate for ${opportunity.name}`}
                                 >
-                                  <FileText className="h-4 w-4 mr-2" />
+                                  <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                                   Create Estimate
                                 </Button>
                               )}

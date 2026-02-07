@@ -8,8 +8,8 @@ const CRMLeadIntelligence = () => {
   return (
     <DashboardLayout title="Lead Intelligence">
       <div className="space-y-6">
-        <Tabs defaultValue="intelligence" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="intelligence" className="w-full" aria-label="Lead intelligence sections">
+          <TabsList className="grid w-full grid-cols-2" aria-label="Intelligence categories">
             <TabsTrigger value="intelligence">Lead Intelligence</TabsTrigger>
             <TabsTrigger value="scoring">Lead Scoring</TabsTrigger>
           </TabsList>

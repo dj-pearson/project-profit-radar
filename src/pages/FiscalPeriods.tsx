@@ -209,12 +209,12 @@ export default function FiscalPeriods() {
   const isLoading = yearsLoading || periodsLoading;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Fiscal Periods Management">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Wallet className="h-8 w-8" />
+            <Wallet className="h-8 w-8" aria-hidden="true" />
             Fiscal Periods
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -224,16 +224,16 @@ export default function FiscalPeriods() {
 
         <Dialog open={isCreateYearDialogOpen} onOpenChange={setIsCreateYearDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button aria-label="Create new fiscal year">
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               New Fiscal Year
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <form onSubmit={handleCreateYear}>
+          <DialogContent aria-describedby="create-year-description">
+            <form onSubmit={handleCreateYear} aria-label="Create fiscal year form">
               <DialogHeader>
                 <DialogTitle>Create Fiscal Year</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="create-year-description">
                   Create a new fiscal year with monthly periods
                 </DialogDescription>
               </DialogHeader>
@@ -252,6 +252,7 @@ export default function FiscalPeriods() {
                       })
                     }
                     required
+                    aria-required="true"
                   />
                 </div>
 
@@ -266,6 +267,7 @@ export default function FiscalPeriods() {
                         setNewYearData({ ...newYearData, startDate: e.target.value })
                       }
                       required
+                      aria-required="true"
                     />
                   </div>
 
@@ -279,12 +281,13 @@ export default function FiscalPeriods() {
                         setNewYearData({ ...newYearData, endDate: e.target.value })
                       }
                       required
+                      aria-required="true"
                     />
                   </div>
                 </div>
 
-                <Alert>
-                  <Calendar className="h-4 w-4" />
+                <Alert role="note">
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
                   <AlertDescription>
                     This will create 12 monthly periods automatically based on the start and end dates.
                   </AlertDescription>
@@ -304,10 +307,10 @@ export default function FiscalPeriods() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </header>
 
       {/* Info Alert */}
-      <Alert>
+      <Alert role="note">
         <AlertDescription>
           <strong>Period Closing:</strong> Close periods to prevent further transactions from being
           posted. This is important for maintaining accurate financial records and ensuring
@@ -316,7 +319,8 @@ export default function FiscalPeriods() {
       </Alert>
 
       {/* Fiscal Years Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <section aria-label="Fiscal year summary">
+        <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Fiscal Years</CardTitle>
@@ -348,17 +352,19 @@ export default function FiscalPeriods() {
             </p>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </section>
 
       {/* Fiscal Years and Periods */}
-      {isLoading ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">Loading fiscal periods...</div>
-          </CardContent>
-        </Card>
-      ) : fiscalYears && fiscalYears.length > 0 ? (
-        <div className="space-y-6">
+      <section aria-label="Fiscal years and periods">
+        {isLoading ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8" role="status" aria-live="polite">Loading fiscal periods...</div>
+            </CardContent>
+          </Card>
+        ) : fiscalYears && fiscalYears.length > 0 ? (
+          <div className="space-y-6">
           {fiscalYears.map((year: any) => (
             <Card key={year.id}>
               <CardHeader>
@@ -371,23 +377,23 @@ export default function FiscalPeriods() {
                     </CardDescription>
                   </div>
                   {year.is_closed && (
-                    <Badge variant="secondary">
-                      <Lock className="mr-2 h-3 w-3" />
+                    <Badge variant="secondary" aria-label="Fiscal year is closed">
+                      <Lock className="mr-2 h-3 w-3" aria-hidden="true" />
                       Closed
                     </Badge>
                   )}
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
+                <Table aria-label={`Fiscal Year ${year.year_number} periods`}>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Period</TableHead>
-                      <TableHead>Period Name</TableHead>
-                      <TableHead>Start Date</TableHead>
-                      <TableHead>End Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead scope="col">Period</TableHead>
+                      <TableHead scope="col">Period Name</TableHead>
+                      <TableHead scope="col">Start Date</TableHead>
+                      <TableHead scope="col">End Date</TableHead>
+                      <TableHead scope="col">Status</TableHead>
+                      <TableHead scope="col" className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -405,13 +411,13 @@ export default function FiscalPeriods() {
                         </TableCell>
                         <TableCell>
                           {period.is_closed ? (
-                            <Badge variant="secondary">
-                              <Lock className="mr-2 h-3 w-3" />
+                            <Badge variant="secondary" aria-label="Period is closed">
+                              <Lock className="mr-2 h-3 w-3" aria-hidden="true" />
                               Closed
                             </Badge>
                           ) : (
-                            <Badge variant="default">
-                              <Unlock className="mr-2 h-3 w-3" />
+                            <Badge variant="default" aria-label="Period is open">
+                              <Unlock className="mr-2 h-3 w-3" aria-hidden="true" />
                               Open
                             </Badge>
                           )}
@@ -422,8 +428,9 @@ export default function FiscalPeriods() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleReopenPeriod(period.id)}
+                              aria-label={`Reopen ${period.period_name}`}
                             >
-                              <Unlock className="mr-2 h-4 w-4" />
+                              <Unlock className="mr-2 h-4 w-4" aria-hidden="true" />
                               Reopen
                             </Button>
                           ) : (
@@ -431,8 +438,9 @@ export default function FiscalPeriods() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleClosePeriod(period.id)}
+                              aria-label={`Close ${period.period_name}`}
                             >
-                              <Lock className="mr-2 h-4 w-4" />
+                              <Lock className="mr-2 h-4 w-4" aria-hidden="true" />
                               Close
                             </Button>
                           )}
@@ -444,16 +452,17 @@ export default function FiscalPeriods() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8 text-muted-foreground">
-              No fiscal years found. Create your first fiscal year to get started.
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8 text-muted-foreground" role="status">
+                No fiscal years found. Create your first fiscal year to get started.
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+    </main>
   );
 }

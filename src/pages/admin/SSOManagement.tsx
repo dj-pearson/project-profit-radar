@@ -433,8 +433,8 @@ export const SSOManagement = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="sso">
-          <TabsList>
+        <Tabs defaultValue="sso" aria-label="SSO and authentication settings">
+          <TabsList aria-label="Authentication categories">
             <TabsTrigger value="sso">SSO Connections ({ssoConnections.length})</TabsTrigger>
             <TabsTrigger value="sessions">Active Sessions ({userSessions.length})</TabsTrigger>
             <TabsTrigger value="mfa">
@@ -740,7 +740,7 @@ export const SSOManagement = () => {
 
       {/* SSO Configuration Dialog */}
       <Dialog open={showSSOForm} onOpenChange={setShowSSOForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-label="SSO Configuration">
           <SSOConfigurationForm
             existingConnection={editingConnection}
             onSuccess={() => {
@@ -758,7 +758,7 @@ export const SSOManagement = () => {
 
       {/* MFA Setup Dialog */}
       <Dialog open={showMFASetup} onOpenChange={setShowMFASetup}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" aria-label="Multi-factor authentication setup">
           <TOTPSetupScreen
             onComplete={() => {
               setShowMFASetup(false);

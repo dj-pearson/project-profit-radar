@@ -198,7 +198,7 @@ export default function BondInsuranceManagement() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Bond Management</h3>
             <Button onClick={() => setShowBondForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               Add Bond
             </Button>
           </div>
@@ -208,7 +208,7 @@ export default function BondInsuranceManagement() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-blue-500" />
+                  <Shield className="h-5 w-5 text-blue-500" aria-hidden="true" />
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Bonds</p>
                     <p className="text-2xl font-bold">{totalBonds}</p>
@@ -260,7 +260,7 @@ export default function BondInsuranceManagement() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="flex-1 w-full">
                   <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
                       placeholder="Search bonds..."
                       value={searchTerm}
@@ -355,7 +355,7 @@ export default function BondInsuranceManagement() {
           {filteredBonds.length === 0 && (
             <Card>
               <CardContent className="text-center py-12">
-                <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No bonds found</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm || statusFilter !== 'all'
@@ -365,7 +365,7 @@ export default function BondInsuranceManagement() {
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => setShowBondForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add First Bond
                   </Button>
                 )}
@@ -378,7 +378,7 @@ export default function BondInsuranceManagement() {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Insurance Management</h3>
             <Button onClick={() => setShowInsuranceForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               Add Policy
             </Button>
           </div>
@@ -440,7 +440,7 @@ export default function BondInsuranceManagement() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <div className="flex-1 w-full">
                   <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
                       placeholder="Search insurance policies..."
                       value={searchTerm}
@@ -543,7 +543,7 @@ export default function BondInsuranceManagement() {
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => setShowInsuranceForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add First Policy
                   </Button>
                 )}

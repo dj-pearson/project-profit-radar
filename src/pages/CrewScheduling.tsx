@@ -354,33 +354,34 @@ const CrewScheduling = () => {
             <h1 className={mobileTextClasses.title}>Crew Scheduling & Dispatch</h1>
             <p className={mobileTextClasses.muted}>Manage crew assignments and dispatch</p>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0" role="search" aria-label="Date filter">
             <Input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="w-32 sm:w-40 text-xs sm:text-sm"
+              aria-label="Select date for crew assignments"
             />
             <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
-                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" aria-hidden="true" />
                   <span className="hidden sm:inline">Assign Crew</span>
                   <span className="sm:hidden">Assign</span>
                 </Button>
               </DialogTrigger>
-                <DialogContent>
+                <DialogContent aria-describedby="crew-assignment-description">
                   <DialogHeader>
                     <DialogTitle>Create Crew Assignment</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="crew-assignment-description">
                       Assign crew members to projects for specific dates and times.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="project">Project *</Label>
-                      <Select value={newAssignment.project_id} onValueChange={(value) => setNewAssignment({...newAssignment, project_id: value})}>
-                        <SelectTrigger>
+                      <Select value={newAssignment.project_id} onValueChange={(value) => setNewAssignment({...newAssignment, project_id: value})} aria-required="true">
+                        <SelectTrigger aria-label="Select project">
                           <SelectValue placeholder="Select project" />
                         </SelectTrigger>
                         <SelectContent>
@@ -395,8 +396,8 @@ const CrewScheduling = () => {
 
                     <div>
                       <Label htmlFor="crew_member">Crew Member *</Label>
-                      <Select value={newAssignment.crew_member_id} onValueChange={(value) => setNewAssignment({...newAssignment, crew_member_id: value})}>
-                        <SelectTrigger>
+                      <Select value={newAssignment.crew_member_id} onValueChange={(value) => setNewAssignment({...newAssignment, crew_member_id: value})} aria-required="true">
+                        <SelectTrigger aria-label="Select crew member">
                           <SelectValue placeholder="Select crew member" />
                         </SelectTrigger>
                         <SelectContent>
@@ -480,7 +481,7 @@ const CrewScheduling = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-5 w-5" aria-hidden="true" />
                   <span>Today's Assignments</span>
                 </CardTitle>
                 <CardDescription>
@@ -490,11 +491,11 @@ const CrewScheduling = () => {
               <CardContent>
                 {todaysAssignments.length === 0 ? (
                   <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                     <h3 className="text-lg font-medium mb-2">No Assignments</h3>
                     <p className="text-muted-foreground mb-4">No crew assignments for this date</p>
                     <Button onClick={() => setIsAssignDialogOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                       Create Assignment
                     </Button>
                   </div>
@@ -508,12 +509,12 @@ const CrewScheduling = () => {
                             <p className="text-sm text-muted-foreground">{assignment.project_name}</p>
                             <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
                               <div className="flex items-center space-x-1">
-                                <Clock className="h-3 w-3" />
+                                <Clock className="h-3 w-3" aria-hidden="true" />
                                 <span>{assignment.start_time} - {assignment.end_time}</span>
                               </div>
                               {assignment.location && (
                                 <div className="flex items-center space-x-1">
-                                  <MapPin className="h-3 w-3" />
+                                  <MapPin className="h-3 w-3" aria-hidden="true" />
                                   <span>{assignment.location}</span>
                                 </div>
                               )}
@@ -528,8 +529,9 @@ const CrewScheduling = () => {
                               size="sm"
                               onClick={() => handleDeleteAssignment(assignment.id)}
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                              aria-label={`Delete assignment for ${assignment.crew_member_name}`}
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3" aria-hidden="true" />
                             </Button>
                           </div>
                         </div>
@@ -578,7 +580,7 @@ const CrewScheduling = () => {
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
+                  <Users className="h-5 w-5" aria-hidden="true" />
                   <span>Available Crew</span>
                 </CardTitle>
                 <CardDescription>{crewMembers.length} crew members</CardDescription>
@@ -593,8 +595,8 @@ const CrewScheduling = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         {member.phone && (
-                          <Button variant="outline" size="sm">
-                            <Phone className="h-3 w-3" />
+                          <Button variant="outline" size="sm" aria-label={`Call ${member.name}`}>
+                            <Phone className="h-3 w-3" aria-hidden="true" />
                           </Button>
                         )}
                         <Badge variant="outline">Available</Badge>

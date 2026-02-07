@@ -402,13 +402,13 @@ const RFIs = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Open</Badge>;
+        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" aria-hidden="true" />Open</Badge>;
       case 'in_progress':
-        return <Badge variant="secondary"><MessageSquare className="h-3 w-3 mr-1" />In Progress</Badge>;
+        return <Badge variant="secondary"><MessageSquare className="h-3 w-3 mr-1" aria-hidden="true" />In Progress</Badge>;
       case 'closed':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Closed</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />Closed</Badge>;
       case 'cancelled':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>;
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" aria-hidden="true" />Cancelled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -417,7 +417,7 @@ const RFIs = () => {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Urgent</Badge>;
+        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />Urgent</Badge>;
       case 'high':
         return <Badge variant="destructive">High</Badge>;
       case 'medium':
@@ -463,14 +463,14 @@ const RFIs = () => {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Create RFI
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl" aria-describedby="create-rfi-description">
                 <DialogHeader>
                   <DialogTitle>Create Request for Information</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="create-rfi-description">
                     Create a new RFI to formally request information from clients, architects, or vendors.
                   </DialogDescription>
                 </DialogHeader>
@@ -478,7 +478,7 @@ const RFIs = () => {
                   <div>
                     <Label htmlFor="project">Project *</Label>
                     <Select value={newRFI.project_id} onValueChange={(value) => setNewRFI({...newRFI, project_id: value})}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-required="true">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
@@ -498,6 +498,7 @@ const RFIs = () => {
                       placeholder="Brief description of the information request"
                       value={newRFI.title}
                       onChange={(e) => setNewRFI({...newRFI, title: e.target.value})}
+                      aria-required="true"
                     />
                   </div>
 
@@ -509,6 +510,7 @@ const RFIs = () => {
                       value={newRFI.description}
                       onChange={(e) => setNewRFI({...newRFI, description: e.target.value})}
                       rows={4}
+                      aria-required="true"
                     />
                   </div>
 
@@ -554,7 +556,7 @@ const RFIs = () => {
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4" role="search" aria-label="Filter RFIs">
               <div className="flex-1">
                 <Label htmlFor="project-filter">Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -580,13 +582,13 @@ const RFIs = () => {
           {filteredRFIs.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No RFIs</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedProject ? 'No RFIs found for selected project' : 'No RFIs have been created yet'}
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create First RFI
                 </Button>
               </CardContent>
@@ -599,7 +601,7 @@ const RFIs = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
-                          <HelpCircle className="h-5 w-5 text-construction-blue" />
+                          <HelpCircle className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                           <span>{rfi.title}</span>
                           <Badge variant="outline">#{rfi.rfi_number}</Badge>
                         </CardTitle>
@@ -622,7 +624,7 @@ const RFIs = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Requested By
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -632,7 +634,7 @@ const RFIs = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Assigned To
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -642,7 +644,7 @@ const RFIs = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
+                          <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                           Due Date
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -683,7 +685,7 @@ const RFIs = () => {
                         size="sm"
                         onClick={() => handleEditRFI(rfi)}
                       >
-                        <Edit className="h-3 w-3 mr-1" />
+                        <Edit className="h-3 w-3 mr-1" aria-hidden="true" />
                         Edit
                       </Button>
                       <Button 
@@ -694,7 +696,7 @@ const RFIs = () => {
                           setIsResponseDialogOpen(true);
                         }}
                       >
-                        <MessageSquare className="h-3 w-3 mr-1" />
+                        <MessageSquare className="h-3 w-3 mr-1" aria-hidden="true" />
                         Add Response
                       </Button>
                     </div>
@@ -708,10 +710,10 @@ const RFIs = () => {
 
       {/* Edit RFI Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="edit-rfi-description">
           <DialogHeader>
             <DialogTitle>Edit Request for Information</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-rfi-description">
               Update the RFI details and status.
             </DialogDescription>
           </DialogHeader>
@@ -719,7 +721,7 @@ const RFIs = () => {
             <div>
               <Label htmlFor="edit-project">Project *</Label>
               <Select value={editedRFI.project_id} onValueChange={(value) => setEditedRFI({...editedRFI, project_id: value})}>
-                <SelectTrigger>
+                <SelectTrigger aria-required="true">
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -739,6 +741,7 @@ const RFIs = () => {
                 placeholder="Brief description of the information request"
                 value={editedRFI.title}
                 onChange={(e) => setEditedRFI({...editedRFI, title: e.target.value})}
+                aria-required="true"
               />
             </div>
 
@@ -750,6 +753,7 @@ const RFIs = () => {
                 value={editedRFI.description}
                 onChange={(e) => setEditedRFI({...editedRFI, description: e.target.value})}
                 rows={4}
+                aria-required="true"
               />
             </div>
 
@@ -822,10 +826,10 @@ const RFIs = () => {
 
       {/* Response Dialog */}
       <Dialog open={isResponseDialogOpen} onOpenChange={setIsResponseDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="add-response-description">
           <DialogHeader>
             <DialogTitle>Add Response</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="add-response-description">
               Add a response to RFI: {selectedRFI?.title}
             </DialogDescription>
           </DialogHeader>

@@ -174,7 +174,7 @@ const WarrantyManagement = () => {
     <DashboardLayout title="Warranty Management">
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           Add Warranty
         </Button>
       </div>
@@ -376,7 +376,7 @@ const WarrantyManagement = () => {
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => setShowForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add First Warranty
                   </Button>
                 )}

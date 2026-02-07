@@ -311,7 +311,7 @@ const MaterialTracking = () => {
                 size="sm"
                 onClick={() => navigate('/dashboard')}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 Back to Dashboard
               </Button>
               <Separator orientation="vertical" className="h-6" />
@@ -326,21 +326,21 @@ const MaterialTracking = () => {
                   variant="outline"
                   onClick={() => setShowMobileScanner(true)}
                 >
-                  <Smartphone className="h-4 w-4 mr-2" />
+                  <Smartphone className="h-4 w-4 mr-2" aria-hidden="true" />
                   Quick Scan
                 </Button>
               )}
               <Dialog open={isUsageDialogOpen} onOpenChange={setIsUsageDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">
-                    <TrendingDown className="h-4 w-4 mr-2" />
+                    <TrendingDown className="h-4 w-4 mr-2" aria-hidden="true" />
                     Record Usage
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl" aria-describedby="record-usage-description">
                   <DialogHeader>
                     <DialogTitle>Record Material Usage</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="record-usage-description">
                       Log material usage for a project and update inventory.
                     </DialogDescription>
                   </DialogHeader>
@@ -348,8 +348,8 @@ const MaterialTracking = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="usage-material">Material *</Label>
-                        <Select value={newUsage.material_id} onValueChange={(value) => setNewUsage({...newUsage, material_id: value})}>
-                          <SelectTrigger>
+                        <Select value={newUsage.material_id} onValueChange={(value) => setNewUsage({...newUsage, material_id: value})} aria-required="true">
+                          <SelectTrigger aria-label="Select material">
                             <SelectValue placeholder="Select material" />
                           </SelectTrigger>
                           <SelectContent>
@@ -429,14 +429,14 @@ const MaterialTracking = () => {
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
+                    <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add Material
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl" aria-describedby="add-material-tracking-description">
                   <DialogHeader>
                     <DialogTitle>Add New Material</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="add-material-tracking-description">
                       Add a new material to your inventory management system.
                     </DialogDescription>
                   </DialogHeader>
@@ -593,7 +593,7 @@ const MaterialTracking = () => {
           <Card className="mb-6 border-yellow-200 bg-yellow-50">
             <CardHeader>
               <CardTitle className="flex items-center text-yellow-800">
-                <AlertTriangle className="h-5 w-5 mr-2" />
+                <AlertTriangle className="h-5 w-5 mr-2" aria-hidden="true" />
                 Low Stock Alert
               </CardTitle>
               <CardDescription className="text-yellow-700">
@@ -630,17 +630,18 @@ const MaterialTracking = () => {
             {/* Filters */}
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4" role="search" aria-label="Filter materials">
                   <div className="flex-1">
                     <Label htmlFor="search">Search Materials</Label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         id="search"
                         placeholder="Search by name, description, or code..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-9"
+                        aria-label="Search materials by name, description, or code"
                       />
                     </div>
                   </div>
@@ -669,7 +670,7 @@ const MaterialTracking = () => {
               {filteredMaterials.length === 0 ? (
                 <Card className="col-span-full">
                   <CardContent className="text-center py-12">
-                    <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                     <h3 className="text-lg font-medium mb-2">No Materials Found</h3>
                     <p className="text-muted-foreground mb-4">
                       {searchTerm || selectedCategory !== 'all' 
@@ -678,7 +679,7 @@ const MaterialTracking = () => {
                       }
                     </p>
                     <Button onClick={() => setIsCreateDialogOpen(true)}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
+                      <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                       Add First Material
                     </Button>
                   </CardContent>
@@ -746,7 +747,7 @@ const MaterialTracking = () => {
               <CardContent>
                 {materialUsage.length === 0 ? (
                   <div className="text-center py-8">
-                    <TrendingDown className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <TrendingDown className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                     <p className="text-muted-foreground">No material usage recorded yet</p>
                   </div>
                 ) : (
@@ -789,7 +790,7 @@ const MaterialTracking = () => {
               size="sm"
               onClick={() => setShowMobileScanner(false)}
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
           <MobileMaterialScanner

@@ -339,14 +339,15 @@ const CRMLeads = () => {
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1" role="search" aria-label="Search leads">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search leads by name, email, company, or project..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
+                        aria-label="Search leads"
                       />
                     </div>
                   </div>
@@ -408,18 +409,18 @@ const CRMLeads = () => {
 
                     <Dialog open={showNewLeadDialog} onOpenChange={setShowNewLeadDialog}>
                       <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button aria-label="Create new lead">
+                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                           New Lead
-                          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/50 rounded border border-border">
+                          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/50 rounded border border-border" aria-label="Keyboard shortcut: Control plus L">
                             Ctrl+L
                           </kbd>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="new-lead-description">
                         <DialogHeader>
                           <DialogTitle>Create New Lead</DialogTitle>
-                          <DialogDescription>
+                          <DialogDescription id="new-lead-description">
                             Add a new construction lead to your pipeline.
                           </DialogDescription>
                         </DialogHeader>
@@ -436,6 +437,7 @@ const CRMLeads = () => {
                                   value={newLead.first_name || ''}
                                   onChange={(e) => setNewLead({...newLead, first_name: e.target.value})}
                                   placeholder="John"
+                                  aria-required="true"
                                 />
                               </div>
                               <div>
@@ -445,6 +447,7 @@ const CRMLeads = () => {
                                   value={newLead.last_name || ''}
                                   onChange={(e) => setNewLead({...newLead, last_name: e.target.value})}
                                   placeholder="Smith"
+                                  aria-required="true"
                                 />
                               </div>
                               <div>

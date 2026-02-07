@@ -293,7 +293,7 @@ export const TenantManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-4" aria-label="Tenant statistics">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
@@ -302,7 +302,7 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.total_tenants || 0}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-lg">
-                  <Building2 className="w-6 h-6 text-blue-600" />
+                  <Building2 className="w-6 h-6 text-blue-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -316,7 +316,7 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.active_tenants || 0}</p>
                 </div>
                 <div className="bg-green-100 p-3 rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  <CheckCircle className="w-6 h-6 text-green-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -330,7 +330,7 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.trial_tenants || 0}</p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-lg">
-                  <AlertCircle className="w-6 h-6 text-yellow-600" />
+                  <AlertCircle className="w-6 h-6 text-yellow-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -344,21 +344,22 @@ export const TenantManagement = () => {
                   <p className="text-2xl font-bold mt-2">{stats?.enterprise_tenants || 0}</p>
                 </div>
                 <div className="bg-purple-100 p-3 rounded-lg">
-                  <Crown className="w-6 h-6 text-purple-600" />
+                  <Crown className="w-6 h-6 text-purple-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+        <div className="relative" role="search" aria-label="Search tenants">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden="true" />
           <Input
             placeholder="Search tenants..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            aria-label="Search tenants by name or slug"
           />
         </div>
 
@@ -465,10 +466,10 @@ export const TenantManagement = () => {
 
         {/* Domain Configuration Dialog */}
         <Dialog open={domainDialogOpen} onOpenChange={setDomainDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" aria-describedby="domain-dialog-description">
             <DialogHeader>
               <DialogTitle>Custom Domain Configuration</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="domain-dialog-description">
                 Configure a custom domain for {selectedTenant?.name}
               </DialogDescription>
             </DialogHeader>

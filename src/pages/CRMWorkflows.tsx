@@ -5,9 +5,9 @@ import { LeadQualificationWorkflows } from "@/components/crm/LeadQualificationWo
 const CRMWorkflows = () => {
   return (
     <DashboardLayout title="Lead Qualification Workflows">
-      <div className="space-y-6">
+      <section className="space-y-6" aria-label="Lead qualification workflows">
         <LeadQualificationWorkflows />
-      </div>
+      </section>
     </DashboardLayout>
   );
 };

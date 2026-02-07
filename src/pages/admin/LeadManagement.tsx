@@ -397,14 +397,15 @@ export const LeadManagement = () => {
         {/* Search and Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex gap-4">
+            <div className="flex gap-4" role="search" aria-label="Search and filter leads">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" aria-hidden="true" />
                 <Input
                   placeholder="Search by email, name, or company..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
+                  aria-label="Search by email, name, or company"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -446,8 +447,8 @@ export const LeadManagement = () => {
         </Card>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} aria-label="Lead management categories">
+          <TabsList className="grid w-full grid-cols-3" aria-label="Lead categories">
             <TabsTrigger value="leads">
               Leads ({leads.length})
             </TabsTrigger>

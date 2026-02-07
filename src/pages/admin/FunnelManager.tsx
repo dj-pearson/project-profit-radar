@@ -194,18 +194,18 @@ export default function FunnelManager() {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                 Create Funnel
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby="create-funnel-description">
               <DialogHeader>
                 <DialogTitle>Create New Funnel</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="create-funnel-description">
                   Set up a new lead funnel with automated email sequences
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleCreateFunnel} className="space-y-4">
+              <form onSubmit={handleCreateFunnel} className="space-y-4" aria-label="Create funnel form">
                 <div>
                   <Label htmlFor="name">Funnel Name</Label>
                   <Input
@@ -286,15 +286,15 @@ export default function FunnelManager() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <span>{funnel.total_steps} steps</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <span>{funnel.total_subscribers} subscribers</span>
                     </div>
                     <div className="flex items-center space-x-2 col-span-2">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <span>{funnel.completion_rate}% completion rate</span>
                     </div>
                   </div>
@@ -317,8 +317,9 @@ export default function FunnelManager() {
                         setSelectedFunnel(funnel.id);
                         setViewMode('analytics');
                       }}
+                      aria-label={`View analytics for ${funnel.name}`}
                     >
-                      <BarChart3 className="h-4 w-4" />
+                      <BarChart3 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="outline"
@@ -329,8 +330,9 @@ export default function FunnelManager() {
                           is_active: !funnel.is_active,
                         })
                       }
+                      aria-label={funnel.is_active ? `Pause ${funnel.name}` : `Activate ${funnel.name}`}
                     >
-                      {funnel.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      {funnel.is_active ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
                     </Button>
                   </div>
                 </CardContent>

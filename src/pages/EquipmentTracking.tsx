@@ -321,7 +321,7 @@ const EquipmentTracking = () => {
                 size="sm"
                 onClick={() => navigate('/dashboard')}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 Back to Dashboard
               </Button>
               <Separator orientation="vertical" className="h-6" />
@@ -334,14 +334,14 @@ const EquipmentTracking = () => {
               <Dialog open={isUsageDialogOpen} onOpenChange={setIsUsageDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">
-                    <Clock className="h-4 w-4 mr-2" />
+                    <Clock className="h-4 w-4 mr-2" aria-hidden="true" />
                     Log Usage
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl" aria-describedby="log-usage-description">
                   <DialogHeader>
                     <DialogTitle>Log Equipment Usage</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="log-usage-description">
                       Record equipment usage for a project.
                     </DialogDescription>
                   </DialogHeader>
@@ -349,8 +349,8 @@ const EquipmentTracking = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="usage-equipment">Equipment *</Label>
-                        <Select value={newUsage.equipment_id} onValueChange={(value) => setNewUsage({...newUsage, equipment_id: value})}>
-                          <SelectTrigger>
+                        <Select value={newUsage.equipment_id} onValueChange={(value) => setNewUsage({...newUsage, equipment_id: value})} aria-required="true">
+                          <SelectTrigger aria-label="Select equipment">
                             <SelectValue placeholder="Select equipment" />
                           </SelectTrigger>
                           <SelectContent>
@@ -365,8 +365,8 @@ const EquipmentTracking = () => {
                       
                       <div>
                         <Label htmlFor="usage-project">Project *</Label>
-                        <Select value={newUsage.project_id} onValueChange={(value) => setNewUsage({...newUsage, project_id: value})}>
-                          <SelectTrigger>
+                        <Select value={newUsage.project_id} onValueChange={(value) => setNewUsage({...newUsage, project_id: value})} aria-required="true">
+                          <SelectTrigger aria-label="Select project">
                             <SelectValue placeholder="Select project" />
                           </SelectTrigger>
                           <SelectContent>
@@ -388,6 +388,7 @@ const EquipmentTracking = () => {
                           type="date"
                           value={newUsage.start_date}
                           onChange={(e) => setNewUsage({...newUsage, start_date: e.target.value})}
+                          aria-required="true"
                         />
                       </div>
                       
@@ -452,14 +453,14 @@ const EquipmentTracking = () => {
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
+                    <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add Equipment
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl" aria-describedby="add-equipment-tracking-description">
                   <DialogHeader>
                     <DialogTitle>Add New Equipment</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="add-equipment-tracking-description">
                       Add new equipment to your inventory management system.
                     </DialogDescription>
                   </DialogHeader>
@@ -472,6 +473,7 @@ const EquipmentTracking = () => {
                           placeholder="Equipment name"
                           value={newEquipment.name}
                           onChange={(e) => setNewEquipment({...newEquipment, name: e.target.value})}
+                          aria-required="true"
                         />
                       </div>
                       
@@ -482,6 +484,7 @@ const EquipmentTracking = () => {
                           placeholder="e.g., Excavator, Generator, etc."
                           value={newEquipment.equipment_type}
                           onChange={(e) => setNewEquipment({...newEquipment, equipment_type: e.target.value})}
+                          aria-required="true"
                         />
                       </div>
                     </div>
@@ -626,7 +629,7 @@ const EquipmentTracking = () => {
           <Card className="mb-6 border-yellow-200 bg-yellow-50">
             <CardHeader>
               <CardTitle className="flex items-center text-yellow-800">
-                <AlertTriangle className="h-5 w-5 mr-2" />
+                <AlertTriangle className="h-5 w-5 mr-2" aria-hidden="true" />
                 Maintenance Due
               </CardTitle>
               <CardDescription className="text-yellow-700">
@@ -663,17 +666,18 @@ const EquipmentTracking = () => {
             {/* Filters */}
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4" role="search" aria-label="Filter equipment">
                   <div className="flex-1">
                     <Label htmlFor="search">Search Equipment</Label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         id="search"
                         placeholder="Search by name, model, or serial number..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-9"
+                        aria-label="Search equipment by name, model, or serial number"
                       />
                     </div>
                   </div>
@@ -717,7 +721,7 @@ const EquipmentTracking = () => {
               {filteredEquipment.length === 0 ? (
                 <Card className="col-span-full">
                   <CardContent className="text-center py-12">
-                    <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                     <h3 className="text-lg font-medium mb-2">No Equipment Found</h3>
                     <p className="text-muted-foreground mb-4">
                       {searchTerm || selectedType !== 'all' || selectedStatus !== 'all'
@@ -726,7 +730,7 @@ const EquipmentTracking = () => {
                       }
                     </p>
                     <Button onClick={() => setIsCreateDialogOpen(true)}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
+                      <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                       Add First Equipment
                     </Button>
                   </CardContent>
@@ -807,7 +811,7 @@ const EquipmentTracking = () => {
               <CardContent>
                 {equipmentUsage.length === 0 ? (
                   <div className="text-center py-8">
-                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                     <p className="text-muted-foreground">No equipment usage recorded yet</p>
                   </div>
                 ) : (

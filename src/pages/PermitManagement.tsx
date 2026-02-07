@@ -176,7 +176,7 @@ export default function PermitManagement() {
       <ResponsiveContainer maxWidth="full" padding="md">
         <div className="flex flex-col sm:flex-row sm:justify-end mb-6">
           <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
             Add Permit
           </Button>
         </div>
@@ -188,7 +188,7 @@ export default function PermitManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <FileText className="h-5 w-5 text-blue-500" />
+              <FileText className="h-5 w-5 text-blue-500" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Permits</p>
                 <p className="text-2xl font-bold">{totalPermits}</p>
@@ -200,7 +200,7 @@ export default function PermitManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
+              <Clock className="h-5 w-5 text-yellow-500" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Pending</p>
                 <p className="text-2xl font-bold">{pendingPermits}</p>
@@ -212,7 +212,7 @@ export default function PermitManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CheckCircle className="h-5 w-5 text-green-500" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Approved</p>
                 <p className="text-2xl font-bold">{approvedPermits}</p>
@@ -224,7 +224,7 @@ export default function PermitManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <AlertTriangle className="h-5 w-5 text-red-500" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Expiring Soon</p>
                 <p className="text-2xl font-bold">{expiringPermits}</p>
@@ -237,21 +237,22 @@ export default function PermitManagement() {
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4" role="search" aria-label="Filter permits">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <Input
                     placeholder="Search permits..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
+                    aria-label="Search permits"
                   />
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 hidden sm:block" />
+                  <Filter className="h-4 w-4 hidden sm:block" aria-hidden="true" />
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-full sm:w-32 md:w-40">
                       <SelectValue placeholder="Status" />
@@ -362,7 +363,7 @@ export default function PermitManagement() {
       {filteredPermits.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
             <h3 className="text-lg font-medium mb-2">No permits found</h3>
             <p className="text-muted-foreground mb-4">
               {searchTerm || statusFilter !== 'all' || projectFilter !== 'all'
@@ -372,7 +373,7 @@ export default function PermitManagement() {
             </p>
             {!searchTerm && statusFilter === 'all' && projectFilter === 'all' && (
               <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add First Permit
               </Button>
             )}

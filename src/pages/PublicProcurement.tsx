@@ -237,7 +237,7 @@ export default function PublicProcurement() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                 Add Opportunity
               </Button>
             </DialogTrigger>
@@ -360,7 +360,7 @@ export default function PublicProcurement() {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <Search className="h-4 w-4 text-muted-foreground" />
+            <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input
               placeholder="Search opportunities, bids, or subcontractors..."
               value={searchTerm}
@@ -383,7 +383,7 @@ export default function PublicProcurement() {
                 Add your first procurement opportunity to get started
               </p>
               <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add Opportunity
               </Button>
             </div>
@@ -444,7 +444,7 @@ export default function PublicProcurement() {
                         View Details
                       </Button>
                       <Button size="sm" className="w-full sm:w-auto">
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                         Submit Bid
                       </Button>
                     </div>
@@ -526,7 +526,7 @@ export default function PublicProcurement() {
                   Add subcontractor information required for bid submissions
                 </p>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Add Subcontractor
                 </Button>
               </div>

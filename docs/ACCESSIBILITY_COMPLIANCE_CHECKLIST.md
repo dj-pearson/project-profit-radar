@@ -75,14 +75,14 @@ Financial pages handle sensitive data and require proper error handling.
 | Accounts Payable | `AccountsPayable.tsx` | Yes | Yes | Yes | **UPDATED** - Dialog, table, metrics ARIA |
 | Balance Sheet | `BalanceSheet.tsx` | Yes | No | Yes | **UPDATED** - Landmarks, table, alerts ARIA |
 | Profit and Loss | `ProfitAndLoss.tsx` | No | No | Yes | **UPDATED** - Landmarks, table, metrics ARIA |
-| Cash Flow | `CashFlowStatement.tsx` | No | No | Yes | Needs AccessibleTable |
-| Fiscal Periods | `FiscalPeriods.tsx` | Yes | Yes | Yes | Needs all accessible components |
+| Cash Flow | `CashFlowStatement.tsx` | No | No | Yes | **UPDATED** - Landmarks, table, metrics ARIA |
+| Fiscal Periods | `FiscalPeriods.tsx` | Yes | Yes | Yes | **UPDATED** - Dialog, form, table ARIA |
 | General Ledger | `GeneralLedger.tsx` | No | No | Yes | **UPDATED** - Landmarks, table, filters ARIA |
 | Trial Balance | `TrialBalance.tsx` | No | No | Yes | **UPDATED** - Landmarks, table, balance alerts ARIA |
-| Budget Management | `BudgetManagement.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Financial Reports | `FinancialReports.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Payroll | `Payroll.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Tax Management | `TaxManagement.tsx` | No | No | No | Needs PageWrapper, ARIA |
+| Budget Management | `BudgetManagement.tsx` | No | No | No | **UPDATED** - Main landmark, ARIA |
+| Financial Reports | `FinancialReports.tsx` | No | No | No | **UPDATED** - Main landmark, ARIA |
+| Payroll | `Payroll.tsx` | No | No | No | **UPDATED** - Main landmark, ARIA |
+| Tax Management | `TaxManagement.tsx` | No | No | No | **UPDATED** - Main landmark, ARIA |
 
 ---
 
@@ -90,16 +90,16 @@ Financial pages handle sensitive data and require proper error handling.
 
 | Page | File | Has Modal | Has Form | Has Table | Status |
 |------|------|-----------|----------|-----------|--------|
-| CRM Dashboard | `CRMDashboard.tsx` | Yes | Yes | No | Needs all accessible components |
-| CRM Leads | `CRMLeads.tsx` | Yes | No | Yes | Needs AccessibleModal, Table |
-| CRM Contacts | `CRMContacts.tsx` | Yes | No | No | Needs AccessibleModal |
-| CRM Opportunities | `CRMOpportunities.tsx` | Yes | No | No | Needs AccessibleModal |
-| Lead Management | `LeadManagement.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Contact Management | `ContactManagement.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| CRM Analytics | `CRMAnalytics.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| CRM Campaigns | `CRMCampaigns.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| CRM Workflows | `CRMWorkflows.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| CRM Lead Intelligence | `CRMLeadIntelligence.tsx` | No | No | No | Needs PageWrapper, ARIA |
+| CRM Dashboard | `CRMDashboard.tsx` | Yes | Yes | No | **UPDATED** - Dialog ARIA, search, icons |
+| CRM Leads | `CRMLeads.tsx` | Yes | No | Yes | **UPDATED** - Dialog ARIA, search, form |
+| CRM Contacts | `CRMContacts.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons |
+| CRM Opportunities | `CRMOpportunities.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons |
+| Lead Management | `LeadManagement.tsx` | No | No | No | **UPDATED** - Main landmark, ARIA |
+| Contact Management | `ContactManagement.tsx` | No | No | No | **UPDATED** - Main landmark, ARIA |
+| CRM Analytics | `CRMAnalytics.tsx` | No | No | No | **UPDATED** - Tabs ARIA labels |
+| CRM Campaigns | `CRMCampaigns.tsx` | No | No | No | **UPDATED** - Section ARIA labels |
+| CRM Workflows | `CRMWorkflows.tsx` | No | No | No | **UPDATED** - Section ARIA labels |
+| CRM Lead Intelligence | `CRMLeadIntelligence.tsx` | No | No | No | **UPDATED** - Tabs ARIA labels |
 
 ---
 
@@ -107,18 +107,18 @@ Financial pages handle sensitive data and require proper error handling.
 
 | Page | File | Has Modal | Has Form | Has Table | Status |
 |------|------|-----------|----------|-----------|--------|
-| Users | `admin/Users.tsx` | Yes | No | No | Needs AccessibleModal |
-| Companies | `admin/Companies.tsx` | Yes | No | No | Needs AccessibleModal |
-| SSO Management | `admin/SSOManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Tenant Management | `admin/TenantManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Lead Management | `admin/LeadManagement.tsx` | Yes | No | Yes | Needs AccessibleModal, Table |
-| Support Tickets | `admin/SupportTickets.tsx` | Yes | No | No | Needs AccessibleModal |
-| Funnel Manager | `admin/FunnelManager.tsx` | Yes | Yes | No | Needs all accessible components |
-| Promotions | `admin/Promotions.tsx` | Yes | Yes | No | Needs all accessible components |
-| Billing | `admin/Billing.tsx` | Yes | No | No | Needs AccessibleModal |
-| AI Model Manager | `admin/AIModelManager.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Social Media Manager | `admin/SocialMediaManager.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Analytics | `admin/Analytics.tsx` | No | No | No | Needs PageWrapper, ARIA |
+| Users | `admin/Users.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons, button labels |
+| Companies | `admin/Companies.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons, button labels |
+| SSO Management | `admin/SSOManagement.tsx` | Yes | No | No | **UPDATED** - Tabs ARIA, Dialog labels |
+| Tenant Management | `admin/TenantManagement.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, stats icons |
+| Lead Management | `admin/LeadManagement.tsx` | Yes | No | Yes | **UPDATED** - Dialog ARIA, search, tabs |
+| Support Tickets | `admin/SupportTickets.tsx` | Yes | No | No | **UPDATED** - Main landmark, stats, filters, Dialog |
+| Funnel Manager | `admin/FunnelManager.tsx` | Yes | Yes | No | **UPDATED** - Dialog ARIA, form, icons, button labels |
+| Promotions | `admin/Promotions.tsx` | Yes | Yes | No | **UPDATED** - Dialog ARIA, form, icons, button labels |
+| Billing | `admin/Billing.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, metrics icons |
+| AI Model Manager | `admin/AIModelManager.tsx` | No | No | No | **UPDATED** - Section ARIA |
+| Social Media Manager | `admin/SocialMediaManager.tsx` | No | No | No | **UPDATED** - Section ARIA, tabs labels |
+| Analytics | `admin/Analytics.tsx` | No | No | No | **UPDATED** - Section ARIA, metrics icons |
 
 ---
 
@@ -126,22 +126,22 @@ Financial pages handle sensitive data and require proper error handling.
 
 | Page | File | Has Modal | Has Form | Has Table | Status |
 |------|------|-----------|----------|-----------|--------|
-| Team Management | `TeamManagement.tsx` | Yes | Yes | No | Needs all accessible components |
-| Crew Scheduling | `CrewScheduling.tsx` | Yes | No | No | Needs AccessibleModal |
-| Equipment | `Equipment.tsx` | Yes | No | No | Needs AccessibleModal |
-| Equipment Management | `EquipmentManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Equipment Tracking | `EquipmentTracking.tsx` | Yes | No | No | Needs AccessibleModal |
-| Materials | `Materials.tsx` | Yes | No | No | Needs AccessibleModal |
-| Material Tracking | `MaterialTracking.tsx` | Yes | No | No | Needs AccessibleModal |
-| Safety | `Safety.tsx` | Yes | No | No | Needs AccessibleModal |
-| Safety Management | `SafetyManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Punch List | `PunchList.tsx` | Yes | No | No | Needs AccessibleModal |
-| Change Orders | `ChangeOrders.tsx` | Yes | No | No | Needs AccessibleModal |
-| Submittals | `Submittals.tsx` | Yes | No | No | Needs AccessibleModal |
-| RFIs | `RFIs.tsx` | Yes | No | No | Needs AccessibleModal |
-| Reports | `Reports.tsx` | Yes | No | No | Needs AccessibleModal |
-| Document Management | `DocumentManagement.tsx` | Yes | Yes | No | Needs all accessible components |
-| Estimates Hub | `EstimatesHub.tsx` | Yes | No | No | Needs AccessibleModal |
+| Team Management | `TeamManagement.tsx` | Yes | Yes | No | **UPDATED** - Dialog ARIA, icons, form fields |
+| Crew Scheduling | `CrewScheduling.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons |
+| Equipment | `Equipment.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons, form |
+| Equipment Management | `EquipmentManagement.tsx` | Yes | No | No | **UPDATED** - Search ARIA, icons |
+| Equipment Tracking | `EquipmentTracking.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, form fields |
+| Materials | `Materials.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons |
+| Material Tracking | `MaterialTracking.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, form fields |
+| Safety | `Safety.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, icons |
+| Safety Management | `SafetyManagement.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons |
+| Punch List | `PunchList.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, icons |
+| Change Orders | `ChangeOrders.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, icons, button labels |
+| Submittals | `Submittals.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons, form |
+| RFIs | `RFIs.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons, form |
+| Reports | `Reports.tsx` | Yes | No | No | **UPDATED** - Tab icons ARIA |
+| Document Management | `DocumentManagement.tsx` | Yes | Yes | No | **UPDATED** - Dialog ARIA, search, icons, form |
+| Estimates Hub | `EstimatesHub.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, search, icons, stats |
 
 ---
 
@@ -149,14 +149,14 @@ Financial pages handle sensitive data and require proper error handling.
 
 | Page | File | Has Modal | Has Form | Has Table | Status |
 |------|------|-----------|----------|-----------|--------|
-| GDPR Compliance | `GDPRCompliance.tsx` | Yes | No | No | Needs AccessibleModal |
-| Permit Management | `PermitManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Environmental Permitting | `EnvironmentalPermitting.tsx` | Yes | No | No | Needs AccessibleModal |
-| Bond Insurance | `BondInsuranceManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Warranty Management | `WarrantyManagement.tsx` | Yes | No | No | Needs AccessibleModal |
-| Compliance Audit | `ComplianceAudit.tsx` | Yes | No | No | Needs AccessibleModal |
-| Audit Logs | `AuditLogs.tsx` | No | No | No | Needs PageWrapper, ARIA |
-| Public Procurement | `PublicProcurement.tsx` | Yes | No | No | Needs AccessibleModal |
+| GDPR Compliance | `GDPRCompliance.tsx` | Yes | No | No | **UPDATED** - Dialog ARIA, icons, form fields |
+| Permit Management | `PermitManagement.tsx` | Yes | No | No | **UPDATED** - Search ARIA, icons, stats |
+| Environmental Permitting | `EnvironmentalPermitting.tsx` | Yes | No | No | **UPDATED** - Icons ARIA |
+| Bond Insurance | `BondInsuranceManagement.tsx` | Yes | No | No | **UPDATED** - Search ARIA, icons |
+| Warranty Management | `WarrantyManagement.tsx` | Yes | No | No | **UPDATED** - Icons ARIA |
+| Compliance Audit | `ComplianceAudit.tsx` | Yes | No | No | **UPDATED** - Search ARIA, icons |
+| Audit Logs | `AuditLogs.tsx` | No | No | No | **UPDATED** - Main landmark ARIA |
+| Public Procurement | `PublicProcurement.tsx` | Yes | No | No | **UPDATED** - Search ARIA, icons |
 
 ---
 
@@ -339,9 +339,9 @@ For each remediated page:
 | Priority | Total Pages | Compliant | % Complete |
 |----------|-------------|-----------|------------|
 | P1: Critical Path | 10 | 10 | 100% |
-| P2: Financial | 15 | 9 | 60% |
-| P3: CRM | 10 | 0 | 0% |
-| P4: Admin | 12 | 0 | 0% |
+| P2: Financial | 15 | 15 | 100% |
+| P3: CRM | 10 | 10 | 100% |
+| P4: Admin | 12 | 12 | 100% |
 | P5: Operations | 17 | 0 | 0% |
 | P6: Compliance | 8 | 0 | 0% |
 | P7: Vendors | 3 | 0 | 0% |
@@ -350,7 +350,7 @@ For each remediated page:
 | P10: Hubs | 5 | 0 | 0% |
 | P11: Tools | 5 | 0 | 0% |
 | P12: Resources | 20+ | 0 | 0% |
-| **TOTAL** | **125+** | **19** | **~15%** |
+| **TOTAL** | **125+** | **47** | **~38%** |
 
 ### Recently Updated (February 2026)
 - `Auth.tsx` - Added semantic HTML, ARIA labels on forms/tabs, aria-hidden on icons
@@ -372,6 +372,34 @@ For each remediated page:
 - `ProfitAndLoss.tsx` - Added landmarks, table scope, metrics section ARIA
 - `GeneralLedger.tsx` - Added landmarks, filters section, table accessibility
 - `TrialBalance.tsx` - Added landmarks, balance status roles, table ARIA
+- `CashFlowStatement.tsx` - Added landmarks, table ARIA, metrics section, aside
+- `FiscalPeriods.tsx` - Added Dialog ARIA, form accessibility, table scope
+- `BudgetManagement.tsx` - Added main landmark, ARIA
+- `FinancialReports.tsx` - Added main landmark, ARIA
+- `Payroll.tsx` - Added main landmark, ARIA
+- `TaxManagement.tsx` - Added main landmark, ARIA
+- `CRMDashboard.tsx` - Added Dialog ARIA, search region, icon aria-hidden, button labels
+- `CRMLeads.tsx` - Added Dialog ARIA, search region, form aria-required
+- `CRMContacts.tsx` - Added Dialog ARIA, search region, icon aria-hidden, button labels
+- `CRMOpportunities.tsx` - Added Dialog ARIA, search region, summary section, icon aria-hidden
+- `LeadManagement.tsx` - Added main landmark, ARIA
+- `ContactManagement.tsx` - Added main landmark, ARIA
+- `CRMAnalytics.tsx` - Added tabs ARIA labels
+- `CRMCampaigns.tsx` - Added section ARIA labels
+- `CRMWorkflows.tsx` - Added section ARIA labels
+- `CRMLeadIntelligence.tsx` - Added tabs ARIA labels
+- `admin/Users.tsx` - Added Dialog ARIA, search, icons, button labels
+- `admin/Companies.tsx` - Added Dialog ARIA, search, icons, button labels
+- `admin/SSOManagement.tsx` - Added Tabs ARIA, Dialog labels
+- `admin/TenantManagement.tsx` - Added Dialog ARIA, search, stats icons
+- `admin/LeadManagement.tsx` - Added Dialog ARIA, search, tabs
+- `admin/SupportTickets.tsx` - Added main landmark, stats, filters, Dialog
+- `admin/FunnelManager.tsx` - Added Dialog ARIA, form, icons, button labels
+- `admin/Promotions.tsx` - Added Dialog ARIA, form, icons, button labels
+- `admin/Billing.tsx` - Added Dialog ARIA, search, metrics icons
+- `admin/AIModelManager.tsx` - Added section ARIA
+- `admin/SocialMediaManager.tsx` - Added section ARIA, tabs labels
+- `admin/Analytics.tsx` - Added section ARIA, metrics icons
 
 ---
 

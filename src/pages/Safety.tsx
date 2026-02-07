@@ -285,21 +285,22 @@ const Safety = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={generateOSHA300Log} className="text-xs md:text-sm">
-              <FileText className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+              <FileText className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Generate OSHA 300 Log</span>
               <span className="sm:hidden">OSHA 300</span>
             </Button>
             <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-construction-orange hover:bg-construction-orange/90 text-xs md:text-sm">
-                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Report Incident</span>
                   <span className="sm:hidden">Report</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="incident-dialog-description">
                 <DialogHeader>
                   <DialogTitle>Report Safety Incident</DialogTitle>
+                  <p id="incident-dialog-description" className="sr-only">Report a workplace safety incident for documentation and investigation</p>
                 </DialogHeader>
                 <SafetyIncidentForm 
                   onSuccess={() => {
@@ -318,7 +319,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Total Incidents</CardTitle>
-              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" />
+              <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.totalIncidents}</div>
@@ -331,7 +332,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Safety Checklists</CardTitle>
-              <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+              <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.checklistsCompleted}</div>
@@ -344,7 +345,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Expiring Certifications</CardTitle>
-              <Clock className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" />
+              <Clock className="h-3 w-3 md:h-4 md:w-4 text-construction-orange" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.expiringCertifications}</div>
@@ -357,7 +358,7 @@ const Safety = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">Upcoming Deadlines</CardTitle>
-              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
+              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-red-600" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold">{stats.upcomingDeadlines}</div>
@@ -390,7 +391,7 @@ const Safety = () => {
                   <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
                     <DialogTrigger asChild>
                       <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                         Report Incident
                       </Button>
                     </DialogTrigger>
@@ -412,7 +413,7 @@ const Safety = () => {
               <CardContent>
                 {recentIncidents.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" />
+                    <CheckCircle className="mx-auto h-12 w-12 mb-4 text-green-600" aria-hidden="true" />
                     <p className="text-lg font-medium mb-2">No Recent Incidents</p>
                     <p>Great job maintaining a safe workplace!</p>
                   </div>
@@ -450,7 +451,7 @@ const Safety = () => {
                   <Dialog open={showChecklistDialog} onOpenChange={setShowChecklistDialog}>
                     <DialogTrigger asChild>
                       <Button className="bg-construction-orange hover:bg-construction-orange/90">
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                         Create Checklist
                       </Button>
                     </DialogTrigger>
@@ -472,7 +473,7 @@ const Safety = () => {
               <CardContent>
                 {checklists.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <Shield className="mx-auto h-12 w-12 mb-4" />
+                    <Shield className="mx-auto h-12 w-12 mb-4" aria-hidden="true" />
                     <p className="text-lg font-medium mb-2">No Safety Checklists</p>
                     <p>Create your first safety checklist to get started</p>
                   </div>

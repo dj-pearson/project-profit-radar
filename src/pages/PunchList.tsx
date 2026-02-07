@@ -314,15 +314,15 @@ const PunchList = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Open</Badge>;
+        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" aria-hidden="true" />Open</Badge>;
       case 'in_progress':
-        return <Badge variant="secondary"><AlertTriangle className="h-3 w-3 mr-1" />In Progress</Badge>;
+        return <Badge variant="secondary"><AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />In Progress</Badge>;
       case 'completed':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />Completed</Badge>;
       case 'verified':
-        return <Badge className="bg-blue-500"><CheckSquare className="h-3 w-3 mr-1" />Verified</Badge>;
+        return <Badge className="bg-blue-500"><CheckSquare className="h-3 w-3 mr-1" aria-hidden="true" />Verified</Badge>;
       case 'rejected':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" aria-hidden="true" />Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -391,14 +391,14 @@ const PunchList = () => {
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
+                <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add Item
               </Button>
             </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="add-punch-item-description">
                 <DialogHeader>
                   <DialogTitle>Add Punch List Item</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="add-punch-item-description">
                     Log a quality issue or incomplete work item for tracking and resolution.
                   </DialogDescription>
                 </DialogHeader>
@@ -554,13 +554,13 @@ const PunchList = () => {
           {filteredItems.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Punch List Items</h3>
                 <p className="text-muted-foreground mb-4">
                   {selectedProject || selectedStatus ? 'No items match the selected filters' : 'No punch list items have been created yet'}
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Add First Item
                 </Button>
               </CardContent>
@@ -573,7 +573,7 @@ const PunchList = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
-                          <CheckSquare className="h-5 w-5 text-construction-blue" />
+                          <CheckSquare className="h-5 w-5 text-construction-blue" aria-hidden="true" />
                           <span>Punch List Item</span>
                           <Badge variant="outline">#{item.item_number}</Badge>
                         </CardTitle>
@@ -596,7 +596,7 @@ const PunchList = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <MapPin className="h-4 w-4 mr-2" />
+                          <MapPin className="h-4 w-4 mr-2" aria-hidden="true" />
                           Location
                         </h4>
                         <p className="text-sm text-muted-foreground">{item.location || 'Not specified'}</p>
@@ -609,7 +609,7 @@ const PunchList = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2 flex items-center">
-                          <User className="h-4 w-4 mr-2" />
+                          <User className="h-4 w-4 mr-2" aria-hidden="true" />
                           Assigned To
                         </h4>
                         <p className="text-sm text-muted-foreground">
@@ -619,7 +619,7 @@ const PunchList = () => {
                       
                       <div>
                          <h4 className="font-medium mb-2 flex items-center">
-                           <Calendar className="h-4 w-4 mr-2" />
+                           <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                            Date Identified
                          </h4>
                          <p className="text-sm text-muted-foreground">
@@ -638,7 +638,7 @@ const PunchList = () => {
                           setIsEditDialogOpen(true);
                         }}
                       >
-                        <User className="h-3 w-3 mr-1" />
+                        <User className="h-3 w-3 mr-1" aria-hidden="true" />
                         Edit
                       </Button>
                       
@@ -650,7 +650,7 @@ const PunchList = () => {
                           setIsCommentDialogOpen(true);
                         }}
                       >
-                        <MessageSquare className="h-3 w-3 mr-1" />
+                        <MessageSquare className="h-3 w-3 mr-1" aria-hidden="true" />
                         Add Comment
                       </Button>
                       
@@ -660,7 +660,7 @@ const PunchList = () => {
                           size="sm"
                           onClick={() => handleStatusUpdate(item.id, 'in_progress')}
                         >
-                          <Clock className="h-3 w-3 mr-1" />
+                          <Clock className="h-3 w-3 mr-1" aria-hidden="true" />
                           Start Work
                         </Button>
                       )}
@@ -671,7 +671,7 @@ const PunchList = () => {
                           size="sm"
                           onClick={() => handleStatusUpdate(item.id, 'completed')}
                         >
-                          <CheckCircle className="h-3 w-3 mr-1" />
+                          <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                           Mark Complete
                         </Button>
                       )}
@@ -682,7 +682,7 @@ const PunchList = () => {
                           size="sm"
                           onClick={() => handleStatusUpdate(item.id, 'verified')}
                         >
-                          <CheckSquare className="h-3 w-3 mr-1" />
+                          <CheckSquare className="h-3 w-3 mr-1" aria-hidden="true" />
                           Verify
                         </Button>
                       )}
@@ -697,10 +697,10 @@ const PunchList = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="edit-punch-item-description">
           <DialogHeader>
             <DialogTitle>Edit Punch List Item</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-punch-item-description">
               Update the details of this punch list item.
             </DialogDescription>
           </DialogHeader>

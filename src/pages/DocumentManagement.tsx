@@ -407,21 +407,21 @@ const DocumentManagement = () => {
           variant="outline"
           className="flex items-center gap-2"
         >
-          <Database className="h-4 w-4" />
+          <Database className="h-4 w-4" aria-hidden="true" />
           Smart Import
         </Button>
         
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
               Upload Files
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md" aria-describedby="upload-documents-description">
             <DialogHeader>
               <DialogTitle>Upload Documents</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="upload-documents-description">
                 Upload files to {isProjectContext ? 'this project' : 'your company library'}
               </DialogDescription>
             </DialogHeader>
@@ -434,6 +434,7 @@ const DocumentManagement = () => {
                   multiple
                   onChange={(e) => setSelectedFiles(e.target.files)}
                   required
+                  aria-required="true"
                 />
                 <div className="flex items-center space-x-2 mt-2">
                   <input
@@ -444,7 +445,7 @@ const DocumentManagement = () => {
                     className="rounded"
                   />
                   <Label htmlFor="smart-processing" className="text-sm flex items-center space-x-1">
-                    <Brain className="h-3 w-3" />
+                    <Brain className="h-3 w-3" aria-hidden="true" />
                     <span>Enable Smart Processing (OCR + AI Classification)</span>
                   </Label>
                 </div>
@@ -512,14 +513,15 @@ const DocumentManagement = () => {
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-4">
-            <div className={mobileFilterClasses.container}>
+            <div className={mobileFilterClasses.container} role="search" aria-label="Filter documents">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
                 <Input
                   placeholder="Search documents..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
+                  aria-label="Search documents"
                 />
               </div>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -560,7 +562,7 @@ const DocumentManagement = () => {
         {filteredDocuments.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
               <h3 className="text-lg font-medium mb-2">No documents found</h3>
               <p className="text-muted-foreground mb-4">
                 {searchTerm || filterCategory || filterType 
@@ -570,7 +572,7 @@ const DocumentManagement = () => {
               </p>
               {!searchTerm && !filterCategory && !filterType && (
                 <Button onClick={() => setIsUploadOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" />
+                  <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
                   Upload Files
                 </Button>
               )}
@@ -594,13 +596,13 @@ const DocumentManagement = () => {
 
       {/* OCR Processing Dialog */}
       <Dialog open={showOCRProcessor} onOpenChange={setShowOCRProcessor}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="ocr-processing-description">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <Brain className="h-5 w-5" />
+              <Brain className="h-5 w-5" aria-hidden="true" />
               <span>Smart Document Processing</span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="ocr-processing-description">
               Processing your document with OCR and AI classification
             </DialogDescription>
           </DialogHeader>

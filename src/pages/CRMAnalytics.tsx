@@ -12,8 +12,8 @@ const CRMAnalytics = () => {
   return (
     <DashboardLayout title="CRM Analytics">
       <div className="space-y-6">
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="overview" className="w-full" aria-label="CRM Analytics sections">
+          <TabsList className="grid w-full grid-cols-6" aria-label="Analytics categories">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
             <TabsTrigger value="forecasting">Forecasting</TabsTrigger>

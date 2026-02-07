@@ -221,15 +221,16 @@ const UsersPage = () => {
       <DashboardLayout title="Users" showTrialBanner={false}>
         <div className="space-y-6">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <section className="flex flex-col sm:flex-row gap-4" aria-label="User filters">
+          <div className="flex-1" role="search" aria-label="Search users">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
               <Input
                 placeholder="Search users by name, email, or company..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="Search users by name, email, or company"
               />
             </div>
           </div>
@@ -257,7 +258,7 @@ const UsersPage = () => {
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </section>
 
         {/* Users Table */}
         <Card>
@@ -290,17 +291,17 @@ const UsersPage = () => {
                       </div>
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <span className="flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
+                          <Mail className="h-3 w-3 mr-1" aria-hidden="true" />
                           {userItem.email}
                         </span>
                         {userItem.companies && (
                           <span className="flex items-center">
-                            <Building2 className="h-3 w-3 mr-1" />
+                            <Building2 className="h-3 w-3 mr-1" aria-hidden="true" />
                             {userItem.companies.name}
                           </span>
                         )}
                         <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
+                          <Calendar className="h-3 w-3 mr-1" aria-hidden="true" />
                           Joined {new Date(userItem.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -315,8 +316,9 @@ const UsersPage = () => {
                         setSelectedUser(userItem);
                         setIsDetailDialogOpen(true);
                       }}
+                      aria-label={`View details for ${userItem.first_name || userItem.email}`}
                     >
-                      <Eye className="h-3 w-3 mr-1" />
+                      <Eye className="h-3 w-3 mr-1" aria-hidden="true" />
                       View
                     </Button>
                     <Button
@@ -325,8 +327,9 @@ const UsersPage = () => {
                       onClick={() => handleImpersonateClick(userItem)}
                       disabled={userItem.id === user?.id}
                       title={userItem.id === user?.id ? "Cannot impersonate yourself" : "Impersonate this user"}
+                      aria-label={`Impersonate ${userItem.first_name || userItem.email}`}
                     >
-                      <UserCog className="h-3 w-3 mr-1" />
+                      <UserCog className="h-3 w-3 mr-1" aria-hidden="true" />
                       Impersonate
                     </Button>
                     <Button
@@ -364,10 +367,10 @@ const UsersPage = () => {
 
       {/* User Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="user-detail-description">
           <DialogHeader>
             <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="user-detail-description">
               Detailed information about {selectedUser?.first_name} {selectedUser?.last_name}
             </DialogDescription>
           </DialogHeader>
@@ -437,10 +440,10 @@ const UsersPage = () => {
 
       {/* Impersonation Dialog */}
       <Dialog open={isImpersonateDialogOpen} onOpenChange={setIsImpersonateDialogOpen}>
-        <DialogContent>
+        <DialogContent aria-describedby="impersonation-dialog-description">
           <DialogHeader>
             <DialogTitle>Impersonate User</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="impersonation-dialog-description">
               Enter a detailed reason for impersonating {selectedUser?.first_name} {selectedUser?.last_name}. All actions will be logged for security.
             </DialogDescription>
           </DialogHeader>

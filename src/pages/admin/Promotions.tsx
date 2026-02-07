@@ -247,20 +247,20 @@ const Promotions = () => {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={openCreateDialog}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create Promotion
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="promotion-dialog-description">
                 <DialogHeader>
                   <DialogTitle>
                     {editingPromotion ? 'Edit Promotion' : 'Create New Promotion'}
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="promotion-dialog-description">
                     Set up a promotional discount campaign for your pricing plans.
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6" aria-label="Promotion form">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Campaign Name *</Label>
@@ -425,11 +425,11 @@ const Promotions = () => {
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditDialog(promotion)}>
-                        <Edit className="h-4 w-4" />
+                      <Button variant="outline" size="sm" onClick={() => openEditDialog(promotion)} aria-label={`Edit ${promotion.name}`}>
+                        <Edit className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(promotion.id)}>
-                        <Trash2 className="h-4 w-4" />
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(promotion.id)} aria-label={`Delete ${promotion.name}`}>
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
@@ -437,11 +437,11 @@ const Promotions = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
-                      <Percent className="h-4 w-4 text-muted-foreground" />
+                      <Percent className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <span className="font-medium">{promotion.discount_percentage}% Off</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <span className="text-sm">
                         {format(new Date(promotion.start_date), 'MMM d, yyyy')} - {format(new Date(promotion.end_date), 'MMM d, yyyy')}
                       </span>

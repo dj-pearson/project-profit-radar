@@ -236,17 +236,17 @@ const Reports = () => {
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
             <TabsTrigger value="dashboard" className={mobileTextClasses.body}>
-              <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
+              <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Executive Dashboard</span>
               <span className="sm:hidden">Dashboard</span>
             </TabsTrigger>
             <TabsTrigger value="builder" className={mobileTextClasses.body}>
-              <Settings className="h-4 w-4 mr-1 sm:mr-2" />
+              <Settings className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Custom Reports</span>
               <span className="sm:hidden">Custom</span>
             </TabsTrigger>
             <TabsTrigger value="exports" className={mobileTextClasses.body}>
-              <Download className="h-4 w-4 mr-1 sm:mr-2" />
+              <Download className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Export Center</span>
               <span className="sm:hidden">Export</span>
             </TabsTrigger>
@@ -315,7 +315,7 @@ const Reports = () => {
                     disabled={!selectedProject || generating}
                     className={mobileButtonClasses.primary}
                   >
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    <FileSpreadsheet className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to Excel'}</span>
                     <span className="sm:hidden">Excel</span>
                   </Button>
@@ -325,7 +325,7 @@ const Reports = () => {
                     variant="outline"
                     className={mobileButtonClasses.secondary}
                   >
-                    <FileText className="h-4 w-4 mr-2" />
+                    <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">{generating ? 'Generating...' : 'Export to PDF'}</span>
                     <span className="sm:hidden">PDF</span>
                   </Button>
@@ -341,7 +341,7 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent>
                   <Button className={mobileButtonClasses.primary} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">Generate Financial Report</span>
                     <span className="sm:hidden">Financial</span>
                   </Button>
@@ -355,7 +355,7 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent>
                   <Button className={mobileButtonClasses.primary} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     <span className="hidden sm:inline">Generate Time Report</span>
                     <span className="sm:hidden">Time</span>
                   </Button>

@@ -173,7 +173,7 @@ export default function Materials() {
     const Icon = config?.icon || Clock;
     return (
       <Badge variant={config?.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {config?.label || status}
       </Badge>
     );
@@ -194,21 +194,21 @@ export default function Materials() {
                 onClick={() => setShowCreatePODialog(true)}
                 className="bg-construction-blue hover:bg-construction-blue/90"
               >
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
                 Create PO ({selectedMaterials.length})
               </Button>
             )}
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                   Add Material
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent aria-describedby="add-material-description">
                 <DialogHeader>
                   <DialogTitle>Add New Material</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="add-material-description">
                     Add a new material to your inventory
                   </DialogDescription>
                 </DialogHeader>
@@ -325,13 +325,14 @@ export default function Materials() {
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
 
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center space-x-2" role="search" aria-label="Search materials">
+            <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input
               placeholder="Search materials, SKUs, or suppliers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
+              aria-label="Search materials, SKUs, or suppliers"
             />
           </div>
 
@@ -340,7 +341,7 @@ export default function Materials() {
               <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 rounded-lg p-3 mb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <CheckCircle className="h-4 w-4 text-blue-600" aria-hidden="true" />
                     <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                       {selectedMaterials.length} material(s) selected
                     </span>
@@ -358,7 +359,7 @@ export default function Materials() {
                       onClick={() => setShowCreatePODialog(true)}
                       className="bg-construction-blue hover:bg-construction-blue/90"
                     >
-                      <FileText className="mr-2 h-4 w-4" />
+                      <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
                       Create Purchase Order
                     </Button>
                   </div>
@@ -384,7 +385,7 @@ export default function Materials() {
                         />
                         <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            <Package className="h-5 w-5" />
+                            <Package className="h-5 w-5" aria-hidden="true" />
                             {material.name}
                           </CardTitle>
                           <CardDescription>
@@ -428,7 +429,7 @@ export default function Materials() {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">
-                          <Truck className="h-4 w-4 mr-2" />
+                          <Truck className="h-4 w-4 mr-2" aria-hidden="true" />
                           Reorder
                         </Button>
                         <Button size="sm">
@@ -490,7 +491,7 @@ export default function Materials() {
 
           <TabsContent value="suppliers" className="space-y-4">
             <div className="text-center py-8">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
               <h3 className="text-lg font-medium">Supplier Management</h3>
               <p className="text-muted-foreground">
                 Manage your material suppliers and vendor relationships
@@ -507,7 +508,7 @@ export default function Materials() {
                 <CardContent>
                   <div className="text-2xl font-bold">$18,125.00</div>
                   <div className="flex items-center text-sm text-green-600">
-                    <TrendingUp className="h-4 w-4 mr-1" />
+                    <TrendingUp className="h-4 w-4 mr-1" aria-hidden="true" />
                     +5.2% from last month
                   </div>
                 </CardContent>
@@ -520,7 +521,7 @@ export default function Materials() {
                 <CardContent>
                   <div className="text-2xl font-bold">1</div>
                   <div className="flex items-center text-sm text-yellow-600">
-                    <AlertTriangle className="h-4 w-4 mr-1" />
+                    <AlertTriangle className="h-4 w-4 mr-1" aria-hidden="true" />
                     Requires attention
                   </div>
                 </CardContent>
@@ -533,7 +534,7 @@ export default function Materials() {
                 <CardContent>
                   <div className="text-2xl font-bold">1</div>
                   <div className="flex items-center text-sm text-blue-600">
-                    <Clock className="h-4 w-4 mr-1" />
+                    <Clock className="h-4 w-4 mr-1" aria-hidden="true" />
                     Awaiting delivery
                   </div>
                 </CardContent>

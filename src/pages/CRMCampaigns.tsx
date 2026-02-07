@@ -5,9 +5,9 @@ import { LeadNurturingCampaigns } from "@/components/crm/LeadNurturingCampaigns"
 const CRMCampaigns = () => {
   return (
     <DashboardLayout title="Lead Nurturing Campaigns">
-      <div className="space-y-6">
+      <section className="space-y-6" aria-label="Lead nurturing campaigns">
         <LeadNurturingCampaigns />
-      </div>
+      </section>
     </DashboardLayout>
   );
 };
