@@ -33,7 +33,7 @@ import {
   RefreshCw,
   Loader2,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -110,7 +110,7 @@ export const SSOManagement = () => {
       if (session?.session?.access_token) {
         try {
           const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+            getEdgeFunctionUrl('sso-manage'),
             {
               method: 'POST',
               headers: {
@@ -188,7 +188,7 @@ export const SSOManagement = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+        getEdgeFunctionUrl('sso-manage'),
         {
           method: 'POST',
           headers: {
@@ -239,7 +239,7 @@ export const SSOManagement = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+        getEdgeFunctionUrl('sso-manage'),
         {
           method: 'POST',
           headers: {
@@ -338,7 +338,7 @@ export const SSOManagement = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/disable-mfa`,
+        getEdgeFunctionUrl('disable-mfa'),
         {
           method: 'POST',
           headers: {

@@ -50,7 +50,8 @@ interface PaymentFailure {
   subscriber?: {
     user?: {
       email: string;
-      full_name: string;
+      first_name: string;
+      last_name: string;
     };
   };
 }
@@ -490,7 +491,7 @@ const FailedPaymentRecovery: React.FC = () => {
                 >
                   <div>
                     <div className="font-medium">
-                      {failure.subscriber?.user?.full_name || 'Unknown Customer'}
+                      {failure.subscriber?.user ? `${failure.subscriber.user.first_name || ''} ${failure.subscriber.user.last_name || ''}`.trim() || 'Unknown Customer' : 'Unknown Customer'}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {failure.subscriber?.user?.email}
@@ -561,7 +562,7 @@ const FailedPaymentRecovery: React.FC = () => {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {failure.subscriber?.user?.full_name || 'Unknown'}
+                          {failure.subscriber?.user ? `${failure.subscriber.user.first_name || ''} ${failure.subscriber.user.last_name || ''}`.trim() || 'Unknown' : 'Unknown'}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {failure.subscriber?.user?.email}
@@ -595,7 +596,7 @@ const FailedPaymentRecovery: React.FC = () => {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handlePauseDunning(failure.subscriber?.user?.full_name || '')}
+                              onClick={() => handlePauseDunning(failure.id)}
                               title="Pause Dunning"
                             >
                               <Pause className="w-4 h-4" />
@@ -606,7 +607,7 @@ const FailedPaymentRecovery: React.FC = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleResumeDunning(failure.subscriber?.user?.full_name || '')}
+                            onClick={() => handleResumeDunning(failure.id)}
                             title="Resume Dunning"
                           >
                             <Play className="w-4 h-4" />

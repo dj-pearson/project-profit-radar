@@ -419,7 +419,7 @@ const DailyReports = () => {
               </DialogContent>
               </Dialog>
           </div>
-        </div>
+        </header>
         {/* Filters */}
         <section aria-label="Report filters">
           <Card className="mb-6">

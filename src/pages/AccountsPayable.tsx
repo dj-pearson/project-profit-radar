@@ -435,7 +435,7 @@ export default function AccountsPayable() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </header>
 
       {/* Metrics */}
       <section aria-label="Accounts payable metrics" className="grid gap-4 md:grid-cols-3">

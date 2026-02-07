@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import {
   Shield,
   Smartphone,
@@ -72,7 +72,7 @@ export const TOTPSetupScreen: React.FC<TOTPSetupScreenProps> = ({
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/setup-mfa`,
+        getEdgeFunctionUrl('setup-mfa'),
         {
           method: 'POST',
           headers: {
@@ -169,7 +169,7 @@ export const TOTPSetupScreen: React.FC<TOTPSetupScreenProps> = ({
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-mfa-setup`,
+        getEdgeFunctionUrl('verify-mfa-setup'),
         {
           method: 'POST',
           headers: {

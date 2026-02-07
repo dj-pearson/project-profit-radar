@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { Shield, Key, Server, Globe, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 // SAML Configuration Schema
@@ -169,7 +169,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+        getEdgeFunctionUrl('sso-manage'),
         {
           method: 'POST',
           headers: {
@@ -231,7 +231,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+        getEdgeFunctionUrl('sso-manage'),
         {
           method: 'POST',
           headers: {
@@ -292,7 +292,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+        getEdgeFunctionUrl('sso-manage'),
         {
           method: 'POST',
           headers: {
@@ -367,7 +367,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sso-manage`,
+        getEdgeFunctionUrl('sso-manage'),
         {
           method: 'POST',
           headers: {

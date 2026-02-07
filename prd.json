@@ -1,0 +1,506 @@
+{
+  "project": "BuildDesk Enterprise Production Readiness",
+  "branchName": "enterprise-production-readiness",
+  "description": "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. The platform has 943+ components, 264 pages, 186 edge functions, and 375 database migrations but scores only ~4.5/10 on enterprise readiness due to: TypeScript strict mode disabled (1,400+ any types), <2% test coverage, <2% accessibility compliance, no CI/CD for the main web app, hardcoded fallback tokens, and significant placeholder code. This PRD addresses all critical, high, and medium priority gaps across code quality, testing, security, accessibility, CI/CD, and production monitoring.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Enable TypeScript strict mode in tsconfig",
+      "description": "As a developer, I want TypeScript strict mode enabled so that the compiler catches type errors at build time instead of runtime. Currently tsconfig.app.json has strict: false, noImplicitAny: false, noUnusedParameters: false. Enable strict: true, noImplicitAny: true, and strictNullChecks: true. This will produce many compile errors - do NOT fix them in this story. Instead, add ts-expect-error comments with TODO tags to suppress errors so the build passes. Create a script at scripts/count-ts-errors.sh that counts remaining ts-expect-error comments for tracking progress.",
+      "acceptanceCriteria": [
+        "tsconfig.app.json has strict: true, noImplicitAny: true, strictNullChecks: true",
+        "npm run build completes successfully with no TypeScript errors",
+        "All suppressed errors use @ts-expect-error with a TODO comment explaining the issue",
+        "scripts/count-ts-errors.sh exists and outputs count of remaining ts-expect-error comments",
+        "No functional changes to runtime behavior"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "This is foundational - must be done first. The count script helps track technical debt reduction in future stories."
+    },
+    {
+      "id": "US-002",
+      "title": "Remove hardcoded fallback tokens from source code",
+      "description": "As a security engineer, I want no secrets or tokens hardcoded in source code so that credentials cannot be leaked through version control. File src/lib/envValidation.ts line 28 contains a hardcoded Supabase JWT token as a fallback value. Remove the hardcoded token from FALLBACK_VALUES. Instead, make the app show a clear setup error page when env vars are missing in development, and fail fast with a descriptive error in production. Update the validation logic to not silently fall back to hardcoded credentials.",
+      "acceptanceCriteria": [
+        "No JWT tokens, API keys, or secrets exist as string literals in any .ts or .tsx file",
+        "src/lib/envValidation.ts FALLBACK_VALUES no longer contains any token strings",
+        "Development mode shows a clear error UI when VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY are missing",
+        "Production mode logs an error and fails fast when required env vars are missing",
+        "npm run build completes successfully",
+        "Running grep -r 'eyJ' src/ returns no results (no JWT tokens in source)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Security critical. The existing token is a supabase-demo token but the pattern is dangerous."
+    },
+    {
+      "id": "US-003",
+      "title": "Remove debug console statements and clean up development artifacts",
+      "description": "As a developer, I want production code free of debug statements so the console is clean and no sensitive information leaks. Remove all console.log DEBUG statements from src/pages/Setup.tsx (4 instances). Search the entire src/ directory for console.log and console.debug statements that are not wrapped in isDevelopment() checks. Either remove them or wrap them in development-only guards. The ESLint config already has no-console as warn - ensure all remaining console usage is intentional error logging only.",
+      "acceptanceCriteria": [
+        "src/pages/Setup.tsx contains zero DEBUG console statements",
+        "No bare console.log or console.debug calls remain in src/ outside of the logger utility",
+        "All intentional logging uses the logger utility from src/lib/logger.ts",
+        "npm run lint produces no new console-related warnings",
+        "npm run build completes successfully"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "ESLint already warns on console usage. This story enforces the rule."
+    },
+    {
+      "id": "US-004",
+      "title": "Create GitHub Actions CI pipeline for main web application",
+      "description": "As a developer, I want an automated CI pipeline so that every pull request is validated before merge. Create .github/workflows/ci.yml that runs on push to main and on all pull requests. The pipeline should: 1) Install dependencies (npm ci), 2) Run TypeScript type checking (npx tsc --noEmit), 3) Run ESLint (npm run lint), 4) Run unit tests (npm run test:run), 5) Run production build (npm run build). Use Node.js 18. Cache node_modules using actions/cache. The pipeline should fail if any step fails. Add a separate job for E2E tests that starts the dev server and runs Playwright tests against Chromium only (to keep CI fast).",
+      "acceptanceCriteria": [
+        ".github/workflows/ci.yml exists and is valid YAML",
+        "Pipeline includes jobs: lint, typecheck, unit-test, build, e2e-test",
+        "Node.js 18 is used with npm ci for dependency installation",
+        "node_modules are cached between runs using actions/cache",
+        "E2E job installs Playwright browsers and runs against Chromium",
+        "Pipeline triggers on push to main and on pull_request events",
+        "Each job fails fast on error"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Edge functions already have CI/CD (.github/workflows/deploy-edge-functions.yml). This covers the main React app."
+    },
+    {
+      "id": "US-005",
+      "title": "Write unit tests for core utility functions in src/lib/",
+      "description": "As a developer, I want comprehensive unit tests for core utilities so that foundational functions are verified. Write Vitest tests for the most critical utility files in src/lib/. Focus on: utils.ts (cn function, formatCurrency, date formatting), envValidation.ts (validateEnvironment, getEnvConfig), and any security utilities in src/lib/security/. Each test file should be co-located as filename.test.ts. Aim for 90%+ coverage on these specific files. Use the existing vitest.config.ts and test setup.",
+      "acceptanceCriteria": [
+        "src/lib/__tests__/utils.test.ts exists with tests for all exported utility functions",
+        "src/lib/__tests__/envValidation.test.ts exists with tests for validation logic",
+        "Tests for any files in src/lib/security/ directory exist",
+        "All tests pass when running npm run test:run",
+        "Coverage for src/lib/ files exceeds 80% (run npm run test:coverage to verify)",
+        "Tests cover edge cases: null inputs, empty strings, boundary values"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Currently <2% test coverage. Start with the most foundational utility code."
+    },
+    {
+      "id": "US-006",
+      "title": "Write unit tests for AuthContext and authentication hooks",
+      "description": "As a developer, I want authentication logic thoroughly tested so that login, logout, role checking, and session management are reliable. Write Vitest tests for src/contexts/AuthContext.tsx covering: user state management, login/logout flows, role-based access helpers, and session persistence. Mock the Supabase client. Test all user roles (admin, project_manager, field_supervisor, office_staff, accounting, client_portal). Also test any auth-related hooks in src/hooks/.",
+      "acceptanceCriteria": [
+        "src/contexts/__tests__/AuthContext.test.tsx exists with comprehensive tests",
+        "Tests cover: initial unauthenticated state, successful login, failed login, logout, session refresh",
+        "All 6 user roles are tested for role-based access control",
+        "Supabase client is properly mocked (no real API calls)",
+        "All tests pass with npm run test:run",
+        "At least 15 test cases covering authentication edge cases"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Auth is the most critical path. Mocking Supabase is essential for reliable tests."
+    },
+    {
+      "id": "US-007",
+      "title": "Write unit tests for financial calculation utilities",
+      "description": "As a developer, I want financial calculations tested to prevent monetary errors in job costing and invoicing. Find and test all financial calculation functions across the codebase - look in src/components/financial/, src/utils/, and src/lib/ for functions that compute totals, margins, tax, markup, budget variance, and cash flow. Write thorough unit tests with exact decimal precision checks. Test currency rounding, zero values, negative values, and very large numbers.",
+      "acceptanceCriteria": [
+        "Test files exist for all financial calculation utilities found in the codebase",
+        "Tests verify exact decimal precision (no floating point errors in money calculations)",
+        "Edge cases tested: zero budget, negative values, very large numbers (>$1M), tax rounding",
+        "Budget vs actual variance calculations are tested with known inputs/outputs",
+        "Markup and margin percentage calculations are tested",
+        "All tests pass with npm run test:run"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Financial accuracy is business-critical for a construction management SaaS."
+    },
+    {
+      "id": "US-008",
+      "title": "Write E2E tests for authentication and dashboard flows",
+      "description": "As a QA engineer, I want E2E tests for the most critical user journeys so that regressions are caught before deployment. Using Playwright (already configured), write E2E tests for: 1) Landing page loads correctly, 2) Sign-in page renders with email/password fields, 3) Dashboard page renders after navigation, 4) Navigation menu works correctly, 5) Theme toggle works. Since we cannot test real auth without credentials, focus on page rendering, navigation, and UI interaction tests. Place tests in tests/e2e/.",
+      "acceptanceCriteria": [
+        "tests/e2e/landing.spec.ts tests that the landing page loads and has key elements",
+        "tests/e2e/auth.spec.ts tests the sign-in page renders correctly",
+        "tests/e2e/navigation.spec.ts tests that navigation links work between pages",
+        "All tests pass with npx playwright test --project=chromium",
+        "Tests use proper Playwright patterns: page objects, locators, assertions",
+        "Tests have descriptive names and are organized by feature area"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Playwright is already configured. Focus on smoke tests that verify critical paths render."
+    },
+    {
+      "id": "US-009",
+      "title": "Fix critical any types in core modules (contexts, hooks, lib)",
+      "description": "As a developer, I want proper TypeScript types in core modules so that the foundational code is type-safe. Focus on removing @ts-expect-error and any types from: 1) src/contexts/ - all context providers, 2) src/hooks/ - the 20 most-used hooks, 3) src/lib/ - all utility files. Replace 'any' with proper types using the existing Supabase generated types from src/integrations/supabase/types.ts. For complex objects, create proper interfaces in src/types/. This story targets the CORE modules only, not components or pages.",
+      "acceptanceCriteria": [
+        "src/contexts/ files have zero any types or @ts-expect-error comments",
+        "src/lib/ files have zero any types or @ts-expect-error comments",
+        "At least 20 hooks in src/hooks/ have proper types replacing any",
+        "New type interfaces are created in src/types/ where needed",
+        "npm run build completes successfully",
+        "No runtime behavior changes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Depends on US-001 (strict mode). Core modules are imported everywhere so fixing them has maximum impact."
+    },
+    {
+      "id": "US-010",
+      "title": "Add AccessiblePageWrapper to top 20 most-visited pages",
+      "description": "As a user with disabilities, I want proper semantic HTML landmarks on all pages so that screen readers can navigate effectively. Import AccessiblePageWrapper from src/components/accessibility/AccessiblePageWrapper.tsx and wrap the following high-traffic pages: Dashboard, Projects list, Project detail, Financial overview, Time tracking, Estimates, Invoices, Daily reports, Team/Crew management, Settings, Client portal, CRM dashboard, Documents, Calendar, Equipment, Safety, Analytics, Reports, Change orders, and Profile. Each page should have proper main landmark, page title, and breadcrumb structure.",
+      "acceptanceCriteria": [
+        "20 specified pages import and use AccessiblePageWrapper as the outermost container",
+        "Each page passes the pageTitle prop to AccessiblePageWrapper",
+        "Each page has a proper <main> landmark via the wrapper",
+        "Screen reader users can identify the current page via the document title",
+        "npm run build completes successfully",
+        "[UI stories only] Verify in browser using dev-browser skill that pages render correctly with the wrapper"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Currently 0 pages use AccessiblePageWrapper. This is the highest-impact a11y change. See docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md."
+    },
+    {
+      "id": "US-011",
+      "title": "Migrate forms to AccessibleForm components on key pages",
+      "description": "As a user with disabilities, I want forms with proper labels, error messages, and ARIA attributes so I can complete tasks with assistive technology. Identify the 15 most important forms in the application (sign-in, sign-up, create project, create estimate, create invoice, time entry, daily report, change order, contact form, settings profile, team invite, expense entry, document upload, task creation, and search/filter forms). Replace their form elements with AccessibleForm, AccessibleFormField, AccessibleSelect, and AccessibleTextarea from src/components/accessibility/AccessibleForm.tsx. Ensure each field has an associated label, aria-invalid on error, and aria-describedby for error messages.",
+      "acceptanceCriteria": [
+        "15 high-priority forms use AccessibleForm components",
+        "All form inputs have associated <label> elements",
+        "Error states set aria-invalid=true on the input",
+        "Error messages are linked via aria-describedby",
+        "Required fields have aria-required=true",
+        "npm run build completes successfully",
+        "[UI stories only] Verify in browser using dev-browser skill that forms still function correctly"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Currently only 1 page (MyTasks.tsx) uses AccessibleForm. See that page as reference implementation."
+    },
+    {
+      "id": "US-012",
+      "title": "Migrate data tables to AccessibleTable on key pages",
+      "description": "As a user with disabilities, I want data tables with proper headers, sorting announcements, and keyboard navigation so I can browse tabular data. Identify all pages with data tables (projects list, estimates list, invoices list, time entries, daily reports, team roster, equipment list, documents list, CRM contacts, expenses, change orders, payments, audit logs, and permissions). Replace their table implementations with AccessibleTable from src/components/accessibility/AccessibleTable.tsx. Ensure proper <th> scope attributes, sortable column announcements, and keyboard navigation between cells.",
+      "acceptanceCriteria": [
+        "At least 14 table pages use AccessibleTable component",
+        "All tables have proper <caption> or aria-label",
+        "Table headers use scope='col' or scope='row'",
+        "Sortable columns announce sort state changes to screen readers",
+        "Tables are keyboard navigable (arrow keys between cells)",
+        "npm run build completes successfully",
+        "[UI stories only] Verify in browser using dev-browser skill that tables render and sort correctly"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Currently 0 pages use AccessibleTable. This is required for WCAG 2.1 AA compliance."
+    },
+    {
+      "id": "US-013",
+      "title": "Migrate dialogs and modals to AccessibleModal across the app",
+      "description": "As a user with disabilities, I want modals that trap focus, can be closed with Escape, and return focus to the trigger element. Search the codebase for all Dialog, AlertDialog, and Sheet components from shadcn/ui. For the 20 most critical modals (create/edit forms, confirmation dialogs, delete confirmations, settings panels), replace with AccessibleModal from src/components/accessibility/AccessibleModal.tsx. Ensure each modal has a title, description, focus trap, and Escape key handler.",
+      "acceptanceCriteria": [
+        "At least 20 critical modals use AccessibleModal",
+        "All modals have a visible title and aria-describedby description",
+        "Focus is trapped inside open modals (Tab cycles within modal)",
+        "Escape key closes the modal",
+        "Focus returns to the trigger element when modal closes",
+        "Background content has aria-hidden=true when modal is open",
+        "npm run build completes successfully",
+        "[UI stories only] Verify in browser using dev-browser skill that modals open, close, and trap focus correctly"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Currently only 2 pages use AccessibleModal. See MyTasks.tsx and ComponentShowcase.tsx as references."
+    },
+    {
+      "id": "US-014",
+      "title": "Add ARIA labels to all interactive elements and icons",
+      "description": "As a user with disabilities, I want all buttons, links, and interactive elements to have accessible names so screen readers can announce them. Audit and fix: 1) Buttons with only icon content (add aria-label), 2) Decorative icons (add aria-hidden=true), 3) Interactive cards (add role=article and aria-labelledby), 4) Badge/status indicators (add aria-label for context), 5) Search inputs (add role=search and aria-label). Focus on the 30 most-used components in src/components/ui/ and the top 20 pages.",
+      "acceptanceCriteria": [
+        "All icon-only buttons have aria-label describing their action",
+        "All decorative icons have aria-hidden=true",
+        "Status badges have aria-label with full context (e.g., 'Status: Active')",
+        "Search areas have role=search and aria-label",
+        "Interactive cards have role=article with aria-labelledby pointing to their heading",
+        "npm run lint produces no new jsx-a11y errors",
+        "npm run build completes successfully"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "This covers the 'last mile' of a11y - individual element labeling across the app."
+    },
+    {
+      "id": "US-015",
+      "title": "Write unit tests for React components (first batch of 20)",
+      "description": "As a developer, I want key UI components tested so that visual regressions and interaction bugs are caught. Write Vitest + Testing Library tests for 20 high-value components. Priority: 1) src/components/ui/button.tsx, 2) src/components/ui/card.tsx, 3) src/components/ui/input.tsx, 4) src/components/ui/select.tsx, 5) src/components/ui/dialog.tsx, and 15 domain components from src/components/financial/, src/components/dashboard/, src/components/projects/. Test rendering, props, user interactions (click, type, select), and conditional rendering. Include accessibility tests using the test utilities from src/test/accessibility-utils.ts.",
+      "acceptanceCriteria": [
+        "20 component test files exist (co-located as ComponentName.test.tsx)",
+        "Each test file has at least 3 test cases covering rendering, props, and interaction",
+        "At least 5 component tests include accessibility checks using expectNoA11yViolations",
+        "All tests pass with npm run test:run",
+        "Tests use @testing-library/react with userEvent for interactions",
+        "No component tests make real API calls (all Supabase calls mocked)"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "This batch focuses on the most reused components. Future stories will cover more."
+    },
+    {
+      "id": "US-016",
+      "title": "Complete error boundary coverage and production error logging",
+      "description": "As a developer, I want comprehensive error boundaries so that component failures are caught gracefully and logged to Sentry. Audit all route-level pages and ensure each is wrapped in an error boundary. The existing ErrorBoundary component in src/components/ui/ErrorBoundary.tsx has a TODO for proper error service logging - complete that integration with Sentry. Add error boundaries around the 5 critical feature sections: financial, projects, time-tracking, scheduling, and CRM. Each boundary should show a user-friendly fallback UI with a retry button.",
+      "acceptanceCriteria": [
+        "All route-level components are wrapped in error boundaries",
+        "ErrorBoundary component logs errors to Sentry (not just console)",
+        "5 feature-section error boundaries exist with domain-specific fallback UIs",
+        "Fallback UI includes a descriptive error message, retry button, and contact support link",
+        "Error boundaries catch render errors, async errors in effects, and event handler errors",
+        "npm run build completes successfully"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Sentry is already integrated. The ErrorBoundary TODO needs completion."
+    },
+    {
+      "id": "US-017",
+      "title": "Add rate limiting configuration for Supabase Edge Functions",
+      "description": "As a security engineer, I want rate limiting on all public API endpoints so that the platform is protected from abuse and DDoS. Create a shared rate limiting utility in supabase/functions/_shared/rate-limiter.ts that uses Supabase's built-in capabilities or a simple in-memory/Redis-backed counter. Apply rate limiting to the 10 most sensitive edge functions: stripe-webhooks, auth endpoints, ai-content-generator, ai-estimating, analyze-images, analyze-support-ticket, api-auth, api-management, and any public-facing endpoints. Configure limits: auth endpoints (10 req/min), AI endpoints (20 req/min), general API (100 req/min).",
+      "acceptanceCriteria": [
+        "supabase/functions/_shared/rate-limiter.ts exists with reusable rate limiting logic",
+        "Rate limiter supports configurable limits per endpoint",
+        "At least 10 edge functions import and use the rate limiter",
+        "Auth endpoints limited to 10 requests per minute per IP",
+        "AI endpoints limited to 20 requests per minute per user",
+        "Rate-limited responses return HTTP 429 with Retry-After header",
+        "Rate limiter has unit tests"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Edge functions are Deno runtime. Use Deno-compatible patterns."
+    },
+    {
+      "id": "US-018",
+      "title": "Fix placeholder calculations and mock data in production components",
+      "description": "As a product owner, I want all dashboard widgets and summary cards to show real calculated data instead of hardcoded zeros and placeholders. Search for TODO comments related to calculations across the codebase. Key files: src/components/EnhancedProjectOverview.tsx (6 TODOs for invoiced_amount, payments_received, critical_path_delays, crew_count), src/pages/CRMDashboard.tsx (3 TODOs), src/components/ui/bulk-actions.tsx (5 TODOs). Replace hardcoded 0 values with actual Supabase queries or computed values from existing data. Where real data doesn't exist yet, show 'N/A' or a clear empty state instead of misleading zeros.",
+      "acceptanceCriteria": [
+        "EnhancedProjectOverview.tsx has zero TODO comments - all calculations use real data or proper empty states",
+        "CRMDashboard.tsx has zero TODO comments - handlers are properly implemented",
+        "bulk-actions.tsx has zero TODO comments - bulk operations work or show 'coming soon' state",
+        "No component displays hardcoded 0 for calculated financial values",
+        "Empty states show 'No data available' or similar instead of fake numbers",
+        "npm run build completes successfully"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Misleading zeros are worse than showing no data. Users may make financial decisions based on these numbers."
+    },
+    {
+      "id": "US-019",
+      "title": "Add production monitoring dashboard and health check endpoint",
+      "description": "As a DevOps engineer, I want a health check endpoint and monitoring setup so that production issues are detected immediately. Create a Supabase Edge Function at supabase/functions/health-check/ that verifies: database connectivity, auth service status, storage availability, and returns response times. Create a simple admin-only monitoring page at src/pages/admin/SystemHealth.tsx that displays: system status, recent error counts from Sentry, API response times, active user sessions, and database connection pool status. Use the existing admin layout and auth guards.",
+      "acceptanceCriteria": [
+        "supabase/functions/health-check/index.ts exists and returns JSON health status",
+        "Health check verifies database, auth, and storage connectivity",
+        "Health check returns response times for each service",
+        "src/pages/admin/SystemHealth.tsx exists with monitoring dashboard",
+        "Dashboard shows: system status, error trends, response times",
+        "Page is protected by admin role authentication",
+        "Health endpoint responds in <500ms",
+        "npm run build completes successfully"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Essential for production operations. Sentry and PostHog are already integrated."
+    },
+    {
+      "id": "US-020",
+      "title": "Write E2E tests for project management and financial flows",
+      "description": "As a QA engineer, I want E2E tests covering the core business workflows so that project management and financial features are regression-tested. Using Playwright, write tests for: 1) Projects page loads and displays project list, 2) Project detail page renders all tabs, 3) Financial overview page shows key metrics, 4) Estimates page loads correctly, 5) Invoices page renders, 6) Time tracking page loads, 7) Daily reports page renders, 8) Settings page sections are accessible. Focus on page rendering and navigation since we can't test mutations without a test database.",
+      "acceptanceCriteria": [
+        "tests/e2e/projects.spec.ts tests project listing and detail pages",
+        "tests/e2e/financial.spec.ts tests financial overview, estimates, and invoices pages",
+        "tests/e2e/time-tracking.spec.ts tests time tracking and daily reports pages",
+        "tests/e2e/settings.spec.ts tests settings page sections",
+        "All tests pass with npx playwright test --project=chromium",
+        "Tests use proper Playwright assertions (toBeVisible, toHaveURL, etc.)",
+        "At least 20 test cases across all spec files"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "These complement US-008 auth/nav tests. Together they cover the critical user journeys."
+    },
+    {
+      "id": "US-021",
+      "title": "Fix any types in component layer (first batch of 50 components)",
+      "description": "As a developer, I want proper TypeScript types in the most-used components so that props and state are type-safe. Target the 50 most-imported components across src/components/. For each component: replace any props with proper interfaces, type all useState and useEffect hooks, type all event handlers (React.ChangeEvent, React.FormEvent, etc.), and type all Supabase query results using types from src/integrations/supabase/types.ts. Prioritize: ui/ components, financial/, dashboard/, projects/, time-tracking/.",
+      "acceptanceCriteria": [
+        "50 component files have any types replaced with proper TypeScript interfaces",
+        "All component props use named interfaces (not inline types)",
+        "Event handlers use proper React event types",
+        "Supabase query results use generated types from types.ts",
+        "No new @ts-expect-error comments added (net reduction in ts-expect-error count)",
+        "npm run build completes successfully",
+        "Run scripts/count-ts-errors.sh and show reduction from baseline"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Depends on US-001 and US-009. This is the second wave of type safety improvements."
+    },
+    {
+      "id": "US-022",
+      "title": "Add comprehensive API documentation for public endpoints",
+      "description": "As a developer integrating with BuildDesk, I want complete API documentation so I can understand and use all public endpoints. Create docs/API_REFERENCE.md documenting all public-facing Supabase Edge Functions. For each endpoint document: HTTP method, URL path, request headers (auth), request body schema, response schema, error codes, rate limits, and a curl example. Group endpoints by domain: Authentication, Projects, Financial, Time Tracking, Documents, CRM, Webhooks, and AI Services. Also create a machine-readable docs/api-schema.json OpenAPI 3.0 specification.",
+      "acceptanceCriteria": [
+        "docs/API_REFERENCE.md exists with documentation for all public edge functions",
+        "Each endpoint has: method, path, auth requirements, request/response schemas, examples",
+        "Endpoints are grouped by domain with a table of contents",
+        "docs/api-schema.json contains valid OpenAPI 3.0 specification",
+        "API schema validates with an OpenAPI validator",
+        "At least 30 endpoints are documented",
+        "curl examples are provided for the 10 most-used endpoints"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Enterprise customers expect API documentation. This also supports the developer portal feature."
+    },
+    {
+      "id": "US-023",
+      "title": "Add performance budget enforcement to CI pipeline",
+      "description": "As a performance engineer, I want automated performance checks so that bundle size regressions are caught in CI. Update the GitHub Actions CI pipeline (from US-004) to add a performance job that: 1) Runs npm run build, 2) Checks total bundle size is under 1.2MB gzipped, 3) Checks no individual chunk exceeds 400KB, 4) Reports bundle size in PR comments using a custom script. Create scripts/check-bundle-size.js that parses the Vite build output and enforces size budgets. Store the bundle size report as a CI artifact.",
+      "acceptanceCriteria": [
+        "scripts/check-bundle-size.js exists and parses Vite build output for bundle sizes",
+        "Script enforces: total <1.2MB gzipped, no chunk >400KB",
+        "Script exits with code 1 if budget is exceeded",
+        "GitHub Actions CI pipeline includes a performance check job",
+        "Bundle size report is uploaded as a CI artifact",
+        "npm run build && node scripts/check-bundle-size.js passes currently",
+        "Script outputs a clear table of chunk sizes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Vite already reports sizes. The script needs to parse and enforce limits. Depends on US-004."
+    },
+    {
+      "id": "US-024",
+      "title": "Write unit tests for Supabase hooks and data fetching layer",
+      "description": "As a developer, I want data fetching hooks tested so that API integration errors are caught early. Write Vitest tests for hooks in src/hooks/ and src/integrations/supabase/ that use TanStack Query. Mock the Supabase client and test: successful data fetching, error handling, loading states, cache invalidation, and refetch behavior. Target hooks for: projects, estimates, invoices, time entries, financial records, user profiles, and CRM contacts. Use @tanstack/react-query testing utilities.",
+      "acceptanceCriteria": [
+        "Test files exist for at least 10 data fetching hooks",
+        "Tests cover: success state, error state, loading state for each hook",
+        "Supabase client is properly mocked with typed mock responses",
+        "TanStack Query wrapper is used for rendering hooks in tests",
+        "Cache invalidation behavior is tested for mutation hooks",
+        "All tests pass with npm run test:run",
+        "Tests use realistic mock data matching Supabase type definitions"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "These hooks are the data backbone. Testing them prevents API integration regressions."
+    },
+    {
+      "id": "US-025",
+      "title": "Implement keyboard navigation for all interactive components",
+      "description": "As a keyboard-only user, I want to navigate the entire application using only the keyboard so I can use BuildDesk without a mouse. Implement: 1) Skip links component (SkipLinks.tsx already exists - ensure it's in the root layout), 2) Focus visible styles for all interactive elements (add :focus-visible CSS), 3) Arrow key navigation in sidebar menu, 4) Enter/Space activation for custom buttons and cards, 5) Tab order follows logical reading order on all top 20 pages. Add the keyboard shortcuts defined in the accessibility docs (Alt+Shift+1 for main content, etc.).",
+      "acceptanceCriteria": [
+        "SkipLinks component is rendered in the root App layout",
+        "All interactive elements have visible focus indicators (:focus-visible styling)",
+        "Sidebar navigation supports arrow key movement between items",
+        "Custom clickable cards respond to Enter and Space keys",
+        "Tab order is logical (no tabindex > 0 anywhere in the codebase)",
+        "Alt+Shift+1 skips to main content, Alt+Shift+2 to navigation",
+        "npm run build completes successfully",
+        "[UI stories only] Verify in browser using dev-browser skill that keyboard navigation works"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Keyboard navigation is a WCAG 2.1 Level A requirement - the most basic accessibility level."
+    },
+    {
+      "id": "US-026",
+      "title": "Add accessibility unit tests for all accessible components",
+      "description": "As a developer, I want automated accessibility tests so that a11y regressions are caught in CI. Write Vitest tests using axe-core (via the existing src/test/accessibility-utils.ts) for: AccessiblePageWrapper, AccessibleTable, AccessibleForm, AccessibleFormField, AccessibleSelect, AccessibleTextarea, AccessibleModal, and SkipLinks. Also add a11y tests to the 20 page-level components from US-010. Each test should render the component and run expectNoA11yViolations(). Test with different props to cover all variants.",
+      "acceptanceCriteria": [
+        "All 8 accessible components have dedicated a11y test files",
+        "At least 20 page-level components have a11y tests",
+        "Tests use expectNoA11yViolations from src/test/accessibility-utils.ts",
+        "Tests cover different variants (e.g., form with errors, table with sorting, modal open/closed)",
+        "All tests pass with npm run test:run",
+        "Zero axe-core violations across all tested components",
+        "Test suite can be run standalone: npm run test:run -- --grep a11y"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Depends on US-010 through US-014 being complete. This locks in the a11y improvements."
+    },
+    {
+      "id": "US-027",
+      "title": "Fix any types in page components (batch of 30 pages)",
+      "description": "As a developer, I want proper TypeScript types in page components so that the full application is type-safe. Target 30 page files in src/pages/ starting with the most critical: Dashboard, Projects, Financial, TimeTracking, Estimates, Invoices, CRM, Settings, Admin pages. For each page: type all local state, type all query results, type all event handlers, and type all props passed to child components. Remove @ts-expect-error comments and replace with proper types.",
+      "acceptanceCriteria": [
+        "30 page files have any types replaced with proper TypeScript types",
+        "All useState hooks have explicit type parameters",
+        "All useQuery results use types from Supabase generated types",
+        "No new @ts-expect-error comments (net reduction)",
+        "npm run build completes successfully",
+        "Run scripts/count-ts-errors.sh and show further reduction from US-021 baseline"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Third wave of type safety. By now, core modules (US-009) and components (US-021) are typed."
+    },
+    {
+      "id": "US-028",
+      "title": "Add Lighthouse CI to GitHub Actions with performance gates",
+      "description": "As a performance engineer, I want automated Lighthouse audits on every PR so that performance, accessibility, SEO, and best practices scores are enforced. Add a Lighthouse CI job to the GitHub Actions pipeline. Configure lighthouserc.js (already exists) with assertions: Performance >= 85, Accessibility >= 90, Best Practices >= 90, SEO >= 90. Run against 5 key pages: landing, dashboard, projects list, financial overview, and settings. Upload Lighthouse HTML reports as CI artifacts. Fail the pipeline if any score drops below thresholds.",
+      "acceptanceCriteria": [
+        "GitHub Actions CI includes a Lighthouse CI job",
+        "lighthouserc.js has score assertions: perf>=85, a11y>=90, bp>=90, seo>=90",
+        "Lighthouse runs against 5 specified pages",
+        "HTML reports are uploaded as CI artifacts",
+        "Pipeline fails if any score drops below threshold",
+        "Lighthouse job starts the dev server, runs audits, then shuts down",
+        "Job uses lhci/cli action or equivalent"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Depends on US-004 CI pipeline and accessibility improvements (US-010 through US-014)."
+    },
+    {
+      "id": "US-029",
+      "title": "Create AGENTS.md files for key directories",
+      "description": "As an AI developer working on this codebase, I want AGENTS.md files in key directories documenting patterns, conventions, and gotchas so that future AI agents (and human developers) can work effectively. Create AGENTS.md files in: src/ (top-level patterns), src/components/ (component conventions), src/hooks/ (hook patterns), src/lib/ (utility patterns), src/pages/ (page patterns), supabase/functions/ (edge function patterns), and tests/ (testing patterns). Each file should document: directory purpose, naming conventions, import patterns, common pitfalls, and key dependencies.",
+      "acceptanceCriteria": [
+        "AGENTS.md exists in src/, src/components/, src/hooks/, src/lib/, src/pages/, supabase/functions/, tests/",
+        "Each file documents: purpose, conventions, patterns, pitfalls, dependencies",
+        "Files are concise (under 100 lines each) and actionable",
+        "Patterns described match actual codebase conventions (verified by reading existing code)",
+        "Files reference key types, utilities, and common imports",
+        "No outdated or incorrect information"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "This supports Ralph and other AI agents in future iterations. Based on actual code patterns found during this PRD."
+    },
+    {
+      "id": "US-030",
+      "title": "Create progress.txt with initial codebase learnings",
+      "description": "As an AI agent running Ralph, I want a progress.txt file initialized with key codebase patterns and learnings so that each iteration starts with useful context. Create progress.txt in the project root with a Consolidated Patterns section documenting: 1) Supabase query patterns (select, insert, update with RLS), 2) Component architecture (shadcn/ui wrapping pattern), 3) Auth pattern (useAuth hook, role checking), 4) Testing patterns (Vitest setup, mock patterns, a11y testing), 5) Build and deploy patterns (Vite config, Cloudflare Pages), 6) Common pitfalls found during the codebase analysis.",
+      "acceptanceCriteria": [
+        "progress.txt exists in project root",
+        "Contains a 'Consolidated Patterns' section at the top",
+        "Documents Supabase query patterns with code examples",
+        "Documents component architecture patterns",
+        "Documents authentication and authorization patterns",
+        "Documents testing setup and mock patterns",
+        "Documents build/deploy workflow",
+        "Lists known pitfalls: TypeScript strict mode migration, any types, a11y gaps",
+        "File is under 200 lines and concise"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Ralph reads this file at the start of every iteration. Quality of this file directly affects agent performance."
+    }
+  ]
+}

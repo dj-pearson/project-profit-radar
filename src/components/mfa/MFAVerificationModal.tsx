@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { Shield, Key, Loader2, Smartphone, AlertCircle } from 'lucide-react';
 
 interface MFAVerificationModalProps {
@@ -114,7 +114,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-mfa-login`,
+        getEdgeFunctionUrl('verify-mfa-login'),
         {
           method: 'POST',
           headers: {
@@ -172,7 +172,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-mfa-login`,
+        getEdgeFunctionUrl('verify-mfa-login'),
         {
           method: 'POST',
           headers: {

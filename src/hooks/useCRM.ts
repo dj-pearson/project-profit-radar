@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -1356,7 +1356,7 @@ export function useLeadScore(leadId: string | undefined, options?: Omit<UseQuery
     queryKey: ['lead_score', leadId],
     queryFn: async (): Promise<LeadScore | null> => {
       // Call the AI lead scoring edge function
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/calculate-lead-score`, {
+      const response = await fetch(getEdgeFunctionUrl('calculate-lead-score'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
