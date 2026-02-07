@@ -76,6 +76,7 @@ const Auth = () => {
     isValid: true,
     errors: [] as string[],
   });
+  const [redirectLoopDetected, setRedirectLoopDetected] = useState(false);
 
   const otpResendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasAttemptedRedirect = useRef(false);
@@ -110,12 +111,20 @@ const Auth = () => {
           (ts: number) => now - ts < REDIRECT_LOOP_WINDOW
         );
         if (recentRedirects.length >= REDIRECT_LOOP_THRESHOLD) {
-          console.warn('Redirect loop detected, blocking redirect');
-          sessionStorage.removeItem(REDIRECT_LOOP_KEY);
+          console.error('Auth: Redirect loop detected, staying on auth page permanently');
+          setRedirectLoopDetected(true);
+          // Set a persistent flag to prevent future redirect attempts
+          sessionStorage.setItem(REDIRECT_LOOP_KEY, JSON.stringify({
+            timestamps: [],
+            blocked: true,
+            blockedAt: now
+          }));
           return true;
         }
+        // Update with filtered timestamps
         sessionStorage.setItem(REDIRECT_LOOP_KEY, JSON.stringify({
-          timestamps: recentRedirects
+          timestamps: recentRedirects,
+          blocked: data.blocked || false
         }));
       }
       return false;
@@ -127,7 +136,13 @@ const Auth = () => {
   const recordRedirectAttempt = useCallback(() => {
     try {
       const stored = sessionStorage.getItem(REDIRECT_LOOP_KEY);
-      const data = stored ? JSON.parse(stored) : { timestamps: [] };
+      const data = stored ? JSON.parse(stored) : { timestamps: [], blocked: false };
+      
+      // Don't record if already blocked
+      if (data.blocked) {
+        return;
+      }
+      
       data.timestamps.push(Date.now());
       sessionStorage.setItem(REDIRECT_LOOP_KEY, JSON.stringify(data));
     } catch {
@@ -153,6 +168,27 @@ const Auth = () => {
         clearTimeout(redirectStabilityTimer.current);
       }
     };
+  }, []);
+
+  // Check for existing redirect loop block on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(REDIRECT_LOOP_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.blocked) {
+          const blockedDuration = Date.now() - (data.blockedAt || 0);
+          if (blockedDuration > 60000) {
+            sessionStorage.removeItem(REDIRECT_LOOP_KEY);
+            setRedirectLoopDetected(false);
+          } else {
+            setRedirectLoopDetected(true);
+          }
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
   }, []);
 
   // Start resend cooldown timer
@@ -198,6 +234,27 @@ const Auth = () => {
     const redirect = urlParams.get('redirect');
     const errorRecovery = urlParams.has('error_recovery');
     const refresh = urlParams.has('refresh');
+
+    // Check if redirects are permanently blocked due to loop detection
+    try {
+      const stored = sessionStorage.getItem(REDIRECT_LOOP_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.blocked) {
+          const blockedDuration = Date.now() - (data.blockedAt || 0);
+          // Clear block after 1 minute to allow recovery
+          if (blockedDuration > 60000) {
+            sessionStorage.removeItem(REDIRECT_LOOP_KEY);
+            setRedirectLoopDetected(false);
+          } else {
+            console.warn('Auth: Redirects blocked due to loop detection');
+            return;
+          }
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
 
     if (errorRecovery || refresh) {
       window.history.replaceState({}, '', '/auth');
@@ -726,6 +783,23 @@ const Auth = () => {
               </span>
             </Link>
           </div>
+
+          {/* Redirect Loop Warning */}
+          {redirectLoopDetected && (
+            <div className="mb-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20" role="alert">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-amber-400">
+                    Authentication Loop Detected
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    To prevent repeated redirects, automatic navigation has been paused. This will reset automatically in 60 seconds, or you can sign out and back in.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Plan Context Banner */}
           {pendingPlan && (
