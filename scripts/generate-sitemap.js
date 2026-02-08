@@ -169,7 +169,73 @@ function generateSitemapXML(pages) {
  */
 function generateRobotsTxt() {
   return `# BuildDesk Robots.txt
-# https://builddesk.com
+# ${DOMAIN}
+# Last Updated: ${CURRENT_DATE}
+
+# ===========================================
+# AI SEARCH ENGINE CRAWLERS - ALLOW
+# ===========================================
+
+# OpenAI Search Bots (ChatGPT Search, SearchGPT)
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic Search Bot (Claude)
+User-agent: ClaudeBot
+Allow: /
+Crawl-delay: 1
+
+# Perplexity AI Search
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+# Google AI (Gemini, AI Overviews)
+User-agent: Google-Extended
+Allow: /
+
+# ===========================================
+# TRADITIONAL SEARCH ENGINE CRAWLERS - ALLOW
+# ===========================================
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# ===========================================
+# AI TRAINING-ONLY BOTS - BLOCK
+# ===========================================
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+# ===========================================
+# DEFAULT RULES - ALL OTHER CRAWLERS
+# ===========================================
 
 User-agent: *
 Allow: /
@@ -201,6 +267,8 @@ Allow: /resources
 Allow: /topics
 Allow: /faq
 Allow: /solutions
+Allow: /procore-alternative
+Allow: /buildertrend-alternative
 
 # Allow marketing URL parameters
 Allow: /*?utm_source=
@@ -208,13 +276,17 @@ Allow: /*?utm_medium=
 Allow: /*?utm_campaign=
 Allow: /*?ref=
 
+# ===========================================
+# DISCOVERY FILES
+# ===========================================
+
 # Sitemap location
 Sitemap: ${DOMAIN}/sitemap.xml
 
 # LLM discovery support
 LLMs-txt: ${DOMAIN}/.well-known/llms.txt
 
-# Crawl delay (optional - be gentle on servers)
+# Crawl delay for unspecified bots
 Crawl-delay: 1
 `;
 }

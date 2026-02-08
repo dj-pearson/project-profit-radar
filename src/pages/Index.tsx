@@ -5,7 +5,7 @@ import SocialProof from "@/components/SocialProof";
 import ProblemSolution from "@/components/ProblemSolution";
 import FinancialIntelligenceShowcase from "@/components/FinancialIntelligenceShowcase";
 import { SkipLink } from "@/components/accessibility/AccessibilityUtils";
-import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createBreadcrumbSchema } from "@/components/seo/PageSEO";
+import { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createBreadcrumbSchema, createWebSiteSchema } from "@/components/seo/PageSEO";
 import { LazyFeatures, LazyPricing, LazyIndustries, PerformanceLazyWrapper } from "@/components/performance/LazyComponents";
 import { OrganizationSchema, SoftwareSchema } from "@/components/seo/EnhancedSchemaMarkup";
 import ModernSection from "@/components/ui/ModernSection";
@@ -53,10 +53,10 @@ const Index = () => {
             'real-time job costing'
           ]}
           canonicalUrl="https://builddesk.com"
-          schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createBreadcrumbSchema([
+          schema={[createOrganizationSchema(), createSoftwareApplicationSchema(), createWebSiteSchema(), createBreadcrumbSchema([
             { name: "Home", url: "https://builddesk.com" }
           ])]}
-          lastModified="2025-11-11"
+          lastModified="2026-02-08"
         />
 
         {/* Enhanced SEO: Aggregate Rating Schema for Rich Snippets */}
