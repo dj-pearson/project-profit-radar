@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { CheckCircle, DollarSign, Users, Clock, ArrowRight, X, Check } from "lucide-react";
+import { PageSEO, createOrganizationSchema, createBreadcrumbSchema, createComparisonSchema } from "@/components/seo/PageSEO";
+import { GEOOptimizedFAQ, procoreAlternativeFAQs } from "@/components/seo/GEOOptimizedFAQ";
 
 const ProcoreAlternative = () => {
   const comparison = [
@@ -43,11 +45,23 @@ const ProcoreAlternative = () => {
 
   return (
     <>
-      <SEOMetaTags
-        title="Procore Alternative - Better Construction Software for Small Business | BuildDesk"
-        description="Affordable Procore alternative built for small-medium contractors. Faster setup, lower cost, easier to use. Get the power of enterprise software without the complexity."
-        keywords={['Procore alternative', 'construction management software alternative', 'small business construction software', 'affordable construction software', 'Procore competitor', 'construction project management alternative']}
-        canonicalUrl="/procore-alternative"
+      <PageSEO
+        title="Best Procore Alternative for Small Contractors 2026"
+        description="BuildDesk is the #1 Procore alternative for small contractors. 50% less cost ($350 vs $500+/month), unlimited users, 1-2 day setup. Same features without enterprise complexity."
+        keywords={['Procore alternative', 'Procore competitor', 'Procore vs BuildDesk', 'cheaper than Procore', 'Procore for small contractors', 'construction management software alternative', 'small business construction software']}
+        canonicalUrl="https://builddesk.com/procore-alternative"
+        lastModified="2026-02-08"
+        schema={[
+          createOrganizationSchema(),
+          createComparisonSchema('BuildDesk vs Procore Comparison', [
+            { name: 'BuildDesk', description: 'Construction management software for small contractors with real-time job costing, unlimited users at $350/month', price: '350', url: 'https://builddesk.com' },
+            { name: 'Procore', description: 'Enterprise construction management platform with per-seat pricing starting at $500+/month', price: '500', url: 'https://www.procore.com' },
+          ]),
+          createBreadcrumbSchema([
+            { name: 'Home', url: 'https://builddesk.com' },
+            { name: 'Procore Alternative', url: 'https://builddesk.com/procore-alternative' },
+          ]),
+        ]}
       />
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
@@ -150,6 +164,15 @@ const ProcoreAlternative = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* FAQ Section - GEO optimized for AI citation */}
+            <div className="mb-16">
+              <GEOOptimizedFAQ
+                faqs={procoreAlternativeFAQs}
+                title="Procore vs BuildDesk: Frequently Asked Questions"
+                description="Common questions contractors ask when comparing BuildDesk to Procore."
+              />
             </div>
 
             {/* CTA Section */}

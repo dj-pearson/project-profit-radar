@@ -112,6 +112,11 @@ export const PageSEO: React.FC<PageSEOProps> = ({
         </>
       )}
 
+      {/* Content freshness signal for AI search engines */}
+      {lastModified && (
+        <meta property="article:modified_time" content={lastModified} />
+      )}
+
       {/* Structured Data (JSON-LD) */}
       {schema.length > 0 && schema.map((schemaObj, index) => (
         <script
@@ -293,6 +298,59 @@ export const createWebPageSchema = (
     "@type": "Organization",
     "name": "BuildDesk"
   }
+});
+
+/**
+ * WebSite Schema with SearchAction
+ * Required for sitelinks search box in Google and AI search engines
+ */
+export const createWebSiteSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "BuildDesk",
+  "url": "https://builddesk.com",
+  "description": "Construction management software for small and mid-size contractors. Real-time job costing, mobile crew tracking, and OSHA compliance.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "BuildDesk"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://builddesk.com/search?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+});
+
+/**
+ * Comparison/ItemList Schema for "vs" pages
+ * AI engines heavily favor structured comparison data
+ */
+export const createComparisonSchema = (
+  title: string,
+  products: Array<{ name: string; description: string; price: string; url?: string }>
+) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": title,
+  "itemListElement": products.map((product, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "item": {
+      "@type": "SoftwareApplication",
+      "name": product.name,
+      "description": product.description,
+      "applicationCategory": "BusinessApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": product.price,
+        "priceCurrency": "USD"
+      },
+      ...(product.url && { "url": product.url })
+    }
+  }))
 });
 
 export default PageSEO;

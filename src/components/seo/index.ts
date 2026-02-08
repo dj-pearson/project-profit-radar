@@ -9,7 +9,7 @@
  */
 
 // Core SEO Components
-export { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createFAQSchema, createBreadcrumbSchema, createHowToSchema, createProductSchema, createArticleSchema, createWebPageSchema } from './PageSEO';
+export { PageSEO, createOrganizationSchema, createSoftwareApplicationSchema, createFAQSchema, createBreadcrumbSchema, createHowToSchema, createProductSchema, createArticleSchema, createWebPageSchema, createWebSiteSchema, createComparisonSchema } from './PageSEO';
 export type { PageSEOProps } from './PageSEO';
 
 export { ProgrammaticSEO } from './ProgrammaticSEO';
@@ -27,6 +27,8 @@ export { InteractiveFAQ, constructionSoftwareFAQs, pricingFAQs } from './Interac
 export type { FAQItem } from './InteractiveFAQ';
 
 export { GEOOptimizedFAQ } from './GEOOptimizedFAQ';
+export { GEOContentWrapper, GEOSection, GEOStatistic, GEOSourceCitation, GEOComparisonTable, GEOQuickQA } from './GEOContentWrapper';
+export type { GEOContentWrapperProps, GEOSectionProps, GEOStatisticProps, GEOSourceCitationProps, GEOComparisonTableProps, GEOQuickQAProps, GEOComparisonRow } from './GEOContentWrapper';
 
 // Schema Components
 export { SaaSProductSchema } from './SaaSProductSchema';

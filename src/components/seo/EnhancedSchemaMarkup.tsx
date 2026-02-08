@@ -44,7 +44,7 @@ export const SoftwareSchema = () => (
           "@type": "Offer",
           "price": "350",
           "priceCurrency": "USD",
-          "priceValidUntil": "2025-12-31"
+          "priceValidUntil": "2026-12-31"
         },
         "aggregateRating": {
           "@type": "AggregateRating",
@@ -165,7 +165,7 @@ export const ProductSchema = ({
           "price": price,
           "priceCurrency": currency,
           "availability": availability,
-          "priceValidUntil": "2025-12-31"
+          "priceValidUntil": "2026-12-31"
         },
         "aggregateRating": {
           "@type": "AggregateRating",

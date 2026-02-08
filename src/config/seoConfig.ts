@@ -403,7 +403,7 @@ export const featurePages: SEOPageConfig[] = [
 export const comparisonPages: SEOPageConfig[] = [
   {
     path: '/procore-alternative',
-    title: 'Best Procore Alternative for Small Contractors 2025 | BuildDesk',
+    title: 'Best Procore Alternative for Small Contractors 2026 | BuildDesk',
     description: 'Looking for a Procore alternative? BuildDesk offers the same features at 60% less cost. Perfect for small contractors who need powerful software without complexity.',
     keywords: [
       'procore alternative',
@@ -420,7 +420,7 @@ export const comparisonPages: SEOPageConfig[] = [
   },
   {
     path: '/buildertrend-alternative',
-    title: 'Best Buildertrend Alternative for Contractors 2025 | BuildDesk',
+    title: 'Best Buildertrend Alternative for Contractors 2026 | BuildDesk',
     description: 'Looking for a Buildertrend alternative? BuildDesk offers better job costing, unlimited users, and no per-user fees. Compare features and pricing.',
     keywords: [
       'buildertrend alternative',
@@ -436,7 +436,7 @@ export const comparisonPages: SEOPageConfig[] = [
   },
   {
     path: '/builddesk-vs-buildertrend-comparison',
-    title: 'BuildDesk vs Buildertrend - Complete Feature Comparison 2025',
+    title: 'BuildDesk vs Buildertrend - Complete Feature Comparison 2026',
     description: 'In-depth comparison of BuildDesk vs Buildertrend. Compare features, pricing, ease of use, and customer reviews. Find the best fit for your construction business.',
     keywords: [
       'builddesk vs buildertrend',
@@ -474,7 +474,7 @@ export const comparisonPages: SEOPageConfig[] = [
 export const resourcePages: SEOPageConfig[] = [
   {
     path: '/resources/complete-guide-construction-job-costing',
-    title: 'Complete Guide to Construction Job Costing (2025) | BuildDesk',
+    title: 'Complete Guide to Construction Job Costing (2026) | BuildDesk',
     description: 'Master construction job costing with our comprehensive guide. Learn cost codes, tracking methods, software selection, and best practices for contractors.',
     keywords: [
       'construction job costing guide',
@@ -491,10 +491,10 @@ export const resourcePages: SEOPageConfig[] = [
   },
   {
     path: '/resources/best-construction-management-software-small-business-2025',
-    title: 'Best Construction Management Software for Small Business 2025',
+    title: 'Best Construction Management Software for Small Business 2026',
     description: 'Top construction management software for small businesses in 2025. Compare features, pricing, and find the perfect solution for your contracting company.',
     keywords: [
-      'best construction software 2025',
+      'best construction software 2026',
       'small business construction software',
       'top contractor software',
       'construction software reviews',
