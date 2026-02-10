@@ -14,7 +14,10 @@
       "Bash(find:*)",
       "Bash(ls -la \"C:\\\\Users\\\\pears\\\\Documents\\\\Build-Desk\\\\project-profit-radar\\\\src\\\\components\\\\errors\"\" 2>/dev/null || echo \"Directory does not exist \")",
       "Bash(xargs:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node scripts/audit-edge-functions.js:*)",
+      "Bash(node scripts/audit-edge-functions.cjs:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
