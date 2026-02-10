@@ -6,8 +6,8 @@
  */
 
 import { Route } from 'react-router-dom';
-import { lazy } from 'react';
 import {
+  createLazyRoute,
   LazyProjects,
   LazyProjectDetail,
   LazyProjectTaskCreate,
@@ -25,8 +25,8 @@ import {
   LazyEquipment,
 } from '@/utils/lazyRoutes';
 
-// Lazy-loaded pages
-const DailyReportTemplates = lazy(() => import('@/pages/DailyReportTemplates'));
+// Lazy-loaded pages with ErrorBoundary + Suspense
+const DailyReportTemplates = createLazyRoute(() => import('@/pages/DailyReportTemplates'));
 
 export const projectRoutes = (
   <>

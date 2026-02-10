@@ -6,33 +6,33 @@
  */
 
 import { Route } from 'react-router-dom';
-import { lazy } from 'react';
+import { createLazyRoute } from '@/utils/lazyRoutes';
 
-// Safety & Compliance - Lazy loaded
-const Safety = lazy(() => import('@/pages/Safety'));
-const ComplianceAudit = lazy(() => import('@/pages/ComplianceAudit'));
-const GDPRCompliance = lazy(() => import('@/pages/GDPRCompliance'));
+// Safety & Compliance - Lazy loaded with ErrorBoundary + Suspense
+const Safety = createLazyRoute(() => import('@/pages/Safety'));
+const ComplianceAudit = createLazyRoute(() => import('@/pages/ComplianceAudit'));
+const GDPRCompliance = createLazyRoute(() => import('@/pages/GDPRCompliance'));
 
-// Permits & Regulations - Lazy loaded
-const PermitManagement = lazy(() => import('@/pages/PermitManagement'));
-const EnvironmentalPermitting = lazy(() => import('@/pages/EnvironmentalPermitting'));
-const BondInsuranceManagement = lazy(() => import('@/pages/BondInsuranceManagement'));
-const WarrantyManagement = lazy(() => import('@/pages/WarrantyManagement'));
-const PublicProcurement = lazy(() => import('@/pages/PublicProcurement'));
+// Permits & Regulations - Lazy loaded with ErrorBoundary + Suspense
+const PermitManagement = createLazyRoute(() => import('@/pages/PermitManagement'));
+const EnvironmentalPermitting = createLazyRoute(() => import('@/pages/EnvironmentalPermitting'));
+const BondInsuranceManagement = createLazyRoute(() => import('@/pages/BondInsuranceManagement'));
+const WarrantyManagement = createLazyRoute(() => import('@/pages/WarrantyManagement'));
+const PublicProcurement = createLazyRoute(() => import('@/pages/PublicProcurement'));
 
-// Operations - Lazy loaded
-const ServiceDispatch = lazy(() => import('@/pages/ServiceDispatch'));
-const CalendarSync = lazy(() => import('@/pages/CalendarSync'));
-const EquipmentManagement = lazy(() => import('@/pages/EquipmentManagement'));
-const EquipmentQRLabels = lazy(() => import('@/pages/EquipmentQRLabels'));
-const AutomatedWorkflows = lazy(() => import('@/pages/AutomatedWorkflows'));
+// Operations - Lazy loaded with ErrorBoundary + Suspense
+const ServiceDispatch = createLazyRoute(() => import('@/pages/ServiceDispatch'));
+const CalendarSync = createLazyRoute(() => import('@/pages/CalendarSync'));
+const EquipmentManagement = createLazyRoute(() => import('@/pages/EquipmentManagement'));
+const EquipmentQRLabels = createLazyRoute(() => import('@/pages/EquipmentQRLabels'));
+const AutomatedWorkflows = createLazyRoute(() => import('@/pages/AutomatedWorkflows'));
 
-// Advanced Features - Lazy loaded
-const SmartClientUpdatesPage = lazy(() => import('@/pages/SmartClientUpdatesPage'));
-const MaterialOrchestrationPage = lazy(() => import('@/pages/MaterialOrchestrationPage'));
-const TradeHandoffPage = lazy(() => import('@/pages/TradeHandoffPage'));
-const AIQualityControlPage = lazy(() => import('@/pages/AIQualityControlPage'));
-const KnowledgeBase = lazy(() => import('@/pages/KnowledgeBase'));
+// Advanced Features - Lazy loaded with ErrorBoundary + Suspense
+const SmartClientUpdatesPage = createLazyRoute(() => import('@/pages/SmartClientUpdatesPage'));
+const MaterialOrchestrationPage = createLazyRoute(() => import('@/pages/MaterialOrchestrationPage'));
+const TradeHandoffPage = createLazyRoute(() => import('@/pages/TradeHandoffPage'));
+const AIQualityControlPage = createLazyRoute(() => import('@/pages/AIQualityControlPage'));
+const KnowledgeBase = createLazyRoute(() => import('@/pages/KnowledgeBase'));
 
 export const operationsRoutes = (
   <>

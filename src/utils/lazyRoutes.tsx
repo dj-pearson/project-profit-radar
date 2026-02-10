@@ -1,12 +1,6 @@
-import { lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { LoadingState } from '@/components/ui/loading-spinner';
-
-/**
- * Utility for creating lazy-loaded route components with consistent loading states
- */
-export const createLazyRoute = (importFn: () => Promise<{ default: React.ComponentType<any> }>) => {
-  return lazy(importFn);
-};
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
 /**
  * Common loading component for all lazy routes
@@ -16,6 +10,27 @@ export const RouteLoadingFallback = () => (
     <LoadingState message="Loading page..." />
   </div>
 );
+
+/**
+ * Creates a lazy-loaded route component wrapped with Suspense + ErrorBoundary.
+ * Every lazy route automatically gets:
+ * - A loading spinner while the chunk downloads
+ * - Chunk-load error detection with user-friendly retry UI
+ * - Generic error boundary for runtime errors within the page
+ */
+export const createLazyRoute = (importFn: () => Promise<{ default: React.ComponentType<any> }>) => {
+  const LazyComponent = lazy(importFn);
+
+  const WrappedRoute = (props: Record<string, unknown>) => (
+    <RouteErrorBoundary>
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    </RouteErrorBoundary>
+  );
+
+  return WrappedRoute;
+};
 
 // Lazy load all major route components
 export const LazyIndex = createLazyRoute(() => import('@/pages/Index'));
@@ -179,7 +194,7 @@ export const LazyProjectTaskCreate = createLazyRoute(() => import('@/pages/Proje
  */
 export interface LazyRouteConfig {
   path: string;
-  component: React.LazyExoticComponent<React.ComponentType<any>>;
+  component: React.ComponentType<any>;
   preload?: boolean; // Whether to preload this route
   chunkName?: string; // Custom chunk name for webpack
 }

@@ -501,6 +501,107 @@
       "priority": 10,
       "passes": false,
       "notes": "Ralph reads this file at the start of every iteration. Quality of this file directly affects agent performance."
+    },
+    {
+      "id": "US-031",
+      "title": "Add per-route ErrorBoundary + Suspense wrapper for all lazy-loaded routes",
+      "description": "As a user, I want to see a clear error message with recovery options when a page fails to load, so that I am not stranded on a blank white screen after a deployment or network issue. Created RouteErrorBoundary component with chunk-load error detection. Updated createLazyRoute to wrap every lazy component with Suspense + RouteErrorBoundary. Converted all 7 route files to use createLazyRoute instead of raw lazy().",
+      "acceptanceCriteria": [
+        "RouteErrorBoundary component created with chunk-load error detection",
+        "createLazyRoute wraps every lazy component with Suspense + RouteErrorBoundary",
+        "All 7 route files use createLazyRoute instead of raw lazy()",
+        "Chunk load failures show user-friendly UI with Reload App and Go to Dashboard buttons",
+        "Runtime errors show Try Again and Go to Dashboard buttons",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "COMPLETED. RouteErrorBoundary at src/components/RouteErrorBoundary.tsx. Updated createLazyRoute in src/utils/lazyRoutes.tsx. All route files (appRoutes, financialRoutes, projectRoutes, peopleRoutes, operationsRoutes, marketingRoutes) converted. LazyRouteConfig interface updated."
+    },
+    {
+      "id": "US-032",
+      "title": "Increase toast notification limit to prevent dropped error messages",
+      "description": "As a user performing multiple operations, I want to see all success and error notifications, so that I don't miss critical error messages when multiple operations complete simultaneously. Increased TOAST_LIMIT from 1 to 5 and added gap-2 to ToastViewport for proper stacking.",
+      "acceptanceCriteria": [
+        "TOAST_LIMIT increased from 1 to 5",
+        "Toast viewport supports stacked display with gap between toasts",
+        "Multiple toasts render correctly without overlapping",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "COMPLETED. Updated TOAST_LIMIT in src/hooks/use-toast.ts from 1 to 5. Added gap-2 to ToastViewport in src/components/ui/toast.tsx."
+    },
+    {
+      "id": "US-033",
+      "title": "Add loading state checks before rendering in financial pages",
+      "description": "As a user navigating to the Financial Dashboard or Invoices page, I want to see a loading skeleton instead of a partially-rendered page with empty data, so that the page doesn't visually jump when data arrives.",
+      "acceptanceCriteria": [
+        "FinancialDashboard.tsx renders a skeleton/loading state while child components load data",
+        "Invoices.tsx checks loading state before rendering page layout, filters, and stats",
+        "No visual jumpiness when navigating to financial pages",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Identified during codebase analysis. FinancialDashboard.tsx has no loading state at all. Invoices.tsx renders layout before data loads."
+    },
+    {
+      "id": "US-034",
+      "title": "Surface data fetch errors in Dashboard instead of showing empty state",
+      "description": "As a user, I want to see an error message on the Dashboard when data fails to load, so that I know something went wrong instead of seeing an empty dashboard with no explanation.",
+      "acceptanceCriteria": [
+        "Dashboard.tsx checks the error state from useDashboardData hook",
+        "Error state renders a user-friendly error message with retry option",
+        "Error message does not block entire dashboard - shows partial data where available",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "useDashboardData returns error state but Dashboard.tsx never checks it. Silent failures."
+    },
+    {
+      "id": "US-035",
+      "title": "Improve Setup page with session auto-refresh and cleanup",
+      "description": "As a new user completing company setup, I want the system to auto-refresh my session before form submission and not leak debug info to console.",
+      "acceptanceCriteria": [
+        "Setup.tsx calls supabase.auth.refreshSession() before company creation",
+        "Remove excessive debug console.log statements",
+        "Add progress indicator showing setup steps",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Setup.tsx has 4+ DEBUG console.log statements and no session refresh before API calls."
+    },
+    {
+      "id": "US-036",
+      "title": "Simplify ProtectedRoute circuit breaker logic",
+      "description": "As a developer, I want the ProtectedRoute redirect-loop prevention to be simpler and more debuggable, so that auth issues are easier to diagnose.",
+      "acceptanceCriteria": [
+        "Replace dual counter mechanism (global + local) with single approach",
+        "Add structured logging for auth state transitions",
+        "Recovery mode UI includes link to re-authenticate",
+        "No redirect loops in normal usage",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "ProtectedRoute.tsx uses global redirect counter, local ref counter, emergency mode, and profile wait time simultaneously."
+    },
+    {
+      "id": "US-037",
+      "title": "Implement virtual scrolling for large project and invoice lists",
+      "description": "As a user with 100+ projects, I want the project list to scroll smoothly without performance degradation.",
+      "acceptanceCriteria": [
+        "Projects page uses react-virtual for list rendering when >50 items",
+        "Invoices page uses react-virtual for list rendering when >50 items",
+        "Scroll performance maintains 60fps with 500+ items",
+        "Build succeeds with no new errors"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Currently no virtualization. Large datasets cause UI sluggishness."
     }
   ]
 }
