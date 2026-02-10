@@ -27,8 +27,8 @@ serve(async (req) => {
     const { user, supabase: supabaseClient } = authContext;
     logStep("User authenticated", { userId: user.id });
 
-    const clientId = Deno.env.get("GOOGLE_OAuth_CLIENT_ID");
-    const clientSecret = Deno.env.get("GOOGLE_OAuth_CLIENT_SECRET");
+    const clientId = Deno.env.get("GOOGLE_OAUTH_CLIENT_ID");
+    const clientSecret = Deno.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
 
     if (!clientId || !clientSecret) {
       throw new Error("Google OAuth credentials not configured");

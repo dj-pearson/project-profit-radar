@@ -22,10 +22,10 @@ serve(async (req) => {
     console.log('Triggering Expo build:', { platform, profile })
 
     // Get Expo access token from environment
-    const expoAccessToken = Deno.env.get('Expo_Access_Token')
-    
+    const expoAccessToken = Deno.env.get('EXPO_ACCESS_TOKEN')
+
     if (!expoAccessToken) {
-      throw new Error('Expo_Access_Token not configured in Supabase environment variables')
+      throw new Error('EXPO_ACCESS_TOKEN not configured in Supabase environment variables')
     }
 
     // EAS Build API endpoint

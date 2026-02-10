@@ -69,7 +69,7 @@ serve(async (req) => {
     console.log('Request data:', requestData)
 
     // Get Bing Webmaster API credentials from Supabase secrets
-    const bingApiKey = Deno.env.get('Microsoft_Bing_API')
+    const bingApiKey = Deno.env.get('MICROSOFT_BING_API_KEY')
     const bingSiteUrl = Deno.env.get('SEARCH_CONSOLE_SITE_URL') // Reuse the same site URL
 
     console.log('Bing API Key exists:', !!bingApiKey)
@@ -87,7 +87,7 @@ serve(async (req) => {
             bingApiKey: !bingApiKey,
             siteUrl: !bingSiteUrl
           },
-          help: 'Please add Microsoft_Bing_API key from Bing Webmaster Tools → Settings → API Access'
+          help: 'Please add MICROSOFT_BING_API_KEY from Bing Webmaster Tools → Settings → API Access'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

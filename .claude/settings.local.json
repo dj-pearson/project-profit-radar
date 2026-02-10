@@ -17,7 +17,8 @@
       "Bash(npx tsc:*)",
       "Bash(node scripts/audit-edge-functions.js:*)",
       "Bash(node scripts/audit-edge-functions.cjs:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
