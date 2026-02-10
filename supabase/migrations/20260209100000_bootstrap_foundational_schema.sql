@@ -86,8 +86,10 @@ ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS website TEXT;
 ALTER TABLE public.companies ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;
 
 -- ---------- user_profiles ----------
--- From migration 1: id PK references auth.users, email, first_name, last_name,
+-- From migration 1 & 3: id PK references auth.users, email, first_name, last_name,
 --   phone, company_id, role (user_role enum), is_active, last_login
+-- NOTE: role column uses user_role enum type to match migration 1/3 and downstream
+-- RLS policies that compare get_user_role() result to ::user_role[] arrays.
 
 CREATE TABLE IF NOT EXISTS public.user_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -96,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   last_name TEXT,
   phone TEXT,
   company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'admin',
+  role public.user_role NOT NULL DEFAULT 'admin',
   is_active BOOLEAN DEFAULT true,
   last_login TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -104,21 +106,26 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
 );
 
 -- Ensure columns exist if table was pre-created with a different schema
+-- NOTE: ADD COLUMN IF NOT EXISTS checks by name only - if column exists with a
+-- different type (e.g. TEXT vs user_role), it silently skips. That's acceptable
+-- since we don't want to break existing data.
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS first_name TEXT;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS last_name TEXT;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS company_id UUID;
-ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'admin';
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS role public.user_role DEFAULT 'admin';
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ;
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- Ensure unique constraint on email (safe if already exists)
+-- Catches both duplicate_object (23505/42710) and duplicate_table (42P07)
+-- because UNIQUE constraints create an underlying index relation.
 DO $$ BEGIN
   ALTER TABLE public.user_profiles ADD CONSTRAINT user_profiles_email_key UNIQUE (email);
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
 END $$;
 
 -- ---------- profiles ----------
@@ -226,7 +233,7 @@ ALTER TABLE public.project_assignments ADD COLUMN IF NOT EXISTS removed_at TIMES
 DO $$ BEGIN
   ALTER TABLE public.project_assignments
     ADD CONSTRAINT project_assignments_project_id_user_id_key UNIQUE (project_id, user_id);
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
 END $$;
 
 -- ---------- time_entries ----------
@@ -510,15 +517,34 @@ ALTER TABLE public.financial_snapshots ADD COLUMN IF NOT EXISTS created_at TIMES
 -- ============================================================
 
 -- ---------- get_user_role ----------
--- Used in 50+ RLS policies across the codebase
-CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID)
-RETURNS TEXT
-LANGUAGE SQL
-STABLE
-SECURITY DEFINER
-AS $$
-  SELECT role::TEXT FROM public.user_profiles WHERE id = user_id;
-$$;
+-- CRITICAL: Must return public.user_role (not TEXT). Existing RLS policies in
+-- other migrations compare the result to ::user_role[] arrays, e.g.:
+--   get_user_role(auth.uid()) = ANY(ARRAY['admin','root_admin']::user_role[])
+-- Returning TEXT would cause type mismatch errors.
+--
+-- CREATE OR REPLACE cannot change the return type of an existing function.
+-- If the function already exists with the correct return type, CREATE OR REPLACE
+-- works fine. If it exists with the wrong return type (e.g. TEXT from a previous
+-- bad migration), we must DROP CASCADE and recreate. The CASCADE may drop
+-- dependent RLS policies, but Section 7 below recreates them.
+DO $$ BEGIN
+  CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID)
+  RETURNS public.user_role
+  LANGUAGE SQL STABLE SECURITY DEFINER
+  AS $func$
+    SELECT role::public.user_role FROM public.user_profiles WHERE id = user_id;
+  $func$;
+EXCEPTION WHEN others THEN
+  -- Return type mismatch: drop old function (CASCADE drops dependent policies)
+  -- then recreate with correct return type. Policies are recreated in Section 7.
+  DROP FUNCTION IF EXISTS public.get_user_role(UUID) CASCADE;
+  CREATE FUNCTION public.get_user_role(user_id UUID)
+  RETURNS public.user_role
+  LANGUAGE SQL STABLE SECURITY DEFINER
+  AS $func$
+    SELECT role::public.user_role FROM public.user_profiles WHERE id = user_id;
+  $func$;
+END $$;
 
 -- ---------- get_user_company ----------
 -- Used in RLS policies to isolate data by company
@@ -532,7 +558,11 @@ AS $$
 $$;
 
 -- ---------- handle_new_user ----------
--- Auto-creates user_profiles row when auth.users row is inserted
+-- Auto-creates user_profiles row when auth.users row is inserted.
+-- Matches migration 3 (20250703020340) pattern with:
+--   - ::user_role cast for type safety
+--   - EXCEPTION block so invalid role values don't block user creation
+--   - ON CONFLICT (id) DO NOTHING for idempotency
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -543,12 +573,17 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    NEW.raw_user_meta_data ->> 'first_name',
-    NEW.raw_user_meta_data ->> 'last_name',
-    COALESCE(NEW.raw_user_meta_data ->> 'role', 'admin')
+    COALESCE(NEW.raw_user_meta_data ->> 'first_name', ''),
+    COALESCE(NEW.raw_user_meta_data ->> 'last_name', ''),
+    COALESCE((NEW.raw_user_meta_data ->> 'role')::public.user_role, 'admin'::public.user_role)
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log the error but don't block user creation
+    RAISE WARNING 'Failed to create user profile for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$;
 
@@ -584,10 +619,10 @@ ALTER TABLE public.financial_snapshots ENABLE ROW LEVEL SECURITY;
 -- SECTION 7: RLS Policies
 -- ============================================================
 -- Uses DO $$ blocks to skip creation if policy already exists.
+-- Only creates bootstrap policies if NO existing policy with similar
+-- function exists on the table (checks both original and bootstrap names).
 -- Core tables use get_user_role()/get_user_company() since those
 -- functions are guaranteed to exist (created in Section 5).
--- New tables use simpler auth.uid() checks where appropriate to
--- avoid potential recursion issues.
 
 -- ---------- companies policies ----------
 DO $$ BEGIN
@@ -797,149 +832,178 @@ END $$;
 -- ============================================================
 -- SECTION 8: Triggers
 -- ============================================================
+-- Check for BOTH original trigger names (from migrations 1/2) and bootstrap
+-- names to avoid creating duplicate triggers that fire twice.
 
 -- ---------- updated_at triggers ----------
+-- For tables from migration 1: originals are named update_<table>_updated_at
+-- For tables from migration 2: originals are named update_<table>_updated_at
+-- Only create if NEITHER the original NOR a bootstrap trigger exists.
+
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_companies_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_companies_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_companies_updated_at', 'bootstrap_update_companies_updated_at')
+  ) THEN
+    CREATE TRIGGER update_companies_updated_at
       BEFORE UPDATE ON public.companies
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_user_profiles_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_user_profiles_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_user_profiles_updated_at', 'bootstrap_update_user_profiles_updated_at')
+  ) THEN
+    CREATE TRIGGER update_user_profiles_updated_at
       BEFORE UPDATE ON public.user_profiles
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_profiles_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_profiles_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_profiles_updated_at', 'bootstrap_update_profiles_updated_at')
+  ) THEN
+    CREATE TRIGGER update_profiles_updated_at
       BEFORE UPDATE ON public.profiles
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_projects_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_projects_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_projects_updated_at', 'bootstrap_update_projects_updated_at')
+  ) THEN
+    CREATE TRIGGER update_projects_updated_at
       BEFORE UPDATE ON public.projects
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_time_entries_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_time_entries_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_time_entries_updated_at', 'bootstrap_update_time_entries_updated_at')
+  ) THEN
+    CREATE TRIGGER update_time_entries_updated_at
       BEFORE UPDATE ON public.time_entries
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_materials_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_materials_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_materials_updated_at', 'bootstrap_update_materials_updated_at')
+  ) THEN
+    CREATE TRIGGER update_materials_updated_at
       BEFORE UPDATE ON public.materials
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
+-- New tables (no original trigger exists, just check for any existing)
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_financial_records_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_financial_records_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_financial_records_updated_at', 'bootstrap_update_financial_records_updated_at')
+  ) THEN
+    CREATE TRIGGER update_financial_records_updated_at
       BEFORE UPDATE ON public.financial_records
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_teams_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_teams_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_teams_updated_at', 'bootstrap_update_teams_updated_at')
+  ) THEN
+    CREATE TRIGGER update_teams_updated_at
       BEFORE UPDATE ON public.teams
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_push_subscriptions_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_push_subscriptions_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_push_subscriptions_updated_at', 'bootstrap_update_push_subscriptions_updated_at')
+  ) THEN
+    CREATE TRIGGER update_push_subscriptions_updated_at
       BEFORE UPDATE ON public.push_subscriptions
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'bootstrap_update_project_team_assignments_updated_at') THEN
-    CREATE TRIGGER bootstrap_update_project_team_assignments_updated_at
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname IN ('update_project_team_assignments_updated_at', 'bootstrap_update_project_team_assignments_updated_at')
+  ) THEN
+    CREATE TRIGGER update_project_team_assignments_updated_at
       BEFORE UPDATE ON public.project_team_assignments
       FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   END IF;
 END $$;
 
 -- ---------- auth trigger for new user signup ----------
+-- Uses EXCEPTION pattern instead of fragile regclass check
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created' AND tgrelid = 'auth.users'::regclass) THEN
-    CREATE TRIGGER on_auth_user_created
-      AFTER INSERT ON auth.users
-      FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-  END IF;
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ============================================================
 -- SECTION 9: Indexes
 -- ============================================================
+-- Use the SAME index names as the original migrations (no bootstrap_ prefix)
+-- so IF NOT EXISTS correctly detects existing indexes and avoids duplicates.
 
--- user_profiles indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_user_profiles_company_id ON public.user_profiles(company_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_user_profiles_email ON public.user_profiles(email);
+-- user_profiles indexes (new, not in original migrations)
+CREATE INDEX IF NOT EXISTS idx_user_profiles_company_id ON public.user_profiles(company_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
 
--- profiles indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_profiles_user_id ON public.profiles(user_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_profiles_company_id ON public.profiles(company_id);
+-- profiles indexes (from migration 2)
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_company_id ON public.profiles(company_id);
 
--- projects indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_projects_company_id ON public.projects(company_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_projects_status ON public.projects(status);
+-- projects indexes (from migration 2)
+CREATE INDEX IF NOT EXISTS idx_projects_company_id ON public.projects(company_id);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON public.projects(status);
 
--- project_assignments indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_project_assignments_project_id ON public.project_assignments(project_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_project_assignments_user_id ON public.project_assignments(user_id);
+-- project_assignments indexes (from migration 2)
+CREATE INDEX IF NOT EXISTS idx_project_assignments_project_id ON public.project_assignments(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_assignments_user_id ON public.project_assignments(user_id);
 
--- time_entries indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_time_entries_project_id ON public.time_entries(project_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_time_entries_user_id ON public.time_entries(user_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_time_entries_clock_in_time ON public.time_entries(clock_in_time);
+-- time_entries indexes (from migration 2)
+CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON public.time_entries(project_id);
+CREATE INDEX IF NOT EXISTS idx_time_entries_user_id ON public.time_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_time_entries_clock_in_time ON public.time_entries(clock_in_time);
 
--- materials indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_materials_company_id ON public.materials(company_id);
+-- materials indexes (from migration 2)
+CREATE INDEX IF NOT EXISTS idx_materials_company_id ON public.materials(company_id);
 
--- material_usage indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_material_usage_project_id ON public.material_usage(project_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_material_usage_material_id ON public.material_usage(material_id);
+-- material_usage indexes (from migration 2)
+CREATE INDEX IF NOT EXISTS idx_material_usage_project_id ON public.material_usage(project_id);
+CREATE INDEX IF NOT EXISTS idx_material_usage_material_id ON public.material_usage(material_id);
 
--- financial_records indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_records_company_id ON public.financial_records(company_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_records_project_id ON public.financial_records(project_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_records_company_date ON public.financial_records(company_id, date);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_records_type ON public.financial_records(type);
+-- financial_records indexes (new)
+CREATE INDEX IF NOT EXISTS idx_financial_records_company_id ON public.financial_records(company_id);
+CREATE INDEX IF NOT EXISTS idx_financial_records_project_id ON public.financial_records(project_id);
+CREATE INDEX IF NOT EXISTS idx_financial_records_company_date ON public.financial_records(company_id, date);
+CREATE INDEX IF NOT EXISTS idx_financial_records_type ON public.financial_records(type);
 
--- teams indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_teams_company_id ON public.teams(company_id);
+-- teams indexes (new)
+CREATE INDEX IF NOT EXISTS idx_teams_company_id ON public.teams(company_id);
 
--- push_subscriptions indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_push_subscriptions_user_id ON public.push_subscriptions(user_id);
+-- push_subscriptions indexes (new)
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON public.push_subscriptions(user_id);
 
--- project_team_assignments indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_project_team_assignments_company_id ON public.project_team_assignments(company_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_project_team_assignments_project_id ON public.project_team_assignments(project_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_project_team_assignments_team_id ON public.project_team_assignments(team_id);
+-- project_team_assignments indexes (new)
+CREATE INDEX IF NOT EXISTS idx_project_team_assignments_company_id ON public.project_team_assignments(company_id);
+CREATE INDEX IF NOT EXISTS idx_project_team_assignments_project_id ON public.project_team_assignments(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_team_assignments_team_id ON public.project_team_assignments(team_id);
 
--- financial_snapshots indexes
-CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_snapshots_tenant_id ON public.financial_snapshots(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_snapshots_date ON public.financial_snapshots(snapshot_date);
+-- financial_snapshots indexes (new)
+CREATE INDEX IF NOT EXISTS idx_financial_snapshots_tenant_id ON public.financial_snapshots(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_financial_snapshots_date ON public.financial_snapshots(snapshot_date);
 
 -- ============================================================
 -- DONE
@@ -966,3 +1030,12 @@ CREATE INDEX IF NOT EXISTS idx_bootstrap_financial_snapshots_date ON public.fina
 -- 5. Test functions:
 --    SELECT public.get_user_role('<user-uuid>');
 --    SELECT public.get_user_company('<user-uuid>');
+--
+-- 6. Check for duplicate triggers (should be 0):
+--    SELECT tgrelid::regclass, array_agg(tgname) FROM pg_trigger
+--    WHERE tgname LIKE '%updated_at%' GROUP BY tgrelid
+--    HAVING count(*) > 1;
+--
+-- 7. Check for duplicate indexes (should be 0):
+--    SELECT tablename, indexname FROM pg_indexes
+--    WHERE schemaname = 'public' AND indexname LIKE 'idx_bootstrap_%';
