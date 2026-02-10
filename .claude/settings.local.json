@@ -18,7 +18,11 @@
       "Bash(node scripts/audit-edge-functions.js:*)",
       "Bash(node scripts/audit-edge-functions.cjs:*)",
       "Bash(findstr:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(for table in financial_records teams project_notes approved_timesheets)",
+      "Bash(do echo \"\")",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
