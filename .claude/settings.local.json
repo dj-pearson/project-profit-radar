@@ -11,7 +11,10 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(ls -la \"C:\\\\Users\\\\pears\\\\Documents\\\\Build-Desk\\\\project-profit-radar\\\\src\\\\components\\\\errors\"\" 2>/dev/null || echo \"Directory does not exist \")",
+      "Bash(xargs:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

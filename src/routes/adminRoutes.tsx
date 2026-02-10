@@ -62,6 +62,7 @@ import {
   LazySSOManagement,
   LazyAuditLoggingCompliance,
   LazyGPSTimeTracking,
+  LazyErrorLogs,
 
   // API & Developer
   LazyAPIKeyManagement,
@@ -406,6 +407,14 @@ export const adminRoutes = (
       element={
         <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
           <LazyAuditLoggingCompliance />
+        </SecureRoute>
+      }
+    />
+    <Route
+      path="/admin/error-logs"
+      element={
+        <SecureRoute requireAuth allowedRoles={['root_admin', 'admin']}>
+          <LazyErrorLogs />
         </SecureRoute>
       }
     />

@@ -133,6 +133,7 @@ export const LazyTenantManagement = createLazyRoute(() => import('@/pages/admin/
 export const LazySSOManagement = createLazyRoute(() => import('@/pages/admin/SSOManagement'));
 export const LazyAuditLoggingCompliance = createLazyRoute(() => import('@/pages/admin/AuditLoggingCompliance'));
 export const LazyGPSTimeTracking = createLazyRoute(() => import('@/pages/admin/GPSTimeTracking'));
+export const LazyErrorLogs = createLazyRoute(() => import('@/pages/admin/ErrorLogs'));
 
 // Admin - API & Developer
 export const LazyAPIKeyManagement = createLazyRoute(() => import('@/pages/admin/APIKeyManagement'));

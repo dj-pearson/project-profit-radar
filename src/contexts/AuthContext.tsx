@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
 import { setSentryUser, clearSentryUser } from "@/lib/sentry";
+import { setErrorLoggingUser } from "@/services/errorLoggingService";
 import { logger } from "@/lib/logger";
 import {
   checkLoginAttempt,
@@ -198,6 +199,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     // Clear Sentry user context
     clearSentryUser();
+    setErrorLoggingUser(null);
 
     // SECURITY: Clear both localStorage and sessionStorage
     try {
@@ -441,7 +443,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           email: data.email,
           role: (data as any).role,
         });
-        
+
+        // Set error logging user context
+        setErrorLoggingUser({
+          id: data.id,
+          email: data.email,
+          role: (data as any).role,
+          company_id: (data as any).company_id,
+        });
+
         // SECURITY: Use sessionStorage instead of localStorage for PII
         // sessionStorage is cleared when browser/tab closes, reducing exposure
         try {
@@ -759,6 +769,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         role: userProfile.role,
         company_id: userProfile.company_id,
       });
+
+      // Set error logging user context
+      setErrorLoggingUser({
+        id: user.id,
+        email: userProfile.email,
+        role: userProfile.role,
+        company_id: userProfile.company_id,
+      });
     }
   }, [user?.id, userProfile?.role, userProfile?.email, userProfile?.company_id]);
 
@@ -934,6 +952,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
       // Clear Sentry user context
       clearSentryUser();
+      setErrorLoggingUser(null);
 
       // Clear route memory on sign out
       clearRememberedRoute();
@@ -949,6 +968,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setUserProfile(null);
       successfulProfiles.current.clear();
       clearSentryUser();
+      setErrorLoggingUser(null);
       clearRememberedRoute();
     } finally {
       setLoading(false);
