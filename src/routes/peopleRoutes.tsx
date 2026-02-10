@@ -6,29 +6,28 @@
  */
 
 import { Route } from 'react-router-dom';
-import { lazy } from 'react';
-import { LazyTimeTracking, LazyCRMDashboard } from '@/utils/lazyRoutes';
+import { createLazyRoute, LazyTimeTracking, LazyCRMDashboard } from '@/utils/lazyRoutes';
 
-// Team Management - Lazy loaded
-const TeamManagement = lazy(() => import('@/pages/TeamManagement'));
-const CrewScheduling = lazy(() => import('@/pages/CrewScheduling'));
-const CrewCheckin = lazy(() => import('@/pages/CrewCheckin'));
-const CrewPresence = lazy(() => import('@/pages/CrewPresence'));
-const Timesheets = lazy(() => import('@/pages/Timesheets'));
-const Support = lazy(() => import('@/pages/Support'));
+// Team Management - Lazy loaded with ErrorBoundary + Suspense
+const TeamManagement = createLazyRoute(() => import('@/pages/TeamManagement'));
+const CrewScheduling = createLazyRoute(() => import('@/pages/CrewScheduling'));
+const CrewCheckin = createLazyRoute(() => import('@/pages/CrewCheckin'));
+const CrewPresence = createLazyRoute(() => import('@/pages/CrewPresence'));
+const Timesheets = createLazyRoute(() => import('@/pages/Timesheets'));
+const Support = createLazyRoute(() => import('@/pages/Support'));
 
-// CRM - Lazy loaded
-const CRMLeads = lazy(() => import('@/pages/CRMLeads'));
-const CRMContacts = lazy(() => import('@/pages/CRMContacts'));
-const CRMOpportunities = lazy(() => import('@/pages/CRMOpportunities'));
-const CRMPipeline = lazy(() => import('@/pages/CRMPipeline'));
-const CRMLeadIntelligence = lazy(() => import('@/pages/CRMLeadIntelligence'));
-const CRMWorkflows = lazy(() => import('@/pages/CRMWorkflows'));
-const CRMCampaigns = lazy(() => import('@/pages/CRMCampaigns'));
-const CRMAnalytics = lazy(() => import('@/pages/CRMAnalytics'));
-const LeadDetailPage = lazy(() => import('@/pages/LeadDetailPage'));
-const WorkflowBuilderPage = lazy(() => import('@/pages/WorkflowBuilderPage'));
-const EmailMarketing = lazy(() => import('@/pages/EmailMarketing'));
+// CRM - Lazy loaded with ErrorBoundary + Suspense
+const CRMLeads = createLazyRoute(() => import('@/pages/CRMLeads'));
+const CRMContacts = createLazyRoute(() => import('@/pages/CRMContacts'));
+const CRMOpportunities = createLazyRoute(() => import('@/pages/CRMOpportunities'));
+const CRMPipeline = createLazyRoute(() => import('@/pages/CRMPipeline'));
+const CRMLeadIntelligence = createLazyRoute(() => import('@/pages/CRMLeadIntelligence'));
+const CRMWorkflows = createLazyRoute(() => import('@/pages/CRMWorkflows'));
+const CRMCampaigns = createLazyRoute(() => import('@/pages/CRMCampaigns'));
+const CRMAnalytics = createLazyRoute(() => import('@/pages/CRMAnalytics'));
+const LeadDetailPage = createLazyRoute(() => import('@/pages/LeadDetailPage'));
+const WorkflowBuilderPage = createLazyRoute(() => import('@/pages/WorkflowBuilderPage'));
+const EmailMarketing = createLazyRoute(() => import('@/pages/EmailMarketing'));
 
 export const peopleRoutes = (
   <>

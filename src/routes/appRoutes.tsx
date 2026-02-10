@@ -6,9 +6,9 @@
  */
 
 import { Route } from 'react-router-dom';
-import { lazy } from 'react';
 import { RouteGuard } from '@/components/ProtectedRoute';
 import {
+  createLazyRoute,
   LazyIndex,
   LazyDashboard,
   LazyMyTasks,
@@ -37,15 +37,15 @@ import {
   LazyBlogPost,
 } from '@/utils/lazyRoutes';
 
-// Lazy-loaded feature pages
-const ReferralProgram = lazy(() => import('@/pages/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
-const IntegrationMarketplace = lazy(() => import('@/pages/IntegrationMarketplace').then(m => ({ default: m.IntegrationMarketplace })));
-const WorkflowAutomation = lazy(() => import('@/pages/WorkflowAutomation').then(m => ({ default: m.WorkflowAutomation })));
-const AIInsights = lazy(() => import('@/pages/AIInsights').then(m => ({ default: m.AIInsights })));
-const MobileShowcase = lazy(() => import('@/pages/MobileShowcase'));
-const AdvancedMobileShowcase = lazy(() => import('@/pages/AdvancedMobileShowcase'));
-const VisualProjectManagementPage = lazy(() => import('@/pages/VisualProjectManagementPage').then(m => ({ default: m.VisualProjectManagementPage })));
-const CustomDomain = lazy(() => import('@/pages/settings/CustomDomain').then(m => ({ default: m.CustomDomain })));
+// Lazy-loaded feature pages (with ErrorBoundary + Suspense via createLazyRoute)
+const ReferralProgram = createLazyRoute(() => import('@/pages/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
+const IntegrationMarketplace = createLazyRoute(() => import('@/pages/IntegrationMarketplace').then(m => ({ default: m.IntegrationMarketplace })));
+const WorkflowAutomation = createLazyRoute(() => import('@/pages/WorkflowAutomation').then(m => ({ default: m.WorkflowAutomation })));
+const AIInsights = createLazyRoute(() => import('@/pages/AIInsights').then(m => ({ default: m.AIInsights })));
+const MobileShowcase = createLazyRoute(() => import('@/pages/MobileShowcase'));
+const AdvancedMobileShowcase = createLazyRoute(() => import('@/pages/AdvancedMobileShowcase'));
+const VisualProjectManagementPage = createLazyRoute(() => import('@/pages/VisualProjectManagementPage').then(m => ({ default: m.VisualProjectManagementPage })));
+const CustomDomain = createLazyRoute(() => import('@/pages/settings/CustomDomain').then(m => ({ default: m.CustomDomain })));
 
 export const appRoutes = (
   <>

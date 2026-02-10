@@ -5,8 +5,8 @@
  */
 
 import { Route } from 'react-router-dom';
-import { lazy } from 'react';
 import {
+  createLazyRoute,
   LazyFinancialDashboard,
   LazyEstimatesHub,
   LazyInvoices,
@@ -17,18 +17,18 @@ import {
   LazyQuickBooksCallback,
 } from '@/utils/lazyRoutes';
 
-// Enterprise Finance Module - Lazy loaded
-const FinanceHub = lazy(() => import('@/pages/FinanceHub'));
-const ChartOfAccounts = lazy(() => import('@/pages/ChartOfAccounts'));
-const JournalEntries = lazy(() => import('@/pages/JournalEntries'));
-const BalanceSheet = lazy(() => import('@/pages/BalanceSheet'));
-const ProfitAndLoss = lazy(() => import('@/pages/ProfitAndLoss'));
-const TrialBalance = lazy(() => import('@/pages/TrialBalance'));
-const AccountsPayable = lazy(() => import('@/pages/AccountsPayable'));
-const GeneralLedger = lazy(() => import('@/pages/GeneralLedger'));
-const CashFlowStatement = lazy(() => import('@/pages/CashFlowStatement'));
-const BillPayments = lazy(() => import('@/pages/BillPayments'));
-const FiscalPeriods = lazy(() => import('@/pages/FiscalPeriods'));
+// Enterprise Finance Module - Lazy loaded with ErrorBoundary + Suspense
+const FinanceHub = createLazyRoute(() => import('@/pages/FinanceHub'));
+const ChartOfAccounts = createLazyRoute(() => import('@/pages/ChartOfAccounts'));
+const JournalEntries = createLazyRoute(() => import('@/pages/JournalEntries'));
+const BalanceSheet = createLazyRoute(() => import('@/pages/BalanceSheet'));
+const ProfitAndLoss = createLazyRoute(() => import('@/pages/ProfitAndLoss'));
+const TrialBalance = createLazyRoute(() => import('@/pages/TrialBalance'));
+const AccountsPayable = createLazyRoute(() => import('@/pages/AccountsPayable'));
+const GeneralLedger = createLazyRoute(() => import('@/pages/GeneralLedger'));
+const CashFlowStatement = createLazyRoute(() => import('@/pages/CashFlowStatement'));
+const BillPayments = createLazyRoute(() => import('@/pages/BillPayments'));
+const FiscalPeriods = createLazyRoute(() => import('@/pages/FiscalPeriods'));
 
 export const financialRoutes = (
   <>
