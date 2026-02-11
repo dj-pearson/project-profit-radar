@@ -6,6 +6,7 @@
  */
 
 import { Route } from 'react-router-dom';
+import { RouteGuard } from '@/components/ProtectedRoute';
 import { createLazyRoute } from '@/utils/lazyRoutes';
 
 // Safety & Compliance - Lazy loaded with ErrorBoundary + Suspense
@@ -37,29 +38,29 @@ const KnowledgeBase = createLazyRoute(() => import('@/pages/KnowledgeBase'));
 export const operationsRoutes = (
   <>
     {/* Safety & Compliance */}
-    <Route path="/safety" element={<Safety />} />
-    <Route path="/compliance-audit" element={<ComplianceAudit />} />
-    <Route path="/gdpr-compliance" element={<GDPRCompliance />} />
+    <Route path="/safety" element={<RouteGuard><Safety /></RouteGuard>} />
+    <Route path="/compliance-audit" element={<RouteGuard><ComplianceAudit /></RouteGuard>} />
+    <Route path="/gdpr-compliance" element={<RouteGuard><GDPRCompliance /></RouteGuard>} />
 
     {/* Permits & Regulations */}
-    <Route path="/permit-management" element={<PermitManagement />} />
-    <Route path="/environmental-permitting" element={<EnvironmentalPermitting />} />
-    <Route path="/bond-insurance" element={<BondInsuranceManagement />} />
-    <Route path="/warranty-management" element={<WarrantyManagement />} />
-    <Route path="/public-procurement" element={<PublicProcurement />} />
+    <Route path="/permit-management" element={<RouteGuard><PermitManagement /></RouteGuard>} />
+    <Route path="/environmental-permitting" element={<RouteGuard><EnvironmentalPermitting /></RouteGuard>} />
+    <Route path="/bond-insurance" element={<RouteGuard><BondInsuranceManagement /></RouteGuard>} />
+    <Route path="/warranty-management" element={<RouteGuard><WarrantyManagement /></RouteGuard>} />
+    <Route path="/public-procurement" element={<RouteGuard><PublicProcurement /></RouteGuard>} />
 
     {/* Operations Management */}
-    <Route path="/service-dispatch" element={<ServiceDispatch />} />
-    <Route path="/calendar" element={<CalendarSync />} />
-    <Route path="/equipment-management" element={<EquipmentManagement />} />
-    <Route path="/equipment-qr-labels" element={<EquipmentQRLabels />} />
-    <Route path="/workflows" element={<AutomatedWorkflows />} />
+    <Route path="/service-dispatch" element={<RouteGuard><ServiceDispatch /></RouteGuard>} />
+    <Route path="/calendar" element={<RouteGuard><CalendarSync /></RouteGuard>} />
+    <Route path="/equipment-management" element={<RouteGuard><EquipmentManagement /></RouteGuard>} />
+    <Route path="/equipment-qr-labels" element={<RouteGuard><EquipmentQRLabels /></RouteGuard>} />
+    <Route path="/workflows" element={<RouteGuard><AutomatedWorkflows /></RouteGuard>} />
 
     {/* Advanced Operations */}
-    <Route path="/smart-client-updates" element={<SmartClientUpdatesPage />} />
-    <Route path="/material-orchestration" element={<MaterialOrchestrationPage />} />
-    <Route path="/trade-handoff" element={<TradeHandoffPage />} />
-    <Route path="/ai-quality-control" element={<AIQualityControlPage />} />
-    <Route path="/knowledge-base" element={<KnowledgeBase />} />
+    <Route path="/smart-client-updates" element={<RouteGuard><SmartClientUpdatesPage /></RouteGuard>} />
+    <Route path="/material-orchestration" element={<RouteGuard><MaterialOrchestrationPage /></RouteGuard>} />
+    <Route path="/trade-handoff" element={<RouteGuard><TradeHandoffPage /></RouteGuard>} />
+    <Route path="/ai-quality-control" element={<RouteGuard><AIQualityControlPage /></RouteGuard>} />
+    <Route path="/knowledge-base" element={<RouteGuard><KnowledgeBase /></RouteGuard>} />
   </>
 );

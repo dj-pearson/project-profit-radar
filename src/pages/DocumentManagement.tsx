@@ -8,6 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,6 +99,9 @@ const DocumentManagement = () => {
   
   // Smart import state
   const [isSmartImportOpen, setIsSmartImportOpen] = useState(false);
+
+  // Delete confirmation state
+  const [deleteConfirmDoc, setDeleteConfirmDoc] = useState<Document | null>(null);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -338,16 +351,18 @@ const DocumentManagement = () => {
   };
 
   const deleteDocument = async (document: Document) => {
-    if (!confirm(`Are you sure you want to delete "${document.name}"?`)) {
-      return;
-    }
+    setDeleteConfirmDoc(document);
+  };
+
+  const confirmDeleteDocument = async () => {
+    if (!deleteConfirmDoc) return;
 
     try {
       // Delete from storage
       const bucketName = isProjectContext ? 'project-documents' : 'company-documents';
       const { error: storageError } = await supabase.storage
         .from(bucketName)
-        .remove([document.file_path]);
+        .remove([deleteConfirmDoc.file_path]);
 
       if (storageError) throw storageError;
 
@@ -355,15 +370,16 @@ const DocumentManagement = () => {
       const { error: docError } = await supabase
         .from('documents')
         .delete()
-        .eq('id', document.id);
+        .eq('id', deleteConfirmDoc.id);
 
       if (docError) throw docError;
 
       toast({
         title: "Document Deleted",
-        description: `"${document.name}" has been deleted.`
+        description: `"${deleteConfirmDoc.name}" has been deleted.`
       });
 
+      setDeleteConfirmDoc(null);
       loadDocuments();
 
     } catch (error: any) {
@@ -373,6 +389,7 @@ const DocumentManagement = () => {
         title: "Delete Failed",
         description: "Failed to delete document"
       });
+      setDeleteConfirmDoc(null);
     }
   };
 
@@ -626,6 +643,22 @@ const DocumentManagement = () => {
           loadDocuments();
         }}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmDoc} onOpenChange={(open) => { if (!open) setDeleteConfirmDoc(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteConfirmDoc?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteDocument}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

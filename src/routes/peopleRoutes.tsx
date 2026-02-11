@@ -6,6 +6,7 @@
  */
 
 import { Route } from 'react-router-dom';
+import { RouteGuard } from '@/components/ProtectedRoute';
 import { createLazyRoute, LazyTimeTracking, LazyCRMDashboard } from '@/utils/lazyRoutes';
 
 // Team Management - Lazy loaded with ErrorBoundary + Suspense
@@ -32,29 +33,29 @@ const EmailMarketing = createLazyRoute(() => import('@/pages/EmailMarketing'));
 export const peopleRoutes = (
   <>
     {/* Team Management */}
-    <Route path="/team" element={<TeamManagement />} />
-    <Route path="/crew-scheduling" element={<CrewScheduling />} />
-    <Route path="/crew-checkin" element={<CrewCheckin />} />
-    <Route path="/crew-presence" element={<CrewPresence />} />
-    <Route path="/time-tracking" element={<LazyTimeTracking />} />
-    <Route path="/timesheets" element={<Timesheets />} />
-    <Route path="/support" element={<Support />} />
+    <Route path="/team" element={<RouteGuard><TeamManagement /></RouteGuard>} />
+    <Route path="/crew-scheduling" element={<RouteGuard><CrewScheduling /></RouteGuard>} />
+    <Route path="/crew-checkin" element={<RouteGuard><CrewCheckin /></RouteGuard>} />
+    <Route path="/crew-presence" element={<RouteGuard><CrewPresence /></RouteGuard>} />
+    <Route path="/time-tracking" element={<RouteGuard><LazyTimeTracking /></RouteGuard>} />
+    <Route path="/timesheets" element={<RouteGuard><Timesheets /></RouteGuard>} />
+    <Route path="/support" element={<RouteGuard><Support /></RouteGuard>} />
 
     {/* CRM */}
-    <Route path="/crm" element={<LazyCRMDashboard />} />
-    <Route path="/crm/leads" element={<CRMLeads />} />
-    <Route path="/crm/leads/:id" element={<LeadDetailPage />} />
-    <Route path="/crm/contacts" element={<CRMContacts />} />
-    <Route path="/crm/opportunities" element={<CRMOpportunities />} />
-    <Route path="/crm/pipeline" element={<CRMPipeline />} />
-    <Route path="/crm/lead-intelligence" element={<CRMLeadIntelligence />} />
-    <Route path="/crm/workflows" element={<CRMWorkflows />} />
-    <Route path="/crm/workflows/builder" element={<WorkflowBuilderPage />} />
-    <Route path="/crm/workflows/builder/:id" element={<WorkflowBuilderPage />} />
-    <Route path="/crm/campaigns" element={<CRMCampaigns />} />
-    <Route path="/crm/analytics" element={<CRMAnalytics />} />
+    <Route path="/crm" element={<RouteGuard><LazyCRMDashboard /></RouteGuard>} />
+    <Route path="/crm/leads" element={<RouteGuard><CRMLeads /></RouteGuard>} />
+    <Route path="/crm/leads/:id" element={<RouteGuard><LeadDetailPage /></RouteGuard>} />
+    <Route path="/crm/contacts" element={<RouteGuard><CRMContacts /></RouteGuard>} />
+    <Route path="/crm/opportunities" element={<RouteGuard><CRMOpportunities /></RouteGuard>} />
+    <Route path="/crm/pipeline" element={<RouteGuard><CRMPipeline /></RouteGuard>} />
+    <Route path="/crm/lead-intelligence" element={<RouteGuard><CRMLeadIntelligence /></RouteGuard>} />
+    <Route path="/crm/workflows" element={<RouteGuard><CRMWorkflows /></RouteGuard>} />
+    <Route path="/crm/workflows/builder" element={<RouteGuard><WorkflowBuilderPage /></RouteGuard>} />
+    <Route path="/crm/workflows/builder/:id" element={<RouteGuard><WorkflowBuilderPage /></RouteGuard>} />
+    <Route path="/crm/campaigns" element={<RouteGuard><CRMCampaigns /></RouteGuard>} />
+    <Route path="/crm/analytics" element={<RouteGuard><CRMAnalytics /></RouteGuard>} />
 
     {/* Communication */}
-    <Route path="/email-marketing" element={<EmailMarketing />} />
+    <Route path="/email-marketing" element={<RouteGuard><EmailMarketing /></RouteGuard>} />
   </>
 );

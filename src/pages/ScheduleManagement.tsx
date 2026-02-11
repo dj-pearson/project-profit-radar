@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, GanttChartIcon, ListIcon, Settings } from 'lucide-react';
 import { ProjectGanttChart } from '@/components/schedule/ProjectGanttChart';
 import { ScheduleCalendar } from '@/components/schedule/ScheduleCalendar';
@@ -55,7 +56,8 @@ const ScheduleManagement = () => {
           status,
           budget,
           completion_percentage,
-          client_name
+          client_name,
+          project_manager_id
         `)
         .eq('company_id', userProfile.company_id)
         .gte('start_date', startDate)
@@ -63,6 +65,21 @@ const ScheduleManagement = () => {
         .order('start_date', { ascending: true });
 
       if (error) throw error;
+
+      // Fetch project manager names for assigned projects
+      const managerIds = [...new Set(data?.map(p => p.project_manager_id).filter(Boolean) || [])];
+      let managerMap: Record<string, string> = {};
+      if (managerIds.length > 0) {
+        const { data: managers } = await supabase
+          .from('user_profiles')
+          .select('id, first_name, last_name')
+          .in('id', managerIds);
+        if (managers) {
+          managerMap = Object.fromEntries(
+            managers.map(m => [m.id, `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'Unnamed'])
+          );
+        }
+      }
 
       // Add priority based on status and dates
       const enhancedProjects = data?.map(project => ({
@@ -73,7 +90,9 @@ const ScheduleManagement = () => {
         status: project.status,
         budget: project.budget,
         completion_percentage: project.completion_percentage,
-        project_manager: 'TBD',
+        project_manager: project.project_manager_id
+          ? (managerMap[project.project_manager_id] || 'Unassigned')
+          : 'Unassigned',
         client_name: project.client_name,
         priority: getPriority(project) as 'low' | 'medium' | 'high' | 'critical'
       })) || [];
@@ -140,20 +159,21 @@ const ScheduleManagement = () => {
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="px-3 py-2 border border-input rounded-md bg-background"
-            >
-              {Array.from({ length: 5 }, (_, i) => {
-                const year = new Date().getFullYear() - 1 + i;
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
-              })}
-            </select>
+            <Select value={String(selectedYear)} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+              <SelectTrigger className="w-28" aria-label="Select year">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 5 }, (_, i) => {
+                  const year = new Date().getFullYear() - 1 + i;
+                  return (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
             <Badge variant="outline">
               {projects.length} Projects
             </Badge>

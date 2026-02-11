@@ -67,14 +67,70 @@ const JobCosting: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    setLoading(true);
+    loadProjects();
   };
 
-  const handleExport = () => {
-    toast({
-      title: "Export Started",
-      description: "Job costing report export is being prepared...",
-    });
+  const handleExport = async () => {
+    if (!selectedProject) {
+      toast({
+        title: "No Project Selected",
+        description: "Please select a project to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const project = projects.find(p => p.id === selectedProject);
+      const { data: records, error } = await supabase
+        .from('financial_records')
+        .select('description, type, amount, category, created_at')
+        .eq('project_id', selectedProject);
+
+      if (error) throw error;
+
+      if (!records || records.length === 0) {
+        toast({
+          title: "No Data",
+          description: "No financial records found for this project.",
+        });
+        return;
+      }
+
+      // Build CSV
+      const headers = ['Description', 'Type', 'Amount', 'Category', 'Date'];
+      const rows = records.map(r => [
+        `"${(r.description || '').replace(/"/g, '""')}"`,
+        r.type || '',
+        r.amount?.toString() || '0',
+        r.category || '',
+        r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
+      ]);
+
+      const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `job-costing-${project?.name || selectedProject}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export Complete",
+        description: `Job costing report exported for ${project?.name || 'project'}.`,
+      });
+    } catch (error) {
+      console.error('Error exporting:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export job costing report.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {

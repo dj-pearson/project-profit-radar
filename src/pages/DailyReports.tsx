@@ -165,19 +165,47 @@ const DailyReports = () => {
     }
 
     try {
+      // Upload photos to Supabase Storage if any
+      const photoUrls: string[] = [];
+      if (selectedPhotos.length > 0) {
+        for (const photo of selectedPhotos) {
+          const fileExt = photo.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+          const filePath = `daily-reports/${newReport.project_id}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('project-documents')
+            .upload(filePath, photo);
+
+          if (uploadError) {
+            console.error('Photo upload error:', uploadError);
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('project-documents')
+            .getPublicUrl(filePath);
+
+          if (urlData?.publicUrl) {
+            photoUrls.push(urlData.publicUrl);
+          }
+        }
+      }
+
       const { data, error } = await supabase
         .from('daily_reports')
         .insert({
           ...newReport,
           crew_count: Number(newReport.crew_count),
-          date: new Date().toISOString().split('T')[0] // Today's date
+          date: new Date().toISOString().split('T')[0],
+          photos: photoUrls.length > 0 ? photoUrls : null
         });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Daily report created successfully"
+        description: `Daily report created successfully${photoUrls.length > 0 ? ` with ${photoUrls.length} photo(s)` : ''}`
       });
 
       setIsCreateDialogOpen(false);
@@ -192,7 +220,7 @@ const DailyReports = () => {
         safety_incidents: ''
       });
       setSelectedPhotos([]);
-      
+
       loadData();
     } catch (error: any) {
       console.error('Error creating report:', error);

@@ -5,11 +5,13 @@
  */
 
 import { Route } from 'react-router-dom';
+import { RouteGuard } from '@/components/ProtectedRoute';
 import {
   createLazyRoute,
   LazyFinancialDashboard,
   LazyEstimatesHub,
   LazyInvoices,
+  LazyExpenses,
   LazyReports,
   LazyPurchaseOrders,
   LazyVendors,
@@ -33,46 +35,47 @@ const FiscalPeriods = createLazyRoute(() => import('@/pages/FiscalPeriods'));
 export const financialRoutes = (
   <>
     {/* Financial Dashboard */}
-    <Route path="/financial" element={<LazyFinancialDashboard />} />
+    <Route path="/financial" element={<RouteGuard><LazyFinancialDashboard /></RouteGuard>} />
 
-    {/* NEW: Enterprise Finance Hub */}
-    <Route path="/finance-hub" element={<FinanceHub />} />
-    <Route path="/finance/hub" element={<FinanceHub />} />
+    {/* Enterprise Finance Hub */}
+    <Route path="/finance-hub" element={<RouteGuard><FinanceHub /></RouteGuard>} />
+    <Route path="/finance/hub" element={<RouteGuard><FinanceHub /></RouteGuard>} />
 
-    {/* NEW: Chart of Accounts */}
-    <Route path="/finance/chart-of-accounts" element={<ChartOfAccounts />} />
+    {/* Chart of Accounts */}
+    <Route path="/finance/chart-of-accounts" element={<RouteGuard><ChartOfAccounts /></RouteGuard>} />
 
-    {/* NEW: Journal Entries */}
-    <Route path="/finance/journal-entries" element={<JournalEntries />} />
+    {/* Journal Entries */}
+    <Route path="/finance/journal-entries" element={<RouteGuard><JournalEntries /></RouteGuard>} />
 
-    {/* NEW: Accounts Payable */}
-    <Route path="/finance/accounts-payable" element={<AccountsPayable />} />
+    {/* Accounts Payable */}
+    <Route path="/finance/accounts-payable" element={<RouteGuard><AccountsPayable /></RouteGuard>} />
 
-    {/* NEW: General Ledger */}
-    <Route path="/finance/general-ledger" element={<GeneralLedger />} />
+    {/* General Ledger */}
+    <Route path="/finance/general-ledger" element={<RouteGuard><GeneralLedger /></RouteGuard>} />
 
-    {/* NEW: Bill Payments */}
-    <Route path="/finance/bill-payments" element={<BillPayments />} />
+    {/* Bill Payments */}
+    <Route path="/finance/bill-payments" element={<RouteGuard><BillPayments /></RouteGuard>} />
 
-    {/* NEW: Fiscal Periods */}
-    <Route path="/finance/fiscal-periods" element={<FiscalPeriods />} />
+    {/* Fiscal Periods */}
+    <Route path="/finance/fiscal-periods" element={<RouteGuard><FiscalPeriods /></RouteGuard>} />
 
-    {/* NEW: Financial Reports */}
-    <Route path="/finance/balance-sheet" element={<BalanceSheet />} />
-    <Route path="/finance/profit-loss" element={<ProfitAndLoss />} />
-    <Route path="/finance/trial-balance" element={<TrialBalance />} />
-    <Route path="/finance/cash-flow" element={<CashFlowStatement />} />
+    {/* Financial Reports */}
+    <Route path="/finance/balance-sheet" element={<RouteGuard><BalanceSheet /></RouteGuard>} />
+    <Route path="/finance/profit-loss" element={<RouteGuard><ProfitAndLoss /></RouteGuard>} />
+    <Route path="/finance/trial-balance" element={<RouteGuard><TrialBalance /></RouteGuard>} />
+    <Route path="/finance/cash-flow" element={<RouteGuard><CashFlowStatement /></RouteGuard>} />
 
     {/* Estimates & Invoices */}
-    <Route path="/estimates" element={<LazyEstimatesHub />} />
-    <Route path="/invoices" element={<LazyInvoices />} />
+    <Route path="/estimates" element={<RouteGuard><LazyEstimatesHub /></RouteGuard>} />
+    <Route path="/invoices" element={<RouteGuard><LazyInvoices /></RouteGuard>} />
+    <Route path="/expenses" element={<RouteGuard><LazyExpenses /></RouteGuard>} />
 
     {/* Reports */}
-    <Route path="/reports" element={<LazyReports />} />
+    <Route path="/reports" element={<RouteGuard><LazyReports /></RouteGuard>} />
 
     {/* Purchasing */}
-    <Route path="/purchase-orders" element={<LazyPurchaseOrders />} />
-    <Route path="/vendors" element={<LazyVendors />} />
+    <Route path="/purchase-orders" element={<RouteGuard><LazyPurchaseOrders /></RouteGuard>} />
+    <Route path="/vendors" element={<RouteGuard><LazyVendors /></RouteGuard>} />
 
     {/* Integrations */}
     <Route path="/quickbooks-routing" element={<LazyQuickBooksRouting />} />

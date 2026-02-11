@@ -4,6 +4,7 @@ import { Plus, Search, Filter, FileText, Calendar, DollarSign, TrendingUp } from
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +20,7 @@ import { CSVImportButton } from "@/components/smart-import";
 export default function EstimatesHub() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [stats, setStats] = useState<EstimateStats>({
     totalEstimates: 0,
@@ -225,11 +227,43 @@ export default function EstimatesHub() {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" className="gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            aria-expanded={showMoreFilters}
+            aria-controls="more-filters-panel"
+          >
             <Filter className="h-4 w-4" aria-hidden="true" />
-            More Filters
+            {showMoreFilters ? 'Hide Filters' : 'More Filters'}
           </Button>
         </div>
+
+        {/* More Filters Panel */}
+        {showMoreFilters && (
+          <Card id="more-filters-panel" className="mb-6 p-4" role="region" aria-label="Additional filters">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Date Range</Label>
+                <div className="flex gap-2">
+                  <Input type="date" placeholder="From" className="text-sm" aria-label="Date from" />
+                  <Input type="date" placeholder="To" className="text-sm" aria-label="Date to" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Value Range</Label>
+                <div className="flex gap-2">
+                  <Input type="number" placeholder="Min ($)" className="text-sm" aria-label="Minimum value" />
+                  <Input type="number" placeholder="Max ($)" className="text-sm" aria-label="Maximum value" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Client</Label>
+                <Input placeholder="Filter by client name..." className="text-sm" aria-label="Filter by client" />
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="all" className="w-full">

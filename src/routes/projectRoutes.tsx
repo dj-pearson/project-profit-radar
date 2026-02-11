@@ -6,6 +6,7 @@
  */
 
 import { Route } from 'react-router-dom';
+import { RouteGuard } from '@/components/ProtectedRoute';
 import {
   createLazyRoute,
   LazyProjects,
@@ -31,31 +32,31 @@ const DailyReportTemplates = createLazyRoute(() => import('@/pages/DailyReportTe
 export const projectRoutes = (
   <>
     {/* Project Management */}
-    <Route path="/projects" element={<LazyProjects />} />
-    <Route path="/projects/:projectId" element={<LazyProjectDetail />} />
-    <Route path="/projects/:projectId/tasks/new" element={<LazyProjectTaskCreate />} />
-    <Route path="/create-project" element={<LazyCreateProject />} />
+    <Route path="/projects" element={<RouteGuard><LazyProjects /></RouteGuard>} />
+    <Route path="/projects/:projectId" element={<RouteGuard><LazyProjectDetail /></RouteGuard>} />
+    <Route path="/projects/:projectId/tasks/new" element={<RouteGuard><LazyProjectTaskCreate /></RouteGuard>} />
+    <Route path="/create-project" element={<RouteGuard><LazyCreateProject /></RouteGuard>} />
 
     {/* Scheduling */}
-    <Route path="/schedule-management" element={<LazyScheduleManagement />} />
+    <Route path="/schedule-management" element={<RouteGuard><LazyScheduleManagement /></RouteGuard>} />
 
     {/* Job Costing */}
-    <Route path="/job-costing" element={<LazyJobCosting />} />
+    <Route path="/job-costing" element={<RouteGuard><LazyJobCosting /></RouteGuard>} />
 
     {/* Daily Operations */}
-    <Route path="/daily-reports" element={<LazyDailyReports />} />
-    <Route path="/daily-report-templates" element={<DailyReportTemplates />} />
+    <Route path="/daily-reports" element={<RouteGuard><LazyDailyReports /></RouteGuard>} />
+    <Route path="/daily-report-templates" element={<RouteGuard><DailyReportTemplates /></RouteGuard>} />
 
     {/* Project Documentation */}
-    <Route path="/rfis" element={<LazyRFIs />} />
-    <Route path="/submittals" element={<LazySubmittals />} />
-    <Route path="/change-orders" element={<LazyChangeOrders />} />
-    <Route path="/punch-list" element={<LazyPunchList />} />
-    <Route path="/documents" element={<LazyDocumentManagement />} />
+    <Route path="/rfis" element={<RouteGuard><LazyRFIs /></RouteGuard>} />
+    <Route path="/submittals" element={<RouteGuard><LazySubmittals /></RouteGuard>} />
+    <Route path="/change-orders" element={<RouteGuard><LazyChangeOrders /></RouteGuard>} />
+    <Route path="/punch-list" element={<RouteGuard><LazyPunchList /></RouteGuard>} />
+    <Route path="/documents" element={<RouteGuard><LazyDocumentManagement /></RouteGuard>} />
 
     {/* Materials & Equipment */}
-    <Route path="/materials" element={<LazyMaterials />} />
-    <Route path="/material-tracking" element={<LazyMaterialTracking />} />
-    <Route path="/equipment" element={<LazyEquipment />} />
+    <Route path="/materials" element={<RouteGuard><LazyMaterials /></RouteGuard>} />
+    <Route path="/material-tracking" element={<RouteGuard><LazyMaterialTracking /></RouteGuard>} />
+    <Route path="/equipment" element={<RouteGuard><LazyEquipment /></RouteGuard>} />
   </>
 );

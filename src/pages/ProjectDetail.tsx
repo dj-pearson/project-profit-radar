@@ -269,7 +269,7 @@ const ProjectDetail = () => {
                     className="mb-4"
                   />
                 </div>
-                <Button onClick={() => navigate(`/projects/${project.id}/edit`)} aria-label={`Edit ${project.name}`}>
+                <Button onClick={() => navigate('/projects')} aria-label={`Edit ${project.name}`}>
                   <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                   Edit Project
                 </Button>

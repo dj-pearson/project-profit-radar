@@ -105,16 +105,34 @@ export const useDashboardData = () => {
 
       if (activityError) throw activityError;
 
+      // Fetch financial records for real revenue data
+      const { data: financialRecords, error: financialError } = await supabase
+        .from('financial_records')
+        .select('amount, type')
+        .eq('company_id', userProfile.company_id);
+
+      if (financialError) throw financialError;
+
+      const totalRevenue = financialRecords
+        ?.filter(r => r.type === 'income' || r.type === 'revenue')
+        .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+      const totalExpenses = financialRecords
+        ?.filter(r => r.type === 'expense' || r.type === 'cost')
+        .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+      const profitMargin = totalRevenue > 0
+        ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 100 * 10) / 10
+        : 0;
+
       // Build dashboard data
       const dashboardData: DashboardData = {
         kpis: {
-          totalRevenue: projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
+          totalRevenue: totalRevenue || projects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
           activeProjects: projects?.length || 0,
           teamMembers: teamMembers?.length || 0,
-          completionRate: projects?.length ? 
+          completionRate: projects?.length ?
             Math.round(projects.reduce((sum, p) => sum + (p.completion_percentage || 0), 0) / projects.length) : 0,
-          profitMargin: 23.5,
-          safetyScore: 94
+          profitMargin,
+          safetyScore: 100
         },
         projects: projects?.map(project => ({
           id: project.id,
