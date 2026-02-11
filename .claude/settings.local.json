@@ -25,7 +25,10 @@
       "Bash(echo:*)",
       "Bash(dir:*)",
       "Bash(git rm:*)",
-      "Bash(npm run test:run:*)"
+      "Bash(npm run test:run:*)",
+      "Bash(npx eslint:*)",
+      "Bash(node scripts/find-duplicates.js:*)",
+      "Bash(node scripts/find-duplicates.cjs:*)"
     ],
     "deny": [],
     "ask": []
