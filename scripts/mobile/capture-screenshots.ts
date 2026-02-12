@@ -5,10 +5,10 @@
  * and Google Play Store submission.
  *
  * Usage:
- *   npx playwright test scripts/mobile/capture-screenshots.ts
+ *   npm run mobile:screenshots
  *
  * Or with a running dev server:
- *   PLAYWRIGHT_BASE_URL=http://localhost:8080 npx playwright test scripts/mobile/capture-screenshots.ts
+ *   PLAYWRIGHT_BASE_URL=http://localhost:8080 npm run mobile:screenshots
  *
  * Output: screenshots/app-store/ and screenshots/play-store/
  */
@@ -198,8 +198,7 @@ const PAGES: ScreenPage[] = [
 
 // ─── Helpers ───
 
-const ROOT = resolve(__dirname, '..', '..');
-const OUTPUT_DIR = resolve(ROOT, 'screenshots');
+const OUTPUT_DIR = resolve(process.cwd(), 'screenshots');
 
 function ensureDir(dir: string) {
   if (!existsSync(dir)) {
