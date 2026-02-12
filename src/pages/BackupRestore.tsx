@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const BackupRestore: React.FC = () => {
   return (
-    <div className="container mx-auto py-6">
+    <main className="container mx-auto py-6" aria-label="Backup and restore settings">
       <Card>
         <CardHeader>
           <CardTitle>Backup & Restore</CardTitle>
@@ -12,7 +12,7 @@ const BackupRestore: React.FC = () => {
           <p className="text-muted-foreground">Backup and restore coming soon...</p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 

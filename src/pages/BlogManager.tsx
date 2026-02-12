@@ -580,7 +580,7 @@ const BlogManager = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4" role="status" aria-label="Loading blog manager"></div>
           <p className="text-muted-foreground">Loading blog manager...</p>
         </div>
       </div>
@@ -589,9 +589,9 @@ const BlogManager = () => {
 
   return (
     <DashboardLayout title="Blog Manager">
-      <div className="space-y-6">
+      <main aria-label="Blog management" className="space-y-6">
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2" aria-label="Blog manager sections">
             <TabsTrigger value="posts">Blog Posts</TabsTrigger>
             <TabsTrigger value="keywords">Keywords & SEO</TabsTrigger>
           </TabsList>
@@ -610,8 +610,8 @@ const BlogManager = () => {
               onOpenChange={setIsDebugDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Bug className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" aria-label="Debug AI generation">
+                  <Bug className="h-4 w-4 mr-2" aria-hidden="true" />
                   Debug AI
                 </Button>
               </DialogTrigger>
@@ -621,8 +621,8 @@ const BlogManager = () => {
               onOpenChange={setIsAutoGenDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Bot className="h-4 w-4 mr-2" />
+                <Button variant="outline" aria-label="Configure auto-generation">
+                  <Bot className="h-4 w-4 mr-2" aria-hidden="true" />
                   Auto-Generation
                 </Button>
               </DialogTrigger>
@@ -632,8 +632,8 @@ const BlogManager = () => {
               onOpenChange={setIsSettingsDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Settings className="h-4 w-4 mr-2" />
+                <Button variant="outline" aria-label="Configure AI settings">
+                  <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
                   AI Settings
                 </Button>
               </DialogTrigger>
@@ -643,8 +643,8 @@ const BlogManager = () => {
               onOpenChange={setIsCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                <Button aria-label="Create new blog post">
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   New Post
                 </Button>
               </DialogTrigger>
@@ -657,13 +657,13 @@ const BlogManager = () => {
           {posts.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <Edit className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Edit className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Blog Posts</h3>
                 <p className="text-muted-foreground mb-4">
                   Start creating engaging content for your platform
                 </p>
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Create First Post
                 </Button>
               </CardContent>
@@ -1218,7 +1218,7 @@ const BlogManager = () => {
             <KeywordManager />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </DashboardLayout>
   );
 };

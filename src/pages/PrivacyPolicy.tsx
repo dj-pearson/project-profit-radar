@@ -19,11 +19,11 @@ const PrivacyPolicy = () => {
                 size="sm"
                 onClick={() => navigate('/')}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                 Back to Home
               </Button>
               <div className="flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-primary" />
+                <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
                 <h1 className="text-xl font-semibold">Privacy Policy</h1>
               </div>
             </div>
@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8" aria-label="Privacy policy">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Privacy Policy</CardTitle>
@@ -163,7 +163,7 @@ const PrivacyPolicy = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };

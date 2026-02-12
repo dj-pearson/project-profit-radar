@@ -103,8 +103,8 @@ export default function Support() {
     const config = statusConfig[status as keyof typeof statusConfig];
     const Icon = config?.icon || Clock;
     return (
-      <Badge variant={config?.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
+      <Badge variant={config?.variant} className="flex items-center gap-1" aria-label={`Status: ${config?.label || status}`}>
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {config?.label || status}
       </Badge>
     );
@@ -119,12 +119,12 @@ export default function Support() {
     };
     
     const config = priorityConfig[priority as keyof typeof priorityConfig];
-    return <Badge variant={config?.variant}>{config?.label || priority}</Badge>;
+    return <Badge variant={config?.variant} aria-label={`Priority: ${config?.label || priority}`}>{config?.label || priority}</Badge>;
   };
 
   return (
     <DashboardLayout title="Support Center">
-      <div className="space-y-6">
+      <main aria-label="Support center" className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -135,7 +135,7 @@ export default function Support() {
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                   New Ticket
                 </Button>
               </DialogTrigger>
@@ -209,20 +209,21 @@ export default function Support() {
 
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-4" aria-label="Support center sections">
             <TabsTrigger value="tickets">Support Tickets</TabsTrigger>
             <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
             <TabsTrigger value="contact">Contact Options</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
+          <div role="search" aria-label="Search support" className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input
               placeholder="Search tickets, knowledge base, or customers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
+              aria-label="Search tickets, knowledge base, or customers"
             />
           </div>
 
@@ -242,7 +243,7 @@ export default function Support() {
                         <div className="flex justify-between items-start">
                           <div className="space-y-1">
                             <CardTitle className="text-lg flex items-center gap-2">
-                              <MessageSquare className="h-5 w-5" />
+                              <MessageSquare className="h-5 w-5" aria-hidden="true" />
                               {ticket.subject}
                             </CardTitle>
                             <CardDescription>
@@ -258,28 +259,28 @@ export default function Support() {
                       <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
+                            <User className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <div>
                               <div className="font-medium text-muted-foreground">Customer</div>
                               <div>{ticket.customer_name}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <div>
                               <div className="font-medium text-muted-foreground">Email</div>
                               <div className="truncate">{ticket.customer_email}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <div>
                               <div className="font-medium text-muted-foreground">Created</div>
                               <div>{new Date(ticket.created_at).toLocaleDateString()}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                             <div>
                               <div className="font-medium text-muted-foreground">Last Update</div>
                               <div>{new Date(ticket.updated_at).toLocaleDateString()}</div>
@@ -313,12 +314,12 @@ export default function Support() {
           <TabsContent value="knowledge" className="space-y-4">
             <div className="grid gap-4">
               {knowledgeBase.map((article) => (
-                <Card key={article.id} className="hover:shadow-md transition-shadow">
+                <Card key={article.id} className="hover:shadow-md transition-shadow" role="article" aria-label={article.title}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <HelpCircle className="h-5 w-5" />
+                          <HelpCircle className="h-5 w-5" aria-hidden="true" />
                           {article.title}
                         </CardTitle>
                         <CardDescription>
@@ -354,7 +355,7 @@ export default function Support() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="text-center">
                 <CardHeader>
-                  <Mail className="h-12 w-12 mx-auto text-primary" />
+                  <Mail className="h-12 w-12 mx-auto text-primary" aria-hidden="true" />
                   <CardTitle>Email Support</CardTitle>
                   <CardDescription>Get help via email</CardDescription>
                 </CardHeader>
@@ -375,7 +376,7 @@ export default function Support() {
 
               <Card className="text-center">
                 <CardHeader>
-                  <MessageSquare className="h-12 w-12 mx-auto text-primary" />
+                  <MessageSquare className="h-12 w-12 mx-auto text-primary" aria-hidden="true" />
                   <CardTitle>Live Chat</CardTitle>
                   <CardDescription>Chat with support</CardDescription>
                 </CardHeader>
@@ -447,7 +448,7 @@ export default function Support() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </DashboardLayout>
   );
 }

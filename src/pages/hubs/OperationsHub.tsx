@@ -72,10 +72,11 @@ const OperationsHub = () => {
 
   return (
     <DashboardLayout title={operationsArea.title}>
-      <div>
+      <main aria-label="Operations Hub">
         {/* Quick Stats */}
+        <section aria-label="Operations quick statistics">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card role="article" aria-label={`Safety Incidents: ${metrics.safetyIncidents}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -83,13 +84,13 @@ const OperationsHub = () => {
                   <p className="text-2xl font-bold">{metrics.safetyIncidents}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <operationsArea.icon className="h-4 w-4 text-green-600" />
+                  <operationsArea.icon className="h-4 w-4 text-green-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card role="article" aria-label={`Active Permits: ${metrics.activePermits}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -97,13 +98,13 @@ const OperationsHub = () => {
                   <p className="text-2xl font-bold">{metrics.activePermits}</p>
                 </div>
                 <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <operationsArea.icon className="h-4 w-4 text-blue-600" />
+                  <operationsArea.icon className="h-4 w-4 text-blue-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card role="article" aria-label={`Active Bonds: ${metrics.bonds}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -111,13 +112,13 @@ const OperationsHub = () => {
                   <p className="text-2xl font-bold">{metrics.bonds}</p>
                 </div>
                 <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <operationsArea.icon className="h-4 w-4 text-purple-600" />
+                  <operationsArea.icon className="h-4 w-4 text-purple-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card role="article" aria-label={`Service Requests: ${metrics.serviceRequests}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -125,14 +126,16 @@ const OperationsHub = () => {
                   <p className="text-2xl font-bold">{metrics.serviceRequests}</p>
                 </div>
                 <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <operationsArea.icon className="h-4 w-4 text-orange-600" />
+                  <operationsArea.icon className="h-4 w-4 text-orange-600" aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+        </section>
 
         {/* Quick Actions */}
+        <section aria-label="Quick actions">
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-3">
@@ -150,6 +153,7 @@ const OperationsHub = () => {
             </Button>
           </div>
         </div>
+        </section>
 
         {/* Navigation Categories */}
         <div className="space-y-8">
@@ -198,7 +202,7 @@ const OperationsHub = () => {
             );
           })}
         </div>
-      </div>
+      </main>
     </DashboardLayout>
   );
 };
