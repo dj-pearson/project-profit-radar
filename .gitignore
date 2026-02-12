@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-mobile
 dist-ssr
 *.local
 
@@ -17,6 +18,9 @@ coverage/
 test-results/
 playwright-report/
 .lighthouseci/
+
+# App Store screenshots (generated)
+screenshots/
 
 # Lock files (keep only npm)
 bun.lockb

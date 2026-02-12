@@ -1,12 +1,25 @@
 {
   "cli": {
     "version": ">= 7.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "promptToConfigurePushNotifications": true
   },
   "build": {
+    "base": {
+      "node": "18.18.0",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "${SUPABASE_URL}",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}",
+        "EXPO_PUBLIC_APP_ENV": "production"
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development"
+      },
       "ios": {
         "simulator": true,
         "resourceClass": "m-medium"
@@ -17,7 +30,11 @@
       }
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview"
+      },
       "ios": {
         "resourceClass": "m-medium"
       },
@@ -27,12 +44,16 @@
       }
     },
     "production": {
+      "extends": "base",
+      "autoIncrement": true,
       "ios": {
-        "resourceClass": "m-large"
+        "resourceClass": "m-large",
+        "image": "latest"
       },
       "android": {
         "buildType": "aab",
-        "resourceClass": "m-large"
+        "resourceClass": "m-large",
+        "image": "latest"
       }
     },
     "production-ios": {
@@ -57,10 +78,16 @@
       },
       "android": {
         "serviceAccountKeyPath": "./service-account.json",
-        "track": "production"
+        "track": "production",
+        "releaseStatus": "completed"
       }
     },
     "preview": {
+      "ios": {
+        "appleId": "[email protected]",
+        "ascAppId": "6754256576",
+        "appleTeamId": "4G65K64G73"
+      },
       "android": {
         "serviceAccountKeyPath": "./service-account.json",
         "track": "internal"

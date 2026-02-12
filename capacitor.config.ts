@@ -3,13 +3,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.builddesk.app',
   appName: 'BuildDesk',
-  webDir: 'dist',
-  bundledWebRuntime: false,
+  webDir: 'dist-mobile',
   server: {
     androidScheme: 'https',
-    // For development:
-    // url: 'http://localhost:8080',
-    // cleartext: true
+    iosScheme: 'https',
+    hostname: 'app.build-desk.com',
   },
   plugins: {
     SplashScreen: {
@@ -33,39 +31,30 @@ const config: CapacitorConfig = {
     Camera: {
       permissionType: 'camera',
     },
-    Geolocation: {
-      // For background location tracking (if needed)
-    },
-    // Biometric auth configuration
+    Geolocation: {},
     BiometricAuth: {
-      // iOS Face ID usage description
       faceIDReason: 'BuildDesk uses Face ID for secure, quick access to your account',
-      // Android biometric prompt settings
       title: 'BuildDesk Authentication',
       subtitle: 'Log in with your biometric',
       description: 'Use your fingerprint or face to securely access BuildDesk',
       negativeButtonText: 'Use Password',
-      // Allow device credentials (PIN/Pattern) as fallback
       allowDeviceCredential: true,
-      // Confirmation required for biometric (recommended)
       confirmationRequired: true,
     },
-    Preferences: {
-      // Encrypted storage for sensitive data
-    },
+    Preferences: {},
   },
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false, // Set to true for debugging
+    webContentsDebuggingEnabled: false,
     backgroundColor: '#ffffff',
-    // Android 11+ requires explicit backup rules
     includePlugins: [
       '@capacitor/camera',
       '@capacitor/geolocation',
       '@capacitor/push-notifications',
       '@capacitor/local-notifications',
       '@capacitor/preferences',
+      '@capacitor/network',
     ],
   },
   ios: {
@@ -73,6 +62,7 @@ const config: CapacitorConfig = {
     limitsNavigationsToAppBoundDomains: true,
     backgroundColor: '#ffffff',
     preferredContentMode: 'mobile',
+    scrollEnabled: true,
   },
 };
 
