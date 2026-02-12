@@ -233,9 +233,9 @@ const Vendors = () => {
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
       <DashboardLayout title="Vendors">
-        <div className="space-y-6">
+        <main aria-label="Vendors management" className="space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section aria-label="Vendor statistics" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -243,11 +243,11 @@ const Vendors = () => {
                   <p className="text-sm font-medium text-muted-foreground">Total Vendors</p>
                   <p className="text-2xl font-bold">{vendors.length}</p>
                 </div>
-                <Building2 className="h-8 w-8 text-muted-foreground" />
+                <Building2 className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -255,22 +255,23 @@ const Vendors = () => {
                   <p className="text-sm font-medium text-muted-foreground">Active Vendors</p>
                   <p className="text-2xl font-bold text-construction-orange">{activeVendors}</p>
                 </div>
-                <Building2 className="h-8 w-8 text-construction-orange" />
+                <Building2 className="h-8 w-8 text-construction-orange" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Search */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
+            <div role="search" aria-label="Search vendors" className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Search vendors by name, contact, or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-md"
+                aria-label="Search vendors by name, contact, or email"
               />
             </div>
           </CardContent>
@@ -283,13 +284,16 @@ const Vendors = () => {
         }}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               Add Vendor
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg" aria-describedby="vendor-form-description">
             <DialogHeader>
               <DialogTitle>{editingVendor ? 'Edit Vendor' : 'Add New Vendor'}</DialogTitle>
+              <p id="vendor-form-description" className="sr-only">
+                {editingVendor ? 'Edit vendor details' : 'Fill in the details to add a new vendor'}
+              </p>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -299,6 +303,7 @@ const Vendors = () => {
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter vendor name"
+                  aria-required="true"
                 />
               </div>
               <div>
@@ -377,13 +382,13 @@ const Vendors = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">
+              <div className="text-center py-8" role="status" aria-label="Loading vendors">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="text-sm text-muted-foreground mt-2">Loading vendors...</p>
               </div>
             ) : filteredVendors.length === 0 ? (
               <div className="text-center py-8">
-                <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Vendors Found</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm 
@@ -393,7 +398,7 @@ const Vendors = () => {
                 </p>
                 {!searchTerm && (
                   <Button onClick={() => setShowAddDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Add Vendor
                   </Button>
                 )}
@@ -401,7 +406,7 @@ const Vendors = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredVendors.map(vendor => (
-                  <div key={vendor.id} className="border rounded-lg p-4 hover:bg-muted/50">
+                  <div key={vendor.id} className="border rounded-lg p-4 hover:bg-muted/50" role="article" aria-label={vendor.name}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-medium">{vendor.name}</h3>
@@ -409,7 +414,7 @@ const Vendors = () => {
                           <p className="text-sm text-muted-foreground">{vendor.contact_person}</p>
                         )}
                       </div>
-                      <Badge variant={vendor.is_active ? 'default' : 'secondary'}>
+                      <Badge variant={vendor.is_active ? 'default' : 'secondary'} aria-label={`Status: ${vendor.is_active ? 'Active' : 'Inactive'}`}>
                         {vendor.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
@@ -417,19 +422,19 @@ const Vendors = () => {
                     <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       {vendor.email && (
                         <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3" />
+                          <Mail className="h-3 w-3" aria-hidden="true" />
                           <span>{vendor.email}</span>
                         </div>
                       )}
                       {vendor.phone && (
                         <div className="flex items-center gap-2">
-                          <Phone className="h-3 w-3" />
+                          <Phone className="h-3 w-3" aria-hidden="true" />
                           <span>{vendor.phone}</span>
                         </div>
                       )}
                       {vendor.address && (
                         <div className="flex items-start gap-2">
-                          <MapPin className="h-3 w-3 mt-0.5" />
+                          <MapPin className="h-3 w-3 mt-0.5" aria-hidden="true" />
                           <span className="text-xs">{vendor.address}</span>
                         </div>
                       )}
@@ -439,26 +444,29 @@ const Vendors = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => openEditDialog(vendor)}
+                        aria-label={`Edit ${vendor.name}`}
                       >
-                        <Edit className="h-3 w-3" />
+                        <Edit className="h-3 w-3" aria-hidden="true" />
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => toggleVendorStatus(vendor)}
+                        aria-label={`${vendor.is_active ? 'Deactivate' : 'Activate'} ${vendor.name}`}
                       >
                         {vendor.is_active ? 'Deactivate' : 'Activate'}
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => deleteVendor(vendor)}
+                        aria-label={`Delete ${vendor.name}`}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3 w-3" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
@@ -467,7 +475,7 @@ const Vendors = () => {
             )}
           </CardContent>
         </Card>
-        </div>
+        </main>
       </DashboardLayout>
     </RoleGuard>
   );

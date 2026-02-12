@@ -141,7 +141,7 @@ const FAQ = () => {
         {faqCategories.map((category, categoryIndex) => (
           <section key={categoryIndex} className="mb-12">
             <div className="flex items-center gap-3 mb-6">
-              <HelpCircle className="h-6 w-6 text-primary" />
+              <HelpCircle className="h-6 w-6 text-primary" aria-hidden="true" />
               <h2 className="text-2xl font-semibold">{category.title}</h2>
             </div>
             <div className="space-y-4">
@@ -172,7 +172,7 @@ const FAQ = () => {
               <CardContent>
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/resources">
-                    View Guide <ArrowRight className="ml-2 h-4 w-4" />
+                    View Guide <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               </CardContent>
@@ -187,7 +187,7 @@ const FAQ = () => {
               <CardContent>
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/features">
-                    View Features <ArrowRight className="ml-2 h-4 w-4" />
+                    View Features <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               </CardContent>
@@ -202,7 +202,7 @@ const FAQ = () => {
               <CardContent>
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/procore-alternative-detailed">
-                    View Comparison <ArrowRight className="ml-2 h-4 w-4" />
+                    View Comparison <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               </CardContent>
@@ -225,7 +225,7 @@ const FAQ = () => {
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link to="/support">
-                Contact Support <ArrowRight className="ml-2 h-4 w-4" />
+                Contact Support <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>

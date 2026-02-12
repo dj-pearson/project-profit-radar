@@ -29,7 +29,7 @@ const Blog = () => {
               <Link to="/resources">
                 <Button className="bg-construction-blue hover:bg-construction-blue/90">
                   Browse All Articles
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               </Link>
             </div>

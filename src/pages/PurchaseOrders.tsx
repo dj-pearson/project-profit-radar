@@ -167,7 +167,7 @@ const PurchaseOrders = () => {
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} aria-label={`Status: ${config.label}`}>{config.label}</Badge>;
   };
 
   const filteredPOs = purchaseOrders.filter(po => {
@@ -187,9 +187,9 @@ const PurchaseOrders = () => {
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
       <DashboardLayout title="Purchase Orders">
-        <div className="space-y-6">
+        <main aria-label="Purchase orders management" className="space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section aria-label="Purchase order statistics" className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -197,11 +197,11 @@ const PurchaseOrders = () => {
                   <p className="text-sm font-medium text-muted-foreground">Total Purchase Orders</p>
                   <p className="text-2xl font-bold">{purchaseOrders.length}</p>
                 </div>
-                <Package className="h-8 w-8 text-muted-foreground" />
+                <Package className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -209,11 +209,11 @@ const PurchaseOrders = () => {
                   <p className="text-sm font-medium text-muted-foreground">Pending Approval</p>
                   <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
                 </div>
-                <Package className="h-8 w-8 text-amber-600" />
+                <Package className="h-8 w-8 text-amber-600" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -221,29 +221,30 @@ const PurchaseOrders = () => {
                   <p className="text-sm font-medium text-muted-foreground">Total Value</p>
                   <p className="text-2xl font-bold text-construction-orange">${totalValue.toLocaleString()}</p>
                 </div>
-                <Package className="h-8 w-8 text-construction-orange" />
+                <Package className="h-8 w-8 text-construction-orange" aria-hidden="true" />
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Filters and Search */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
+            <div role="search" aria-label="Filter purchase orders" className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
+                <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   placeholder="Search PO number, vendor, or project..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-64"
+                  aria-label="Search purchase orders"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Filter className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-40" aria-label="Filter by status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -270,13 +271,13 @@ const PurchaseOrders = () => {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">
+              <div className="text-center py-8" role="status" aria-label="Loading purchase orders">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="text-sm text-muted-foreground mt-2">Loading purchase orders...</p>
               </div>
             ) : filteredPOs.length === 0 ? (
               <div className="text-center py-8">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                 <h3 className="text-lg font-medium mb-2">No Purchase Orders Found</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm || statusFilter !== 'all' 
@@ -286,7 +287,7 @@ const PurchaseOrders = () => {
                 </p>
                 {!searchTerm && statusFilter === 'all' && (
                   <Button onClick={() => navigate('/purchase-orders/new')}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                     Create Purchase Order
                   </Button>
                 )}
@@ -294,7 +295,7 @@ const PurchaseOrders = () => {
             ) : (
               <div className="space-y-4">
                 {filteredPOs.map(po => (
-                  <div key={po.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+                  <div key={po.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50" role="article" aria-label={`Purchase order ${po.po_number}`}>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-medium">{po.po_number}</h3>
@@ -316,44 +317,49 @@ const PurchaseOrders = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => navigate(`/purchase-orders/${po.id}`)}
+                        aria-label={`View ${po.po_number}`}
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => navigate(`/purchase-orders/${po.id}/edit`)}
+                        aria-label={`Edit ${po.po_number}`}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-4 w-4" aria-hidden="true" />
                       </Button>
                       {po.status === 'draft' && (
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => updatePOStatus(po.id, 'sent')}
+                          aria-label={`Send ${po.po_number}`}
                         >
-                          <Send className="h-4 w-4" />
+                          <Send className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
                       {po.status === 'sent' && (
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => updatePOStatus(po.id, 'approved')}
+                          aria-label={`Approve ${po.po_number}`}
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => deletePO(po.id)}
+                        aria-label={`Delete ${po.po_number}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
@@ -362,7 +368,7 @@ const PurchaseOrders = () => {
             )}
           </CardContent>
         </Card>
-        </div>
+        </main>
       </DashboardLayout>
     </RoleGuard>
   );

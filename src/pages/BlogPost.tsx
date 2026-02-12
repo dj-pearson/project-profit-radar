@@ -82,7 +82,7 @@ const BlogPost = () => {
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse">
+            <div className="animate-pulse" role="status" aria-label="Loading article">
               <div className="h-8 bg-gray-200 rounded mb-4"></div>
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-4 bg-gray-200 rounded mb-8"></div>
@@ -109,7 +109,7 @@ const BlogPost = () => {
             </p>
             <Link to="/resources">
               <Button>
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
                 Back to Resources
               </Button>
             </Link>
@@ -164,13 +164,13 @@ const BlogPost = () => {
       
       <div className="min-h-screen bg-gradient-to-br from-construction-light via-white to-construction-light/30">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* Back Button */}
             <div className="mb-8">
               <Link to="/resources">
                 <Button variant="ghost" className="pl-0">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
                   Back to Resources
                 </Button>
               </Link>
@@ -194,11 +194,11 @@ const BlogPost = () => {
               </h1>
               <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
                   <span>{formatDate(post.published_at || post.created_at)}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4" aria-hidden="true" />
                   <span>{getReadingTime(post.body)}</span>
                 </div>
               </div>
@@ -278,7 +278,7 @@ const BlogPost = () => {
               </Link>
             </div>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     </>
