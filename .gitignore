@@ -19,6 +19,9 @@ test-results/
 playwright-report/
 .lighthouseci/
 
+# App Store screenshots (generated)
+screenshots/
+
 # Lock files (keep only npm)
 bun.lockb
 yarn.lock

@@ -37,6 +37,7 @@
     "cap:init:ios": "npx cap add ios && npx cap sync ios",
     "cap:init:android": "npx cap add android && npx cap sync android",
     "mobile:checklist": "node scripts/mobile/app-store-checklist.js",
+    "mobile:screenshots": "playwright test scripts/mobile/capture-screenshots.ts --reporter=list",
     "build:cloudflare": "npm run generate-sitemap && vite build --mode production && node scripts/copy-404.js",
     "cloudflare:build": "node cloudflare-build.js",
     "cloudflare:install": "npm install --force && npm run build",
