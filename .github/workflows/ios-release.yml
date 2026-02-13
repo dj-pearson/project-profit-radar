@@ -122,6 +122,69 @@ jobs:
           fi
           echo "✅ iOS project verified"
 
+      - name: 🔧 Configure Manual Code Signing
+        run: |
+          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
+
+          echo "Patching project.pbxproj for manual signing..."
+
+          # 1. Switch from Automatic to Manual provisioning style
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PBXPROJ"
+
+          # 2. Switch CODE_SIGN_STYLE from Automatic to Manual
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+
+          # 3. Set DEVELOPMENT_TEAM wherever it's empty
+          sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_TEAM_ID }}\";/g" "$PBXPROJ"
+
+          # 4. Set CODE_SIGN_IDENTITY to Apple Distribution for Release builds
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$PBXPROJ"
+
+          # 5. Add PROVISIONING_PROFILE_SPECIFIER for the App target only
+          #    We use Python for a targeted edit that only adds it to the App target's buildSettings
+          python3 << 'PYEOF'
+import re
+
+pbxproj_path = "ios/App/App.xcodeproj/project.pbxproj"
+with open(pbxproj_path, 'r') as f:
+    content = f.read()
+
+team_id = "${{ secrets.APPLE_TEAM_ID }}"
+profile_name = "${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}"
+
+# Find the App target's Release buildSettings blocks and add PROVISIONING_PROFILE_SPECIFIER
+# In Capacitor projects, the App target has PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app
+# We look for buildSettings blocks that contain the bundle ID and add the profile specifier
+
+# Strategy: Find every buildSettings block that contains PRODUCT_BUNDLE_IDENTIFIER
+# and ensure PROVISIONING_PROFILE_SPECIFIER is set there
+pattern = r'(buildSettings\s*=\s*\{[^}]*PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;)'
+matches = list(re.finditer(pattern, content, re.DOTALL))
+
+for match in reversed(matches):  # Reverse to not mess up positions
+    block = match.group(0)
+    if 'PROVISIONING_PROFILE_SPECIFIER' not in block:
+        # Insert PROVISIONING_PROFILE_SPECIFIER before the PRODUCT_BUNDLE_IDENTIFIER line
+        new_block = block.replace(
+            'PRODUCT_BUNDLE_IDENTIFIER',
+            f'PROVISIONING_PROFILE_SPECIFIER = "{profile_name}";\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER'
+        )
+        content = content[:match.start()] + new_block + content[match.end():]
+
+with open(pbxproj_path, 'w') as f:
+    f.write(content)
+
+print(f"✅ Added PROVISIONING_PROFILE_SPECIFIER = \"{profile_name}\" to App target build settings")
+PYEOF
+
+          # Verify the changes
+          echo ""
+          echo "Verification - checking for Manual signing:"
+          grep -c "ProvisioningStyle = Manual" "$PBXPROJ" || echo "WARNING: No Manual provisioning found"
+          grep -c "CODE_SIGN_STYLE = Manual" "$PBXPROJ" || echo "WARNING: No Manual code sign style found"
+          grep "PROVISIONING_PROFILE_SPECIFIER" "$PBXPROJ" | head -5
+          echo "✅ Manual code signing configured"
+
       # ====================================
       # 5. SETUP RUBY & COCOAPODS
       # ====================================
@@ -222,6 +285,9 @@ jobs:
 
           echo "Building with: $BUILD_TARGET"
 
+          # Note: PROVISIONING_PROFILE_SPECIFIER and CODE_SIGN_STYLE are set
+          # in project.pbxproj for the App target only (not passed on CLI
+          # to avoid applying to Pods framework targets which don't support them)
           xcodebuild archive \
             $BUILD_TARGET \
             -scheme App \
@@ -230,7 +296,6 @@ jobs:
             -destination 'generic/platform=iOS' \
             -allowProvisioningUpdates \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
 
           echo "✅ Archive created successfully"
