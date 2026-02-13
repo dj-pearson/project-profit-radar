@@ -213,7 +213,7 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>app-store-connect</string>
               <key>teamID</key>
               <string>TEAM_ID_PLACEHOLDER</string>
               <key>uploadBitcode</key>
@@ -232,7 +232,7 @@ jobs:
               <key>generateAppStoreInformation</key>
               <true/>
               <key>destination</key>
-              <string>upload</string>
+              <string>export</string>
               <key>stripSwiftSymbols</key>
               <true/>
               <key>compileBitcode</key>
