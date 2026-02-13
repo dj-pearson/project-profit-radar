@@ -123,6 +123,9 @@ jobs:
           echo "✅ iOS project verified"
 
       - name: 🔧 Configure Manual Code Signing
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
         run: |
           PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
 
@@ -135,47 +138,26 @@ jobs:
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
 
           # 3. Set DEVELOPMENT_TEAM wherever it's empty
-          sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_TEAM_ID }}\";/g" "$PBXPROJ"
+          sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${TEAM_ID}\";/g" "$PBXPROJ"
 
           # 4. Set CODE_SIGN_IDENTITY to Apple Distribution for Release builds
           sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$PBXPROJ"
 
           # 5. Add PROVISIONING_PROFILE_SPECIFIER for the App target only
-          #    We use Python for a targeted edit that only adds it to the App target's buildSettings
-          python3 << 'PYEOF'
-import re
-
-pbxproj_path = "ios/App/App.xcodeproj/project.pbxproj"
-with open(pbxproj_path, 'r') as f:
-    content = f.read()
-
-team_id = "${{ secrets.APPLE_TEAM_ID }}"
-profile_name = "${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}"
-
-# Find the App target's Release buildSettings blocks and add PROVISIONING_PROFILE_SPECIFIER
-# In Capacitor projects, the App target has PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app
-# We look for buildSettings blocks that contain the bundle ID and add the profile specifier
-
-# Strategy: Find every buildSettings block that contains PRODUCT_BUNDLE_IDENTIFIER
-# and ensure PROVISIONING_PROFILE_SPECIFIER is set there
-pattern = r'(buildSettings\s*=\s*\{[^}]*PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;)'
-matches = list(re.finditer(pattern, content, re.DOTALL))
-
-for match in reversed(matches):  # Reverse to not mess up positions
-    block = match.group(0)
-    if 'PROVISIONING_PROFILE_SPECIFIER' not in block:
-        # Insert PROVISIONING_PROFILE_SPECIFIER before the PRODUCT_BUNDLE_IDENTIFIER line
-        new_block = block.replace(
-            'PRODUCT_BUNDLE_IDENTIFIER',
-            f'PROVISIONING_PROFILE_SPECIFIER = "{profile_name}";\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER'
-        )
-        content = content[:match.start()] + new_block + content[match.end():]
-
-with open(pbxproj_path, 'w') as f:
-    f.write(content)
-
-print(f"✅ Added PROVISIONING_PROFILE_SPECIFIER = \"{profile_name}\" to App target build settings")
-PYEOF
+          #    Only App.xcodeproj has PRODUCT_BUNDLE_IDENTIFIER (not Pods), so this is safe
+          python3 -c '
+          import os
+          path = "ios/App/App.xcodeproj/project.pbxproj"
+          with open(path) as f:
+              content = f.read()
+          pn = os.environ["PROFILE_NAME"]
+          old = "PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
+          new = "PROVISIONING_PROFILE_SPECIFIER = \"" + pn + "\";\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
+          content = content.replace(old, new)
+          with open(path, "w") as f:
+              f.write(content)
+          print("Added PROVISIONING_PROFILE_SPECIFIER to App target build settings")
+          '
 
           # Verify the changes
           echo ""
