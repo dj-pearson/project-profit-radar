@@ -122,6 +122,17 @@ jobs:
           fi
           echo "✅ iOS project verified"
 
+      - name: 📝 Set App Version
+        run: |
+          INFO_PLIST="ios/App/App/Info.plist"
+          # Set marketing version to 1.0.1
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.1" "$INFO_PLIST"
+          # Use GitHub run number as build number for auto-increment
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 1.0.1.${{ github.run_number }}" "$INFO_PLIST"
+          echo "Version set to:"
+          echo "  Marketing: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
+          echo "  Build:     $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
+
       - name: 🔧 Configure Manual Code Signing
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
