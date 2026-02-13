@@ -160,12 +160,49 @@ jobs:
           echo "✅ Provisioning profile installed"
           ls -la "$PP_PATH"
 
-      - name: 🔧 Configure ExportOptions.plist
+      - name: 🔧 Generate ExportOptions.plist
         run: |
-          # Replace placeholders in ExportOptions.plist
-          sed -i '' 's/YOUR_TEAM_ID_HERE/${{ secrets.APPLE_TEAM_ID }}/g' ios/App/ExportOptions.plist
+          cat > ios/App/ExportOptions.plist << 'PLIST_EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>TEAM_ID_PLACEHOLDER</string>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.builddesk.app</key>
+                  <string>PROFILE_NAME_PLACEHOLDER</string>
+              </dict>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+              <key>generateAppStoreInformation</key>
+              <true/>
+              <key>destination</key>
+              <string>upload</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+              <key>manageAppVersionAndBuildNumber</key>
+              <true/>
+          </dict>
+          </plist>
+          PLIST_EOF
 
-          echo "ExportOptions.plist configured:"
+          # Replace placeholders with actual secret values
+          sed -i '' "s/TEAM_ID_PLACEHOLDER/${{ secrets.APPLE_TEAM_ID }}/g" ios/App/ExportOptions.plist
+          sed -i '' "s/PROFILE_NAME_PLACEHOLDER/${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}/g" ios/App/ExportOptions.plist
+
+          echo "ExportOptions.plist generated:"
           cat ios/App/ExportOptions.plist
 
       # ====================================
