@@ -92,8 +92,18 @@ jobs:
           ls -la dist-mobile
 
       # ====================================
-      # 4. CAPACITOR SYNC
+      # 4. CAPACITOR - ADD & SYNC iOS
       # ====================================
+
+      - name: 📱 Add iOS platform (if needed)
+        run: |
+          if [ ! -d "ios/App/App.xcodeproj" ] && [ ! -d "ios/App/App.xcworkspace" ]; then
+            echo "iOS platform not found, adding it now..."
+            npx cap add ios
+            echo "✅ iOS platform added"
+          else
+            echo "✅ iOS platform already exists"
+          fi
 
       - name: 📱 Sync Capacitor to iOS
         run: npx cap sync ios
@@ -101,16 +111,16 @@ jobs:
       - name: 🔍 Verify iOS project
         run: |
           echo "Checking iOS project structure..."
-          if [ ! -d "ios/App/App.xcworkspace" ] && [ ! -d "ios/App/App.xcodeproj" ]; then
+          ls -la ios/App/
+          if [ -d "ios/App/App.xcworkspace" ]; then
+            echo "✅ Xcode workspace found"
+          elif [ -d "ios/App/App.xcodeproj" ]; then
+            echo "✅ Xcode project found"
+          else
             echo "❌ ERROR: No Xcode workspace or project found!"
-            echo "This might be the first time running Capacitor. Please run locally first:"
-            echo "  npm run build:mobile"
-            echo "  npx cap add ios"
-            echo "  npx cap sync ios"
             exit 1
           fi
           echo "✅ iOS project verified"
-          ls -la ios/App/
 
       # ====================================
       # 5. SETUP RUBY & COCOAPODS
