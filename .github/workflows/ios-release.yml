@@ -133,6 +133,37 @@ jobs:
           echo "  Marketing: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
           echo "  Build:     $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
 
+      - name: 🔒 Add Privacy Usage Descriptions
+        run: |
+          INFO_PLIST="ios/App/App/Info.plist"
+
+          # Camera - required by @capacitor/camera
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'BuildDesk needs camera access to capture photos of job sites, receipts, and project documentation.'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'BuildDesk needs camera access to capture photos of job sites, receipts, and project documentation.'" "$INFO_PLIST"
+
+          # Photo Library Read - required by @capacitor/camera (BLOCKING issue from Apple)
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'BuildDesk needs photo library access to attach existing photos to daily reports, documents, and project records.'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'BuildDesk needs photo library access to attach existing photos to daily reports, documents, and project records.'" "$INFO_PLIST"
+
+          # Photo Library Write - required by @capacitor/camera to save photos
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'BuildDesk needs permission to save captured job site photos and documents to your photo library.'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'BuildDesk needs permission to save captured job site photos and documents to your photo library.'" "$INFO_PLIST"
+
+          # Location When In Use - required by @capacitor/geolocation
+          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'BuildDesk uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription 'BuildDesk uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.'" "$INFO_PLIST"
+
+          # Location Always - required by @capacitor/geolocation for background tracking
+          /usr/libexec/PlistBuddy -c "Add :NSLocationAlwaysAndWhenInUseUsageDescription string 'BuildDesk uses background location for automatic job site check-ins and geofence-based time tracking even when the app is not in the foreground.'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSLocationAlwaysAndWhenInUseUsageDescription 'BuildDesk uses background location for automatic job site check-ins and geofence-based time tracking even when the app is not in the foreground.'" "$INFO_PLIST"
+
+          echo "✅ Privacy usage descriptions added:"
+          echo "  - NSCameraUsageDescription"
+          echo "  - NSPhotoLibraryUsageDescription"
+          echo "  - NSPhotoLibraryAddUsageDescription"
+          echo "  - NSLocationWhenInUseUsageDescription"
+          echo "  - NSLocationAlwaysAndWhenInUseUsageDescription"
+
       - name: 🔧 Configure Manual Code Signing
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
