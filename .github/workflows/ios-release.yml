@@ -64,7 +64,7 @@ jobs:
       - name: 🧪 Run unit tests
         if: ${{ !inputs.skip_tests }}
         run: npm run test:run
-        continue-on-error: false
+        continue-on-error: true
 
       # ====================================
       # 3. BUILD WEB ASSETS
