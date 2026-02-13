@@ -1,0 +1,277 @@
+name: Build & Submit iOS to App Store
+
+on:
+  # Manual trigger with options
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Build environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+      submit_to_testflight:
+        description: "Submit to TestFlight after build?"
+        required: true
+        default: true
+        type: boolean
+      skip_tests:
+        description: "Skip tests before build?"
+        required: false
+        default: false
+        type: boolean
+
+# Prevent concurrent builds
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-ios:
+    name: Build & Submit iOS App
+    runs-on: macos-latest
+    timeout-minutes: 90
+
+    env:
+      NODE_VERSION: "20"
+      CAPACITOR_VERSION: "7.4.4"
+
+    steps:
+      # ====================================
+      # 1. SETUP & CHECKOUT
+      # ====================================
+
+      - name: 🔄 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for versioning
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: 🔧 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      # ====================================
+      # 2. TESTS (OPTIONAL)
+      # ====================================
+
+      - name: 🧪 Run unit tests
+        if: ${{ !inputs.skip_tests }}
+        run: npm run test:run
+        continue-on-error: false
+
+      # ====================================
+      # 3. BUILD WEB ASSETS
+      # ====================================
+
+      - name: 🏗️ Build web assets for mobile
+        run: npm run build:mobile
+        env:
+          NODE_ENV: production
+          VITE_ENVIRONMENT: ${{ inputs.environment }}
+
+      - name: 📊 Check build output
+        run: |
+          echo "Checking dist-mobile directory..."
+          if [ ! -d "dist-mobile" ]; then
+            echo "❌ ERROR: dist-mobile directory not found!"
+            exit 1
+          fi
+          if [ ! -f "dist-mobile/index.html" ]; then
+            echo "❌ ERROR: index.html not found in dist-mobile!"
+            exit 1
+          fi
+          echo "✅ Build output verified"
+          du -sh dist-mobile
+          ls -la dist-mobile
+
+      # ====================================
+      # 4. CAPACITOR SYNC
+      # ====================================
+
+      - name: 📱 Sync Capacitor to iOS
+        run: npx cap sync ios
+
+      - name: 🔍 Verify iOS project
+        run: |
+          echo "Checking iOS project structure..."
+          if [ ! -d "ios/App/App.xcworkspace" ] && [ ! -d "ios/App/App.xcodeproj" ]; then
+            echo "❌ ERROR: No Xcode workspace or project found!"
+            echo "This might be the first time running Capacitor. Please run locally first:"
+            echo "  npm run build:mobile"
+            echo "  npx cap add ios"
+            echo "  npx cap sync ios"
+            exit 1
+          fi
+          echo "✅ iOS project verified"
+          ls -la ios/App/
+
+      # ====================================
+      # 5. SETUP RUBY & COCOAPODS
+      # ====================================
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: 📦 Install CocoaPods dependencies
+        run: |
+          cd ios/App
+          pod install --repo-update
+          echo "✅ CocoaPods dependencies installed"
+
+      # ====================================
+      # 6. CODE SIGNING SETUP
+      # ====================================
+
+      - name: 🔐 Import Apple Distribution Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_DISTRIBUTION_CERT_P12 }}
+          p12-password: ${{ secrets.IOS_DISTRIBUTION_CERT_PASSWORD }}
+
+      - name: 📝 Install Provisioning Profile
+        run: |
+          # Create provisioning profile directory
+          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p "$PP_PATH"
+
+          # Decode and install profile
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$PP_PATH/BuildDesk.mobileprovision"
+
+          echo "✅ Provisioning profile installed"
+          ls -la "$PP_PATH"
+
+      - name: 🔧 Configure ExportOptions.plist
+        run: |
+          # Replace placeholders in ExportOptions.plist
+          sed -i '' 's/YOUR_TEAM_ID_HERE/${{ secrets.APPLE_TEAM_ID }}/g' ios/App/ExportOptions.plist
+
+          echo "ExportOptions.plist configured:"
+          cat ios/App/ExportOptions.plist
+
+      # ====================================
+      # 7. BUILD IPA
+      # ====================================
+
+      - name: 🏗️ Build iOS Archive
+        run: |
+          cd ios/App
+
+          # Use workspace if it exists, otherwise project
+          if [ -d "App.xcworkspace" ]; then
+            BUILD_TARGET="-workspace App.xcworkspace"
+          else
+            BUILD_TARGET="-project App.xcodeproj"
+          fi
+
+          echo "Building with: $BUILD_TARGET"
+
+          xcodebuild archive \
+            $BUILD_TARGET \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+          echo "✅ Archive created successfully"
+          ls -la build/
+
+      - name: 📦 Export IPA
+        run: |
+          cd ios/App
+
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/output \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+          echo "✅ IPA exported successfully"
+          ls -la build/output/
+
+          # Get IPA size
+          IPA_SIZE=$(du -h build/output/*.ipa | cut -f1)
+          echo "IPA_SIZE=$IPA_SIZE" >> $GITHUB_ENV
+
+      # ====================================
+      # 8. UPLOAD ARTIFACT
+      # ====================================
+
+      - name: 📤 Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuildDesk-iOS-${{ github.sha }}
+          path: ios/App/build/output/*.ipa
+          retention-days: 30
+          if-no-files-found: error
+
+      # ====================================
+      # 9. SUBMIT TO TESTFLIGHT
+      # ====================================
+
+      - name: 🚀 Submit to TestFlight
+        if: ${{ inputs.submit_to_testflight == true }}
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: "ios/App/build/output/App.ipa"
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      # ====================================
+      # 10. SUMMARY & NOTIFICATIONS
+      # ====================================
+
+      - name: 📊 Build Summary
+        if: always()
+        run: |
+          echo "# 📱 iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Submitted to TestFlight:** ${{ inputs.submit_to_testflight }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **IPA Size:** ${{ env.IPA_SIZE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle ID:** com.builddesk.app" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.submit_to_testflight }}" == "true" ]; then
+            echo "1. Wait 5-30 minutes for App Store Connect processing" >> $GITHUB_STEP_SUMMARY
+            echo "2. Go to [App Store Connect](https://appstoreconnect.apple.com)" >> $GITHUB_STEP_SUMMARY
+            echo "3. Check TestFlight tab for your build" >> $GITHUB_STEP_SUMMARY
+            echo "4. Answer export compliance question if needed" >> $GITHUB_STEP_SUMMARY
+            echo "5. Add test groups or submit for external testing" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "1. Download IPA from GitHub Actions artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "2. Upload manually to App Store Connect if needed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: ❌ Failure Notification
+        if: failure()
+        run: |
+          echo "# ❌ iOS Build Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The iOS build has failed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Common Issues:" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing or expired certificates" >> $GITHUB_STEP_SUMMARY
+          echo "- Provisioning profile mismatch" >> $GITHUB_STEP_SUMMARY
+          echo "- Bundle ID configuration error" >> $GITHUB_STEP_SUMMARY
+          echo "- CocoaPods dependency issues" >> $GITHUB_STEP_SUMMARY
+          echo "- Xcode build errors" >> $GITHUB_STEP_SUMMARY
