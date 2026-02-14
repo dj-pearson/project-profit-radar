@@ -98,7 +98,8 @@ export default defineConfig(({ mode }) => ({
     logOverride: { "this-is-undefined-in-esm": "silent" },
     target: "es2020",
     treeShaking: true,
-    // Strip console/debugger in production mobile builds
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+    // Keep console in mobile builds for debugging via Safari Web Inspector
+    // Strip only debugger statements in production
+    drop: mode === 'production' ? ['debugger'] : [],
   },
 }));

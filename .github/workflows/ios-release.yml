@@ -4,6 +4,11 @@ on:
   # Manual trigger with options
   workflow_dispatch:
     inputs:
+      app_version:
+        description: "App version (e.g., 1.0.2)"
+        required: true
+        default: "1.0.1"
+        type: string
       environment:
         description: "Build environment"
         required: true
@@ -75,6 +80,8 @@ jobs:
         env:
           NODE_ENV: production
           VITE_ENVIRONMENT: ${{ inputs.environment }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: 📊 Check build output
         run: |
@@ -125,13 +132,19 @@ jobs:
       - name: 📝 Set App Version
         run: |
           INFO_PLIST="ios/App/App/Info.plist"
-          # Set marketing version to 1.0.1
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.1" "$INFO_PLIST"
-          # Use GitHub run number as build number for auto-increment
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 1.0.1.${{ github.run_number }}" "$INFO_PLIST"
+          APP_VERSION="${{ inputs.app_version }}"
+          BUILD_NUMBER="${APP_VERSION}.${{ github.run_number }}"
+
+          # Set marketing version (shown in App Store, e.g., 1.0.2)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${APP_VERSION}" "$INFO_PLIST"
+          # Set build number (auto-increments via run_number, e.g., 1.0.2.15)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NUMBER}" "$INFO_PLIST"
+
+          echo "APP_VERSION=${APP_VERSION}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
           echo "Version set to:"
-          echo "  Marketing: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
-          echo "  Build:     $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
+          echo "  Marketing: ${APP_VERSION}"
+          echo "  Build:     ${BUILD_NUMBER}"
 
       - name: 🔒 Add Privacy Usage Descriptions
         run: |
@@ -389,6 +402,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Build Information" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **App Version:** ${{ env.APP_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** ${{ env.BUILD_NUMBER }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Submitted to TestFlight:** ${{ inputs.submit_to_testflight }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY

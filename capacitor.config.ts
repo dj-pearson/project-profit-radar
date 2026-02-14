@@ -6,8 +6,16 @@ const config: CapacitorConfig = {
   webDir: 'dist-mobile',
   server: {
     androidScheme: 'https',
-    iosScheme: 'https',
-    hostname: 'app.build-desk.com',
+    iosScheme: 'capacitor',
+    hostname: 'localhost',
+    // Allow navigation to Supabase auth and OAuth callback domains
+    allowNavigation: [
+      'api.build-desk.com',
+      '*.build-desk.com',
+      '*.supabase.co',
+      'accounts.google.com',
+      'appleid.apple.com',
+    ],
   },
   plugins: {
     SplashScreen: {
@@ -59,10 +67,11 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'automatic',
-    limitsNavigationsToAppBoundDomains: true,
     backgroundColor: '#ffffff',
     preferredContentMode: 'mobile',
     scrollEnabled: true,
+    // Enable WebView debugging in development builds
+    webContentsDebuggingEnabled: true,
   },
 };
 

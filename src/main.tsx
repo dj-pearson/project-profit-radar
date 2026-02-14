@@ -68,8 +68,10 @@ const initDeferredServices = () => {
     });
   });
 
-  // Register service worker (production only)
-  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  // Register service worker (production web only, not in Capacitor native)
+  const isCapacitorNative = typeof window !== 'undefined' &&
+    window.Capacitor?.isNativePlatform?.();
+  if (import.meta.env.PROD && 'serviceWorker' in navigator && !isCapacitorNative) {
     import("./utils/serviceWorkerManager").then(({ registerServiceWorker }) => {
       registerServiceWorker({
         enabled: true,
