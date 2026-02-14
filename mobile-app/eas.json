@@ -22,7 +22,8 @@
       },
       "ios": {
         "simulator": true,
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "image": "macos-sequoia-xcode-26"
       },
       "android": {
         "buildType": "apk",
@@ -36,7 +37,8 @@
         "EXPO_PUBLIC_APP_ENV": "preview"
       },
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "image": "macos-sequoia-xcode-26"
       },
       "android": {
         "buildType": "apk",
@@ -48,7 +50,7 @@
       "autoIncrement": true,
       "ios": {
         "resourceClass": "m-large",
-        "image": "latest"
+        "image": "macos-sequoia-xcode-26"
       },
       "android": {
         "buildType": "aab",
@@ -59,7 +61,8 @@
     "production-ios": {
       "extends": "production",
       "ios": {
-        "resourceClass": "m-large"
+        "resourceClass": "m-large",
+        "image": "macos-sequoia-xcode-26"
       }
     },
     "production-android": {
