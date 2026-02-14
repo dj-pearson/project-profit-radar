@@ -315,6 +315,20 @@ if (appJson) {
   } else {
     fail('expo-build-properties plugin not configured — SDK targets not set');
   }
+
+  // Check EAS build image for iOS 26 SDK (Xcode 26) compliance
+  const easJsonPath = resolve(MOBILE_APP, 'eas.json');
+  if (existsSync(easJsonPath)) {
+    const easJson = JSON.parse(readFileSync(easJsonPath, 'utf-8'));
+    const prodIosImage = easJson?.build?.production?.ios?.image;
+    if (prodIosImage && prodIosImage.includes('xcode-26')) {
+      pass(`iOS production build image: ${prodIosImage} (iOS 26 SDK compliant)`);
+    } else if (prodIosImage === 'latest') {
+      warn('iOS production build image set to "latest" — verify it uses Xcode 26+ for App Store compliance (required by April 28, 2026)');
+    } else {
+      fail('iOS production build must use Xcode 26+ image (iOS 26 SDK required by April 28, 2026). Set "image": "macos-sequoia-xcode-26" in eas.json');
+    }
+  }
 }
 
 // ─── Assets ───
