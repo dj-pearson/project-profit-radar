@@ -22,12 +22,12 @@
       },
       "ios": {
         "simulator": true,
-        "resourceClass": "m-medium",
+        "resourceClass": "medium",
         "image": "macos-sequoia-xcode-26"
       },
       "android": {
         "buildType": "apk",
-        "resourceClass": "m-medium"
+        "resourceClass": "medium"
       }
     },
     "preview": {
@@ -37,38 +37,38 @@
         "EXPO_PUBLIC_APP_ENV": "preview"
       },
       "ios": {
-        "resourceClass": "m-medium",
+        "resourceClass": "medium",
         "image": "macos-sequoia-xcode-26"
       },
       "android": {
         "buildType": "apk",
-        "resourceClass": "m-medium"
+        "resourceClass": "medium"
       }
     },
     "production": {
       "extends": "base",
       "autoIncrement": true,
       "ios": {
-        "resourceClass": "m-large",
+        "resourceClass": "medium",
         "image": "macos-sequoia-xcode-26"
       },
       "android": {
-        "buildType": "aab",
-        "resourceClass": "m-large",
+        "buildType": "app-bundle",
+        "resourceClass": "medium",
         "image": "latest"
       }
     },
     "production-ios": {
       "extends": "production",
       "ios": {
-        "resourceClass": "m-large",
+        "resourceClass": "medium",
         "image": "macos-sequoia-xcode-26"
       }
     },
     "production-android": {
       "extends": "production",
       "android": {
-        "resourceClass": "m-large"
+        "resourceClass": "medium"
       }
     }
   },
