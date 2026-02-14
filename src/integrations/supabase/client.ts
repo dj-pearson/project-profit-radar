@@ -8,37 +8,34 @@ import { supabaseStorage } from '@/lib/supabaseStorage';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// SECURITY: Validate required environment variables in production
-// In production, missing credentials should fail loudly rather than falling back to insecure defaults
-if (import.meta.env.PROD) {
-  if (!SUPABASE_URL) {
-    throw new Error(
-      'CRITICAL SECURITY ERROR: VITE_SUPABASE_URL environment variable is required in production. ' +
-      'Application cannot start without proper Supabase configuration.'
-    );
-  }
-  if (!SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error(
-      'CRITICAL SECURITY ERROR: VITE_SUPABASE_PUBLISHABLE_KEY environment variable is required in production. ' +
-      'Application cannot start without proper Supabase configuration.'
-    );
-  }
-}
+// Single-tenant production URL (always api.build-desk.com)
+const PRODUCTION_URL = 'https://api.build-desk.com';
 
-// Development fallbacks - only used when env vars are not set in development mode
-const DEV_FALLBACK_URL = 'https://api.build-desk.com';
-const RESOLVED_SUPABASE_URL = SUPABASE_URL || DEV_FALLBACK_URL;
+// Resolve configuration: env vars take priority, then production default URL
+// NOTE: The anon key MUST be provided via VITE_SUPABASE_PUBLISHABLE_KEY env var
+// (set in Cloudflare Pages for web, and GitHub Secrets for iOS/Android CI builds)
+const RESOLVED_SUPABASE_URL = SUPABASE_URL || PRODUCTION_URL;
 const RESOLVED_SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || '';
+
+// Log warning if key is missing (app will render but API calls will fail)
+if (!RESOLVED_SUPABASE_KEY) {
+  // Using console.warn directly (not logger) since this runs before app initialization
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[BuildDesk] VITE_SUPABASE_PUBLISHABLE_KEY is not set. ' +
+    'API calls will fail. Set this env var in your build environment.'
+  );
+}
 
 // Edge Functions URL (separate deployment for self-hosted)
 // Falls back to SUPABASE_URL/functions/v1 if not specified (for backward compatibility)
 const EDGE_FUNCTIONS_URL = import.meta.env.VITE_EDGE_FUNCTIONS_URL || `${RESOLVED_SUPABASE_URL}/functions/v1`;
 
-// Log warning in development if using fallback values
-if (import.meta.env.DEV && (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY)) {
+// Log fallback usage in development
+if (import.meta.env.DEV && !SUPABASE_URL) {
   console.warn(
-    '[SECURITY WARNING] Using development fallback Supabase configuration. ' +
-    'Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables for proper configuration.'
+    '[BuildDesk] Using default Supabase URL (api.build-desk.com). ' +
+    'Set VITE_SUPABASE_URL to override.'
   );
 }
 

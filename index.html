@@ -187,31 +187,34 @@
     }
     </script>
 
-    <!-- Google Analytics - Deferred loading for better FCP -->
+    <!-- Google Analytics - Deferred loading for better FCP (web only) -->
     <script>
-      // Defer GA loading until after first paint
+      // Defer GA loading until after first paint (skip in Capacitor native)
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
 
-      // Load GA script after page becomes interactive
-      if (typeof requestIdleCallback !== 'undefined') {
-        requestIdleCallback(function() {
-          var s = document.createElement('script');
-          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
-          s.async = true;
-          document.head.appendChild(s);
-          gtag('js', new Date());
-          gtag('config', 'G-LNDT7H4SJR', {'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure'});
-        }, {timeout: 3000});
-      } else {
-        setTimeout(function() {
-          var s = document.createElement('script');
-          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
-          s.async = true;
-          document.head.appendChild(s);
-          gtag('js', new Date());
-          gtag('config', 'G-LNDT7H4SJR', {'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure'});
-        }, 2000);
+      // Skip GA in Capacitor native apps
+      var isCapacitorNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+      if (!isCapacitorNative) {
+        if (typeof requestIdleCallback !== 'undefined') {
+          requestIdleCallback(function() {
+            var s = document.createElement('script');
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
+            s.async = true;
+            document.head.appendChild(s);
+            gtag('js', new Date());
+            gtag('config', 'G-LNDT7H4SJR', {'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure'});
+          }, {timeout: 3000});
+        } else {
+          setTimeout(function() {
+            var s = document.createElement('script');
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LNDT7H4SJR';
+            s.async = true;
+            document.head.appendChild(s);
+            gtag('js', new Date());
+            gtag('config', 'G-LNDT7H4SJR', {'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure'});
+          }, 2000);
+        }
       }
     </script>
 
@@ -226,8 +229,10 @@
         // Run after DOM is ready to avoid blocking first paint
         var CURRENT_VERSION = "2025.08.08.007";
 
-        // Defer cache management until idle
+        // Defer cache management until idle (web only, skip in Capacitor native)
         function initCacheManagement() {
+          // Skip SW/cache management in Capacitor native (not supported in WKWebView)
+          if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
           try {
             var lastCacheClear = localStorage.getItem("last_cache_clear");
             var now = Date.now();
