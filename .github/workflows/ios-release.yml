@@ -100,7 +100,35 @@ jobs:
           echo "Encryption export compliance set (HTTPS only)"
 
       # ====================================
-      # 3. RESOLVE SWIFT PACKAGES
+      # 3. PREPARE APP ICON
+      # ====================================
+
+      - name: Ensure app icon is 1024x1024
+        run: |
+          ICON_PATH="${{ env.PROJECT_DIR }}/BuildDesk/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+
+          if [ ! -f "$ICON_PATH" ]; then
+            echo "ERROR: AppIcon.png not found at $ICON_PATH"
+            exit 1
+          fi
+
+          # Get current dimensions
+          CURRENT_SIZE=$(sips -g pixelWidth "$ICON_PATH" | tail -1 | awk '{print $2}')
+          echo "Current icon size: ${CURRENT_SIZE}x${CURRENT_SIZE}"
+
+          if [ "$CURRENT_SIZE" != "1024" ]; then
+            echo "Resizing icon to 1024x1024..."
+            sips -z 1024 1024 "$ICON_PATH"
+            echo "Icon resized to 1024x1024"
+          else
+            echo "Icon is already 1024x1024"
+          fi
+
+          # Verify final size
+          sips -g pixelWidth -g pixelHeight "$ICON_PATH"
+
+      # ====================================
+      # 4. RESOLVE SWIFT PACKAGES
       # ====================================
 
       - name: Resolve Swift Package dependencies
@@ -127,7 +155,7 @@ jobs:
           echo "Project structure verified"
 
       # ====================================
-      # 4. TESTS (OPTIONAL)
+      # 5. TESTS (OPTIONAL)
       # ====================================
 
       - name: Run unit tests
@@ -147,7 +175,7 @@ jobs:
         continue-on-error: true
 
       # ====================================
-      # 5. CODE SIGNING SETUP
+      # 6. CODE SIGNING SETUP
       # ====================================
 
       - name: Import Apple Distribution Certificate
@@ -253,7 +281,7 @@ jobs:
           echo "ExportOptions.plist generated"
 
       # ====================================
-      # 6. BUILD IPA
+      # 7. BUILD IPA
       # ====================================
 
       - name: Build iOS Archive
@@ -290,7 +318,7 @@ jobs:
           echo "IPA_SIZE=$IPA_SIZE" >> $GITHUB_ENV
 
       # ====================================
-      # 7. UPLOAD ARTIFACT
+      # 8. UPLOAD ARTIFACT
       # ====================================
 
       - name: Upload IPA as artifact
@@ -302,10 +330,11 @@ jobs:
           if-no-files-found: error
 
       # ====================================
-      # 8. SUBMIT TO TESTFLIGHT
+      # 9. SUBMIT TO TESTFLIGHT
       # ====================================
 
       - name: Submit to TestFlight
+        id: testflight_upload
         if: ${{ inputs.submit_to_testflight == true }}
         uses: apple-actions/upload-testflight-build@v3
         with:
@@ -314,8 +343,20 @@ jobs:
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
 
+      - name: Verify TestFlight upload
+        if: ${{ inputs.submit_to_testflight == true }}
+        run: |
+          if [ "${{ steps.testflight_upload.outcome }}" != "success" ]; then
+            echo "::error::TestFlight upload FAILED! Check the upload step logs for Apple validation errors."
+            echo "TESTFLIGHT_RESULT=FAILED" >> $GITHUB_ENV
+            exit 1
+          else
+            echo "TestFlight upload succeeded"
+            echo "TESTFLIGHT_RESULT=SUCCESS" >> $GITHUB_ENV
+          fi
+
       # ====================================
-      # 9. SUMMARY
+      # 10. SUMMARY
       # ====================================
 
       - name: Build Summary
@@ -328,21 +369,34 @@ jobs:
           echo "- **Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "- **App Version:** ${{ env.APP_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Number:** ${{ env.BUILD_NUMBER }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Submitted to TestFlight:** ${{ inputs.submit_to_testflight }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle ID:** ${{ env.BUNDLE_ID }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **IPA Size:** ${{ env.IPA_SIZE }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Bundle ID:** ${{ env.BUNDLE_ID }}" >> $GITHUB_STEP_SUMMARY
           echo "- **iOS Target:** 17.0+" >> $GITHUB_STEP_SUMMARY
           echo "- **Dependencies:** supabase-swift (SPM)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+
           if [ "${{ inputs.submit_to_testflight }}" == "true" ]; then
-            echo "1. Wait 5-30 minutes for App Store Connect processing" >> $GITHUB_STEP_SUMMARY
-            echo "2. Go to [App Store Connect](https://appstoreconnect.apple.com)" >> $GITHUB_STEP_SUMMARY
-            echo "3. Check TestFlight tab for your build" >> $GITHUB_STEP_SUMMARY
-            echo "4. Add test groups or submit for external testing" >> $GITHUB_STEP_SUMMARY
+            UPLOAD_RESULT="${{ env.TESTFLIGHT_RESULT }}"
+            if [ "$UPLOAD_RESULT" == "SUCCESS" ]; then
+              echo "## TestFlight Upload: SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+              echo "1. Wait 5-30 minutes for App Store Connect processing" >> $GITHUB_STEP_SUMMARY
+              echo "2. Go to [App Store Connect](https://appstoreconnect.apple.com)" >> $GITHUB_STEP_SUMMARY
+              echo "3. Check TestFlight tab for your build" >> $GITHUB_STEP_SUMMARY
+              echo "4. Add test groups or submit for external testing" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## TestFlight Upload: FAILED" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "The IPA was built successfully but Apple rejected the upload." >> $GITHUB_STEP_SUMMARY
+              echo "Check the 'Submit to TestFlight' step logs for validation errors." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "The IPA artifact is still available for manual upload." >> $GITHUB_STEP_SUMMARY
+            fi
           else
+            echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
             echo "1. Download IPA from GitHub Actions artifacts" >> $GITHUB_STEP_SUMMARY
             echo "2. Upload manually to App Store Connect if needed" >> $GITHUB_STEP_SUMMARY
           fi
