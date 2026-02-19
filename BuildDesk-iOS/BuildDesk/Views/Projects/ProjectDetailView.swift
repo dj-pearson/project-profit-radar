@@ -18,7 +18,7 @@ struct ProjectDetailView: View {
             TaskListView(
                 projectId: viewModel.project.id,
                 companyId: auth.companyId ?? "",
-                siteId: auth.siteId ?? viewModel.project.siteId
+                siteId: auth.siteId ?? viewModel.project.siteId ?? ""
             )
             .tabItem { Label("Tasks", systemImage: "checklist") }
             .tag(1)
@@ -26,7 +26,7 @@ struct ProjectDetailView: View {
             DailyReportListView(
                 projectId: viewModel.project.id,
                 companyId: auth.companyId ?? "",
-                siteId: auth.siteId ?? viewModel.project.siteId
+                siteId: auth.siteId ?? viewModel.project.siteId ?? ""
             )
             .tabItem { Label("Reports", systemImage: "doc.text.fill") }
             .tag(2)

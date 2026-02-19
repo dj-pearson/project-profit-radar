@@ -4,7 +4,7 @@ struct DailyReport: Codable, Identifiable, Hashable, Sendable {
     let id: String
     let projectId: String
     var companyId: String?
-    var siteId: String
+    var siteId: String?  // Optional: may be null on older rows
     var date: String          // Keep as String — PostgreSQL `date` type ("2024-01-15")
     var crewCount: Int?
     var weatherConditions: String?
@@ -30,7 +30,7 @@ struct DailyReport: Codable, Identifiable, Hashable, Sendable {
     var submissionTimestamp: Date?
     var createdBy: String?
     let createdAt: Date
-    var updatedAt: Date
+    var updatedAt: Date?  // Optional: may be null on initial row creation
 
     /// Parse the date string for display.
     var reportDate: Date? {

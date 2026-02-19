@@ -4,7 +4,7 @@ struct ProjectDocument: Codable, Identifiable, Sendable {
     let id: String
     let companyId: String
     var projectId: String?
-    var siteId: String
+    var siteId: String?  // Optional: may be null on older rows
     var name: String
     var description: String?
     var filePath: String?
@@ -23,7 +23,7 @@ struct ProjectDocument: Codable, Identifiable, Sendable {
     var autoRouted: Bool?
     var routingConfidence: String?
     let createdAt: Date
-    var updatedAt: Date
+    var updatedAt: Date?  // Optional: may be null on initial row creation
 
     /// Human-readable file size.
     var formattedSize: String {

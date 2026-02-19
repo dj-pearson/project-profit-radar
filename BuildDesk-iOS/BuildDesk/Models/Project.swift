@@ -15,7 +15,7 @@ struct Project: Codable, Identifiable, Hashable, Sendable {
     var siteAddress: String?
     var siteLatitude: Double?
     var siteLongitude: Double?
-    var siteId: String
+    var siteId: String?  // Optional: may be null on older rows
     var startDate: Date?
     var endDate: Date?
     var estimatedHours: Double?
@@ -29,7 +29,7 @@ struct Project: Codable, Identifiable, Hashable, Sendable {
     var opportunityId: String?
     var tenantId: String?
     let createdAt: Date
-    var updatedAt: Date
+    var updatedAt: Date?  // Optional: may be null on initial row creation
 
     /// Display-friendly status used for UI grouping.
     var displayStatus: ProjectStatus {

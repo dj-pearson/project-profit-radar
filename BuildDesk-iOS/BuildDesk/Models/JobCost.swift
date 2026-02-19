@@ -14,7 +14,7 @@ struct JobCost: Codable, Identifiable, Sendable {
     var totalCost: Double?
     var createdBy: String?
     let createdAt: Date
-    var updatedAt: Date
+    var updatedAt: Date?  // Optional: may be null on initial row creation
 
     /// Computed total if the server-side `total_cost` is nil.
     var effectiveTotal: Double {

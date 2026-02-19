@@ -5,7 +5,7 @@ struct ProjectTask: Codable, Identifiable, Hashable, Sendable {
     let id: String
     let companyId: String
     let projectId: String
-    var siteId: String
+    var siteId: String?  // Optional: may be null on older rows
     var name: String
     var description: String?
     var status: String?
@@ -28,7 +28,7 @@ struct ProjectTask: Codable, Identifiable, Hashable, Sendable {
     var weatherLastCheck: Date?
     var createdBy: String?
     let createdAt: Date
-    var updatedAt: Date
+    var updatedAt: Date?  // Optional: may be null on initial row creation
 
     var displayStatus: TaskStatus {
         TaskStatus(rawValue: status ?? "") ?? .unknown
