@@ -18,6 +18,11 @@ struct JobCost: Codable, Identifiable, Sendable {
 
     /// Computed total if the server-side `total_cost` is nil.
     var effectiveTotal: Double {
-        totalCost ?? (laborCost ?? 0) + (materialCost ?? 0) + (equipmentCost ?? 0) + (otherCost ?? 0)
+        if let totalCost { return totalCost }
+        let labor: Double = laborCost ?? 0
+        let material: Double = materialCost ?? 0
+        let equipment: Double = equipmentCost ?? 0
+        let other: Double = otherCost ?? 0
+        return labor + material + equipment + other
     }
 }

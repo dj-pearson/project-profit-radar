@@ -128,3 +128,6 @@ URGENT_OAUTH_FIX.md
 .env_backup
 COOLIFY_GOTRUE_PERMANENT_FIX.md
 user_roles_rows.csv
+ios_build_logs.txt
+.gitignore
+Untitled

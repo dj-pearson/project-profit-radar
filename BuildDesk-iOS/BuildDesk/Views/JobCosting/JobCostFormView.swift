@@ -81,10 +81,11 @@ struct JobCostFormView: View {
     }
 
     private var computedTotal: Double {
-        (Double(laborCost) ?? 0)
-        + (Double(materialCost) ?? 0)
-        + (Double(equipmentCost) ?? 0)
-        + (Double(otherCost) ?? 0)
+        let labor: Double = Double(laborCost) ?? 0
+        let material: Double = Double(materialCost) ?? 0
+        let equipment: Double = Double(equipmentCost) ?? 0
+        let other: Double = Double(otherCost) ?? 0
+        return labor + material + equipment + other
     }
 
     private func save() async {
