@@ -25,18 +25,24 @@ actor AuthService {
 
     /// Fetch the `user_profiles` row for the authenticated user.
     private func fetchProfile(userId: String) async throws -> UserProfile {
-        let response: [UserProfile] = try await client
-            .from("user_profiles")
-            .select()
-            .eq("id", value: userId)
-            .limit(1)
-            .execute()
-            .value
+        do {
+            let response: [UserProfile] = try await client
+                .from("user_profiles")
+                .select()
+                .eq("id", value: userId)
+                .limit(1)
+                .execute()
+                .value
 
-        guard let profile = response.first else {
-            throw AuthError.profileNotFound
+            guard let profile = response.first else {
+                throw AuthError.profileNotFound
+            }
+            return profile
+        } catch let decodingError as DecodingError {
+            // Log full decoding details to help diagnose field/type mismatches.
+            print("[AuthService] fetchProfile decoding error: \(DecodingErrorHelper.describe(decodingError))")
+            throw decodingError
         }
-        return profile
     }
 
     enum AuthError: LocalizedError {
