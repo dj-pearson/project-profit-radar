@@ -6,11 +6,13 @@ const config: CapacitorConfig = {
   webDir: 'dist-mobile',
   server: {
     androidScheme: 'https',
-    iosScheme: 'capacitor',
-    hostname: 'localhost',
+    iosScheme: 'https',
+    hostname: 'app.build-desk.com',
     // Allow navigation to Supabase auth and OAuth callback domains
     allowNavigation: [
       'api.build-desk.com',
+      'app.build-desk.com',
+      'functions.build-desk.com',
       '*.build-desk.com',
       '*.supabase.co',
       'accounts.google.com',
@@ -72,6 +74,8 @@ const config: CapacitorConfig = {
     scrollEnabled: true,
     // Enable WebView debugging in development builds
     webContentsDebuggingEnabled: true,
+    // Restrict WebView navigation to app-bound domains (requires WKAppBoundDomains in Info.plist)
+    limitsNavigationsToAppBoundDomains: true,
   },
 };
 

@@ -70,11 +70,15 @@ jobs:
         run: |
           INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
 
+          # Inject the Supabase URL (already hardcoded in AppConfiguration but set here for clarity)
+          /usr/libexec/PlistBuddy -c "Add :SUPABASE_URL string 'https://api.build-desk.com'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SUPABASE_URL 'https://api.build-desk.com'" "$INFO_PLIST"
+
           # Inject the Supabase anon key so AppConfiguration.swift can read it
           /usr/libexec/PlistBuddy -c "Add :SUPABASE_ANON_KEY string '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST" 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :SUPABASE_ANON_KEY '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST"
 
-          echo "Supabase anon key injected into Info.plist"
+          echo "Supabase config injected into Info.plist"
 
       - name: Set App Version
         run: |

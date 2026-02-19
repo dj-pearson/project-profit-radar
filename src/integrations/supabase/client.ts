@@ -51,8 +51,17 @@ export const supabase = createClient<Database>(RESOLVED_SUPABASE_URL, RESOLVED_S
     storage: supabaseStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // PKCE is required for secure OAuth on mobile (Capacitor deep-links)
+    flowType: 'pkce',
+    // Detect session from URL on web; Capacitor handles deep-link callbacks natively
+    detectSessionInUrl: true,
   },
   global: {
+    // Always include apikey header so Kong never returns "No API key found in request"
+    headers: {
+      'apikey': RESOLVED_SUPABASE_KEY,
+      'x-client-info': 'builddesk-mobile',
+    },
     // Override functions URL for self-hosted setup
     fetch: (url, options) => {
       // If it's a functions call, redirect to our edge functions server
