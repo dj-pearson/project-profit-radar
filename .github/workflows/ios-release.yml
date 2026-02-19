@@ -182,7 +182,8 @@ jobs:
           # Set DEVELOPMENT_TEAM wherever it's empty
           sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${TEAM_ID}\";/g" "$PBXPROJ"
 
-          # Add PROVISIONING_PROFILE_SPECIFIER next to PRODUCT_BUNDLE_IDENTIFIER
+          # Add PROVISIONING_PROFILE_SPECIFIER and CODE_SIGN_IDENTITY next to PRODUCT_BUNDLE_IDENTIFIER
+          # These are set in the pbxproj (app target only) so SPM dependency targets are NOT affected
           python3 -c '
           import os
           path = os.environ["PBXPROJ_PATH"]
@@ -190,11 +191,15 @@ jobs:
               content = f.read()
           pn = os.environ["PROFILE_NAME"]
           old = "PRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
-          new = "PROVISIONING_PROFILE_SPECIFIER = \"" + pn + "\";\n\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
+          new = (
+              "CODE_SIGN_IDENTITY = \"Apple Distribution\";\n"
+              "\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"" + pn + "\";\n"
+              "\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.builddesk.app;"
+          )
           content = content.replace(old, new)
           with open(path, "w") as f:
               f.write(content)
-          print("Added PROVISIONING_PROFILE_SPECIFIER")
+          print("Added CODE_SIGN_IDENTITY and PROVISIONING_PROFILE_SPECIFIER")
           '
 
       - name: Verify code signing configuration
@@ -263,7 +268,6 @@ jobs:
             -destination 'generic/platform=iOS' \
             -clonedSourcePackagesDirPath ../SPMCache \
             -allowProvisioningUpdates \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
 
           echo "Archive created successfully"
