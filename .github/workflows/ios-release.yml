@@ -170,8 +170,9 @@ jobs:
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+          PBXPROJ_PATH: ${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj
         run: |
-          PBXPROJ="${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj"
+          PBXPROJ="${PBXPROJ_PATH}"
 
           echo "Patching project.pbxproj for manual signing..."
 
@@ -195,8 +196,6 @@ jobs:
               f.write(content)
           print("Added PROVISIONING_PROFILE_SPECIFIER")
           '
-        env:
-          PBXPROJ_PATH: ${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj
 
       - name: Verify code signing configuration
         run: |
