@@ -103,7 +103,7 @@ jobs:
       # 3. PREPARE APP ICON
       # ====================================
 
-      - name: Ensure app icon is 1024x1024
+      - name: Ensure app icon is 1024x1024 without alpha
         run: |
           ICON_PATH="${{ env.PROJECT_DIR }}/BuildDesk/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
 
@@ -124,8 +124,16 @@ jobs:
             echo "Icon is already 1024x1024"
           fi
 
-          # Verify final size
-          sips -g pixelWidth -g pixelHeight "$ICON_PATH"
+          # Strip alpha channel — Apple rejects icons with transparency
+          # Convert PNG -> JPEG (strips alpha, composites on white) -> PNG
+          TEMP_JPG="${ICON_PATH%.png}.jpg"
+          sips -s format jpeg "$ICON_PATH" --out "$TEMP_JPG"
+          sips -s format png "$TEMP_JPG" --out "$ICON_PATH"
+          rm -f "$TEMP_JPG"
+          echo "Alpha channel stripped from app icon"
+
+          # Verify final properties
+          sips -g pixelWidth -g pixelHeight -g hasAlpha "$ICON_PATH"
 
       # ====================================
       # 4. RESOLVE SWIFT PACKAGES
@@ -334,26 +342,40 @@ jobs:
       # ====================================
 
       - name: Submit to TestFlight
-        id: testflight_upload
         if: ${{ inputs.submit_to_testflight == true }}
-        uses: apple-actions/upload-testflight-build@v3
-        with:
-          app-path: "${{ env.PROJECT_DIR }}/build/output/BuildDesk.ipa"
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-
-      - name: Verify TestFlight upload
-        if: ${{ inputs.submit_to_testflight == true }}
+        env:
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
-          if [ "${{ steps.testflight_upload.outcome }}" != "success" ]; then
-            echo "::error::TestFlight upload FAILED! Check the upload step logs for Apple validation errors."
+          # Write API key to the location altool expects
+          mkdir -p ~/private_keys
+          echo "$API_PRIVATE_KEY" > ~/private_keys/AuthKey_${API_KEY_ID}.p8
+
+          echo "Uploading IPA to App Store Connect via altool..."
+          xcrun altool --upload-app \
+            --file "${{ env.PROJECT_DIR }}/build/output/BuildDesk.ipa" \
+            --type ios \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID" \
+            2>&1 | tee /tmp/altool_output.txt
+
+          ALTOOL_EXIT=${PIPESTATUS[0]}
+
+          # Check for failure in both exit code and output
+          if [ $ALTOOL_EXIT -ne 0 ] || grep -q "UPLOAD FAILED" /tmp/altool_output.txt; then
+            echo ""
+            echo "::error::TestFlight upload FAILED! See altool output above for Apple validation errors."
             echo "TESTFLIGHT_RESULT=FAILED" >> $GITHUB_ENV
             exit 1
           else
-            echo "TestFlight upload succeeded"
+            echo ""
+            echo "TestFlight upload succeeded!"
             echo "TESTFLIGHT_RESULT=SUCCESS" >> $GITHUB_ENV
           fi
+
+          # Clean up API key
+          rm -f ~/private_keys/AuthKey_${API_KEY_ID}.p8
 
       # ====================================
       # 10. SUMMARY
