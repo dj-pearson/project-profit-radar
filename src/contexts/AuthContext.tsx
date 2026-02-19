@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { z } from "zod";
-import { supabase, getEdgeFunctionUrl } from "@/integrations/supabase/client";
+import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { gtag } from "@/hooks/useGoogleAnalytics";
 import { clearRememberedRoute } from "@/lib/routeMemory";
@@ -900,7 +900,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              apikey: supabaseAnonKey,
             },
             body: JSON.stringify({
               email,
@@ -987,7 +987,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: "request",
@@ -1026,7 +1026,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: "verify",
@@ -1096,7 +1096,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              apikey: supabaseAnonKey,
             },
             body: JSON.stringify({
               ...options,
@@ -1132,7 +1132,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              apikey: supabaseAnonKey,
             },
             body: JSON.stringify({
               ...options,

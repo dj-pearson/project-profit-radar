@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, supabaseAnonKey } from '@/integrations/supabase/client';
 
 // --- Types ---
 
@@ -257,7 +257,7 @@ if (typeof window !== 'undefined') {
         // sendBeacon is more reliable than fetch during unload
         // but we need to use the Supabase REST API directly
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+        const supabaseKey = supabaseAnonKey;
         if (supabaseUrl && supabaseKey) {
           navigator.sendBeacon(
             `${supabaseUrl}/rest/v1/error_logs`,

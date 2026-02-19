@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { Shield, Key, Server, Globe, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 // SAML Configuration Schema
@@ -175,7 +175,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: existingConnection ? 'update' : 'create',
@@ -237,7 +237,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: existingConnection ? 'update' : 'create',
@@ -298,7 +298,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: existingConnection ? 'update' : 'create',
@@ -373,7 +373,7 @@ export const SSOConfigurationForm: React.FC<SSOConfigurationFormProps> = ({
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: 'test',

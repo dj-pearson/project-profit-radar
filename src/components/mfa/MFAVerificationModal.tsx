@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { getEdgeFunctionUrl } from '@/integrations/supabase/client';
+import { getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { Shield, Key, Loader2, Smartphone, AlertCircle } from 'lucide-react';
 
 interface MFAVerificationModalProps {
@@ -119,7 +119,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: 'verify',
@@ -177,7 +177,7 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: 'verify_backup',

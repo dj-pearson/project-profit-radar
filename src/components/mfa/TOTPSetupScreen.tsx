@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import {
   Shield,
   Smartphone,
@@ -78,7 +78,7 @@ export const TOTPSetupScreen: React.FC<TOTPSetupScreenProps> = ({
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             user_id: user.id,
@@ -175,7 +175,7 @@ export const TOTPSetupScreen: React.FC<TOTPSetupScreenProps> = ({
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             user_id: user.id,
