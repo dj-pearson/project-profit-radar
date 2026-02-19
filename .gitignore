@@ -18,6 +18,7 @@ coverage/
 test-results/
 playwright-report/
 .lighthouseci/
+.playwright-auth.json
 
 # App Store screenshots (generated)
 screenshots/
