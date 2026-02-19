@@ -28,7 +28,8 @@
       "Bash(npm run test:run:*)",
       "Bash(npx eslint:*)",
       "Bash(node scripts/find-duplicates.js:*)",
-      "Bash(node scripts/find-duplicates.cjs:*)"
+      "Bash(node scripts/find-duplicates.cjs:*)",
+      "Bash(ls \"C:\\\\Users\\\\pears\\\\Documents\\\\Build-Desk\\\\project-profit-radar\\\\ios\"\" 2>nul && echo \"---ios exists---\" || echo \"---no ios dir--- \")"
     ],
     "deny": [],
     "ask": []
