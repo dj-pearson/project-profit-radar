@@ -35,193 +35,156 @@ concurrency:
 
 jobs:
   build-ios:
-    name: Build & Submit iOS App
+    name: Build & Submit iOS App (Native Swift)
     runs-on: macos-15
-    timeout-minutes: 90
+    timeout-minutes: 60
 
     env:
-      NODE_VERSION: "20"
-      CAPACITOR_VERSION: "7.4.4"
       XCODE_VERSION: "26.0"
+      PROJECT_DIR: BuildDesk-iOS
+      SCHEME: BuildDesk
+      BUNDLE_ID: com.builddesk.app
 
     steps:
       # ====================================
       # 1. SETUP & CHECKOUT
       # ====================================
 
-      - name: 🔄 Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Full history for versioning
+          fetch-depth: 0
 
-      - name: 🔧 Select Xcode 26 (iOS 26 SDK)
+      - name: Select Xcode
         run: |
           sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app/Contents/Developer
           xcodebuild -version
-          echo "Selected Xcode version:"
+          echo "Selected Xcode:"
           xcode-select -p
 
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: 🔧 Install dependencies
-        run: npm ci --prefer-offline --no-audit
-
       # ====================================
-      # 2. TESTS (OPTIONAL)
+      # 2. CONFIGURE APP
       # ====================================
 
-      - name: 🧪 Run unit tests
-        if: ${{ !inputs.skip_tests }}
-        run: npm run test:run
-        continue-on-error: true
-
-      # ====================================
-      # 3. BUILD WEB ASSETS
-      # ====================================
-
-      - name: 🏗️ Build web assets for mobile
-        run: npm run build:mobile
-        env:
-          NODE_ENV: production
-          VITE_ENVIRONMENT: ${{ inputs.environment }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-      - name: 📊 Check build output
+      - name: Inject Supabase anon key into Info.plist
         run: |
-          echo "Checking dist-mobile directory..."
-          if [ ! -d "dist-mobile" ]; then
-            echo "❌ ERROR: dist-mobile directory not found!"
-            exit 1
-          fi
-          if [ ! -f "dist-mobile/index.html" ]; then
-            echo "❌ ERROR: index.html not found in dist-mobile!"
-            exit 1
-          fi
-          echo "✅ Build output verified"
-          du -sh dist-mobile
-          ls -la dist-mobile
+          INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
 
-      # ====================================
-      # 4. CAPACITOR - ADD & SYNC iOS
-      # ====================================
+          # Inject the Supabase anon key so AppConfiguration.swift can read it
+          /usr/libexec/PlistBuddy -c "Add :SUPABASE_ANON_KEY string '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST" 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :SUPABASE_ANON_KEY '${{ secrets.SUPABASE_ANON_KEY }}'" "$INFO_PLIST"
 
-      - name: 📱 Add iOS platform (if needed)
+          echo "Supabase anon key injected into Info.plist"
+
+      - name: Set App Version
         run: |
-          if [ ! -d "ios/App/App.xcodeproj" ] && [ ! -d "ios/App/App.xcworkspace" ]; then
-            echo "iOS platform not found, adding it now..."
-            npx cap add ios
-            echo "✅ iOS platform added"
-          else
-            echo "✅ iOS platform already exists"
-          fi
-
-      - name: 📱 Sync Capacitor to iOS
-        run: npx cap sync ios
-
-      - name: 🔍 Verify iOS project
-        run: |
-          echo "Checking iOS project structure..."
-          ls -la ios/App/
-          if [ -d "ios/App/App.xcworkspace" ]; then
-            echo "✅ Xcode workspace found"
-          elif [ -d "ios/App/App.xcodeproj" ]; then
-            echo "✅ Xcode project found"
-          else
-            echo "❌ ERROR: No Xcode workspace or project found!"
-            exit 1
-          fi
-          echo "✅ iOS project verified"
-
-      - name: 📝 Set App Version
-        run: |
-          INFO_PLIST="ios/App/App/Info.plist"
+          INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
           APP_VERSION="${{ inputs.app_version }}"
           BUILD_NUMBER="${APP_VERSION}.${{ github.run_number }}"
 
-          # Set marketing version (shown in App Store, e.g., 1.0.2)
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${APP_VERSION}" "$INFO_PLIST"
-          # Set build number (auto-increments via run_number, e.g., 1.0.2.15)
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NUMBER}" "$INFO_PLIST"
 
           echo "APP_VERSION=${APP_VERSION}" >> $GITHUB_ENV
           echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
-          echo "Version set to:"
-          echo "  Marketing: ${APP_VERSION}"
-          echo "  Build:     ${BUILD_NUMBER}"
+          echo "Version: ${APP_VERSION} (${BUILD_NUMBER})"
 
-      - name: 🔒 Add Privacy Usage Descriptions
+      - name: Add Encryption Export Compliance
         run: |
-          INFO_PLIST="ios/App/App/Info.plist"
+          INFO_PLIST="${{ env.PROJECT_DIR }}/BuildDesk/Info.plist"
 
-          # Camera - required by @capacitor/camera
-          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'BuildDesk needs camera access to capture photos of job sites, receipts, and project documentation.'" "$INFO_PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'BuildDesk needs camera access to capture photos of job sites, receipts, and project documentation.'" "$INFO_PLIST"
-
-          # Photo Library Read - required by @capacitor/camera (BLOCKING issue from Apple)
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'BuildDesk needs photo library access to attach existing photos to daily reports, documents, and project records.'" "$INFO_PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'BuildDesk needs photo library access to attach existing photos to daily reports, documents, and project records.'" "$INFO_PLIST"
-
-          # Photo Library Write - required by @capacitor/camera to save photos
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'BuildDesk needs permission to save captured job site photos and documents to your photo library.'" "$INFO_PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'BuildDesk needs permission to save captured job site photos and documents to your photo library.'" "$INFO_PLIST"
-
-          # Location When In Use - required by @capacitor/geolocation
-          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'BuildDesk uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.'" "$INFO_PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSLocationWhenInUseUsageDescription 'BuildDesk uses your location for GPS time tracking, job site check-ins, and geofencing to verify on-site attendance.'" "$INFO_PLIST"
-
-          # Location Always - required by @capacitor/geolocation for background tracking
-          /usr/libexec/PlistBuddy -c "Add :NSLocationAlwaysAndWhenInUseUsageDescription string 'BuildDesk uses background location for automatic job site check-ins and geofence-based time tracking even when the app is not in the foreground.'" "$INFO_PLIST" 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSLocationAlwaysAndWhenInUseUsageDescription 'BuildDesk uses background location for automatic job site check-ins and geofence-based time tracking even when the app is not in the foreground.'" "$INFO_PLIST"
-
-          echo "✅ Privacy usage descriptions added:"
-          echo "  - NSCameraUsageDescription"
-          echo "  - NSPhotoLibraryUsageDescription"
-          echo "  - NSPhotoLibraryAddUsageDescription"
-          echo "  - NSLocationWhenInUseUsageDescription"
-          echo "  - NSLocationAlwaysAndWhenInUseUsageDescription"
-
-      - name: � Add Encryption Export Compliance
-        run: |
-          INFO_PLIST="ios/App/App/Info.plist"
-
-          # App uses standard HTTPS only (no custom encryption)
+          # Standard HTTPS only, no custom encryption
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$INFO_PLIST" 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$INFO_PLIST"
 
-          echo "✅ Encryption export compliance added:"
-          echo "  - ITSAppUsesNonExemptEncryption = false (uses standard HTTPS only)"
+          echo "Encryption export compliance set (HTTPS only)"
 
-      - name: �🔧 Configure Manual Code Signing
+      # ====================================
+      # 3. RESOLVE SWIFT PACKAGES
+      # ====================================
+
+      - name: Resolve Swift Package dependencies
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+
+          xcodebuild -resolvePackageDependencies \
+            -project BuildDesk.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
+            -clonedSourcePackagesDirPath ../SPMCache
+
+          echo "Swift packages resolved"
+
+      - name: Verify project structure
+        run: |
+          echo "Checking project structure..."
+          ls -la ${{ env.PROJECT_DIR }}/
+          ls -la ${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/
+
+          if [ ! -f "${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj" ]; then
+            echo "ERROR: project.pbxproj not found!"
+            exit 1
+          fi
+          echo "Project structure verified"
+
+      # ====================================
+      # 4. TESTS (OPTIONAL)
+      # ====================================
+
+      - name: Run unit tests
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+
+          xcodebuild test \
+            -project BuildDesk.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -clonedSourcePackagesDirPath ../SPMCache \
+            -resultBundlePath build/TestResults.xcresult \
+            | xcpretty || true
+
+          echo "Tests completed"
+        continue-on-error: true
+
+      # ====================================
+      # 5. CODE SIGNING SETUP
+      # ====================================
+
+      - name: Import Apple Distribution Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_DISTRIBUTION_CERT_P12 }}
+          p12-password: ${{ secrets.IOS_DISTRIBUTION_CERT_PASSWORD }}
+
+      - name: Install Provisioning Profile
+        run: |
+          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles
+          mkdir -p "$PP_PATH"
+
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$PP_PATH/BuildDesk.mobileprovision"
+
+          echo "Provisioning profile installed"
+          ls -la "$PP_PATH"
+
+      - name: Configure Manual Code Signing
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
         run: |
-          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
+          PBXPROJ="${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj"
 
           echo "Patching project.pbxproj for manual signing..."
 
-          # 1. Switch from Automatic to Manual provisioning style
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PBXPROJ"
-
-          # 2. Switch CODE_SIGN_STYLE from Automatic to Manual
+          # Switch to Manual provisioning
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
 
-          # 3. Set DEVELOPMENT_TEAM wherever it's empty
+          # Set DEVELOPMENT_TEAM wherever it's empty
           sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${TEAM_ID}\";/g" "$PBXPROJ"
 
-          # 4. Set CODE_SIGN_IDENTITY to Apple Distribution for Release builds
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "Apple Distribution";/g' "$PBXPROJ"
-
-          # 5. Add PROVISIONING_PROFILE_SPECIFIER for the App target only
-          #    Only App.xcodeproj has PRODUCT_BUNDLE_IDENTIFIER (not Pods), so this is safe
+          # Add PROVISIONING_PROFILE_SPECIFIER next to PRODUCT_BUNDLE_IDENTIFIER
           python3 -c '
           import os
-          path = "ios/App/App.xcodeproj/project.pbxproj"
+          path = os.environ["PBXPROJ_PATH"]
           with open(path) as f:
               content = f.read()
           pn = os.environ["PROFILE_NAME"]
@@ -230,58 +193,21 @@ jobs:
           content = content.replace(old, new)
           with open(path, "w") as f:
               f.write(content)
-          print("Added PROVISIONING_PROFILE_SPECIFIER to App target build settings")
+          print("Added PROVISIONING_PROFILE_SPECIFIER")
           '
+        env:
+          PBXPROJ_PATH: ${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj
 
-          # Verify the changes
-          echo ""
-          echo "Verification - checking for Manual signing:"
-          grep -c "ProvisioningStyle = Manual" "$PBXPROJ" || echo "WARNING: No Manual provisioning found"
+      - name: Verify code signing configuration
+        run: |
+          PBXPROJ="${{ env.PROJECT_DIR }}/BuildDesk.xcodeproj/project.pbxproj"
           grep -c "CODE_SIGN_STYLE = Manual" "$PBXPROJ" || echo "WARNING: No Manual code sign style found"
           grep "PROVISIONING_PROFILE_SPECIFIER" "$PBXPROJ" | head -5
-          echo "✅ Manual code signing configured"
+          echo "Code signing configured"
 
-      # ====================================
-      # 5. SETUP RUBY & COCOAPODS
-      # ====================================
-
-      - name: 💎 Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.2"
-          bundler-cache: true
-
-      - name: 📦 Install CocoaPods dependencies
+      - name: Generate ExportOptions.plist
         run: |
-          cd ios/App
-          pod install --repo-update
-          echo "✅ CocoaPods dependencies installed"
-
-      # ====================================
-      # 6. CODE SIGNING SETUP
-      # ====================================
-
-      - name: 🔐 Import Apple Distribution Certificate
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.IOS_DISTRIBUTION_CERT_P12 }}
-          p12-password: ${{ secrets.IOS_DISTRIBUTION_CERT_PASSWORD }}
-
-      - name: 📝 Install Provisioning Profile
-        run: |
-          # Create provisioning profile directory
-          PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles
-          mkdir -p "$PP_PATH"
-
-          # Decode and install profile
-          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$PP_PATH/BuildDesk.mobileprovision"
-
-          echo "✅ Provisioning profile installed"
-          ls -la "$PP_PATH"
-
-      - name: 🔧 Generate ExportOptions.plist
-        run: |
-          cat > ios/App/ExportOptions.plist << 'PLIST_EOF'
+          cat > ${{ env.PROJECT_DIR }}/ExportOptions.plist << 'PLIST_EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -317,98 +243,85 @@ jobs:
           </plist>
           PLIST_EOF
 
-          # Replace placeholders with actual secret values
-          sed -i '' "s/TEAM_ID_PLACEHOLDER/${{ secrets.APPLE_TEAM_ID }}/g" ios/App/ExportOptions.plist
-          sed -i '' "s/PROFILE_NAME_PLACEHOLDER/${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}/g" ios/App/ExportOptions.plist
+          sed -i '' "s/TEAM_ID_PLACEHOLDER/${{ secrets.APPLE_TEAM_ID }}/g" ${{ env.PROJECT_DIR }}/ExportOptions.plist
+          sed -i '' "s/PROFILE_NAME_PLACEHOLDER/${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}/g" ${{ env.PROJECT_DIR }}/ExportOptions.plist
 
-          echo "ExportOptions.plist generated:"
-          cat ios/App/ExportOptions.plist
+          echo "ExportOptions.plist generated"
 
       # ====================================
-      # 7. BUILD IPA
+      # 6. BUILD IPA
       # ====================================
 
-      - name: 🏗️ Build iOS Archive
+      - name: Build iOS Archive
         run: |
-          cd ios/App
+          cd ${{ env.PROJECT_DIR }}
 
-          # Use workspace if it exists, otherwise project
-          if [ -d "App.xcworkspace" ]; then
-            BUILD_TARGET="-workspace App.xcworkspace"
-          else
-            BUILD_TARGET="-project App.xcodeproj"
-          fi
-
-          echo "Building with: $BUILD_TARGET"
-
-          # Note: PROVISIONING_PROFILE_SPECIFIER and CODE_SIGN_STYLE are set
-          # in project.pbxproj for the App target only (not passed on CLI
-          # to avoid applying to Pods framework targets which don't support them)
           xcodebuild archive \
-            $BUILD_TARGET \
-            -scheme App \
+            -project BuildDesk.xcodeproj \
+            -scheme ${{ env.SCHEME }} \
             -configuration Release \
-            -archivePath build/App.xcarchive \
+            -archivePath build/BuildDesk.xcarchive \
             -destination 'generic/platform=iOS' \
+            -clonedSourcePackagesDirPath ../SPMCache \
             -allowProvisioningUpdates \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
 
-          echo "✅ Archive created successfully"
+          echo "Archive created successfully"
           ls -la build/
 
-      - name: 📦 Export IPA
+      - name: Export IPA
         run: |
-          cd ios/App
+          cd ${{ env.PROJECT_DIR }}
 
           xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
+            -archivePath build/BuildDesk.xcarchive \
             -exportPath build/output \
             -exportOptionsPlist ExportOptions.plist \
             -allowProvisioningUpdates
 
-          echo "✅ IPA exported successfully"
+          echo "IPA exported successfully"
           ls -la build/output/
 
-          # Get IPA size
           IPA_SIZE=$(du -h build/output/*.ipa | cut -f1)
           echo "IPA_SIZE=$IPA_SIZE" >> $GITHUB_ENV
 
       # ====================================
-      # 8. UPLOAD ARTIFACT
+      # 7. UPLOAD ARTIFACT
       # ====================================
 
-      - name: 📤 Upload IPA as artifact
+      - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
           name: BuildDesk-iOS-${{ github.sha }}
-          path: ios/App/build/output/*.ipa
+          path: ${{ env.PROJECT_DIR }}/build/output/*.ipa
           retention-days: 30
           if-no-files-found: error
 
       # ====================================
-      # 9. SUBMIT TO TESTFLIGHT
+      # 8. SUBMIT TO TESTFLIGHT
       # ====================================
 
-      - name: 🚀 Submit to TestFlight
+      - name: Submit to TestFlight
         if: ${{ inputs.submit_to_testflight == true }}
         uses: apple-actions/upload-testflight-build@v3
         with:
-          app-path: "ios/App/build/output/App.ipa"
+          app-path: "${{ env.PROJECT_DIR }}/build/output/BuildDesk.ipa"
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
 
       # ====================================
-      # 10. SUMMARY & NOTIFICATIONS
+      # 9. SUMMARY
       # ====================================
 
-      - name: 📊 Build Summary
+      - name: Build Summary
         if: always()
         run: |
-          echo "# 📱 iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "# iOS Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **App Type:** Native SwiftUI" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
           echo "- **App Version:** ${{ env.APP_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Number:** ${{ env.BUILD_NUMBER }}" >> $GITHUB_STEP_SUMMARY
@@ -416,24 +329,25 @@ jobs:
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **IPA Size:** ${{ env.IPA_SIZE }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Bundle ID:** com.builddesk.app" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle ID:** ${{ env.BUNDLE_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **iOS Target:** 17.0+" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependencies:** supabase-swift (SPM)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.submit_to_testflight }}" == "true" ]; then
             echo "1. Wait 5-30 minutes for App Store Connect processing" >> $GITHUB_STEP_SUMMARY
             echo "2. Go to [App Store Connect](https://appstoreconnect.apple.com)" >> $GITHUB_STEP_SUMMARY
             echo "3. Check TestFlight tab for your build" >> $GITHUB_STEP_SUMMARY
-            echo "4. Answer export compliance question if needed" >> $GITHUB_STEP_SUMMARY
-            echo "5. Add test groups or submit for external testing" >> $GITHUB_STEP_SUMMARY
+            echo "4. Add test groups or submit for external testing" >> $GITHUB_STEP_SUMMARY
           else
             echo "1. Download IPA from GitHub Actions artifacts" >> $GITHUB_STEP_SUMMARY
             echo "2. Upload manually to App Store Connect if needed" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: ❌ Failure Notification
+      - name: Failure Notification
         if: failure()
         run: |
-          echo "# ❌ iOS Build Failed" >> $GITHUB_STEP_SUMMARY
+          echo "# iOS Build Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The iOS build has failed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -441,5 +355,6 @@ jobs:
           echo "- Missing or expired certificates" >> $GITHUB_STEP_SUMMARY
           echo "- Provisioning profile mismatch" >> $GITHUB_STEP_SUMMARY
           echo "- Bundle ID configuration error" >> $GITHUB_STEP_SUMMARY
-          echo "- CocoaPods dependency issues" >> $GITHUB_STEP_SUMMARY
-          echo "- Xcode build errors" >> $GITHUB_STEP_SUMMARY
+          echo "- Swift Package Manager resolution failure" >> $GITHUB_STEP_SUMMARY
+          echo "- Xcode build errors in Swift code" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing SUPABASE_ANON_KEY secret" >> $GITHUB_STEP_SUMMARY
