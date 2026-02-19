@@ -33,7 +33,7 @@ import {
   RefreshCw,
   Loader2,
 } from 'lucide-react';
-import { supabase, getEdgeFunctionUrl } from '@/integrations/supabase/client';
+import { supabase, getEdgeFunctionUrl, supabaseAnonKey } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -116,7 +116,7 @@ export const SSOManagement = () => {
               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${session.session.access_token}`,
-                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                apikey: supabaseAnonKey,
               },
               body: JSON.stringify({ action: 'list' }),
             }
@@ -194,7 +194,7 @@ export const SSOManagement = () => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: 'update',
@@ -245,7 +245,7 @@ export const SSOManagement = () => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             action: 'delete',
@@ -344,7 +344,7 @@ export const SSOManagement = () => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.session.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            apikey: supabaseAnonKey,
           },
           body: JSON.stringify({
             user_id: user.id,

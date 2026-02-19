@@ -8,14 +8,18 @@ import { supabaseStorage } from '@/lib/supabaseStorage';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Single-tenant production URL (always api.build-desk.com)
+// Single-tenant production defaults (always api.build-desk.com)
 const PRODUCTION_URL = 'https://api.build-desk.com';
+// The anon key is a public key (security is enforced via RLS, not key secrecy).
+// This fallback ensures mobile/Capacitor builds work without env var injection.
+const PRODUCTION_ANON_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NjAwNzA2MCwiZXhwIjo0OTIxNjgwNjYwLCJyb2xlIjoiYW5vbiJ9.0ZmnSLWlt3HntC4M7j12YgPt7DwuP23EoZzCDkp9kFk';
 
-// Resolve configuration: env vars take priority, then production default URL
-// NOTE: The anon key MUST be provided via VITE_SUPABASE_PUBLISHABLE_KEY env var
-// (set in Cloudflare Pages for web, and GitHub Secrets for iOS/Android CI builds)
+// Resolve configuration: env vars take priority, then production defaults
 const RESOLVED_SUPABASE_URL = SUPABASE_URL || PRODUCTION_URL;
-const RESOLVED_SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || '';
+const RESOLVED_SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || PRODUCTION_ANON_KEY;
+
+// Export the resolved anon key for use in manual fetch calls (e.g., AuthContext edge function calls)
+export const supabaseAnonKey = RESOLVED_SUPABASE_KEY;
 
 // Log warning if key is missing (app will render but API calls will fail)
 if (!RESOLVED_SUPABASE_KEY) {

@@ -21,12 +21,14 @@ interface EnvConfig {
 }
 
 /**
- * Default fallback values
- * URL always falls back to production (single-tenant deployment)
- * Key must be provided via env var (set in Cloudflare Pages / GitHub Secrets)
+ * Default fallback values for single-tenant production deployment.
+ * URL and anon key fall back to production defaults so that mobile/Capacitor
+ * builds work without explicit env var injection. The anon key is a public key
+ * (security is enforced via RLS, not key secrecy).
  */
 const FALLBACK_VALUES: Partial<EnvConfig> = {
   VITE_SUPABASE_URL: 'https://api.build-desk.com',
+  VITE_SUPABASE_PUBLISHABLE_KEY: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NjAwNzA2MCwiZXhwIjo0OTIxNjgwNjYwLCJyb2xlIjoiYW5vbiJ9.0ZmnSLWlt3HntC4M7j12YgPt7DwuP23EoZzCDkp9kFk',
 };
 
 /**
