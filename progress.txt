@@ -1,0 +1,73 @@
+## Consolidated Patterns
+
+### Supabase Query Patterns
+- Client: `src/integrations/supabase/client.ts` - createClient with env vars
+- Types: `src/integrations/supabase/types.ts` (manually maintained, not auto-generated)
+- All queries use RLS (Row Level Security) with company_id isolation
+- Pattern: `const { data, error } = await supabase.from('table').select('*').eq('company_id', companyId)`
+- Mutations wrapped in TanStack Query: `useMutation({ mutationFn: async () => { ... } })`
+- Data fetching hooks use `useQuery` with `enabled: !!user` guard
+
+### Component Architecture
+- shadcn/ui components in `src/components/ui/` (Radix UI primitives + Tailwind)
+- Domain components organized by feature directory (117+ directories)
+- Functional components with hooks only (no class components)
+- State: React Context for global (auth, theme), TanStack Query for server state
+- Styling: Tailwind CSS with `cn()` utility from `src/lib/utils.ts`
+- Import alias: `@/` maps to `src/`
+
+### Authentication & Authorization
+- AuthContext at `src/contexts/AuthContext.tsx` - provides `useAuth()` hook
+- 6 roles: admin, project_manager, field_supervisor, office_staff, accounting, client_portal
+- Route guards: `SecureRoute` component with `allowedRoles` prop
+- JWT tokens via Supabase Auth
+- ProtectedRoute has circuit-breaker logic for redirect loops
+
+### Routing
+- React Router DOM 6.26.2 with lazy loading
+- `createLazyRoute()` in `src/utils/lazyRoutes.tsx` wraps routes with Suspense + RouteErrorBoundary
+- Route files: appRoutes, financialRoutes, projectRoutes, peopleRoutes, operationsRoutes, marketingRoutes
+- Admin pages use `DashboardLayout` wrapper
+- Nav config: `src/components/navigation/HierarchicalNavigationConfig.ts`
+
+### Testing Patterns
+- Unit: Vitest 4.0.8 + Happy DOM + Testing Library
+- E2E: Playwright 1.56.1 (Chromium, Firefox, WebKit)
+- Test setup: `src/test/setup.ts`
+- A11y testing: `src/test/accessibility-utils.ts` with axe-core
+- Coverage: V8 provider, 60% thresholds configured but actual coverage <2%
+- Mock Supabase client for unit tests (no real API calls)
+
+### Build & Deploy
+- Vite 5.4.1 with manual chunking, tree shaking, code splitting
+- Build: `npm run build` (includes sitemap gen, 404 copy, SW version update, image optimization)
+- Deploy: Cloudflare Pages from `dist/` folder
+- TypeScript: `tsconfig.app.json` covers `src/`, `tsconfig.node.json` covers config files
+- `package.json` has `"type": "module"` - CommonJS scripts need `.cjs` extension
+- Edge functions are Deno (TypeScript) - NOT checked by `tsc --noEmit`
+
+### Known Pitfalls
+- Self-hosted Supabase: foundational tables (user_profiles, companies) may not exist
+- Migrations must be idempotent: `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`
+- RLS policies referencing `get_user_role()` fail if function doesn't exist - use `auth.uid() IS NOT NULL`
+- Env vars must be ALL_CAPS_SNAKE_CASE (previously had mixed-case bugs)
+- ~65 unique env vars needed across edge functions
+- tsconfig.json extends `expo/tsconfig.base` - root config has Expo integration
+- TOAST_LIMIT was 1 (caused dropped notifications) - now set to 5
+
+---
+
+## 2026-02-19 - US-031 (Previously Completed)
+- RouteErrorBoundary created at `src/components/RouteErrorBoundary.tsx`
+- `createLazyRoute` in `src/utils/lazyRoutes.tsx` wraps lazy components with Suspense + RouteErrorBoundary
+- All 7 route files converted from raw `lazy()` to `createLazyRoute`
+- Chunk load failures show user-friendly UI with Reload/Dashboard buttons
+
+---
+
+## 2026-02-19 - US-032 (Previously Completed)
+- TOAST_LIMIT increased from 1 to 5 in `src/hooks/use-toast.ts`
+- Added gap-2 to ToastViewport in `src/components/ui/toast.tsx`
+- Multiple toasts now stack correctly without overlapping
+
+---

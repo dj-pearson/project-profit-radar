@@ -32,7 +32,12 @@
       "Bash(ls \"C:\\\\Users\\\\pears\\\\Documents\\\\Build-Desk\\\\project-profit-radar\\\\ios\"\" 2>nul && echo \"---ios exists---\" || echo \"---no ios dir--- \")",
       "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\(''.github/workflows/ios-release.yml''\\)\\); print\\(''YAML valid''\\)\")",
       "Bash(python -c \"import yaml; yaml.safe_load\\(open\\(''.github/workflows/ios-release.yml''\\)\\); print\\(''YAML valid''\\)\")",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.aihero.dev)",
+      "Bash(node -e:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []
