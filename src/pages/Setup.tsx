@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses } from '@/utils/mobileHelpers';
+import { logger } from '@/lib/logger';
 
 const Setup = () => {
   const { user, userProfile, refreshProfile, loading } = useAuth();
@@ -28,7 +29,7 @@ const Setup = () => {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && (hash.includes('access_token=') || hash.includes('refresh_token='))) {
-      console.log('🔒 Clearing OAuth callback hash from URL (Setup)...');
+      logger.debug('Clearing OAuth callback hash from URL (Setup)');
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []);
@@ -62,31 +63,13 @@ const Setup = () => {
     setSetupLoading(true);
 
       try {
-        // DEBUG: Log authentication state
-        console.log('🔍 Setup Debug - Start:', {
-          timestamp: new Date().toISOString(),
-          user: user?.id,
-          userEmail: user?.email,
-          userProfile: userProfile?.id,
-          userRole: userProfile?.role,
-          hasSession: !!user,
-          supabaseUrl: import.meta.env.VITE_SUPABASE_URL
-        });
+        // Refresh session before API calls to ensure valid token
+        await supabase.auth.refreshSession();
 
-        // DEBUG: Check current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('🔍 Setup Debug - Session Check:', {
-          hasSession: !!session,
-          sessionError,
-          accessToken: session?.access_token ? 'exists' : 'missing',
-          accessTokenPreview: session?.access_token ? session.access_token.substring(0, 50) + '...' : 'none',
-          user: session?.user?.id,
-          userRole: session?.user?.role,
-          userEmail: session?.user?.email
-        });
 
         if (!session || sessionError) {
-          console.error('❌ No valid session!', sessionError);
+          logger.error('No valid session for company setup', sessionError);
           toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -96,7 +79,6 @@ const Setup = () => {
           return;
         }
 
-        // DEBUG: Log insert payload
         const insertPayload = {
           name: companyName,
           address,
@@ -106,15 +88,6 @@ const Setup = () => {
           license_numbers: licenseNumbers ? licenseNumbers.split(',').map(l => l.trim()) : null,
           tenant_id: userProfile?.tenant_id || null,
         };
-        console.log('🔍 Setup Debug - Insert Payload:', insertPayload);
-        
-        // DEBUG: Check what Supabase client will send
-        const { data: authData } = await supabase.auth.getUser();
-        console.log('🔍 Setup Debug - Auth User Check:', {
-          userId: authData?.user?.id,
-          userEmail: authData?.user?.email,
-          userRole: authData?.user?.role
-        });
 
         // Create company scoped to current site/tenant
         const { data: company, error: companyError } = await supabase
@@ -123,14 +96,10 @@ const Setup = () => {
           .select()
           .single();
 
-        console.log('🔍 Setup Debug - Insert Result:', { company, companyError });
-
         if (companyError) {
-          console.error('❌ Company Insert Error:', {
-            message: companyError.message,
+          logger.error('Company insert failed', companyError, {
             code: companyError.code,
             details: companyError.details,
-            hint: companyError.hint
           });
           throw companyError;
         }
@@ -170,7 +139,7 @@ const Setup = () => {
         .insert(costCodesWithCompanyId);
 
       if (costCodesError) {
-        console.warn('Could not create default cost codes:', costCodesError);
+        logger.warn('Could not create default cost codes', costCodesError);
       }
 
       await refreshProfile();
@@ -183,7 +152,7 @@ const Setup = () => {
       navigate('/dashboard');
 
     } catch (error: any) {
-      console.error('Setup error:', error);
+      logger.error('Setup error', error);
       toast({
         variant: "destructive",
         title: "Setup Failed",

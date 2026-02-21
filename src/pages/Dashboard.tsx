@@ -24,7 +24,7 @@ const Dashboard = () => {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && (hash.includes('access_token=') || hash.includes('refresh_token='))) {
-      console.log('🔒 Clearing OAuth callback hash from URL...');
+      // Clear hash silently - no logging needed for routine OAuth cleanup
       // Remove hash without reloading page
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }

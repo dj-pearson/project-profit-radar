@@ -5,6 +5,7 @@ import { Device } from '@capacitor/device';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
 
 export interface OfflineData {
   id: string;
@@ -147,7 +148,7 @@ export const useOfflineSync = () => {
       }
 
     } catch (error) {
-      console.error('Error loading pending sync data:', error);
+      logger.error('Error loading pending sync data:', error);
     }
   };
 
@@ -187,7 +188,7 @@ export const useOfflineSync = () => {
       return offlineItem.id;
 
     } catch (error) {
-      console.error('Error saving offline data:', error);
+      logger.error('Error saving offline data:', error);
       throw error;
     }
   }, [toast]);
@@ -214,7 +215,7 @@ export const useOfflineSync = () => {
           await syncSingleItem(item);
           syncedCount++;
         } catch (error) {
-          console.error(`Failed to sync item ${item.id}:`, error);
+          logger.error(`Failed to sync item ${item.id}:`, error);
           failedCount++;
 
           // Calculate next retry time using exponential backoff
@@ -231,7 +232,7 @@ export const useOfflineSync = () => {
           };
 
           // Log backoff info
-          console.log(
+          logger.debug(
             `Item ${item.id} failed. Retry ${updatedItem.retryCount}/${MAX_RETRY_COUNT}. ` +
             `Next retry in ${backoffMs / 1000}s`
           );
@@ -286,7 +287,7 @@ export const useOfflineSync = () => {
       }
 
     } catch (error) {
-      console.error('Error during sync:', error);
+      logger.error('Error during sync:', error);
       setOfflineState(prev => ({ ...prev, syncInProgress: false }));
       
       toast({
@@ -405,7 +406,7 @@ export const useOfflineSync = () => {
       });
 
     } catch (error) {
-      console.error('Error clearing synced data:', error);
+      logger.error('Error clearing synced data:', error);
     }
   }, [offlineState.pendingSync, toast]);
 
@@ -473,7 +474,7 @@ export const useOfflineSync = () => {
       };
 
     } catch (error) {
-      console.error('Error getting storage info:', error);
+      logger.error('Error getting storage info:', error);
       return null;
     }
   }, [offlineState]);

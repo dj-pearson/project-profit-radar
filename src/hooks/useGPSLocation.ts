@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface GPSCoordinates {
   latitude: number;
@@ -74,7 +75,7 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
       
       return false;
     } catch (error) {
-      console.error('Permission check error:', error);
+      logger.error('Permission check error:', error);
       return false;
     }
   };
@@ -101,7 +102,7 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
       const data = await response.json();
       return data.display_name || undefined;
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      logger.error('Reverse geocoding error:', error);
       return undefined;
     }
   };
@@ -165,7 +166,7 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
 
       return result;
     } catch (error: any) {
-      console.error('Location error:', error);
+      logger.error('Location error:', error);
       
       let errorMessage = 'Unable to get current location';
       

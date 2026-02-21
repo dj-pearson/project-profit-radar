@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 /**
  * Validate Google Analytics tracking ID format
@@ -31,7 +32,7 @@ export const initializeGoogleAnalytics = async () => {
 
     // SECURITY: Validate tracking ID format before injecting into script
     if (!isValidGATrackingId(trackingId)) {
-      console.error('Invalid Google Analytics tracking ID format:', trackingId);
+      logger.error('Invalid Google Analytics tracking ID format', undefined, { trackingId });
       return;
     }
 
@@ -39,9 +40,9 @@ export const initializeGoogleAnalytics = async () => {
     loadGoogleAnalyticsScript(trackingId);
     
 
-    console.log('Google Analytics initialized with ID:', trackingId);
+    logger.debug('Google Analytics initialized with ID: ' + trackingId);
   } catch (error) {
-    console.error('Error initializing Google Analytics:', error);
+    logger.error('Error initializing Google Analytics', error instanceof Error ? error : undefined);
   }
 };
 
@@ -51,7 +52,7 @@ const loadGoogleAnalyticsScript = (trackingId: string) => {
 
   // SECURITY: Double-check tracking ID format before injecting into script
   if (!isValidGATrackingId(trackingId)) {
-    console.error('Invalid tracking ID format, refusing to load script');
+    logger.error('Invalid tracking ID format, refusing to load script');
     return;
   }
 
