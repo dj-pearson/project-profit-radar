@@ -165,14 +165,15 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
       });
 
       return result;
-    } catch (error: any) {
-      logger.error('Location error:', error);
-      
+    } catch (error: unknown) {
+      logger.error('Location error:', error instanceof Error ? error : undefined);
+
       let errorMessage = 'Unable to get current location';
-      
-      if (error.message?.includes('timeout')) {
+      const message = error instanceof Error ? error.message : '';
+
+      if (message.includes('timeout')) {
         errorMessage = 'Location request timed out. Please try again.';
-      } else if (error.message?.includes('denied')) {
+      } else if (message.includes('denied')) {
         errorMessage = 'Location permission denied';
       }
 

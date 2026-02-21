@@ -136,9 +136,9 @@ export const useDeviceTrust = () => {
         ...prev,
         trustedDevices: data || [],
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading trusted devices:', error);
-      setState(prev => ({ ...prev, error: error.message }));
+      setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }));
     }
   }, [user]);
 
@@ -160,9 +160,9 @@ export const useDeviceTrust = () => {
         ...prev,
         activeSessions: data || [],
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading active sessions:', error);
-      setState(prev => ({ ...prev, error: error.message }));
+      setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Unknown error' }));
     }
   }, [user]);
 
@@ -236,7 +236,7 @@ export const useDeviceTrust = () => {
         description: "Failed to trust this device.",
         variant: "destructive",
       });
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }, [user, getCurrentDeviceId, generateDeviceFingerprint, parseUserAgent, loadTrustedDevices]);
 
@@ -260,14 +260,14 @@ export const useDeviceTrust = () => {
 
       await loadTrustedDevices();
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error revoking device trust:', error);
       toast({
         title: "Error",
         description: "Failed to remove the device.",
         variant: "destructive",
       });
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }, [user, loadTrustedDevices]);
 
@@ -297,9 +297,9 @@ export const useDeviceTrust = () => {
 
       await loadTrustedDevices();
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating device trust:', error);
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }, [user, loadTrustedDevices]);
 
@@ -326,14 +326,14 @@ export const useDeviceTrust = () => {
 
       await loadActiveSessions();
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error revoking session:', error);
       toast({
         title: "Error",
         description: "Failed to revoke the session.",
         variant: "destructive",
       });
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }, [user, loadActiveSessions]);
 
@@ -363,14 +363,14 @@ export const useDeviceTrust = () => {
 
       await loadActiveSessions();
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error revoking all sessions:', error);
       toast({
         title: "Error",
         description: "Failed to revoke sessions.",
         variant: "destructive",
       });
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }, [user, getCurrentDeviceId, loadActiveSessions]);
 

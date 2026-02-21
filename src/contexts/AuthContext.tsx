@@ -130,7 +130,7 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    userData?: any
+    userData?: { first_name?: string; last_name?: string; role?: string }
   ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
@@ -417,6 +417,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return null;
         }
 
+        // Cast to mutable profile for role override
+        const profile = data as UserProfile;
+
         // SECURITY: Get authoritative role from user_roles via RPC
         try {
           const { data: secureRole, error: roleError } = await supabase
@@ -425,39 +428,39 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           if (roleError) {
             logger.error('Error fetching user role from user_roles:', roleError);
           } else if (secureRole) {
-            (data as any).role = secureRole;
+            profile.role = secureRole;
           }
         } catch (roleErr) {
           logger.error('Exception fetching user role from user_roles:', roleErr);
         }
 
         logger.debug('Profile fetched successfully:', {
-          role: (data as any).role,
+          role: profile.role,
         });
-        
+
         // Removed: Site context update - single-tenant architecture
-        
+
         // Set Sentry user context for error tracking
         setSentryUser({
-          id: data.id,
-          email: data.email,
-          role: (data as any).role,
+          id: profile.id,
+          email: profile.email,
+          role: profile.role,
         });
 
         // Set error logging user context
         setErrorLoggingUser({
-          id: data.id,
-          email: data.email,
-          role: (data as any).role,
-          company_id: (data as any).company_id,
+          id: profile.id,
+          email: profile.email,
+          role: profile.role,
+          company_id: profile.company_id,
         });
 
         // SECURITY: Use sessionStorage instead of localStorage for PII
         // sessionStorage is cleared when browser/tab closes, reducing exposure
         try {
-          sessionStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(data));
+          sessionStorage.setItem(`bd.userProfile.${userId}`, JSON.stringify(profile));
         } catch {}
-        return data as UserProfile;
+        return profile;
       } catch (error) {
         logger.error("Profile fetch exception:", error);
         const isTimeout =
@@ -888,7 +891,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   // Sign up using our custom edge function (bypasses Supabase's email)
   const signUp = useCallback(
-    async (email: string, password: string, userData?: any): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
+    async (email: string, password: string, userData?: { first_name?: string; last_name?: string; role?: string }): Promise<{ error?: string; userId?: string; expiresInMinutes?: number }> => {
       try {
         logger.debug("AuthContext: Signing up via OTP flow...");
         setLoading(true);

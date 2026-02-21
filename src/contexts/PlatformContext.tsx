@@ -9,7 +9,7 @@ export interface CrossModuleRelationship {
   target_id: string;
   relationship_type: string;
   created_at: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface NavigationContext {
@@ -17,7 +17,7 @@ export interface NavigationContext {
   currentEntity?: {
     type: string;
     id: string;
-    data?: any;
+    data?: Record<string, unknown>;
   };
   breadcrumb: Array<{
     label: string;
@@ -27,23 +27,37 @@ export interface NavigationContext {
   relatedEntities: CrossModuleRelationship[];
 }
 
+export interface PlatformAction {
+  id: string;
+  label: string;
+  module: string;
+  handler: () => void;
+}
+
+export interface ActivityEntry {
+  id: string;
+  type: string;
+  description: string;
+  timestamp: string;
+}
+
 export interface PlatformContextType {
   navigationContext: NavigationContext;
   setNavigationContext: (context: Partial<NavigationContext>) => void;
   relationships: CrossModuleRelationship[];
   loadRelationships: (entityType: string, entityId: string) => Promise<void>;
   createRelationship: (relationship: Omit<CrossModuleRelationship, 'id' | 'created_at'>) => Promise<void>;
-  availableActions: any[];
-  triggerWorkflow: (workflowType: string, data: any) => Promise<void>;
+  availableActions: PlatformAction[];
+  triggerWorkflow: (workflowType: string, data: Record<string, unknown>) => Promise<void>;
   syncStatus: 'idle' | 'syncing' | 'error';
   lastSyncTime?: Date;
   metrics: {
     totalProjects: number;
     activeOpportunities: number;
     pendingTasks: number;
-    recentActivity: any[];
+    recentActivity: ActivityEntry[];
   };
-  navigateWithContext: (path: string, context?: any) => void;
+  navigateWithContext: (path: string, context?: Partial<NavigationContext>) => void;
   getRelatedEntities: (entityType: string, entityId: string) => CrossModuleRelationship[];
   refreshPlatformData: () => Promise<void>;
 }
@@ -71,7 +85,7 @@ export const PlatformProvider: React.FC<PlatformProviderProps> = ({ children }) 
   });
   
   const [relationships, setRelationships] = useState<CrossModuleRelationship[]>([]);
-  const [availableActions, setAvailableActions] = useState<any[]>([]);
+  const [availableActions, setAvailableActions] = useState<PlatformAction[]>([]);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [lastSyncTime, setLastSyncTime] = useState<Date>();
   const [metrics, setMetrics] = useState({
@@ -102,7 +116,7 @@ export const PlatformProvider: React.FC<PlatformProviderProps> = ({ children }) 
     setRelationships(prev => [...prev, newRelationship]);
   };
 
-  const triggerWorkflow = async (workflowType: string, data: any) => {
+  const triggerWorkflow = async (workflowType: string, data: Record<string, unknown>) => {
     setSyncStatus('syncing');
     // Mock workflow execution
     setTimeout(() => setSyncStatus('idle'), 1000);
@@ -118,7 +132,7 @@ export const PlatformProvider: React.FC<PlatformProviderProps> = ({ children }) 
     });
   };
 
-  const navigateWithContext = (path: string, context?: any) => {
+  const navigateWithContext = (path: string, context?: Partial<NavigationContext>) => {
     if (context) {
       setNavigationContext(context);
     }

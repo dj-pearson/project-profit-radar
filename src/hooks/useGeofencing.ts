@@ -100,8 +100,8 @@ export const useGeofencing = (options: UseGeofencingOptions = {}): UseGeofencing
       const granted = await geofencingService.requestPermission();
       setPermissionStatus(granted ? 'granted' : 'denied');
       return granted;
-    } catch (err: any) {
-      setError(err.message || 'Permission denied');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Permission denied');
       setPermissionStatus('denied');
       return false;
     }
@@ -117,8 +117,8 @@ export const useGeofencing = (options: UseGeofencingOptions = {}): UseGeofencing
       });
       setCurrentLocation(location);
       return location;
-    } catch (err: any) {
-      setError(err.message || 'Failed to get location');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to get location');
       return null;
     }
   }, [enableHighAccuracy, timeout, maximumAge]);
