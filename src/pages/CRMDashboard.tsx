@@ -1009,7 +1009,7 @@ const CRMDashboard = () => {
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button className={mobileButtonClasses.primary} onClick={() => {/* TODO: Add new lead functionality */}} aria-label="Add new lead">
+                      <Button className={mobileButtonClasses.primary} onClick={() => { navigate('/crm/leads/new'); }} aria-label="Add new lead">
                         <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                         New Lead
                       </Button>
@@ -1101,7 +1101,7 @@ const CRMDashboard = () => {
                       <CardTitle>Sales Opportunities</CardTitle>
                       <CardDescription>Track your sales pipeline and close deals</CardDescription>
                     </div>
-                    <Button onClick={() => {/* TODO: Add new opportunity functionality */}} aria-label="Create new opportunity">
+                    <Button onClick={() => { toast({ title: 'Coming Soon', description: 'Opportunity creation will be available in a future update.' }); }} aria-label="Create new opportunity">
                       <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                       New Opportunity
                     </Button>
@@ -1196,7 +1196,7 @@ const CRMDashboard = () => {
       <LeadDetailView 
         leadId={selectedLeadId} 
         onBack={() => setViewMode('dashboard')}
-        onUpdate={() => {/* TODO: Add lead update handler */}}
+        onUpdate={() => { loadCRMData(); }}
       />
     )}
     

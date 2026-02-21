@@ -20,6 +20,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface BulkAction {
   id: string;
@@ -221,31 +222,32 @@ export const SelectableItem = ({
   );
 };
 
-// Common bulk actions for construction management
+// Common bulk actions for construction management.
+// Override these per-component by passing your own actions array.
 export const defaultBulkActions: BulkAction[] = [
   {
     id: 'complete',
     label: 'Mark Complete',
     icon: <CheckCircle2 className="h-4 w-4" />,
-    action: (ids) => { /* TODO: Implement mark complete */ }
+    action: (ids) => { logger.warn(`Bulk "mark complete" not implemented for ${ids.length} items`); }
   },
   {
     id: 'duplicate',
     label: 'Duplicate',
     icon: <Copy className="h-4 w-4" />,
-    action: (ids) => { /* TODO: Implement duplicate */ }
+    action: (ids) => { logger.warn(`Bulk "duplicate" not implemented for ${ids.length} items`); }
   },
   {
     id: 'archive',
     label: 'Archive',
     icon: <Archive className="h-4 w-4" />,
-    action: (ids) => { /* TODO: Implement archive */ }
+    action: (ids) => { logger.warn(`Bulk "archive" not implemented for ${ids.length} items`); }
   },
   {
     id: 'export',
     label: 'Export',
     icon: <Download className="h-4 w-4" />,
-    action: (ids) => { /* TODO: Implement export */ }
+    action: (ids) => { logger.warn(`Bulk "export" not implemented for ${ids.length} items`); }
   },
   {
     id: 'delete',
@@ -253,7 +255,7 @@ export const defaultBulkActions: BulkAction[] = [
     icon: <Trash2 className="h-4 w-4" />,
     variant: 'destructive' as const,
     requiresConfirmation: true,
-    action: (ids) => { /* TODO: Implement delete */ }
+    action: (ids) => { logger.warn(`Bulk "delete" not implemented for ${ids.length} items`); }
   }
 ];
 

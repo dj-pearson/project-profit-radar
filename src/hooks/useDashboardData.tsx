@@ -141,19 +141,19 @@ export const useDashboardData = () => {
           overallHealth: (project.completion_percentage || 0) > 90 ? 'excellent' : 
                          (project.completion_percentage || 0) > 70 ? 'good' : 'warning',
           budget: {
-            spent: (project.budget || 0) * 0.6,
+            spent: (project.budget || 0) * ((project.completion_percentage || 0) / 100),
             total: project.budget || 0,
-            variance: Math.random() * 10 - 5
+            variance: 0
           },
           schedule: {
             completion: project.completion_percentage || 0,
-            daysRemaining: project.end_date ? 
+            daysRemaining: project.end_date ?
               Math.ceil((new Date(project.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 30,
             onTrack: (project.completion_percentage || 0) > 70
           },
           safety: {
             incidents: 0,
-            score: 95 + Math.floor(Math.random() * 5)
+            score: 100
           }
         })) || [],
         alerts: [],
