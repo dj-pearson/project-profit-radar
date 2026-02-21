@@ -3,6 +3,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { gtag } from '@/hooks/useGoogleAnalytics';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
+import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
 import JobProfitabilityOverview from '@/components/financial/JobProfitabilityOverview';
 import InvoicingPayments from '@/components/financial/InvoicingPayments';
@@ -20,10 +22,34 @@ import { StripePaymentProcessor } from '@/components/financial/StripePaymentProc
 import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+const FinancialDashboardSkeleton = () => (
+  <div className="space-y-6">
+    <Skeleton className="h-10 w-full" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="lg:col-span-2"><Skeleton className="h-48" /></div>
+      <Skeleton className="h-48" />
+      <div className="lg:col-span-2"><Skeleton className="h-48" /></div>
+      <Skeleton className="h-48" />
+    </div>
+  </div>
+);
+
 const FinancialDashboard = () => {
+  const { loading: authLoading } = useAuth();
+
   React.useEffect(() => {
     gtag.trackFeature('financial_dashboard', 'page_view');
   }, []);
+
+  if (authLoading) {
+    return (
+      <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
+        <DashboardLayout title="Financial Dashboard">
+          <FinancialDashboardSkeleton />
+        </DashboardLayout>
+      </RoleGuard>
+    );
+  }
 
   return (
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>

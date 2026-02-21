@@ -10,10 +10,13 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 const Dashboard = () => {
   const { user, userProfile, loading: authLoading } = useAuth();
-  const { data, loading: dataLoading } = useDashboardData();
+  const { data, loading: dataLoading, error: dataError, refetch } = useDashboardData();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,6 +49,25 @@ const Dashboard = () => {
   // Show loading state while auth or data is loading
   if (authLoading || dataLoading || !user || !userProfile) {
     return <DashboardSkeleton />;
+  }
+
+  // Show error state if data failed to load
+  if (dataError && !data) {
+    return (
+      <DashboardLayout title="Dashboard">
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Failed to load dashboard data</AlertTitle>
+          <AlertDescription className="flex items-center gap-4 mt-2">
+            <span>{dataError}</span>
+            <Button variant="outline" size="sm" onClick={refetch}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </DashboardLayout>
+    );
   }
 
   // Show empty state if no data is available (new user/company)

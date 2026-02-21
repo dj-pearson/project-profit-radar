@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export interface DashboardKPIs {
   totalRevenue: number;
@@ -167,7 +168,7 @@ export const useDashboardData = () => {
 
       setData(dashboardData);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      logger.error('Error loading dashboard data', error instanceof Error ? error : undefined);
       setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
       toast({
         title: "Error Loading Dashboard",
