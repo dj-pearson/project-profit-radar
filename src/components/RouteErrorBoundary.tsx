@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home, WifiOff } from 'lucide-react';
+import { captureException } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -44,6 +45,11 @@ export class RouteErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Route Error Boundary caught an error:', error, errorInfo);
+    captureException(error, {
+      componentStack: errorInfo.componentStack || undefined,
+      boundary: 'RouteErrorBoundary',
+      isChunkError: this.state.isChunkError,
+    });
   }
 
   private handleRetry = () => {

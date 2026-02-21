@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { logError } from '@/services/errorLoggingService';
+import { captureException } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -32,6 +33,10 @@ class ErrorBoundary extends Component<Props, State> {
       errorType: 'render',
       severity: 'high',
       componentStack: errorInfo.componentStack || undefined,
+    });
+    captureException(error, {
+      componentStack: errorInfo.componentStack || undefined,
+      boundary: 'ErrorBoundary',
     });
     this.props.onError?.(error, errorInfo);
   }
