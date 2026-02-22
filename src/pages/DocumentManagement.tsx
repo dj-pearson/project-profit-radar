@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -414,9 +415,11 @@ const DocumentManagement = () => {
   }
 
   return (
-    <DashboardLayout 
+    <AccessiblePageWrapper pageTitle="Document Management">
+    <DashboardLayout
       title={pageTitle}
       showTrialBanner={false}
+      hasAccessibleWrapper
     >
       <div className="flex justify-end mb-6 gap-2">
         <Button
@@ -660,6 +663,7 @@ const DocumentManagement = () => {
         </AlertDialogContent>
       </AlertDialog>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

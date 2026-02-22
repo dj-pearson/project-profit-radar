@@ -10,25 +10,26 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Single-tenant production defaults (always api.build-desk.com)
 const PRODUCTION_URL = 'https://api.build-desk.com';
-// The anon key is a public key (security is enforced via RLS, not key secrecy).
-// This fallback ensures mobile/Capacitor builds work without env var injection.
-const PRODUCTION_ANON_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NjAwNzA2MCwiZXhwIjo0OTIxNjgwNjYwLCJyb2xlIjoiYW5vbiJ9.0ZmnSLWlt3HntC4M7j12YgPt7DwuP23EoZzCDkp9kFk';
 
-// Resolve configuration: env vars take priority, then production defaults
+// Resolve configuration: env vars take priority, then production URL default
 const RESOLVED_SUPABASE_URL = SUPABASE_URL || PRODUCTION_URL;
-const RESOLVED_SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || PRODUCTION_ANON_KEY;
+const RESOLVED_SUPABASE_KEY = SUPABASE_PUBLISHABLE_KEY || '';
 
 // Export the resolved anon key for use in manual fetch calls (e.g., AuthContext edge function calls)
 export const supabaseAnonKey = RESOLVED_SUPABASE_KEY;
 
-// Log warning if key is missing (app will render but API calls will fail)
+// Fail fast if the key is missing
 if (!RESOLVED_SUPABASE_KEY) {
-  // Using console.warn directly (not logger) since this runs before app initialization
-  // eslint-disable-next-line no-console
-  console.warn(
+  const message =
     '[BuildDesk] VITE_SUPABASE_PUBLISHABLE_KEY is not set. ' +
-    'API calls will fail. Set this env var in your build environment.'
-  );
+    'API calls will fail. Set this env var in your .env file or build environment.';
+  if (import.meta.env.PROD) {
+    // eslint-disable-next-line no-console
+    console.error(message);
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn(message);
+  }
 }
 
 // Edge Functions URL (separate deployment for self-hosted)

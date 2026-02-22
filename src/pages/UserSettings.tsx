@@ -30,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/contexts/ThemeContext';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 interface UserPreferences {
   id?: string;
@@ -263,14 +264,17 @@ const UserSettings = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="User Settings">
+      <AccessiblePageWrapper pageTitle="User Settings">
+      <DashboardLayout title="User Settings" hasAccessibleWrapper>
         <div className="text-center py-8">Loading your settings...</div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Personal Settings">
+    <AccessiblePageWrapper pageTitle="User Settings">
+    <DashboardLayout title="Personal Settings" hasAccessibleWrapper>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -714,6 +718,7 @@ const UserSettings = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

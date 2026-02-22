@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { TableSkeleton } from '@/components/ui/loading-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
+import { logger } from '@/lib/logger';
 import InvoiceGenerator from '@/components/InvoiceGenerator';
 import InvoiceList from '@/components/invoices/InvoiceList';
 import InvoiceStats from '@/components/invoices/InvoiceStats';
@@ -51,7 +54,7 @@ const Invoices: React.FC = () => {
       if (error) throw error;
       setInvoices(data || []);
     } catch (error) {
-      console.error('Error loading invoices:', error);
+      logger.error('Error loading invoices', error instanceof Error ? error : undefined);
       toast({
         title: "Error",
         description: "Failed to load invoices",
@@ -95,7 +98,26 @@ const Invoices: React.FC = () => {
     );
   }
 
+  if (loading && invoices.length === 0) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Invoice Management</h1>
+            <p className="text-muted-foreground">Manage invoices, progress billing, and retention</p>
+          </div>
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <TableSkeleton rows={5} columns={5} />
+      </div>
+    );
+  }
+
   return (
+    <AccessiblePageWrapper pageTitle="Invoices">
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -214,6 +236,7 @@ const Invoices: React.FC = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </AccessiblePageWrapper>
   );
 };
 

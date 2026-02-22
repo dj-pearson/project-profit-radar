@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface AIModel {
   id: string;
@@ -138,7 +139,7 @@ const AIModelManager = () => {
         auth_method: model.auth_method as 'bearer' | 'x-api-key' | 'basic'
       })));
     } catch (error) {
-      console.error('Error loading models:', error);
+      logger.error('Error loading models:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -158,7 +159,7 @@ const AIModelManager = () => {
 
       if (error) {
         // Table might not exist yet
-        console.log('Environment config table not yet created');
+        logger.debug('Environment config table not yet created');
         return;
       }
       setEnvConfigs(data || []);
@@ -267,7 +268,7 @@ const AIModelManager = () => {
       resetForm();
       loadModels();
     } catch (error) {
-      console.error('Error saving model:', error);
+      logger.error('Error saving model:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -293,7 +294,7 @@ const AIModelManager = () => {
       });
       loadModels();
     } catch (error) {
-      console.error('Error deleting model:', error);
+      logger.error('Error deleting model:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -341,7 +342,7 @@ const AIModelManager = () => {
       });
       loadModels();
     } catch (error) {
-      console.error('Error updating aliases:', error);
+      logger.error('Error updating aliases:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -370,7 +371,7 @@ const AIModelManager = () => {
         variant: data.success ? "default" : "destructive"
       });
     } catch (error) {
-      console.error('Error running AI test:', error);
+      logger.error('Error running AI test:', error);
       toast({
         variant: "destructive",
         title: "Test Failed",

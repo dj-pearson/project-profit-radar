@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface GPSCoordinates {
   latitude: number;
@@ -74,7 +75,7 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
       
       return false;
     } catch (error) {
-      console.error('Permission check error:', error);
+      logger.error('Permission check error:', error);
       return false;
     }
   };
@@ -101,7 +102,7 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
       const data = await response.json();
       return data.display_name || undefined;
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      logger.error('Reverse geocoding error:', error);
       return undefined;
     }
   };
@@ -164,14 +165,15 @@ export const useGPSLocation = (): UseGPSLocationReturn => {
       });
 
       return result;
-    } catch (error: any) {
-      console.error('Location error:', error);
-      
+    } catch (error: unknown) {
+      logger.error('Location error:', error instanceof Error ? error : undefined);
+
       let errorMessage = 'Unable to get current location';
-      
-      if (error.message?.includes('timeout')) {
+      const message = error instanceof Error ? error.message : '';
+
+      if (message.includes('timeout')) {
         errorMessage = 'Location request timed out. Please try again.';
-      } else if (error.message?.includes('denied')) {
+      } else if (message.includes('denied')) {
         errorMessage = 'Location permission denied';
       }
 

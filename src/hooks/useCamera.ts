@@ -29,8 +29,8 @@ export function useCamera(): CameraHookReturn {
         input.capture = 'environment';
 
         return new Promise((resolve) => {
-          input.onchange = (e: any) => {
-            const file = e.target.files?.[0];
+          input.onchange = (e: Event) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
               const url = URL.createObjectURL(file);
               resolve(url);
@@ -52,8 +52,8 @@ export function useCamera(): CameraHookReturn {
       });
 
       return photo.webPath || null;
-    } catch (err: any) {
-      if (err.message !== 'User cancelled photos app') {
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || err.message !== 'User cancelled photos app') {
         setError('Failed to take picture');
         console.error('Camera error:', err);
       }
@@ -75,8 +75,8 @@ export function useCamera(): CameraHookReturn {
         input.accept = 'image/*';
 
         return new Promise((resolve) => {
-          input.onchange = (e: any) => {
-            const file = e.target.files?.[0];
+          input.onchange = (e: Event) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
               const url = URL.createObjectURL(file);
               resolve(url);
@@ -98,8 +98,8 @@ export function useCamera(): CameraHookReturn {
       });
 
       return photo.webPath || null;
-    } catch (err: any) {
-      if (err.message !== 'User cancelled photos app') {
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || err.message !== 'User cancelled photos app') {
         setError('Failed to select photo');
         console.error('Gallery error:', err);
       }

@@ -3,6 +3,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
 import { gtag } from '@/hooks/useGoogleAnalytics';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
+import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 import CashFlowSnapshot from '@/components/financial/CashFlowSnapshot';
 import JobProfitabilityOverview from '@/components/financial/JobProfitabilityOverview';
 import InvoicingPayments from '@/components/financial/InvoicingPayments';
@@ -19,15 +21,43 @@ import Form1099Manager from '@/components/financial/Form1099Manager';
 import { StripePaymentProcessor } from '@/components/financial/StripePaymentProcessor';
 import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+
+const FinancialDashboardSkeleton = () => (
+  <div className="space-y-6">
+    <Skeleton className="h-10 w-full" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="lg:col-span-2"><Skeleton className="h-48" /></div>
+      <Skeleton className="h-48" />
+      <div className="lg:col-span-2"><Skeleton className="h-48" /></div>
+      <Skeleton className="h-48" />
+    </div>
+  </div>
+);
 
 const FinancialDashboard = () => {
+  const { loading: authLoading } = useAuth();
+
   React.useEffect(() => {
     gtag.trackFeature('financial_dashboard', 'page_view');
   }, []);
 
+  if (authLoading) {
+    return (
+      <AccessiblePageWrapper pageTitle="Financial Dashboard">
+        <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
+          <DashboardLayout title="Financial Dashboard" hasAccessibleWrapper>
+            <FinancialDashboardSkeleton />
+          </DashboardLayout>
+        </RoleGuard>
+      </AccessiblePageWrapper>
+    );
+  }
+
   return (
+    <AccessiblePageWrapper pageTitle="Financial Dashboard">
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
-      <DashboardLayout title="Financial Dashboard">
+      <DashboardLayout title="Financial Dashboard" hasAccessibleWrapper>
         <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
@@ -122,6 +152,7 @@ const FinancialDashboard = () => {
         </div>
       </DashboardLayout>
     </RoleGuard>
+    </AccessiblePageWrapper>
   );
 };
 

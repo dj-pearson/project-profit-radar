@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -275,7 +276,8 @@ const ClientPortal = () => {
 
   if (projects.length === 0) {
     return (
-      <DashboardLayout title="Client Portal">
+      <AccessiblePageWrapper pageTitle="Client Portal">
+      <DashboardLayout title="Client Portal" hasAccessibleWrapper>
         <Card>
           <CardContent className="text-center py-12">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -286,11 +288,13 @@ const ClientPortal = () => {
           </CardContent>
         </Card>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Client Portal">
+    <AccessiblePageWrapper pageTitle="Client Portal">
+    <DashboardLayout title="Client Portal" hasAccessibleWrapper>
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Project Selector */}
@@ -605,6 +609,7 @@ const ClientPortal = () => {
         </div>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

@@ -3,6 +3,7 @@ import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { SubscriptionUsageWidget } from "@/components/subscription/SubscriptionUsageWidget";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,10 +11,13 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useCriticalCSS } from "@/utils/criticalCSSExtractor";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 const Dashboard = () => {
   const { user, userProfile, loading: authLoading } = useAuth();
-  const { data, loading: dataLoading } = useDashboardData();
+  const { data, loading: dataLoading, error: dataError, refetch } = useDashboardData();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,7 +28,7 @@ const Dashboard = () => {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && (hash.includes('access_token=') || hash.includes('refresh_token='))) {
-      console.log('🔒 Clearing OAuth callback hash from URL...');
+      // Clear hash silently - no logging needed for routine OAuth cleanup
       // Remove hash without reloading page
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
@@ -46,6 +50,27 @@ const Dashboard = () => {
   // Show loading state while auth or data is loading
   if (authLoading || dataLoading || !user || !userProfile) {
     return <DashboardSkeleton />;
+  }
+
+  // Show error state if data failed to load
+  if (dataError && !data) {
+    return (
+      <AccessiblePageWrapper pageTitle="Dashboard">
+        <DashboardLayout title="Dashboard" hasAccessibleWrapper>
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Failed to load dashboard data</AlertTitle>
+            <AlertDescription className="flex items-center gap-4 mt-2">
+              <span>{dataError}</span>
+              <Button variant="outline" size="sm" onClick={refetch}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
   }
 
   // Show empty state if no data is available (new user/company)
@@ -110,13 +135,33 @@ const Dashboard = () => {
   // Show empty dashboard for new users or companies without data
   if (!hasData && userProfile) {
     return (
-      <DashboardLayout title="Dashboard">
+      <AccessiblePageWrapper pageTitle="Dashboard">
+        <DashboardLayout title="Dashboard" hasAccessibleWrapper>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
+            <section className="lg:col-span-2" aria-label="Getting started">
+              <EmptyDashboard
+                userRole={userProfile.role}
+                onAction={handleEmptyAction}
+              />
+            </section>
+            <aside className="lg:col-span-1" aria-label="Subscription usage">
+              <SubscriptionUsageWidget />
+            </aside>
+          </div>
+          <section aria-label="Onboarding progress">
+            <OnboardingChecklist />
+          </section>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
+  }
+
+  return (
+    <AccessiblePageWrapper pageTitle="Dashboard">
+      <DashboardLayout title="Dashboard" hasAccessibleWrapper>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
-          <section className="lg:col-span-2" aria-label="Getting started">
-            <EmptyDashboard
-              userRole={userProfile.role}
-              onAction={handleEmptyAction}
-            />
+          <section className="lg:col-span-2" aria-label="Dashboard overview">
+            <RoleDashboard />
           </section>
           <aside className="lg:col-span-1" aria-label="Subscription usage">
             <SubscriptionUsageWidget />
@@ -126,23 +171,7 @@ const Dashboard = () => {
           <OnboardingChecklist />
         </section>
       </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout title="Dashboard">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
-        <section className="lg:col-span-2" aria-label="Dashboard overview">
-          <RoleDashboard />
-        </section>
-        <aside className="lg:col-span-1" aria-label="Subscription usage">
-          <SubscriptionUsageWidget />
-        </aside>
-      </div>
-      <section aria-label="Onboarding progress">
-        <OnboardingChecklist />
-      </section>
-    </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

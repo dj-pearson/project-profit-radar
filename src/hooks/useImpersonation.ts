@@ -146,12 +146,12 @@ const hasChecked = useRef(false);
         }, 1000);
 
         return true;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error starting impersonation:', error);
         toast({
           variant: 'destructive',
           title: 'Impersonation Failed',
-          description: error.message || 'Could not start impersonation session',
+          description: error instanceof Error ? error.message : 'Could not start impersonation session',
         });
         return false;
       } finally {
@@ -190,7 +190,7 @@ const hasChecked = useRef(false);
       setTimeout(() => {
         window.location.reload();
       }, 500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error ending impersonation:', error);
       toast({
         variant: 'destructive',
@@ -203,7 +203,7 @@ const hasChecked = useRef(false);
   }, [session]);
 
   const logAction = useCallback(
-    async (action: string, details: any) => {
+    async (action: string, details: Record<string, unknown>) => {
       if (!session) return;
 
       try {

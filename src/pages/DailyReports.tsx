@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -238,7 +239,8 @@ const DailyReports = () => {
 
   if (loading || loadingReports) {
     return (
-      <DashboardLayout title="Daily Reports">
+      <AccessiblePageWrapper pageTitle="Daily Reports">
+      <DashboardLayout title="Daily Reports" hasAccessibleWrapper>
         <div className="flex items-center justify-center h-96" role="status" aria-live="polite" aria-label="Loading daily reports">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4" aria-hidden="true"></div>
@@ -246,11 +248,13 @@ const DailyReports = () => {
           </div>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Daily Reports">
+    <AccessiblePageWrapper pageTitle="Daily Reports">
+    <DashboardLayout title="Daily Reports" hasAccessibleWrapper>
       <main className="space-y-6" role="main" aria-label="Daily Reports Management">
         <header className="flex items-center justify-between">
           <div>
@@ -643,6 +647,7 @@ const DailyReports = () => {
         </div>
       )}
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

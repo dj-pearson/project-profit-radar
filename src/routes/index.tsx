@@ -1,9 +1,11 @@
 /**
  * Centralized Route Configuration
- * Exports all application routes in organized groups
+ * Exports all application routes in organized groups.
+ * Feature sections wrapped in FeatureErrorBoundary via layout routes.
  */
 
-import { Route } from 'react-router-dom';
+import { Route, Outlet } from 'react-router-dom';
+import { FeatureErrorBoundary } from '@/components/FeatureErrorBoundary';
 import { appRoutes } from './appRoutes';
 import { marketingRoutes } from './marketingRoutes';
 import { projectRoutes } from './projectRoutes';
@@ -11,6 +13,13 @@ import { financialRoutes } from './financialRoutes';
 import { peopleRoutes } from './peopleRoutes';
 import { operationsRoutes } from './operationsRoutes';
 import { adminRoutes } from './adminRoutes';
+
+/** Layout wrapper that adds a FeatureErrorBoundary around child routes */
+const FeatureBoundaryLayout = ({ featureName }: { featureName: string }) => (
+  <FeatureErrorBoundary featureName={featureName}>
+    <Outlet />
+  </FeatureErrorBoundary>
+);
 
 /**
  * 404 Not Found Route
@@ -31,7 +40,8 @@ export const notFoundRoute = (
 
 /**
  * All Application Routes
- * Organized by functional area for better maintainability
+ * Organized by functional area for better maintainability.
+ * Feature sections wrapped in FeatureErrorBoundary via layout routes.
  */
 export const allRoutes = (
   <>
@@ -41,20 +51,30 @@ export const allRoutes = (
     {/* Marketing & Public Pages */}
     {marketingRoutes}
 
-    {/* Project Management */}
-    {projectRoutes}
+    {/* Project Management – wrapped in boundary */}
+    <Route element={<FeatureBoundaryLayout featureName="Project Management" />}>
+      {projectRoutes}
+    </Route>
 
-    {/* Financial Management */}
-    {financialRoutes}
+    {/* Financial Management – wrapped in boundary */}
+    <Route element={<FeatureBoundaryLayout featureName="Financial Dashboard" />}>
+      {financialRoutes}
+    </Route>
 
-    {/* People & CRM */}
-    {peopleRoutes}
+    {/* People & CRM – wrapped in boundary */}
+    <Route element={<FeatureBoundaryLayout featureName="CRM & People" />}>
+      {peopleRoutes}
+    </Route>
 
-    {/* Operations & Compliance */}
-    {operationsRoutes}
+    {/* Operations & Compliance – wrapped in boundary */}
+    <Route element={<FeatureBoundaryLayout featureName="Operations" />}>
+      {operationsRoutes}
+    </Route>
 
-    {/* Admin & System */}
-    {adminRoutes}
+    {/* Admin & System – wrapped in boundary */}
+    <Route element={<FeatureBoundaryLayout featureName="Administration" />}>
+      {adminRoutes}
+    </Route>
 
     {/* 404 - Must be last */}
     {notFoundRoute}

@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CustomReportBuilder } from '@/components/reports/CustomReportBuilder';
 import ExecutiveDashboard from '@/components/analytics/ExecutiveDashboard';
 import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Eye } from 'lucide-react';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 
 const Reports = () => {
@@ -219,7 +220,8 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Reports & Analytics">
+      <AccessiblePageWrapper pageTitle="Reports">
+      <DashboardLayout title="Reports & Analytics" hasAccessibleWrapper>
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
@@ -227,11 +229,13 @@ const Reports = () => {
           </div>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Reports & Analytics">
+    <AccessiblePageWrapper pageTitle="Reports">
+    <DashboardLayout title="Reports & Analytics" hasAccessibleWrapper>
       <MobilePageWrapper title="Reports & Analytics">
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
@@ -366,6 +370,7 @@ const Reports = () => {
         </Tabs>
       </MobilePageWrapper>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

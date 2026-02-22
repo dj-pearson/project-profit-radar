@@ -22,6 +22,8 @@ interface DashboardLayoutProps {
   showTrialBanner?: boolean;
   showBottomNav?: boolean;
   actions?: React.ReactNode;
+  /** When true, suppresses <main> and <SkipLinks> since an outer AccessiblePageWrapper provides them */
+  hasAccessibleWrapper?: boolean;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
@@ -29,7 +31,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   title = "BuildDesk",
   showTrialBanner = true,
   showBottomNav = true,
-  actions
+  actions,
+  hasAccessibleWrapper = false,
 }) => {
   const { user, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -52,8 +55,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <SidebarProvider>
-      {/* Skip Links for keyboard navigation */}
-      <SkipLinks />
+      {/* Skip Links for keyboard navigation (suppressed when outer AccessiblePageWrapper provides them) */}
+      {!hasAccessibleWrapper && <SkipLinks />}
 
       <ImpersonationBanner />
       <div className={cn(
@@ -127,22 +130,36 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </header>
 
-          {/* Main Content Area */}
-          <main
-            id="main-content"
-            className={cn(
-              'flex-1 overflow-auto',
-              showBottomNav && isMobile && 'pb-16', // Space for bottom nav
-            )}
-            role="main"
-            aria-labelledby="page-title"
-            tabIndex={-1}
-          >
-            <ResponsiveContainer className="py-4 md:py-6" padding="sm">
-              {showTrialBanner && <TrialStatusBanner />}
-              {children}
-            </ResponsiveContainer>
-          </main>
+          {/* Main Content Area - renders as <div> when outer AccessiblePageWrapper provides <main> */}
+          {hasAccessibleWrapper ? (
+            <div
+              className={cn(
+                'flex-1 overflow-auto',
+                showBottomNav && isMobile && 'pb-16',
+              )}
+            >
+              <ResponsiveContainer className="py-4 md:py-6" padding="sm">
+                {showTrialBanner && <TrialStatusBanner />}
+                {children}
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <main
+              id="main-content"
+              className={cn(
+                'flex-1 overflow-auto',
+                showBottomNav && isMobile && 'pb-16',
+              )}
+              role="main"
+              aria-labelledby="page-title"
+              tabIndex={-1}
+            >
+              <ResponsiveContainer className="py-4 md:py-6" padding="sm">
+                {showTrialBanner && <TrialStatusBanner />}
+                {children}
+              </ResponsiveContainer>
+            </main>
+          )}
 
           {/* Mobile Bottom Navigation */}
           {showBottomNav && isMobile && (

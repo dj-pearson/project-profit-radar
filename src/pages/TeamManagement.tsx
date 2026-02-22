@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -304,10 +305,12 @@ const TeamManagement = () => {
   };
 
   return (
+    <AccessiblePageWrapper pageTitle="Team Management">
     <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
       <DashboardLayout
         title="Team Management"
         showTrialBanner={false}
+        hasAccessibleWrapper
       >
         <div className="flex justify-end mb-6">
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
@@ -596,6 +599,7 @@ const TeamManagement = () => {
         />
     </DashboardLayout>
     </RoleGuard>
+    </AccessiblePageWrapper>
   );
 };
 
