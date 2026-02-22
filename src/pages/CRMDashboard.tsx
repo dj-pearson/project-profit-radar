@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -721,8 +722,9 @@ const CRMDashboard = () => {
   }
 
   return (
-    <DashboardLayout title="CRM Dashboard">
-            
+    <AccessiblePageWrapper pageTitle="CRM Dashboard">
+    <DashboardLayout title="CRM Dashboard" hasAccessibleWrapper>
+
             {/* CRM KPI Cards */}
             <ErrorBoundary>
               {crmLoading ? (
@@ -1201,6 +1203,7 @@ const CRMDashboard = () => {
     )}
     
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -274,7 +275,8 @@ const Safety = () => {
   }
 
   return (
-    <DashboardLayout title="Safety & OSHA Compliance">
+    <AccessiblePageWrapper pageTitle="Safety">
+    <DashboardLayout title="Safety & OSHA Compliance" hasAccessibleWrapper>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -506,6 +508,7 @@ const Safety = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

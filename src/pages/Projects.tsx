@@ -86,6 +86,7 @@ import { BulkActionsToolbar } from "@/components/projects/BulkActionsToolbar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FilterPresetsManager } from "@/components/filters/FilterPresetsManager";
 import { CSVImportButton } from "@/components/smart-import";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 interface Project {
   id: string;
@@ -571,23 +572,26 @@ const Projects = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Projects" showTrialBanner={false}>
-        <div className="space-y-6">
-          <div className="flex justify-end">
-            <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+      <AccessiblePageWrapper pageTitle="Projects">
+        <DashboardLayout title="Projects" showTrialBanner={false} hasAccessibleWrapper>
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <div className="h-9 w-32 bg-muted animate-pulse rounded-md" />
+            </div>
+            <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} className="gap-6">
+              {[...Array(6)].map((_, i) => (
+                <ProjectCardSkeleton key={i} />
+              ))}
+            </ResponsiveGrid>
           </div>
-          <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} className="gap-6">
-            {[...Array(6)].map((_, i) => (
-              <ProjectCardSkeleton key={i} />
-            ))}
-          </ResponsiveGrid>
-        </div>
-      </DashboardLayout>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Projects" showTrialBanner={false}>
+    <AccessiblePageWrapper pageTitle="Projects">
+    <DashboardLayout title="Projects" showTrialBanner={false} hasAccessibleWrapper>
       <div className="flex justify-end gap-2 mb-4 sm:mb-6">
         <CSVImportButton
           dataType="projects"
@@ -1120,6 +1124,7 @@ const Projects = () => {
         />
       )}
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

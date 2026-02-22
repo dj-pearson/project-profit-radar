@@ -26,6 +26,7 @@ import {
   Users,
   Settings
 } from 'lucide-react';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -109,19 +110,22 @@ const ProjectDetail = () => {
 
   if (!project) {
     return (
-      <DashboardLayout title="Project Not Found">
-        <main className="text-center py-8" role="main" aria-label="Project not found">
-          <p className="text-muted-foreground">Project not found</p>
-          <Button onClick={() => navigate('/projects')} className="mt-4">
-            Back to Projects
-          </Button>
-        </main>
-      </DashboardLayout>
+      <AccessiblePageWrapper pageTitle="Project Details">
+        <DashboardLayout title="Project Not Found" hasAccessibleWrapper>
+          <main className="text-center py-8" role="main" aria-label="Project not found">
+            <p className="text-muted-foreground">Project not found</p>
+            <Button onClick={() => navigate('/projects')} className="mt-4">
+              Back to Projects
+            </Button>
+          </main>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   if (isMobile && project) {
     return (
+      <AccessiblePageWrapper pageTitle="Project Details">
       <div className="min-h-screen bg-background flex flex-col">
         {/* Mobile Header with Menu - Fixed at top */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -225,11 +229,13 @@ const ProjectDetail = () => {
           { icon: Settings, label: 'Admin', href: '/admin-hub' },
         ]} />
       </div>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title={project.name}>
+    <AccessiblePageWrapper pageTitle="Project Details">
+    <DashboardLayout title={project.name} hasAccessibleWrapper>
       <div className="flex h-full">
         <ProjectSubSidebar
           activeTab={activeTab}
@@ -295,6 +301,7 @@ const ProjectDetail = () => {
         </main>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

@@ -21,6 +21,7 @@ import Form1099Manager from '@/components/financial/Form1099Manager';
 import { StripePaymentProcessor } from '@/components/financial/StripePaymentProcessor';
 import { PaymentSettings } from '@/components/financial/PaymentSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 const FinancialDashboardSkeleton = () => (
   <div className="space-y-6">
@@ -43,17 +44,20 @@ const FinancialDashboard = () => {
 
   if (authLoading) {
     return (
-      <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
-        <DashboardLayout title="Financial Dashboard">
-          <FinancialDashboardSkeleton />
-        </DashboardLayout>
-      </RoleGuard>
+      <AccessiblePageWrapper pageTitle="Financial Dashboard">
+        <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
+          <DashboardLayout title="Financial Dashboard" hasAccessibleWrapper>
+            <FinancialDashboardSkeleton />
+          </DashboardLayout>
+        </RoleGuard>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
+    <AccessiblePageWrapper pageTitle="Financial Dashboard">
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
-      <DashboardLayout title="Financial Dashboard">
+      <DashboardLayout title="Financial Dashboard" hasAccessibleWrapper>
         <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
@@ -148,6 +152,7 @@ const FinancialDashboard = () => {
         </div>
       </DashboardLayout>
     </RoleGuard>
+    </AccessiblePageWrapper>
   );
 };
 

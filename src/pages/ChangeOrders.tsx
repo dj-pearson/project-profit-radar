@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 interface Project {
   id: string;
@@ -398,7 +399,8 @@ const ChangeOrders = () => {
 
   if (loading || loadingOrders) {
     return (
-      <DashboardLayout title="Change Orders">
+      <AccessiblePageWrapper pageTitle="Change Orders">
+      <DashboardLayout title="Change Orders" hasAccessibleWrapper>
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-construction-blue mx-auto mb-4"></div>
@@ -406,11 +408,13 @@ const ChangeOrders = () => {
           </div>
         </div>
       </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
   return (
-    <DashboardLayout title="Change Orders">
+    <AccessiblePageWrapper pageTitle="Change Orders">
+    <DashboardLayout title="Change Orders" hasAccessibleWrapper>
       <div className="space-y-6">
         {/* Header */}
         <div className={mobileCardClasses.header}>
@@ -848,6 +852,7 @@ const ChangeOrders = () => {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

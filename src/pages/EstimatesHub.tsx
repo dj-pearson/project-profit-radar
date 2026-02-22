@@ -16,6 +16,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { estimateService, EstimateStats } from "@/services/estimateService";
 import { useAuth } from "@/contexts/AuthContext";
 import { CSVImportButton } from "@/components/smart-import";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 
 export default function EstimatesHub() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,7 +90,8 @@ export default function EstimatesHub() {
   }, [location.search]);
 
   return (
-    <DashboardLayout title="Estimates">
+    <AccessiblePageWrapper pageTitle="Estimates">
+    <DashboardLayout title="Estimates" hasAccessibleWrapper>
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
@@ -336,5 +338,6 @@ export default function EstimatesHub() {
           </TabsContent>
         </Tabs>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

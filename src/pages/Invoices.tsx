@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,6 +117,7 @@ const Invoices: React.FC = () => {
   }
 
   return (
+    <AccessiblePageWrapper pageTitle="Invoices">
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -234,6 +236,7 @@ const Invoices: React.FC = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </AccessiblePageWrapper>
   );
 };
 

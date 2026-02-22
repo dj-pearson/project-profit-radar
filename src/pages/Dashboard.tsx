@@ -3,6 +3,7 @@ import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { SubscriptionUsageWidget } from "@/components/subscription/SubscriptionUsageWidget";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,19 +55,21 @@ const Dashboard = () => {
   // Show error state if data failed to load
   if (dataError && !data) {
     return (
-      <DashboardLayout title="Dashboard">
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Failed to load dashboard data</AlertTitle>
-          <AlertDescription className="flex items-center gap-4 mt-2">
-            <span>{dataError}</span>
-            <Button variant="outline" size="sm" onClick={refetch}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </DashboardLayout>
+      <AccessiblePageWrapper pageTitle="Dashboard">
+        <DashboardLayout title="Dashboard" hasAccessibleWrapper>
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Failed to load dashboard data</AlertTitle>
+            <AlertDescription className="flex items-center gap-4 mt-2">
+              <span>{dataError}</span>
+              <Button variant="outline" size="sm" onClick={refetch}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
     );
   }
 
@@ -132,13 +135,33 @@ const Dashboard = () => {
   // Show empty dashboard for new users or companies without data
   if (!hasData && userProfile) {
     return (
-      <DashboardLayout title="Dashboard">
+      <AccessiblePageWrapper pageTitle="Dashboard">
+        <DashboardLayout title="Dashboard" hasAccessibleWrapper>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
+            <section className="lg:col-span-2" aria-label="Getting started">
+              <EmptyDashboard
+                userRole={userProfile.role}
+                onAction={handleEmptyAction}
+              />
+            </section>
+            <aside className="lg:col-span-1" aria-label="Subscription usage">
+              <SubscriptionUsageWidget />
+            </aside>
+          </div>
+          <section aria-label="Onboarding progress">
+            <OnboardingChecklist />
+          </section>
+        </DashboardLayout>
+      </AccessiblePageWrapper>
+    );
+  }
+
+  return (
+    <AccessiblePageWrapper pageTitle="Dashboard">
+      <DashboardLayout title="Dashboard" hasAccessibleWrapper>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
-          <section className="lg:col-span-2" aria-label="Getting started">
-            <EmptyDashboard
-              userRole={userProfile.role}
-              onAction={handleEmptyAction}
-            />
+          <section className="lg:col-span-2" aria-label="Dashboard overview">
+            <RoleDashboard />
           </section>
           <aside className="lg:col-span-1" aria-label="Subscription usage">
             <SubscriptionUsageWidget />
@@ -148,23 +171,7 @@ const Dashboard = () => {
           <OnboardingChecklist />
         </section>
       </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout title="Dashboard">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6" role="region" aria-label="Dashboard content">
-        <section className="lg:col-span-2" aria-label="Dashboard overview">
-          <RoleDashboard />
-        </section>
-        <aside className="lg:col-span-1" aria-label="Subscription usage">
-          <SubscriptionUsageWidget />
-        </aside>
-      </div>
-      <section aria-label="Onboarding progress">
-        <OnboardingChecklist />
-      </section>
-    </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 };
 

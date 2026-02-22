@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,7 +89,8 @@ export default function Equipment() {
   };
 
   return (
-    <DashboardLayout title="Equipment Management">
+    <AccessiblePageWrapper pageTitle="Equipment">
+    <DashboardLayout title="Equipment Management" hasAccessibleWrapper>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -619,5 +621,6 @@ export default function Equipment() {
         </Tabs>
       </div>
     </DashboardLayout>
+    </AccessiblePageWrapper>
   );
 }

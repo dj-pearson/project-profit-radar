@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -143,8 +144,9 @@ const AdminSettings = () => {
   }
 
   return (
+    <AccessiblePageWrapper pageTitle="Settings">
     <RoleGuard allowedRoles={ROLE_GROUPS.ADMINS}>
-      <DashboardLayout title="System Settings">
+      <DashboardLayout title="System Settings" hasAccessibleWrapper>
         <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex items-center justify-between">
@@ -428,6 +430,7 @@ const AdminSettings = () => {
       </div>
     </DashboardLayout>
     </RoleGuard>
+    </AccessiblePageWrapper>
   );
 };
 
