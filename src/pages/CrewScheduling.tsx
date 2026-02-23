@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AccessibleForm, AccessibleFormField } from '@/components/accessibility/AccessibleForm';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import VisualScheduler from '@/components/scheduling/VisualScheduler';
@@ -377,7 +378,11 @@ const CrewScheduling = () => {
                       Assign crew members to projects for specific dates and times.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <AccessibleForm
+                    onSubmit={() => { handleCreateAssignment(); }}
+                    ariaLabel="Create crew assignment form"
+                    className="space-y-4"
+                  >
                     <div>
                       <Label htmlFor="project">Project *</Label>
                       <Select value={newAssignment.project_id} onValueChange={(value) => setNewAssignment({...newAssignment, project_id: value})} aria-required="true">
@@ -411,64 +416,54 @@ const CrewScheduling = () => {
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="date">Date</Label>
-                        <Input
-                          id="date"
-                          type="date"
-                          value={newAssignment.date}
-                          onChange={(e) => setNewAssignment({...newAssignment, date: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="start_time">Start Time</Label>
-                        <Input
-                          id="start_time"
-                          type="time"
-                          value={newAssignment.start_time}
-                          onChange={(e) => setNewAssignment({...newAssignment, start_time: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="end_time">End Time</Label>
-                        <Input
-                          id="end_time"
-                          type="time"
-                          value={newAssignment.end_time}
-                          onChange={(e) => setNewAssignment({...newAssignment, end_time: e.target.value})}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="location">Location</Label>
-                      <Input
-                        id="location"
-                        placeholder="Work site location"
-                        value={newAssignment.location}
-                        onChange={(e) => setNewAssignment({...newAssignment, location: e.target.value})}
+                      <AccessibleFormField
+                        name="date"
+                        label="Date"
+                        type="date"
+                        value={newAssignment.date}
+                        onChange={(e) => setNewAssignment({...newAssignment, date: e.target.value})}
+                      />
+                      <AccessibleFormField
+                        name="start_time"
+                        label="Start Time"
+                        type="time"
+                        value={newAssignment.start_time}
+                        onChange={(e) => setNewAssignment({...newAssignment, start_time: e.target.value})}
+                      />
+                      <AccessibleFormField
+                        name="end_time"
+                        label="End Time"
+                        type="time"
+                        value={newAssignment.end_time}
+                        onChange={(e) => setNewAssignment({...newAssignment, end_time: e.target.value})}
                       />
                     </div>
 
-                    <div>
-                      <Label htmlFor="notes">Notes</Label>
-                      <Input
-                        id="notes"
-                        placeholder="Special instructions or notes"
-                        value={newAssignment.notes}
-                        onChange={(e) => setNewAssignment({...newAssignment, notes: e.target.value})}
-                      />
-                    </div>
+                    <AccessibleFormField
+                      name="location"
+                      label="Location"
+                      placeholder="Work site location"
+                      value={newAssignment.location}
+                      onChange={(e) => setNewAssignment({...newAssignment, location: e.target.value})}
+                    />
+
+                    <AccessibleFormField
+                      name="notes"
+                      label="Notes"
+                      placeholder="Special instructions or notes"
+                      value={newAssignment.notes}
+                      onChange={(e) => setNewAssignment({...newAssignment, notes: e.target.value})}
+                    />
 
                     <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
+                      <Button type="button" variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleCreateAssignment}>
+                      <Button type="submit">
                         Create Assignment
                       </Button>
                     </div>
-                  </div>
+                  </AccessibleForm>
                 </DialogContent>
               </Dialog>
             </div>

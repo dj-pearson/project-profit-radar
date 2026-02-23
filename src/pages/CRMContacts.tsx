@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
 import { 
   Users, 
   Search,
@@ -312,79 +313,68 @@ const CRMContacts = () => {
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <div className="grid gap-6 py-4">
-                          {/* Basic Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Contact Information</h3>
+                        <AccessibleForm
+                          onSubmit={() => { createContact(); }}
+                          ariaLabel="Create new contact form"
+                          className="space-y-6 py-4"
+                        >
+                          <AccessibleFieldset legend="Contact Information">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="first_name">First Name *</Label>
-                                <Input
-                                  id="first_name"
-                                  value={newContact.first_name || ''}
-                                  onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
-                                  placeholder="John"
-                                  aria-required="true"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="last_name">Last Name *</Label>
-                                <Input
-                                  id="last_name"
-                                  value={newContact.last_name || ''}
-                                  onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
-                                  placeholder="Smith"
-                                  aria-required="true"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                  id="email"
-                                  type="email"
-                                  value={newContact.email || ''}
-                                  onChange={(e) => setNewContact({...newContact, email: e.target.value})}
-                                  placeholder="john.smith@email.com"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="phone">Phone</Label>
-                                <Input
-                                  id="phone"
-                                  value={newContact.phone || ''}
-                                  onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-                                  placeholder="(555) 123-4567"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="company_name">Company</Label>
-                                <Input
-                                  id="company_name"
-                                  value={newContact.company_name || ''}
-                                  onChange={(e) => setNewContact({...newContact, company_name: e.target.value})}
-                                  placeholder="ABC Corporation"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="job_title">Job Title</Label>
-                                <Input
-                                  id="job_title"
-                                  value={newContact.job_title || ''}
-                                  onChange={(e) => setNewContact({...newContact, job_title: e.target.value})}
-                                  placeholder="Property Manager"
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="first_name"
+                                label="First Name"
+                                required
+                                value={newContact.first_name || ''}
+                                onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
+                                placeholder="John"
+                              />
+                              <AccessibleFormField
+                                name="last_name"
+                                label="Last Name"
+                                required
+                                value={newContact.last_name || ''}
+                                onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
+                                placeholder="Smith"
+                              />
+                              <AccessibleFormField
+                                name="email"
+                                label="Email"
+                                type="email"
+                                value={newContact.email || ''}
+                                onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                                placeholder="john.smith@email.com"
+                              />
+                              <AccessibleFormField
+                                name="phone"
+                                label="Phone"
+                                type="tel"
+                                value={newContact.phone || ''}
+                                onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                                placeholder="(555) 123-4567"
+                              />
+                              <AccessibleFormField
+                                name="company_name"
+                                label="Company"
+                                value={newContact.company_name || ''}
+                                onChange={(e) => setNewContact({...newContact, company_name: e.target.value})}
+                                placeholder="ABC Corporation"
+                              />
+                              <AccessibleFormField
+                                name="job_title"
+                                label="Job Title"
+                                value={newContact.job_title || ''}
+                                onChange={(e) => setNewContact({...newContact, job_title: e.target.value})}
+                                placeholder="Property Manager"
+                              />
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Contact Type and Status */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Classification</h3>
+                          <AccessibleFieldset legend="Classification">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <Label htmlFor="contact_type">Contact Type</Label>
                                 <Select value={newContact.contact_type} onValueChange={(value) => setNewContact({...newContact, contact_type: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Contact type">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -399,7 +389,7 @@ const CRMContacts = () => {
                               <div>
                                 <Label htmlFor="relationship_status">Status</Label>
                                 <Select value={newContact.relationship_status} onValueChange={(value) => setNewContact({...newContact, relationship_status: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Relationship status">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -410,30 +400,25 @@ const CRMContacts = () => {
                                 </Select>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Notes */}
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="notes">Notes</Label>
-                              <Textarea
-                                id="notes"
-                                value={newContact.notes || ''}
-                                onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
-                                placeholder="Additional notes about this contact..."
-                              />
-                            </div>
+                          <AccessibleTextarea
+                            name="notes"
+                            label="Notes"
+                            value={newContact.notes || ''}
+                            onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
+                            placeholder="Additional notes about this contact..."
+                          />
+
+                          <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setShowNewContactDialog(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">
+                              Create Contact
+                            </Button>
                           </div>
-                        </div>
-                        
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setShowNewContactDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={createContact}>
-                            Create Contact
-                          </Button>
-                        </div>
+                        </AccessibleForm>
                       </DialogContent>
                     </Dialog>
                   </div>

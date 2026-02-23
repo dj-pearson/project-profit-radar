@@ -130,6 +130,38 @@
 
 ---
 
+## 2026-02-23 - Session: Accessibility & Error Boundary Improvements
+
+### US-006: AuthContext unit tests (ALREADY COMPLETE)
+- Tests exist at `src/contexts/__tests__/AuthContext.test.tsx` (25+ tests)
+- Covers: sign-in, sign-out, sign-up, reset password, all 7 roles, session caching, error handling
+- Comprehensive mocking of Supabase client, auth state changes, profile queries
+
+### US-010: AccessiblePageWrapper on top 20 pages (ALREADY COMPLETE)
+- All 20 target pages already wrapped via direct import or DashboardLayout
+- Pages: Dashboard, Projects, FinancialDashboard, TimeTracking, EstimatesHub, Invoices, DailyReports, TeamManagement, UserSettings, ClientPortal, CRMDashboard, DocumentManagement, CalendarSync, Equipment, Safety, Analytics, Reports, ChangeOrders, ProjectDetail
+
+### US-011: Migrate forms to AccessibleForm (4 pages migrated)
+- **CRMContacts.tsx**: Dialog form wrapped in AccessibleForm, 6 inputs → AccessibleFormField, textarea → AccessibleTextarea, fieldsets added
+- **CRMLeads.tsx**: Dialog form wrapped in AccessibleForm, 8 inputs → AccessibleFormField, 2 textareas → AccessibleTextarea, 5 fieldsets added
+- **CRMOpportunities.tsx**: Dialog form wrapped in AccessibleForm, 4 inputs → AccessibleFormField, 3 textareas → AccessibleTextarea, 3 fieldsets added
+- **CrewScheduling.tsx**: Dialog form wrapped in AccessibleForm, 5 inputs → AccessibleFormField, form submit button added
+- All forms now have proper `<form>` elements (previously missing), aria-labels on Select triggers, fieldset grouping
+- Remaining forms (Auth, CreateProject, DailyReports, BillPayments) already had `<form>` elements or good a11y
+
+### US-016: CriticalErrorBoundary Sentry integration
+- Added `captureException` import from `@/lib/sentry` to CriticalErrorBoundary
+- onError handler now reports to both errorLoggingService AND Sentry
+- Removed bare console.error call
+- Context includes: componentStack, boundary name, severity level
+- All 5 error boundary components now report to Sentry: ErrorBoundary, RouteErrorBoundary, FeatureErrorBoundary, CriticalErrorBoundary, ErrorBoundary (ui)
+
+### Build Verification
+- `npm run build` passes cleanly (no TypeScript or bundling errors)
+- Cloudflare Pages compatible build output in `dist/`
+
+---
+
 ## 2026-02-19 - US-031 (Previously Completed)
 - RouteErrorBoundary created at `src/components/RouteErrorBoundary.tsx`
 - `createLazyRoute` in `src/utils/lazyRoutes.tsx` wraps lazy components with Suspense + RouteErrorBoundary

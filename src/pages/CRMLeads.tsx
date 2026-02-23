@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
 import { 
   Users, 
   Search,
@@ -425,88 +426,75 @@ const CRMLeads = () => {
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <div className="grid gap-6 py-4">
-                          {/* Basic Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Contact Information</h3>
+                        <AccessibleForm
+                          onSubmit={() => { createLead(); }}
+                          ariaLabel="Create new lead form"
+                          className="space-y-6 py-4"
+                        >
+                          <AccessibleFieldset legend="Contact Information">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="first_name">First Name *</Label>
-                                <Input
-                                  id="first_name"
-                                  value={newLead.first_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, first_name: e.target.value})}
-                                  placeholder="John"
-                                  aria-required="true"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="last_name">Last Name *</Label>
-                                <Input
-                                  id="last_name"
-                                  value={newLead.last_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, last_name: e.target.value})}
-                                  placeholder="Smith"
-                                  aria-required="true"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                  id="email"
-                                  type="email"
-                                  value={newLead.email || ''}
-                                  onChange={(e) => setNewLead({...newLead, email: e.target.value})}
-                                  placeholder="john.smith@email.com"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="phone">Phone</Label>
-                                <Input
-                                  id="phone"
-                                  value={newLead.phone || ''}
-                                  onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
-                                  placeholder="(555) 123-4567"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="company_name">Company Name</Label>
-                                <Input
-                                  id="company_name"
-                                  value={newLead.company_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, company_name: e.target.value})}
-                                  placeholder="ABC Corporation"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="job_title">Job Title</Label>
-                                <Input
-                                  id="job_title"
-                                  value={newLead.job_title || ''}
-                                  onChange={(e) => setNewLead({...newLead, job_title: e.target.value})}
-                                  placeholder="Property Manager"
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="first_name"
+                                label="First Name"
+                                required
+                                value={newLead.first_name || ''}
+                                onChange={(e) => setNewLead({...newLead, first_name: e.target.value})}
+                                placeholder="John"
+                              />
+                              <AccessibleFormField
+                                name="last_name"
+                                label="Last Name"
+                                required
+                                value={newLead.last_name || ''}
+                                onChange={(e) => setNewLead({...newLead, last_name: e.target.value})}
+                                placeholder="Smith"
+                              />
+                              <AccessibleFormField
+                                name="email"
+                                label="Email"
+                                type="email"
+                                value={newLead.email || ''}
+                                onChange={(e) => setNewLead({...newLead, email: e.target.value})}
+                                placeholder="john.smith@email.com"
+                              />
+                              <AccessibleFormField
+                                name="phone"
+                                label="Phone"
+                                type="tel"
+                                value={newLead.phone || ''}
+                                onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
+                                placeholder="(555) 123-4567"
+                              />
+                              <AccessibleFormField
+                                name="company_name"
+                                label="Company Name"
+                                value={newLead.company_name || ''}
+                                onChange={(e) => setNewLead({...newLead, company_name: e.target.value})}
+                                placeholder="ABC Corporation"
+                              />
+                              <AccessibleFormField
+                                name="job_title"
+                                label="Job Title"
+                                value={newLead.job_title || ''}
+                                onChange={(e) => setNewLead({...newLead, job_title: e.target.value})}
+                                placeholder="Property Manager"
+                              />
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Project Information */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Project Details</h3>
+                          <AccessibleFieldset legend="Project Details">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="project_name">Project Name</Label>
-                                <Input
-                                  id="project_name"
-                                  value={newLead.project_name || ''}
-                                  onChange={(e) => setNewLead({...newLead, project_name: e.target.value})}
-                                  placeholder="Kitchen Renovation"
-                                />
-                              </div>
+                              <AccessibleFormField
+                                name="project_name"
+                                label="Project Name"
+                                value={newLead.project_name || ''}
+                                onChange={(e) => setNewLead({...newLead, project_name: e.target.value})}
+                                placeholder="Kitchen Renovation"
+                              />
                               <div>
                                 <Label htmlFor="project_type">Project Type</Label>
                                 <Select value={newLead.project_type || ''} onValueChange={(value) => setNewLead({...newLead, project_type: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Project type">
                                     <SelectValue placeholder="Select project type" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -523,30 +511,27 @@ const CRMLeads = () => {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <div className="md:col-span-2">
-                                <Label htmlFor="project_description">Project Description</Label>
-                                <Textarea
-                                  id="project_description"
-                                  value={newLead.project_description || ''}
-                                  onChange={(e) => setNewLead({...newLead, project_description: e.target.value})}
-                                  placeholder="Describe the project scope and requirements..."
-                                  rows={3}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="estimated_budget">Estimated Budget ($)</Label>
-                                <Input
-                                  id="estimated_budget"
-                                  type="number"
-                                  value={newLead.estimated_budget || ''}
-                                  onChange={(e) => setNewLead({...newLead, estimated_budget: Number(e.target.value)})}
-                                  placeholder="50000"
-                                />
-                              </div>
+                              <AccessibleTextarea
+                                name="project_description"
+                                label="Project Description"
+                                value={newLead.project_description || ''}
+                                onChange={(e) => setNewLead({...newLead, project_description: e.target.value})}
+                                placeholder="Describe the project scope and requirements..."
+                                rows={3}
+                                className="md:col-span-2"
+                              />
+                              <AccessibleFormField
+                                name="estimated_budget"
+                                label="Estimated Budget ($)"
+                                type="number"
+                                value={newLead.estimated_budget || ''}
+                                onChange={(e) => setNewLead({...newLead, estimated_budget: Number(e.target.value)})}
+                                placeholder="50000"
+                              />
                               <div>
                                 <Label htmlFor="budget_range">Budget Range</Label>
                                 <Select value={newLead.budget_range || ''} onValueChange={(value) => setNewLead({...newLead, budget_range: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Budget range">
                                     <SelectValue placeholder="Select budget range" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -562,16 +547,14 @@ const CRMLeads = () => {
                                 </Select>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Lead Classification */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Lead Classification</h3>
+                          <AccessibleFieldset legend="Lead Classification">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
                                 <Label htmlFor="status">Status</Label>
                                 <Select value={newLead.status || 'new'} onValueChange={(value) => setNewLead({...newLead, status: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Lead status">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -585,7 +568,7 @@ const CRMLeads = () => {
                               <div>
                                 <Label htmlFor="priority">Priority</Label>
                                 <Select value={newLead.priority || 'medium'} onValueChange={(value) => setNewLead({...newLead, priority: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Lead priority">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -599,7 +582,7 @@ const CRMLeads = () => {
                               <div>
                                 <Label htmlFor="lead_source">Lead Source</Label>
                                 <Select value={newLead.lead_source || 'website'} onValueChange={(value) => setNewLead({...newLead, lead_source: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger aria-label="Lead source">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -617,11 +600,9 @@ const CRMLeads = () => {
                                 </Select>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Construction-Specific Fields */}
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-medium">Construction Details</h3>
+                          <AccessibleFieldset legend="Construction Details">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
@@ -669,7 +650,7 @@ const CRMLeads = () => {
                                 <div>
                                   <Label htmlFor="financing_type">Financing Type</Label>
                                   <Select value={newLead.financing_type || ''} onValueChange={(value) => setNewLead({...newLead, financing_type: value})}>
-                                    <SelectTrigger>
+                                    <SelectTrigger aria-label="Financing type">
                                       <SelectValue placeholder="Select financing type" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -685,7 +666,7 @@ const CRMLeads = () => {
                                 <div>
                                   <Label htmlFor="decision_timeline">Decision Timeline</Label>
                                   <Select value={newLead.decision_timeline || ''} onValueChange={(value) => setNewLead({...newLead, decision_timeline: value})}>
-                                    <SelectTrigger>
+                                    <SelectTrigger aria-label="Decision timeline">
                                       <SelectValue placeholder="When will they decide?" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -699,29 +680,26 @@ const CRMLeads = () => {
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </AccessibleFieldset>
 
-                          {/* Notes */}
-                          <div>
-                            <Label htmlFor="notes">Notes</Label>
-                            <Textarea
-                              id="notes"
-                              value={newLead.notes || ''}
-                              onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
-                              placeholder="Additional notes about this lead..."
-                              rows={3}
-                            />
-                          </div>
-                        </div>
+                          <AccessibleTextarea
+                            name="notes"
+                            label="Notes"
+                            value={newLead.notes || ''}
+                            onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
+                            placeholder="Additional notes about this lead..."
+                            rows={3}
+                          />
 
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setShowNewLeadDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={createLead}>
-                            Create Lead
-                          </Button>
-                        </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setShowNewLeadDialog(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">
+                              Create Lead
+                            </Button>
+                          </div>
+                        </AccessibleForm>
                       </DialogContent>
                     </Dialog>
                   </div>
