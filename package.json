@@ -40,6 +40,8 @@
     "mobile:screenshots": "playwright test --config=playwright.screenshots.config.ts",
     "ios:verify": "node scripts/verify-ios-setup.js",
     "ios:init": "npm run build:mobile && npx cap add ios && npx cap sync ios",
+    "ralph": "bash scripts/ralph/ralph.sh --tool claude",
+    "ralph:run": "bash scripts/ralph/ralph.sh --tool claude",
     "build:cloudflare": "npm run generate-sitemap && vite build --mode production && node scripts/copy-404.js",
     "cloudflare:build": "node cloudflare-build.js",
     "cloudflare:install": "npm install --force && npm run build",
