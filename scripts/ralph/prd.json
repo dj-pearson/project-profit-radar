@@ -228,7 +228,7 @@
         "npm run build completes successfully"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "This covers the 'last mile' of a11y - individual element labeling across the app."
     },
     {

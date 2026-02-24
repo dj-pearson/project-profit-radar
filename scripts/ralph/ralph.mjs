@@ -5,7 +5,7 @@
  * Usage: node scripts/ralph/ralph.mjs [--tool claude|amp] [max_iterations]
  */
 
-import { spawnSync } from 'child_process';
+import { spawnSync, execFileSync } from 'child_process';
 import {
   readFileSync,
   writeFileSync,
@@ -173,8 +173,8 @@ for (let i = 1; i <= maxIterations; i++) {
   console.log(`\nIteration ${i} complete. Remaining stories: ${remaining}`);
   console.log('Continuing in 2 seconds...');
 
-  // Small delay between iterations
-  spawnSync('node', ['-e', 'setTimeout(()=>{},2000)'], { shell: true, stdio: 'inherit' });
+  // Small delay between iterations — use Atomics.wait (no shell, no quoting issues)
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
 }
 
 console.log(`\nRalph reached max iterations (${maxIterations}) without completing all tasks.`);
