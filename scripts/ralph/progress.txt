@@ -187,3 +187,33 @@ Migrated 14 pages/components from various table implementations (shadcn Table, r
 - The AccessibleTable component requires `T extends { id: string | number }` - data objects need an `id` field
 
 ---
+
+## Session: US-009 - Fix critical any types in core modules
+**Date**: 2026-02-23
+**Branch**: enterprise-production-readiness (merged from main)
+**Status**: COMPLETE
+
+### Summary
+Removed `any` types and `@ts-expect-error` comments from core modules:
+- **src/contexts/**: Already clean - no `any` types found
+- **src/lib/**: Fixed 25+ `any` types across 8 files (analytics.ts, cache.ts, offline-sync.ts, queryClient.ts, touchOptimization.ts, sessionFingerprint.ts, react-native-web-fallback.ts, mobile-touch.ts)
+- **src/hooks/**: Fixed 22 hooks (exceeds 20 requirement)
+
+### Hooks fixed (22 total)
+useRealtimeSubscription, useRealTimeSync, useSupabaseMutation, useSupabaseQuery, useSecurity, useNotifications, useAuditLog, useTasks, usePerformanceMonitor, useLongPress, useTouchGestures, useTouchDevice, useInstallPrompt, usePWA, useOfflineSync, useSimpleNotifications, useAccessibilityHelpers, useDeviceTrust, useAccounting, useAutoClockInOut, useActivityTracking, useAutomatedSocialPosts
+
+### Patterns used
+- `fromTable()` helper for dynamic Supabase table access: `supabase.from(table as keyof Database['public']['Tables'])`
+- `ReturnType<typeof setTimeout>` instead of `NodeJS.Timeout` for timer refs
+- Intersection types for non-standard browser APIs: `Navigator & { deviceMemory?: number }`
+- `'prop' in navigator` guard before casting for non-standard props (msMaxTouchPoints, standalone, deviceMemory)
+- `catch (error: unknown)` + `error instanceof Error ? error.message : String(error)` pattern
+- `Record<string, unknown>` replacing `Record<string, any>` throughout
+- `EventListener` cast for addEventListener callbacks instead of `as any`
+
+### Quality checks
+- `npx tsc --noEmit`: PASS (zero errors)
+- `npm run build`: PASS (built in 3m 17s)
+- No runtime behavior changes
+
+---
