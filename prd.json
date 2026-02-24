@@ -1,4 +1,4 @@
-﻿{
+{
     "project":  "BuildDesk Enterprise Production Readiness",
     "branchName":  "enterprise-production-readiness",
     "description":  "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. The platform has 943+ components, 264 pages, 186 edge functions, and 375 database migrations but scores only ~4.5/10 on enterprise readiness due to: TypeScript strict mode disabled (1,400+ any types), \u003c2% test coverage, \u003c2% accessibility compliance, no CI/CD for the main web app, hardcoded fallback tokens, and significant placeholder code. This PRD addresses all critical, high, and medium priority gaps across code quality, testing, security, accessibility, CI/CD, and production monitoring.",

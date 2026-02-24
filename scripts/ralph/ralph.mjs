@@ -49,8 +49,12 @@ const PROMPT_FILE   = tool === 'claude'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function readJSON(file) {
-  try { return JSON.parse(readFileSync(file, 'utf8')); }
-  catch { return null; }
+  try {
+    let content = readFileSync(file, 'utf8');
+    // Strip UTF-8 BOM if present (written by PowerShell ConvertTo-Json)
+    if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1);
+    return JSON.parse(content);
+  } catch { return null; }
 }
 
 function remainingStories(prd) {
