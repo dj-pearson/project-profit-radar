@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -160,17 +160,15 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
   ];
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{permit ? 'Edit Permit' : 'Add New Permit'}</DialogTitle>
-          <DialogDescription>
-            {permit ? 'Update permit information' : 'Add a new permit to track'}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <AccessibleModal
+      isOpen={true}
+      onClose={onClose}
+      title={permit ? 'Edit Permit' : 'Add New Permit'}
+      description={permit ? 'Update permit information' : 'Add a new permit to track'}
+      size="xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="project_id">Project *</Label>
               <Select
@@ -455,16 +453,15 @@ export const PermitForm: React.FC<PermitFormProps> = ({ permit, projectId, onClo
             />
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : permit ? 'Update Permit' : 'Add Permit'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Saving...' : permit ? 'Update Permit' : 'Add Permit'}
+          </Button>
+        </div>
+      </form>
+    </AccessibleModal>
   );
 };

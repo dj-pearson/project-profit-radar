@@ -15,13 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -62,17 +56,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   Popover,
   PopoverContent,
@@ -124,6 +107,7 @@ const Projects = () => {
   const [saveTemplateProject, setSaveTemplateProject] = useState<ProjectWithRelations | null>(null);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
+  const [deletingProject, setDeletingProject] = useState<{ id: string; name: string } | null>(null);
 
   // Advanced filter states with persistence
   const [budgetMin, setBudgetMin] = usePersistedState<string>("projects-budget-min", "");
@@ -481,31 +465,12 @@ const Projects = () => {
                     Save as Template
                   </DropdownMenuItem>
                 )}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Delete Project
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete "{project.name}"? This
-                        action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDeleteProject(project.id)}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <DropdownMenuItem
+                  onSelect={() => setDeletingProject({ id: project.id, name: project.name })}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Delete Project
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
               </div>
@@ -970,138 +935,153 @@ const Projects = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Edit Project Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="edit-dialog-description">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-            <p id="edit-dialog-description" className="sr-only">
-              Edit project details including name, client, address, status, and dates.
-            </p>
-          </DialogHeader>
-          {editingProject && (
-            <form onSubmit={handleEditSubmit} className="space-y-4" aria-label="Edit project form">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Project Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    defaultValue={editingProject.name}
-                    required
-                    aria-required="true"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="client_name">Client Name</Label>
-                  <Input
-                    id="client_name"
-                    name="client_name"
-                    defaultValue={editingProject.client_name}
-                    required
-                    aria-required="true"
-                  />
-                </div>
-              </div>
-
+      {/* Edit Project Modal */}
+      <AccessibleModal
+        isOpen={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        title="Edit Project"
+        description="Edit project details including name, client, address, status, and dates."
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" form="edit-project-form">Update Project</Button>
+          </>
+        }
+      >
+        {editingProject && (
+          <form id="edit-project-form" onSubmit={handleEditSubmit} className="space-y-4" aria-label="Edit project form">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="site_address">Site Address</Label>
+                <Label htmlFor="name">Project Name</Label>
                 <Input
-                  id="site_address"
-                  name="site_address"
-                  defaultValue={editingProject.site_address}
+                  id="name"
+                  name="name"
+                  defaultValue={editingProject.name}
+                  required
+                  aria-required="true"
                 />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select name="status" defaultValue={editingProject.status}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="on_hold">On Hold</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="completion_percentage">Completion %</Label>
-                  <Input
-                    id="completion_percentage"
-                    name="completion_percentage"
-                    type="number"
-                    min="0"
-                    max="100"
-                    defaultValue={editingProject.completion_percentage}
-                  />
-                </div>
-              </div>
-
               <div>
-                <Label htmlFor="budget">Budget</Label>
+                <Label htmlFor="client_name">Client Name</Label>
                 <Input
-                  id="budget"
-                  name="budget"
+                  id="client_name"
+                  name="client_name"
+                  defaultValue={editingProject.client_name}
+                  required
+                  aria-required="true"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="site_address">Site Address</Label>
+              <Input
+                id="site_address"
+                name="site_address"
+                defaultValue={editingProject.site_address}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select name="status" defaultValue={editingProject.status}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="on_hold">On Hold</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="completion_percentage">Completion %</Label>
+                <Input
+                  id="completion_percentage"
+                  name="completion_percentage"
                   type="number"
-                  step="0.01"
-                  defaultValue={editingProject.budget}
+                  min="0"
+                  max="100"
+                  defaultValue={editingProject.completion_percentage}
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    name="start_date"
-                    type="date"
-                    defaultValue={editingProject.start_date}
-                    required
-                    aria-required="true"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">End Date</Label>
-                  <Input
-                    id="end_date"
-                    name="end_date"
-                    type="date"
-                    defaultValue={editingProject.end_date}
-                    required
-                    aria-required="true"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="budget">Budget</Label>
+              <Input
+                id="budget"
+                name="budget"
+                type="number"
+                step="0.01"
+                defaultValue={editingProject.budget}
+              />
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  defaultValue={editingProject.description}
-                  rows={3}
+                <Label htmlFor="start_date">Start Date</Label>
+                <Input
+                  id="start_date"
+                  name="start_date"
+                  type="date"
+                  defaultValue={editingProject.start_date}
+                  required
+                  aria-required="true"
                 />
               </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Update Project</Button>
+              <div>
+                <Label htmlFor="end_date">End Date</Label>
+                <Input
+                  id="end_date"
+                  name="end_date"
+                  type="date"
+                  defaultValue={editingProject.end_date}
+                  required
+                  aria-required="true"
+                />
               </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                defaultValue={editingProject.description}
+                rows={3}
+              />
+            </div>
+          </form>
+        )}
+      </AccessibleModal>
+
+      {/* Delete Project Confirmation Modal */}
+      <AccessibleModal
+        isOpen={!!deletingProject}
+        onClose={() => setDeletingProject(null)}
+        title="Delete Project"
+        description={`Are you sure you want to delete "${deletingProject?.name || ''}"? This action cannot be undone.`}
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingProject(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { if (deletingProject) { handleDeleteProject(deletingProject.id); setDeletingProject(null); } }}>Delete</Button>
+          </>
+        }
+      />
 
       {/* Upgrade Prompt */}
       <UpgradePrompt

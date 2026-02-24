@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { DocumentVersions } from './DocumentVersions';
 import { 
   FileText,
@@ -164,34 +164,31 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
               Download
             </Button>
             
-            <Dialog open={isVersionsOpen} onOpenChange={setIsVersionsOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                >
-                  <History className="h-3 w-3 mr-1" />
-                  Versions
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Document Versions: {document.name}</DialogTitle>
-                  <DialogDescription>
-                    Manage and view all versions of this document
-                  </DialogDescription>
-                </DialogHeader>
-                <DocumentVersions
-                  documentId={document.id}
-                  documentName={document.name}
-                  onNewVersion={() => {
-                    onVersionUpdate?.();
-                    setIsVersionsOpen(false);
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => setIsVersionsOpen(true)}
+            >
+              <History className="h-3 w-3 mr-1" />
+              Versions
+            </Button>
+            <AccessibleModal
+              isOpen={isVersionsOpen}
+              onClose={() => setIsVersionsOpen(false)}
+              title={`Document Versions: ${document.name}`}
+              description="Manage and view all versions of this document"
+              size="xl"
+            >
+              <DocumentVersions
+                documentId={document.id}
+                documentName={document.name}
+                onNewVersion={() => {
+                  onVersionUpdate?.();
+                  setIsVersionsOpen(false);
+                }}
+              />
+            </AccessibleModal>
           </div>
 
           <Button

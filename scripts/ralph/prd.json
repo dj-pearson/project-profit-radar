@@ -211,8 +211,8 @@
         "[UI stories only] Verify in browser using dev-browser skill that modals open, close, and trap focus correctly"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Currently only 2 pages use AccessibleModal. See MyTasks.tsx and ComponentShowcase.tsx as references."
+      "passes": true,
+      "notes": "COMPLETED. Migrated 20 critical modals to AccessibleModal: CreateTaskDialog, EditTaskDialog, ConvertToProjectDialog, MFAVerificationModal, MFASetupDialog, Projects, CRMContacts, admin/Users, EstimatesTable, ExpenseTracker, EstimatesHub, FilterPresetsManager, EmailSyncSetup, BondForm, PermitForm, DocumentCard, BudgetManager, SSOManagement, PaymentMethodManager, ChangeOrderManagement."
     },
     {
       "id": "US-014",

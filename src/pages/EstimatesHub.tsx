@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { EstimatesTable } from "@/components/estimates/EstimatesTable";
 import { useToast } from "@/hooks/use-toast";
@@ -83,7 +83,7 @@ export default function EstimatesHub() {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const opportunityId = urlParams.get('opportunity');
-    
+
     if (opportunityId) {
       setIsCreateDialogOpen(true);
     }
@@ -99,7 +99,7 @@ export default function EstimatesHub() {
             Create, manage, and track construction estimates
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <CSVImportButton
             dataType="estimates"
@@ -107,24 +107,23 @@ export default function EstimatesHub() {
             variant="outline"
           />
 
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleCreateEstimate} className="gap-2">
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                New Estimate
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="create-estimate-description">
-            <DialogHeader>
-              <DialogTitle>Create New Estimate</DialogTitle>
-              <p id="create-estimate-description" className="sr-only">Create a new estimate for a construction project</p>
-            </DialogHeader>
-            <EstimateForm 
+          <Button onClick={handleCreateEstimate} className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New Estimate
+          </Button>
+
+          <AccessibleModal
+            isOpen={isCreateDialogOpen}
+            onClose={() => setIsCreateDialogOpen(false)}
+            title="Create New Estimate"
+            description="Create a new estimate for a construction project"
+            size="xl"
+          >
+            <EstimateForm
               onSuccess={handleEstimateCreated}
               onCancel={() => setIsCreateDialogOpen(false)}
             />
-          </DialogContent>
-          </Dialog>
+          </AccessibleModal>
         </div>
       </div>
 
@@ -213,7 +212,7 @@ export default function EstimatesHub() {
               aria-label="Search estimates"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Filter by status" />
@@ -298,7 +297,7 @@ export default function EstimatesHub() {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter={statusFilter}
               onEstimateChange={loadStats}
@@ -306,7 +305,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="draft" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="draft"
               onEstimateChange={loadStats}
@@ -314,7 +313,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="sent" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="sent"
               onEstimateChange={loadStats}
@@ -322,7 +321,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="pending" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="viewed"
               onEstimateChange={loadStats}
@@ -330,7 +329,7 @@ export default function EstimatesHub() {
           </TabsContent>
 
           <TabsContent value="accepted" className="mt-6">
-            <EstimatesTable 
+            <EstimatesTable
               searchTerm={searchTerm}
               statusFilter="accepted"
               onEstimateChange={loadStats}

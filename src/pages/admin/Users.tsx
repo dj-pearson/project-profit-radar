@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -65,7 +65,7 @@ const UsersPage = () => {
     if (!loading && !user) {
       navigate('/auth');
     }
-    
+
     if (!loading && userProfile && userProfile.role !== 'root_admin') {
       navigate('/dashboard');
       toast({
@@ -75,7 +75,7 @@ const UsersPage = () => {
       });
       return;
     }
-    
+
     if (userProfile?.role === 'root_admin') {
       loadUsers();
     }
@@ -84,7 +84,7 @@ const UsersPage = () => {
   const loadUsers = async () => {
     try {
       setLoadingData(true);
-      
+
       const { data: usersData, error } = await supabase
         .from('user_profiles')
         .select(`
@@ -97,7 +97,7 @@ const UsersPage = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       setUsers(usersData || []);
     } catch (error: any) {
       console.error('Error loading users:', error);
@@ -134,11 +134,11 @@ const UsersPage = () => {
     if (!isActive) {
       return <Badge variant="destructive">Inactive</Badge>;
     }
-    
-    const daysSinceLogin = lastLogin 
+
+    const daysSinceLogin = lastLogin
       ? Math.floor((new Date().getTime() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24))
       : null;
-    
+
     if (!lastLogin) {
       return <Badge variant="outline">Never Logged In</Badge>;
     } else if (daysSinceLogin && daysSinceLogin < 7) {
@@ -155,10 +155,10 @@ const UsersPage = () => {
                          `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === 'all' || user.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || 
+    const matchesStatus = filterStatus === 'all' ||
                          (filterStatus === 'active' && user.is_active) ||
                          (filterStatus === 'inactive' && !user.is_active);
-    
+
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -392,138 +392,134 @@ const UsersPage = () => {
         })()}
       </div>
 
-      {/* User Detail Dialog */}
-      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl" aria-describedby="user-detail-description">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription id="user-detail-description">
-              Detailed information about {selectedUser?.first_name} {selectedUser?.last_name}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedUser && (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="text-lg">
-                    {selectedUser.first_name?.[0]}{selectedUser.last_name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-lg font-medium">
-                    {selectedUser.first_name} {selectedUser.last_name}
-                  </h3>
-                  <div className="flex space-x-2 mt-1">
-                    {getRoleBadge(selectedUser.role)}
-                    {getStatusBadge(selectedUser.is_active, selectedUser.last_login)}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                  <p className="text-sm">{selectedUser.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
-                  <p className="text-sm">{selectedUser.phone || 'Not provided'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Company</Label>
-                  <p className="text-sm">{selectedUser.companies?.name || 'No company assigned'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Role</Label>
-                  <p className="text-sm">{selectedUser.role.replace('_', ' ').toUpperCase()}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
-                  <p className="text-sm">{selectedUser.is_active ? 'Active' : 'Inactive'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Last Login</Label>
-                  <p className="text-sm">
-                    {selectedUser.last_login 
-                      ? new Date(selectedUser.last_login).toLocaleDateString()
-                      : 'Never'
-                    }
-                  </p>
-                </div>
-              </div>
-              
+      {/* User Detail Modal */}
+      <AccessibleModal
+        isOpen={isDetailDialogOpen}
+        onClose={() => setIsDetailDialogOpen(false)}
+        title="User Details"
+        description={`Detailed information about ${selectedUser?.first_name || ''} ${selectedUser?.last_name || ''}`}
+        size="lg"
+      >
+        {selectedUser && (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="text-lg">
+                  {selectedUser.first_name?.[0]}{selectedUser.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
+                <h3 className="text-lg font-medium">
+                  {selectedUser.first_name} {selectedUser.last_name}
+                </h3>
+                <div className="flex space-x-2 mt-1">
+                  {getRoleBadge(selectedUser.role)}
+                  {getStatusBadge(selectedUser.is_active, selectedUser.last_login)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                <p className="text-sm">{selectedUser.email}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                <p className="text-sm">{selectedUser.phone || 'Not provided'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Company</Label>
+                <p className="text-sm">{selectedUser.companies?.name || 'No company assigned'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Role</Label>
+                <p className="text-sm">{selectedUser.role.replace('_', ' ').toUpperCase()}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                <p className="text-sm">{selectedUser.is_active ? 'Active' : 'Inactive'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Last Login</Label>
                 <p className="text-sm">
-                  {new Date(selectedUser.created_at).toLocaleDateString()} 
-                  ({Math.floor((new Date().getTime() - new Date(selectedUser.created_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)
+                  {selectedUser.last_login
+                    ? new Date(selectedUser.last_login).toLocaleDateString()
+                    : 'Never'
+                  }
                 </p>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
-      {/* Impersonation Dialog */}
-      <Dialog open={isImpersonateDialogOpen} onOpenChange={setIsImpersonateDialogOpen}>
-        <DialogContent aria-describedby="impersonation-dialog-description">
-          <DialogHeader>
-            <DialogTitle>Impersonate User</DialogTitle>
-            <DialogDescription id="impersonation-dialog-description">
-              Enter a detailed reason for impersonating {selectedUser?.first_name} {selectedUser?.last_name}. All actions will be logged for security.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="impersonation-reason">Reason for Impersonation</Label>
-              <Textarea
-                id="impersonation-reason"
-                placeholder="e.g., Investigating reported bug with project creation, reproducing error for support ticket #1234, etc."
-                value={impersonationReason}
-                onChange={(e) => setImpersonationReason(e.target.value)}
-                rows={4}
-                className="resize-none"
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 10 characters required. Be specific about why you need to impersonate this user.
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
+              <p className="text-sm">
+                {new Date(selectedUser.created_at).toLocaleDateString()}
+                ({Math.floor((new Date().getTime() - new Date(selectedUser.created_at).getTime()) / (1000 * 60 * 60 * 24))} days ago)
               </p>
             </div>
+          </div>
+        )}
+      </AccessibleModal>
 
-            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded p-3">
-              <div className="flex items-start space-x-2">
-                <UserCog className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5" />
-                <div className="text-xs text-orange-900 dark:text-orange-100">
-                  <p className="font-medium mb-1">Security Notice:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>You will see the platform exactly as this user sees it</li>
-                    <li>All actions will be logged with your admin account</li>
-                    <li>The user will be notified of this access</li>
-                    <li>Session can be ended at any time from the banner</li>
-                  </ul>
-                </div>
+      {/* Impersonation Modal */}
+      <AccessibleModal
+        isOpen={isImpersonateDialogOpen}
+        onClose={() => setIsImpersonateDialogOpen(false)}
+        title="Impersonate User"
+        description={`Enter a detailed reason for impersonating ${selectedUser?.first_name || ''} ${selectedUser?.last_name || ''}. All actions will be logged for security.`}
+        size="md"
+        disableClickOutside
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setIsImpersonateDialogOpen(false)}
+              disabled={impersonationLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStartImpersonation}
+              disabled={impersonationLoading || impersonationReason.trim().length < 10}
+            >
+              {impersonationLoading ? 'Starting...' : 'Start Impersonation'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="impersonation-reason">Reason for Impersonation</Label>
+            <Textarea
+              id="impersonation-reason"
+              placeholder="e.g., Investigating reported bug with project creation, reproducing error for support ticket #1234, etc."
+              value={impersonationReason}
+              onChange={(e) => setImpersonationReason(e.target.value)}
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Minimum 10 characters required. Be specific about why you need to impersonate this user.
+            </p>
+          </div>
+
+          <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded p-3">
+            <div className="flex items-start space-x-2">
+              <UserCog className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5" />
+              <div className="text-xs text-orange-900 dark:text-orange-100">
+                <p className="font-medium mb-1">Security Notice:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>You will see the platform exactly as this user sees it</li>
+                  <li>All actions will be logged with your admin account</li>
+                  <li>The user will be notified of this access</li>
+                  <li>Session can be ended at any time from the banner</li>
+                </ul>
               </div>
             </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsImpersonateDialogOpen(false)}
-                disabled={impersonationLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleStartImpersonation}
-                disabled={impersonationLoading || impersonationReason.trim().length < 10}
-              >
-                {impersonationLoading ? 'Starting...' : 'Start Impersonation'}
-              </Button>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </AccessibleModal>
     </DashboardLayout>
     </RoleGuard>
   );

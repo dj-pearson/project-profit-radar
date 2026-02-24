@@ -5,30 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -330,89 +313,15 @@ export function FilterPresetsManager({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Save Preset Dialog */}
-      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Save Filter Preset</DialogTitle>
-            <DialogDescription>
-              Save your current filters for quick access later
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="preset-name">Preset Name *</Label>
-              <Input
-                id="preset-name"
-                placeholder="My Active Projects"
-                value={presetName}
-                onChange={(e) => setPresetName(e.target.value)}
-                maxLength={100}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="preset-description">Description (Optional)</Label>
-              <Input
-                id="preset-description"
-                placeholder="Projects I'm currently managing"
-                value={presetDescription}
-                onChange={(e) => setPresetDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="set-default"
-                  checked={setAsDefault}
-                  onCheckedChange={(checked) => setSetAsDefault(checked as boolean)}
-                />
-                <label
-                  htmlFor="set-default"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Set as my default preset
-                </label>
-              </div>
-
-              {companyId && (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="share-company"
-                    checked={shareWithCompany}
-                    onCheckedChange={(checked) => setShareWithCompany(checked as boolean)}
-                  />
-                  <label
-                    htmlFor="share-company"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Share with my company
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Preview current filters */}
-            <div className="border rounded-lg p-3 bg-muted/50">
-              <div className="text-xs font-medium mb-2">Active Filters:</div>
-              <div className="text-xs text-muted-foreground space-y-1">
-                {Object.entries(currentFilters || {}).map(([key, value]) => {
-                  if (value && value !== 'all' && value !== '' && (!Array.isArray(value) || value.length > 0)) {
-                    return (
-                      <div key={key}>
-                        • {key.replace(/_/g, ' ')}: {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                      </div>
-                    );
-                  }
-                  return null;
-                }).filter(Boolean)}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
+      {/* Save Preset Modal */}
+      <AccessibleModal
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        title="Save Filter Preset"
+        description="Save your current filters for quick access later"
+        size="md"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
               Cancel
             </Button>
@@ -420,29 +329,107 @@ export function FilterPresetsManager({
               <Save className="h-4 w-4 mr-2" />
               Save Preset
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="preset-name">Preset Name *</Label>
+            <Input
+              id="preset-name"
+              placeholder="My Active Projects"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              maxLength={100}
+            />
+          </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Preset</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{selectedPreset?.name}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedPreset(null)}>
+          <div className="space-y-2">
+            <Label htmlFor="preset-description">Description (Optional)</Label>
+            <Input
+              id="preset-description"
+              placeholder="Projects I'm currently managing"
+              value={presetDescription}
+              onChange={(e) => setPresetDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="set-default"
+                checked={setAsDefault}
+                onCheckedChange={(checked) => setSetAsDefault(checked as boolean)}
+              />
+              <label
+                htmlFor="set-default"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Set as my default preset
+              </label>
+            </div>
+
+            {companyId && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="share-company"
+                  checked={shareWithCompany}
+                  onCheckedChange={(checked) => setShareWithCompany(checked as boolean)}
+                />
+                <label
+                  htmlFor="share-company"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Share with my company
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* Preview current filters */}
+          <div className="border rounded-lg p-3 bg-muted/50">
+            <div className="text-xs font-medium mb-2">Active Filters:</div>
+            <div className="text-xs text-muted-foreground space-y-1">
+              {Object.entries(currentFilters || {}).map(([key, value]) => {
+                if (value && value !== 'all' && value !== '' && (!Array.isArray(value) || value.length > 0)) {
+                  return (
+                    <div key={key}>
+                      • {key.replace(/_/g, ' ')}: {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                    </div>
+                  );
+                }
+                return null;
+              }).filter(Boolean)}
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
+
+      {/* Delete Confirmation Modal */}
+      <AccessibleModal
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setSelectedPreset(null);
+        }}
+        title="Delete Preset"
+        description={`Are you sure you want to delete "${selectedPreset?.name}"? This action cannot be undone.`}
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => {
+              setShowDeleteDialog(false);
+              setSelectedPreset(null);
+            }}>
               Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePreset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePreset}>
               Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
     </>
   );
 }

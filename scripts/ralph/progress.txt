@@ -217,3 +217,55 @@ useRealtimeSubscription, useRealTimeSync, useSupabaseMutation, useSupabaseQuery,
 - No runtime behavior changes
 
 ---
+
+## 2026-02-23 - US-013: Migrate dialogs and modals to AccessibleModal
+
+### What was done
+Migrated 20 critical Dialog/AlertDialog components to AccessibleModal for WCAG 2.1 AA compliance with focus trapping, escape key handling, and screen reader support.
+
+### Files modified (20 modals)
+1. `src/components/tasks/CreateTaskDialog.tsx` - Create task form
+2. `src/components/tasks/EditTaskDialog.tsx` - Edit task form
+3. `src/components/estimates/ConvertToProjectDialog.tsx` - Estimate→project wizard
+4. `src/components/mfa/MFAVerificationModal.tsx` - MFA 6-digit code verification
+5. `src/components/auth/MFASetupDialog.tsx` - MFA setup wizard (3 steps)
+6. `src/pages/Projects.tsx` - Edit project + delete confirmation
+7. `src/pages/CRMContacts.tsx` - New contact form
+8. `src/pages/admin/Users.tsx` - User detail + impersonation confirmation
+9. `src/components/estimates/EstimatesTable.tsx` - Edit estimate + delete confirmation
+10. `src/components/expenses/ExpenseTracker.tsx` - Create/edit expense + delete confirmation
+11. `src/pages/EstimatesHub.tsx` - Create estimate dialog
+12. `src/components/filters/FilterPresetsManager.tsx` - Save preset + delete confirmation
+13. `src/components/crm/EmailSyncSetup.tsx` - Delete email account confirmation
+14. `src/components/bonds/BondForm.tsx` - Add/edit bond form
+15. `src/components/permits/PermitForm.tsx` - Add/edit permit form
+16. `src/components/documents/DocumentCard.tsx` - Document versions viewer
+17. `src/components/job-costing/BudgetManager.tsx` - Budget item form + delete confirmation
+18. `src/pages/admin/SSOManagement.tsx` - SSO config + MFA setup + delete confirmation
+19. `src/components/payments/PaymentMethodManager.tsx` - Add payment method
+20. `src/components/workflow/ChangeOrderManagement.tsx` - Create/edit change order
+
+### Key patterns used
+- `title` prop is string-only - stripped JSX icons from DialogTitle text
+- Size mapping: max-w-md→sm, max-w-lg→md, max-w-2xl→lg, max-w-4xl→xl
+- AlertDialog→AccessibleModal with `disableClickOutside` + destructive footer buttons
+- DialogTrigger removed - replaced with state-controlled button + `isOpen` state
+- Forms with footer buttons: used `id="form-name"` on form + `form="form-name"` on submit button in footer
+- MFA modals: `disableClickOutside={true}`, `disableEscapeKey={true}` for security-critical flows
+- MFASetupDialog: conditional close prevention with `hideCloseButton`/`disableClickOutside`/`disableEscapeKey` when MFA is required
+
+### Accessibility features gained
+- Focus trap in all modals (Tab cycles within modal)
+- Escape key closes modal (except security-critical flows)
+- Focus returns to trigger element when modal closes
+- All modals have `aria-labelledby` and `aria-describedby` attributes
+- `aria-modal="true"` and `role="dialog"` on all modals
+- Body scroll lock when modal is open
+
+### Learnings
+- DialogTrigger pattern (uncontrolled): Must add state variable (`showDialog`) and separate button onClick from dialog open/close
+- Forms in footer: Use HTML `form` attribute to connect external submit button to form element
+- Security modals: Use `disableClickOutside` + `disableEscapeKey` + `hideCloseButton` to prevent accidental dismissal
+- MFASetupDialog has 3 separate dialog renders for steps (intro/setup/success) - each needs independent AccessibleModal
+
+---

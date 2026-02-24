@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,7 +45,7 @@ type TaskCategory = 'general' | 'permit' | 'estimate' | 'inspection' | 'material
 const TASK_CATEGORIES: TaskCategory[] = [
   'general',
   'permit',
-  'estimate', 
+  'estimate',
   'inspection',
   'material_order',
   'labor',
@@ -67,7 +67,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  
+
   const [formData, setFormData] = useState({
     name: task.name,
     description: task.description || '',
@@ -179,102 +179,63 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-md h-[90vh] flex flex-col p-3 sm:p-6 overflow-hidden bg-background">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Edit Task</DialogTitle>
-          <DialogDescription>
-            Update task details and settings below.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          {task && (
-            <div className="text-xs text-muted-foreground mb-2">
-              Editing: {task.name} (ID: {task.id})
-            </div>
-          )}
+    <AccessibleModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Task"
+      description="Update task details and settings below."
+      size="sm"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            Cancel
+          </Button>
+          <Button type="submit" form="edit-task-form" disabled={loading} className="flex-1">
+            {loading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </>
+      }
+    >
+      {task && (
+        <div className="text-xs text-muted-foreground mb-2">
+          Editing: {task.name} (ID: {task.id})
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <form id="edit-task-form" onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Task Name *</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Enter task name"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Task description (optional)"
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Task Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Enter task name"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Task description (optional)"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={formData.category} onValueChange={(value: TaskCategory) => setFormData(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_CATEGORIES.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+            <Label htmlFor="category">Category</Label>
+            <Select value={formData.category} onValueChange={(value: TaskCategory) => setFormData(prev => ({ ...prev, category: value }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="on_hold">On Hold</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="project">Project *</Label>
-            <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map(project => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
+                {TASK_CATEGORIES.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -282,58 +243,94 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assigned_to">Assigned To</Label>
-            <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
               <SelectTrigger>
-                <SelectValue placeholder="Assign to..." />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
-                {users.map(user => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={formData.due_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="estimated_hours">Estimated Hours</Label>
-              <Input
-                id="estimated_hours"
-                type="number"
-                step="0.5"
-                min="0"
-                value={formData.estimated_hours}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="space-y-2">
+          <Label htmlFor="status">Status</Label>
+          <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todo">To Do</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="on_hold">On Hold</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="project">Project *</Label>
+          <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a project" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map(project => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="assigned_to">Assigned To</Label>
+          <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Assign to..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {users.map(user => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="due_date">Due Date</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="estimated_hours">Estimated Hours</Label>
+            <Input
+              id="estimated_hours"
+              type="number"
+              step="0.5"
+              min="0"
+              value={formData.estimated_hours}
+              onChange={(e) => setFormData(prev => ({ ...prev, estimated_hours: e.target.value }))}
+              placeholder="0"
+            />
+          </div>
+        </div>
+      </form>
+    </AccessibleModal>
   );
 };

@@ -3,23 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import {
   Shield,
   Key,
@@ -739,66 +723,72 @@ export const SSOManagement = () => {
       </div>
 
       {/* SSO Configuration Dialog */}
-      <Dialog open={showSSOForm} onOpenChange={setShowSSOForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-label="SSO Configuration">
-          <SSOConfigurationForm
-            existingConnection={editingConnection}
-            onSuccess={() => {
-              setShowSSOForm(false);
-              setEditingConnection(null);
-              loadSSOData();
-            }}
-            onCancel={() => {
-              setShowSSOForm(false);
-              setEditingConnection(null);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <AccessibleModal
+        isOpen={showSSOForm}
+        onClose={() => { setShowSSOForm(false); setEditingConnection(null); }}
+        title={editingConnection ? 'Edit SSO Configuration' : 'Add SSO Configuration'}
+        size="xl"
+      >
+        <SSOConfigurationForm
+          existingConnection={editingConnection}
+          onSuccess={() => {
+            setShowSSOForm(false);
+            setEditingConnection(null);
+            loadSSOData();
+          }}
+          onCancel={() => {
+            setShowSSOForm(false);
+            setEditingConnection(null);
+          }}
+        />
+      </AccessibleModal>
 
       {/* MFA Setup Dialog */}
-      <Dialog open={showMFASetup} onOpenChange={setShowMFASetup}>
-        <DialogContent className="max-w-lg" aria-label="Multi-factor authentication setup">
-          <TOTPSetupScreen
-            onComplete={() => {
-              setShowMFASetup(false);
-              loadSSOData();
-            }}
-            onSkip={() => setShowMFASetup(false)}
-            showSkip={true}
-          />
-        </DialogContent>
-      </Dialog>
+      <AccessibleModal
+        isOpen={showMFASetup}
+        onClose={() => setShowMFASetup(false)}
+        title="Set Up Multi-Factor Authentication"
+        size="md"
+      >
+        <TOTPSetupScreen
+          onComplete={() => {
+            setShowMFASetup(false);
+            loadSSOData();
+          }}
+          onSkip={() => setShowMFASetup(false)}
+          showSkip={true}
+        />
+      </AccessibleModal>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingConnectionId} onOpenChange={() => setDeletingConnectionId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete SSO Connection?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. Users who rely on this SSO connection will no longer be
-              able to sign in using it.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+      <AccessibleModal
+        isOpen={!!deletingConnectionId}
+        onClose={() => setDeletingConnectionId(null)}
+        title="Delete SSO Connection?"
+        description="This action cannot be undone. Users who rely on this SSO connection will no longer be able to sign in using it."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingConnectionId(null)} disabled={isDeleting}>Cancel</Button>
+            <Button
+              variant="destructive"
               onClick={deleteConnection}
               disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
+              className="gap-2"
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Deleting...
                 </>
               ) : (
                 'Delete'
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
     </DashboardLayout>
   );
 };
