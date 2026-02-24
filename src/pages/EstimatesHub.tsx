@@ -273,25 +273,25 @@ export default function EstimatesHub() {
             <TabsTrigger value="draft">
               Draft
               {!loading && stats.statusCounts.draft > 0 && (
-                <Badge variant="secondary" className="ml-2">{stats.statusCounts.draft}</Badge>
+                <Badge variant="secondary" className="ml-2" aria-label={`${stats.statusCounts.draft} draft estimates`}>{stats.statusCounts.draft}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="sent">
               Sent
               {!loading && stats.statusCounts.sent > 0 && (
-                <Badge variant="outline" className="ml-2">{stats.statusCounts.sent}</Badge>
+                <Badge variant="outline" className="ml-2" aria-label={`${stats.statusCounts.sent} sent estimates`}>{stats.statusCounts.sent}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="pending">
               Pending
               {!loading && stats.statusCounts.viewed > 0 && (
-                <Badge variant="outline" className="ml-2">{stats.statusCounts.viewed}</Badge>
+                <Badge variant="outline" className="ml-2" aria-label={`${stats.statusCounts.viewed} pending estimates`}>{stats.statusCounts.viewed}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="accepted">
               Accepted
               {!loading && stats.statusCounts.accepted > 0 && (
-                <Badge variant="default" className="ml-2">{stats.statusCounts.accepted}</Badge>
+                <Badge variant="default" className="ml-2" aria-label={`${stats.statusCounts.accepted} accepted estimates`}>{stats.statusCounts.accepted}</Badge>
               )}
             </TabsTrigger>
           </TabsList>

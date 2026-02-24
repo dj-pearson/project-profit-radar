@@ -274,7 +274,7 @@ const CRMContacts = () => {
 
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className="w-full sm:w-40">
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by contact type">
                         <SelectValue placeholder="Type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -288,7 +288,7 @@ const CRMContacts = () => {
                     </Select>
 
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-full sm:w-40">
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by relationship status">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -487,7 +487,7 @@ const CRMContacts = () => {
                     header: 'Type',
                     sortable: true,
                     render: (value) => (
-                      <Badge variant="outline" className={`text-${getTypeColor(value)}-600`}>
+                      <Badge variant="outline" className={`text-${getTypeColor(value)}-600`} aria-label={`Type: ${value}`}>
                         {value}
                       </Badge>
                     ),
@@ -497,7 +497,7 @@ const CRMContacts = () => {
                     header: 'Status',
                     sortable: true,
                     render: (value) => (
-                      <Badge variant="outline" className={`text-${getStatusColor(value)}-600`}>
+                      <Badge variant="outline" className={`text-${getStatusColor(value)}-600`} aria-label={`Status: ${value.replace('_', ' ')}`}>
                         {value}
                       </Badge>
                     ),

@@ -46,17 +46,17 @@ export const ProjectCard = ({ project, onViewProject }: ProjectCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow" role="article" aria-labelledby={`project-title-${project.id}`}>
       <CardHeader className="pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 min-w-0 flex-1">
-            <CardTitle className="text-base sm:text-lg truncate">{project.name}</CardTitle>
+            <CardTitle id={`project-title-${project.id}`} className="text-base sm:text-lg truncate">{project.name}</CardTitle>
             <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-              <User className="h-3 w-3 mr-1 shrink-0" />
+              <User className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
               <span className="truncate">{project.client_name}</span>
             </div>
           </div>
-          <Badge variant={getStatusColor(project.status)} className="text-xs shrink-0">
+          <Badge variant={getStatusColor(project.status)} className="text-xs shrink-0" aria-label={`Status: ${project.status.replace('_', ' ')}`}>
             {project.status.replace('_', ' ')}
           </Badge>
         </div>
@@ -64,7 +64,7 @@ export const ProjectCard = ({ project, onViewProject }: ProjectCardProps) => {
       <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
         {project.site_address && (
           <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-            <MapPin className="h-3 w-3 mr-1 shrink-0" />
+            <MapPin className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="truncate">{project.site_address}</span>
           </div>
         )}
@@ -76,19 +76,19 @@ export const ProjectCard = ({ project, onViewProject }: ProjectCardProps) => {
               {project.completion_percentage}%
             </span>
           </div>
-          <Progress value={project.completion_percentage} className="h-2" />
+          <Progress value={project.completion_percentage} className="h-2" aria-label={`Project progress: ${project.completion_percentage}%`} />
         </div>
 
         {project.budget && (
           <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-            <DollarSign className="h-3 w-3 mr-1 shrink-0" />
+            <DollarSign className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="truncate">Budget: ${project.budget.toLocaleString()}</span>
           </div>
         )}
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center">
-            <Calendar className="h-3 w-3 mr-1 shrink-0" />
+            <Calendar className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
             <span className="truncate">{new Date(project.start_date).toLocaleDateString()}</span>
           </div>
           <div className="truncate ml-2">

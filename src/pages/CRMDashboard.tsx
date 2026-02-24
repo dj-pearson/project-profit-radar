@@ -823,13 +823,13 @@ const CRMDashboard = () => {
                   <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div>
                       <CardTitle className="flex items-center text-lg sm:text-xl">
-                        <Target className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
+                        <Target className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" aria-hidden="true" />
                         Sales Pipeline
                       </CardTitle>
                       <CardDescription className="text-xs sm:text-sm">Visual overview of your opportunities and deals</CardDescription>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setActiveTab('opportunities')} className="w-full sm:w-auto">
-                      <BarChart3 className="h-4 w-4 mr-2" />
+                      <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
                       <span className="hidden sm:inline">View Full Pipeline</span>
                       <span className="sm:hidden">Pipeline</span>
                     </Button>
@@ -850,7 +850,7 @@ const CRMDashboard = () => {
                     <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                       <div>
                         <CardTitle className="flex items-center text-base sm:text-lg">
-                          <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
+                          <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" aria-hidden="true" />
                           Top Scoring Leads
                         </CardTitle>
                         <CardDescription className="text-xs sm:text-sm">AI-powered lead prioritization</CardDescription>
@@ -874,16 +874,16 @@ const CRMDashboard = () => {
                       ) : (
                         <div className="space-y-4">
                           {crmData.leads.slice(0, 5).map((lead) => (
-                            <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors" role="article" aria-labelledby={`lead-overview-${lead.id}`}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2">
-                                  <p className="font-medium truncate">
+                                  <p id={`lead-overview-${lead.id}`} className="font-medium truncate">
                                     {lead.first_name} {lead.last_name}
                                   </p>
-                                 <Badge variant="outline" className={getStatusColorClass(lead.status)}>
+                                 <Badge variant="outline" className={getStatusColorClass(lead.status)} aria-label={`Status: ${lead.status}`}>
                                    {lead.status}
                                  </Badge>
-                                 <Badge variant="outline" className={getPriorityColorClass(lead.priority)}>
+                                 <Badge variant="outline" className={getPriorityColorClass(lead.priority)} aria-label={`Priority: ${lead.priority}`}>
                                    {lead.priority}
                                  </Badge>
                                 </div>
@@ -934,11 +934,11 @@ const CRMDashboard = () => {
                       ) : (
                         <div className="space-y-4">
                           {crmData.opportunities.slice(0, 5).map((opportunity) => (
-                            <div key={opportunity.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div key={opportunity.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors" role="article" aria-labelledby={`opp-overview-${opportunity.id}`}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2">
-                                  <p className="font-medium truncate">{opportunity.name}</p>
-                                 <Badge variant="outline" className={getStageColorClass(opportunity.stage)}>
+                                  <p id={`opp-overview-${opportunity.id}`} className="font-medium truncate">{opportunity.name}</p>
+                                 <Badge variant="outline" className={getStageColorClass(opportunity.stage)} aria-label={`Stage: ${opportunity.stage}`}>
                                    {opportunity.stage}
                                  </Badge>
                                 </div>
@@ -1048,10 +1048,10 @@ const CRMDashboard = () => {
                                     </p>
                                   </div>
                                   <div className="flex flex-col items-center space-y-1">
-                                   <Badge variant="outline" className={getStatusColorClass(lead.status)}>
+                                   <Badge variant="outline" className={getStatusColorClass(lead.status)} aria-label={`Status: ${lead.status}`}>
                                      {lead.status}
                                    </Badge>
-                                   <Badge variant="outline" className={getPriorityColorClass(lead.priority)}>
+                                   <Badge variant="outline" className={getPriorityColorClass(lead.priority)} aria-label={`Priority: ${lead.priority}`}>
                                      {lead.priority}
                                    </Badge>
                                   </div>
@@ -1129,8 +1129,8 @@ const CRMDashboard = () => {
                                   <div className="flex items-center justify-between">
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center space-x-2">
-                                        <p className="font-medium truncate">{opportunity.name}</p>
-                                       <Badge variant="outline" className={getStageColorClass(opportunity.stage)}>
+                                        <p id={`opp-detail-${opportunity.id}`} className="font-medium truncate">{opportunity.name}</p>
+                                       <Badge variant="outline" className={getStageColorClass(opportunity.stage)} aria-label={`Stage: ${opportunity.stage}`}>
                                          {opportunity.stage}
                                        </Badge>
                                       </div>
@@ -1178,7 +1178,7 @@ const CRMDashboard = () => {
                     <CardDescription>Insights into your sales performance</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-12" role="status">
+                    <div className="text-center py-12">
                       <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" aria-hidden="true" />
                       <h3 className="text-lg font-medium mb-2">Reports Coming Soon</h3>
                       <p className="text-muted-foreground mb-4">

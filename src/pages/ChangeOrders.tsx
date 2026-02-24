@@ -384,13 +384,13 @@ const ChangeOrders = () => {
 
   const getStatusBadge = (order: ChangeOrder) => {
     if (order.status === 'rejected') {
-      return <Badge variant="destructive">Rejected</Badge>;
+      return <Badge variant="destructive" aria-label="Status: Rejected">Rejected</Badge>;
     } else if (order.client_approved && order.internal_approved) {
-      return <Badge className="bg-green-500">Approved</Badge>;
+      return <Badge className="bg-green-500" aria-label="Status: Approved">Approved</Badge>;
     } else if (!order.client_approved && !order.internal_approved) {
-      return <Badge variant="secondary">Pending</Badge>;
+      return <Badge variant="secondary" aria-label="Status: Pending">Pending</Badge>;
     } else {
-      return <Badge variant="outline">Partial Approval</Badge>;
+      return <Badge variant="outline" aria-label="Status: Partial Approval">Partial Approval</Badge>;
     }
   };
 
@@ -403,7 +403,7 @@ const ChangeOrders = () => {
       key: 'change_order_number',
       header: 'CO #',
       sortable: true,
-      render: (value) => <Badge variant="outline" className="font-mono">#{value}</Badge>,
+      render: (value) => <Badge variant="outline" className="font-mono" aria-label={`Change order number ${value}`}>#{value}</Badge>,
     },
     {
       key: 'title',
@@ -661,8 +661,9 @@ const ChangeOrders = () => {
                             <Button
                               variant="outline"
                               className="w-full justify-start text-left font-normal"
+                              aria-label="Select approval due date"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                               {approvalDueDate ? format(approvalDueDate, "PPP") : "Select date"}
                             </Button>
                           </PopoverTrigger>
@@ -722,11 +723,11 @@ const ChangeOrders = () => {
         {/* Filters */}
         <Card className={mobileCardClasses.container}>
           <CardContent className={mobileCardClasses.content}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4" role="search" aria-label="Filter change orders">
               <div className="flex-1">
                 <Label htmlFor="project-filter" className={mobileTextClasses.body}>Filter by Project</Label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger className={mobileFilterClasses.input}>
+                  <SelectTrigger className={mobileFilterClasses.input} aria-label="Filter by project">
                     <SelectValue placeholder="All projects" />
                   </SelectTrigger>
                   <SelectContent>

@@ -59,8 +59,8 @@ const FinancialDashboard = () => {
     <RoleGuard allowedRoles={ROLE_GROUPS.FINANCIAL_VIEWERS}>
       <DashboardLayout title="Financial Dashboard" hasAccessibleWrapper>
         <div className="space-y-6">
-        <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)}>
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
+        <Tabs defaultValue="overview" className="space-y-6" onValueChange={(value) => gtag.trackFeature('financial_dashboard', 'tab_change', 1)} aria-label="Financial dashboard sections">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1" aria-label="Financial categories">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="budgets" className="text-xs sm:text-sm">Budget</TabsTrigger>
             <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">Cash</TabsTrigger>

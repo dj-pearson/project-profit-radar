@@ -280,8 +280,8 @@ const Analytics = () => {
                   <SelectItem value="ytd">Year to Date</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" className={mobileButtonClasses.secondary}>
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" className={mobileButtonClasses.secondary} aria-label="Export analytics data">
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                 <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
@@ -434,9 +434,9 @@ const Analytics = () => {
               <CardContent>
                 <div className="space-y-4">
                   {analyticsData.projectPerformance.slice(0, 10).map((project) => (
-                    <div key={project.projectId} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={project.projectId} className="flex items-center justify-between p-4 border rounded-lg" role="article" aria-labelledby={`project-perf-${project.projectId}`}>
                       <div className="flex-1">
-                        <h4 className="font-medium">{project.projectName}</h4>
+                        <h4 id={`project-perf-${project.projectId}`} className="font-medium">{project.projectName}</h4>
                         <p className="text-sm text-muted-foreground">{project.completion}% complete</p>
                       </div>
                       <div className="flex items-center space-x-4 text-sm">

@@ -213,10 +213,10 @@ export const ExpenseTracker: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'paid': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending': return <Clock className="h-4 w-4 text-orange-500" />;
-      case 'overdue': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default: return <Clock className="h-4 w-4 text-gray-500" />;
+      case 'paid': return <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />;
+      case 'pending': return <Clock className="h-4 w-4 text-orange-500" aria-hidden="true" />;
+      case 'overdue': return <AlertCircle className="h-4 w-4 text-red-500" aria-hidden="true" />;
+      default: return <Clock className="h-4 w-4 text-gray-500" aria-hidden="true" />;
     }
   };
 
@@ -257,14 +257,14 @@ export const ExpenseTracker: React.FC = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" />
+            <Receipt className="h-5 w-5" aria-hidden="true" />
             Expense Tracker
           </CardTitle>
           <div className="flex items-center gap-2">
             <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
               <DialogTrigger asChild>
                 <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                   Add Expense
                 </Button>
               </DialogTrigger>
@@ -433,7 +433,7 @@ export const ExpenseTracker: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4" role="search" aria-label="Filter expenses">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Status" />
@@ -474,7 +474,7 @@ export const ExpenseTracker: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-medium">{expense.description}</h4>
-                      <Badge variant={getStatusColor(expense.payment_status)}>
+                      <Badge variant={getStatusColor(expense.payment_status)} aria-label={`Payment status: ${expense.payment_status}`}>
                         {getStatusIcon(expense.payment_status)}
                         <span className="ml-1 capitalize">{expense.payment_status}</span>
                       </Badge>

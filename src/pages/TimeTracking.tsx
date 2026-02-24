@@ -43,8 +43,11 @@ const TimeTracking = () => {
 
         {/* Mobile Tab Navigation */}
         <div className="sticky top-[57px] z-10 bg-background border-b sm:hidden">
-          <div className="flex">
+          <div className="flex" role="tablist" aria-label="Time tracking views">
             <button
+              role="tab"
+              aria-selected={activeView === 'dashboard'}
+              aria-controls="time-tracking-content"
               onClick={() => setActiveView('dashboard')}
               className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                 activeView === 'dashboard'
@@ -52,10 +55,13 @@ const TimeTracking = () => {
                   : 'text-muted-foreground'
               }`}
             >
-              <Clock className="h-4 w-4 mx-auto mb-1" />
+              <Clock className="h-4 w-4 mx-auto mb-1" aria-hidden="true" />
               Dashboard
             </button>
             <button
+              role="tab"
+              aria-selected={activeView === 'quick-entry'}
+              aria-controls="time-tracking-content"
               onClick={() => setActiveView('quick-entry')}
               className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                 activeView === 'quick-entry'
@@ -63,10 +69,13 @@ const TimeTracking = () => {
                   : 'text-muted-foreground'
               }`}
             >
-              <Plus className="h-4 w-4 mx-auto mb-1" />
+              <Plus className="h-4 w-4 mx-auto mb-1" aria-hidden="true" />
               Quick Entry
             </button>
             <button
+              role="tab"
+              aria-selected={activeView === 'reports'}
+              aria-controls="time-tracking-content"
               onClick={() => setActiveView('reports')}
               className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                 activeView === 'reports'
@@ -74,7 +83,7 @@ const TimeTracking = () => {
                   : 'text-muted-foreground'
               }`}
             >
-              <BarChart3 className="h-4 w-4 mx-auto mb-1" />
+              <BarChart3 className="h-4 w-4 mx-auto mb-1" aria-hidden="true" />
               Reports
             </button>
           </div>
@@ -83,8 +92,11 @@ const TimeTracking = () => {
         {/* Desktop Tab Navigation */}
         <div className="hidden sm:block border-b">
           <div className="container mx-auto px-6">
-            <div className="flex gap-6">
+            <div className="flex gap-6" role="tablist" aria-label="Time tracking views">
               <button
+                role="tab"
+                aria-selected={activeView === 'dashboard'}
+                aria-controls="time-tracking-content"
                 onClick={() => setActiveView('dashboard')}
                 className={`py-4 px-2 text-sm font-medium transition-colors ${
                   activeView === 'dashboard'
@@ -95,6 +107,9 @@ const TimeTracking = () => {
                 Dashboard
               </button>
               <button
+                role="tab"
+                aria-selected={activeView === 'quick-entry'}
+                aria-controls="time-tracking-content"
                 onClick={() => setActiveView('quick-entry')}
                 className={`py-4 px-2 text-sm font-medium transition-colors ${
                   activeView === 'quick-entry'
@@ -105,6 +120,9 @@ const TimeTracking = () => {
                 Quick Entry
               </button>
               <button
+                role="tab"
+                aria-selected={activeView === 'reports'}
+                aria-controls="time-tracking-content"
                 onClick={() => setActiveView('reports')}
                 className={`py-4 px-2 text-sm font-medium transition-colors ${
                   activeView === 'reports'
@@ -119,7 +137,7 @@ const TimeTracking = () => {
         </div>
 
         {/* Content */}
-        <div className="container mx-auto px-4 py-6 sm:px-6">
+        <div id="time-tracking-content" role="tabpanel" className="container mx-auto px-4 py-6 sm:px-6" aria-label={`${activeView === 'dashboard' ? 'Dashboard' : activeView === 'quick-entry' ? 'Quick Entry' : 'Reports'} view`}>
           {activeView === 'dashboard' && <TimeTrackingDashboard />}
           
           {activeView === 'quick-entry' && (
@@ -128,7 +146,7 @@ const TimeTracking = () => {
           
           {activeView === 'reports' && (
             <div className="text-center py-12">
-              <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" aria-hidden="true" />
               <h3 className="text-lg font-medium mb-2">Time Reports</h3>
               <p className="text-muted-foreground max-w-md mx-auto">
                 Detailed time tracking reports and analytics coming soon
@@ -143,8 +161,9 @@ const TimeTracking = () => {
             size="lg"
             onClick={() => setActiveView('quick-entry')}
             className="h-14 w-14 rounded-full shadow-lg"
+            aria-label="Add quick time entry"
           >
-            <Plus className="h-6 w-6" />
+            <Plus className="h-6 w-6" aria-hidden="true" />
           </Button>
         </div>
       </div>

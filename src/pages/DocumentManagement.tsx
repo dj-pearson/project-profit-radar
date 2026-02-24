@@ -408,9 +408,9 @@ const DocumentManagement = () => {
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center" role="status" aria-label="Loading documents">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4" aria-hidden="true"></div>
           <p className="text-muted-foreground">Loading documents...</p>
         </div>
       </div>
@@ -607,7 +607,7 @@ const DocumentManagement = () => {
               sortable: true,
               hideOnMobile: true,
               render: (value) => (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs" aria-label={`File type: ${value ? value.split('/').pop()?.toUpperCase() : 'Unknown'}`}>
                   {value ? value.split('/').pop()?.toUpperCase() : 'Unknown'}
                 </Badge>
               ),

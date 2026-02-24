@@ -422,14 +422,14 @@ const Safety = () => {
                 ) : (
                   <div className="space-y-4">
                     {recentIncidents.map(incident => (
-                      <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={incident.id} className="flex items-center justify-between p-4 border rounded-lg" role="article" aria-labelledby={`incident-${incident.id}`}>
                         <div>
-                          <h3 className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
+                          <h3 id={`incident-${incident.id}`} className="font-medium">{incident.incident_type.replace('_', ' ').toUpperCase()}</h3>
                           <p className="text-sm text-muted-foreground">
                             {new Date(incident.incident_date).toLocaleDateString()} • Severity: {incident.severity}
                           </p>
                         </div>
-                        <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'}>
+                        <Badge variant={incident.status === 'closed' ? 'default' : 'destructive'} aria-label={`Status: ${incident.status}`}>
                           {incident.status}
                         </Badge>
                       </div>

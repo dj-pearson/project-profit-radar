@@ -36,7 +36,7 @@ const AuditLogs: React.FC = () => {
       header: 'Action',
       sortable: true,
       render: (value) => (
-        <Badge variant="outline">{value || '--'}</Badge>
+        <Badge variant="outline" aria-label={`Action: ${value || 'none'}`}>{value || '--'}</Badge>
       ),
     },
     {

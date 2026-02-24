@@ -284,7 +284,7 @@ export const ContextualActions: React.FC<ContextualActionsProps> = ({
       <Card className={className}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center">
-            <Zap className="h-4 w-4 mr-2" />
+            <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
             Quick Actions
           </CardTitle>
         </CardHeader>
@@ -298,7 +298,7 @@ export const ContextualActions: React.FC<ContextualActionsProps> = ({
               disabled={action.disabled || loading}
               className="w-full justify-start"
             >
-              <action.icon className="h-4 w-4 mr-2" />
+              <action.icon className="h-4 w-4 mr-2" aria-hidden="true" />
               {action.title}
               {action.badge && (
                 <Badge variant="secondary" className="ml-auto text-xs">
@@ -324,7 +324,7 @@ export const ContextualActions: React.FC<ContextualActionsProps> = ({
                     onClick={action.action}
                     disabled={action.disabled || loading}
                   >
-                    <action.icon className="h-4 w-4 mr-2" />
+                    <action.icon className="h-4 w-4 mr-2" aria-hidden="true" />
                     {action.title}
                   </DropdownMenuItem>
                 ))}
