@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 export interface OfflineData {
   id: string;
   type: 'time_entry' | 'daily_report' | 'expense' | 'photo' | 'voice_note' | 'safety_incident';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
   synced: boolean;
   retryCount: number;
@@ -154,7 +154,7 @@ export const useOfflineSync = () => {
 
   const saveOfflineData = useCallback(async (
     type: OfflineData['type'],
-    data: any
+    data: Record<string, unknown>
   ): Promise<string> => {
     try {
       const offlineItem: OfflineData = {

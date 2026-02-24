@@ -9,7 +9,7 @@ export interface SimpleNotification {
   type: 'project_update' | 'approval_request' | 'safety_incident' | 'task_assignment' | 'budget_alert' | 'timeline_change' | 'message' | 'system';
   title: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   read_at?: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   created_at: string;

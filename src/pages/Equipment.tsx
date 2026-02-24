@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -230,132 +231,101 @@ export default function Equipment() {
           </div>
 
           <TabsContent value="fleet" className="space-y-4">
-            {equipmentLoading ? (
-              <div className="grid gap-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i}>
-                    <CardHeader>
-                      <Skeleton className="h-6 w-48" />
-                      <Skeleton className="h-4 w-64 mt-2" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-4 gap-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : filteredEquipment.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Truck className="h-12 w-12 text-muted-foreground mb-4" aria-hidden="true" />
-                  <h3 className="text-lg font-semibold mb-2">No Equipment Found</h3>
-                  <p className="text-muted-foreground text-center max-w-md">
-                    {searchTerm
-                      ? 'No equipment matches your search criteria.'
-                      : 'Get started by adding your first piece of equipment to your fleet.'}
-                  </p>
-                  {!searchTerm && (
-                    <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
-                      <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Add Your First Equipment
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {filteredEquipment.map((item) => (
-                  <Card key={item.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Truck className="h-5 w-5" aria-hidden="true" />
-                            {item.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {item.equipment_type} {item.model ? `• ${item.model}` : ''} {item.serial_number ? `• ${item.serial_number}` : ''}
-                          </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(item.status || 'available')}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          <div>
-                            <div className="font-medium text-muted-foreground text-xs">Location</div>
-                            <div className="text-sm">{item.location || 'Not assigned'}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          <div>
-                            <div className="font-medium text-muted-foreground text-xs">Last Maintenance</div>
-                            <div className="text-sm">
-                              {item.last_maintenance_date
-                                ? new Date(item.last_maintenance_date).toLocaleDateString()
-                                : 'Not recorded'}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          <div>
-                            <div className="font-medium text-muted-foreground text-xs">Next Maintenance</div>
-                            <div className="text-sm">
-                              {item.next_maintenance_date
-                                ? new Date(item.next_maintenance_date).toLocaleDateString()
-                                : 'Not scheduled'}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                          <div>
-                            <div className="font-medium text-muted-foreground text-xs">Current Value</div>
-                            <div className="text-sm">
-                              {item.current_value
-                                ? formatCurrency(item.current_value)
-                                : item.purchase_cost
-                                  ? formatCurrency(item.purchase_cost)
-                                  : 'Not set'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+            {(() => {
+              const equipmentColumns: TableColumn<any>[] = [
+                {
+                  key: 'name',
+                  header: 'Name',
+                  sortable: true,
+                  render: (value) => (
+                    <span className="flex items-center gap-2 font-medium">
+                      <Truck className="h-4 w-4" aria-hidden="true" />
+                      {value}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'equipment_type',
+                  header: 'Type',
+                  sortable: true,
+                  render: (value) => (
+                    <span className="capitalize">{value || '--'}</span>
+                  ),
+                },
+                {
+                  key: 'model',
+                  header: 'Model',
+                  hideOnMobile: true,
+                  render: (value) => <span>{value || '--'}</span>,
+                },
+                {
+                  key: 'serial_number',
+                  header: 'Serial Number',
+                  hideOnMobile: true,
+                  render: (value) => <span className="font-mono text-xs">{value || '--'}</span>,
+                },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  sortable: true,
+                  render: (value) => getStatusBadge(value || 'available'),
+                },
+                {
+                  key: 'location',
+                  header: 'Location',
+                  hideOnMobile: true,
+                  render: (value) => (
+                    <span className="flex items-center gap-1 text-sm">
+                      <MapPin className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                      {value || 'Not assigned'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: 'Actions',
+                  headerRender: () => <span className="sr-only">Actions</span>,
+                  render: (_, row) => (
+                    <div className="flex gap-1">
+                      <Button variant="outline" size="sm" aria-label={`Schedule maintenance for ${row.name}`}>
+                        <Wrench className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      <Button size="sm" aria-label={`View details for ${row.name}`}>
+                        <span className="sr-only">Details</span>
+                        <span aria-hidden="true">View</span>
+                      </Button>
+                    </div>
+                  ),
+                },
+              ];
 
-                      <div className={mobileFilterClasses.buttonGroup}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          <Wrench className="h-4 w-4 mr-1 sm:mr-2" aria-hidden="true" />
-                          <span className="hidden sm:inline">Schedule Maintenance</span>
-                          <span className="sm:hidden">Maint.</span>
+              return (
+                <AccessibleTable
+                  caption="Equipment Fleet"
+                  hideCaption
+                  columns={equipmentColumns}
+                  data={filteredEquipment}
+                  loading={equipmentLoading}
+                  emptyContent={
+                    <div className="text-center py-8">
+                      <Truck className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                      <h3 className="text-lg font-semibold mb-2">No Equipment Found</h3>
+                      <p className="text-muted-foreground text-center max-w-md">
+                        {searchTerm
+                          ? 'No equipment matches your search criteria.'
+                          : 'Get started by adding your first piece of equipment to your fleet.'}
+                      </p>
+                      {!searchTerm && (
+                        <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
+                          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                          Add Your First Equipment
                         </Button>
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                        >
-                          <span className="hidden sm:inline">View Details</span>
-                          <span className="sm:hidden">Details</span>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+                      )}
+                    </div>
+                  }
+                />
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-4">

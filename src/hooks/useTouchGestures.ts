@@ -51,7 +51,7 @@ export const useTouchGestures = (
     initialDistance: 0,
     currentDistance: 0,
     touchCount: 0,
-    longPressTimer: null as NodeJS.Timeout | null
+    longPressTimer: null as ReturnType<typeof setTimeout> | null
   });
 
   const calculateDistance = useCallback((touch1: Touch, touch2: Touch) => {
@@ -86,7 +86,7 @@ export const useTouchGestures = (
           type: 'long-press',
           duration: Date.now() - state.startTime
         });
-      }, longPressThreshold) as any;
+      }, longPressThreshold);
     }
   }, [calculateDistance, onLongPress, longPressThreshold]);
 

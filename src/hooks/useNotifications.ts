@@ -11,7 +11,7 @@ export interface NotificationPayload {
   id?: number;
   title: string;
   body: string;
-  data?: any;
+  data?: Record<string, unknown>;
   schedule?: {
     at: Date;
     repeats?: boolean;
@@ -21,10 +21,10 @@ export interface NotificationPayload {
   attachments?: Array<{
     id: string;
     url: string;
-    options?: any;
+    options?: Record<string, unknown>;
   }>;
   actionTypeId?: string;
-  extra?: any;
+  extra?: Record<string, unknown>;
 }
 
 interface NotificationSettings {
@@ -162,7 +162,7 @@ export const useNotifications = () => {
     }
   };
 
-  const handleNotificationAction = (notificationAction: any) => {
+  const handleNotificationAction = (notificationAction: { actionId: string; notification: NotificationPayload }) => {
     const { actionId, notification } = notificationAction;
     
     switch (actionId) {

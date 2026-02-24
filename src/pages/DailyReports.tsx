@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccessiblePageWrapper } from '@/components/accessibility/AccessiblePageWrapper';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -478,134 +479,119 @@ const DailyReports = () => {
         </Card>
         </section>
 
-        {/* Reports List */}
+        {/* Reports Table */}
         <section aria-label="Daily reports list" className="space-y-6">
-          {filteredReports.length === 0 ? (
-            <Card role="region" aria-label="No reports found">
-              <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                <h3 className="text-lg font-medium mb-2">No Daily Reports</h3>
-                <p className="text-muted-foreground mb-4">
-                  {selectedProject ? 'No reports found for selected project' : 'No reports have been created yet'}
-                </p>
-                <Button onClick={() => setIsCreateDialogOpen(true)} aria-label="Create your first daily report">
-                  <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Create First Report
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-6" role="feed" aria-label="Daily reports">
-              {filteredReports.map((report) => {
-                const reportId = `report-${report.id}`;
-                return (
-                <Card key={report.id} role="article" aria-labelledby={`${reportId}-title`}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle id={`${reportId}-title`} className="flex items-center space-x-2">
-                          <Calendar className="h-5 w-5 text-construction-blue" aria-hidden="true" />
-                          <span>{new Date(report.date).toLocaleDateString()}</span>
-                          <span className="sr-only">for {report.projects?.name}</span>
-                        </CardTitle>
-                        <CardDescription>{report.projects?.name}</CardDescription>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline" aria-label={`${report.crew_count} crew members`}>
-                          <Users className="h-3 w-3 mr-1" aria-hidden="true" />
-                          {report.crew_count} crew
-                        </Badge>
-                        {report.safety_incidents && (
-                          <Badge variant="destructive" aria-label="Safety issue reported">
-                            <AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />
-                            Safety Issue
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Work Performed</h4>
-                      <p className="text-sm text-muted-foreground">{report.work_performed}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {report.weather_conditions && (
-                        <div>
-                          <h4 className="font-medium mb-1 flex items-center">
-                            <Cloud className="h-4 w-4 mr-1" aria-hidden="true" />
-                            Weather
-                          </h4>
-                          <p className="text-sm text-muted-foreground">{report.weather_conditions}</p>
-                        </div>
-                      )}
-
-                      {report.materials_delivered && (
-                        <div>
-                          <h4 className="font-medium mb-1 flex items-center">
-                            <Truck className="h-4 w-4 mr-1" aria-hidden="true" />
-                            Materials Delivered
-                          </h4>
-                          <p className="text-sm text-muted-foreground">{report.materials_delivered}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {report.equipment_used && (
-                      <div>
-                        <h4 className="font-medium mb-1">Equipment Used</h4>
-                        <p className="text-sm text-muted-foreground">{report.equipment_used}</p>
-                      </div>
+          {(() => {
+            const dailyReportColumns: TableColumn<DailyReport>[] = [
+              {
+                key: 'date',
+                header: 'Date',
+                sortable: true,
+                render: (value) => (
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4 text-construction-blue" aria-hidden="true" />
+                    {new Date(value).toLocaleDateString()}
+                  </span>
+                ),
+              },
+              {
+                key: 'projects',
+                header: 'Project',
+                sortable: true,
+                render: (value) => (
+                  <span>{value?.name || 'Unknown'}</span>
+                ),
+              },
+              {
+                key: 'crew_count',
+                header: 'Crew Count',
+                sortable: true,
+                render: (value) => (
+                  <Badge variant="outline" aria-label={`${value} crew members`}>
+                    <Users className="h-3 w-3 mr-1" aria-hidden="true" />
+                    {value}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'weather_conditions',
+                header: 'Weather',
+                hideOnMobile: true,
+                render: (value) => (
+                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                    {value ? (
+                      <>
+                        <Cloud className="h-3 w-3" aria-hidden="true" />
+                        {value}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">--</span>
                     )}
+                  </span>
+                ),
+              },
+              {
+                key: 'work_performed',
+                header: 'Work Performed',
+                hideOnMobile: true,
+                render: (value) => (
+                  <span className="text-sm text-muted-foreground" title={value}>
+                    {value && value.length > 80 ? value.slice(0, 80) + '...' : value || '--'}
+                  </span>
+                ),
+              },
+              {
+                key: 'safety_incidents',
+                header: 'Safety Issues',
+                render: (value) => value ? (
+                  <Badge variant="destructive" aria-label="Safety issue reported">
+                    <AlertTriangle className="h-3 w-3 mr-1" aria-hidden="true" />
+                    Issue
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">None</span>
+                ),
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                headerRender: () => <span className="sr-only">Actions</span>,
+                render: (_, row) => (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-label={`View report for ${new Date(row.date).toLocaleDateString()}`}
+                    onClick={() => {/* View detail */}}
+                  >
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                ),
+              },
+            ];
 
-                    {report.delays_issues && (
-                      <div>
-                        <h4 className="font-medium mb-1 text-yellow-600">Delays & Issues</h4>
-                        <p className="text-sm text-muted-foreground">{report.delays_issues}</p>
-                      </div>
-                    )}
-
-                    {report.safety_incidents && (
-                      <div>
-                        <h4 className="font-medium mb-1 text-red-600">Safety Incidents</h4>
-                        <p className="text-sm text-muted-foreground">{report.safety_incidents}</p>
-                      </div>
-                    )}
-
-                    {/* Photo Gallery */}
-                    {report.photos && report.photos.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2 flex items-center">
-                          <Camera className="h-4 w-4 mr-1" aria-hidden="true" />
-                          Photos ({report.photos.length})
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2" role="list" aria-label={`${report.photos.length} photos`}>
-                          {report.photos.map((photo, index) => (
-                            <div key={index} className="relative group" role="listitem">
-                              <button
-                                type="button"
-                                onClick={() => window.open(photo, '_blank')}
-                                className="w-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-                                aria-label={`View photo ${index + 1} of ${report.photos.length} in full size`}
-                              >
-                                <img
-                                  src={photo}
-                                  alt={`Report photo ${index + 1} of ${report.photos.length}`}
-                                  className="w-full h-20 object-cover rounded border hover:opacity-75 transition-opacity cursor-pointer"
-                                />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-              })}
-            </div>
-          )}
+            return (
+              <AccessibleTable<DailyReport>
+                caption="Daily Reports"
+                hideCaption
+                columns={dailyReportColumns}
+                data={filteredReports}
+                loading={loadingReports}
+                emptyContent={
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                    <h3 className="text-lg font-medium mb-2">No Daily Reports</h3>
+                    <p className="text-muted-foreground mb-4">
+                      {selectedProject ? 'No reports found for selected project' : 'No reports have been created yet'}
+                    </p>
+                    <Button onClick={() => setIsCreateDialogOpen(true)} aria-label="Create your first daily report">
+                      <PlusCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Create First Report
+                    </Button>
+                  </div>
+                }
+              />
+            );
+          })()}
         </section>
       </main>
 

@@ -144,3 +144,46 @@
 - Multiple toasts now stack correctly without overlapping
 
 ---
+
+## 2026-02-23 - US-012: Migrate data tables to AccessibleTable on key pages
+
+### What was done
+Migrated 14 pages/components from various table implementations (shadcn Table, raw HTML tables, card grids, div lists) to use the AccessibleTable component for WCAG 2.1 AA compliance.
+
+### Files modified (14 pages)
+1. `src/components/estimates/EstimatesTable.tsx` - Replaced shadcn Table with AccessibleTable<Estimate>
+2. `src/components/expenses/ExpenseTracker.tsx` - Replaced HTML <table> with AccessibleTable<Expense>
+3. `src/components/invoices/InvoiceList.tsx` - Replaced card layout with AccessibleTable
+4. `src/pages/TeamManagement.tsx` - Replaced card list with AccessibleTable<TeamMember>
+5. `src/pages/ChangeOrders.tsx` - Replaced card layout with AccessibleTable<ChangeOrder>
+6. `src/pages/DailyReports.tsx` - Replaced card grid with AccessibleTable
+7. `src/pages/Equipment.tsx` - Replaced card grid with AccessibleTable
+8. `src/pages/CRMContacts.tsx` - Replaced ResponsiveGrid with AccessibleTable
+9. `src/pages/admin/ErrorLogs.tsx` - Replaced collapsible list with AccessibleTable
+10. `src/pages/admin/Users.tsx` - Replaced list items with AccessibleTable
+11. `src/pages/admin/PermissionManagement.tsx` - Replaced card lists with AccessibleTable (two tables: Permissions + Roles)
+12. `src/pages/AuditLogs.tsx` - Added AccessibleTable with AuditLogEntry interface
+13. `src/pages/DocumentManagement.tsx` - Replaced DocumentCard grid with AccessibleTable
+14. `src/components/time-tracking/TimeEntriesList.tsx` - Replaced div list with AccessibleTable
+
+### Key patterns used
+- `TableColumn<T>` interface with `key`, `header`, `sortable`, `render`, `hideOnMobile`, `align`, `headerRender`
+- Actions columns use `headerRender: () => <span className="sr-only">Actions</span>` for screen reader only header
+- Rich content preserved via `render` functions (badges, avatars, dropdown menus, icons)
+- All icon-only buttons have `aria-label` attributes
+- Decorative icons have `aria-hidden="true"`
+- Caption provided via `caption` prop (with `hideCaption` for visual hiding when page heading serves as caption)
+
+### Accessibility features gained
+- Proper `<th>` scope attributes on all headers
+- Keyboard navigation between cells (arrow keys)
+- Sortable column announcements to screen readers
+- Proper table semantics with `<caption>`, `<thead>`, `<tbody>`
+- Screen reader announcements for sort state changes
+
+### Learnings
+- Card-to-table conversion: Use AccessibleTable's `render` function to maintain rich content (badges, icons, avatars, action menus) within table cells
+- Orphaned code cleanup: When replacing `.map()` loops with AccessibleTable, ensure all leftover JSX from the loop body is removed (variables from the loop iterator go out of scope)
+- The AccessibleTable component requires `T extends { id: string | number }` - data objects need an `id` field
+
+---

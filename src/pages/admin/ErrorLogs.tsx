@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -586,171 +587,193 @@ ${e.metadata ? JSON.stringify(e.metadata, null, 2) : 'N/A'}`;
         </Card>
 
         {/* Error List */}
-        <div className="space-y-2">
-          {errors.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
-                <h3 className="text-lg font-semibold">No errors found</h3>
-                <p className="text-muted-foreground text-sm mt-1">
-                  No errors match your current filters.
-                </p>
+        {(() => {
+          const errorLogColumns: TableColumn<ErrorLog>[] = [
+            {
+              key: 'severity',
+              header: 'Severity',
+              sortable: true,
+              render: (value) => getSeverityBadge(value),
+            },
+            {
+              key: 'error_type',
+              header: 'Error Type',
+              sortable: true,
+              render: (value) => getErrorTypeBadge(value),
+            },
+            {
+              key: 'error_message',
+              header: 'Message',
+              render: (value) => (
+                <span className="text-sm font-mono truncate block max-w-xs" title={value}>
+                  {value && value.length > 100 ? value.slice(0, 100) + '...' : value}
+                </span>
+              ),
+            },
+            {
+              key: 'user_email',
+              header: 'User',
+              hideOnMobile: true,
+              render: (value) => <span className="text-sm">{value || 'Anonymous'}</span>,
+            },
+            {
+              key: 'page_route',
+              header: 'Page',
+              hideOnMobile: true,
+              render: (value, row) => (
+                <span className="text-xs font-mono">{value || row.url || 'Unknown'}</span>
+              ),
+            },
+            {
+              key: 'created_at',
+              header: 'Time',
+              sortable: true,
+              render: (value, row) => (
+                <span className="text-xs text-muted-foreground">
+                  {relativeTime(value || row.timestamp)}
+                </span>
+              ),
+            },
+            {
+              key: 'resolved',
+              header: 'Status',
+              sortable: true,
+              render: (value) => value ? (
+                <Badge variant="outline" className="text-green-600">
+                  <CheckCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+                  Resolved
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-red-600">
+                  <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+                  Open
+                </Badge>
+              ),
+            },
+            {
+              key: 'actions',
+              header: 'Actions',
+              headerRender: () => <span className="sr-only">Actions</span>,
+              render: (_, row) => (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); copyErrorDetails(row); }}
+                    aria-label={copiedId === row.id ? 'Copied' : 'Copy error details'}
+                  >
+                    {copiedId === row.id
+                      ? <Check className="h-3 w-3" aria-hidden="true" />
+                      : <Copy className="h-3 w-3" aria-hidden="true" />}
+                  </Button>
+                  <Button
+                    variant={row.resolved ? 'outline' : 'default'}
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); toggleResolved(row); }}
+                    aria-label={row.resolved ? 'Mark as unresolved' : 'Mark as resolved'}
+                  >
+                    {row.resolved
+                      ? <XCircle className="h-3 w-3" aria-hidden="true" />
+                      : <CheckCircle className="h-3 w-3" aria-hidden="true" />}
+                  </Button>
+                </div>
+              ),
+            },
+          ];
+
+          return (
+            <AccessibleTable<ErrorLog>
+              caption="Error Logs"
+              hideCaption
+              columns={errorLogColumns}
+              data={errors}
+              loading={loading}
+              onRowClick={(row) => setExpandedId(expandedId === row.id ? null : row.id)}
+              emptyContent={
+                <div className="text-center py-8">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" aria-hidden="true" />
+                  <h3 className="text-lg font-semibold">No errors found</h3>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    No errors match your current filters.
+                  </p>
+                </div>
+              }
+            />
+          );
+        })()}
+
+        {/* Expanded Error Detail */}
+        {expandedId && errors.find(e => e.id === expandedId) && (() => {
+          const errorLog = errors.find(e => e.id === expandedId)!;
+          return (
+            <Card className="border-primary/30">
+              <CardContent className="pt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Error Details</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setExpandedId(null)} aria-label="Close error details">
+                    <XCircle className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">User:</span>{' '}
+                    <span>{errorLog.user_email || 'Anonymous'} ({errorLog.user_role || 'unknown'})</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Page:</span>{' '}
+                    <span className="font-mono">{errorLog.page_route || errorLog.url || 'Unknown'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Browser/OS:</span>{' '}
+                    <span>{errorLog.browser || 'Unknown'} / {errorLog.os || 'Unknown'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Device:</span>{' '}
+                    <span>{errorLog.device_type || 'Unknown'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Screen:</span>{' '}
+                    <span>{errorLog.screen_resolution || 'Unknown'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Component:</span>{' '}
+                    <span>{errorLog.component || 'N/A'}</span>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Error Message</Label>
+                  <pre className="mt-1 p-3 bg-muted rounded-md text-sm font-mono whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
+                    {errorLog.error_message}
+                  </pre>
+                </div>
+                {errorLog.stack_trace && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Stack Trace</Label>
+                    <pre className="mt-1 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap break-all max-h-60 overflow-y-auto">
+                      {errorLog.stack_trace}
+                    </pre>
+                  </div>
+                )}
+                {errorLog.component_stack && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Component Stack</Label>
+                    <pre className="mt-1 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
+                      {errorLog.component_stack}
+                    </pre>
+                  </div>
+                )}
+                {errorLog.metadata && Object.keys(errorLog.metadata).length > 0 && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Metadata</Label>
+                    <pre className="mt-1 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
+                      {JSON.stringify(errorLog.metadata, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          ) : (
-            errors.map((errorLog) => (
-              <Collapsible
-                key={errorLog.id}
-                open={expandedId === errorLog.id}
-                onOpenChange={(open) => setExpandedId(open ? errorLog.id : null)}
-              >
-                <Card className={`transition-colors ${errorLog.resolved ? 'opacity-60' : ''}`}>
-                  <CollapsibleTrigger asChild>
-                    <CardContent className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/50">
-                      {expandedId === errorLog.id
-                        ? <ChevronDown className="h-4 w-4 shrink-0" />
-                        : <ChevronRight className="h-4 w-4 shrink-0" />}
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        {getSeverityBadge(errorLog.severity)}
-                        {getErrorTypeBadge(errorLog.error_type)}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-mono truncate">
-                          {errorLog.error_message.length > 150
-                            ? errorLog.error_message.slice(0, 150) + '...'
-                            : errorLog.error_message}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
-                        {errorLog.user_email && (
-                          <span className="hidden lg:inline">{errorLog.user_email}</span>
-                        )}
-                        {errorLog.page_route && (
-                          <span className="hidden md:inline font-mono">{errorLog.page_route}</span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          {getDeviceIcon(errorLog.device_type)}
-                          {errorLog.browser}
-                        </span>
-                        <span>{relativeTime(errorLog.created_at || errorLog.timestamp)}</span>
-                        {errorLog.resolved && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        )}
-                      </div>
-                    </CardContent>
-                  </CollapsibleTrigger>
-
-                  <CollapsibleContent>
-                    <div className="border-t px-6 py-4 space-y-4 bg-muted/30">
-                      {/* Detail Grid */}
-                      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">User:</span>{' '}
-                          <span>{errorLog.user_email || 'Anonymous'} ({errorLog.user_role || 'unknown'})</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Page:</span>{' '}
-                          <span className="font-mono">{errorLog.page_route || errorLog.url || 'Unknown'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Browser/OS:</span>{' '}
-                          <span>{errorLog.browser || 'Unknown'} / {errorLog.os || 'Unknown'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Device:</span>{' '}
-                          <span>{errorLog.device_type || 'Unknown'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Screen:</span>{' '}
-                          <span>{errorLog.screen_resolution || 'Unknown'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Viewport:</span>{' '}
-                          <span>{errorLog.viewport_size || 'Unknown'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Session:</span>{' '}
-                          <span className="font-mono text-xs">{errorLog.session_id || 'Unknown'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Component:</span>{' '}
-                          <span>{errorLog.component || 'N/A'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Environment:</span>{' '}
-                          <span>{errorLog.environment || 'Unknown'}</span>
-                        </div>
-                      </div>
-
-                      {/* Full Error Message */}
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Error Message</Label>
-                        <pre className="mt-1 p-3 bg-muted rounded-md text-sm font-mono whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
-                          {errorLog.error_message}
-                        </pre>
-                      </div>
-
-                      {/* Stack Trace */}
-                      {errorLog.stack_trace && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Stack Trace</Label>
-                          <pre className="mt-1 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap break-all max-h-60 overflow-y-auto">
-                            {errorLog.stack_trace}
-                          </pre>
-                        </div>
-                      )}
-
-                      {/* Component Stack */}
-                      {errorLog.component_stack && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Component Stack</Label>
-                          <pre className="mt-1 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
-                            {errorLog.component_stack}
-                          </pre>
-                        </div>
-                      )}
-
-                      {/* Metadata */}
-                      {errorLog.metadata && Object.keys(errorLog.metadata).length > 0 && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground">Metadata</Label>
-                          <pre className="mt-1 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap max-h-40 overflow-y-auto">
-                            {JSON.stringify(errorLog.metadata, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyErrorDetails(errorLog)}
-                        >
-                          {copiedId === errorLog.id
-                            ? <><Check className="h-4 w-4 mr-1" />Copied</>
-                            : <><Copy className="h-4 w-4 mr-1" />Copy Error Details</>}
-                        </Button>
-                        <Button
-                          variant={errorLog.resolved ? 'outline' : 'default'}
-                          size="sm"
-                          onClick={() => toggleResolved(errorLog)}
-                        >
-                          {errorLog.resolved
-                            ? <><XCircle className="h-4 w-4 mr-1" />Unresolve</>
-                            : <><CheckCircle className="h-4 w-4 mr-1" />Mark as Resolved</>}
-                        </Button>
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            ))
-          )}
-        </div>
+          );
+        })()}
 
         {/* Pagination */}
         {totalPages > 1 && (

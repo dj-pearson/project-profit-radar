@@ -8,6 +8,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -426,94 +427,124 @@ const CRMContacts = () => {
               </CardContent>
             </Card>
 
-            {/* Contacts List */}
+            {/* Contacts Table */}
             <ErrorBoundary>
-              {contactsLoading ? (
-                <LoadingState message="Loading contacts..." />
-              ) : contactsError ? (
-                <ErrorState 
-                  error={contactsError} 
+              {contactsError ? (
+                <ErrorState
+                  error={contactsError}
                   onRetry={() => loadContacts(loadContactsData)}
                 />
-              ) : !filteredContacts.length ? (
-                <EmptyState
-                  icon={Users}
-                  title="No contacts found"
-                  description={searchTerm ? "No contacts match your search criteria." : "Start building your contact database by adding your first contact."}
-                  action={!searchTerm ? {
-                    label: "Add First Contact",
-                    onClick: () => setShowNewContactDialog(true)
-                  } : undefined}
-                />
-              ) : (
-                <ResponsiveGrid cols={{ default: 1, md: 2, lg: 3 }} gap="sm">
-                  {filteredContacts.map((contact) => (
-                    <Card key={contact.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-lg">
-                              {contact.first_name} {contact.last_name}
-                            </CardTitle>
-                            {contact.job_title && (
-                              <CardDescription>{contact.job_title}</CardDescription>
-                            )}
-                          </div>
-                          <div className="flex space-x-1">
-                            <Badge variant="outline" className={`text-${getTypeColor(contact.contact_type)}-600`}>
-                              {contact.contact_type}
-                            </Badge>
-                            <Badge variant="outline" className={`text-${getStatusColor(contact.relationship_status)}-600`}>
-                              {contact.relationship_status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {contact.company_name && (
-                          <div className="flex items-center space-x-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                            <span className="text-sm">{contact.company_name}</span>
-                          </div>
+              ) : (() => {
+                const contactColumns: TableColumn<Contact>[] = [
+                  {
+                    key: 'first_name',
+                    header: 'Name',
+                    sortable: true,
+                    render: (_, row) => (
+                      <div>
+                        <span className="font-medium">{row.first_name} {row.last_name}</span>
+                        {row.job_title && (
+                          <span className="block text-xs text-muted-foreground">{row.job_title}</span>
                         )}
-                        {contact.email && (
-                          <div className="flex items-center space-x-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                            <span className="text-sm truncate">{contact.email}</span>
-                          </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'email',
+                    header: 'Email',
+                    hideOnMobile: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm">
+                        <Mail className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        {value || '--'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'phone',
+                    header: 'Phone',
+                    hideOnMobile: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm">
+                        <Phone className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        {value || '--'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'company_name',
+                    header: 'Company',
+                    hideOnMobile: true,
+                    sortable: true,
+                    render: (value) => (
+                      <span className="flex items-center gap-1 text-sm">
+                        <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        {value || '--'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'contact_type',
+                    header: 'Type',
+                    sortable: true,
+                    render: (value) => (
+                      <Badge variant="outline" className={`text-${getTypeColor(value)}-600`}>
+                        {value}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'relationship_status',
+                    header: 'Status',
+                    sortable: true,
+                    render: (value) => (
+                      <Badge variant="outline" className={`text-${getStatusColor(value)}-600`}>
+                        {value}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'actions',
+                    header: 'Actions',
+                    headerRender: () => <span className="sr-only">Actions</span>,
+                    render: (_, row) => (
+                      <div className="flex space-x-1">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Edit ${row.first_name} ${row.last_name}`}>
+                          <Edit className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Delete ${row.first_name} ${row.last_name}`}>
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ];
+
+                return (
+                  <AccessibleTable<Contact>
+                    caption="CRM Contacts"
+                    hideCaption
+                    columns={contactColumns}
+                    data={filteredContacts}
+                    loading={contactsLoading}
+                    emptyContent={
+                      <div className="text-center py-8">
+                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                        <h3 className="text-lg font-medium mb-2">No contacts found</h3>
+                        <p className="text-muted-foreground mb-4">
+                          {searchTerm ? "No contacts match your search criteria." : "Start building your contact database by adding your first contact."}
+                        </p>
+                        {!searchTerm && (
+                          <Button onClick={() => setShowNewContactDialog(true)}>
+                            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                            Add First Contact
+                          </Button>
                         )}
-                        {contact.phone && (
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                            <span className="text-sm">{contact.phone}</span>
-                          </div>
-                        )}
-                        {(contact.city || contact.state) && (
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                            <span className="text-sm">
-                              {[contact.city, contact.state].filter(Boolean).join(', ')}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between pt-2">
-                          <span className="text-xs text-muted-foreground">
-                            Added {formatDate(contact.created_at)}
-                          </span>
-                          <div className="flex space-x-1">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Edit ${contact.first_name} ${contact.last_name}`}>
-                              <Edit className="h-4 w-4" aria-hidden="true" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" aria-label={`Delete ${contact.first_name} ${contact.last_name}`}>
-                              <Trash2 className="h-4 w-4" aria-hidden="true" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </ResponsiveGrid>
-              )}
+                      </div>
+                    }
+                  />
+                );
+              })()}
             </ErrorBoundary>
     </DashboardLayout>
   );

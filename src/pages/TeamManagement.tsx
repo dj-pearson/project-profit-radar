@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { 
@@ -304,6 +305,103 @@ const TeamManagement = () => {
     }
   };
 
+  const teamColumns: TableColumn<TeamMember>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      sortable: true,
+      render: (_value, member) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-construction-blue rounded-full flex items-center justify-center text-white font-semibold shrink-0 text-sm">
+            {member.first_name?.charAt(0) || member.email.charAt(0).toUpperCase()}
+          </div>
+          <span className="font-medium">
+            {member.first_name && member.last_name
+              ? `${member.first_name} ${member.last_name}`
+              : member.email}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      hideOnMobile: true,
+      render: (value) => (
+        <span className="flex items-center text-sm text-muted-foreground">
+          <Mail className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
+          <span className="truncate">{value}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      render: (value) => (
+        <Badge variant={getRoleBadgeVariant(value)} className="text-xs" aria-label={`Role: ${getRoleDisplayName(value)}`}>
+          {getRoleDisplayName(value)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
+      render: (value) => (
+        <Badge variant={value ? "default" : "secondary"} className="text-xs" aria-label={`Status: ${value ? 'Active' : 'Inactive'}`}>
+          {value ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'Phone',
+      hideOnMobile: true,
+      render: (value) => value ? (
+        <span className="flex items-center text-sm text-muted-foreground">
+          <Phone className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
+          {value}
+        </span>
+      ) : <span className="text-muted-foreground">-</span>,
+    },
+    {
+      key: 'created_at',
+      header: 'Joined',
+      hideOnMobile: true,
+      sortable: true,
+      render: (value) => (
+        <span className="text-sm text-muted-foreground">
+          {new Date(value).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, member) => (
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toggleUserStatus(member.id, member.is_active)}
+            disabled={member.id === user?.id}
+            aria-label={member.is_active ? `Deactivate ${member.first_name} ${member.last_name}` : `Activate ${member.first_name} ${member.last_name}`}
+          >
+            {member.is_active ? (
+              <><UserX className="h-4 w-4 mr-1" aria-hidden="true" />Deactivate</>
+            ) : (
+              <><UserCheck className="h-4 w-4 mr-1" aria-hidden="true" />Activate</>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" aria-label={`Edit ${member.first_name} ${member.last_name}`}>
+            <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
+            Edit
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <AccessiblePageWrapper pageTitle="Team Management">
     <RoleGuard allowedRoles={ROLE_GROUPS.TEAM_MANAGERS}>
@@ -481,82 +579,18 @@ const TeamManagement = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {teamMembers.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-                <p className="text-muted-foreground">No team members found</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-0">
-                    <div className="flex items-center space-x-3 sm:space-x-4 w-full sm:w-auto">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-construction-blue rounded-full flex items-center justify-center text-white font-semibold shrink-0">
-                        {member.first_name?.charAt(0) || member.email.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h3 className="font-medium text-sm sm:text-base truncate">
-                            {member.first_name && member.last_name 
-                              ? `${member.first_name} ${member.last_name}`
-                              : member.email
-                            }
-                          </h3>
-                          <Badge variant={getRoleBadgeVariant(member.role)} className="text-xs">
-                            {getRoleDisplayName(member.role)}
-                          </Badge>
-                          <Badge variant={member.is_active ? "default" : "secondary"} className="text-xs">
-                            {member.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                          <span className="flex items-center truncate">
-                            <Mail className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
-                            <span className="truncate">{member.email}</span>
-                          </span>
-                          {member.phone && (
-                            <span className="flex items-center">
-                              <Phone className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
-                              {member.phone}
-                            </span>
-                          )}
-                          <span className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1 shrink-0" aria-hidden="true" />
-                            Joined {new Date(member.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleUserStatus(member.id, member.is_active)}
-                        disabled={member.id === user?.id} // Can't deactivate yourself
-                        aria-label={member.is_active ? `Deactivate ${member.first_name} ${member.last_name}` : `Activate ${member.first_name} ${member.last_name}`}
-                      >
-                        {member.is_active ? (
-                          <>
-                            <UserX className="h-4 w-4 mr-1" aria-hidden="true" />
-                            Deactivate
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="h-4 w-4 mr-1" aria-hidden="true" />
-                            Activate
-                          </>
-                        )}
-                      </Button>
-                      <Button variant="outline" size="sm" aria-label={`Edit ${member.first_name} ${member.last_name}`}>
-                        <Edit className="h-4 w-4 mr-1" aria-hidden="true" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <AccessibleTable<TeamMember>
+              caption="Team Members"
+              hideCaption
+              columns={teamColumns}
+              data={teamMembers}
+              emptyContent={
+                <div className="text-center py-4">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                  <p className="text-muted-foreground">No team members found</p>
+                </div>
+              }
+            />
           </CardContent>
         </Card>
 

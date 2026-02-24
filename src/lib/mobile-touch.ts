@@ -89,8 +89,7 @@ export function isTouchDevice(): boolean {
   return (
     'ontouchstart' in window ||
     navigator.maxTouchPoints > 0 ||
-    // @ts-ignore - msMaxTouchPoints is IE specific
-    navigator.msMaxTouchPoints > 0
+    ('msMaxTouchPoints' in navigator && (navigator as Navigator & { msMaxTouchPoints: number }).msMaxTouchPoints > 0)
   );
 }
 

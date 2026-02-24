@@ -15,8 +15,8 @@
         "No functional changes to runtime behavior"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "This is foundational - must be done first. The count script helps track technical debt reduction in future stories."
+      "passes": true,
+      "notes": "COMPLETED. strict: true, noImplicitAny: true, strictNullChecks: true enabled in tsconfig.app.json. Count script at scripts/count-strict-violations.sh."
     },
     {
       "id": "US-002",
@@ -31,8 +31,8 @@
         "Running grep -r 'eyJ' src/ returns no results (no JWT tokens in source)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "Security critical. The existing token is a supabase-demo token but the pattern is dangerous."
+      "passes": true,
+      "notes": "COMPLETED. Removed hardcoded JWT from envValidation.ts FALLBACK_VALUES and PRODUCTION_ANON_KEY from supabase/client.ts. Added fail-fast error handling."
     },
     {
       "id": "US-003",
@@ -46,8 +46,8 @@
         "npm run build completes successfully"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "ESLint already warns on console usage. This story enforces the rule."
+      "passes": true,
+      "notes": "COMPLETED. Replaced 41 bare console.* calls across 10 files with logger utility."
     },
     {
       "id": "US-004",
@@ -63,8 +63,8 @@
         "Each job fails fast on error"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Edge functions already have CI/CD (.github/workflows/deploy-edge-functions.yml). This covers the main React app."
+      "passes": true,
+      "notes": "COMPLETED. Created .github/workflows/ci.yml with 5 jobs: lint, typecheck, unit-test, build, e2e-test. Node 18, npm caching, Chromium-only E2E."
     },
     {
       "id": "US-005",
@@ -79,8 +79,8 @@
         "Tests cover edge cases: null inputs, empty strings, boundary values"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Currently <2% test coverage. Start with the most foundational utility code."
+      "passes": true,
+      "notes": "COMPLETED. Created src/lib/__tests__/sanitize.test.ts (30+ tests) and src/lib/__tests__/envValidation.test.ts (7 tests)."
     },
     {
       "id": "US-006",
@@ -95,8 +95,8 @@
         "At least 15 test cases covering authentication edge cases"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Auth is the most critical path. Mocking Supabase is essential for reliable tests."
+      "passes": true,
+      "notes": "COMPLETED. Auth context tests created with Supabase mocking."
     },
     {
       "id": "US-007",
@@ -111,8 +111,8 @@
         "All tests pass with npm run test:run"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Financial accuracy is business-critical for a construction management SaaS."
+      "passes": true,
+      "notes": "COMPLETED. Created src/utils/__tests__/financialCalculations.test.ts (49 tests) covering all exported financial calculation functions."
     },
     {
       "id": "US-008",
@@ -127,8 +127,8 @@
         "Tests have descriptive names and are organized by feature area"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Playwright is already configured. Focus on smoke tests that verify critical paths render."
+      "passes": true,
+      "notes": "COMPLETED. Created tests/e2e/landing.spec.ts (6 tests) and tests/e2e/navigation.spec.ts (8 tests)."
     },
     {
       "id": "US-009",
@@ -143,8 +143,8 @@
         "No runtime behavior changes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Depends on US-001 (strict mode). Core modules are imported everywhere so fixing them has maximum impact."
+      "passes": true,
+      "notes": "COMPLETED. Removed any types from core modules in contexts, hooks, and lib."
     },
     {
       "id": "US-010",
@@ -159,8 +159,8 @@
         "[UI stories only] Verify in browser using dev-browser skill that pages render correctly with the wrapper"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Currently 0 pages use AccessiblePageWrapper. This is the highest-impact a11y change. See docs/ACCESSIBILITY_COMPLIANCE_CHECKLIST.md."
+      "passes": true,
+      "notes": "COMPLETED. Added AccessiblePageWrapper to 20+ top pages."
     },
     {
       "id": "US-011",
@@ -176,8 +176,8 @@
         "[UI stories only] Verify in browser using dev-browser skill that forms still function correctly"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Currently only 1 page (MyTasks.tsx) uses AccessibleForm. See that page as reference implementation."
+      "passes": true,
+      "notes": "COMPLETED. Migrated 15+ forms to AccessibleForm components including CRM/scheduling forms."
     },
     {
       "id": "US-012",
@@ -193,8 +193,8 @@
         "[UI stories only] Verify in browser using dev-browser skill that tables render and sort correctly"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Currently 0 pages use AccessibleTable. This is required for WCAG 2.1 AA compliance."
+      "passes": true,
+      "notes": "COMPLETED. Migrated 14 pages to AccessibleTable: EstimatesTable, ExpenseTracker, InvoiceList, TeamManagement, ChangeOrders, DailyReports, Equipment, CRMContacts, ErrorLogs, Users, PermissionManagement, AuditLogs, DocumentManagement, TimeEntriesList."
     },
     {
       "id": "US-013",
@@ -244,8 +244,8 @@
         "No component tests make real API calls (all Supabase calls mocked)"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "This batch focuses on the most reused components. Future stories will cover more."
+      "passes": true,
+      "notes": "COMPLETED. Created 20 component test files with rendering, props, and interaction tests. Includes accessibility checks."
     },
     {
       "id": "US-016",
@@ -260,8 +260,8 @@
         "npm run build completes successfully"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": "Sentry is already integrated. The ErrorBoundary TODO needs completion."
+      "passes": true,
+      "notes": "COMPLETED. CriticalErrorBoundary with Sentry integration, error logging service, 5 feature-section error boundaries."
     },
     {
       "id": "US-017",
@@ -293,8 +293,8 @@
         "npm run build completes successfully"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": "Misleading zeros are worse than showing no data. Users may make financial decisions based on these numbers."
+      "passes": true,
+      "notes": "COMPLETED. Fixed placeholder calculations in EnhancedProjectOverview, useDashboardData, CRMDashboard, and bulk-actions."
     },
     {
       "id": "US-019",
@@ -480,8 +480,8 @@
         "No outdated or incorrect information"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "This supports Ralph and other AI agents in future iterations. Based on actual code patterns found during this PRD."
+      "passes": true,
+      "notes": "COMPLETED. Created AGENTS.md in 7 directories: src/, src/components/, src/hooks/, src/lib/, src/pages/, supabase/functions/, tests/."
     },
     {
       "id": "US-030",
@@ -499,8 +499,8 @@
         "File is under 200 lines and concise"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "Ralph reads this file at the start of every iteration. Quality of this file directly affects agent performance."
+      "passes": true,
+      "notes": "COMPLETED. progress.txt created with Consolidated Patterns section covering Supabase, components, auth, testing, build/deploy, and known pitfalls."
     },
     {
       "id": "US-031",
@@ -543,8 +543,8 @@
         "Build succeeds with no new errors"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Identified during codebase analysis. FinancialDashboard.tsx has no loading state at all. Invoices.tsx renders layout before data loads."
+      "passes": true,
+      "notes": "COMPLETED. Added FinancialDashboardSkeleton component and full-page TableSkeleton to Invoices.tsx."
     },
     {
       "id": "US-034",
@@ -557,8 +557,8 @@
         "Build succeeds with no new errors"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "useDashboardData returns error state but Dashboard.tsx never checks it. Silent failures."
+      "passes": true,
+      "notes": "COMPLETED. Added Alert + Retry button in Dashboard.tsx when useDashboardData returns error."
     },
     {
       "id": "US-035",
@@ -571,8 +571,8 @@
         "Build succeeds with no new errors"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Setup.tsx has 4+ DEBUG console.log statements and no session refresh before API calls."
+      "passes": true,
+      "notes": "COMPLETED. Added supabase.auth.refreshSession() before company creation. Removed DEBUG console.log statements."
     },
     {
       "id": "US-036",
@@ -586,8 +586,8 @@
         "Build succeeds with no new errors"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": "ProtectedRoute.tsx uses global redirect counter, local ref counter, emergency mode, and profile wait time simultaneously."
+      "passes": true,
+      "notes": "COMPLETED. Rewrote from 213 to ~130 lines. Replaced dual counter with time-windowed trackRedirect(). Added RecoveryUI."
     },
     {
       "id": "US-037",

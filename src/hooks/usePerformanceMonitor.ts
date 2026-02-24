@@ -41,11 +41,12 @@ export const usePerformanceMonitor = () => {
             setMetrics(prev => ({ ...prev, fid: fidEntry.processingStart - fidEntry.startTime }));
             break;
             
-          case 'layout-shift':
-            if (!(entry as any).hadRecentInput) {
-              setMetrics(prev => ({ 
-                ...prev, 
-                cls: (prev.cls || 0) + (entry as any).value 
+          case 'layout-shift': {
+            const lsEntry = entry as PerformanceEntry & { hadRecentInput: boolean; value: number };
+            if (!lsEntry.hadRecentInput) {
+              setMetrics(prev => ({
+                ...prev,
+                cls: (prev.cls || 0) + lsEntry.value
               }));
             }
             break;
@@ -170,7 +171,7 @@ export const useRealUserMetrics = (): RealUserMetrics => {
 
       // Get connection info if available
       if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+        const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
         setRumData(prev => ({
           ...prev,
           connectionType: connection?.effectiveType || 'unknown'
@@ -179,9 +180,10 @@ export const useRealUserMetrics = (): RealUserMetrics => {
 
       // Get device memory if available
       if ('deviceMemory' in navigator) {
+        const navWithMemory = navigator as Navigator & { deviceMemory?: number };
         setRumData(prev => ({
           ...prev,
-          deviceMemory: (navigator as any).deviceMemory || 0
+          deviceMemory: navWithMemory.deviceMemory || 0
         }));
       }
     };

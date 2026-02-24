@@ -70,7 +70,7 @@ export const useCreateTask = () => {
         description: 'Task created successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -97,7 +97,7 @@ export const useUpdateTask = () => {
         description: 'Task updated successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -123,7 +123,7 @@ export const useDeleteTask = () => {
         description: 'Task deleted successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -157,7 +157,7 @@ export const useAddTaskComment = () => {
         description: 'Comment added successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         variant: 'destructive',
         title: 'Error',

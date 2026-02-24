@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ResponsiveContainer } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
-import { 
+import {
   Upload,
   FileText,
   Plus,
@@ -39,7 +40,9 @@ import {
   Calendar,
   Brain,
   Zap,
-  Database
+  Database,
+  Download,
+  Trash2
 } from 'lucide-react';
 
 interface Document {
@@ -578,40 +581,121 @@ const DocumentManagement = () => {
           </CardContent>
         </Card>
 
-        {/* Documents Grid */}
-        {filteredDocuments.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
-              <h3 className="text-lg font-medium mb-2">No documents found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm || filterCategory || filterType 
-                  ? 'Try adjusting your filters or search terms.'
-                  : `Upload your first ${isProjectContext ? 'project' : 'company'} document to get started.`
-                }
-              </p>
-              {!searchTerm && !filterCategory && !filterType && (
-                <Button onClick={() => setIsUploadOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Upload Files
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className={mobileGridClasses.content}>
-            {filteredDocuments.map((document) => (
-              <DocumentCard
-                key={document.id}
-                document={document}
-                onDownload={downloadDocument}
-                onDelete={deleteDocument}
-                onVersionUpdate={loadDocuments}
-                isProjectContext={isProjectContext}
-              />
-            ))}
-          </div>
-        )}
+        {/* Documents Table */}
+        {(() => {
+          const formatFileSize = (bytes: number) => {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+          };
+
+          const documentColumns: TableColumn<Document>[] = [
+            {
+              key: 'name',
+              header: 'Name',
+              sortable: true,
+              render: (value) => (
+                <span className="flex items-center gap-2 font-medium">
+                  <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <span className="truncate max-w-xs" title={value}>{value}</span>
+                </span>
+              ),
+            },
+            {
+              key: 'file_type',
+              header: 'Type',
+              sortable: true,
+              hideOnMobile: true,
+              render: (value) => (
+                <Badge variant="outline" className="text-xs">
+                  {value ? value.split('/').pop()?.toUpperCase() : 'Unknown'}
+                </Badge>
+              ),
+            },
+            {
+              key: 'file_size',
+              header: 'Size',
+              sortable: true,
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="text-sm text-muted-foreground">{formatFileSize(value)}</span>
+              ),
+            },
+            {
+              key: 'user_profiles',
+              header: 'Uploaded By',
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="text-sm">
+                  {value ? `${value.first_name} ${value.last_name}` : 'Unknown'}
+                </span>
+              ),
+            },
+            {
+              key: 'created_at',
+              header: 'Date',
+              sortable: true,
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="text-sm text-muted-foreground">
+                  {new Date(value).toLocaleDateString()}
+                </span>
+              ),
+            },
+            {
+              key: 'actions',
+              header: 'Actions',
+              headerRender: () => <span className="sr-only">Actions</span>,
+              render: (_, row) => (
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => { e.stopPropagation(); downloadDocument(row); }}
+                    aria-label={`Download ${row.name}`}
+                  >
+                    <Download className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => { e.stopPropagation(); deleteDocument(row); }}
+                    aria-label={`Delete ${row.name}`}
+                  >
+                    <Trash2 className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                </div>
+              ),
+            },
+          ];
+
+          return (
+            <AccessibleTable<Document>
+              caption="Documents"
+              hideCaption
+              columns={documentColumns}
+              data={filteredDocuments}
+              loading={loadingDocs}
+              emptyContent={
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+                  <h3 className="text-lg font-medium mb-2">No documents found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {searchTerm || filterCategory || filterType
+                      ? 'Try adjusting your filters or search terms.'
+                      : `Upload your first ${isProjectContext ? 'project' : 'company'} document to get started.`}
+                  </p>
+                  {!searchTerm && !filterCategory && !filterType && (
+                    <Button onClick={() => setIsUploadOpen(true)}>
+                      <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Upload Files
+                    </Button>
+                  )}
+                </div>
+              }
+            />
+          );
+        })()}
       </ResponsiveContainer>
 
       {/* OCR Processing Dialog */}

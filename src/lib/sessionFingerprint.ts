@@ -33,8 +33,6 @@ const generateHash = async (data: string): Promise<string> => {
  * Collect device characteristics
  */
 const collectDeviceCharacteristics = (): Omit<DeviceFingerprint, 'hash'> => {
-  const nav = navigator as any;
-
   return {
     userAgent: navigator.userAgent,
     language: navigator.language,
@@ -43,7 +41,7 @@ const collectDeviceCharacteristics = (): Omit<DeviceFingerprint, 'hash'> => {
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     colorDepth: screen.colorDepth,
     hardwareConcurrency: navigator.hardwareConcurrency || 0,
-    deviceMemory: nav.deviceMemory,
+    deviceMemory: 'deviceMemory' in navigator ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory : undefined,
     touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
   };
 };

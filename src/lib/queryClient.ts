@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, type Query } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { safeStorage } from './safeStorage';
 import { logger } from './logger';
@@ -186,8 +186,8 @@ export const cacheUtils = {
     
       return {
         totalQueries: queries.length,
-        staleQueries: queries.filter(q => (q as any).isStale?.()).length,
-        fetchingQueries: queries.filter(q => (q as any).state?.fetchStatus === 'fetching').length,
+        staleQueries: queries.filter(q => q.isStale()).length,
+        fetchingQueries: queries.filter(q => q.state.fetchStatus === 'fetching').length,
         cacheSize: JSON.stringify(queryCache).length,
       };
   },
@@ -204,10 +204,10 @@ export const devTools = {
       console.table(
         queries.map(query => ({
           queryKey: JSON.stringify(query.queryKey),
-          state: (query as any).state?.status,
-          dataUpdatedAt: new Date(((query as any).state?.dataUpdatedAt ?? 0)).toLocaleTimeString(),
-          isStale: (query as any).isStale?.(),
-          isFetching: (query as any).state?.fetchStatus === 'fetching',
+          state: query.state.status,
+          dataUpdatedAt: new Date(query.state.dataUpdatedAt ?? 0).toLocaleTimeString(),
+          isStale: query.isStale(),
+          isFetching: query.state.fetchStatus === 'fetching',
         }))
       );
     }
@@ -230,10 +230,16 @@ const CACHE_KEY = 'builddesk-query-cache';
 const CACHE_VERSION = 1;
 const MAX_CACHE_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
+interface PersistedQueryData {
+  queryKey: readonly unknown[];
+  queryHash: string;
+  state: Query['state'];
+}
+
 interface PersistedCache {
   version: number;
   timestamp: number;
-  data: any;
+  data: PersistedQueryData[];
 }
 
 /**
@@ -245,15 +251,14 @@ export const persistQueryCache = () => {
     const queries = cache.getAll();
 
     // Filter out stale or error queries
-    const dataToCache = queries
+    const dataToCache: PersistedQueryData[] = queries
       .filter(query => {
-        const state = (query as any).state;
-        return state.status === 'success' && state.data !== undefined;
+        return query.state.status === 'success' && query.state.data !== undefined;
       })
       .map(query => ({
         queryKey: query.queryKey,
         queryHash: query.queryHash,
-        state: (query as any).state,
+        state: query.state,
       }));
 
     const persistedCache: PersistedCache = {
@@ -302,13 +307,11 @@ export const restoreQueryCache = () => {
     const cache = queryClient.getQueryCache();
     let restored = 0;
 
-    persistedCache.data.forEach((queryData: any) => {
+    persistedCache.data.forEach((queryData: PersistedQueryData) => {
       try {
-        const query = cache.find(queryData.queryKey);
-        if (query) {
-          (query as any).state = queryData.state;
-          restored++;
-        }
+        // Restore by setting query data directly through the client API
+        queryClient.setQueryData(queryData.queryKey, queryData.state.data);
+        restored++;
       } catch (error) {
         logger.warn('Failed to restore individual query', error as Error);
       }
