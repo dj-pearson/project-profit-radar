@@ -30,6 +30,7 @@ import {
 import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { expenseSchema, type ExpenseInput } from '@/lib/validations';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 
 interface Expense {
   id: string;
@@ -223,6 +224,78 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
 
   const totalExpenses = expensesData?.data.reduce((sum, exp) => sum + exp.amount, 0) || 0;
   const totalPages = expensesData?.count ? Math.ceil(expensesData.count / pageSize) : 1;
+
+  const expenseColumns: TableColumn<Expense>[] = [
+    {
+      key: 'expense_date',
+      header: 'Date',
+      sortable: true,
+      render: (value) => format(new Date(value), 'MMM dd, yyyy'),
+    },
+    {
+      key: 'vendor_name',
+      header: 'Vendor',
+      sortable: true,
+      render: (value) => value || 'N/A',
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      hideOnMobile: true,
+      render: (value) => (
+        <span className="text-muted-foreground max-w-xs truncate block">
+          {value || 'No description'}
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      sortable: true,
+      align: 'right',
+      render: (value, row) => (
+        <span className="font-medium">
+          ${Number(value).toLocaleString()}
+          {row.is_billable && (
+            <Badge variant="secondary" className="ml-2 text-xs" aria-label="Billable expense">Billable</Badge>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: 'payment_method',
+      header: 'Payment',
+      hideOnMobile: true,
+      render: (value) => <span className="text-muted-foreground">{value || 'N/A'}</span>,
+    },
+    {
+      key: 'payment_status',
+      header: 'Status',
+      render: (value) => (
+        <Badge
+          variant={value === 'paid' ? 'default' : value === 'approved' ? 'secondary' : 'outline'}
+          aria-label={`Payment status: ${value}`}
+        >
+          {value}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, expense) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="ghost" onClick={() => handleEdit(expense)} aria-label={`Edit expense from ${expense.vendor_name || 'unknown vendor'}`}>
+            <Edit className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setDeletingExpenseId(expense.id)} aria-label={`Delete expense from ${expense.vendor_name || 'unknown vendor'}`}>
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   if (error) {
     return <ErrorState error={error} onRetry={refetch} />;
@@ -477,74 +550,12 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
             />
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b text-left text-sm font-medium text-muted-foreground">
-                      <th className="p-4">Date</th>
-                      <th className="p-4">Vendor</th>
-                      <th className="p-4">Description</th>
-                      <th className="p-4">Amount</th>
-                      <th className="p-4">Payment</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {expensesData?.data.map((expense) => (
-                      <tr key={expense.id} className="border-b hover:bg-muted/50">
-                        <td className="p-4 text-sm">
-                          {format(new Date(expense.expense_date), 'MMM dd, yyyy')}
-                        </td>
-                        <td className="p-4 text-sm">{expense.vendor_name || 'N/A'}</td>
-                        <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
-                          {expense.description || 'No description'}
-                        </td>
-                        <td className="p-4 text-sm font-medium">
-                          ${expense.amount.toLocaleString()}
-                          {expense.is_billable && (
-                            <Badge variant="secondary" className="ml-2 text-xs">Billable</Badge>
-                          )}
-                        </td>
-                        <td className="p-4 text-sm text-muted-foreground">
-                          {expense.payment_method || 'N/A'}
-                        </td>
-                        <td className="p-4">
-                          <Badge
-                            variant={
-                              expense.payment_status === 'paid'
-                                ? 'default'
-                                : expense.payment_status === 'approved'
-                                ? 'secondary'
-                                : 'outline'
-                            }
-                          >
-                            {expense.payment_status}
-                          </Badge>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEdit(expense)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setDeletingExpenseId(expense.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AccessibleTable<Expense>
+                caption="Expenses"
+                hideCaption
+                columns={expenseColumns}
+                data={expensesData?.data || []}
+              />
 
               <Pagination
                 currentPage={page}

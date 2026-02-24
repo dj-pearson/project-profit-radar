@@ -20,7 +20,7 @@ interface SecurityLog {
   event_type: string;
   ip_address: unknown;
   user_agent: string | null;
-  details: any;
+  details: Record<string, unknown>;
   created_at: string;
 }
 
@@ -111,9 +111,9 @@ export const useSecurity = () => {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error enabling 2FA:', error);
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : String(error) };
     }
   };
 
@@ -134,7 +134,7 @@ export const useSecurity = () => {
 
       await logSecurityEvent('2fa_disabled');
       await loadUserSecurity();
-      
+
       toast({
         title: "2FA Disabled",
         description: "Two-factor authentication has been disabled for your account.",
@@ -142,13 +142,13 @@ export const useSecurity = () => {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error disabling 2FA:', error);
-      return { error: error.message };
+      return { error: error instanceof Error ? error.message : String(error) };
     }
   };
 
-  const logSecurityEvent = async (eventType: string, details: any = {}) => {
+  const logSecurityEvent = async (eventType: string, details: Record<string, unknown> = {}) => {
     if (!user) return;
 
     try {

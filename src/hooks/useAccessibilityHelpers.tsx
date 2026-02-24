@@ -205,13 +205,13 @@ export function useFocusVisible() {
       setIsFocusVisible(false);
     };
 
-    element.addEventListener('keydown', handleKeyDown as any);
+    element.addEventListener('keydown', handleKeyDown as EventListener);
     element.addEventListener('mousedown', handleMouseDown);
     element.addEventListener('focus', handleFocus);
     element.addEventListener('blur', handleBlur);
 
     return () => {
-      element.removeEventListener('keydown', handleKeyDown as any);
+      element.removeEventListener('keydown', handleKeyDown as EventListener);
       element.removeEventListener('mousedown', handleMouseDown);
       element.removeEventListener('focus', handleFocus);
       element.removeEventListener('blur', handleBlur);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -261,108 +262,134 @@ const UsersPage = () => {
         </section>
 
         {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Platform Users ({filteredUsers.length})</CardTitle>
-            <CardDescription>
-              All registered users across the platform
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredUsers.map((userItem) => (
-                <div key={userItem.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {userItem.first_name?.[0]}{userItem.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="font-medium">
-                          {userItem.first_name && userItem.last_name 
-                            ? `${userItem.first_name} ${userItem.last_name}`
-                            : userItem.email
-                          }
-                        </p>
-                        {getRoleBadge(userItem.role)}
-                        {getStatusBadge(userItem.is_active, userItem.last_login)}
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <span className="flex items-center">
-                          <Mail className="h-3 w-3 mr-1" aria-hidden="true" />
-                          {userItem.email}
-                        </span>
-                        {userItem.companies && (
-                          <span className="flex items-center">
-                            <Building2 className="h-3 w-3 mr-1" aria-hidden="true" />
-                            {userItem.companies.name}
-                          </span>
-                        )}
-                        <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" aria-hidden="true" />
-                          Joined {new Date(userItem.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedUser(userItem);
-                        setIsDetailDialogOpen(true);
-                      }}
-                      aria-label={`View details for ${userItem.first_name || userItem.email}`}
-                    >
-                      <Eye className="h-3 w-3 mr-1" aria-hidden="true" />
-                      View
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleImpersonateClick(userItem)}
-                      disabled={userItem.id === user?.id}
-                      title={userItem.id === user?.id ? "Cannot impersonate yourself" : "Impersonate this user"}
-                      aria-label={`Impersonate ${userItem.first_name || userItem.email}`}
-                    >
-                      <UserCog className="h-3 w-3 mr-1" aria-hidden="true" />
-                      Impersonate
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={userItem.is_active ? "destructive" : "default"}
-                      onClick={() => toggleUserStatus(userItem.id, userItem.is_active)}
-                    >
-                      {userItem.is_active ? (
-                        <>
-                          <UserX className="h-3 w-3 mr-1" />
-                          Deactivate
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          Activate
-                        </>
-                      )}
-                    </Button>
-                  </div>
+        {(() => {
+          const userColumns: TableColumn<UserProfile>[] = [
+            {
+              key: 'first_name',
+              header: 'Name',
+              sortable: true,
+              render: (_, row) => (
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {row.first_name?.[0]}{row.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium">
+                    {row.first_name && row.last_name
+                      ? `${row.first_name} ${row.last_name}`
+                      : row.email}
+                  </span>
                 </div>
-              ))}
+              ),
+            },
+            {
+              key: 'email',
+              header: 'Email',
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="flex items-center gap-1 text-sm">
+                  <Mail className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  {value}
+                </span>
+              ),
+            },
+            {
+              key: 'role',
+              header: 'Role',
+              sortable: true,
+              render: (value) => getRoleBadge(value),
+            },
+            {
+              key: 'is_active',
+              header: 'Status',
+              sortable: true,
+              render: (_, row) => getStatusBadge(row.is_active, row.last_login),
+            },
+            {
+              key: 'companies',
+              header: 'Company',
+              hideOnMobile: true,
+              render: (value) => (
+                <span className="flex items-center gap-1 text-sm">
+                  <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  {value?.name || 'No company'}
+                </span>
+              ),
+            },
+            {
+              key: 'created_at',
+              header: 'Joined',
+              hideOnMobile: true,
+              sortable: true,
+              render: (value) => (
+                <span className="text-sm text-muted-foreground">
+                  {new Date(value).toLocaleDateString()}
+                </span>
+              ),
+            },
+            {
+              key: 'actions',
+              header: 'Actions',
+              headerRender: () => <span className="sr-only">Actions</span>,
+              render: (_, row) => (
+                <div className="flex items-center space-x-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedUser(row);
+                      setIsDetailDialogOpen(true);
+                    }}
+                    aria-label={`View details for ${row.first_name || row.email}`}
+                  >
+                    <Eye className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => { e.stopPropagation(); handleImpersonateClick(row); }}
+                    disabled={row.id === user?.id}
+                    title={row.id === user?.id ? "Cannot impersonate yourself" : "Impersonate this user"}
+                    aria-label={`Impersonate ${row.first_name || row.email}`}
+                  >
+                    <UserCog className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={row.is_active ? "destructive" : "default"}
+                    onClick={(e) => { e.stopPropagation(); toggleUserStatus(row.id, row.is_active); }}
+                    aria-label={row.is_active ? `Deactivate ${row.first_name || row.email}` : `Activate ${row.first_name || row.email}`}
+                  >
+                    {row.is_active ? (
+                      <UserX className="h-3 w-3" aria-hidden="true" />
+                    ) : (
+                      <UserCheck className="h-3 w-3" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
+              ),
+            },
+          ];
 
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          return (
+            <AccessibleTable<UserProfile>
+              caption={`Platform Users (${filteredUsers.length})`}
+              hideCaption
+              columns={userColumns}
+              data={filteredUsers}
+              loading={loadingData}
+              emptyContent={
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                   <h3 className="text-lg font-medium mb-2">No Users Found</h3>
                   <p className="text-muted-foreground">No users match your current filters.</p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              }
+            />
+          );
+        })()}
       </div>
 
       {/* User Detail Dialog */}

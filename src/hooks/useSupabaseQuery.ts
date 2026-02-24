@@ -2,6 +2,12 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PostgrestError } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
+
+/** Helper to call supabase.from() with a runtime table name */
+function fromTable(table: string) {
+  return supabase.from(table as keyof Database['public']['Tables']);
+}
 
 interface UseSupabaseQueryOptions<T> extends Omit<UseQueryOptions<T, PostgrestError>, 'queryKey' | 'queryFn'> {
   queryKey: string[];
@@ -61,7 +67,7 @@ interface UsePaginatedQueryOptions<T> {
   queryKey: string[];
   tableName: string;
   select?: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, string | number | boolean>;
   orderBy?: { column: string; ascending?: boolean };
   pageSize?: number;
   page: number;
@@ -89,8 +95,7 @@ export function usePaginatedQuery<T>({
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      let query = (supabase as any)
-        .from(tableName)
+      let query = fromTable(tableName)
         .select(select, { count: 'exact' })
         .range(from, to);
 
@@ -136,9 +141,9 @@ export function usePaginatedQuery<T>({
 export async function fetchSingleRecord<T>(
   tableName: string,
   select: string,
-  filters: Record<string, any>
+  filters: Record<string, string | number | boolean>
 ): Promise<{ data: T | null; error: PostgrestError | null }> {
-  let query = (supabase as any).from(tableName).select(select);
+  let query = fromTable(tableName).select(select);
 
   Object.entries(filters).forEach(([key, value]) => {
     query = query.eq(key, value);
@@ -162,7 +167,7 @@ export function useSingleRecord<T>({
   queryKey: string[];
   tableName: string;
   select?: string;
-  filters: Record<string, any>;
+  filters: Record<string, string | number | boolean>;
   enabled?: boolean;
   showErrorToast?: boolean;
 }) {

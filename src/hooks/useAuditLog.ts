@@ -11,12 +11,12 @@ interface AuditLogParams {
   resourceType: string;
   resourceId?: string;
   resourceName?: string;
-  oldValues?: any;
-  newValues?: any;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   riskLevel?: 'low' | 'medium' | 'high' | 'critical';
   complianceCategory?: string;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface DataAccessParams {
@@ -156,30 +156,30 @@ export const useAuditLog = () => {
     });
   };
 
-  const logFinancialDataAccess = (resourceId: string, resourceName: string, accessMethod: string = 'view') => {
+  const logFinancialDataAccess = (resourceId: string, resourceName: string, accessMethod: DataAccessParams['accessMethod'] = 'view') => {
     return logDataAccess({
       dataType: 'financial',
       dataClassification: 'confidential',
       resourceId,
       resourceName,
-      accessMethod: accessMethod as any,
+      accessMethod,
       accessPurpose: 'Business operations and reporting',
       lawfulBasis: 'Legitimate interests'
     });
   };
 
-  const logDocumentAccess = (documentId: string, documentName: string, accessMethod: string = 'view') => {
+  const logDocumentAccess = (documentId: string, documentName: string, accessMethod: DataAccessParams['accessMethod'] = 'view') => {
     return logDataAccess({
       dataType: 'document',
       dataClassification: 'internal',
       resourceId: documentId,
       resourceName: documentName,
-      accessMethod: accessMethod as any,
+      accessMethod,
       accessPurpose: 'Document management and collaboration'
     });
   };
 
-  const logUserManagement = (actionType: string, targetUserId: string, targetUserName: string, changes?: any) => {
+  const logUserManagement = (actionType: string, targetUserId: string, targetUserName: string, changes?: Record<string, unknown>) => {
     return logAuditEvent({
       actionType,
       resourceType: 'user',
@@ -192,7 +192,7 @@ export const useAuditLog = () => {
     });
   };
 
-  const logSecurityEvent = (eventType: string, details: any, riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
+  const logSecurityEvent = (eventType: string, details: Record<string, unknown>, riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
     return logAuditEvent({
       actionType: eventType,
       resourceType: 'security',

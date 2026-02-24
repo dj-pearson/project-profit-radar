@@ -7,8 +7,8 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 export interface SyncEvent {
   table: string;
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: any;
-  old: any;
+  new: Record<string, unknown>;
+  old: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -16,14 +16,14 @@ export interface SyncSubscription {
   id: string;
   tables: string[];
   onSync: (event: SyncEvent) => void;
-  filters?: Record<string, any>;
+  filters?: Record<string, string>;
 }
 
 export interface UseRealTimeSyncOptions {
   subscriptions: SyncSubscription[];
   enableCrossModuleSync?: boolean;
   enableNotifications?: boolean;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
 }
 
 export const useRealTimeSync = (options: UseRealTimeSyncOptions) => {

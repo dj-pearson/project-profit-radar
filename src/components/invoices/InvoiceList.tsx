@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Eye, 
-  Edit, 
-  Send, 
-  DollarSign, 
-  Download, 
+import {
+  Eye,
+  Edit,
+  Send,
+  DollarSign,
+  Download,
   MoreHorizontal,
   Calendar,
   User,
@@ -23,6 +23,7 @@ import {
 import { format } from 'date-fns';
 import PaymentProcessor from '@/components/PaymentProcessor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
 
 interface InvoiceListProps {
   invoices: any[];
@@ -114,120 +115,117 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
     );
   }
 
-  if (invoices.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <div className="text-muted-foreground">No invoices found</div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const invoiceColumns: TableColumn<any>[] = [
+    {
+      key: 'invoice_number',
+      header: 'Invoice #',
+      sortable: true,
+      render: (value) => <span className="font-semibold">{value}</span>,
+    },
+    {
+      key: 'client_name',
+      header: 'Client',
+      sortable: true,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          {getStatusBadge(value)}
+          {row.invoice_type && getInvoiceTypeBadge(row.invoice_type)}
+        </div>
+      ),
+    },
+    {
+      key: 'due_date',
+      header: 'Due Date',
+      sortable: true,
+      render: (value) => formatDate(value),
+    },
+    {
+      key: 'projects',
+      header: 'Project',
+      hideOnMobile: true,
+      render: (value) => value?.name || <span className="text-muted-foreground">-</span>,
+    },
+    {
+      key: 'total_amount',
+      header: 'Amount',
+      sortable: true,
+      align: 'right',
+      render: (value, row) => (
+        <div className="text-right">
+          <div className="font-semibold">{formatCurrency(parseFloat(value || 0))}</div>
+          {row.amount_paid > 0 && (
+            <div className="text-xs text-green-600">
+              Paid: {formatCurrency(parseFloat(row.amount_paid || 0))}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, invoice) => (
+        <div className="flex items-center gap-2">
+          {invoice.status !== 'paid' && parseFloat(invoice.amount_due || 0) > 0 && (
+            <Button
+              size="sm"
+              onClick={() => handleProcessPayment(invoice)}
+              className="bg-construction-orange hover:bg-construction-orange/90"
+              aria-label={`Process payment for invoice ${invoice.invoice_number}`}
+            >
+              <DollarSign className="mr-2 h-4 w-4" aria-hidden="true" />
+              Pay
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" aria-label={`Actions for invoice ${invoice.invoice_number}`}>
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" aria-hidden="true" />
+                Edit Invoice
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+                Download PDF
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {invoice.status === 'draft' && (
+                <DropdownMenuItem>
+                  <Send className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Send to Client
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
-      <div className="space-y-4">
-        {invoices.map((invoice) => (
-          <Card 
-            key={invoice.id} 
-            className={`transition-all hover:shadow-md ${
-              highlightOverdue && invoice.status === 'overdue' ? 'border-red-200 bg-red-50' : ''
-            }`}
-          >
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Invoice Info */}
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-lg">{invoice.invoice_number}</h3>
-                    {getStatusBadge(invoice.status)}
-                    {invoice.invoice_type && getInvoiceTypeBadge(invoice.invoice_type)}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      {invoice.client_name}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Due: {formatDate(invoice.due_date)}
-                    </div>
-                    {invoice.projects?.name && (
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        {invoice.projects.name}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Amount Info */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="text-right">
-                    <div className="text-lg font-semibold">
-                      {formatCurrency(parseFloat(invoice.total_amount || 0))}
-                    </div>
-                    {invoice.amount_due > 0 && (
-                      <div className="text-sm text-muted-foreground">
-                        Due: {formatCurrency(parseFloat(invoice.amount_due || 0))}
-                      </div>
-                    )}
-                    {invoice.amount_paid > 0 && (
-                      <div className="text-sm text-green-600">
-                        Paid: {formatCurrency(parseFloat(invoice.amount_paid || 0))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {invoice.status !== 'paid' && parseFloat(invoice.amount_due || 0) > 0 && (
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleProcessPayment(invoice)}
-                        className="bg-construction-orange hover:bg-construction-orange/90"
-                      >
-                        <DollarSign className="mr-2 h-4 w-4" />
-                        Pay
-                      </Button>
-                    )}
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Invoice
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {invoice.status === 'draft' && (
-                          <DropdownMenuItem>
-                            <Send className="mr-2 h-4 w-4" />
-                            Send to Client
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <AccessibleTable
+        caption={highlightOverdue ? "Overdue Invoices" : "Invoices"}
+        hideCaption
+        columns={invoiceColumns}
+        data={invoices}
+        loading={loading}
+        emptyContent="No invoices found"
+        className={highlightOverdue ? '[&_tr]:border-red-100' : ''}
+      />
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>

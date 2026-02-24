@@ -229,7 +229,7 @@ export const useDeviceTrust = () => {
 
       await loadTrustedDevices();
       return { data, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error trusting device:', error);
       toast({
         title: "Error",

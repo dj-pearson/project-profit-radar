@@ -84,7 +84,7 @@ export const useAutomatedSocialPosts = () => {
           auto_schedule: true,
         }
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading automated social config:", error);
       toast({
         title: "Error",
@@ -194,7 +194,7 @@ export const useAutomatedSocialPosts = () => {
       });
 
       return result.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving automated social config:", error);
       toast({
         title: "Error",
@@ -236,7 +236,7 @@ export const useAutomatedSocialPosts = () => {
       await loadQueue();
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error triggering manual post:", error);
       toast({
         title: "Error",

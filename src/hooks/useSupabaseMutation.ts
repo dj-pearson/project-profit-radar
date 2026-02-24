@@ -2,6 +2,12 @@ import { useMutation, UseMutationOptions, useQueryClient } from '@tanstack/react
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PostgrestError } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
+
+/** Helper to call supabase.from() with a runtime table name */
+function fromTable(table: string) {
+  return supabase.from(table as keyof Database['public']['Tables']);
+}
 
 interface UseSupabaseMutationOptions<TData, TVariables> 
   extends Omit<UseMutationOptions<TData, PostgrestError, TVariables>, 'mutationFn'> {
@@ -16,7 +22,7 @@ interface UseSupabaseMutationOptions<TData, TVariables>
 /**
  * Enhanced useMutation hook with built-in error handling and query invalidation
  */
-export function useSupabaseMutation<TData = any, TVariables = void>({
+export function useSupabaseMutation<TData = unknown, TVariables = void>({
   mutationFn,
   invalidateQueries = [],
   showSuccessToast = false,
@@ -87,8 +93,7 @@ export function useInsertMutation<T>({
 }) {
   return useSupabaseMutation<T, Partial<T>>({
     mutationFn: async (data) => {
-      return await (supabase as any)
-        .from(tableName)
+      return await fromTable(tableName)
         .insert(data)
         .select()
         .single();
@@ -116,8 +121,7 @@ export function useUpdateMutation<T>({
 }) {
   return useSupabaseMutation<T, { id: string; data: Partial<T> }>({
     mutationFn: async ({ id, data }) => {
-      return await (supabase as any)
-        .from(tableName)
+      return await fromTable(tableName)
         .update(data)
         .eq('id', id)
         .select()
@@ -146,8 +150,7 @@ export function useDeleteMutation({
 }) {
   return useSupabaseMutation<void, string>({
     mutationFn: async (id) => {
-      return await (supabase as any)
-        .from(tableName)
+      return await fromTable(tableName)
         .delete()
         .eq('id', id);
     },
@@ -167,7 +170,7 @@ export function useBatchMutation<T>({
   showSuccessToast = true,
   successMessage = 'Batch operation completed',
 }: {
-  operations: Array<() => Promise<any>>;
+  operations: Array<() => Promise<{ data: unknown; error: PostgrestError | null }>>;
   invalidateQueries?: string[][];
   showSuccessToast?: boolean;
   successMessage?: string;

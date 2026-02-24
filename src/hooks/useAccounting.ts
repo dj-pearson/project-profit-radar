@@ -65,7 +65,7 @@ export function useAccount(accountId: string) {
 export function useCreateAccount() {
   const queryClient = useQueryClient();
     return useMutation({
-    mutationFn: async (accountData: any) => {
+    mutationFn: async (accountData: Record<string, unknown>) => {
             const { data, error } = await supabase
         .from('chart_of_accounts')
         .insert({
@@ -81,7 +81,7 @@ export function useCreateAccount() {
       queryClient.invalidateQueries({ queryKey: ['chart-of-accounts'] });
       toast.success('Account created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create account: ${error.message}`);
     },
   });
@@ -90,7 +90,7 @@ export function useCreateAccount() {
 export function useUpdateAccount() {
   const queryClient = useQueryClient();
     return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
             const { data, error } = await supabase
         .from('chart_of_accounts')
         .update(updates)
@@ -107,7 +107,7 @@ export function useUpdateAccount() {
       queryClient.invalidateQueries({ queryKey: ['account'] });
       toast.success('Account updated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update account: ${error.message}`);
     },
   });
@@ -274,7 +274,7 @@ export function useCreateJournalEntry() {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
       toast.success('Journal entry created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create journal entry: ${error.message}`);
     },
   });
@@ -305,7 +305,7 @@ export function usePostJournalEntry() {
       queryClient.invalidateQueries({ queryKey: ['account-balances'] });
       toast.success('Journal entry posted successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to post journal entry: ${error.message}`);
     },
   });
@@ -439,7 +439,7 @@ export function useCreateBill() {
       queryClient.invalidateQueries({ queryKey: ['bills'] });
       toast.success('Bill created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create bill: ${error.message}`);
     },
   });

@@ -14,14 +14,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { AccessibleTable, type TableColumn } from "@/components/accessibility/AccessibleTable";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -262,124 +255,142 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     );
   }
 
+  const estimateColumns: TableColumn<Estimate>[] = [
+    {
+      key: 'estimate_number',
+      header: 'Estimate #',
+      sortable: true,
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      sortable: true,
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      key: 'client_name',
+      header: 'Client',
+      sortable: true,
+    },
+    {
+      key: 'project',
+      header: 'Project',
+      render: (_value, row) =>
+        row.project ? (
+          <Button variant="link" size="sm" className="p-0 h-auto">
+            {row.project.name}
+            <ExternalLink className="ml-1 h-3 w-3" aria-hidden="true" />
+          </Button>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      key: 'total_amount',
+      header: 'Amount',
+      sortable: true,
+      align: 'right',
+      render: (value) => <span className="font-medium">${Number(value).toLocaleString()}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (value) => getStatusBadge(value),
+    },
+    {
+      key: 'estimate_date',
+      header: 'Date',
+      sortable: true,
+      render: (value) => format(new Date(value), "MMM d, yyyy"),
+    },
+    {
+      key: 'valid_until',
+      header: 'Valid Until',
+      hideOnMobile: true,
+      render: (value) =>
+        value ? (
+          <span className={new Date(value) < new Date() ? "text-destructive" : ""}>
+            {format(new Date(value), "MMM d, yyyy")}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '48px',
+      headerRender: () => <span className="sr-only">Actions</span>,
+      render: (_value, estimate) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" aria-label={`Actions for estimate ${estimate.estimate_number}`}>
+              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+              View
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEditingEstimate(estimate.id)}>
+              <Edit className="mr-2 h-4 w-4" aria-hidden="true" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDuplicate(estimate)}>
+              <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {estimate.status === "draft" && (
+              <DropdownMenuItem onClick={() => handleSendEstimate(estimate.id)}>
+                <Send className="mr-2 h-4 w-4" aria-hidden="true" />
+                Send to Client
+              </DropdownMenuItem>
+            )}
+            {!estimate.project && (estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
+              <DropdownMenuItem
+                onClick={() => setConvertingEstimate(estimate.id)}
+                className="text-construction-blue font-medium"
+              >
+                <Building2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                Convert to Project
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem>
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              Download PDF
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Archive className="mr-2 h-4 w-4" aria-hidden="true" />
+              Archive
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setDeletingEstimate(estimate.id)}
+              className="text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
   return (
     <>
       <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Estimate #</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Project</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Valid Until</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {estimates.map((estimate) => (
-              <TableRow key={estimate.id}>
-                <TableCell className="font-medium">
-                  {estimate.estimate_number}
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">{estimate.title}</div>
-                </TableCell>
-                <TableCell>{estimate.client_name}</TableCell>
-                <TableCell>
-                  {estimate.project ? (
-                    <Button variant="link" size="sm" className="p-0 h-auto">
-                      {estimate.project.name}
-                      <ExternalLink className="ml-1 h-3 w-3" />
-                    </Button>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">
-                  ${estimate.total_amount.toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {getStatusBadge(estimate.status)}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(estimate.estimate_date), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell>
-                  {estimate.valid_until ? (
-                    <span className={
-                      new Date(estimate.valid_until) < new Date() 
-                        ? "text-destructive" 
-                        : ""
-                    }>
-                      {format(new Date(estimate.valid_until), "MMM d, yyyy")}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setEditingEstimate(estimate.id)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDuplicate(estimate)}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {estimate.status === "draft" && (
-                        <DropdownMenuItem onClick={() => handleSendEstimate(estimate.id)}>
-                          <Send className="mr-2 h-4 w-4" />
-                          Send to Client
-                        </DropdownMenuItem>
-                      )}
-                      {!estimate.project && (estimate.status === "accepted" || estimate.status === "sent" || estimate.status === "viewed") && (
-                        <DropdownMenuItem
-                          onClick={() => setConvertingEstimate(estimate.id)}
-                          className="text-construction-blue font-medium"
-                        >
-                          <Building2 className="mr-2 h-4 w-4" />
-                          Convert to Project
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download PDF
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Archive className="mr-2 h-4 w-4" />
-                        Archive
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setDeletingEstimate(estimate.id)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <AccessibleTable<Estimate>
+          caption="Estimates"
+          hideCaption
+          columns={estimateColumns}
+          data={estimates}
+          loading={loading}
+          emptyContent="No estimates found"
+        />
       </div>
 
       {/* Edit Dialog */}
