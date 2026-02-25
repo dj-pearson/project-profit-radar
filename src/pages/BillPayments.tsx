@@ -38,6 +38,46 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface BillRecord {
+  id: string;
+  bill_number: string;
+  vendor_id: string;
+  vendor?: { id: string; name: string } | null;
+  total_amount: number;
+  amount_due: number;
+  amount_paid: number | null;
+  due_date: string;
+  status: string;
+  line_items?: unknown[];
+}
+
+interface VendorRecord {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface BillPaymentRecord {
+  id: string;
+  payment_number: string;
+  payment_date: string;
+  vendor?: { name: string } | null;
+  total_amount: number;
+  payment_method: string;
+  applications?: { amount_applied: number; bill: { bill_number: string } | null }[];
+}
+
+interface PaymentFormData {
+  paymentDate: string;
+  paymentMethod: string;
+  bankAccountId: string;
+  checkNumber: string;
+  referenceNumber: string;
+  memo: string;
+  billsToPayArray: BillToPayApplication[];
+  totalAmount?: number;
+}
+
 interface BillToPayApplication {
   billId: string;
   billNumber: string;
@@ -115,7 +155,7 @@ export default function BillPayments() {
 
   // Filter bills by selected vendor
   const filteredBills = selectedVendorId
-    ? bills?.filter((bill: any) => bill.vendor_id === selectedVendorId)
+    ? bills?.filter((bill: BillRecord) => bill.vendor_id === selectedVendorId)
     : bills;
 
   // Calculate total payment amount
@@ -125,7 +165,7 @@ export default function BillPayments() {
   );
 
   // Toggle bill selection
-  const toggleBillSelection = (bill: any, isSelected: boolean) => {
+  const toggleBillSelection = (bill: BillRecord, isSelected: boolean) => {
     if (isSelected) {
       const newApp: BillToPayApplication = {
         billId: bill.id,
@@ -159,7 +199,7 @@ export default function BillPayments() {
 
   // Create bill payment mutation
   const createPayment = useMutation({
-    mutationFn: async (paymentData: any) => {
+    mutationFn: async (paymentData: PaymentFormData) => {
       // Generate payment number
       const { data: seqData, error: seqError } = await supabase
         .rpc('nextval', { sequence_name: 'bill_payment_number_seq' });
@@ -169,7 +209,7 @@ export default function BillPayments() {
       const paymentNumber = `PMT-${String(seqData).padStart(6, '0')}`;
 
       // Get vendor ID from first bill
-      const firstBill = bills?.find((b: any) => b.id === paymentData.billsToPayArray[0].billId);
+      const firstBill = bills?.find((b: BillRecord) => b.id === paymentData.billsToPayArray[0].billId);
 
       // Create payment
       const { data: payment, error: paymentError } = await supabase
@@ -214,7 +254,7 @@ export default function BillPayments() {
 
         if (updateError) {
           // Fallback: manual update
-          const bill = bills?.find((b: any) => b.id === app.billId);
+          const bill = bills?.find((b: BillRecord) => b.id === app.billId);
           if (bill) {
             await supabase
               .from('bills')
@@ -245,8 +285,9 @@ export default function BillPayments() {
       });
       setSelectedVendorId('');
     },
-    onError: (error: any) => {
-      toast.error(`Failed to create payment: ${error.message}`);
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to create payment: ${message}`);
     },
   });
 
@@ -268,8 +309,8 @@ export default function BillPayments() {
   const bankAccounts = accounts?.filter(a => a.is_bank_account) || [];
 
   // Calculate metrics
-  const totalUnpaidBills = bills?.reduce((sum: number, bill: any) => sum + Number(bill.amount_due || 0), 0) || 0;
-  const numberOfUnpaidBills = bills?.filter((bill: any) => Number(bill.amount_due) > 0).length || 0;
+  const totalUnpaidBills = bills?.reduce((sum: number, bill: BillRecord) => sum + Number(bill.amount_due || 0), 0) || 0;
+  const numberOfUnpaidBills = bills?.filter((bill: BillRecord) => Number(bill.amount_due) > 0).length || 0;
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Bill Payments">
@@ -399,7 +440,7 @@ export default function BillPayments() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All Vendors</SelectItem>
-                      {vendors?.map((vendor: any) => (
+                      {vendors?.map((vendor: VendorRecord) => (
                         <SelectItem key={vendor.id} value={vendor.id}>
                           {vendor.name}
                         </SelectItem>
@@ -425,7 +466,7 @@ export default function BillPayments() {
                       </TableHeader>
                       <TableBody>
                         {filteredBills && filteredBills.length > 0 ? (
-                          filteredBills.map((bill: any) => {
+                          filteredBills.map((bill: BillRecord) => {
                             const isSelected = formData.billsToPayArray.some(
                               app => app.billId === bill.id
                             );
@@ -590,7 +631,7 @@ export default function BillPayments() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((payment: any) => (
+                  {payments.map((payment: BillPaymentRecord) => (
                     <TableRow key={payment.id}>
                       <TableCell className="font-mono">{payment.payment_number}</TableCell>
                       <TableCell>

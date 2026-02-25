@@ -74,7 +74,7 @@ interface EquipmentTransaction {
 
 interface MobileEquipmentManagerProps {
   projectId?: string;
-  onTransactionComplete?: (transaction: any) => void;
+  onTransactionComplete?: (transaction: Record<string, unknown>) => void;
   onClose?: () => void;
 }
 
@@ -83,15 +83,15 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
   onTransactionComplete,
   onClose
 }) => {
-  const [equipment, setEquipment] = useState<any[]>([]);
-  const [selectedEquipment, setSelectedEquipment] = useState<any | null>(null);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [actionType, setActionType] = useState<'check_out' | 'check_in' | 'maintenance' | 'inspection'>('check_out');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showCamera, setShowCamera] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string; client_name: string }[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   
   const [transactionData, setTransactionData] = useState<EquipmentTransaction>({
@@ -152,7 +152,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }
   };
 
-  const handlePhotoCapture = (file: File, metadata?: any) => {
+  const handlePhotoCapture = (file: File, metadata?: Record<string, unknown>) => {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
@@ -223,7 +223,7 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
     }
   };
 
-  const selectEquipment = (item: any) => {
+  const selectEquipment = (item: Equipment) => {
     setSelectedEquipment(item);
     setTransactionData(prev => ({
       ...prev,
@@ -457,8 +457,8 @@ const MobileEquipmentManager: React.FC<MobileEquipmentManagerProps> = ({
             <div>
               <Label>Action Type</Label>
               <Select value={actionType} onValueChange={(value) => {
-                setActionType(value as any);
-                setTransactionData(prev => ({ ...prev, action_type: value as any }));
+                setActionType(value as EquipmentTransaction['action_type']);
+                setTransactionData(prev => ({ ...prev, action_type: value as EquipmentTransaction['action_type'] }));
               }}>
                 <SelectTrigger>
                   <SelectValue />

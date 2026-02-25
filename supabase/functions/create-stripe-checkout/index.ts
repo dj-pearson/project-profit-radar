@@ -7,6 +7,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateRequest, createErrorResponse } from "../_shared/validation.ts";
 import { initializeAuthContext, errorResponse } from '../_shared/auth-helpers.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 // SECURITY: Input validation schema
 const CheckoutRequestSchema = z.object({
@@ -48,6 +49,17 @@ serve(async (req) => {
 
     const { user, supabase: supabaseClient } = authContext;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+
+    // Rate limit: 100 req/min per user for general API
+    const serviceRLClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const rlResult = await checkRateLimit(serviceRLClient, {
+      identifier: user.id, endpoint: 'create-stripe-checkout', ...RATE_LIMITS.GENERAL
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
+
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // SECURITY: Validate request body

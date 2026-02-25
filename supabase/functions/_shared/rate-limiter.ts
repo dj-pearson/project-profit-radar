@@ -130,6 +130,45 @@ export async function checkRateLimit(
   }
 }
 
+/** Preset rate limit configurations by endpoint type */
+export const RATE_LIMITS = {
+  /** Auth endpoints: 10 requests per minute per IP */
+  AUTH: { maxRequests: 10, windowMinutes: 1 },
+  /** AI endpoints: 20 requests per minute per user */
+  AI: { maxRequests: 20, windowMinutes: 1 },
+  /** General API: 100 requests per minute */
+  GENERAL: { maxRequests: 100, windowMinutes: 1 },
+  /** Webhook endpoints: 200 requests per minute (server-to-server) */
+  WEBHOOK: { maxRequests: 200, windowMinutes: 1 },
+} as const;
+
+/**
+ * Create a 429 Too Many Requests response with Retry-After header
+ */
+export function rateLimitResponse(
+  result: RateLimitResult,
+  corsHeaders: Record<string, string> = {}
+): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Rate limit exceeded',
+      retryAfter: result.retryAfter,
+      limit: result.limit,
+      requestCount: result.requestCount,
+    }),
+    {
+      status: 429,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'Retry-After': String(result.retryAfter),
+        'X-RateLimit-Limit': String(result.limit),
+        'X-RateLimit-Remaining': '0',
+      },
+    }
+  );
+}
+
 /**
  * Get client IP address from request headers
  * Security: Extracts real IP even behind proxies/CDNs

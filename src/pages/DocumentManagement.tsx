@@ -78,6 +78,21 @@ interface Project {
   client_name: string;
 }
 
+interface AIClassification {
+  document_type?: string;
+  category?: string;
+  confidence: number;
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+interface OCRProcessingResult {
+  ocrText: string;
+  aiClassification: AIClassification;
+  suggestedProjectId?: string;
+  suggestedCostCenter?: string;
+}
+
 const DocumentManagement = () => {
   const { projectId } = useParams<{ projectId?: string }>();
   const { user, userProfile } = useAuth();
@@ -146,9 +161,9 @@ const DocumentManagement = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDocuments((data as any) || []);
+      setDocuments((data as Document[]) || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading documents:', error);
       toast({
         variant: "destructive",
@@ -172,7 +187,7 @@ const DocumentManagement = () => {
       if (error) throw error;
       setCategories(data || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading categories:', error);
     }
   };
@@ -189,7 +204,7 @@ const DocumentManagement = () => {
       if (error) throw error;
       setProjects(data || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading projects:', error);
     }
   };
@@ -222,12 +237,7 @@ const DocumentManagement = () => {
     await performRegularUpload();
   };
 
-  const performRegularUpload = async (ocrData?: {
-    ocrText: string;
-    aiClassification: any;
-    suggestedProjectId?: string;
-    suggestedCostCenter?: string;
-  }) => {
+  const performRegularUpload = async (ocrData?: OCRProcessingResult) => {
     setIsUploading(true);
     const files = currentProcessingFile ? [currentProcessingFile] : Array.from(selectedFiles || []);
     const totalFiles = files.length;
@@ -297,24 +307,19 @@ const DocumentManagement = () => {
       setUploadProgress(0);
       loadDocuments();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading files:', error);
       toast({
         variant: "destructive",
         title: "Upload Failed",
-        description: error.message || "Failed to upload files"
+        description: error instanceof Error ? error.message : "Failed to upload files"
       });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleOCRProcessingComplete = (result: {
-    ocrText: string;
-    aiClassification: any;
-    suggestedProjectId?: string;
-    suggestedCostCenter?: string;
-  }) => {
+  const handleOCRProcessingComplete = (result: OCRProcessingResult) => {
     performRegularUpload(result);
   };
 
@@ -344,7 +349,7 @@ const DocumentManagement = () => {
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error downloading document:', error);
       toast({
         variant: "destructive",
@@ -386,7 +391,7 @@ const DocumentManagement = () => {
       setDeleteConfirmDoc(null);
       loadDocuments();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting document:', error);
       toast({
         variant: "destructive",

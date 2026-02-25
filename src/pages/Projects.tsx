@@ -25,6 +25,7 @@ import {
   ResponsiveContainer,
   ResponsiveGrid,
 } from "@/components/layout/ResponsiveContainer";
+import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
 import { TaskManager } from "@/components/tasks/TaskManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -129,11 +130,11 @@ const Projects = () => {
       const companyId = userProfile?.role !== "root_admin" ? userProfile?.company_id : undefined;
       const data = await projectService.getProjects(companyId);
       setProjects(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error loading projects",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setLoading(false);
@@ -156,7 +157,7 @@ const Projects = () => {
 
   const handleUpdateProject = async (
     projectId: string,
-    updates: any
+    updates: Partial<Project>
   ) => {
     try {
       // Pass company_id to enforce access control (null for root_admin)
@@ -173,11 +174,11 @@ const Projects = () => {
         title: "Project updated",
         description: "Project has been updated successfully.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error updating project",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -193,11 +194,11 @@ const Projects = () => {
         title: "Project deleted",
         description: "Project has been deleted successfully.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error deleting project",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -275,16 +276,16 @@ const Projects = () => {
     };
   };
 
-  const handleLoadPreset = (filters: any) => {
-    setSearchTerm(filters.searchTerm || "");
-    setStatusFilter(filters.statusFilter || "all");
-    setBudgetMin(filters.budgetMin || "");
-    setBudgetMax(filters.budgetMax || "");
-    setStartDate(filters.startDate ? new Date(filters.startDate) : undefined);
-    setEndDate(filters.endDate ? new Date(filters.endDate) : undefined);
-    setMaterialFilter(filters.materialFilter || "");
-    setTaskFilter(filters.taskFilter || "");
-    setDocumentFilter(filters.documentFilter || "");
+  const handleLoadPreset = (filters: Record<string, unknown>) => {
+    setSearchTerm((filters.searchTerm as string) || "");
+    setStatusFilter((filters.statusFilter as string) || "all");
+    setBudgetMin((filters.budgetMin as string) || "");
+    setBudgetMax((filters.budgetMax as string) || "");
+    setStartDate(filters.startDate ? new Date(filters.startDate as string) : undefined);
+    setEndDate(filters.endDate ? new Date(filters.endDate as string) : undefined);
+    setMaterialFilter((filters.materialFilter as string) || "");
+    setTaskFilter((filters.taskFilter as string) || "");
+    setDocumentFilter((filters.documentFilter as string) || "");
   };
 
   const toggleProjectSelection = (projectId: string) => {
@@ -334,7 +335,7 @@ const Projects = () => {
       (project.materials &&
         Array.isArray(project.materials) &&
         project.materials.some(
-          (material: any) =>
+          (material) =>
             material.name
               ?.toLowerCase()
               .includes(materialFilter.toLowerCase()) ||
@@ -349,7 +350,7 @@ const Projects = () => {
       (project.tasks &&
         Array.isArray(project.tasks) &&
         project.tasks.some(
-          (task: any) =>
+          (task) =>
             task.name?.toLowerCase().includes(taskFilter.toLowerCase()) ||
             task.description?.toLowerCase().includes(taskFilter.toLowerCase())
         ));
@@ -360,9 +361,9 @@ const Projects = () => {
       (project.documents &&
         Array.isArray(project.documents) &&
         project.documents.some(
-          (doc: any) =>
+          (doc) =>
             doc.name?.toLowerCase().includes(documentFilter.toLowerCase()) ||
-            doc.description
+            doc.file_path
               ?.toLowerCase()
               .includes(documentFilter.toLowerCase())
         ));
@@ -848,14 +849,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {activeProjects.map((project) => (
+            <VirtualizedGrid
+              items={activeProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -873,14 +875,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {completedProjects.map((project) => (
+            <VirtualizedGrid
+              items={completedProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -898,14 +901,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {onHoldProjects.map((project) => (
+            <VirtualizedGrid
+              items={onHoldProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -923,14 +927,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {planningProjects.map((project) => (
+            <VirtualizedGrid
+              items={planningProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
       </Tabs>

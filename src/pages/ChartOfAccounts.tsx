@@ -31,16 +31,33 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, BookOpen } from 'lucide-react';
-import { formatCurrency, getAccountTypeLabel } from '@/utils/accountingUtils';
+import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/accountingUtils';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+
+interface ChartAccount {
+  id: string;
+  account_number: string;
+  account_name: string;
+  account_type: string;
+  account_subtype: string;
+  description: string | null;
+  is_active: boolean | null;
+  allow_manual_entries: boolean | null;
+  current_balance: number | null;
+  normal_balance: string | null;
+  company_id: string;
+  parent_account_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export default function ChartOfAccounts() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [editingAccount, setEditingAccount] = useState<ChartAccount | null>(null);
 
   // Get company ID from user profile
   const companyId = user?.user_metadata?.company_id;
@@ -62,7 +79,7 @@ export default function ChartOfAccounts() {
   });
 
   // Filter accounts
-  const filteredAccounts = accounts?.filter((account: any) => {
+  const filteredAccounts = accounts?.filter((account: ChartAccount) => {
     const matchesSearch =
       account.account_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       account.account_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -74,7 +91,7 @@ export default function ChartOfAccounts() {
   });
 
   // Group accounts by type
-  const accountsByType = filteredAccounts?.reduce((acc: any, account: any) => {
+  const accountsByType = filteredAccounts?.reduce<Record<string, ChartAccount[]>>((acc, account: ChartAccount) => {
     if (!acc[account.account_type]) {
       acc[account.account_type] = [];
     }
@@ -124,7 +141,7 @@ export default function ChartOfAccounts() {
     setIsDialogOpen(false);
   };
 
-  const handleEdit = (account: any) => {
+  const handleEdit = (account: ChartAccount) => {
     setEditingAccount(account);
     setFormData({
       accountNumber: account.account_number,
@@ -421,18 +438,18 @@ export default function ChartOfAccounts() {
           </Card>
         ) : accountsByType && Object.keys(accountsByType).length > 0 ? (
           <div className="space-y-6">
-            {Object.entries(accountsByType).map(([type, typeAccounts]: [string, any]) => (
+            {Object.entries(accountsByType).map(([type, typeAccounts]: [string, ChartAccount[]]) => (
               <Card key={type} role="region" aria-labelledby={`account-type-${type}`}>
                 <CardHeader>
                   <CardTitle id={`account-type-${type}`} className="flex items-center justify-between">
-                    <span>{getAccountTypeLabel(type as any)}</span>
+                    <span>{getAccountTypeLabel(type as AccountType)}</span>
                     <Badge className={getAccountTypeColor(type)} aria-label={`${typeAccounts.length} accounts`}>
                       {typeAccounts.length} accounts
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table aria-label={`${getAccountTypeLabel(type as any)} accounts`}>
+                  <Table aria-label={`${getAccountTypeLabel(type as AccountType)} accounts`}>
                     <TableHeader>
                       <TableRow>
                         <TableHead scope="col">Number</TableHead>
@@ -443,7 +460,7 @@ export default function ChartOfAccounts() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {typeAccounts.map((account: any) => (
+                      {typeAccounts.map((account: ChartAccount) => (
                         <TableRow key={account.id}>
                           <TableCell className="font-mono">
                             {account.account_number}

@@ -113,7 +113,7 @@ export const ExpenseTracker: React.FC = () => {
       }));
       
       setExpenses(transformedData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading expenses:', error);
     } finally {
       setLoading(false);
@@ -131,7 +131,7 @@ export const ExpenseTracker: React.FC = () => {
 
       if (error) throw error;
       setCategories(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading categories:', error);
     }
   };
@@ -146,7 +146,7 @@ export const ExpenseTracker: React.FC = () => {
 
       if (error) throw error;
       setProjects(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading projects:', error);
     }
   };
@@ -162,7 +162,7 @@ export const ExpenseTracker: React.FC = () => {
 
       if (error) throw error;
       setCostCodes(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading cost codes:', error);
     }
   };
@@ -201,7 +201,7 @@ export const ExpenseTracker: React.FC = () => {
       });
 
       loadExpenses();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding expense:', error);
       toast({
         variant: "destructive",

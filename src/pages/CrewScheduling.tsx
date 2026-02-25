@@ -30,6 +30,13 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
+interface CrewProject {
+  id: string;
+  name: string;
+  description: string | null;
+  site_address: string | null;
+}
+
 interface CrewMember {
   id: string;
   name: string;
@@ -57,7 +64,7 @@ const CrewScheduling = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<CrewProject[]>([]);
   const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
   const [assignments, setAssignments] = useState<CrewAssignment[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -142,7 +149,7 @@ const CrewScheduling = () => {
       // Load crew assignments for selected date
       await loadAssignments();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -184,7 +191,7 @@ const CrewScheduling = () => {
       }));
 
       setAssignments(formattedAssignments);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading assignments:', error);
     }
   };
@@ -262,7 +269,7 @@ const CrewScheduling = () => {
       // Reload assignments
       await loadAssignments();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating assignment:', error);
       toast({
         variant: "destructive",
@@ -287,7 +294,7 @@ const CrewScheduling = () => {
       });
 
       await loadAssignments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating assignment:', error);
       toast({
         variant: "destructive",
@@ -312,7 +319,7 @@ const CrewScheduling = () => {
       });
 
       await loadAssignments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting assignment:', error);
       toast({
         variant: "destructive",
@@ -390,7 +397,7 @@ const CrewScheduling = () => {
                           <SelectValue placeholder="Select project" />
                         </SelectTrigger>
                         <SelectContent>
-                          {projects.map((project: any) => (
+                          {projects.map((project: CrewProject) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.name}
                             </SelectItem>

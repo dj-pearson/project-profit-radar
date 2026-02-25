@@ -323,6 +323,12 @@ All colors MUST be HSL.
   scroll-behavior: auto !important;
 }
 
+/* Global Focus Indicators - all interactive elements */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 /* Enhanced Focus Indicators */
 .enhanced-focus *:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring-color);

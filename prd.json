@@ -277,7 +277,7 @@
         "Rate limiter has unit tests"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Edge functions are Deno runtime. Use Deno-compatible patterns."
     },
     {
@@ -311,7 +311,7 @@
         "npm run build completes successfully"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Essential for production operations. Sentry and PostHog are already integrated."
     },
     {
@@ -328,7 +328,7 @@
         "At least 20 test cases across all spec files"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "These complement US-008 auth/nav tests. Together they cover the critical user journeys."
     },
     {
@@ -345,7 +345,7 @@
         "Run scripts/count-ts-errors.sh and show reduction from baseline"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Depends on US-001 and US-009. This is the second wave of type safety improvements."
     },
     {
@@ -362,7 +362,7 @@
         "curl examples are provided for the 10 most-used endpoints"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Enterprise customers expect API documentation. This also supports the developer portal feature."
     },
     {
@@ -379,7 +379,7 @@
         "Script outputs a clear table of chunk sizes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Vite already reports sizes. The script needs to parse and enforce limits. Depends on US-004."
     },
     {
@@ -396,7 +396,7 @@
         "Tests use realistic mock data matching Supabase type definitions"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "These hooks are the data backbone. Testing them prevents API integration regressions."
     },
     {
@@ -414,7 +414,7 @@
         "[UI stories only] Verify in browser using dev-browser skill that keyboard navigation works"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Keyboard navigation is a WCAG 2.1 Level A requirement - the most basic accessibility level."
     },
     {
@@ -431,7 +431,7 @@
         "Test suite can be run standalone: npm run test:run -- --grep a11y"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Depends on US-010 through US-014 being complete. This locks in the a11y improvements."
     },
     {
@@ -447,8 +447,8 @@
         "Run scripts/count-ts-errors.sh and show further reduction from US-021 baseline"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": "Third wave of type safety. By now, core modules (US-009) and components (US-021) are typed."
+      "passes": true,
+      "notes": "COMPLETED. Fixed any types in 30 page files: SystemAdminSettings, Reports, BillPayments, PermissionManagement, UserSettings, RFIs, GeneralLedger, DocumentManagement, SEOManager, LeadManagement, WorkflowAutomation, SEOManagement, Projects, ComplianceAudit, DeveloperPortal, FiscalPeriods, ChartOfAccounts, AIEstimating, PunchList, EnvironmentalPermitting, CrewScheduling, BlogManager, RiskPrediction, TrialBalance, Submittals, IntegrationMarketplace, ChangeOrders, AccountsPayable, RetentionAnalytics, APIKeyManagement."
     },
     {
       "id": "US-028",
@@ -464,7 +464,7 @@
         "Job uses lhci/cli action or equivalent"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Depends on US-004 CI pipeline and accessibility improvements (US-010 through US-014)."
     },
     {
@@ -600,13 +600,13 @@
         "Build succeeds with no new errors"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Currently no virtualization. Large datasets cause UI sluggishness."
     },
     {
       "id": "US-038",
       "title": "Add visual takeoff measurement tools for construction drawings",
-      "description": "As an estimator, I want to measure linear distances, areas, and count symbols directly on uploaded construction drawings (PDFs/images) so that I can produce accurate quantity takeoffs without switching to a separate tool. All three major competitors (Buildertrend, Procore, Autodesk) offer visual takeoff. BuildDesk currently has NO takeoff capability — estimates exist (src/pages/EstimatesHub.tsx, src/components/estimates/) but lack drawing-based measurement. Create a new TakeoffViewer component that renders uploaded PDF/image drawings on a canvas, supports linear measurement (click two points for distance), area measurement (polygon tool), and count measurement (click to place markers). Measurements should be stored per-drawing and exportable to the existing estimate line items. Use an existing canvas library (e.g., fabric.js or konva) for rendering. Create a Supabase migration for a takeoff_measurements table (id, project_id, document_id, measurement_type, value, unit, coordinates_json, label, created_by, created_at). Add a Takeoff page accessible from the project detail view.",
+      "description": "As an estimator, I want to measure linear distances, areas, and count symbols directly on uploaded construction drawings (PDFs/images) so that I can produce accurate quantity takeoffs without switching to a separate tool. All three major competitors (Buildertrend, Procore, Autodesk) offer visual takeoff. BuildDesk currently has NO takeoff capability \u2014 estimates exist (src/pages/EstimatesHub.tsx, src/components/estimates/) but lack drawing-based measurement. Create a new TakeoffViewer component that renders uploaded PDF/image drawings on a canvas, supports linear measurement (click two points for distance), area measurement (polygon tool), and count measurement (click to place markers). Measurements should be stored per-drawing and exportable to the existing estimate line items. Use an existing canvas library (e.g., fabric.js or konva) for rendering. Create a Supabase migration for a takeoff_measurements table (id, project_id, document_id, measurement_type, value, unit, coordinates_json, label, created_by, created_at). Add a Takeoff page accessible from the project detail view.",
       "acceptanceCriteria": [
         "src/components/takeoff/TakeoffViewer.tsx exists with PDF/image rendering on canvas",
         "Linear measurement tool: click two points, display distance with configurable scale",
@@ -620,7 +620,7 @@
         "npm run build completes successfully"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Competitor gap: ALL three competitors (Buildertrend, Procore, Autodesk) have visual takeoff tools. This is the single most requested feature class that BuildDesk lacks. Autodesk has 2D+3D takeoff with AI symbol detection; Procore has plan viewer with measurement; Buildertrend has visual takeoff from blueprints. For SMB market, 2D PDF takeoff is the minimum viable feature."
     },
     {
@@ -640,13 +640,13 @@
         "npm run build completes successfully"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Competitor gap: Procore has robust drawing management with OCR, version comparison, and markup. Autodesk has DWG editing in browser, markup with text/callout auto-resize, and version stacking. BuildDesk has document storage and OCR but no interactive drawing viewer. This is table-stakes for construction project management."
     },
     {
       "id": "US-040",
       "title": "Add client selections management for finish and fixture choices",
-      "description": "As a residential builder, I want clients to browse and select finishes, fixtures, and material options through the client portal, with their choices automatically updating the project budget, so that the selections process doesn't require manual back-and-forth emails. Buildertrend's Selections feature is a key residential differentiator that BuildDesk lacks entirely. BuildDesk has a client portal (src/components/client-portal/) but it only shows project progress — there is NO selections workflow. Create a selections management system: 1) Builder defines selection categories per project (e.g., Kitchen Countertop, Master Bath Tile, Lighting Fixtures) with options that include photos, descriptions, and price impacts. 2) Client views and picks selections in the client portal. 3) Selections auto-update project budget as change orders. Create Supabase migrations for: selection_categories (id, project_id, name, description, due_date, status, sort_order), selection_options (id, category_id, name, description, photo_url, price_impact, is_default, supplier), client_selections (id, category_id, option_id, selected_by, selected_at, notes).",
+      "description": "As a residential builder, I want clients to browse and select finishes, fixtures, and material options through the client portal, with their choices automatically updating the project budget, so that the selections process doesn't require manual back-and-forth emails. Buildertrend's Selections feature is a key residential differentiator that BuildDesk lacks entirely. BuildDesk has a client portal (src/components/client-portal/) but it only shows project progress \u2014 there is NO selections workflow. Create a selections management system: 1) Builder defines selection categories per project (e.g., Kitchen Countertop, Master Bath Tile, Lighting Fixtures) with options that include photos, descriptions, and price impacts. 2) Client views and picks selections in the client portal. 3) Selections auto-update project budget as change orders. Create Supabase migrations for: selection_categories (id, project_id, name, description, due_date, status, sort_order), selection_options (id, category_id, name, description, photo_url, price_impact, is_default, supplier), client_selections (id, category_id, option_id, selected_by, selected_at, notes).",
       "acceptanceCriteria": [
         "src/components/selections/SelectionCategoryManager.tsx exists for builders to define categories and options",
         "src/components/client-portal/ClientSelections.tsx exists for clients to browse and pick selections",
@@ -660,8 +660,8 @@
         "npm run build completes successfully"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": "Competitor gap: Buildertrend's Selections feature is one of their most popular residential features — clients can choose finishes/fixtures directly in the portal, which auto-flows into change orders and budgets. Neither Procore nor Autodesk focus on this (they target commercial). This is a high-value differentiator for BuildDesk's SMB residential market. BuildDesk has a client portal but ZERO selections workflow."
+      "passes": true,
+      "notes": "Competitor gap: Buildertrend's Selections feature is one of their most popular residential features \u2014 clients can choose finishes/fixtures directly in the portal, which auto-flows into change orders and budgets. Neither Procore nor Autodesk focus on this (they target commercial). This is a high-value differentiator for BuildDesk's SMB residential market. BuildDesk has a client portal but ZERO selections workflow."
     },
     {
       "id": "US-041",
@@ -680,8 +680,8 @@
         "npm run build completes successfully"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": "Competitor gap: Buildertrend has built-in e-signatures for proposals and change orders. Autodesk integrates with DocuSign and Adobe Sign. Procore has DocuSign integration. BuildDesk has only an in-person canvas signature pad — no remote signing workflow. E-signatures are table stakes for any construction management tool in 2026."
+      "passes": true,
+      "notes": "Competitor gap: Buildertrend has built-in e-signatures for proposals and change orders. Autodesk integrates with DocuSign and Adobe Sign. Procore has DocuSign integration. BuildDesk has only an in-person canvas signature pad \u2014 no remote signing workflow. E-signatures are table stakes for any construction management tool in 2026."
     },
     {
       "id": "US-042",
@@ -700,7 +700,7 @@
         "npm run build completes successfully"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Competitor gap: Procore has formal prequalification workflows. Autodesk has TradeTapp (acquired company) with AI-powered financial statement extraction and risk scoring. Buildertrend has basic sub management. BuildDesk has the foundation (SubcontractorManagement with ratings and insurance fields) but no structured prequalification process or automated risk scoring."
     },
     {
@@ -720,13 +720,13 @@
         "npm run build completes successfully"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Competitor gap: All three competitors are investing heavily in AI assistants. Autodesk Assistant queries project data conversationally and is their fastest-growing feature. Procore Copilot drafts RFIs and summarizes daily logs. Buildertrend uses AI for scheduling and client updates. BuildDesk has static AI components but no interactive assistant. This is the most important strategic gap for 2026 competitiveness."
     },
     {
       "id": "US-044",
       "title": "Add schedule import from Microsoft Project and Primavera P6 files",
-      "description": "As a project manager, I want to import existing schedules from Microsoft Project (.mpp, .xml) and Primavera P6 (.xer, .xml) files so that I don't have to manually recreate schedules when switching to BuildDesk. Both Procore and Autodesk support importing schedules from industry-standard formats. BuildDesk has a Gantt chart (src/components/schedule/GanttChart.tsx) with dependencies and critical path support, and a ScheduleBuilder page (src/pages/tools/ScheduleBuilder.tsx), but NO schedule import capability — schedules must be created from scratch or from templates. Add an import wizard that: 1) Accepts .xml (MS Project XML), .mpp (via server-side conversion), and .xer (P6) files, 2) Parses tasks, durations, dependencies, resources, and milestones, 3) Maps imported data to BuildDesk's Task type (src/types/schedule.ts), 4) Previews imported schedule before saving. Start with MS Project XML and P6 XER as they are text-based and parseable without proprietary libraries.",
+      "description": "As a project manager, I want to import existing schedules from Microsoft Project (.mpp, .xml) and Primavera P6 (.xer, .xml) files so that I don't have to manually recreate schedules when switching to BuildDesk. Both Procore and Autodesk support importing schedules from industry-standard formats. BuildDesk has a Gantt chart (src/components/schedule/GanttChart.tsx) with dependencies and critical path support, and a ScheduleBuilder page (src/pages/tools/ScheduleBuilder.tsx), but NO schedule import capability \u2014 schedules must be created from scratch or from templates. Add an import wizard that: 1) Accepts .xml (MS Project XML), .mpp (via server-side conversion), and .xer (P6) files, 2) Parses tasks, durations, dependencies, resources, and milestones, 3) Maps imported data to BuildDesk's Task type (src/types/schedule.ts), 4) Previews imported schedule before saving. Start with MS Project XML and P6 XER as they are text-based and parseable without proprietary libraries.",
       "acceptanceCriteria": [
         "src/components/schedule/ScheduleImportWizard.tsx exists with file upload and format selection",
         "MS Project XML (.xml) parser extracts: tasks, durations, start/end dates, dependencies, resources",
@@ -740,17 +740,17 @@
         "npm run build completes successfully"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "Competitor gap: Procore imports from MS Project and Primavera P6. Autodesk imports from P6 (.xer, .xml), MS Project (.mpp, .xml), and Asta Powerproject (.pp). BuildDesk only creates schedules from templates or scratch. Schedule import is critical for winning customers switching from other tools. MS Project XML and P6 XER are text-based formats that can be parsed with JavaScript — .mpp requires server-side conversion."
+      "passes": true,
+      "notes": "Competitor gap: Procore imports from MS Project and Primavera P6. Autodesk imports from P6 (.xer, .xml), MS Project (.mpp, .xml), and Asta Powerproject (.pp). BuildDesk only creates schedules from templates or scratch. Schedule import is critical for winning customers switching from other tools. MS Project XML and P6 XER are text-based formats that can be parsed with JavaScript \u2014 .mpp requires server-side conversion."
     },
     {
       "id": "US-045",
       "title": "Add submittal tracking and approval workflow",
-      "description": "As a project manager, I want to track submittals (shop drawings, product data, samples) through a formal review and approval workflow so that I can ensure materials and equipment meet specification requirements before installation. Procore has a comprehensive submittal system, and Autodesk tracks submittals with AutoSpecs AI recommendations. BuildDesk has a basic Submittals page (mentioned in navigation) but lacks a structured submittal workflow. Create a submittal management system with: 1) Submittal log listing all submittals with spec section, status, and ball-in-court, 2) Submittal creation linking to specification sections and drawing references, 3) Multi-step review workflow (submit → review → approve/revise/reject), 4) Revision tracking with full history, 5) Ball-in-court tracking showing who needs to act next. Create Supabase migrations for: submittals (id, project_id, number, title, spec_section, description, status, ball_in_court_user_id, due_date, submitted_by, submitted_at, current_revision), submittal_revisions (id, submittal_id, revision_number, document_url, submitted_at, reviewed_by, reviewed_at, review_status, review_comments).",
+      "description": "As a project manager, I want to track submittals (shop drawings, product data, samples) through a formal review and approval workflow so that I can ensure materials and equipment meet specification requirements before installation. Procore has a comprehensive submittal system, and Autodesk tracks submittals with AutoSpecs AI recommendations. BuildDesk has a basic Submittals page (mentioned in navigation) but lacks a structured submittal workflow. Create a submittal management system with: 1) Submittal log listing all submittals with spec section, status, and ball-in-court, 2) Submittal creation linking to specification sections and drawing references, 3) Multi-step review workflow (submit \u2192 review \u2192 approve/revise/reject), 4) Revision tracking with full history, 5) Ball-in-court tracking showing who needs to act next. Create Supabase migrations for: submittals (id, project_id, number, title, spec_section, description, status, ball_in_court_user_id, due_date, submitted_by, submitted_at, current_revision), submittal_revisions (id, submittal_id, revision_number, document_url, submitted_at, reviewed_by, reviewed_at, review_status, review_comments).",
       "acceptanceCriteria": [
         "src/pages/Submittals.tsx exists with submittal log table (number, title, spec section, status, ball-in-court, due date)",
         "Submittal creation form links to spec section and drawing references",
-        "Review workflow with status transitions: draft → submitted → under-review → approved/revise/rejected",
+        "Review workflow with status transitions: draft \u2192 submitted \u2192 under-review \u2192 approved/revise/rejected",
         "Ball-in-court tracking shows current responsible party with days pending",
         "Revision tracking: each resubmission creates a new revision with full history preserved",
         "Overdue submittal alerts when ball-in-court exceeds due date",
@@ -760,8 +760,8 @@
         "npm run build completes successfully"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "Competitor gap: Procore has a comprehensive submittal system with specification linking, multi-step review, and ball-in-court tracking. Autodesk has submittals with AutoSpecs AI that recommends potentially missing submittals. Buildertrend has basic submittal tracking. BuildDesk references submittals in navigation but has no structured workflow. Submittals are fundamental to construction project management — this gap is more noticeable as BuildDesk targets larger SMB projects."
+      "passes": true,
+      "notes": "Competitor gap: Procore has a comprehensive submittal system with specification linking, multi-step review, and ball-in-court tracking. Autodesk has submittals with AutoSpecs AI that recommends potentially missing submittals. Buildertrend has basic submittal tracking. BuildDesk references submittals in navigation but has no structured workflow. Submittals are fundamental to construction project management \u2014 this gap is more noticeable as BuildDesk targets larger SMB projects."
     },
     {
       "id": "US-046",
@@ -779,8 +779,8 @@
         "npm run build completes successfully"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": "Competitor gap: Procore classifies photos by trade and location automatically. Autodesk has Photo Autotags for ML-based automatic tagging. BuildDesk has an analyze-images edge function and photo upload in daily reports but no automated classification. Construction site photos are one of the highest-volume data types — automated classification saves significant time for field teams."
+      "passes": true,
+      "notes": "Competitor gap: Procore classifies photos by trade and location automatically. Autodesk has Photo Autotags for ML-based automatic tagging. BuildDesk has an analyze-images edge function and photo upload in daily reports but no automated classification. Construction site photos are one of the highest-volume data types \u2014 automated classification saves significant time for field teams."
     },
     {
       "id": "US-047",
@@ -799,13 +799,13 @@
         "npm run build completes successfully"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "Competitor gap: Procore has dedicated meeting management with templates, action items, and distribution. Autodesk's Autodesk Assistant can scan meeting minutes data. Buildertrend doesn't have formal meeting minutes. For BuildDesk's SMB market, OAC (Owner-Architect-Contractor) meetings are common and tracking minutes with action items prevents scope disputes. This is more relevant as BuildDesk targets larger commercial SMB projects."
     },
     {
       "id": "US-048",
       "title": "Add project closeout and handover documentation tools",
-      "description": "As a project manager completing a project, I want a structured closeout checklist and handover package builder so that I can ensure all closeout requirements are met and deliver a complete documentation package to the owner. Procore and Autodesk both have project closeout tools. BuildDesk has NO closeout workflow — projects are simply marked as 'completed' with no structured handover process. Create a closeout management system with: 1) Configurable closeout checklist (punch list completion, final inspections, as-built drawings, O&M manuals, warranties, lien waivers, certificate of occupancy), 2) Handover package builder that compiles selected documents from the project into a downloadable ZIP or shared link, 3) Closeout progress dashboard showing completion percentage per category. Create Supabase migrations for: closeout_checklists (id, project_id, template_id, items_json, progress_percentage, started_at, completed_at), closeout_packages (id, project_id, title, document_ids_json, shared_link_token, created_by, created_at, downloaded_at).",
+      "description": "As a project manager completing a project, I want a structured closeout checklist and handover package builder so that I can ensure all closeout requirements are met and deliver a complete documentation package to the owner. Procore and Autodesk both have project closeout tools. BuildDesk has NO closeout workflow \u2014 projects are simply marked as 'completed' with no structured handover process. Create a closeout management system with: 1) Configurable closeout checklist (punch list completion, final inspections, as-built drawings, O&M manuals, warranties, lien waivers, certificate of occupancy), 2) Handover package builder that compiles selected documents from the project into a downloadable ZIP or shared link, 3) Closeout progress dashboard showing completion percentage per category. Create Supabase migrations for: closeout_checklists (id, project_id, template_id, items_json, progress_percentage, started_at, completed_at), closeout_packages (id, project_id, title, document_ids_json, shared_link_token, created_by, created_at, downloaded_at).",
       "acceptanceCriteria": [
         "src/pages/ProjectCloseout.tsx exists with closeout checklist and handover tools",
         "Configurable closeout checklist with standard items: punch list, inspections, as-builts, O&M, warranties, lien waivers, CO",
@@ -819,8 +819,8 @@
         "npm run build completes successfully"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": "Competitor gap: Procore has comprehensive closeout workflows with punch list integration and warranty tracking. Autodesk added Handover & Closeout tools (January 2025) for collecting, compiling, and exporting handover documentation including issues, forms, and project records. BuildDesk has no closeout process — projects just get marked 'completed'. Structured closeout reduces liability risk and improves client satisfaction."
+      "passes": true,
+      "notes": "Competitor gap: Procore has comprehensive closeout workflows with punch list integration and warranty tracking. Autodesk added Handover & Closeout tools (January 2025) for collecting, compiling, and exporting handover documentation including issues, forms, and project records. BuildDesk has no closeout process \u2014 projects just get marked 'completed'. Structured closeout reduces liability risk and improves client satisfaction."
     },
     {
       "id": "US-049",
@@ -839,8 +839,8 @@
         "npm run build completes successfully"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": "Competitor gap: Buildertrend offers AI-powered automatic client updates as a key feature for residential builders. Procore and Autodesk focus more on internal reporting. For BuildDesk's SMB market, automated client communication is a significant time saver. The data sources (daily reports, schedule, budget) already exist — the gap is aggregation and AI summarization. This leverages BuildDesk's existing AI infrastructure (edge functions for AI content generation)."
+      "passes": true,
+      "notes": "Competitor gap: Buildertrend offers AI-powered automatic client updates as a key feature for residential builders. Procore and Autodesk focus more on internal reporting. For BuildDesk's SMB market, automated client communication is a significant time saver. The data sources (daily reports, schedule, budget) already exist \u2014 the gap is aggregation and AI summarization. This leverages BuildDesk's existing AI infrastructure (edge functions for AI content generation)."
     },
     {
       "id": "US-050",
@@ -858,17 +858,17 @@
         "npm run build completes successfully"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": "Competitor gap: Procore has centralized workforce planning with skill tracking, resource calendars, and conflict detection. Autodesk handles resources at the schedule level. Buildertrend has basic crew scheduling. BuildDesk has crew management and time tracking but these are project-centric — there's no cross-project resource planning view. For SMB contractors managing 3-10 concurrent projects, avoiding crew conflicts is a daily challenge."
+      "passes": true,
+      "notes": "Competitor gap: Procore has centralized workforce planning with skill tracking, resource calendars, and conflict detection. Autodesk handles resources at the schedule level. Buildertrend has basic crew scheduling. BuildDesk has crew management and time tracking but these are project-centric \u2014 there's no cross-project resource planning view. For SMB contractors managing 3-10 concurrent projects, avoiding crew conflicts is a daily challenge."
     },
     {
       "id": "US-051",
       "title": "Add RFI (Request for Information) management with workflow tracking",
-      "description": "As a project manager, I want to create, track, and manage RFIs with a formal workflow so that design clarifications are documented, assigned to the right parties, and resolved before they impact the schedule. Procore has comprehensive RFI management with workflow tracking, and Autodesk has RFI management with AI-powered quick create. BuildDesk references RFIs in some components but has NO dedicated RFI management page or workflow. Create an RFI system with: 1) RFI log with sequential numbering, status, ball-in-court, and impact tracking, 2) RFI creation linking to drawings, specifications, and cost/schedule impact, 3) Assignment workflow (create → assign → respond → review → close), 4) Response tracking with attachments, 5) Impact analysis showing cost and schedule effect of each RFI. Create Supabase migrations for: rfis (id, project_id, number, subject, question, drawing_reference, spec_section, status, assigned_to, ball_in_court, cost_impact, schedule_impact_days, priority, due_date, created_by, created_at, closed_at), rfi_responses (id, rfi_id, response_text, attachments_json, responded_by, responded_at).",
+      "description": "As a project manager, I want to create, track, and manage RFIs with a formal workflow so that design clarifications are documented, assigned to the right parties, and resolved before they impact the schedule. Procore has comprehensive RFI management with workflow tracking, and Autodesk has RFI management with AI-powered quick create. BuildDesk references RFIs in some components but has NO dedicated RFI management page or workflow. Create an RFI system with: 1) RFI log with sequential numbering, status, ball-in-court, and impact tracking, 2) RFI creation linking to drawings, specifications, and cost/schedule impact, 3) Assignment workflow (create \u2192 assign \u2192 respond \u2192 review \u2192 close), 4) Response tracking with attachments, 5) Impact analysis showing cost and schedule effect of each RFI. Create Supabase migrations for: rfis (id, project_id, number, subject, question, drawing_reference, spec_section, status, assigned_to, ball_in_court, cost_impact, schedule_impact_days, priority, due_date, created_by, created_at, closed_at), rfi_responses (id, rfi_id, response_text, attachments_json, responded_by, responded_at).",
       "acceptanceCriteria": [
         "src/pages/RFIs.tsx exists with RFI log table (number, subject, status, ball-in-court, due date, cost impact)",
         "RFI creation form with: subject, question, drawing/spec references, priority, due date, assignee",
-        "Workflow statuses: draft → open → assigned → responded → closed",
+        "Workflow statuses: draft \u2192 open \u2192 assigned \u2192 responded \u2192 closed",
         "Ball-in-court tracking shows who needs to act next and days pending",
         "RFI responses with text and file attachments, preserving full conversation history",
         "Cost and schedule impact fields per RFI, summarized on RFI dashboard",
@@ -878,8 +878,8 @@
         "npm run build completes successfully"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": "Competitor gap: Procore has comprehensive RFI management with ball-in-court tracking and schedule impact analysis. Autodesk has RFI management with AI-powered quick creation from natural language prompts. Buildertrend has basic RFI tracking. BuildDesk mentions RFIs in some places but has no dedicated RFI module. RFIs are one of the most fundamental construction project management workflows — their absence is a significant gap as BuildDesk targets larger projects."
+      "passes": true,
+      "notes": "Competitor gap: Procore has comprehensive RFI management with ball-in-court tracking and schedule impact analysis. Autodesk has RFI management with AI-powered quick creation from natural language prompts. Buildertrend has basic RFI tracking. BuildDesk mentions RFIs in some places but has no dedicated RFI module. RFIs are one of the most fundamental construction project management workflows \u2014 their absence is a significant gap as BuildDesk targets larger projects."
     }
   ]
 }

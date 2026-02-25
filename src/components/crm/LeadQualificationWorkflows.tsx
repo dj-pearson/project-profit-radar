@@ -30,9 +30,9 @@ interface QualificationWorkflow {
   id: string;
   workflow_name: string;
   description?: string;
-  trigger_events: any;
-  qualification_criteria: any;
-  workflow_steps: any;
+  trigger_events: string[];
+  qualification_criteria: Record<string, unknown>;
+  workflow_steps: WorkflowStep[];
   qualified_status: string;
   disqualified_status: string;
   auto_route_qualified: boolean;
@@ -53,7 +53,7 @@ interface WorkflowStep {
   id: string;
   type: string;
   action: string;
-  conditions: Record<string, any>;
+  conditions: Record<string, unknown>;
   auto_execute: boolean;
   delay_minutes?: number;
 }
@@ -107,10 +107,10 @@ export const LeadQualificationWorkflows: React.FC = () => {
         qualification_criteria: typeof workflow.qualification_criteria === 'object' ? workflow.qualification_criteria : {},
         workflow_steps: Array.isArray(workflow.workflow_steps) ? workflow.workflow_steps : []
       })));
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error loading workflows",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     } finally {
@@ -162,10 +162,10 @@ export const LeadQualificationWorkflows: React.FC = () => {
       });
 
       await loadWorkflows();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error creating workflow",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     } finally {
@@ -188,10 +188,10 @@ export const LeadQualificationWorkflows: React.FC = () => {
       });
 
       await loadWorkflows();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error updating workflow",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive"
       });
     }
@@ -204,7 +204,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
     ]);
   };
 
-  const updateCriteria = (index: number, field: keyof WorkflowCriteria, value: any) => {
+  const updateCriteria = (index: number, field: keyof WorkflowCriteria, value: string | number) => {
     const updated = [...criteriaList];
     updated[index] = { ...updated[index], [field]: value };
     setCriteriaList(updated);
@@ -225,7 +225,7 @@ export const LeadQualificationWorkflows: React.FC = () => {
     setWorkflowSteps([...workflowSteps, newStep]);
   };
 
-  const updateWorkflowStep = (index: number, field: keyof WorkflowStep, value: any) => {
+  const updateWorkflowStep = (index: number, field: keyof WorkflowStep, value: string | boolean | number | Record<string, unknown>) => {
     const updated = [...workflowSteps];
     updated[index] = { ...updated[index], [field]: value };
     setWorkflowSteps(updated);
