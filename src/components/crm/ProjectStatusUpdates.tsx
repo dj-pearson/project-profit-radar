@@ -34,8 +34,8 @@ interface ProjectStatusUpdate {
   description: string;
   status_type: string;
   visibility: string;
-  images: any;
-  attachments: any;
+  images: string[] | null;
+  attachments: string[] | null;
   is_published: boolean;
   published_at: string | null;
   created_at: string;
@@ -95,10 +95,10 @@ export const ProjectStatusUpdates = () => {
 
       if (projectsError) throw projectsError;
 
-      setUpdates((updatesData as any) || []);
-      setProjects((projectsData as any) || []);
+      setUpdates((updatesData as unknown as ProjectStatusUpdate[]) || []);
+      setProjects((projectsData as unknown as Project[]) || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading status updates:', error);
       toast({
         variant: "destructive",
@@ -153,7 +153,7 @@ export const ProjectStatusUpdates = () => {
 
       loadStatusUpdates();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating status update:', error);
       toast({
         variant: "destructive",
@@ -182,7 +182,7 @@ export const ProjectStatusUpdates = () => {
 
       loadStatusUpdates();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating publish status:', error);
       toast({
         variant: "destructive",

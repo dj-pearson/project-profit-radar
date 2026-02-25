@@ -243,7 +243,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       if (costCodesError) throw costCodesError;
       setCostCodes(costCodesData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -268,7 +268,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
       if (costsError) throw costsError;
       setJobCosts(costsData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading job costs:', error);
       toast({
         variant: "destructive",
@@ -280,7 +280,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
     }
   };
 
-  const handleRealTimeUpdate = useCallback((payload: any) => {
+  const handleRealTimeUpdate = useCallback((payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }) => {
     console.time('handleRealTimeUpdate');
     const { eventType, new: newRecord, old: oldRecord } = payload;
     
@@ -394,7 +394,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         description: `Job cost of $${totalCost.toLocaleString()} has been added`
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding job cost:', error);
       toast({
         variant: "destructive",
@@ -479,7 +479,7 @@ const RealTimeJobCosting: React.FC<RealTimeJobCostingProps> = ({ projectId }) =>
         description: "Job cost has been successfully updated"
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating job cost:', error);
       toast({
         variant: "destructive",

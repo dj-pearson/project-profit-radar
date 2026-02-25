@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 // Webhook endpoints from Stripe don't need CORS (server-to-server)
 // But we keep minimal headers for potential health checks
@@ -39,6 +40,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Rate limit: 200 req/min per IP for webhook endpoints
+    const clientIP = getClientIP(req);
+    const rlResult = await checkRateLimit(supabaseClient, {
+      identifier: clientIP, endpoint: 'stripe-webhook', ...RATE_LIMITS.WEBHOOK
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
 
     const signature = req.headers.get("stripe-signature");
     if (!signature) {

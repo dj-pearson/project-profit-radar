@@ -89,7 +89,7 @@ export const CashFlowForecasting: React.FC = () => {
       summaryData.variance = summaryData.actualCashFlow - summaryData.projectedCashFlow;
 
       setSummary(summaryData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading cash flow data:', error);
       toast({
         variant: "destructive",
@@ -126,7 +126,7 @@ export const CashFlowForecasting: React.FC = () => {
       });
 
       loadCashFlowData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating forecasts:', error);
       toast({
         variant: "destructive",
@@ -182,7 +182,7 @@ export const CashFlowForecasting: React.FC = () => {
                   key={period}
                   variant={selectedPeriod === period ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setSelectedPeriod(period as any)}
+                  onClick={() => setSelectedPeriod(period as '30' | '90' | '180')}
                   className="rounded-none first:rounded-l-md last:rounded-r-md"
                 >
                   {period} days

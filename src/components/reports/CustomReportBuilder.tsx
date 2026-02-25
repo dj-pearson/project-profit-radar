@@ -127,7 +127,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
     ...initialConfig
   });
 
-  const [reportData, setReportData] = useState<any[]>([]);
+  const [reportData, setReportData] = useState<Record<string, unknown>[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
@@ -211,7 +211,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
     }
   };
 
-  const generateRealData = async (config: ReportConfig): Promise<any[]> => {
+  const generateRealData = async (config: ReportConfig): Promise<Record<string, unknown>[]> => {
     try {
       if (!userProfile?.company_id) {
         throw new Error('No company found');
@@ -272,7 +272,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
   const generateMockData = (config: ReportConfig) => {
     const dataCount = Math.floor(Math.random() * 20) + 10;
     return Array.from({ length: dataCount }, (_, i) => {
-      const item: any = {};
+      const item: Record<string, string | number | boolean> = {};
       config.fields.forEach(field => {
         switch (field.type) {
           case 'string':
@@ -463,8 +463,8 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                 <Label htmlFor="dataSource">Data Source</Label>
                 <Select
                   value={config.dataSource}
-                  onValueChange={(value: any) => setConfig(prev => ({ 
-                    ...prev, 
+                  onValueChange={(value: ReportConfig['dataSource']) => setConfig(prev => ({
+                    ...prev,
                     dataSource: value,
                     fields: [],
                     filters: []
@@ -551,7 +551,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                       </Select>
                       <Select
                         value={filter.operator}
-                        onValueChange={(value: any) => updateFilter(index, { operator: value })}
+                        onValueChange={(value: ReportFilter['operator']) => updateFilter(index, { operator: value })}
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />
@@ -596,7 +596,7 @@ export const CustomReportBuilder: React.FC<CustomReportBuilderProps> = ({
                       key={value}
                       variant={config.chartType === value ? 'default' : 'outline'}
                       className="flex-col h-16"
-                      onClick={() => setConfig(prev => ({ ...prev, chartType: value as any }))}
+                      onClick={() => setConfig(prev => ({ ...prev, chartType: value as ReportConfig['chartType'] }))}
                     >
                       <Icon className="h-4 w-4 mb-1" />
                       <span className="text-xs">{label}</span>

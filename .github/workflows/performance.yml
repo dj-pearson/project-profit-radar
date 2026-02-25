@@ -1,0 +1,40 @@
+name: Performance Budget Check
+
+on:
+  push:
+    branches: [main, enterprise-production-readiness]
+  pull_request:
+    branches: [main]
+
+jobs:
+  bundle-check:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+
+      - name: Build
+        run: npx vite build
+
+      - name: Check bundle size
+        run: node scripts/check-bundle-size.js
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-report
+          path: dist/assets/
+          retention-days: 7

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 // Using built-in crypto API instead
 
 const corsHeaders = {
@@ -25,6 +26,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // Rate limit: 100 req/min per IP for general API
+    const clientIP = getClientIP(req);
+    const rlResult = await checkRateLimit(supabase, {
+      identifier: clientIP, endpoint: 'api-management', ...RATE_LIMITS.GENERAL
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
 
     const url = new URL(req.url);
     const pathname = url.pathname;

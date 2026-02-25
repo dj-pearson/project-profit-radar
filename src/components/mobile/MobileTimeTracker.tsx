@@ -32,7 +32,7 @@ import { Geolocation } from '@capacitor/geolocation';
 
 interface MobileTimeTrackerProps {
   projectId?: string;
-  onTimeEntryChange?: (entry: any) => void;
+  onTimeEntryChange?: (entry: TimeEntry | null) => void;
 }
 
 interface TimeEntry {
@@ -86,13 +86,34 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
   const [breakStartTime, setBreakStartTime] = useState<Date | null>(null);
   
   // Location state
-  const [location, setLocation] = useState<any>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
   const [isInGeofence, setIsInGeofence] = useState<boolean | null>(null);
   
   // Project & task state
-  const [projects, setProjects] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [costCodes, setCostCodes] = useState<any[]>([]);
+  interface ProjectOption {
+    id: string;
+    name: string;
+    client_name: string;
+    site_address?: string;
+    site_latitude?: number | null;
+    site_longitude?: number | null;
+    geofence_radius_meters?: number;
+  }
+  interface TaskOption {
+    id: string;
+    name: string;
+    status: string;
+  }
+  interface CostCodeOption {
+    id: string;
+    code: string;
+    name: string;
+    category?: string;
+    is_active?: boolean;
+  }
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [tasks, setTasks] = useState<TaskOption[]>([]);
+  const [costCodes, setCostCodes] = useState<CostCodeOption[]>([]);
   const [selectedProject, setSelectedProject] = useState(projectId || '');
   const [selectedTask, setSelectedTask] = useState('');
   const [selectedCostCode, setSelectedCostCode] = useState('');
@@ -279,7 +300,7 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      setDailyEntries((data || []) as any as TimeEntry[]);
+      setDailyEntries((data || []) as unknown as TimeEntry[]);
     } catch (error) {
       console.error('Error loading daily entries:', error);
     }
@@ -359,12 +380,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       if (error) throw error;
 
       if (data) {
-        setCurrentEntry(data as any as TimeEntry);
+        setCurrentEntry(data as unknown as TimeEntry);
         setIsTracking(true);
         setSelectedProject(data.project_id);
         setSelectedTask(data.task_id || '');
         setSelectedCostCode(data.cost_code_id || '');
-        setNotes((data as any).notes || '');
+        setNotes((data as unknown as TimeEntry).notes || '');
         
         const startTime = new Date(data.start_time);
         const now = new Date();
@@ -414,12 +435,12 @@ const MobileTimeTracker: React.FC<MobileTimeTrackerProps> = ({
       if (isOnline) {
         const { data, error } = await supabase
           .from('time_entries')
-          .insert(entryData as any)
+          .insert(entryData as unknown as Record<string, unknown>)
           .select()
           .single();
 
         if (error) throw error;
-        setCurrentEntry(data as any as TimeEntry);
+        setCurrentEntry(data as unknown as TimeEntry);
       } else {
         await saveOfflineData('time_entry', entryData);
         setCurrentEntry({ ...entryData, id: `offline_${Date.now()}` } as TimeEntry);

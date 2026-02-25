@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -214,6 +215,86 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
       ),
     },
   ];
+
+  const VIRTUALIZE_THRESHOLD = 50;
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: invoices.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 56,
+    overscan: 10,
+    enabled: invoices.length > VIRTUALIZE_THRESHOLD,
+  });
+
+  // For large lists, use virtualized rendering
+  if (invoices.length > VIRTUALIZE_THRESHOLD) {
+    return (
+      <>
+        <div ref={parentRef} style={{ maxHeight: '70vh', overflow: 'auto' }}>
+          <table className="w-full caption-bottom text-sm">
+            <thead className="sticky top-0 bg-background z-10 [&_tr]:border-b">
+              <tr>
+                {invoiceColumns.map((col) => (
+                  <th key={String(col.key)} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                    {typeof col.headerRender === 'function' ? col.headerRender() : col.header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ height: `${virtualizer.getTotalSize()}px` }}>
+                <td colSpan={invoiceColumns.length} style={{ padding: 0, position: 'relative' }}>
+                  {virtualizer.getVirtualItems().map((virtualRow) => {
+                    const invoice = invoices[virtualRow.index];
+                    return (
+                      <div
+                        key={virtualRow.key}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          borderBottom: '1px solid hsl(var(--border))',
+                        }}
+                      >
+                        {invoiceColumns.map((col) => {
+                          const value = invoice[col.key as keyof typeof invoice];
+                          return (
+                            <div key={String(col.key)} className="px-4 flex-1" style={{ textAlign: col.align || 'left' }}>
+                              {col.render ? col.render(value, invoice) : String(value ?? '')}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Payment Dialog */}
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Process Payment</DialogTitle>
+            </DialogHeader>
+            {selectedInvoice && (
+              <PaymentProcessor
+                invoice={selectedInvoice}
+                onPaymentProcessed={handlePaymentProcessed}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <>

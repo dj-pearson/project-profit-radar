@@ -25,6 +25,7 @@ import {
   ResponsiveContainer,
   ResponsiveGrid,
 } from "@/components/layout/ResponsiveContainer";
+import { VirtualizedGrid } from "@/components/ui/virtualized-grid";
 import { TaskManager } from "@/components/tasks/TaskManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -848,14 +849,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {activeProjects.map((project) => (
+            <VirtualizedGrid
+              items={activeProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -873,14 +875,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {completedProjects.map((project) => (
+            <VirtualizedGrid
+              items={completedProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -898,14 +901,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {onHoldProjects.map((project) => (
+            <VirtualizedGrid
+              items={onHoldProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
 
@@ -923,14 +927,15 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <ResponsiveGrid
-              cols={{ default: 1, md: 2, lg: 3 }}
-              className="gap-6"
-            >
-              {planningProjects.map((project) => (
+            <VirtualizedGrid
+              items={planningProjects}
+              renderItem={(project) => (
                 <ProjectCard key={project.id} project={project} />
-              ))}
-            </ResponsiveGrid>
+              )}
+              columns={3}
+              estimateRowHeight={280}
+              virtualizeThreshold={50}
+            />
           )}
         </TabsContent>
       </Tabs>

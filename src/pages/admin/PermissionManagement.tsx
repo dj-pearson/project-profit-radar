@@ -73,7 +73,7 @@ interface PermissionAuditLog {
   resource_id: string;
   changed_by_user_id: string;
   reason: string;
-  metadata: any;
+  metadata: Record<string, string | number | boolean | null>;
   created_at: string;
   user_email?: string;
   changed_by_email?: string;
@@ -143,7 +143,7 @@ export const PermissionManagement = () => {
         })
       );
 
-      setCustomRoles(rolesWithCounts as any);
+      setCustomRoles(rolesWithCounts as CustomRole[]);
 
       // Load user permissions
       const { data: userPermsData, error: userPermsError } = await (supabase as any)
@@ -153,7 +153,7 @@ export const PermissionManagement = () => {
         .limit(50);
 
       if (userPermsError) throw userPermsError;
-      setUserPermissions((userPermsData as any) || []);
+      setUserPermissions((userPermsData as UserPermission[]) || []);
 
       // Load audit logs
       const { data: auditData, error: auditError } = await (supabase as any)
@@ -163,7 +163,7 @@ export const PermissionManagement = () => {
         .limit(100);
 
       if (auditError) throw auditError;
-      setAuditLogs((auditData as any) || []);
+      setAuditLogs((auditData as PermissionAuditLog[]) || []);
     } catch (error) {
       console.error('Failed to load permission data:', error);
       toast({

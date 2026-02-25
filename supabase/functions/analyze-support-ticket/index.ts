@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +55,13 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Rate limit: 20 req/min per IP for AI endpoints
+    const clientIP = getClientIP(req);
+    const rlResult = await checkRateLimit(supabase, {
+      identifier: clientIP, endpoint: 'analyze-support-ticket', ...RATE_LIMITS.AI
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
 
     console.log(`[ANALYZE-TICKET] Analyzing ticket ${ticketId}...`);
 

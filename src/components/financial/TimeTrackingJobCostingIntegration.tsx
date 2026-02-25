@@ -98,7 +98,15 @@ const TimeTrackingJobCostingIntegration = () => {
       if (error) throw error;
 
       // Aggregate time entries by project and cost code
-      const aggregated = timeData?.reduce((acc: any[], entry: any) => {
+      interface TimeEntryRow {
+        project_id: string;
+        cost_code_id: string | null;
+        total_hours: number;
+        start_time: string;
+        projects: { name: string };
+        cost_codes: { id: string; code: string; name: string } | null;
+      }
+      const aggregated = timeData?.reduce((acc: Array<{ key: string; project_id: string; project_name: string; cost_code_id: string | null; cost_code: string; cost_code_name: string; total_hours: number; estimated_labor_rate: number; entry_count: number }>, entry: TimeEntryRow) => {
         const key = `${entry.project_id}-${entry.cost_code_id || 'no-cost-code'}`;
         const existing = acc.find(item => item.key === key);
         
@@ -169,7 +177,7 @@ const TimeTrackingJobCostingIntegration = () => {
         .eq('projects.company_id', userProfile?.company_id);
 
       // Compare and create status
-      const projectTimeHours = timeData?.reduce((acc: any, entry: any) => {
+      const projectTimeHours = timeData?.reduce((acc: Record<string, { project_name: string; hours: number }>, entry: { project_id: string; total_hours: number; projects: { name: string } }) => {
         const projectId = entry.project_id;
         if (!acc[projectId]) {
           acc[projectId] = {
@@ -181,7 +189,7 @@ const TimeTrackingJobCostingIntegration = () => {
         return acc;
       }, {}) || {};
 
-      const projectJobCostHours = jobCostData?.reduce((acc: any, cost: any) => {
+      const projectJobCostHours = jobCostData?.reduce((acc: Record<string, { project_name: string; hours: number; last_sync: string }>, cost: { project_id: string; labor_hours: number; updated_at: string; projects: { name: string } }) => {
         const projectId = cost.project_id;
         if (!acc[projectId]) {
           acc[projectId] = {
@@ -248,7 +256,14 @@ const TimeTrackingJobCostingIntegration = () => {
       if (timeError) throw timeError;
 
       // Group by project, cost code, and date
-      const groupedEntries = timeEntries?.reduce((acc: any, entry: any) => {
+      interface GroupedEntry {
+        project_id: string;
+        cost_code_id: string | null;
+        date: string;
+        total_hours: number;
+        labor_cost: number;
+      }
+      const groupedEntries = timeEntries?.reduce((acc: Record<string, GroupedEntry>, entry: { project_id: string; cost_code_id: string | null; total_hours: number; start_time: string }) => {
         const date = entry.start_time.split('T')[0];
         const key = `${entry.project_id}-${entry.cost_code_id || 'null'}-${date}`;
         
@@ -269,7 +284,7 @@ const TimeTrackingJobCostingIntegration = () => {
       }, {}) || {};
 
       // Insert or update job_costs entries
-      const jobCostUpdates = Object.values(groupedEntries).map((entry: any) => ({
+      const jobCostUpdates = Object.values(groupedEntries).map((entry: GroupedEntry) => ({
         project_id: entry.project_id,
         cost_code_id: entry.cost_code_id,
         date: entry.date,

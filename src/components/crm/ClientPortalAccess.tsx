@@ -88,10 +88,10 @@ export const ClientPortalAccess = () => {
 
       if (projectsError) throw projectsError;
 
-      setPortalAccess((accessData as any) || []);
-      setProjects((projectsData as any) || []);
+      setPortalAccess((accessData as unknown as ClientPortalAccess[]) || []);
+      setProjects((projectsData as unknown as Project[]) || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading portal data:', error);
       toast({
         variant: "destructive",
@@ -131,7 +131,7 @@ export const ClientPortalAccess = () => {
           access_level: newAccess.access_level,
           expires_at: expiresAt,
           created_by: userProfile?.id
-        } as any);
+        });
 
       if (error) throw error;
 
@@ -149,7 +149,7 @@ export const ClientPortalAccess = () => {
 
       loadPortalData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating portal access:', error);
       toast({
         variant: "destructive",
@@ -175,7 +175,7 @@ export const ClientPortalAccess = () => {
 
       loadPortalData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating portal access:', error);
       toast({
         variant: "destructive",
@@ -210,7 +210,7 @@ export const ClientPortalAccess = () => {
 
       loadPortalData();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting portal access:', error);
       toast({
         variant: "destructive",

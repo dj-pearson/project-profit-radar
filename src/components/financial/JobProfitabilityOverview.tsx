@@ -76,7 +76,7 @@ const JobProfitabilityOverview = () => {
       if (projectsError) throw projectsError;
 
       // Get actual job costs for all projects (bypass type inference)
-      const jobCostsResult = await (supabase as any)
+      const jobCostsResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
         .from('job_costs')
         .select('project_id, labor_cost, material_cost, equipment_cost, other_cost')
         .eq('company_id', userProfile?.company_id);
@@ -85,7 +85,7 @@ const JobProfitabilityOverview = () => {
       if (jobCostsError) throw jobCostsError;
 
       // Get actual expenses for all projects  
-      const expensesResult = await (supabase as any)
+      const expensesResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
         .from('expenses')
         .select('project_id, amount')
         .eq('company_id', userProfile?.company_id)
@@ -95,7 +95,7 @@ const JobProfitabilityOverview = () => {
       if (expensesError) throw expensesError;
 
       // Get actual revenue from paid invoices
-      const invoicesResult = await (supabase as any)
+      const invoicesResult = await (supabase as unknown as { from: (table: string) => ReturnType<typeof supabase.from> })
         .from('invoices')
         .select('project_id, amount_paid')
         .eq('company_id', userProfile?.company_id)

@@ -18,6 +18,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/secure-cors.ts';
 import { sendEmail, getSiteEmailConfig } from '../_shared/ses-email-service.ts';
 import { generateAuthEmail, generateOTPCode, AuthEmailType } from '../_shared/auth-email-templates.ts';
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 // Validation schema
 const sendOTPSchema = z.object({
@@ -101,7 +102,14 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Rate limiting check
+    // Shared rate limiter: 10 req/min per IP for auth endpoints
+    const clientIP = getClientIP(req);
+    const rlResult = await checkRateLimit(supabaseAdmin, {
+      identifier: clientIP, endpoint: 'send-auth-otp', ...RATE_LIMITS.AUTH
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, { 'Content-Type': 'application/json', ...corsHeaders });
+
+    // Rate limiting check (per-email, per-type)
     const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW).toISOString();
     const { data: recentTokens, error: rateError } = await supabaseAdmin
       .from('auth_otp_codes')

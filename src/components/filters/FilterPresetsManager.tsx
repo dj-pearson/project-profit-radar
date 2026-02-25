@@ -27,7 +27,7 @@ interface FilterPreset {
   id: string;
   name: string;
   description?: string;
-  filters: any;
+  filters: Record<string, unknown>;
   is_shared: boolean;
   is_default: boolean;
   use_count: number;
@@ -36,8 +36,8 @@ interface FilterPreset {
 
 interface FilterPresetsManagerProps {
   context: string; // 'projects', 'estimates', etc.
-  currentFilters: any;
-  onLoadPreset: (filters: any) => void;
+  currentFilters: Record<string, unknown>;
+  onLoadPreset: (filters: Record<string, unknown>) => void;
   userId?: string;
   companyId?: string;
 }
@@ -84,7 +84,7 @@ export function FilterPresetsManager({
 
       if (error) throw error;
       setPresets(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading presets:', error);
     } finally {
       setLoading(false);
@@ -128,11 +128,11 @@ export function FilterPresetsManager({
       setShareWithCompany(false);
       setSetAsDefault(false);
       loadPresets();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Failed to save preset'
+        description: error instanceof Error ? error.message : 'Failed to save preset'
       });
     }
   };
@@ -174,11 +174,11 @@ export function FilterPresetsManager({
       setShowDeleteDialog(false);
       setSelectedPreset(null);
       loadPresets();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Failed to delete preset'
+        description: error instanceof Error ? error.message : 'Failed to delete preset'
       });
     }
   };
@@ -200,11 +200,11 @@ export function FilterPresetsManager({
       });
 
       loadPresets();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Failed to update preset'
+        description: error instanceof Error ? error.message : 'Failed to update preset'
       });
     }
   };

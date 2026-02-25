@@ -17,6 +17,52 @@ import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Ey
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
 
+interface ReportProject {
+  id: string;
+  name: string;
+}
+
+interface JobCost {
+  date: string;
+  description: string | null;
+  cost_codes: { code: string; name: string } | null;
+  labor_cost: number | null;
+  material_cost: number | null;
+  equipment_cost: number | null;
+  total_cost: number | null;
+  labor_hours: number | null;
+}
+
+interface ChangeOrder {
+  change_order_number: string;
+  title: string;
+  amount: number;
+  status: string;
+  client_approved: boolean;
+  internal_approved: boolean;
+  created_at: string;
+}
+
+interface ProjectReportData {
+  name: string;
+  description: string | null;
+  status: string;
+  budget: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  completion_percentage: number | null;
+  site_address: string | null;
+  job_costs: JobCost[];
+  change_orders: ChangeOrder[];
+  daily_reports: Record<string, unknown>[];
+  time_entries: Record<string, unknown>[];
+}
+
+interface AutoTableDoc {
+  autoTable: (options: Record<string, unknown>) => void;
+  lastAutoTable: { finalY: number };
+}
+
 const Reports = () => {
   const { user, userProfile, loading } = useAuth();
   const navigate = useNavigate();
