@@ -32,9 +32,9 @@ interface APIDoc {
   category: string;
   title: string;
   description: string;
-  request_schema: any;
-  response_schema: any;
-  code_examples: any;
+  request_schema: Record<string, unknown> | null;
+  response_schema: Record<string, unknown> | null;
+  code_examples: Record<string, unknown> | null;
   version: string;
   is_deprecated: boolean;
   usage_count: number;
@@ -76,17 +76,33 @@ export function DeveloperPortal() {
         .from('api_documentation')
         .select('*')
         .order('category', { ascending: true })
-        .order('endpoint_path', { ascending: true }) as any;
+        .order('endpoint_path', { ascending: true });
 
       if (error) throw error;
-      setDocs(data as any || []);
+
+      const mappedDocs: APIDoc[] = (data ?? []).map((row) => ({
+        id: row.id,
+        endpoint: row.endpoint_path ?? '',
+        method: row.http_method ?? 'GET',
+        category: row.category,
+        title: row.title,
+        description: row.description ?? '',
+        request_schema: row.request_schema as Record<string, unknown> | null,
+        response_schema: row.response_schema as Record<string, unknown> | null,
+        code_examples: null,
+        version: row.version ?? 'v1',
+        is_deprecated: false,
+        usage_count: row.view_count ?? 0,
+      }));
+
+      setDocs(mappedDocs);
       if (data && data.length > 0 && !selectedDoc) {
         setSelectedDoc(data[0]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to load documentation',
         variant: 'destructive',
       });
     } finally {
@@ -149,8 +165,9 @@ export function DeveloperPortal() {
         title: 'Request Sent',
         description: 'Check the response below',
       });
-    } catch (error: any) {
-      setPlaygroundResponse(JSON.stringify({ error: error.message }, null, 2));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setPlaygroundResponse(JSON.stringify({ error: message }, null, 2));
     }
   };
 

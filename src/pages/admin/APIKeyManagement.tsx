@@ -94,10 +94,10 @@ export const APIKeyManagement = () => {
         .from('api_keys')
         .select('*')
         .eq('created_by', user?.id)
-        .order('created_at', { ascending: false }) as any;
+        .order('created_at', { ascending: false });
 
       if (keysError) throw keysError;
-      setApiKeys(keysData as any || []);
+      setApiKeys((keysData as APIKey[]) || []);
 
       // Load recent request logs
       if (keysData && keysData.length > 0) {
@@ -109,7 +109,7 @@ export const APIKeyManagement = () => {
           .limit(50);
 
         if (logsError) throw logsError;
-        setRequestLogs(logsData as any || []);
+        setRequestLogs((logsData as APIRequestLog[]) || []);
       }
     } catch (error) {
       console.error('Failed to load API data:', error);
@@ -159,7 +159,7 @@ export const APIKeyManagement = () => {
           api_key_hash: keyHash,
           permissions: newKeyScopes,
           is_active: true,
-        } as any);
+        });
 
       if (error) throw error;
 

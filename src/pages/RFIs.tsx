@@ -13,8 +13,13 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { Helmet } from 'react-helmet-async';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+
+// Helper to query tables not yet in the generated Database types.
+const untypedFrom = (table: string) =>
+  (supabase as unknown as SupabaseClient).from(table);
 import { 
   ArrowLeft, 
   FileText,
@@ -70,6 +75,33 @@ interface RFIResponse {
   response_date: string;
   is_final_response: boolean;
   responder: { first_name: string; last_name: string };
+}
+
+interface RawRFIRow {
+  id: string;
+  project_id: string;
+  rfi_number: string | null;
+  subject: string | null;
+  description: string;
+  priority: string;
+  status: string;
+  submitted_to: string | null;
+  created_by: string | null;
+  due_date: string | null;
+  response_date: string | null;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  projects: { name: string; client_name: string };
+}
+
+interface RawRFIResponseRow {
+  id: string;
+  rfi_id: string;
+  response_text: string;
+  responded_by: string;
+  response_date: string;
+  is_final_response: boolean;
 }
 
 const RFIs = () => {
@@ -181,17 +213,16 @@ const RFIs = () => {
       }));
 
       // Fetch responses for these RFIs
-      const rfiIds = (rfisData || []).map((r: any) => r.id);
+      const rfiIds = (rfisData || []).map((r: RawRFIRow) => r.id);
       let responsesByRfi: Record<string, RFIResponse[]> = {};
       if (rfiIds.length > 0) {
-        const { data: responsesData } = await (supabase as any)
-          .from('rfi_responses')
+        const { data: responsesData } = await untypedFrom('rfi_responses')
           .select('*')
           .in('rfi_id', rfiIds)
           .order('response_date', { ascending: true });
 
-        (responsesData || []).forEach((resp: any) => {
-          const arr = responsesByRfi[resp.rfi_id] || [] as RFIResponse[];
+        (responsesData || []).forEach((resp: RawRFIResponseRow) => {
+          const arr = responsesByRfi[resp.rfi_id] || ([] as RFIResponse[]);
           arr.push({
             ...resp,
             responder: { first_name: 'User', last_name: '' }
@@ -200,14 +231,14 @@ const RFIs = () => {
         });
       }
 
-      const enrichedRFIs = transformedRFIs.map((r: any) => ({
+      const enrichedRFIs = transformedRFIs.map((r) => ({
         ...r,
         responses: responsesByRfi[r.id] || []
       }));
 
       setRFIs(enrichedRFIs);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -268,7 +299,7 @@ const RFIs = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating RFI:', error);
       toast({
         variant: "destructive",
@@ -336,7 +367,7 @@ const RFIs = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating RFI:', error);
       toast({
         variant: "destructive",
@@ -359,8 +390,7 @@ const RFIs = () => {
     try {
       if (!selectedRFI || !user || !userProfile) return;
 
-      const { error: insertErr } = await (supabase as any)
-        .from('rfi_responses')
+      const { error: insertErr } = await untypedFrom('rfi_responses')
         .insert({
           rfi_id: selectedRFI.id,
           response_text: responseText.trim(),
@@ -389,7 +419,7 @@ const RFIs = () => {
       setIsFinalResponse(false);
       setSelectedRFI(null);
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding response:', error);
       toast({
         variant: 'destructive',

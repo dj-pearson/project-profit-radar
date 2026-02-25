@@ -161,12 +161,12 @@ const ChangeOrders = () => {
         setChangeOrders([]);
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load change orders data"
+        description: error instanceof Error ? error.message : "Failed to load change orders data"
       });
     } finally {
       setLoadingOrders(false);
@@ -228,12 +228,12 @@ const ChangeOrders = () => {
       setEditingOrder(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating change order:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create change order"
+        description: error instanceof Error ? error.message : "Failed to create change order"
       });
     }
   };
@@ -295,12 +295,12 @@ const ChangeOrders = () => {
       setEditingOrder(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating change order:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update change order"
+        description: error instanceof Error ? error.message : "Failed to update change order"
       });
     }
   };
@@ -324,12 +324,12 @@ const ChangeOrders = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating approval:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update approval status"
+        description: error instanceof Error ? error.message : "Failed to update approval status"
       });
     }
   };
@@ -372,12 +372,12 @@ const ChangeOrders = () => {
       setIsRejectionDialogOpen(false);
       setRejectionReason('');
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error rejecting change order:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to reject change order"
+        description: error instanceof Error ? error.message : "Failed to reject change order"
       });
     }
   };

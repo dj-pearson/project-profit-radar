@@ -447,8 +447,8 @@
         "Run scripts/count-ts-errors.sh and show further reduction from US-021 baseline"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": "Third wave of type safety. By now, core modules (US-009) and components (US-021) are typed."
+      "passes": true,
+      "notes": "COMPLETED. Fixed any types in 30 page files: SystemAdminSettings, Reports, BillPayments, PermissionManagement, UserSettings, RFIs, GeneralLedger, DocumentManagement, SEOManager, LeadManagement, WorkflowAutomation, SEOManagement, Projects, ComplianceAudit, DeveloperPortal, FiscalPeriods, ChartOfAccounts, AIEstimating, PunchList, EnvironmentalPermitting, CrewScheduling, BlogManager, RiskPrediction, TrialBalance, Submittals, IntegrationMarketplace, ChangeOrders, AccountsPayable, RetentionAnalytics, APIKeyManagement."
     },
     {
       "id": "US-028",

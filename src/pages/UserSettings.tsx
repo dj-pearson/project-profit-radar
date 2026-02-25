@@ -182,14 +182,14 @@ const UserSettings = () => {
       if (data) {
         setPreferences({
           ...data,
-          dashboard_layout: data.dashboard_layout as any,
-          email_notifications: data.email_notifications as any,
-          sms_notifications: data.sms_notifications as any,
-          in_app_notifications: data.in_app_notifications as any,
-          working_hours: data.working_hours as any,
-          mobile_preferences: data.mobile_preferences as any,
-          accessibility_preferences: data.accessibility_preferences as any,
-          favorite_shortcuts: data.favorite_shortcuts as any
+          dashboard_layout: data.dashboard_layout as UserPreferences['dashboard_layout'],
+          email_notifications: data.email_notifications as UserPreferences['email_notifications'],
+          sms_notifications: data.sms_notifications as UserPreferences['sms_notifications'],
+          in_app_notifications: data.in_app_notifications as UserPreferences['in_app_notifications'],
+          working_hours: data.working_hours as UserPreferences['working_hours'],
+          mobile_preferences: data.mobile_preferences as UserPreferences['mobile_preferences'],
+          accessibility_preferences: data.accessibility_preferences as UserPreferences['accessibility_preferences'],
+          favorite_shortcuts: data.favorite_shortcuts as UserPreferences['favorite_shortcuts']
         } as UserPreferences);
       } else {
         // Create default preferences for new user
@@ -238,17 +238,17 @@ const UserSettings = () => {
     }
   };
 
-  const updatePreferences = (path: string, value: any) => {
+  const updatePreferences = (path: string, value: string | boolean | string[]) => {
     setPreferences(prev => {
       const keys = path.split('.');
       const newPrefs = { ...prev };
-      let current: any = newPrefs;
-      
+      let current: Record<string, unknown> = newPrefs as unknown as Record<string, unknown>;
+
       for (let i = 0; i < keys.length - 1; i++) {
-        current[keys[i]] = { ...current[keys[i]] };
-        current = current[keys[i]];
+        current[keys[i]] = { ...(current[keys[i]] as Record<string, unknown>) };
+        current = current[keys[i]] as Record<string, unknown>;
       }
-      
+
       current[keys[keys.length - 1]] = value;
       return newPrefs;
     });

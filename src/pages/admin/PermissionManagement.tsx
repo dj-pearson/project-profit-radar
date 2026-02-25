@@ -23,9 +23,15 @@ import {
   FileText,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+
+// Helper to query tables not yet in the generated Database types.
+// Returns a standard Supabase query builder for the given table name.
+const untypedFrom = (table: string) =>
+  (supabase as unknown as SupabaseClient).from(table);
 
 interface Permission {
   id: string;
@@ -105,8 +111,7 @@ export const PermissionManagement = () => {
     setLoading(true);
     try {
       // Load all permissions
-      const { data: permissionsData, error: permissionsError } = await (supabase as any)
-        .from('permissions')
+      const { data: permissionsData, error: permissionsError } = await untypedFrom('permissions')
         .select('*')
         .order('category', { ascending: true })
         .order('name', { ascending: true });
@@ -115,8 +120,7 @@ export const PermissionManagement = () => {
       setPermissions(permissionsData || []);
 
       // Load custom roles with counts
-      const { data: rolesData, error: rolesError } = await (supabase as any)
-        .from('custom_roles')
+      const { data: rolesData, error: rolesError } = await untypedFrom('custom_roles')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -125,13 +129,11 @@ export const PermissionManagement = () => {
       // Get permission and user counts for each role
       const rolesWithCounts = await Promise.all(
         (rolesData || []).map(async (role) => {
-          const { count: permCount } = await (supabase as any)
-            .from('role_permissions')
+          const { count: permCount } = await untypedFrom('role_permissions')
             .select('*', { count: 'exact', head: true })
             .eq('role_id', role.id);
 
-          const { count: userCount } = await (supabase as any)
-            .from('tenant_users')
+          const { count: userCount } = await untypedFrom('tenant_users')
             .select('*', { count: 'exact', head: true })
             .contains('custom_roles', [role.id]);
 
@@ -146,8 +148,7 @@ export const PermissionManagement = () => {
       setCustomRoles(rolesWithCounts as CustomRole[]);
 
       // Load user permissions
-      const { data: userPermsData, error: userPermsError } = await (supabase as any)
-        .from('user_permissions')
+      const { data: userPermsData, error: userPermsError } = await untypedFrom('user_permissions')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
@@ -156,8 +157,7 @@ export const PermissionManagement = () => {
       setUserPermissions((userPermsData as UserPermission[]) || []);
 
       // Load audit logs
-      const { data: auditData, error: auditError } = await (supabase as any)
-        .from('permission_audit_log')
+      const { data: auditData, error: auditError } = await untypedFrom('permission_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
@@ -188,8 +188,7 @@ export const PermissionManagement = () => {
 
     try {
       // Create role
-      const { data: role, error: roleError } = await (supabase as any)
-        .from('custom_roles')
+      const { data: role, error: roleError } = await untypedFrom('custom_roles')
         .insert({
           name: newRoleName,
           slug: newRoleName.toLowerCase().replace(/\s+/g, '_'),
@@ -208,8 +207,7 @@ export const PermissionManagement = () => {
         permission_id: permId,
       }));
 
-      const { error: permError } = await (supabase as any)
-        .from('role_permissions')
+      const { error: permError } = await untypedFrom('role_permissions')
         .insert(rolePermissions);
 
       if (permError) throw permError;
@@ -237,8 +235,7 @@ export const PermissionManagement = () => {
 
   const toggleRoleStatus = async (roleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await (supabase as any)
-        .from('custom_roles')
+      const { error } = await untypedFrom('custom_roles')
         .update({ is_active: !currentStatus })
         .eq('id', roleId);
 
@@ -268,8 +265,7 @@ export const PermissionManagement = () => {
     }
 
     try {
-      const { error } = await (supabase as any)
-        .from('custom_roles')
+      const { error } = await untypedFrom('custom_roles')
         .delete()
         .eq('id', roleId);
 

@@ -165,7 +165,7 @@ const BlogManager = () => {
 
       if (settingsError) throw settingsError;
       setAiSettings(settingsData || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading data:", error);
       toast({
         variant: "destructive",
@@ -288,13 +288,13 @@ const BlogManager = () => {
       });
 
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating post:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: `Failed to create blog post: ${
-          error.message || "Unknown error"
+          error instanceof Error ? error.message : "Unknown error"
         }`,
       });
     }
@@ -410,13 +410,13 @@ const BlogManager = () => {
       });
 
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating post:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: `Failed to update blog post: ${
-          error.message || "Unknown error"
+          error instanceof Error ? error.message : "Unknown error"
         }`,
       });
     }
@@ -445,13 +445,13 @@ const BlogManager = () => {
       });
 
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting post:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: `Failed to delete blog post: ${
-          error.message || "Unknown error"
+          error instanceof Error ? error.message : "Unknown error"
         }`,
       });
     }
@@ -507,22 +507,23 @@ const BlogManager = () => {
       } else {
         throw new Error("No content generated");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error generating AI content:", error);
 
       // Enhanced error handling with specific guidance
       let errorMessage = "Failed to generate AI content. ";
+      const errorMsg = error instanceof Error ? error.message : "";
 
-      if (error.message?.includes("not enabled or configured")) {
+      if (errorMsg.includes("not enabled or configured")) {
         errorMessage +=
           "Auto-generation settings not configured. Please set up AI auto-generation first.";
-      } else if (error.message?.includes("API key")) {
+      } else if (errorMsg.includes("API key")) {
         errorMessage +=
           "API keys not configured. Please check your environment variables.";
-      } else if (error.message?.includes("Authentication")) {
+      } else if (errorMsg.includes("Authentication")) {
         errorMessage += "Authentication failed. Please check your permissions.";
       } else {
-        errorMessage += error.message || "Unknown error occurred.";
+        errorMessage += errorMsg || "Unknown error occurred.";
       }
 
       toast({
@@ -553,7 +554,7 @@ const BlogManager = () => {
       });
 
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating AI settings:", error);
       toast({
         variant: "destructive",

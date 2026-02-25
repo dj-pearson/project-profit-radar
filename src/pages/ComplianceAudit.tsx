@@ -127,28 +127,28 @@ const ComplianceAudit = () => {
       // Fetch audit statistics
       const [eventsResult, highRiskResult, dataAccessResult, configResult, todayResult] = await Promise.all([
         // Total events (last 30 days)
-        (supabase as any)
+        supabase
           .from('audit_logs')
           .select('id')
           .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-        
-        (supabase as any)
+
+        supabase
           .from('audit_logs')
           .select('id')
           .in('risk_level', ['high', 'critical'])
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        
-        (supabase as any)
+
+        supabase
           .from('data_access_logs')
           .select('id')
           .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-        
-        (supabase as any)
+
+        supabase
           .from('system_config_changes')
           .select('id')
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        
-        (supabase as any)
+
+        supabase
           .from('audit_logs')
           .select('id')
           .gte('created_at', `${today}T00:00:00.000Z`)
@@ -156,7 +156,7 @@ const ComplianceAudit = () => {
       ]);
 
       // Fetch recent audit events with user details
-      const { data: recentEvents } = await (supabase as any)
+      const { data: recentEvents } = await supabase
         .from('audit_logs')
         .select(`
           *,
@@ -170,7 +170,7 @@ const ComplianceAudit = () => {
         .limit(50);
 
       // Fetch recent data access logs
-      const { data: recentAccess } = await (supabase as any)
+      const { data: recentAccess } = await supabase
         .from('data_access_logs')
         .select(`
           *,
@@ -191,7 +191,7 @@ const ComplianceAudit = () => {
         todayEvents: todayResult.data?.length || 0
       });
 
-      setAuditEvents(recentEvents as any || []);
+      setAuditEvents((recentEvents as AuditEvent[]) ?? []);
       setDataAccessLogs(recentAccess || []);
     } catch (error) {
       console.error('Error fetching audit data:', error);

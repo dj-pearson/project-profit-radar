@@ -41,6 +41,7 @@ import {
   AlertCircle,
   User,
   Filter,
+  type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,6 +96,16 @@ interface SalesContact {
   leads?: Lead;
 }
 
+interface LeadActivity {
+  id: string;
+  lead_id: string;
+  activity_type: string;
+  activity_metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+type CSVCellValue = string | number;
+
 export const LeadManagement = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
@@ -108,7 +119,7 @@ export const LeadManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [leadActivities, setLeadActivities] = useState<any[]>([]);
+  const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
 
   // Check if user is admin
   useEffect(() => {
@@ -136,10 +147,10 @@ export const LeadManagement = () => {
           .from('leads')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100) as any;
+          .limit(100);
 
         if (error) throw error;
-        setLeads(data as any || []);
+        setLeads((data as Lead[]) || []);
       } else if (activeTab === 'demos') {
         const { data, error } = await supabase
           .from('demo_requests')
@@ -148,10 +159,10 @@ export const LeadManagement = () => {
             leads (*)
           `)
           .order('created_at', { ascending: false })
-          .limit(100) as any;
+          .limit(100);
 
         if (error) throw error;
-        setDemoRequests(data as any || []);
+        setDemoRequests((data as DemoRequest[]) || []);
       } else if (activeTab === 'sales') {
         const { data, error } = await supabase
           .from('sales_contact_requests')
@@ -160,10 +171,10 @@ export const LeadManagement = () => {
             leads (*)
           `)
           .order('created_at', { ascending: false })
-          .limit(100) as any;
+          .limit(100);
 
         if (error) throw error;
-        setSalesContacts(data as any || []);
+        setSalesContacts((data as SalesContact[]) || []);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -247,7 +258,7 @@ export const LeadManagement = () => {
 
   // Export to CSV
   const exportToCSV = () => {
-    let data: any[] = [];
+    let data: CSVCellValue[][] = [];
     let headers: string[] = [];
 
     if (activeTab === 'leads') {
@@ -353,7 +364,7 @@ export const LeadManagement = () => {
 
   // Get status badge
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { color: string; icon: any }> = {
+    const statusConfig: Record<string, { color: string; icon: LucideIcon }> = {
       new: { color: 'bg-blue-500', icon: AlertCircle },
       contacted: { color: 'bg-purple-500', icon: Mail },
       qualified: { color: 'bg-green-500', icon: CheckCircle },

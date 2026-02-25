@@ -156,12 +156,12 @@ const Submittals = () => {
 
       setSubmittals(submittalsData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load submittals data"
+        description: error instanceof Error ? error.message : "Failed to load submittals data"
       });
     } finally {
       setLoadingSubmittals(false);
@@ -221,12 +221,12 @@ const Submittals = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create submittal"
+        description: error instanceof Error ? error.message : "Failed to create submittal"
       });
     }
   };
@@ -255,15 +255,15 @@ const Submittals = () => {
       if (error) throw error;
 
       // Log review entry for accountability
-      await (supabase as any)
-        .from('submittal_reviews')
+      await supabase
+        .from('submittal_reviews' as 'submittals')
         .insert({
           submittal_id: selectedSubmittal.id,
           reviewer_id: user?.id,
           review_status: reviewStatus,
           comments: reviewComments || null,
           company_id: userProfile?.company_id
-        });
+        } as Record<string, unknown>);
 
       toast({
         title: "Success",
@@ -276,12 +276,12 @@ const Submittals = () => {
       setSelectedSubmittal(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error reviewing submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to review submittal"
+        description: error instanceof Error ? error.message : "Failed to review submittal"
       });
     }
   };
@@ -357,12 +357,12 @@ const Submittals = () => {
       setIsEditDialogOpen(false);
       setEditingSubmittal(null);
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating submittal:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update submittal"
+        description: error instanceof Error ? error.message : "Failed to update submittal"
       });
     }
   };

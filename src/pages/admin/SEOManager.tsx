@@ -177,7 +177,7 @@ const SEOManager = () => {
       if (submissionError) throw submissionError;
       setSubmissions(submissionData || []);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading SEO data:', error);
       toast({
         variant: "destructive",
@@ -224,7 +224,7 @@ const SEOManager = () => {
           "SEO configuration saved successfully. Page will reload to activate Google Analytics." :
           "SEO configuration saved successfully"
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving configuration:', error);
       toast({
         variant: "destructive",
@@ -272,7 +272,7 @@ const SEOManager = () => {
       });
 
       loadSEOData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding meta tag:', error);
       toast({
         variant: "destructive",
@@ -302,7 +302,7 @@ const SEOManager = () => {
       });
 
       loadSEOData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting to search engines:', error);
       toast({
         variant: "destructive",
@@ -350,12 +350,12 @@ const SEOManager = () => {
         description: "Your sitemap has been generated. The static sitemap.xml file will be updated on the next build deployment."
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating sitemap:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate sitemap: " + error.message
+        description: "Failed to generate sitemap: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, sitemap: false }));
@@ -409,12 +409,12 @@ ${content}`;
         description: "Your robots.txt file has been updated with SEO-friendly directives."
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating robots.txt:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update robots.txt: " + error.message
+        description: "Failed to update robots.txt: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, robots: false }));
@@ -531,12 +531,12 @@ ${JSON.stringify(faqSchema, null, 2)}
         description: "Schema markup has been generated and copied to your clipboard. Add it to your website's <head> section."
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating schema markup:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate schema markup: " + error.message
+        description: "Failed to generate schema markup: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, schema: false }));
@@ -636,12 +636,12 @@ ${JSON.stringify(faqSchema, null, 2)}
       });
       
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error running SEO audit:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to run SEO audit: " + error.message
+        description: "Failed to run SEO audit: " + (error instanceof Error ? error.message : 'Unknown error')
       });
     } finally {
       setGenerating(prev => ({ ...prev, audit: false }));
