@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { CreditCard, Plus, Trash2, Shield, Calendar, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,7 @@ export const PaymentMethodManager = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingMethod, setAddingMethod] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { userProfile } = useAuth();
   const { toast } = useToast();
 
@@ -216,37 +217,35 @@ export const PaymentMethodManager = () => {
               Manage your saved payment methods for quick checkout
             </CardDescription>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Method
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Payment Method</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-4 w-4 text-blue-600" />
-                    <p className="text-sm font-medium text-blue-700">Secure Setup</p>
-                  </div>
-                  <p className="text-sm text-blue-600">
-                    Your payment information is securely processed by Stripe and never stored on our servers.
-                  </p>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Method
+          </Button>
+          <AccessibleModal
+            isOpen={showAddDialog}
+            onClose={() => setShowAddDialog(false)}
+            title="Add Payment Method"
+            size="sm"
+          >
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm font-medium text-blue-700">Secure Setup</p>
                 </div>
-                <Button 
-                  onClick={addPaymentMethod}
-                  disabled={addingMethod}
-                  className="w-full"
-                >
-                  {addingMethod ? "Setting up..." : "Setup New Payment Method"}
-                </Button>
+                <p className="text-sm text-blue-600">
+                  Your payment information is securely processed by Stripe and never stored on our servers.
+                </p>
               </div>
-            </DialogContent>
-          </Dialog>
+              <Button
+                onClick={addPaymentMethod}
+                disabled={addingMethod}
+                className="w-full"
+              >
+                {addingMethod ? "Setting up..." : "Setup New Payment Method"}
+              </Button>
+            </div>
+          </AccessibleModal>
         </div>
       </CardHeader>
       <CardContent>

@@ -36,6 +36,38 @@ import { formatCurrency } from '@/utils/accountingUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Vendor {
+  id: string;
+  name: string;
+  address: string | null;
+  company_id: string;
+  contact_person: string | null;
+  created_at: string;
+  created_by: string | null;
+  email: string | null;
+  is_active: boolean;
+  notes: string | null;
+  payment_terms: string | null;
+  phone: string | null;
+  tax_id: string | null;
+  updated_at: string;
+}
+
+interface Bill {
+  id: string;
+  bill_number: string;
+  bill_date: string;
+  due_date: string;
+  status: string | null;
+  total_amount: number;
+  amount_due: number | null;
+  amount_paid: number | null;
+  vendor_id: string;
+  vendor?: { id: string; name: string };
+  memo: string | null;
+  company_id: string;
+}
+
 interface BillLineItem {
   id: string;
   description: string;
@@ -180,9 +212,9 @@ export default function AccountsPayable() {
   };
 
   // Calculate AP metrics
-  const totalAP = bills?.reduce((sum: number, bill: any) => sum + Number(bill.amount_due || 0), 0) || 0;
-  const overdueBills = bills?.filter((bill: any) => bill.status === 'overdue').length || 0;
-  const openBills = bills?.filter((bill: any) => ['open', 'partial', 'overdue'].includes(bill.status)).length || 0;
+  const totalAP = bills?.reduce((sum: number, bill: Bill) => sum + Number(bill.amount_due || 0), 0) || 0;
+  const overdueBills = bills?.filter((bill: Bill) => bill.status === 'overdue').length || 0;
+  const openBills = bills?.filter((bill: Bill) => ['open', 'partial', 'overdue'].includes(bill.status || '')).length || 0;
 
   return (
     <main className="container mx-auto py-6 space-y-6" role="main" aria-label="Accounts Payable">
@@ -248,7 +280,7 @@ export default function AccountsPayable() {
                         <SelectValue placeholder="Select vendor" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vendors?.map((vendor: any) => (
+                        {vendors?.map((vendor: Vendor) => (
                           <SelectItem key={vendor.id} value={vendor.id}>
                             {vendor.name}
                           </SelectItem>
@@ -516,7 +548,7 @@ export default function AccountsPayable() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bills.map((bill: any) => (
+                  {bills.map((bill: Bill) => (
                     <TableRow key={bill.id}>
                       <TableCell className="font-mono">{bill.bill_number}</TableCell>
                       <TableCell>{bill.vendor?.name || 'Unknown'}</TableCell>

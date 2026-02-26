@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -196,96 +196,94 @@ export const ChangeOrderManagement: React.FC = () => {
           <h2 className="text-2xl font-bold">Change Order Management</h2>
           <p className="text-muted-foreground">Track and manage project changes and their impacts</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingOrder(null);
-              resetForm();
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Change Order
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingOrder ? 'Edit Change Order' : 'Create New Change Order'}</DialogTitle>
-              <DialogDescription>
-                Document project changes, scope modifications, and cost impacts
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="project">Project *</Label>
-                <Select 
-                  value={changeOrderForm.project_id} 
-                  onValueChange={(value) => setChangeOrderForm(prev => ({ ...prev, project_id: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map(project => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={changeOrderForm.title}
-                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Brief description of the change"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={changeOrderForm.description}
-                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Detailed description of the change"
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="justification">Justification</Label>
-                <Textarea
-                  id="justification"
-                  value={changeOrderForm.justification}
-                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, justification: e.target.value }))}
-                  placeholder="Reason for the change order"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="amount">Cost Impact ($) *</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  value={changeOrderForm.amount}
-                  onChange={(e) => setChangeOrderForm(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSubmit}>
-                  {editingOrder ? 'Update' : 'Create'} Change Order
-                </Button>
-              </div>
+        <Button onClick={() => {
+          setEditingOrder(null);
+          resetForm();
+          setDialogOpen(true);
+        }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Change Order
+        </Button>
+        <AccessibleModal
+          isOpen={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title={editingOrder ? 'Edit Change Order' : 'Create New Change Order'}
+          description="Document project changes, scope modifications, and cost impacts"
+          size="lg"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSubmit}>
+                {editingOrder ? 'Update' : 'Create'} Change Order
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="project">Project *</Label>
+              <Select
+                value={changeOrderForm.project_id}
+                onValueChange={(value) => setChangeOrderForm(prev => ({ ...prev, project_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            <div>
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={changeOrderForm.title}
+                onChange={(e) => setChangeOrderForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Brief description of the change"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                value={changeOrderForm.description}
+                onChange={(e) => setChangeOrderForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Detailed description of the change"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="justification">Justification</Label>
+              <Textarea
+                id="justification"
+                value={changeOrderForm.justification}
+                onChange={(e) => setChangeOrderForm(prev => ({ ...prev, justification: e.target.value }))}
+                placeholder="Reason for the change order"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="amount">Cost Impact ($) *</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={changeOrderForm.amount}
+                onChange={(e) => setChangeOrderForm(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </AccessibleModal>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

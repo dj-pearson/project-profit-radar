@@ -14,7 +14,7 @@ interface WorkflowVersion {
   version: number;
   name: string;
   description?: string;
-  workflowData: any;
+  workflowData: Record<string, unknown>;
   createdBy: string;
   createdAt: Date;
   changesSummary?: string;
@@ -23,8 +23,8 @@ interface WorkflowVersion {
 
 interface WorkflowVersionControlProps {
   workflowId?: string;
-  currentWorkflowData: any;
-  onRestore: (versionData: any) => void;
+  currentWorkflowData: Record<string, unknown>;
+  onRestore: (versionData: Record<string, unknown>) => void;
 }
 
 export function WorkflowVersionControl({
@@ -110,7 +110,7 @@ export function WorkflowVersionControl({
 
       setVersions([newVersion, ...versions.map(v => ({ ...v, isCurrent: false }))]);
       toast.success('New version saved');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to save version:', error);
       toast.error('Failed to save version');
     }

@@ -167,7 +167,7 @@ export function RiskPrediction() {
         setFactors(factorsData || []);
 
         // Load recommendations
-        const { data: recsData } = await (supabase as any)
+        const { data: recsData } = await supabase
           .from('risk_recommendations')
           .select('*')
           .eq('risk_prediction_id', predictionData.id)
@@ -175,7 +175,7 @@ export function RiskPrediction() {
         setRecommendations((recsData as unknown as RiskRecommendation[]) || []);
 
         // Load active alerts
-        const { data: alertsData } = await (supabase as any)
+        const { data: alertsData } = await supabase
           .from('risk_alerts')
           .select('*')
           .eq('project_id', projectId)
@@ -190,7 +190,7 @@ export function RiskPrediction() {
       }
 
       // Load prediction history
-      const { data: historyData } = await (supabase as any)
+      const { data: historyData } = await supabase
         .from('risk_predictions')
         .select('*')
         .eq('project_id', projectId)
@@ -222,7 +222,7 @@ export function RiskPrediction() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No session');
 
-      const { data: invokeData, error: invokeError } = await (supabase as any).functions.invoke(
+      const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
         'risk-prediction',
         {
           body: {
@@ -277,7 +277,7 @@ export function RiskPrediction() {
 
       // Update local state
       setRecommendations(recommendations.map(r =>
-        r.id === recId ? { ...r, status: newStatus as any } : r
+        r.id === recId ? { ...r, status: newStatus as RiskRecommendation['status'] } : r
       ));
     } catch (error) {
       console.error('Error updating recommendation:', error);

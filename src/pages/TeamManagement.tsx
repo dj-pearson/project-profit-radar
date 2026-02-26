@@ -607,7 +607,7 @@ const TeamManagement = () => {
                   <span className="text-sm text-muted-foreground">
                     {teamMembers.length} / {checkLimit('teamMembers').limit === -1 ? '∞' : checkLimit('teamMembers').limit}
                   </span>
-                  <Badge variant={subscriptionData.subscription_tier === 'enterprise' ? 'default' : 'secondary'}>
+                  <Badge variant={subscriptionData.subscription_tier === 'enterprise' ? 'default' : 'secondary'} aria-label={`Subscription tier: ${subscriptionData.subscription_tier?.charAt(0).toUpperCase() + subscriptionData.subscription_tier?.slice(1) || 'Free'}`}>
                     {subscriptionData.subscription_tier?.charAt(0).toUpperCase() + subscriptionData.subscription_tier?.slice(1) || 'Free'}
                   </Badge>
                 </div>

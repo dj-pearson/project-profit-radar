@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 
 interface AuthDebugInfo {
-  frontendUser: any;
-  frontendProfile: any;
-  supabaseSession: any;
-  supabaseUser: any;
-  profileFromDB: any;
+  frontendUser: unknown;
+  frontendProfile: unknown;
+  supabaseSession: unknown;
+  supabaseUser: unknown;
+  profileFromDB: unknown;
   canAccessBlogPosts: boolean;
   error: string | null;
 }
@@ -73,8 +73,8 @@ export const AuthDebugComponent: React.FC = () => {
         info.canAccessBlogPosts = true;
       }
 
-    } catch (error: any) {
-      info.error = error.message;
+    } catch (error: unknown) {
+      info.error = error instanceof Error ? error.message : "Unknown error";
     }
 
     setDebugInfo(info);

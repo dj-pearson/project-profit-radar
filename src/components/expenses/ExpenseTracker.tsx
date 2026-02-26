@@ -16,17 +16,7 @@ import { useInsertMutation, useUpdateMutation, useDeleteMutation } from '@/hooks
 import { LoadingState, TableSkeleton } from '@/components/common/LoadingState';
 import { ErrorState, EmptyState } from '@/components/common/ErrorState';
 import { Pagination } from '@/components/common/Pagination';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Plus, Edit, Trash2, Receipt, DollarSign, Calendar, Tag, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { expenseSchema, type ExpenseInput } from '@/lib/validations';
@@ -359,184 +349,10 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
                 Record and manage all project and company expenses
               </CardDescription>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Expense
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                {Object.keys(errors).length > 0 && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Please fix the validation errors below
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <form onSubmit={handleFormSubmit(onSubmit)}>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingExpense ? 'Edit Expense' : 'Record New Expense'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Enter the expense details below
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="vendor_name">Vendor *</Label>
-                        <Input
-                          id="vendor_name"
-                          placeholder="Vendor name"
-                          {...register('vendor_name')}
-                        />
-                        {errors.vendor_name && (
-                          <p className="text-sm text-destructive">{errors.vendor_name.message}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="amount">Amount *</Label>
-                        <Input
-                          id="amount"
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...register('amount', { valueAsNumber: true })}
-                        />
-                        {errors.amount && (
-                          <p className="text-sm text-destructive">{errors.amount.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="tax_amount">Tax Amount</Label>
-                        <Input
-                          id="tax_amount"
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...register('tax_amount', { valueAsNumber: true })}
-                        />
-                        {errors.tax_amount && (
-                          <p className="text-sm text-destructive">{errors.tax_amount.message}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="expense_date">Date *</Label>
-                        <Input
-                          id="expense_date"
-                          type="date"
-                          {...register('expense_date')}
-                        />
-                        {errors.expense_date && (
-                          <p className="text-sm text-destructive">{errors.expense_date.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="payment_method">Payment Method *</Label>
-                        <Select
-                          value={formValues.payment_method}
-                          onValueChange={(value: any) => setValue('payment_method', value)}
-                        >
-                          <SelectTrigger id="payment_method">
-                            <SelectValue placeholder="Select method" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PAYMENT_METHODS.map((method) => (
-                              <SelectItem key={method} value={method}>
-                                {method}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.payment_method && (
-                          <p className="text-sm text-destructive">{errors.payment_method.message}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="payment_status">Payment Status</Label>
-                        <Select
-                          value={formValues.payment_status}
-                          onValueChange={(value: any) => setValue('payment_status', value)}
-                        >
-                          <SelectTrigger id="payment_status">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="paid">Paid</SelectItem>
-                            <SelectItem value="reimbursed">Reimbursed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="is_billable"
-                        {...register('is_billable')}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      <Label htmlFor="is_billable" className="text-sm font-normal">
-                        This expense is billable to client
-                      </Label>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Additional details..."
-                        {...register('description')}
-                        rows={3}
-                      />
-                      {errors.description && (
-                        <p className="text-sm text-destructive">{errors.description.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsDialogOpen(false);
-                        resetForm();
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={createExpense.isPending || updateExpense.isPending}
-                      className="gap-2"
-                    >
-                      {(createExpense.isPending || updateExpense.isPending) && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      )}
-                      {createExpense.isPending || updateExpense.isPending
-                        ? 'Saving...'
-                        : editingExpense ? 'Update Expense' : 'Create Expense'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Expense
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -570,26 +386,197 @@ export function ExpenseTracker({ projectId }: { projectId?: string }) {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingExpenseId} onOpenChange={(open) => !open && setDeletingExpenseId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this expense? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+      {/* Create/Edit Expense Modal */}
+      <AccessibleModal
+        isOpen={isDialogOpen}
+        onClose={() => { setIsDialogOpen(false); resetForm(); }}
+        title={editingExpense ? 'Edit Expense' : 'Record New Expense'}
+        description="Enter the expense details below"
+        size="lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsDialogOpen(false);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="expense-form"
+              disabled={createExpense.isPending || updateExpense.isPending}
+              className="gap-2"
+            >
+              {(createExpense.isPending || updateExpense.isPending) && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              {createExpense.isPending || updateExpense.isPending
+                ? 'Saving...'
+                : editingExpense ? 'Update Expense' : 'Create Expense'}
+            </Button>
+          </>
+        }
+      >
+        {Object.keys(errors).length > 0 && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Please fix the validation errors below
+            </AlertDescription>
+          </Alert>
+        )}
+        <form id="expense-form" onSubmit={handleFormSubmit(onSubmit)}>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="vendor_name">Vendor *</Label>
+                <Input
+                  id="vendor_name"
+                  placeholder="Vendor name"
+                  {...register('vendor_name')}
+                />
+                {errors.vendor_name && (
+                  <p className="text-sm text-destructive">{errors.vendor_name.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...register('amount', { valueAsNumber: true })}
+                />
+                {errors.amount && (
+                  <p className="text-sm text-destructive">{errors.amount.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tax_amount">Tax Amount</Label>
+                <Input
+                  id="tax_amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...register('tax_amount', { valueAsNumber: true })}
+                />
+                {errors.tax_amount && (
+                  <p className="text-sm text-destructive">{errors.tax_amount.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expense_date">Date *</Label>
+                <Input
+                  id="expense_date"
+                  type="date"
+                  {...register('expense_date')}
+                />
+                {errors.expense_date && (
+                  <p className="text-sm text-destructive">{errors.expense_date.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="payment_method">Payment Method *</Label>
+                <Select
+                  value={formValues.payment_method}
+                  onValueChange={(value: any) => setValue('payment_method', value)}
+                >
+                  <SelectTrigger id="payment_method">
+                    <SelectValue placeholder="Select method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((method) => (
+                      <SelectItem key={method} value={method}>
+                        {method}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.payment_method && (
+                  <p className="text-sm text-destructive">{errors.payment_method.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="payment_status">Payment Status</Label>
+                <Select
+                  value={formValues.payment_status}
+                  onValueChange={(value: any) => setValue('payment_status', value)}
+                >
+                  <SelectTrigger id="payment_status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="reimbursed">Reimbursed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_billable"
+                {...register('is_billable')}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="is_billable" className="text-sm font-normal">
+                This expense is billable to client
+              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Additional details..."
+                {...register('description')}
+                rows={3}
+              />
+              {errors.description && (
+                <p className="text-sm text-destructive">{errors.description.message}</p>
+              )}
+            </div>
+          </div>
+        </form>
+      </AccessibleModal>
+
+      {/* Delete Confirmation Modal */}
+      <AccessibleModal
+        isOpen={!!deletingExpenseId}
+        onClose={() => setDeletingExpenseId(null)}
+        title="Delete Expense"
+        description="Are you sure you want to delete this expense? This action cannot be undone."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingExpenseId(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
               onClick={() => deletingExpenseId && confirmDelete(deletingExpenseId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

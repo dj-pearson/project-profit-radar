@@ -4,17 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Save, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -339,30 +329,10 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Budget vs Actual Costs</CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setEditingItem(null)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Budget Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingItem ? 'Edit Budget Item' : 'Add Budget Item'}
-                  </DialogTitle>
-                </DialogHeader>
-                <BudgetItemForm
-                  item={editingItem || undefined}
-                  onSave={handleSave}
-                  onCancel={() => {
-                    setEditingItem(null);
-                    setIsDialogOpen(false);
-                  }}
-                  isSaving={isSaving}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => { setEditingItem(null); setIsDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Budget Item
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -434,27 +404,46 @@ export const BudgetManager: React.FC<BudgetManagerProps> = ({ projectId }) => {
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingItemId} onOpenChange={(open) => !open && setDeletingItemId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Budget Item</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this budget item? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+      <AccessibleModal
+        isOpen={!!deletingItemId}
+        onClose={() => setDeletingItemId(null)}
+        title="Delete Budget Item"
+        description="Are you sure you want to delete this budget item? This action cannot be undone."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingItemId(null)} disabled={isDeleting}>Cancel</Button>
+            <Button
+              variant="destructive"
               onClick={() => deletingItemId && handleDelete(deletingItemId)}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              className="gap-2"
             >
               {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isDeleting ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
+
+      {/* Add/Edit Budget Item Dialog */}
+      <AccessibleModal
+        isOpen={isDialogOpen}
+        onClose={() => { setEditingItem(null); setIsDialogOpen(false); }}
+        title={editingItem ? 'Edit Budget Item' : 'Add Budget Item'}
+        size="lg"
+      >
+        <BudgetItemForm
+          item={editingItem || undefined}
+          onSave={handleSave}
+          onCancel={() => {
+            setEditingItem(null);
+            setIsDialogOpen(false);
+          }}
+          isSaving={isSaving}
+        />
+      </AccessibleModal>
     </div>
   );
 };

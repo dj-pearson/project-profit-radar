@@ -27,6 +27,35 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Separator } from '@/components/ui/separator';
 
+interface JournalEntry {
+  id: string;
+  entry_number: string;
+  entry_date: string;
+  description: string;
+  transaction_status: string;
+  memo: string;
+}
+
+interface JournalEntryLine {
+  id: string;
+  account_id: string;
+  debit_amount: number | string | null;
+  credit_amount: number | string | null;
+  description: string | null;
+  journal_entry: JournalEntry | null;
+}
+
+interface TransactionWithBalance extends JournalEntryLine {
+  debit: number;
+  credit: number;
+  runningBalance: number;
+}
+
+interface MonthGroup {
+  label: string;
+  transactions: TransactionWithBalance[];
+}
+
 export default function GeneralLedger() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
@@ -68,11 +97,11 @@ export default function GeneralLedger() {
       if (error) throw error;
 
       // Filter out draft entries and sort properly
-      const filtered = data
-        ?.filter((line: any) => line.journal_entry?.transaction_status === 'posted')
-        .sort((a: any, b: any) => {
-          const dateA = new Date(a.journal_entry.entry_date).getTime();
-          const dateB = new Date(b.journal_entry.entry_date).getTime();
+      const filtered = (data as JournalEntryLine[])
+        ?.filter((line) => line.journal_entry?.transaction_status === 'posted')
+        .sort((a, b) => {
+          const dateA = new Date(a.journal_entry!.entry_date).getTime();
+          const dateB = new Date(b.journal_entry!.entry_date).getTime();
           return dateA - dateB;
         });
 
@@ -85,7 +114,7 @@ export default function GeneralLedger() {
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
 
   // Calculate running balance
-  const transactionsWithBalance = transactions?.map((tx: any, index: number) => {
+  const transactionsWithBalance = (transactions as JournalEntryLine[] | undefined)?.map((tx, index) => {
     const debit = Number(tx.debit_amount) || 0;
     const credit = Number(tx.credit_amount) || 0;
 
@@ -108,8 +137,8 @@ export default function GeneralLedger() {
 
   // Group transactions by month if needed
   const groupedTransactions = groupBy === 'month' && transactionsWithBalance
-    ? transactionsWithBalance.reduce((acc: any, tx: any) => {
-        const date = new Date(tx.journal_entry.entry_date);
+    ? transactionsWithBalance.reduce<Record<string, MonthGroup>>((acc, tx) => {
+        const date = new Date(tx.journal_entry!.entry_date);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 
@@ -135,8 +164,8 @@ export default function GeneralLedger() {
   const isLoading = accountsLoading || transactionsLoading;
 
   // Calculate totals
-  const totalDebits = transactionsWithBalance?.reduce((sum: number, tx: any) => sum + tx.debit, 0) || 0;
-  const totalCredits = transactionsWithBalance?.reduce((sum: number, tx: any) => sum + tx.credit, 0) || 0;
+  const totalDebits = transactionsWithBalance?.reduce((sum: number, tx: TransactionWithBalance) => sum + tx.debit, 0) || 0;
+  const totalCredits = transactionsWithBalance?.reduce((sum: number, tx: TransactionWithBalance) => sum + tx.credit, 0) || 0;
   const endingBalance = transactionsWithBalance?.[transactionsWithBalance.length - 1]?.runningBalance || 0;
 
   return (
@@ -212,7 +241,7 @@ export default function GeneralLedger() {
             <div className="mt-4 flex items-center gap-4">
               <div className="space-y-2">
                 <Label htmlFor="groupBy">Group By</Label>
-                <Select value={groupBy} onValueChange={(value: any) => setGroupBy(value)}>
+                <Select value={groupBy} onValueChange={(value: 'month' | 'none') => setGroupBy(value)}>
                   <SelectTrigger className="w-[180px]" aria-label="Select grouping option">
                     <SelectValue />
                   </SelectTrigger>
@@ -306,7 +335,7 @@ export default function GeneralLedger() {
             <div className="space-y-6">
               {groupBy === 'month' && groupedTransactions ? (
                 // Grouped by month
-                Object.entries(groupedTransactions).map(([monthKey, monthData]: [string, any]) => (
+                Object.entries(groupedTransactions).map(([monthKey, monthData]: [string, MonthGroup]) => (
                   <div key={monthKey} className="space-y-2" role="region" aria-label={`Transactions for ${monthData.label}`}>
                     <div className="flex items-center gap-2 sticky top-0 bg-background py-2">
                       <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -325,7 +354,7 @@ export default function GeneralLedger() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {monthData.transactions.map((tx: any) => (
+                        {monthData.transactions.map((tx: TransactionWithBalance) => (
                           <TableRow key={tx.id}>
                             <TableCell>
                               {new Date(tx.journal_entry.entry_date).toLocaleDateString()}
@@ -372,7 +401,7 @@ export default function GeneralLedger() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactionsWithBalance.map((tx: any) => (
+                    {transactionsWithBalance.map((tx: TransactionWithBalance) => (
                       <TableRow key={tx.id}>
                         <TableCell>
                           {new Date(tx.journal_entry.entry_date).toLocaleDateString()}

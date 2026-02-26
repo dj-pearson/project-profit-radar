@@ -87,7 +87,7 @@ const PunchList = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PunchListItem | null>(null);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<PunchListItem | null>(null);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   
@@ -152,9 +152,9 @@ const PunchList = () => {
         .order('created_at', { ascending: false });
 
       if (itemsError) throw itemsError;
-      setPunchItems((itemsData || []) as any);
+      setPunchItems((itemsData || []) as PunchListItem[]);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
       toast({
         variant: "destructive",
@@ -213,7 +213,7 @@ const PunchList = () => {
       });
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating punch list item:', error);
       toast({
         variant: "destructive",
@@ -230,9 +230,9 @@ const PunchList = () => {
         title: "Success",
         description: "Status updated successfully"
       });
-      
+
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating status:', error);
       toast({
         variant: "destructive",
@@ -301,7 +301,7 @@ const PunchList = () => {
       setSelectedItem(null);
       
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding comment:', error);
       toast({
         variant: "destructive",

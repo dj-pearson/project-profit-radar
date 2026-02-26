@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AccessibleTable, type TableColumn } from "@/components/accessibility/AccessibleTable";
+import { AccessibleModal } from "@/components/accessibility/AccessibleModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,17 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { EstimateForm } from "./EstimateForm";
 import { ConvertToProjectDialog } from "./ConvertToProjectDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -209,7 +199,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     try {
       const { error } = await supabase
         .from("estimates")
-        .update({ 
+        .update({
           status: "sent",
           sent_date: new Date().toISOString().split('T')[0]
         })
@@ -246,7 +236,7 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
     return (
       <div className="text-center py-8">
         <div className="text-muted-foreground mb-4">
-          {searchTerm || statusFilter !== "all" 
+          {searchTerm || statusFilter !== "all"
             ? "No estimates match your filters."
             : "No estimates found. Create your first estimate to get started."
           }
@@ -393,25 +383,25 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
         />
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingEstimate} onOpenChange={() => setEditingEstimate(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Estimate</DialogTitle>
-          </DialogHeader>
-          {editingEstimate && (
-            <EstimateForm
-              estimateId={editingEstimate}
-                onSuccess={() => {
-                  setEditingEstimate(null);
-                  fetchEstimates();
-                  onEstimateChange?.();
-                }}
-              onCancel={() => setEditingEstimate(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Edit Estimate Modal */}
+      <AccessibleModal
+        isOpen={!!editingEstimate}
+        onClose={() => setEditingEstimate(null)}
+        title="Edit Estimate"
+        size="xl"
+      >
+        {editingEstimate && (
+          <EstimateForm
+            estimateId={editingEstimate}
+              onSuccess={() => {
+                setEditingEstimate(null);
+                fetchEstimates();
+                onEstimateChange?.();
+              }}
+            onCancel={() => setEditingEstimate(null)}
+          />
+        )}
+      </AccessibleModal>
 
       {/* Convert to Project Dialog */}
       <ConvertToProjectDialog
@@ -425,26 +415,26 @@ export function EstimatesTable({ searchTerm, statusFilter, onEstimateChange }: E
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingEstimate} onOpenChange={(open) => !open && setDeletingEstimate(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Estimate</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this estimate? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+      {/* Delete Confirmation Modal */}
+      <AccessibleModal
+        isOpen={!!deletingEstimate}
+        onClose={() => setDeletingEstimate(null)}
+        title="Delete Estimate"
+        description="Are you sure you want to delete this estimate? This action cannot be undone."
+        size="sm"
+        disableClickOutside
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeletingEstimate(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
               onClick={() => deletingEstimate && handleDelete(deletingEstimate)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
     </>
   );
 }

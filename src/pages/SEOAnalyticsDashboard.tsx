@@ -61,10 +61,10 @@ interface SEOData {
 }
 
 interface AIInsights {
-  insights: any;
-  recommendations: any;
-  actionPlan: any;
-  competitorAnalysis: any;
+  insights: string[] | Record<string, unknown>;
+  recommendations: string[] | Record<string, unknown>;
+  actionPlan: string[] | Record<string, unknown>;
+  competitorAnalysis: string[] | Record<string, unknown>;
 }
 
 const SEOAnalyticsDashboard: React.FC = () => {
@@ -104,7 +104,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['seo-analytics-summary'] });
       toast.success('Google Search Console data updated');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to fetch Google data: ${error.message}`);
     }
   });
@@ -129,7 +129,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['seo-analytics-summary'] });
       toast.success('Bing Webmaster data updated');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to fetch Bing data: ${error.message}`);
     }
   });
@@ -147,7 +147,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
     onSuccess: (data) => {
       window.open(data.authUrl, '_blank', 'width=500,height=600');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to get Google auth URL: ${error.message}`);
     }
   });
@@ -163,7 +163,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
     onSuccess: (data) => {
       window.open(data.authUrl, '_blank', 'width=500,height=600');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to get Microsoft auth URL: ${error.message}`);
     }
   });
@@ -183,7 +183,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['seo-analytics-summary'] });
       toast.success('AI insights generated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to generate insights: ${error.message}`);
     }
   });
@@ -195,16 +195,17 @@ const SEOAnalyticsDashboard: React.FC = () => {
         fetchBingData.mutateAsync()
       ]);
       await generateInsights.mutateAsync();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error refreshing data:', error);
-      
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
       // Handle specific error types
-      if (error.message?.includes('OAuth credentials not configured')) {
+      if (errorMessage?.includes('OAuth credentials not configured')) {
         toast.error('SEO Analytics Setup Required', {
           description: 'Google Search Console requires OAuth credentials to be configured. Please contact your administrator.',
           duration: 10000,
         });
-      } else if (error.message?.includes('Please authenticate')) {
+      } else if (errorMessage?.includes('Please authenticate')) {
         toast.error('Authentication Required', {
           description: 'Please connect your Google Search Console account using the "Connect Google" button.',
           duration: 5000,
@@ -242,7 +243,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
   const analytics = analyticsData?.analytics || [];
 
   // Prepare chart data
-  const chartData = analytics.slice(0, 30).reverse().map((item: any) => ({
+  const chartData = analytics.slice(0, 30).reverse().map((item: { date: string; impressions: number; clicks: number; ctr: number; average_position: number }) => ({
     date: new Date(item.date).toLocaleDateString(),
     impressions: item.impressions,
     clicks: item.clicks,
@@ -421,7 +422,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics?.[0]?.top_queries?.slice(0, 10).map((query: any, index: number) => (
+                {analytics?.[0]?.top_queries?.slice(0, 10).map((query: { query: string; position: string; ctr: string; impressions: number; clicks: number }, index: number) => (
                   <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <h4 className="font-medium">{query.query}</h4>
@@ -453,7 +454,7 @@ const SEOAnalyticsDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics?.[0]?.top_pages?.slice(0, 10).map((page: any, index: number) => (
+                {analytics?.[0]?.top_pages?.slice(0, 10).map((page: { page: string; ctr: string; impressions: number; clicks: number }, index: number) => (
                   <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <h4 className="font-medium">{page.page}</h4>

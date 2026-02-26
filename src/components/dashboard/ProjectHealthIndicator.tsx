@@ -58,15 +58,15 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
   const getHealthIcon = (health: ProjectHealth['overallHealth']) => {
     switch (health) {
       case 'excellent':
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className="h-4 w-4" aria-hidden="true" />;
       case 'good':
-        return <CheckCircle className="h-4 w-4" />;
+        return <CheckCircle className="h-4 w-4" aria-hidden="true" />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
       case 'critical':
-        return <XCircle className="h-4 w-4" />;
+        return <XCircle className="h-4 w-4" aria-hidden="true" />;
       default:
-        return <AlertTriangle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
     }
   };
 
@@ -83,7 +83,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
     <Card className={cn("w-full", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
+          <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
           Project Health Overview
         </CardTitle>
       </CardHeader>
@@ -98,7 +98,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
                   {project.schedule.daysRemaining} days remaining
                 </p>
               </div>
-              <Badge className={cn("flex items-center gap-1", getHealthColor(project.overallHealth))}>
+              <Badge className={cn("flex items-center gap-1", getHealthColor(project.overallHealth))} aria-label={`Health status: ${project.overallHealth}`}>
                 {getHealthIcon(project.overallHealth)}
                 <span className="capitalize">{project.overallHealth}</span>
               </Badge>
@@ -109,7 +109,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
               {/* Budget Health */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <DollarSign className="h-4 w-4 text-green-600" aria-hidden="true" />
                   Budget
                 </div>
                 <div className="space-y-1">
@@ -133,7 +133,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
               {/* Schedule Health */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <Calendar className="h-4 w-4 text-blue-600" aria-hidden="true" />
                   Schedule
                 </div>
                 <div className="space-y-1">
@@ -146,7 +146,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
                     "text-xs font-medium flex items-center gap-1",
                     project.schedule.onTrack ? "text-green-600" : "text-red-600"
                   )}>
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3" aria-hidden="true" />
                     {project.schedule.onTrack ? 'On Track' : 'Behind Schedule'}
                   </p>
                 </div>
@@ -155,7 +155,7 @@ export const ProjectHealthIndicator = ({ projects, className }: ProjectHealthInd
               {/* Safety Health */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <Shield className="h-4 w-4 text-orange-600" />
+                  <Shield className="h-4 w-4 text-orange-600" aria-hidden="true" />
                   Safety
                 </div>
                 <div className="space-y-1">

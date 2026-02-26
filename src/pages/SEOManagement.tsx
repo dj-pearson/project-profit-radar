@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { enterpriseSeoService } from '@/services/EnterpriseSeOService';
-import { contentSeoGenerator, ContentSEOConfig } from '@/services/ContentSEOGenerator';
+import { contentSeoGenerator, ContentSEOConfig, GeneratedContent } from '@/services/ContentSEOGenerator';
 import { toast } from '@/hooks/use-toast';
 import {
   Search,
@@ -43,7 +43,7 @@ const SEOManagement = () => {
     cta: 'Start Free Trial',
     internalLinks: []
   });
-  const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
 
@@ -55,10 +55,10 @@ const SEOManagement = () => {
         title: "SEO System Initialized",
         description: "Enterprise SEO optimization is now active across all pages",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Initialization Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive"
       });
     } finally {
@@ -84,10 +84,10 @@ const SEOManagement = () => {
         title: "Content Generated",
         description: `SEO-optimized content created with ${result.seoScore}/100 score`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Generation Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive"
       });
     } finally {
@@ -139,10 +139,10 @@ const SEOManagement = () => {
         title: "Competitor Content Generated",
         description: `${competitor} alternative page created successfully`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Generation Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive"
       });
     } finally {
@@ -162,10 +162,10 @@ const SEOManagement = () => {
         title: "Industry Content Generated",
         description: `${industry} contractor page created successfully`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Generation Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive"
       });
     } finally {
@@ -185,10 +185,10 @@ const SEOManagement = () => {
         title: "Guide Content Generated",
         description: `${topic} guide created successfully`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Generation Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive"
       });
     } finally {
@@ -336,7 +336,7 @@ const SEOManagement = () => {
                       <label className="text-sm font-medium">Content Type</label>
                       <Select
                         value={contentConfig.contentType}
-                        onValueChange={(value) => setContentConfig({...contentConfig, contentType: value as any})}
+                        onValueChange={(value) => setContentConfig({...contentConfig, contentType: value as ContentSEOConfig['contentType']})}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -355,7 +355,7 @@ const SEOManagement = () => {
                       <label className="text-sm font-medium">Target Audience</label>
                       <Select
                         value={contentConfig.targetAudience}
-                        onValueChange={(value) => setContentConfig({...contentConfig, targetAudience: value as any})}
+                        onValueChange={(value) => setContentConfig({...contentConfig, targetAudience: value as ContentSEOConfig['targetAudience']})}
                       >
                         <SelectTrigger>
                           <SelectValue />

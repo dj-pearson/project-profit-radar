@@ -82,8 +82,8 @@ export default function Equipment() {
     const config = statusConfig[status as keyof typeof statusConfig];
     const Icon = config?.icon || Clock;
     return (
-      <Badge variant={config?.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
+      <Badge variant={config?.variant} className="flex items-center gap-1" aria-label={`Status: ${config?.label || status}`}>
+        <Icon className="h-3 w-3" aria-hidden="true" />
         {config?.label || status}
       </Badge>
     );
@@ -200,8 +200,8 @@ export default function Equipment() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4" aria-label="Equipment management sections">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4" aria-label="Equipment categories">
             <TabsTrigger value="fleet" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Equipment Fleet</span>
               <span className="sm:hidden">Fleet</span>
@@ -360,11 +360,11 @@ export default function Equipment() {
             ) : (
               <div className="grid gap-4">
                 {maintenanceRecords.map((record: any) => (
-                  <Card key={record.id} className="hover:shadow-md transition-shadow">
+                  <Card key={record.id} className="hover:shadow-md transition-shadow" role="article" aria-labelledby={`maintenance-${record.id}`}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
-                          <CardTitle className="text-lg">
+                          <CardTitle id={`maintenance-${record.id}`} className="text-lg">
                             {record.equipment?.name || 'Unknown Equipment'}
                           </CardTitle>
                           <CardDescription>
@@ -398,6 +398,7 @@ export default function Equipment() {
                         <Button
                           size="sm"
                           className="w-full sm:w-auto"
+                          aria-label={`View maintenance details for ${record.equipment?.name || 'equipment'}`}
                         >
                           <span className="hidden sm:inline">View Maintenance Details</span>
                           <span className="sm:hidden">Details</span>
@@ -442,11 +443,11 @@ export default function Equipment() {
             ) : (
               <div className="grid gap-4">
                 {filteredEquipment.map((item) => (
-                  <Card key={item.id} className="hover:shadow-md transition-shadow">
+                  <Card key={item.id} className="hover:shadow-md transition-shadow" role="article" aria-labelledby={`utilization-${item.id}`}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
-                          <CardTitle className="text-lg flex items-center gap-2">
+                          <CardTitle id={`utilization-${item.id}`} className="text-lg flex items-center gap-2">
                             <Truck className="h-5 w-5" aria-hidden="true" />
                             {item.name}
                           </CardTitle>

@@ -1,11 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -219,173 +213,170 @@ export const MFAVerificationModal: React.FC<MFAVerificationModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-construction-orange" />
-            Two-Factor Authentication
-          </DialogTitle>
-          <DialogDescription>
-            {showBackupCodeInput
-              ? 'Enter one of your backup codes to verify your identity.'
-              : 'Enter the 6-digit code from your authenticator app.'}
-          </DialogDescription>
-        </DialogHeader>
+    <AccessibleModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Two-Factor Authentication"
+      description={
+        showBackupCodeInput
+          ? 'Enter one of your backup codes to verify your identity.'
+          : 'Enter the 6-digit code from your authenticator app.'
+      }
+      size="sm"
+      disableClickOutside={true}
+    >
+      <div className="space-y-6 py-4">
+        {!showBackupCodeInput ? (
+          <>
+            {/* TOTP Code Input */}
+            <div className="flex items-center justify-center">
+              <Smartphone className="w-16 h-16 text-muted-foreground" />
+            </div>
 
-        <div className="space-y-6 py-4">
-          {!showBackupCodeInput ? (
-            <>
-              {/* TOTP Code Input */}
-              <div className="flex items-center justify-center">
-                <Smartphone className="w-16 h-16 text-muted-foreground" />
-              </div>
-
-              <div className="flex justify-center gap-2">
-                {code.map((digit, index) => (
-                  <Input
-                    key={index}
-                    ref={(el) => (inputRefs.current[index] = el)}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleCodeChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-2xl font-mono"
-                    disabled={isVerifying}
-                    autoComplete="one-time-code"
-                  />
-                ))}
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
-                </div>
-              )}
-
-              {/* Trust Device Checkbox */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="trustDevice"
-                  checked={trustDevice}
-                  onCheckedChange={(checked) => setTrustDevice(checked === true)}
-                />
-                <Label htmlFor="trustDevice" className="text-sm text-muted-foreground">
-                  Trust this device for 90 days
-                </Label>
-              </div>
-
-              {/* Verify Button */}
-              <Button
-                className="w-full"
-                onClick={() => handleVerify(code.join(''))}
-                disabled={isVerifying || code.some((d) => !d)}
-              >
-                {isVerifying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="w-4 h-4 mr-2" />
-                    Verify
-                  </>
-                )}
-              </Button>
-
-              {/* Backup Code Link */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="text-sm text-muted-foreground hover:text-foreground underline"
-                  onClick={() => setShowBackupCodeInput(true)}
-                >
-                  Use a backup code instead
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Backup Code Input */}
-              <div className="flex items-center justify-center">
-                <Key className="w-16 h-16 text-muted-foreground" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="backupCode">Backup Code</Label>
+            <div className="flex justify-center gap-2">
+              {code.map((digit, index) => (
                 <Input
-                  id="backupCode"
+                  key={index}
+                  ref={(el) => (inputRefs.current[index] = el)}
                   type="text"
-                  placeholder="XXXXXXXX"
-                  value={backupCode}
-                  onChange={(e) => {
-                    setBackupCode(e.target.value.toUpperCase());
-                    setError(null);
-                  }}
-                  className="text-center font-mono text-lg tracking-wider"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-12 h-14 text-center text-2xl font-mono"
                   disabled={isVerifying}
+                  autoComplete="one-time-code"
                 />
-              </div>
+              ))}
+            </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
-                </div>
+            {/* Error Message */}
+            {error && (
+              <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                {error}
+              </div>
+            )}
+
+            {/* Trust Device Checkbox */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="trustDevice"
+                checked={trustDevice}
+                onCheckedChange={(checked) => setTrustDevice(checked === true)}
+              />
+              <Label htmlFor="trustDevice" className="text-sm text-muted-foreground">
+                Trust this device for 90 days
+              </Label>
+            </div>
+
+            {/* Verify Button */}
+            <Button
+              className="w-full"
+              onClick={() => handleVerify(code.join(''))}
+              disabled={isVerifying || code.some((d) => !d)}
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4 mr-2" />
+                  Verify
+                </>
               )}
+            </Button>
 
-              {/* Verify Button */}
-              <Button
-                className="w-full"
-                onClick={handleBackupCodeVerify}
-                disabled={isVerifying || !backupCode.trim()}
+            {/* Backup Code Link */}
+            <div className="text-center">
+              <button
+                type="button"
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+                onClick={() => setShowBackupCodeInput(true)}
               >
-                {isVerifying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <Key className="w-4 h-4 mr-2" />
-                    Verify Backup Code
-                  </>
-                )}
-              </Button>
+                Use a backup code instead
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Backup Code Input */}
+            <div className="flex items-center justify-center">
+              <Key className="w-16 h-16 text-muted-foreground" />
+            </div>
 
-              {/* Back to TOTP Link */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="text-sm text-muted-foreground hover:text-foreground underline"
-                  onClick={() => {
-                    setShowBackupCodeInput(false);
-                    setBackupCode('');
-                    setError(null);
-                  }}
-                >
-                  Use authenticator app instead
-                </button>
+            <div className="space-y-2">
+              <Label htmlFor="backupCode">Backup Code</Label>
+              <Input
+                id="backupCode"
+                type="text"
+                placeholder="XXXXXXXX"
+                value={backupCode}
+                onChange={(e) => {
+                  setBackupCode(e.target.value.toUpperCase());
+                  setError(null);
+                }}
+                className="text-center font-mono text-lg tracking-wider"
+                disabled={isVerifying}
+              />
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                {error}
               </div>
-            </>
-          )}
+            )}
 
-          {/* Help Text */}
-          <p className="text-xs text-center text-muted-foreground">
-            Having trouble?{' '}
-            <a href="/support" className="underline hover:text-foreground">
-              Contact support
-            </a>
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+            {/* Verify Button */}
+            <Button
+              className="w-full"
+              onClick={handleBackupCodeVerify}
+              disabled={isVerifying || !backupCode.trim()}
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Key className="w-4 h-4 mr-2" />
+                  Verify Backup Code
+                </>
+              )}
+            </Button>
+
+            {/* Back to TOTP Link */}
+            <div className="text-center">
+              <button
+                type="button"
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+                onClick={() => {
+                  setShowBackupCodeInput(false);
+                  setBackupCode('');
+                  setError(null);
+                }}
+              >
+                Use authenticator app instead
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Help Text */}
+        <p className="text-xs text-center text-muted-foreground">
+          Having trouble?{' '}
+          <a href="/support" className="underline hover:text-foreground">
+            Contact support
+          </a>
+        </p>
+      </div>
+    </AccessibleModal>
   );
 };
 

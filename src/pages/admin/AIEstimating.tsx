@@ -35,6 +35,28 @@ interface AIEstimate {
   created_at: string;
 }
 
+interface AIEstimateResult {
+  estimate_name: string;
+  predictions: {
+    total_cost: number;
+    labor_cost: number;
+    material_cost: number;
+    equipment_cost: number;
+    subcontractor_cost: number;
+    labor_hours: number;
+  };
+  recommendations: {
+    bid_amount: number;
+    markup_percentage: number;
+    win_probability: number;
+  };
+  confidence: {
+    score: number;
+    similar_projects: number;
+    data_quality: string;
+  };
+}
+
 export function AIEstimating() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,27 +73,30 @@ export function AIEstimating() {
   const [durationDays, setDurationDays] = useState('30');
 
   // Result state
-  const [currentEstimate, setCurrentEstimate] = useState<any>(null);
+  const [currentEstimate, setCurrentEstimate] = useState<AIEstimateResult | null>(null);
 
   useEffect(() => {
     fetchEstimates();
   }, []);
 
+  // Helper for querying tables not yet in the generated Supabase types
+  const fromUntypedTable = (table: string) =>
+    (supabase.from as (t: string) => ReturnType<typeof supabase.from>)(table);
+
   const fetchEstimates = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
-        .from('ai_cost_predictions')
+      const { data, error } = await fromUntypedTable('ai_cost_predictions')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20) as any;
+        .limit(20);
 
       if (error) throw error;
-      setEstimates(data as any || []);
-    } catch (error: any) {
+      setEstimates((data as unknown as AIEstimate[]) ?? []);
+    } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to fetch estimates',
         variant: 'destructive',
       });
     } finally {
@@ -135,11 +160,11 @@ export function AIEstimating() {
       setLocationZip('');
       setDurationDays('30');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Generate estimate error:', error);
       toast({
         title: 'Generation Failed',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to generate estimate',
         variant: 'destructive',
       });
     } finally {

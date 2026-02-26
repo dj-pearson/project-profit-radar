@@ -1,6 +1,18 @@
 import { useEffect, useState, useMemo } from 'react';
 import { assessDeviceCapabilities } from '@/utils/performanceConfig';
 
+interface NetworkConnection {
+  saveData?: boolean;
+  effectiveType?: string;
+  downlink?: number;
+  addEventListener: (event: string, handler: () => void) => void;
+  removeEventListener: (event: string, handler: () => void) => void;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkConnection;
+}
+
 interface DeviceCapabilities {
   connectionType: string;
   effectiveType: string;
@@ -23,7 +35,7 @@ export const useMobileOptimizations = () => {
   useEffect(() => {
     const deviceCaps = assessDeviceCapabilities();
     const saveDataEnabled = 'connection' in navigator && 
-      (navigator as any).connection?.saveData === true;
+      (navigator as NavigatorWithConnection).connection?.saveData === true;
 
     setCapabilities({
       ...deviceCaps,
@@ -37,7 +49,7 @@ export const useMobileOptimizations = () => {
   return capabilities;
 };
 
-const applyMobileOptimizations = (capabilities: any, saveDataEnabled: boolean) => {
+const applyMobileOptimizations = (capabilities: DeviceCapabilities, saveDataEnabled: boolean) => {
   // Reduce animations for low-end devices
   if (capabilities.isLowEndDevice || saveDataEnabled) {
     document.documentElement.style.setProperty('--animation-duration', '0s');
@@ -116,7 +128,7 @@ export const useConnectionAwareLoading = () => {
   useEffect(() => {
     const updateConnectionInfo = () => {
       if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+        const connection = (navigator as NavigatorWithConnection).connection;
         setConnectionInfo({
           isOnline: navigator.onLine,
           effectiveType: connection?.effectiveType || 'unknown',
@@ -133,7 +145,7 @@ export const useConnectionAwareLoading = () => {
     window.addEventListener('offline', updateConnectionInfo);
     
     if ('connection' in navigator) {
-      (navigator as any).connection.addEventListener('change', updateConnectionInfo);
+      (navigator as NavigatorWithConnection).connection.addEventListener('change', updateConnectionInfo);
     }
 
     updateConnectionInfo();
@@ -143,7 +155,7 @@ export const useConnectionAwareLoading = () => {
       window.removeEventListener('offline', updateConnectionInfo);
       
       if ('connection' in navigator) {
-        (navigator as any).connection.removeEventListener('change', updateConnectionInfo);
+        (navigator as NavigatorWithConnection).connection.removeEventListener('change', updateConnectionInfo);
       }
     };
   }, []);

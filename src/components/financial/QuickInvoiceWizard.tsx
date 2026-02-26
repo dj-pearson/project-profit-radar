@@ -44,7 +44,7 @@ interface LineItem {
 
 interface QuickInvoiceWizardProps {
   projectId?: string;
-  onComplete?: (invoice: any) => void;
+  onComplete?: (invoice: Record<string, unknown>) => void;
   onCancel?: () => void;
 }
 
@@ -55,7 +55,7 @@ export const QuickInvoiceWizard: React.FC<QuickInvoiceWizardProps> = ({
 }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string; client_name: string | null; client_email: string | null; status: string }[]>([]);
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
 
@@ -120,7 +120,7 @@ export const QuickInvoiceWizard: React.FC<QuickInvoiceWizardProps> = ({
     }
   };
 
-  const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
+  const updateLineItem = (id: string, field: keyof LineItem, value: string | number) => {
     setLineItems(lineItems.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     ));
@@ -224,11 +224,11 @@ export const QuickInvoiceWizard: React.FC<QuickInvoiceWizardProps> = ({
       });
 
       onComplete?.(invoice);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating invoice:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create invoice',
+        description: error instanceof Error ? error.message : 'Failed to create invoice',
         variant: 'destructive'
       });
     } finally {

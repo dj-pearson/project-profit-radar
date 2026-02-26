@@ -58,12 +58,12 @@ const Dashboard = () => {
       <AccessiblePageWrapper pageTitle="Dashboard">
         <DashboardLayout title="Dashboard" hasAccessibleWrapper>
           <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             <AlertTitle>Failed to load dashboard data</AlertTitle>
             <AlertDescription className="flex items-center gap-4 mt-2">
               <span>{dataError}</span>
               <Button variant="outline" size="sm" onClick={refetch}>
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
                 Retry
               </Button>
             </AlertDescription>

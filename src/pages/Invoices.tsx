@@ -129,9 +129,9 @@ const Invoices: React.FC = () => {
           onClick={() => setShowInvoiceGenerator(true)}
           className="bg-construction-orange hover:bg-construction-orange/90"
         >
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
           Create Invoice
-          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/20 rounded border border-background/40">
+          <kbd className="ml-2 hidden lg:inline-block px-2 py-0.5 text-xs bg-background/20 rounded border border-background/40" aria-hidden="true">
             Ctrl+I
           </kbd>
         </Button>
@@ -141,22 +141,22 @@ const Invoices: React.FC = () => {
       <InvoiceStats invoices={invoices} />
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" aria-label="Invoice management sections">
+        <TabsList className="grid w-full grid-cols-4" aria-label="Invoice categories">
           <TabsTrigger value="overview" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4" aria-hidden="true" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="progress" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
+            <DollarSign className="h-4 w-4" aria-hidden="true" />
             Progress Billing
           </TabsTrigger>
           <TabsTrigger value="retention" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+            <Clock className="h-4 w-4" aria-hidden="true" />
             Retention
           </TabsTrigger>
           <TabsTrigger value="overdue" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             Overdue
           </TabsTrigger>
         </TabsList>
@@ -166,20 +166,21 @@ const Invoices: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-construction-orange" />
+                <Filter className="h-5 w-5 text-construction-orange" aria-hidden="true" />
                 Filters
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4" role="search" aria-label="Search and filter invoices">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
                       placeholder="Search invoices..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
+                      aria-label="Search invoices by client name or invoice number"
                     />
                   </div>
                 </div>
@@ -220,7 +221,7 @@ const Invoices: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
+                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
                 Overdue Invoices
               </CardTitle>
             </CardHeader>

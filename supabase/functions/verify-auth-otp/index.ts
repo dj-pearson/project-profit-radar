@@ -14,6 +14,7 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { getCorsHeaders } from '../_shared/secure-cors.ts';
+import { checkRateLimit, getClientIP, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts';
 
 // Helper function to get user by email (works with all Supabase client versions)
 async function getUserByEmail(supabaseAdmin: any, email: string) {
@@ -83,6 +84,13 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
+
+    // Rate limit: 10 req/min per IP for auth endpoints
+    const clientIP = getClientIP(req);
+    const rlResult = await checkRateLimit(supabaseAdmin, {
+      identifier: clientIP, endpoint: 'verify-auth-otp', ...RATE_LIMITS.AUTH
+    });
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders);
 
     // Verify OTP code using database function
     const { data: verifyResult, error: verifyError } = await supabaseAdmin.rpc('verify_otp_code', {

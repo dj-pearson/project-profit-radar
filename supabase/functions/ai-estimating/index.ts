@@ -2,7 +2,9 @@
 // Generates project cost estimates using ML predictions and historical data
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.3'
 import { initializeAuthContext, errorResponse, successResponse } from '../_shared/auth-helpers.ts'
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '../_shared/rate-limiter.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,6 +45,17 @@ serve(async (req) => {
     }
 
     const { user, supabase } = authContext
+
+    // Rate limit: 20 req/min per user for AI endpoints
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+    const rlResult = await checkRateLimit(serviceClient, {
+      identifier: user.id, endpoint: 'ai-estimating', ...RATE_LIMITS.AI
+    })
+    if (!rlResult.allowed) return rateLimitResponse(rlResult, corsHeaders)
+
     logStep('User authenticated', { userId: user.id })
 
     const requestData: EstimateRequest = await req.json()

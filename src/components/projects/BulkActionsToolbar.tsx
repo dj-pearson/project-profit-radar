@@ -124,8 +124,9 @@ export function BulkActionsToolbar({
 
         updateItemStatus(projectId, 'success');
         successCount++;
-      } catch (error: any) {
-        updateItemStatus(projectId, 'error', error.message || 'Update failed');
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Update failed';
+        updateItemStatus(projectId, 'error', message);
         failed.push(projectId);
       }
     }
@@ -179,8 +180,9 @@ export function BulkActionsToolbar({
 
         updateItemStatus(projectId, 'success');
         successCount++;
-      } catch (error: any) {
-        updateItemStatus(projectId, 'error', error.message || 'Archive failed');
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Archive failed';
+        updateItemStatus(projectId, 'error', message);
         failed.push(projectId);
       }
     }
@@ -247,8 +249,9 @@ export function BulkActionsToolbar({
 
         updateItemStatus(projectId, 'success');
         successCount++;
-      } catch (error: any) {
-        updateItemStatus(projectId, 'error', error.message || 'Retry failed');
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Retry failed';
+        updateItemStatus(projectId, 'error', message);
         stillFailed.push(projectId);
       }
     }
@@ -331,11 +334,11 @@ export function BulkActionsToolbar({
       });
 
       onClearSelection();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Export Failed',
-        description: error.message || 'Failed to export projects'
+        description: error instanceof Error ? error.message : 'Failed to export projects'
       });
     }
   };

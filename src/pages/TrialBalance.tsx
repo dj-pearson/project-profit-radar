@@ -14,7 +14,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ClipboardList, Download, Printer, CheckCircle, AlertCircle } from 'lucide-react';
-import { formatCurrency, getAccountTypeLabel } from '@/utils/accountingUtils';
+import { formatCurrency, getAccountTypeLabel, type AccountType } from '@/utils/accountingUtils';
+
+interface ChartAccount {
+  id: string;
+  account_name: string;
+  account_number: string;
+  account_type: AccountType;
+  account_subtype: string;
+  current_balance: number | null;
+}
 
 export default function TrialBalance() {
   const { user } = useAuth();
@@ -44,11 +53,12 @@ export default function TrialBalance() {
   const isBalanced = difference < 0.01;
 
   // Group accounts by type
-  const accountsByType = accounts?.reduce((acc: any, account: any) => {
-    if (!acc[account.account_type]) {
-      acc[account.account_type] = [];
+  const accountsByType = accounts?.reduce<Record<string, ChartAccount[]>>((acc, account) => {
+    const typedAccount = account as unknown as ChartAccount;
+    if (!acc[typedAccount.account_type]) {
+      acc[typedAccount.account_type] = [];
     }
-    acc[account.account_type].push(account);
+    acc[typedAccount.account_type].push(typedAccount);
     return acc;
   }, {});
 
@@ -170,7 +180,7 @@ export default function TrialBalance() {
                   // Calculate subtotals for this type
                   const isDebitType = ['asset', 'expense', 'cost_of_goods_sold', 'other_expense'].includes(type);
                   const subtotal = typeAccounts.reduce(
-                    (sum: number, account: any) => sum + Math.abs(Number(account.current_balance) || 0),
+                    (sum: number, account: ChartAccount) => sum + Math.abs(Number(account.current_balance) || 0),
                     0
                   );
 
@@ -179,12 +189,12 @@ export default function TrialBalance() {
                       {/* Type Header */}
                       <TableRow className="bg-muted/50">
                         <TableCell colSpan={5} className="font-semibold">
-                          {getAccountTypeLabel(type as any)}
+                          {getAccountTypeLabel(type as AccountType)}
                         </TableCell>
                       </TableRow>
 
                       {/* Accounts */}
-                      {typeAccounts.map((account: any) => {
+                      {typeAccounts.map((account: ChartAccount) => {
                         const balance = Math.abs(Number(account.current_balance) || 0);
 
                         return (
@@ -209,7 +219,7 @@ export default function TrialBalance() {
                       {/* Subtotal */}
                       <TableRow className="font-semibold bg-muted/30">
                         <TableCell colSpan={3} className="text-right">
-                          Total {getAccountTypeLabel(type as any)}
+                          Total {getAccountTypeLabel(type as AccountType)}
                         </TableCell>
                         <TableCell className="text-right font-mono border-t">
                           {isDebitType ? formatCurrency(subtotal) : '-'}

@@ -9,18 +9,18 @@ import { LoadingState } from '@/components/ui/loading-spinner';
 import { ErrorBoundary, ErrorState, EmptyState } from '@/components/ui/error-boundary';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { AccessibleTable, type TableColumn } from '@/components/accessibility/AccessibleTable';
+import { AccessibleModal } from '@/components/accessibility/AccessibleModal';
 import { useLoadingState } from '@/hooks/useLoadingState';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AccessibleForm, AccessibleFormField, AccessibleTextarea, AccessibleFieldset } from '@/components/accessibility/AccessibleForm';
-import { 
-  Users, 
+import {
+  Users,
   Search,
   Plus,
   Phone,
@@ -73,7 +73,7 @@ const CRMContacts = () => {
   const { user, userProfile, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -84,23 +84,23 @@ const CRMContacts = () => {
     preferred_contact_method: 'email',
     country: 'United States'
   });
-  
-  const { 
-    data: contacts, 
-    loading: contactsLoading, 
-    error: contactsError, 
-    execute: loadContacts 
+
+  const {
+    data: contacts,
+    loading: contactsLoading,
+    error: contactsError,
+    execute: loadContacts
   } = useLoadingState<Contact[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
-    
+
     if (!loading && user && userProfile && !userProfile.company_id && userProfile.role !== 'root_admin') {
       navigate('/setup');
     }
-    
+
     if (!loading && user && userProfile) {
       loadContacts(loadContactsData);
     }
@@ -232,15 +232,15 @@ const CRMContacts = () => {
   };
 
   const filteredContacts = contacts?.filter(contact => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       `${contact.first_name} ${contact.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.job_title?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesType = typeFilter === 'all' || contact.contact_type === typeFilter;
     const matchesStatus = statusFilter === 'all' || contact.relationship_status === statusFilter;
-    
+
     return matchesSearch && matchesType && matchesStatus;
   }) || [];
 
@@ -254,7 +254,7 @@ const CRMContacts = () => {
 
   return (
     <DashboardLayout title="Contact Management">
-            
+
             {/* Filters and Actions */}
             <Card className="mb-6">
               <CardContent className="pt-6">
@@ -271,10 +271,10 @@ const CRMContacts = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className="w-full sm:w-40">
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by contact type">
                         <SelectValue placeholder="Type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -286,9 +286,9 @@ const CRMContacts = () => {
                         <SelectItem value="referral">Referral</SelectItem>
                       </SelectContent>
                     </Select>
-                    
+
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-full sm:w-40">
+                      <SelectTrigger className="w-full sm:w-40" aria-label="Filter by relationship status">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -298,134 +298,133 @@ const CRMContacts = () => {
                         <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Dialog open={showNewContactDialog} onOpenChange={setShowNewContactDialog}>
-                      <DialogTrigger asChild>
-                        <Button aria-label="Create new contact">
-                          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-                          New Contact
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="new-contact-description">
-                        <DialogHeader>
-                          <DialogTitle>Create New Contact</DialogTitle>
-                          <DialogDescription id="new-contact-description">
-                            Add a new contact to your CRM system.
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <AccessibleForm
-                          onSubmit={() => { createContact(); }}
-                          ariaLabel="Create new contact form"
-                          className="space-y-6 py-4"
-                        >
-                          <AccessibleFieldset legend="Contact Information">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <AccessibleFormField
-                                name="first_name"
-                                label="First Name"
-                                required
-                                value={newContact.first_name || ''}
-                                onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
-                                placeholder="John"
-                              />
-                              <AccessibleFormField
-                                name="last_name"
-                                label="Last Name"
-                                required
-                                value={newContact.last_name || ''}
-                                onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
-                                placeholder="Smith"
-                              />
-                              <AccessibleFormField
-                                name="email"
-                                label="Email"
-                                type="email"
-                                value={newContact.email || ''}
-                                onChange={(e) => setNewContact({...newContact, email: e.target.value})}
-                                placeholder="john.smith@email.com"
-                              />
-                              <AccessibleFormField
-                                name="phone"
-                                label="Phone"
-                                type="tel"
-                                value={newContact.phone || ''}
-                                onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-                                placeholder="(555) 123-4567"
-                              />
-                              <AccessibleFormField
-                                name="company_name"
-                                label="Company"
-                                value={newContact.company_name || ''}
-                                onChange={(e) => setNewContact({...newContact, company_name: e.target.value})}
-                                placeholder="ABC Corporation"
-                              />
-                              <AccessibleFormField
-                                name="job_title"
-                                label="Job Title"
-                                value={newContact.job_title || ''}
-                                onChange={(e) => setNewContact({...newContact, job_title: e.target.value})}
-                                placeholder="Property Manager"
-                              />
-                            </div>
-                          </AccessibleFieldset>
 
-                          <AccessibleFieldset legend="Classification">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="contact_type">Contact Type</Label>
-                                <Select value={newContact.contact_type} onValueChange={(value) => setNewContact({...newContact, contact_type: value})}>
-                                  <SelectTrigger aria-label="Contact type">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="client">Client</SelectItem>
-                                    <SelectItem value="prospect">Prospect</SelectItem>
-                                    <SelectItem value="vendor">Vendor</SelectItem>
-                                    <SelectItem value="partner">Partner</SelectItem>
-                                    <SelectItem value="referral">Referral</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label htmlFor="relationship_status">Status</Label>
-                                <Select value={newContact.relationship_status} onValueChange={(value) => setNewContact({...newContact, relationship_status: value})}>
-                                  <SelectTrigger aria-label="Relationship status">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                    <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </AccessibleFieldset>
-
-                          <AccessibleTextarea
-                            name="notes"
-                            label="Notes"
-                            value={newContact.notes || ''}
-                            onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
-                            placeholder="Additional notes about this contact..."
-                          />
-
-                          <div className="flex justify-end space-x-2">
-                            <Button type="button" variant="outline" onClick={() => setShowNewContactDialog(false)}>
-                              Cancel
-                            </Button>
-                            <Button type="submit">
-                              Create Contact
-                            </Button>
-                          </div>
-                        </AccessibleForm>
-                      </DialogContent>
-                    </Dialog>
+                    <Button aria-label="Create new contact" onClick={() => setShowNewContactDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                      New Contact
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* New Contact Modal */}
+            <AccessibleModal
+              isOpen={showNewContactDialog}
+              onClose={() => setShowNewContactDialog(false)}
+              title="Create New Contact"
+              description="Add a new contact to your CRM system."
+              size="xl"
+              footer={
+                <>
+                  <Button type="button" variant="outline" onClick={() => setShowNewContactDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" form="create-contact-form">
+                    Create Contact
+                  </Button>
+                </>
+              }
+            >
+              <AccessibleForm
+                id="create-contact-form"
+                onSubmit={() => { createContact(); }}
+                ariaLabel="Create new contact form"
+                className="space-y-6"
+              >
+                <AccessibleFieldset legend="Contact Information">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <AccessibleFormField
+                      name="first_name"
+                      label="First Name"
+                      required
+                      value={newContact.first_name || ''}
+                      onChange={(e) => setNewContact({...newContact, first_name: e.target.value})}
+                      placeholder="John"
+                    />
+                    <AccessibleFormField
+                      name="last_name"
+                      label="Last Name"
+                      required
+                      value={newContact.last_name || ''}
+                      onChange={(e) => setNewContact({...newContact, last_name: e.target.value})}
+                      placeholder="Smith"
+                    />
+                    <AccessibleFormField
+                      name="email"
+                      label="Email"
+                      type="email"
+                      value={newContact.email || ''}
+                      onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                      placeholder="john.smith@email.com"
+                    />
+                    <AccessibleFormField
+                      name="phone"
+                      label="Phone"
+                      type="tel"
+                      value={newContact.phone || ''}
+                      onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                      placeholder="(555) 123-4567"
+                    />
+                    <AccessibleFormField
+                      name="company_name"
+                      label="Company"
+                      value={newContact.company_name || ''}
+                      onChange={(e) => setNewContact({...newContact, company_name: e.target.value})}
+                      placeholder="ABC Corporation"
+                    />
+                    <AccessibleFormField
+                      name="job_title"
+                      label="Job Title"
+                      value={newContact.job_title || ''}
+                      onChange={(e) => setNewContact({...newContact, job_title: e.target.value})}
+                      placeholder="Property Manager"
+                    />
+                  </div>
+                </AccessibleFieldset>
+
+                <AccessibleFieldset legend="Classification">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="contact_type">Contact Type</Label>
+                      <Select value={newContact.contact_type} onValueChange={(value) => setNewContact({...newContact, contact_type: value})}>
+                        <SelectTrigger aria-label="Contact type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="client">Client</SelectItem>
+                          <SelectItem value="prospect">Prospect</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                          <SelectItem value="partner">Partner</SelectItem>
+                          <SelectItem value="referral">Referral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="relationship_status">Status</Label>
+                      <Select value={newContact.relationship_status} onValueChange={(value) => setNewContact({...newContact, relationship_status: value})}>
+                        <SelectTrigger aria-label="Relationship status">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="do_not_contact">Do Not Contact</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </AccessibleFieldset>
+
+                <AccessibleTextarea
+                  name="notes"
+                  label="Notes"
+                  value={newContact.notes || ''}
+                  onChange={(e) => setNewContact({...newContact, notes: e.target.value})}
+                  placeholder="Additional notes about this contact..."
+                />
+              </AccessibleForm>
+            </AccessibleModal>
 
             {/* Contacts Table */}
             <ErrorBoundary>
@@ -488,7 +487,7 @@ const CRMContacts = () => {
                     header: 'Type',
                     sortable: true,
                     render: (value) => (
-                      <Badge variant="outline" className={`text-${getTypeColor(value)}-600`}>
+                      <Badge variant="outline" className={`text-${getTypeColor(value)}-600`} aria-label={`Type: ${value}`}>
                         {value}
                       </Badge>
                     ),
@@ -498,7 +497,7 @@ const CRMContacts = () => {
                     header: 'Status',
                     sortable: true,
                     render: (value) => (
-                      <Badge variant="outline" className={`text-${getStatusColor(value)}-600`}>
+                      <Badge variant="outline" className={`text-${getStatusColor(value)}-600`} aria-label={`Status: ${value.replace('_', ' ')}`}>
                         {value}
                       </Badge>
                     ),

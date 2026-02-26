@@ -231,7 +231,7 @@ const CompanySettings = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+              <Building2 className="h-5 w-5" aria-hidden="true" />
               Company Profile
             </CardTitle>
             <CardDescription>
@@ -276,7 +276,7 @@ const CompanySettings = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
+              <Shield className="h-5 w-5" aria-hidden="true" />
               Feature Management
             </CardTitle>
             <CardDescription>
@@ -390,7 +390,7 @@ const CompanySettings = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               Notification Preferences
             </CardTitle>
             <CardDescription>
@@ -456,7 +456,7 @@ const CompanySettings = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+              <DollarSign className="h-5 w-5" aria-hidden="true" />
               Business Configuration
             </CardTitle>
             <CardDescription>

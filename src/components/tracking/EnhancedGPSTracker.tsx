@@ -56,7 +56,7 @@ export const EnhancedGPSTracker = () => {
   // Monitor battery level (if available)
   useEffect(() => {
     if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
+      (navigator as unknown as { getBattery: () => Promise<{ level: number; addEventListener: (event: string, handler: () => void) => void; removeEventListener: (event: string, handler: () => void) => void }> }).getBattery().then((battery) => {
         setBatteryLevel(Math.round(battery.level * 100));
         
         const updateBattery = () => {
@@ -253,7 +253,7 @@ export const EnhancedGPSTracker = () => {
       }, accuracy === 'high' ? 30000 : 60000); // 30s for high accuracy, 1min for others
 
       // Store interval ID for cleanup
-      (window as any).gpsTrackingInterval = trackingInterval;
+      (window as unknown as Record<string, unknown>).gpsTrackingInterval = trackingInterval;
     } catch (error) {
       console.error('Error starting tracking:', error);
       toast({
@@ -266,8 +266,8 @@ export const EnhancedGPSTracker = () => {
 
   const stopTracking = () => {
     setIsTracking(false);
-    if ((window as any).gpsTrackingInterval) {
-      clearInterval((window as any).gpsTrackingInterval);
+    if ((window as unknown as Record<string, unknown>).gpsTrackingInterval) {
+      clearInterval((window as unknown as Record<string, ReturnType<typeof setInterval>>).gpsTrackingInterval);
     }
     
     toast({

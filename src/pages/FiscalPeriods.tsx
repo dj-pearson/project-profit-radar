@@ -30,6 +30,43 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { generateMonthlyPeriods } from '@/utils/accountingUtils';
 
+interface NewFiscalYearData {
+  yearNumber: number;
+  startDate: string;
+  endDate: string;
+}
+
+interface FiscalYear {
+  id: string;
+  company_id: string;
+  year_number: number;
+  start_date: string;
+  end_date: string;
+  is_closed: boolean | null;
+  closed_at: string | null;
+  closed_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface FiscalPeriod {
+  id: string;
+  fiscal_year_id: string;
+  company_id: string;
+  period_number: number;
+  period_name: string;
+  start_date: string;
+  end_date: string;
+  is_closed: boolean | null;
+  closed_at: string | null;
+  closed_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  fiscal_year?: {
+    year_number: number;
+  } | null;
+}
+
 export default function FiscalPeriods() {
   const { user } = useAuth();
   const companyId = user?.user_metadata?.company_id;
@@ -78,7 +115,7 @@ export default function FiscalPeriods() {
 
   // Create fiscal year mutation
   const createFiscalYear = useMutation({
-    mutationFn: async (yearData: any) => {
+    mutationFn: async (yearData: NewFiscalYearData) => {
       // Create fiscal year
       const { data: fiscalYear, error: yearError } = await supabase
         .from('fiscal_years')
@@ -128,8 +165,8 @@ export default function FiscalPeriods() {
         endDate: `${new Date().getFullYear() + 1}-12-31`,
       });
     },
-    onError: (error: any) => {
-      toast.error(`Failed to create fiscal year: ${error.message}`);
+    onError: (error: unknown) => {
+      toast.error(`Failed to create fiscal year: ${error instanceof Error ? error.message : 'Unknown error'}`);
     },
   });
 
@@ -151,8 +188,8 @@ export default function FiscalPeriods() {
       queryClient.invalidateQueries({ queryKey: ['fiscal-periods-all'] });
       toast.success('Period closed successfully');
     },
-    onError: (error: any) => {
-      toast.error(`Failed to close period: ${error.message}`);
+    onError: (error: unknown) => {
+      toast.error(`Failed to close period: ${error instanceof Error ? error.message : 'Unknown error'}`);
     },
   });
 
@@ -174,8 +211,8 @@ export default function FiscalPeriods() {
       queryClient.invalidateQueries({ queryKey: ['fiscal-periods-all'] });
       toast.success('Period reopened successfully');
     },
-    onError: (error: any) => {
-      toast.error(`Failed to reopen period: ${error.message}`);
+    onError: (error: unknown) => {
+      toast.error(`Failed to reopen period: ${error instanceof Error ? error.message : 'Unknown error'}`);
     },
   });
 
@@ -197,12 +234,12 @@ export default function FiscalPeriods() {
   };
 
   // Group periods by fiscal year
-  const periodsByYear = allPeriods?.reduce((acc: any, period: any) => {
-    const yearNumber = period.fiscal_year?.year_number || 'Unknown';
+  const periodsByYear = allPeriods?.reduce<Record<string | number, FiscalPeriod[]>>((acc, period) => {
+    const yearNumber = (period as FiscalPeriod).fiscal_year?.year_number || 'Unknown';
     if (!acc[yearNumber]) {
       acc[yearNumber] = [];
     }
-    acc[yearNumber].push(period);
+    acc[yearNumber].push(period as FiscalPeriod);
     return acc;
   }, {});
 
@@ -365,7 +402,7 @@ export default function FiscalPeriods() {
           </Card>
         ) : fiscalYears && fiscalYears.length > 0 ? (
           <div className="space-y-6">
-          {fiscalYears.map((year: any) => (
+          {fiscalYears.map((year: FiscalYear) => (
             <Card key={year.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -397,7 +434,7 @@ export default function FiscalPeriods() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {periodsByYear?.[year.year_number]?.map((period: any) => (
+                    {periodsByYear?.[year.year_number]?.map((period: FiscalPeriod) => (
                       <TableRow key={period.id}>
                         <TableCell className="font-mono">
                           Period {period.period_number}
