@@ -38,7 +38,9 @@
       "WebFetch(domain:www.aihero.dev)",
       "Bash(node -e:*)",
       "Bash(tee:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc:*)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
