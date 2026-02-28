@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -12,12 +12,12 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { LoadingState } from '@/components/ui/loading-spinner';
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/layout/ResponsiveContainer';
 import { mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses } from '@/utils/mobileHelpers';
-import PredictiveAnalytics from '@/components/analytics/PredictiveAnalytics';
-import RiskAssessment from '@/components/analytics/RiskAssessment';
-import TimelineOptimization from '@/components/analytics/TimelineOptimization';
-import PerformanceBenchmarking from '@/components/analytics/PerformanceBenchmarking';
-import ResourceOptimization from '@/components/analytics/ResourceOptimization';
-import WorkflowAutomation from '@/components/analytics/WorkflowAutomation';
+const PredictiveAnalytics = React.lazy(() => import('@/components/analytics/PredictiveAnalytics'));
+const RiskAssessment = React.lazy(() => import('@/components/analytics/RiskAssessment'));
+const TimelineOptimization = React.lazy(() => import('@/components/analytics/TimelineOptimization'));
+const PerformanceBenchmarking = React.lazy(() => import('@/components/analytics/PerformanceBenchmarking'));
+const ResourceOptimization = React.lazy(() => import('@/components/analytics/ResourceOptimization'));
+const WorkflowAutomation = React.lazy(() => import('@/components/analytics/WorkflowAutomation'));
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
 import { 
   TrendingUp, 
@@ -606,27 +606,39 @@ const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="predictive">
-            <PredictiveAnalytics />
+            <Suspense fallback={<LoadingState message="Loading predictive analytics..." />}>
+              <PredictiveAnalytics />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="risk">
-            <RiskAssessment />
+            <Suspense fallback={<LoadingState message="Loading risk assessment..." />}>
+              <RiskAssessment />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="optimization">
-            <ResourceOptimization />
+            <Suspense fallback={<LoadingState message="Loading resource optimization..." />}>
+              <ResourceOptimization />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="workflow">
-            <WorkflowAutomation />
+            <Suspense fallback={<LoadingState message="Loading workflow automation..." />}>
+              <WorkflowAutomation />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="timeline">
-            <TimelineOptimization />
+            <Suspense fallback={<LoadingState message="Loading timeline optimization..." />}>
+              <TimelineOptimization />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="benchmarks">
-            <PerformanceBenchmarking />
+            <Suspense fallback={<LoadingState message="Loading benchmarks..." />}>
+              <PerformanceBenchmarking />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </ResponsiveContainer>

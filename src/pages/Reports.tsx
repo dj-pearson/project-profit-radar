@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CustomReportBuilder } from '@/components/reports/CustomReportBuilder';
-import ExecutiveDashboard from '@/components/analytics/ExecutiveDashboard';
+const CustomReportBuilder = React.lazy(() => import('@/components/reports/CustomReportBuilder').then(m => ({ default: m.CustomReportBuilder })));
+const ExecutiveDashboard = React.lazy(() => import('@/components/analytics/ExecutiveDashboard'));
 import { ArrowLeft, FileSpreadsheet, FileText, Download, BarChart3, Settings, Eye } from 'lucide-react';
 import { AccessiblePageWrapper } from "@/components/accessibility/AccessiblePageWrapper";
 import { MobilePageWrapper, MobileStatsGrid, MobileFilters, mobileGridClasses, mobileFilterClasses, mobileButtonClasses, mobileTextClasses, mobileCardClasses } from '@/utils/mobileHelpers';
@@ -303,20 +303,24 @@ const Reports = () => {
           </TabsList>
 
           <TabsContent value="dashboard">
-            <ExecutiveDashboard />
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+              <ExecutiveDashboard />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="builder">
-            <CustomReportBuilder
-              onSave={(config) => {
-                toast({
-                  title: "Success",
-                  description: "Report configuration saved successfully"
-                });
-              }}
-              onExecute={(config) => {
-              }}
-            />
+            <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+              <CustomReportBuilder
+                onSave={(config) => {
+                  toast({
+                    title: "Success",
+                    description: "Report configuration saved successfully"
+                  });
+                }}
+                onExecute={(config) => {
+                }}
+              />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="exports" className="space-y-6">
