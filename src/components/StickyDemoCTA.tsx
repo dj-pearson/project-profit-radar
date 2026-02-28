@@ -26,66 +26,92 @@ export const StickyDemoCTA: React.FC<StickyDemoCTAProps> = ({ className }) => {
   if (!isVisible) return null;
 
   return (
-    <aside
-      aria-label="Call to action"
-      className={cn(
-        "fixed bottom-4 right-4 z-50 bg-background border border-border rounded-lg shadow-lg p-4 max-w-sm transition-all duration-300 animate-slide-up",
-        "bg-gradient-to-r from-construction-light/90 to-construction-orange/10 backdrop-blur-sm",
-        className
-      )}
-    >
-      {/* Close Button */}
-      <button
-        onClick={() => setIsDismissed(true)}
-        className="absolute top-2 right-2 p-1 hover:bg-muted rounded-full transition-colors"
-        aria-label="Dismiss"
+    <>
+      {/* Mobile: Slim bottom bar */}
+      <aside
+        aria-label="Call to action"
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-construction-dark text-white shadow-lg h-12 flex items-center justify-between px-4",
+          className
+        )}
       >
-        <X className="h-4 w-4 text-muted-foreground" />
-      </button>
+        <span className="text-sm font-medium">Try BuildDesk Free</span>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="hero" className="text-xs h-8" asChild>
+            <Link to="/auth">Start Trial</Link>
+          </Button>
+          <button
+            onClick={() => setIsDismissed(true)}
+            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </aside>
 
-      {/* Content */}
-      <div className="space-y-3 pr-6">
-        <div>
-          <h3 className="font-semibold text-construction-dark text-sm">
-            See BuildDesk in Action
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            Watch how contractors save 23% on project costs
+      {/* Desktop: Floating card */}
+      <aside
+        aria-label="Call to action"
+        className={cn(
+          "hidden md:block fixed bottom-4 right-4 z-50 bg-background border border-border rounded-lg shadow-lg p-4 max-w-sm transition-all duration-300 animate-slide-up",
+          "bg-gradient-to-r from-construction-light/90 to-construction-orange/10 backdrop-blur-sm",
+          className
+        )}
+      >
+        {/* Close Button */}
+        <button
+          onClick={() => setIsDismissed(true)}
+          className="absolute top-2 right-2 p-1 hover:bg-muted rounded-full transition-colors"
+          aria-label="Dismiss"
+        >
+          <X className="h-4 w-4 text-muted-foreground" />
+        </button>
+
+        {/* Content */}
+        <div className="space-y-3 pr-6">
+          <div>
+            <h3 className="font-semibold text-construction-dark text-sm">
+              See BuildDesk in Action
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Watch how contractors save 23% on project costs
+            </p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="hero"
+              className="flex-1 text-xs h-8"
+              asChild
+            >
+              <Link to="/auth">
+                <ArrowRight className="h-3 w-3 mr-1" />
+                Free Trial
+              </Link>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 text-xs h-8"
+              asChild
+            >
+              <Link to="/demo">
+                <Play className="h-3 w-3 mr-1" />
+                Demo
+              </Link>
+            </Button>
+          </div>
+
+          {/* Trust Signal */}
+          <p className="text-xs text-muted-foreground text-center">
+            No credit card required. Setup in 30 minutes.
           </p>
         </div>
-
-        {/* CTA Buttons */}
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant="hero"
-            className="flex-1 text-xs h-8"
-            asChild
-          >
-            <Link to="/auth">
-              <ArrowRight className="h-3 w-3 mr-1" />
-              Free Trial
-            </Link>
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="flex-1 text-xs h-8"
-            asChild
-          >
-            <Link to="/demo">
-              <Play className="h-3 w-3 mr-1" />
-              Demo
-            </Link>
-          </Button>
-        </div>
-
-        {/* Trust Signal */}
-        <p className="text-xs text-muted-foreground text-center">
-          ✓ No credit card required • ✓ Setup in 30 minutes
-        </p>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 

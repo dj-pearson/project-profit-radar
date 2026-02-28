@@ -52,7 +52,7 @@ const Header = () => {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium whitespace-nowrap"
+                  className="text-construction-dark dark:text-gray-200 hover:text-construction-orange transition-colors font-medium whitespace-nowrap"
                 >
                   {item.name}
                 </a>
@@ -60,7 +60,7 @@ const Header = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="text-construction-dark hover:text-construction-orange transition-colors font-medium whitespace-nowrap"
+                  className="text-construction-dark dark:text-gray-200 hover:text-construction-orange transition-colors font-medium whitespace-nowrap"
                 >
                   {item.name}
                 </Link>
@@ -74,7 +74,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-construction-dark hover:text-construction-orange hidden lg:flex"
+              className="text-construction-dark dark:text-gray-200 hover:text-construction-orange hidden lg:flex"
               asChild
             >
               <Link to="/auth">Sign In</Link>
@@ -103,14 +103,14 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border animate-accordion-down">
+          <div className="lg:hidden py-4 border-t border-border dark:border-border animate-accordion-down">
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) =>
                 item.isSection ? (
                   <a
                     key={item.name}
                     href={item.href}
-                    className="text-construction-dark hover:text-construction-orange transition-colors font-medium py-2"
+                    className="text-construction-dark dark:text-gray-200 hover:text-construction-orange transition-colors font-medium py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
@@ -119,17 +119,17 @@ const Header = () => {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className="text-construction-dark hover:text-construction-orange transition-colors font-medium py-2"
+                    className="text-construction-dark dark:text-gray-200 hover:text-construction-orange transition-colors font-medium py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
                 )
               )}
-              <div className="flex flex-col space-y-3 pt-4 border-t border-border">
+              <div className="flex flex-col space-y-3 pt-4 border-t border-border dark:border-border">
                 <Button
                   variant="ghost"
-                  className="text-construction-dark hover:text-construction-orange justify-start"
+                  className="text-construction-dark dark:text-gray-200 hover:text-construction-orange justify-start"
                   asChild
                 >
                   <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>

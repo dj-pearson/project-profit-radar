@@ -1,9 +1,18 @@
+import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail, MapPin } from "lucide-react";
+import { ArrowRight, Mail, MapPin, Linkedin, Twitter, Facebook } from "lucide-react";
 import { Link } from "react-router-dom";
 import SmartLogo from "@/components/ui/smart-logo";
+import { toast } from "sonner";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+
+  const handleNewsletterSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    toast.success("Thanks for subscribing!");
+    setEmail("");
+  };
   const companyLinks = [
     { name: "Solutions", href: "/solutions" },
     { name: "FAQ", href: "/faq" },
@@ -90,6 +99,22 @@ const Footer = () => {
                   West Des Moines, IA
                 </div>
               </div>
+
+              {/* Newsletter Signup */}
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 mt-4">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="flex-1 text-sm px-3 py-1.5 rounded bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-construction-orange"
+                />
+                <Button type="submit" variant="ghost" size="sm" className="text-white text-sm hover:bg-white/10">
+                  Subscribe
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              </form>
             </div>
 
             {/* Company Links */}
@@ -184,13 +209,26 @@ const Footer = () => {
         <div className="py-8 border-t border-white/20">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-white/80 text-sm">
-                © 2025 Build Desk. All rights reserved. | <Link to="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</Link>
+                © {new Date().getFullYear()} Build Desk. All rights reserved. | <Link to="/privacy-policy" className="hover:text-construction-orange transition-colors">Privacy Policy</Link>
               </div>
-              <div className="flex items-center gap-6 text-sm text-white/80">
-                <span>WCAG 2.1 AA</span>
-                <span>SOC 2 Certified</span>
-                <span>GDPR Compliant</span>
-                <span>QuickBooks Certified</span>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
+                  <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="LinkedIn">
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="Twitter">
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-white/60 hover:text-white transition-colors" aria-label="Facebook">
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                </div>
+                <div className="flex items-center gap-6 text-sm text-white/80">
+                  <span>WCAG 2.1 AA</span>
+                  <span>SOC 2 Certified</span>
+                  <span>GDPR Compliant</span>
+                  <span>QuickBooks Certified</span>
+                </div>
               </div>
             </div>
         </div>

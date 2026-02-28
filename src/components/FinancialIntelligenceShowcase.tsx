@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, Zap, Brain, Check, X } from "lucide-react";
+import { DollarSign, TrendingUp, Zap, Brain, Check, X, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -75,16 +75,20 @@ const FinancialIntelligenceShowcase = () => {
               <tr className="border-b border-border/10">
                 <th className="p-6 font-medium text-muted-foreground w-1/2">Capability</th>
                 <th className="p-6 font-bold text-construction-orange text-center bg-construction-orange/5 w-1/4">BuildDesk</th>
-                <th className="p-6 font-medium text-muted-foreground text-center w-1/4">Others</th>
+                <th className="p-6 font-medium text-muted-foreground text-center w-1/4">Traditional PM Tools</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/10">
-              {[
-                { name: "Real-time Profit Visibility", us: true, them: false },
-                { name: "Predictive Cost Alerts", us: true, them: false },
-                { name: "Automated Month-End Close", us: true, them: false },
-                { name: "Decision Impact Calculator", us: true, them: false },
-              ].map((row, i) => (
+              {([
+                { name: "Real-time Profit Visibility", us: true, them: false as boolean | "partial" },
+                { name: "Predictive Cost Alerts", us: true, them: false as boolean | "partial" },
+                { name: "Automated Month-End Close", us: true, them: false as boolean | "partial" },
+                { name: "Decision Impact Calculator", us: true, them: false as boolean | "partial" },
+                { name: "Gantt Chart Scheduling", us: true, them: true as boolean | "partial" },
+                { name: "Photo Documentation", us: true, them: true as boolean | "partial" },
+                { name: "GPS Time Tracking", us: true, them: "partial" as boolean | "partial" },
+                { name: "QuickBooks 2-Way Sync", us: true, them: "partial" as boolean | "partial" },
+              ]).map((row, i) => (
                 <tr key={i} className="hover:bg-secondary/20 transition-colors">
                   <td className="p-6 font-medium text-construction-dark dark:text-gray-200">{row.name}</td>
                   <td className="p-6 text-center bg-construction-orange/5">
@@ -93,15 +97,28 @@ const FinancialIntelligenceShowcase = () => {
                     </div>
                   </td>
                   <td className="p-6 text-center">
-                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-muted-foreground">
-                      <X className="h-5 w-5" />
-                    </div>
+                    {row.them === true ? (
+                      <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30">
+                        <Check className="h-5 w-5" />
+                      </div>
+                    ) : row.them === "partial" ? (
+                      <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-amber-500 text-white">
+                        <Minus className="h-5 w-5" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-muted-foreground">
+                        <X className="h-5 w-5" />
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <p className="text-xs text-muted-foreground italic text-center mt-4">
+          Compared to Procore, Buildertrend, and CoConstruct based on publicly available feature sets.
+        </p>
       </div>
     </div>
   );
