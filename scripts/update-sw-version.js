@@ -7,8 +7,16 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { execSync } from 'child_process';
 
-const BUILD_VERSION = Date.now().toString(); // Unix timestamp
+// Use git commit hash + timestamp for unique, traceable versions
+let gitHash = '';
+try {
+  gitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+} catch {
+  gitHash = 'unknown';
+}
+const BUILD_VERSION = `${gitHash}-${Date.now()}`;
 const SW_PATH = join(process.cwd(), 'dist', 'sw.js');
 
 try {
