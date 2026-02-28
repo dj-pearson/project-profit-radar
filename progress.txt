@@ -290,11 +290,28 @@
 - Client-side Set-based filtering replaces sequential `.in()` query pattern
 - Wrapped in useCallback with proper dependencies
 
-### US-056: Extract Sub-Components (P3)
-- Created `src/components/auth/OAuthButtons.tsx` - Google/Apple sign-in buttons
-- Created `src/components/auth/PasswordRequirements.tsx` - password validation display
-- Created `src/components/blog/BlogPostCard.tsx` - blog post list card component
-- All components have proper TypeScript interfaces
+### US-056: Extract Sub-Components from Oversized Pages (P3)
+**Auth.tsx: 1318 → 373 lines** (72% reduction, 6 sub-components + 1 hook extracted):
+- `src/components/auth/SignInForm.tsx` - Sign in form with email/password
+- `src/components/auth/SignUpForm.tsx` - Sign up form with OTP verification flow
+- `src/components/auth/PasswordResetFlow.tsx` - Forgot password with OTP + new password
+- `src/components/auth/AuthBrandingPanel.tsx` - Left panel branding/hero
+- `src/components/auth/OAuthButtons.tsx` - Google/Apple sign-in buttons
+- `src/components/auth/PasswordRequirements.tsx` - Password validation checklist
+- `src/hooks/useRedirectLoopDetection.ts` - Redirect loop detection logic
+
+**BlogManager.tsx: 1227 → 353 lines** (71% reduction, 5 sub-components extracted):
+- `src/components/blog/BlogPostList.tsx` - Post listing with status badges
+- `src/components/blog/BlogPostFormDialog.tsx` - Shared create/edit dialog
+- `src/components/blog/BlogKeywordsTab.tsx` - Keywords/SEO tab
+- `src/components/blog/BlogAISettingsDialog.tsx` - AI provider settings
+- `src/components/blog/BlogToolDialogs.tsx` - Debug AI & auto-gen dialogs
+
+**CRMDashboard.tsx: 1210 → 341 lines** (72% reduction, 4 sub-components extracted):
+- `src/components/crm/LeadEditDialog.tsx` - Lead edit form dialog
+- `src/components/crm/OpportunityEditDialog.tsx` - Opportunity edit form dialog
+- `src/components/crm/CRMOverviewTab.tsx` - Pipeline, lead scoring, sales overview
+- `src/components/crm/CRMLeadsTab.tsx` - Lead search/filter + list
 
 ### US-057: Centralized Supabase Subscription Manager (P3)
 - Created `src/hooks/useSupabaseSubscription.ts`
@@ -302,9 +319,11 @@
 - Migrated SubscriptionContext.tsx to use the new hook
 
 ### US-058: Dynamic Imports for Heavy Viz Libraries (P3)
-- Hero3D.tsx now uses React.lazy + Suspense for BuildDeskHero3D (Three.js)
-- PremiumBlueprint3D was already dynamically imported
-- Manual chunk splitting ensures recharts and three.js are in separate chunks
+- Analytics.tsx: 6 components converted to React.lazy (PredictiveAnalytics, RiskAssessment, TimelineOptimization, PerformanceBenchmarking, ResourceOptimization, WorkflowAutomation) with Suspense + LoadingState fallback
+- Reports.tsx: ExecutiveDashboard + CustomReportBuilder converted to React.lazy with Suspense
+- Hero3D.tsx: BuildDeskHero3D already uses React.lazy for Three.js
+- Build output confirms separate chunks: charts-cELRl4Et.js (489KB), three-B7WJ4NKJ.js (869KB), xlsx-Cy0wn7Pa.js (428KB)
+- No static imports of recharts or three.js remain in page-level components
 
 ### US-059: Reduce Context Provider Nesting (P4)
 - Created `UIProviders` component (AccessibilityProvider + ContextMenuProvider + PlatformProvider + ThemeProvider)
@@ -315,41 +334,60 @@
 - Added CACHE_LIMITS config: static:50, dynamic:30, api:30, images:20, navigation:10
 - Added `enforceLimit()` LRU eviction function
 - Both cacheFirst and networkFirst strategies enforce limits after cache.put
-- Updated update-sw-version.js to use git commit hash + timestamp (e.g., `05c0e75-1772248673157`)
+- Updated update-sw-version.js to use git commit hash + timestamp
 
-### US-061: Enhanced LazyImage Component (P4)
-- Enhanced existing `src/components/ui/lazy-image.tsx`
-- Added: native loading='lazy' + decoding='async', WebP/AVIF support via `<picture>`, width/height for CLS prevention, Skeleton placeholder, error fallback state
+### US-061: LazyImage Component (P4)
+- `src/components/ui/lazy-image.tsx` with full implementation:
+  - Native `loading='lazy'` + `decoding='async'`
+  - WebP/AVIF support via `<picture>` element with `<source>` fallback
+  - Required `width`/`height` to prevent CLS
+  - IntersectionObserver for viewport detection
+  - Skeleton placeholder while loading
+  - Error fallback state with accessible alt text
 
 ### US-062: Consolidate Animation Libraries (P5)
+- Only framer-motion in package.json (no react-spring, @react-spring, etc.)
 - Created `src/lib/animation-utils.ts` with shared utilities
-- Documented animation strategy: Framer Motion for scroll/viewport, GSAP for Hero timeline only (lazily loaded)
-- Shared constants: EASE_OUT, DURATION_DEFAULT
 - Helper functions: createRevealVariants, createStaggerVariants, prefersReducedMotion
 
 ### Build Verification
-- `npx vite build` passes successfully (1m 20s)
-- Named vendor chunks confirmed in output
-- Post-build scripts pass (copy-404, update-sw-version with git hash)
+- `npx vite build` passes successfully (1m 20s, 5371 modules transformed)
+- Named vendor chunks confirmed: framework (217KB), ui-library (155KB), charts (489KB), three (869KB), xlsx (428KB)
+- Post-build scripts pass (copy-404, update-sw-version)
 - Image optimization: 86% savings
 
 ### New Files Created
 - `src/hooks/useSupabaseSubscription.ts`
+- `src/hooks/useRedirectLoopDetection.ts`
+- `src/components/auth/SignInForm.tsx`
+- `src/components/auth/SignUpForm.tsx`
+- `src/components/auth/PasswordResetFlow.tsx`
+- `src/components/auth/AuthBrandingPanel.tsx`
 - `src/components/auth/OAuthButtons.tsx`
 - `src/components/auth/PasswordRequirements.tsx`
-- `src/components/blog/BlogPostCard.tsx`
+- `src/components/blog/BlogPostList.tsx`
+- `src/components/blog/BlogPostFormDialog.tsx`
+- `src/components/blog/BlogKeywordsTab.tsx`
+- `src/components/blog/BlogAISettingsDialog.tsx`
+- `src/components/blog/BlogToolDialogs.tsx`
+- `src/components/crm/LeadEditDialog.tsx`
+- `src/components/crm/OpportunityEditDialog.tsx`
+- `src/components/crm/CRMOverviewTab.tsx`
+- `src/components/crm/CRMLeadsTab.tsx`
 - `src/lib/animation-utils.ts`
 
 ### Files Modified
 - `src/contexts/SubscriptionContext.tsx` - useMemo, useSupabaseSubscription
 - `vite.config.ts` - manualChunks re-enabled
-- `src/pages/Auth.tsx` - useCallback wrapping
+- `src/pages/Auth.tsx` - useCallback + extracted sub-components (1318→373 lines)
 - `src/pages/PunchList.tsx` - useCallback wrapping
-- `src/pages/BlogManager.tsx` - useCallback wrapping
-- `src/pages/Analytics.tsx` - parallel queries
+- `src/pages/BlogManager.tsx` - useCallback + extracted sub-components (1227→353 lines)
+- `src/pages/CRMDashboard.tsx` - extracted sub-components (1210→341 lines)
+- `src/pages/Analytics.tsx` - parallel queries + React.lazy for viz components
+- `src/pages/Reports.tsx` - React.lazy for ExecutiveDashboard + CustomReportBuilder
 - `src/App.tsx` - UIProviders + AppProviders
 - `src/components/Hero3D.tsx` - lazy import
 - `src/components/ui/lazy-image.tsx` - enhanced with WebP/AVIF/CLS
 - `public/sw.js` - cache limits + LRU eviction
 - `scripts/update-sw-version.js` - git hash versioning
-- `prd.json` - all 11 Phase 2 stories marked as passes: true
+- `prd.json` - all 62 stories marked as passes: true (100% complete)
