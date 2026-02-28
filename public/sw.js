@@ -9,7 +9,6 @@ const IMAGE_CACHE = `builddesk-images-v${BUILD_VERSION}`;
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
-  '/',
   '/index.html',
   '/manifest.json',
   '/BuildDeskLogo.png',
@@ -122,9 +121,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle navigation requests with stale-while-revalidate
+  // Handle navigation requests with network-first to avoid stale HTML/chunk mismatches
   if (request.mode === 'navigate') {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(navigationNetworkFirst(request));
     return;
   }
 
@@ -184,19 +183,28 @@ async function networkFirst(request) {
   }
 }
 
-// Stale-while-revalidate for navigation
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(DYNAMIC_CACHE);
-  const cached = await cache.match(request);
-  
-  const networkPromise = fetch(request).then((response) => {
-    if (response.ok) {
-      cache.put(request, response.clone());
+// Network-first for navigation to prioritize fresh HTML on each deployment.
+// Falls back to cached app shell only when offline/unreachable.
+async function navigationNetworkFirst(request) {
+  try {
+    return await fetch(request, { cache: 'no-store' });
+  } catch (error) {
+    console.warn('Service Worker: Navigation request failed, trying offline fallback:', request.url, error);
+    const cache = await caches.open(STATIC_CACHE);
+    const appShell = await cache.match('/index.html');
+    if (appShell) {
+      return appShell;
     }
-    return response;
-  }).catch(() => cached);
 
-  return cached || networkPromise;
+    return new Response(
+      '<!doctype html><html><head><meta charset="utf-8"><title>Offline</title></head><body><h1>Offline</h1><p>Please reconnect and refresh.</p></body></html>',
+      {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      }
+    );
+  }
 }
 
 // Enforce cache size limit using LRU eviction
