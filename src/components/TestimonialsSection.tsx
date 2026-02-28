@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, Quote, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Star, Quote, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface TestimonialProps {
   quote: string;
@@ -180,6 +182,24 @@ export const TestimonialsSection: React.FC = () => {
           <p className="text-sm text-construction-orange font-semibold">
             Average ROI payback period: Less than 30 days
           </p>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="text-center mt-12 pt-8 border-t border-border/30">
+        <p className="text-lg text-muted-foreground mb-6">
+          Join 500+ contractors saving an average of $78K/year
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button variant="hero" size="lg" asChild>
+            <Link to="/auth">
+              Start Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <a href="/#pricing">View Pricing</a>
+          </Button>
         </div>
       </div>
     </section>

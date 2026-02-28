@@ -1,5 +1,8 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // FAQ structured data generator
 const faqStructuredData = (faqs: Array<{question: string; answer: string}>) => ({
@@ -77,6 +80,31 @@ const FAQ = () => {
               </AccordionItem>
             ))}
           </Accordion>
+
+          {/* CTA Section */}
+          <div className="text-center mt-12 pt-12 border-t border-border/50">
+            <h3 className="text-2xl font-bold mb-2">Still Have Questions?</h3>
+            <p className="text-muted-foreground mb-6">
+              Our team is here to help you find the right solution for your business.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="hero" size="lg" asChild>
+                <Link to="/auth">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <a href="mailto:support@build-desk.com">
+                  <Mail className="mr-2 h-5 w-5" />
+                  Contact Sales
+                </a>
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              14-day free trial. No credit card required.
+            </p>
+          </div>
         </div>
       </div>
     </section>
