@@ -1,7 +1,7 @@
 {
   "project": "BuildDesk Enterprise Production Readiness",
   "branchName": "enterprise-production-readiness",
-  "description": "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. The platform has 943+ components, 264 pages, 186 edge functions, and 375 database migrations but scores only ~4.5/10 on enterprise readiness due to: TypeScript strict mode disabled (1,400+ any types), <2% test coverage, <2% accessibility compliance, no CI/CD for the main web app, hardcoded fallback tokens, and significant placeholder code. This PRD addresses all critical, high, and medium priority gaps across code quality, testing, security, accessibility, CI/CD, and production monitoring.",
+  "description": "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. Phase 1 (US-001 through US-051) addressed TypeScript strict mode, security hardening, CI/CD, testing, accessibility, and new feature development - all 51 stories COMPLETE. Phase 2 (US-052 through US-062) addresses performance optimization findings from a comprehensive platform audit covering: bundle size & code splitting, React performance (context memoization, useCallback), data fetching patterns, image/asset optimization, service worker caching, and CSS performance. Priority fixes target 15-20% bundle reduction, 10-15% fewer re-renders, and 30-50% faster analytics load times.",
   "userStories": [
     {
       "id": "US-001",
@@ -880,6 +880,196 @@
       "priority": 12,
       "passes": true,
       "notes": "Competitor gap: Procore has comprehensive RFI management with ball-in-court tracking and schedule impact analysis. Autodesk has RFI management with AI-powered quick creation from natural language prompts. Buildertrend has basic RFI tracking. BuildDesk mentions RFIs in some places but has no dedicated RFI module. RFIs are one of the most fundamental construction project management workflows \u2014 their absence is a significant gap as BuildDesk targets larger projects."
+    },
+    {
+      "id": "US-052",
+      "title": "Memoize SubscriptionContext provider value to prevent cascading re-renders",
+      "description": "As a developer, I want the SubscriptionContext provider value memoized so that consumer components don't re-render unnecessarily. Currently in src/contexts/SubscriptionContext.tsx lines 368-381, the context value object is created fresh on every render without useMemo. This causes ALL components consuming SubscriptionContext to re-render whenever ANY state in the provider changes, even if the specific values they use haven't changed. Additionally, getCurrentLimits() is called on every render without memoization. Wrap the value object in useMemo with appropriate dependencies. Also wrap callback functions (checkLimit, getUpgradeRequirement, refreshSubscription, refreshUsage, isSubscribed, canUseFeature, hasUnlimitedAccess) in useCallback if they aren't already.",
+      "acceptanceCriteria": [
+        "SubscriptionContext value object is wrapped in useMemo with correct dependency array",
+        "getCurrentLimits() result is memoized and not called on every render",
+        "All callback functions in the context value are wrapped in useCallback",
+        "No functional changes to subscription behavior",
+        "npm run build completes successfully",
+        "npm run test:run passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "AUDIT FINDING 2.1 (HIGH IMPACT): Context value not memoized causes 10-15% unnecessary re-renders across all subscription consumers. Quick win - estimated 1 hour effort."
+    },
+    {
+      "id": "US-053",
+      "title": "Re-enable manual chunk splitting in Vite build configuration",
+      "description": "As a developer, I want optimized bundle chunking so that users download smaller initial bundles and benefit from better caching. Currently in vite.config.ts lines 130-133, manual chunking is disabled with the comment 'DISABLE manual chunking to prevent React dependency issues'. Re-enable manual chunking with a conservative strategy that avoids the previous React dependency issues. Create separate chunks for: 1) 'framework' chunk containing react, react-dom, react-router-dom (these must stay together), 2) 'ui-library' chunk containing @radix-ui packages and class-variance-authority, 3) 'query' chunk containing @tanstack/react-query, 4) 'charts' chunk containing recharts, 5) 'vendor' chunk for remaining node_modules. Test thoroughly that the build works and the app loads correctly with no React context errors.",
+      "acceptanceCriteria": [
+        "vite.config.ts manualChunks function is re-enabled with conservative strategy",
+        "React, ReactDOM, and React Router are in the same 'framework' chunk",
+        "Radix UI components are in a separate 'ui-library' chunk",
+        "Recharts is in a separate 'charts' chunk (loaded only when needed)",
+        "npm run build completes successfully with no errors",
+        "npm run build output shows at least 4 separate vendor chunks",
+        "Application loads and routes correctly after build (manual verification)",
+        "No React 'Invalid hook call' or context errors in browser console"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "AUDIT FINDING 1.1 (HIGH IMPACT): Manual chunking disabled prevents optimal chunk separation. Re-enabling with conservative strategy could reduce main bundle by 15-20% and improve caching. Estimated 2-3 hours effort."
+    },
+    {
+      "id": "US-054",
+      "title": "Add useCallback to form event handlers in Auth and large page components",
+      "description": "As a developer, I want form event handlers memoized so that controlled inputs don't trigger unnecessary re-renders. In src/pages/Auth.tsx (1,318 lines), multiple event handlers (handleSignIn, handleSignUp, handleVerifyResetOTP, handleResendResetOTP, etc.) are created fresh on every render and passed to controlled form inputs. Similarly, src/pages/PunchList.tsx and other large form pages create inline arrow functions in JSX (onChange, onClick). Wrap the top 10-15 most impactful handlers across Auth.tsx, PunchList.tsx, and BlogManager.tsx with useCallback. Extract inline arrow functions from JSX into named useCallback-wrapped handlers. Focus on handlers that are passed as props to child components or used in lists.",
+      "acceptanceCriteria": [
+        "Auth.tsx: handleSignIn, handleSignUp, handleVerifyResetOTP wrapped in useCallback",
+        "PunchList.tsx: onChange/onClick handlers extracted from JSX into useCallback",
+        "BlogManager.tsx: form submission and state update handlers wrapped in useCallback",
+        "No inline arrow functions creating new references in lists/maps",
+        "All forms still function correctly (login, signup, punch list creation)",
+        "npm run build completes successfully",
+        "npm run test:run passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "AUDIT FINDING 2.4+2.5 (MEDIUM IMPACT): Form re-renders on every keystroke with new handler references. Fixing could reduce form re-renders by 20%. Estimated 2-3 hours effort."
+    },
+    {
+      "id": "US-055",
+      "title": "Parallelize data queries in Analytics dashboard",
+      "description": "As a user, I want the Analytics dashboard to load faster by fetching all data in parallel instead of sequentially. In src/pages/Analytics.tsx, multiple useQuery/useEffect chains fetch data that could be loaded simultaneously. Identify all independent data fetching calls on the Analytics page and use useQueries from @tanstack/react-query to execute them in parallel. This includes executive summary data, project performance metrics, and resource utilization stats. Also audit src/pages/Reports.tsx and src/pages/Dashboard.tsx for similar waterfall patterns and fix those as well.",
+      "acceptanceCriteria": [
+        "Analytics.tsx uses useQueries or Promise.all for parallel data fetching",
+        "No sequential data fetching chains where queries are independent",
+        "Analytics page renders loading state once instead of incrementally",
+        "Dashboard.tsx independent queries are parallelized",
+        "Reports.tsx independent queries are parallelized",
+        "npm run build completes successfully",
+        "npm run test:run passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "AUDIT FINDING 3.2 (MEDIUM IMPACT): Waterfall queries could delay analytics render by seconds. Parallelizing could improve analytics load time by 30-50%. Estimated 1-2 hours effort."
+    },
+    {
+      "id": "US-056",
+      "title": "Extract sub-components from oversized page files",
+      "description": "As a developer, I want large page components broken into smaller, focused sub-components for better code splitting and maintainability. The following pages exceed 1,000 lines and should be refactored: 1) Auth.tsx (1,318 lines) - extract OTPVerificationForm, OAuthButtons, PasswordResetFlow, and SignUpForm into separate files in src/components/auth/, 2) BlogManager.tsx (1,227 lines) - extract BlogEditorForm, BlogPreview, BlogSettings into src/components/blog/, 3) CRMDashboard.tsx (1,209 lines) - extract ContactsList, LeadPipeline, CampaignOverview into src/components/crm/. Each extracted component should be lazy-loadable. The parent pages should import sub-components and compose them. No functional changes to user-facing behavior.",
+      "acceptanceCriteria": [
+        "Auth.tsx reduced to under 400 lines by extracting 3+ sub-components",
+        "BlogManager.tsx reduced to under 400 lines by extracting 3+ sub-components",
+        "CRMDashboard.tsx reduced to under 400 lines by extracting 3+ sub-components",
+        "Extracted components are in domain-specific directories under src/components/",
+        "All extracted components have proper TypeScript interfaces for props",
+        "All pages function identically to before refactoring",
+        "npm run build completes successfully",
+        "npm run test:run passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "AUDIT FINDING 1.4 (MEDIUM IMPACT): Monolithic page files prevent optimal code splitting and slow initial render. Estimated 4-6 hours effort. Focus on Auth.tsx first as it impacts login experience."
+    },
+    {
+      "id": "US-057",
+      "title": "Create centralized Supabase real-time subscription manager",
+      "description": "As a developer, I want a centralized subscription management system so that WebSocket connections are properly tracked, deduplicated, and cleaned up. Currently 27 files across the codebase create independent Supabase channel subscriptions with .channel() and .subscribe(). There is no centralized management, risking memory leaks if components remount and duplicate connections. Create a useSupabaseSubscription hook in src/hooks/ that: 1) Creates a channel with a unique ID per component, 2) Automatically cleans up on unmount, 3) Includes error handling for channel errors, 4) Deduplicates subscriptions to the same table, 5) Provides a consistent API. Migrate the SubscriptionContext.tsx real-time subscription to use this new hook as a proof of concept.",
+      "acceptanceCriteria": [
+        "src/hooks/useSupabaseSubscription.ts exists with centralized subscription management",
+        "Hook handles: channel creation, cleanup on unmount, error handling, deduplication",
+        "SubscriptionContext.tsx uses the new hook instead of direct channel management",
+        "Hook includes TypeScript types for channel configuration",
+        "Error handler logs subscription failures without crashing the app",
+        "npm run build completes successfully",
+        "npm run test:run passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "AUDIT FINDING 3.3+3.4 (MEDIUM IMPACT): 27 independent WebSocket subscriptions with no centralized management risks memory leaks. Estimated 2-3 hours for hook + 1 migration. Remaining 26 files can be migrated incrementally."
+    },
+    {
+      "id": "US-058",
+      "title": "Add dynamic imports for heavy visualization libraries",
+      "description": "As a user, I want pages to load faster by only downloading heavy visualization libraries when I actually need them. Currently recharts (~300KB) is statically imported in Analytics.tsx, and Three.js (~158KB) is used in 20+ files with static imports. These libraries should be dynamically imported so they're only loaded when the user navigates to a page that uses them. Use React.lazy for component-level splitting and dynamic import() for utility-level splitting. The Reports.tsx page already correctly uses dynamic imports for xlsx and jspdf - follow this pattern. Add loading skeleton components that show while the heavy libraries are being loaded.",
+      "acceptanceCriteria": [
+        "Recharts components in Analytics.tsx are loaded via React.lazy with Suspense fallback",
+        "Three.js components are loaded via React.lazy with Suspense fallback",
+        "Loading skeletons display while chart/3D components are being fetched",
+        "No static imports of recharts or three.js remain in page-level components",
+        "Charts and 3D views still render correctly after dynamic loading",
+        "npm run build shows recharts and three.js in separate chunks (not main bundle)",
+        "npm run build completes successfully"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "AUDIT FINDING 1.2 (MEDIUM IMPACT): Heavy libraries add ~458KB to initial bundles unnecessarily. Dynamic imports could reduce initial load by 5-10%. Estimated 1-2 hours effort."
+    },
+    {
+      "id": "US-059",
+      "title": "Reduce deep context provider nesting in App.tsx",
+      "description": "As a developer, I want fewer nested context providers in App.tsx so that the component tree is simpler and cascading re-renders are reduced. Currently App.tsx has 9 nested context providers (QueryClientProvider, TenantProvider, AuthProvider, SubscriptionProvider, AccessibilityProvider, ContextMenuProvider, PlatformProvider, ThemeProvider, HelmetProvider). Combine logically related contexts: 1) Merge AccessibilityProvider settings into ThemeProvider (both deal with visual presentation), 2) Merge ContextMenuProvider into a UIProvider, 3) Create a composed AppProviders component that nests the remaining providers, keeping auth providers (TenantProvider, AuthProvider, SubscriptionProvider) early in the tree. This reduces visual nesting and makes provider structure clearer.",
+      "acceptanceCriteria": [
+        "App.tsx provider nesting reduced from 9 levels to 6 or fewer",
+        "AccessibilityProvider merged into ThemeProvider or a combined UIProvider",
+        "ContextMenuProvider merged into a UIProvider",
+        "AppProviders component created to encapsulate provider composition",
+        "Auth-related providers remain early in the tree (before UI providers)",
+        "All context values still accessible from consumer components",
+        "npm run build completes successfully",
+        "npm run test:run passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "AUDIT FINDING 2.2 (MEDIUM IMPACT): Deep nesting causes potential cascading re-renders on provider changes. Estimated 2-3 hours effort. Could improve startup time by 5-10%."
+    },
+    {
+      "id": "US-060",
+      "title": "Add cache size limits and version metadata to service worker",
+      "description": "As a developer, I want the service worker to have cache size limits and proper version metadata so that storage doesn't grow unbounded and cache invalidation is reliable. Currently public/sw.js has good caching strategies but: 1) No cache size limits (caches grow indefinitely), 2) Version doesn't auto-increment on every build. Add maximum cache entries per cache (e.g., 50 for static assets, 30 for API responses, 10 for navigation). Implement cache eviction using LRU (least recently used) when limits are reached. Update scripts/update-sw-version.js to use the git commit hash or build timestamp as the version identifier, ensuring every build produces a unique cache version.",
+      "acceptanceCriteria": [
+        "Service worker caches have maximum entry limits (static: 50, API: 30, navigation: 10)",
+        "LRU cache eviction removes oldest entries when limit is reached",
+        "Service worker version uses git commit hash or build timestamp",
+        "scripts/update-sw-version.js generates unique version per build",
+        "Old cache versions are properly cleaned up on service worker activation",
+        "npm run build completes successfully",
+        "Service worker updates correctly in browser after new deployment"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "AUDIT FINDING 5.1+5.2 (LOW-MEDIUM IMPACT): Unbounded caches can consume excessive storage on mobile devices. Version management prevents users from caching stale content. Estimated 1-2 hours effort."
+    },
+    {
+      "id": "US-061",
+      "title": "Create LazyImage component with native lazy loading",
+      "description": "As a user, I want images below the fold to load lazily so that initial page load is faster and data usage is reduced, especially on mobile. Currently there is no standardized image component with lazy loading across the 262+ pages. Create a LazyImage component in src/components/ui/lazy-image.tsx that: 1) Uses native loading='lazy' attribute, 2) Supports WebP/AVIF with fallback via picture element, 3) Includes width/height to prevent layout shifts (CLS), 4) Shows a low-res placeholder or skeleton while loading, 5) Supports responsive srcSet for different screen sizes. Update hero-dashboard.jpg usage to use this component as a proof of concept.",
+      "acceptanceCriteria": [
+        "src/components/ui/lazy-image.tsx exists with LazyImage component",
+        "Component uses native loading='lazy' attribute",
+        "Component supports WebP/AVIF via picture element with fallback",
+        "Component requires width and height props to prevent CLS",
+        "Placeholder/skeleton shown during image load",
+        "hero-dashboard.jpg usage migrated to LazyImage as reference implementation",
+        "npm run build completes successfully",
+        "Component is exported from the ui barrel export"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "AUDIT FINDING 4.4 (MEDIUM IMPACT): No standardized lazy loading for images across 262+ pages. Native lazy loading is well-supported and reduces initial page weight. Estimated 1-2 hours effort."
+    },
+    {
+      "id": "US-062",
+      "title": "Audit and consolidate duplicate animation libraries",
+      "description": "As a developer, I want to consolidate animation libraries so that bundle size is reduced and animation patterns are consistent. The project currently includes both @gsap/react (2.1.2) and framer-motion (12.23.24) - two competing animation libraries adding ~100KB combined. Audit all files importing from gsap and framer-motion to determine actual usage patterns. If one library can handle all use cases, remove the other. If both are needed, ensure each is only loaded on pages that use it (dynamic imports). Also verify that lovable-tagger (1.1.8) is dev-only and move it to devDependencies if so.",
+      "acceptanceCriteria": [
+        "Audit document listing all files using gsap vs framer-motion and their specific features used",
+        "Either gsap or framer-motion removed from dependencies, OR both dynamically imported",
+        "If one library removed: all animations still work correctly with remaining library",
+        "If both kept: neither is in the main bundle (both dynamically imported)",
+        "lovable-tagger verified as dev-only and moved to devDependencies if appropriate",
+        "npm run build bundle size reduced by at least 30KB compared to before",
+        "npm run build completes successfully"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "AUDIT FINDING 1.5 (LOW IMPACT): Duplicate animation libraries add ~100KB. Consolidation reduces bundle size and simplifies animation patterns. Estimated 2-3 hours for audit + migration."
     }
   ]
 }
