@@ -149,10 +149,6 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('node_modules/@tanstack/')) {
             return 'query';
           }
-          // Charts chunk: Recharts (heavy, only needed on analytics pages)
-          if (id.includes('node_modules/recharts/') || id.includes('node_modules/d3-')) {
-            return 'charts';
-          }
           // XLSX chunk: Heavy spreadsheet library
           if (id.includes('node_modules/xlsx/')) {
             return 'xlsx';
@@ -166,7 +162,7 @@ export default defineConfig(({ mode }) => ({
         // Optimized file naming for better caching
         chunkFileNames: (chunkInfo) => {
           // Use manual chunk name when available (framework, ui-library, etc.)
-          const manualNames = ['framework', 'ui-library', 'query', 'charts', 'xlsx', 'three'];
+          const manualNames = ['framework', 'ui-library', 'query', 'xlsx', 'three'];
           if (manualNames.includes(chunkInfo.name)) {
             return `assets/${chunkInfo.name}-[hash].js`;
           }
