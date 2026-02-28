@@ -105,9 +105,14 @@ const SocialProof = () => {
       {/* Logos */}
       <div className="pt-8 border-t border-border/30">
         <p className="text-center text-sm text-muted-foreground mb-8">Powering construction companies of all sizes</p>
-        <div className="flex flex-wrap justify-center gap-8 md:gap-16 grayscale hover:grayscale-0 transition-all duration-500">
+        <div className="flex flex-wrap justify-center gap-4">
           {companies.map((company, i) => (
-            <span key={i} className="text-xl font-bold text-construction-dark dark:text-white">{company}</span>
+            <span
+              key={i}
+              className="bg-secondary/30 border border-border/50 rounded-lg px-4 py-2 font-bold tracking-wider uppercase text-sm hover:bg-secondary/50 transition-colors"
+            >
+              {company}
+            </span>
           ))}
         </div>
       </div>

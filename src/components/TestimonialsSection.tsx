@@ -11,6 +11,7 @@ interface TestimonialProps {
   title: string;
   company: string;
   rating: number;
+  date?: string;
   metric?: {
     label: string;
     value: string;
@@ -25,6 +26,7 @@ export const TestimonialCard: React.FC<TestimonialProps> = ({
   title,
   company,
   rating,
+  date,
   metric,
   verified = true
 }) => {
@@ -70,6 +72,7 @@ export const TestimonialCard: React.FC<TestimonialProps> = ({
           <div className="font-medium">{author}</div>
           <div className="text-sm text-muted-foreground">{title}</div>
           <div className="text-sm text-muted-foreground font-medium">{company}</div>
+          {date && <div className="text-xs text-muted-foreground mt-1">{date}</div>}
         </div>
       </CardContent>
     </Card>
@@ -84,6 +87,7 @@ export const TestimonialsSection: React.FC = () => {
       title: "Owner",
       company: "Rodriguez Custom Homes",
       rating: 5,
+      date: "February 2026",
       metric: {
         label: "Cost Overrun Prevented",
         value: "$47K",
@@ -96,6 +100,7 @@ export const TestimonialsSection: React.FC = () => {
       title: "Owner/CFO",
       company: "Metro Build Group",
       rating: 5,
+      date: "January 2026",
       metric: {
         label: "Monthly Close Time",
         value: "5 min",
@@ -108,6 +113,7 @@ export const TestimonialsSection: React.FC = () => {
       title: "General Contractor",
       company: "Thompson Construction LLC",
       rating: 5,
+      date: "December 2025",
       metric: {
         label: "Real-Time Visibility",
         value: "Every Project",
@@ -120,6 +126,7 @@ export const TestimonialsSection: React.FC = () => {
       title: "Project Manager",
       company: "Atlantic Builders",
       rating: 5,
+      date: "November 2025",
       metric: {
         label: "Margin Improvement",
         value: "+4%",
@@ -132,6 +139,7 @@ export const TestimonialsSection: React.FC = () => {
       title: "Owner",
       company: "Martinez Remodeling",
       rating: 5,
+      date: "October 2025",
       metric: {
         label: "Accounting Time Saved",
         value: "18 hrs/mo",
@@ -144,6 +152,7 @@ export const TestimonialsSection: React.FC = () => {
       title: "Operations Manager",
       company: "Chang & Associates Construction",
       rating: 5,
+      date: "January 2026",
       metric: {
         label: "Margin Increase",
         value: "8% → 13%",
@@ -184,6 +193,34 @@ export const TestimonialsSection: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "BuildDesk Construction Management Software",
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "500",
+              "bestRating": "5",
+            },
+            "review": testimonials.map((t) => ({
+              "@type": "Review",
+              "author": { "@type": "Person", "name": t.author },
+              "reviewBody": t.quote,
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": t.rating,
+                "bestRating": 5,
+              },
+            })),
+          }),
+        }}
+      />
 
       {/* CTA Section */}
       <div className="text-center mt-12 pt-8 border-t border-border/30">

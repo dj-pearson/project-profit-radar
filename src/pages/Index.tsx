@@ -1,4 +1,5 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useState, useEffect, useCallback } from "react";
+import { ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SocialProof from "@/components/SocialProof";
@@ -25,12 +26,41 @@ const StickyDemoCTA = lazy(() => import("@/components/StickyDemoCTA"));
 
 // Minimal loading fallback
 const SectionFallback = ({ height = "h-64" }: { height?: string }) => (
-  <div className={`${height} bg-muted/30 animate-pulse rounded-lg`} />
+  <div className={`${height} bg-muted/30 animate-pulse rounded-lg flex items-center justify-center`}>
+    <span className="text-sm text-muted-foreground/50">Loading...</span>
+  </div>
 );
 
 const Index = () => {
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  const handleScroll = useCallback(() => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    setScrollProgress(progress);
+    setShowBackToTop(progress > 50);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+        {/* Scroll Progress Indicator */}
+        <div className="fixed top-16 left-0 right-0 z-40 h-0.5 bg-border/20">
+          <div
+            className="h-full bg-construction-orange transition-[width] duration-100"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
 
         <PageSEO
           title="Real-Time Job Costing for Contractors"
@@ -172,6 +202,17 @@ const Index = () => {
         <Suspense fallback={null}>
           <StickyDemoCTA />
         </Suspense>
+
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-20 right-4 z-40 rounded-full h-10 w-10 flex items-center justify-center bg-construction-orange text-white hover:bg-construction-orange/90 shadow-lg transition-all duration-300"
+            aria-label="Back to top"
+          >
+            <ChevronUp className="h-5 w-5" />
+          </button>
+        )}
       </div>
   );
 };

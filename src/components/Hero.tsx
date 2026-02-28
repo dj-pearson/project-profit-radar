@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, ComponentType } from "react";
+import { useState, useRef, useEffect, useCallback, ComponentType } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Ruler, CheckCircle } from "lucide-react";
+import { ArrowRight, Play, Ruler, CheckCircle, DollarSign, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 
@@ -10,14 +10,42 @@ interface Blueprint3DProps {
   onToggleMode: () => void;
 }
 
-// Static fallback for mobile - lightweight placeholder
+// Mobile fallback - dashboard mockup showing real-time metrics
 const Hero3DFallback = () => (
-  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-construction-orange/10 to-blue-500/10 rounded-2xl">
-    <div className="text-center space-y-4 p-8">
-      <div className="w-24 h-24 mx-auto bg-construction-orange/20 rounded-2xl flex items-center justify-center">
-        <Ruler className="w-12 h-12 text-construction-orange" />
+  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-construction-orange/10 to-blue-500/10 rounded-2xl p-6">
+    <div className="w-full max-w-sm rounded-2xl bg-card border shadow-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b bg-muted/30">
+        <span className="font-semibold text-sm text-construction-dark dark:text-white">Westside Complex</span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
+          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          LIVE
+        </span>
       </div>
-      <p className="text-muted-foreground text-sm">Interactive 3D on desktop</p>
+      <div className="p-5 space-y-4">
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Budget</div>
+            <div className="text-sm font-bold text-construction-dark dark:text-white">$125,000</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Spent</div>
+            <div className="text-sm font-bold text-construction-dark dark:text-white">$89,200</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground mb-1">Margin</div>
+            <div className="text-sm font-bold text-green-600">28.8%</div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>Budget Utilization</span>
+            <span>71.4%</span>
+          </div>
+          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+            <div className="h-full bg-green-500 rounded-full" style={{ width: '71.4%' }} />
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -41,9 +69,18 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+const badgeMessages = [
+  "New: AI-Powered Estimation",
+  "Residential: Save 23% on Margins",
+  "Commercial: 5-Min Monthly Close",
+  "Trusted by 500+ Contractors",
+];
+
 const Hero = () => {
   const [isBuildMode, setIsBuildMode] = useState(false);
   const [Blueprint3D, setBlueprint3D] = useState<ComponentType<Blueprint3DProps> | null>(null);
+  const [badgeIndex, setBadgeIndex] = useState(0);
+  const [badgeHovered, setBadgeHovered] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -51,6 +88,15 @@ const Hero = () => {
   const badgeRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
+
+  // Rotating badge messages
+  useEffect(() => {
+    if (badgeHovered) return;
+    const interval = setInterval(() => {
+      setBadgeIndex((prev) => (prev + 1) % badgeMessages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [badgeHovered]);
 
   // Conditionally load 3D component only on desktop to save ~1.3MB on mobile
   useEffect(() => {
@@ -159,23 +205,30 @@ const Hero = () => {
           {/* Content */}
           <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
             <div className="space-y-6">
-              <div ref={badgeRef} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm">
+              <div
+                ref={badgeRef}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm"
+                onMouseEnter={() => setBadgeHovered(true)}
+                onMouseLeave={() => setBadgeHovered(false)}
+              >
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-construction-orange opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-construction-orange"></span>
                 </span>
-                <span className="text-sm font-medium text-muted-foreground">New: AI-Powered Estimation</span>
+                <span className="text-sm font-medium text-muted-foreground transition-opacity duration-300">
+                  {badgeMessages[badgeIndex]}
+                </span>
               </div>
 
               <h1 ref={headlineRef} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-construction-dark dark:text-white leading-[1.1] tracking-tight">
-                Build Smarter. <br />
+                Know Your Real <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-construction-orange to-orange-600">
-                  Profit Faster.
+                  Profit Margins. Every Day.
                 </span>
               </h1>
 
               <p ref={textRef} className="text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Stop guessing your margins. Track every dollar in real-time with the only financial-first platform built for modern contractors.
+                Catch $40K+ cost overruns weeks before they happen. The only financial-first platform built for contractors who refuse to fly blind.
               </p>
             </div>
 
@@ -226,12 +279,15 @@ const Hero = () => {
             {/* Social Proof */}
             <div className="pt-8 border-t border-border/50">
               <p className="text-sm text-muted-foreground mb-4">Trusted by 2,000+ innovative builders</p>
-              <div className="flex flex-wrap justify-center lg:justify-start gap-x-8 gap-y-4 grayscale">
-                {/* Simple text placeholders for logos to keep it clean */}
-                <span className="font-bold text-lg">ACME Build</span>
-                <span className="font-bold text-lg">ConstructCo</span>
-                <span className="font-bold text-lg">UrbanSpaces</span>
-                <span className="font-bold text-lg">NextLevel</span>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3">
+                {["ACME Build", "ConstructCo", "UrbanSpaces", "NextLevel"].map((name) => (
+                  <span
+                    key={name}
+                    className="bg-secondary/30 border border-border/50 rounded-lg px-4 py-2 font-bold tracking-wider uppercase text-sm hover:bg-secondary/50 transition-colors"
+                  >
+                    {name}
+                  </span>
+                ))}
               </div>
             </div>
           </div>

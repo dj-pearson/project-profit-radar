@@ -298,3 +298,76 @@ US-017 (Rate Limiting), US-019 (Monitoring Dashboard), US-020 (E2E Tests), US-02
 ### COMPLETE
 
 ---
+
+## 2026-02-28 - Ralph UI/UX Audit: All 25 Stories Implemented
+
+### PRD: `scripts/ralph/prd.json` (BuildDesk UI/UX Audit Improvements)
+### Branch: `claude/ralph-loops-prd-progress-HU3yc`
+### Status: COMPLETE — 25/25 stories passing, build passes
+
+### What was done
+Implemented all 25 UI/UX improvement stories from the UI/UX audit PRD across 12 source files. Changes are purely presentational (text, CTAs, styling, SEO schemas) with no routing, state management, or dependency changes.
+
+### Files modified (12)
+1. **src/components/Hero.tsx** — US-001 (trust signals), US-006 (headline), US-010 (mobile fallback), US-011 (logo badges), US-023 (rotating badge)
+2. **src/components/TestimonialsSection.tsx** — US-002 (CTA after testimonials), US-014 (Review JSON-LD), US-019 (dates)
+3. **src/components/FAQ.tsx** — US-003 (CTA section), US-015 (bullet points & links)
+4. **src/components/Pricing.tsx** — US-004 (single CTA), US-007 (social proof), US-016 (savings callout), US-020 (Offer schema)
+5. **src/components/Implementation.tsx** — US-005 (CTA section)
+6. **src/components/Footer.tsx** — US-008 (dynamic copyright, social icons), US-009 (newsletter)
+7. **src/components/SocialProof.tsx** — US-011 (logo badges)
+8. **src/components/ProblemSolution.tsx** — US-012 (CTA bridge)
+9. **src/components/FinancialIntelligenceShowcase.tsx** — US-013 (rename "Others"), US-024 (more rows)
+10. **src/pages/Index.tsx** — US-017 (scroll progress), US-018 (back-to-top), US-021 (loading text)
+11. **src/components/StickyDemoCTA.tsx** — US-022 (mobile optimization)
+12. **src/components/Header.tsx** — US-025 (dark mode nav fix)
+
+### Story Summary by Category
+
+**Conversion Optimization (Priority 1-2):**
+- US-001: Trust signal strip below hero CTA (4 items with CheckCircle icons)
+- US-002: CTA after testimonials section
+- US-003: CTA after FAQ accordion
+- US-004: Single CTA per pricing card (Enterprise → Contact Sales)
+- US-005: CTA after Implementation success metrics
+- US-006: Headline → "Know Your Real Profit Margins. Every Day."
+- US-007: Social proof badge + ROI line in pricing header
+
+**Engagement & Content (Priority 3):**
+- US-008: Dynamic copyright year + social media icons in footer
+- US-009: Newsletter signup form in footer
+- US-010: Dashboard mockup mobile fallback replacing placeholder text
+- US-011: Styled logo badges in SocialProof + Hero
+- US-012: CTA bridge between problem and solution sections
+- US-013: "Traditional PM Tools" replacing "Others" with competitor footnote
+- US-014: JSON-LD Review schema for SEO rich snippets
+- US-015: Bullet points + internal links in FAQ answers
+- US-016: Annual savings callout near billing toggle
+
+**Polish & SEO (Priority 4-5):**
+- US-017: Scroll progress indicator bar
+- US-018: Back-to-top floating button
+- US-019: Date timestamps on testimonials
+- US-020: JSON-LD Offer schema on pricing
+- US-021: "Loading..." text in lazy section fallbacks
+- US-022: Slim mobile bottom bar for StickyDemoCTA
+- US-023: Rotating hero badge (4 messages, 4s cycle, pause on hover)
+- US-024: 4 new comparison table rows with partial/amber indicator
+- US-025: dark:text-gray-200 on nav links for dark mode
+
+### Quality Checks
+- `npx vite build`: PASS (6294 modules, built in 1m 13s)
+- `npm run lint`: Only pre-existing errors (Hero.tsx GSAP `any` types, Footer.tsx placeholder `href="#"`)
+- No new dependencies added
+- No routing changes
+- No state management changes
+- All changes are UI-only (text, styling, CTAs, JSON-LD schemas)
+
+### Risk Assessment for Blank White Page
+- Zero risk from these changes: all modifications are presentational
+- No new imports of packages not already in node_modules
+- No changes to React Router config, AuthContext, or app initialization
+- No dynamic imports that could fail at runtime
+- Existing `sonner` toast import in Footer.tsx matches pattern used in 4 other files
+
+### COMPLETE
