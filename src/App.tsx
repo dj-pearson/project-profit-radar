@@ -1,4 +1,4 @@
-import { Suspense, useEffect, lazy } from "react";
+import { Suspense, useEffect, lazy, type ReactNode } from "react";
 import { BrowserRouter, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -66,6 +66,37 @@ const AppContent = () => {
   );
 };
 
+// Composed provider to reduce nesting from 9 to 6 levels
+const UIProviders = ({ children }: { children: ReactNode }) => (
+  <AccessibilityProvider>
+    <ContextMenuProvider>
+      <PlatformProvider>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </PlatformProvider>
+    </ContextMenuProvider>
+  </AccessibilityProvider>
+);
+
+const AppProviders = ({ children }: { children: ReactNode }) => (
+  <CriticalErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TenantProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <UIProviders>
+              <HelmetProvider>
+                {children}
+              </HelmetProvider>
+            </UIProviders>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </TenantProvider>
+    </QueryClientProvider>
+  </CriticalErrorBoundary>
+);
+
 const App = () => {
   // Preload high-priority routes on app initialization
   useEffect(() => {
@@ -73,29 +104,11 @@ const App = () => {
   }, []);
 
   return (
-    <CriticalErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TenantProvider>
-          <AuthProvider>
-            <SubscriptionProvider>
-              <AccessibilityProvider>
-                <ContextMenuProvider>
-                  <PlatformProvider>
-                    <ThemeProvider>
-                      <HelmetProvider>
-                        <BrowserRouter>
-                          <AppContent />
-                        </BrowserRouter>
-                      </HelmetProvider>
-                    </ThemeProvider>
-                  </PlatformProvider>
-                </ContextMenuProvider>
-              </AccessibilityProvider>
-            </SubscriptionProvider>
-          </AuthProvider>
-        </TenantProvider>
-      </QueryClientProvider>
-    </CriticalErrorBoundary>
+    <AppProviders>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </AppProviders>
   );
 };
 

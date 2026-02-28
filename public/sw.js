@@ -37,6 +37,15 @@ const API_PATTERNS = [
   /supabase\.co.*\/rest\/v1\/knowledge_base_articles/
 ];
 
+// Cache size limits (LRU eviction when exceeded)
+const CACHE_LIMITS = {
+  static: 50,
+  dynamic: 30,
+  api: 30,
+  images: 20,
+  navigation: 10
+};
+
 // Resources to cache on first request
 const DYNAMIC_ASSETS = [
   '/features',
@@ -127,7 +136,7 @@ self.addEventListener('fetch', (event) => {
 async function cacheFirst(request) {
   const cache = await caches.open(STATIC_CACHE);
   const cached = await cache.match(request);
-  
+
   if (cached) {
     return cached;
   }
@@ -136,11 +145,11 @@ async function cacheFirst(request) {
     const response = await fetch(request);
     if (response.ok) {
       cache.put(request, response.clone());
+      enforceLimit(STATIC_CACHE, CACHE_LIMITS.static);
     }
     return response;
   } catch (error) {
     console.warn('Service Worker: Failed to fetch static asset:', request.url, error);
-    // Return a proper error response for static assets
     return new Response('Resource unavailable', {
       status: 503,
       statusText: 'Service Unavailable',
@@ -152,11 +161,12 @@ async function cacheFirst(request) {
 // Network-first strategy for API calls
 async function networkFirst(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
-  
+
   try {
     const response = await fetch(request);
     if (response.ok) {
       cache.put(request, response.clone());
+      enforceLimit(DYNAMIC_CACHE, CACHE_LIMITS.dynamic);
     }
     return response;
   } catch (error) {
@@ -187,6 +197,19 @@ async function staleWhileRevalidate(request) {
   }).catch(() => cached);
 
   return cached || networkPromise;
+}
+
+// Enforce cache size limit using LRU eviction
+async function enforceLimit(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxEntries) {
+    // Delete oldest entries (first in list = oldest)
+    const excess = keys.length - maxEntries;
+    for (let i = 0; i < excess; i++) {
+      await cache.delete(keys[i]);
+    }
+  }
 }
 
 // Check if URL is a static asset

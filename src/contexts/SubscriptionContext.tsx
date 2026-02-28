@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { useSupabaseSubscription } from '@/hooks/useSupabaseSubscription';
 
 export interface SubscriptionTier {
   name: string;
@@ -340,36 +341,23 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     }
   }, [user, userProfile?.company_id, fetchSubscriptionData, fetchUsage]);
 
-  // Set up real-time subscription for subscription changes
-  useEffect(() => {
-    if (!user) return;
+  // Set up real-time subscription for subscription changes using centralized hook
+  useSupabaseSubscription({
+    channelName: `subscription_changes_${user?.id}`,
+    table: 'subscribers',
+    event: '*',
+    filter: user ? `user_id=eq.${user.id}` : undefined,
+    onPayload: () => fetchSubscriptionData(),
+    enabled: !!user,
+  });
 
-    const channel = supabase
-      .channel('subscription_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscribers',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          fetchSubscriptionData();
-        }
-      )
-      .subscribe();
+  const limits = useMemo(() => getCurrentLimits(), [getCurrentLimits]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchSubscriptionData]);
-
-  const value: SubscriptionContextType = {
+  const value: SubscriptionContextType = useMemo(() => ({
     subscriptionData,
     subscriptionStatus,
     usage,
-    limits: getCurrentLimits(),
+    limits,
     loading,
     checkLimit,
     getUpgradeRequirement,
@@ -378,7 +366,20 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     isSubscribed,
     canUseFeature,
     hasUnlimitedAccess
-  };
+  }), [
+    subscriptionData,
+    subscriptionStatus,
+    usage,
+    limits,
+    loading,
+    checkLimit,
+    getUpgradeRequirement,
+    refreshSubscription,
+    refreshUsage,
+    isSubscribed,
+    canUseFeature,
+    hasUnlimitedAccess
+  ]);
 
   return (
     <SubscriptionContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocialMediaAutomation } from "@/hooks/useSocialMediaAutomation";
@@ -139,7 +139,7 @@ const BlogManager = () => {
     }
   }, [user, userProfile, loading, navigate]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoadingData(true);
 
@@ -175,7 +175,7 @@ const BlogManager = () => {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, []);
 
   const generateSlug = (title: string) => {
     return title
@@ -186,7 +186,7 @@ const BlogManager = () => {
       .trim();
   };
 
-  const handleCreatePost = async () => {
+  const handleCreatePost = useCallback(async () => {
     if (!newPost.title || !newPost.body) {
       toast({
         variant: "destructive",
@@ -298,9 +298,9 @@ const BlogManager = () => {
         }`,
       });
     }
-  };
+  }, [newPost, user?.id, shouldAutoTrigger, triggerAutomation, loadData, generateSlug]);
 
-  const handleEditPost = (post: BlogPost) => {
+  const handleEditPost = useCallback((post: BlogPost) => {
     setEditingPost(post);
     setEditPost({
       title: post.title,
@@ -315,9 +315,9 @@ const BlogManager = () => {
         : "",
     });
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const handleUpdatePost = async () => {
+  const handleUpdatePost = useCallback(async () => {
     if (!editingPost || !editPost.title || !editPost.body) {
       toast({
         variant: "destructive",
@@ -420,9 +420,9 @@ const BlogManager = () => {
         }`,
       });
     }
-  };
+  }, [editingPost, editPost, loadData, generateSlug]);
 
-  const handleDeletePost = async (post: BlogPost) => {
+  const handleDeletePost = useCallback(async (post: BlogPost) => {
     if (
       !confirm(
         `Are you sure you want to delete "${post.title}"? This action cannot be undone.`
@@ -455,9 +455,9 @@ const BlogManager = () => {
         }`,
       });
     }
-  };
+  }, [loadData]);
 
-  const generateWithAI = async () => {
+  const generateWithAI = useCallback(async () => {
     if (!aiTopic.trim()) {
       toast({
         variant: "destructive",
@@ -534,7 +534,7 @@ const BlogManager = () => {
     } finally {
       setGeneratingAI(false);
     }
-  };
+  }, [aiTopic, newPost, loadData]);
 
   const updateAISettings = async (
     settingId: string,

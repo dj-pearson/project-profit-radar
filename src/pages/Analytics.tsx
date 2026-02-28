@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleGuard, ROLE_GROUPS } from '@/components/auth/RoleGuard';
@@ -97,34 +97,34 @@ const Analytics = () => {
     }
   }, [user, userProfile, loading, navigate, selectedPeriod]);
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setAnalyticsLoading(true);
-      
-      // Load projects data
-      const { data: projects, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('company_id', userProfile?.company_id);
 
-      if (projectsError) throw projectsError;
+      // Load projects and job costs in parallel
+      const [projectsResult, jobCostsResult] = await Promise.all([
+        supabase
+          .from('projects')
+          .select('*')
+          .eq('company_id', userProfile?.company_id),
+        supabase
+          .from('job_costs')
+          .select('*, projects(name)')
+      ]);
 
-      // Load job costs
-      const { data: jobCosts, error: costsError } = await supabase
-        .from('job_costs')
-        .select('*, projects(name)')
-        .in('project_id', projects?.map(p => p.id) || []);
+      if (projectsResult.error) throw projectsResult.error;
+      if (jobCostsResult.error) throw jobCostsResult.error;
 
-      if (costsError) throw costsError;
-
-      // Create mock time entries data since table doesn't exist yet
-      const timeEntries: any[] = [];
+      const projects = projectsResult.data || [];
+      // Filter job costs to only include ones for our projects
+      const projectIds = new Set(projects.map(p => p.id));
+      const jobCosts = (jobCostsResult.data || []).filter(c => projectIds.has(c.project_id));
 
       // Process data
-      const processedData = processAnalyticsData(projects || [], jobCosts || [], timeEntries || []);
+      const processedData = processAnalyticsData(projects, jobCosts, []);
       setAnalyticsData(processedData);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading analytics:', error);
       toast({
         variant: "destructive",
@@ -134,7 +134,7 @@ const Analytics = () => {
     } finally {
       setAnalyticsLoading(false);
     }
-  };
+  }, [userProfile?.company_id, toast]);
 
   const processAnalyticsData = (projects: any[], jobCosts: any[], timeEntries: any[]): AnalyticsData => {
     // Calculate executive metrics

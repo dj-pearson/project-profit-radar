@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -127,7 +127,7 @@ const PunchList = () => {
     }
   }, [user, userProfile, loading, navigate]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoadingItems(true);
       
@@ -164,9 +164,9 @@ const PunchList = () => {
     } finally {
       setLoadingItems(false);
     }
-  };
+  }, [userProfile?.company_id]);
 
-  const handleCreateItem = async () => {
+  const handleCreateItem = useCallback(async () => {
     if (!newItem.project_id || !newItem.description) {
       toast({
         variant: "destructive",
@@ -221,9 +221,9 @@ const PunchList = () => {
         description: "Failed to create punch list item"
       });
     }
-  };
+  }, [newItem, userProfile?.company_id, user?.id, loadData]);
 
-  const handleStatusUpdate = async (itemId: string, newStatus: string) => {
+  const handleStatusUpdate = useCallback(async (itemId: string, newStatus: string) => {
     try {
       // In a real implementation, this would update the item status
       toast({
@@ -240,9 +240,9 @@ const PunchList = () => {
         description: "Failed to update status"
       });
     }
-  };
+  }, [loadData]);
 
-  const handleEditItem = async () => {
+  const handleEditItem = useCallback(async () => {
     if (!editingItem || !editingItem.id) return;
 
     try {
@@ -277,9 +277,9 @@ const PunchList = () => {
         description: "There was a problem updating the punch list item."
       });
     }
-  };
+  }, [editingItem, loadData]);
 
-  const handleAddComment = async () => {
+  const handleAddComment = useCallback(async () => {
     if (!commentText.trim()) {
       toast({
         variant: "destructive",
@@ -309,9 +309,9 @@ const PunchList = () => {
         description: "Failed to add comment"
       });
     }
-  };
+  }, [commentText, loadData]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = useCallback((status: string) => {
     switch (status) {
       case 'open':
         return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" aria-hidden="true" />Open</Badge>;
@@ -326,9 +326,9 @@ const PunchList = () => {
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
-  };
+  }, []);
 
-  const getPriorityBadge = (priority: string) => {
+  const getPriorityBadge = useCallback((priority: string) => {
     switch (priority) {
       case 'urgent':
         return <Badge variant="destructive">Urgent</Badge>;
@@ -341,9 +341,9 @@ const PunchList = () => {
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
-  };
+  }, []);
 
-  const getCategoryBadge = (category: string) => {
+  const getCategoryBadge = useCallback((category: string) => {
     switch (category) {
       case 'quality':
         return <Badge variant="outline">Quality</Badge>;
@@ -358,7 +358,7 @@ const PunchList = () => {
       default:
         return <Badge variant="outline">{category}</Badge>;
     }
-  };
+  }, []);
 
   const filteredItems = punchItems.filter(item => {
     const projectMatch = !selectedProject || selectedProject === 'all' || item.project_id === selectedProject;

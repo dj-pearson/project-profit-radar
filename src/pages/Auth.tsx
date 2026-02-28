@@ -337,7 +337,7 @@ const Auth = () => {
     };
   }, [user, userProfile, session, authLoading, navigate, checkRedirectLoop, recordRedirectAttempt, clearRedirectLoopTracking]);
 
-  const validatePasswordInput = (pwd: string) => {
+  const validatePasswordInput = useCallback((pwd: string) => {
     const errors: string[] = [];
     if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
     if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
@@ -346,7 +346,7 @@ const Auth = () => {
     if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Password must contain at least one special character');
     setPasswordValidation({ isValid: errors.length === 0, errors });
     setShowPasswordRequirements(pwd.length > 0);
-  };
+  }, []);
 
   const getPasswordRequirementStatus = (requirement: string, pwd: string = password) => {
     switch (requirement) {
@@ -359,7 +359,7 @@ const Auth = () => {
     }
   };
 
-  const handleSignIn = async (e: FormEvent) => {
+  const handleSignIn = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -372,9 +372,9 @@ const Auth = () => {
       toast({ title: "Welcome back!", description: "You've been successfully signed in." });
     }
     setLoading(false);
-  };
+  }, [email, password, signIn, toast]);
 
-  const handleSignUp = async (e: FormEvent) => {
+  const handleSignUp = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -401,9 +401,9 @@ const Auth = () => {
       toast({ title: "Verification Code Sent!", description: "Please check your email for the 6-digit verification code." });
     }
     setLoading(false);
-  };
+  }, [email, password, firstName, lastName, passwordValidation.isValid, passwordValidation.errors, signUp, toast]);
 
-  const handleVerifySignupOTP = async () => {
+  const handleVerifySignupOTP = useCallback(async () => {
     if (otpCode.length !== 6) {
       toast({ variant: "destructive", title: "Invalid Code", description: "Please enter the complete 6-digit verification code." });
       return;
@@ -427,9 +427,9 @@ const Auth = () => {
       toast({ variant: "destructive", title: "Verification Failed", description: result.error || "Invalid verification code. Please try again." });
     }
     setLoading(false);
-  };
+  }, [otpCode, email, verifyOTP, toast]);
 
-  const handleResendSignupOTP = async () => {
+  const handleResendSignupOTP = useCallback(async () => {
     if (otpResendCooldown > 0) return;
     setLoading(true);
     const result = await resendOTP({ email, type: 'confirm_signup', recipientName: firstName });
@@ -442,9 +442,9 @@ const Auth = () => {
       toast({ title: "Code Resent!", description: "A new verification code has been sent to your email." });
     }
     setLoading(false);
-  };
+  }, [otpResendCooldown, email, firstName, resendOTP, toast]);
 
-  const handleForgotPassword = async (e: FormEvent) => {
+  const handleForgotPassword = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(resetEmail)) {
@@ -466,9 +466,9 @@ const Auth = () => {
       toast({ title: "Reset Code Sent!", description: "Please check your email for the 6-digit verification code." });
     }
     setLoading(false);
-  };
+  }, [resetEmail, resetPassword, toast]);
 
-  const validateNewPassword = (pwd: string) => {
+  const validateNewPassword = useCallback((pwd: string) => {
     const errors: string[] = [];
     if (pwd.length < 8) errors.push('Password must be at least 8 characters long');
     if (!/[A-Z]/.test(pwd)) errors.push('Password must contain at least one uppercase letter');
@@ -476,18 +476,18 @@ const Auth = () => {
     if (!/\d/.test(pwd)) errors.push('Password must contain at least one number');
     if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errors.push('Password must contain at least one special character');
     setNewPasswordValidation({ isValid: errors.length === 0, errors });
-  };
+  }, []);
 
-  const handleVerifyResetOTP = () => {
+  const handleVerifyResetOTP = useCallback(() => {
     if (otpCode.length !== 6) {
       toast({ variant: "destructive", title: "Invalid Code", description: "Please enter the complete 6-digit verification code." });
       return;
     }
     setOtpFlowState('setting_password');
     toast({ title: "Enter New Password", description: "Please create your new password below." });
-  };
+  }, [otpCode, toast]);
 
-  const handleSetNewPassword = async (e: FormEvent) => {
+  const handleSetNewPassword = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     if (!newPasswordValidation.isValid) {
       toast({ variant: "destructive", title: "Password Requirements Not Met", description: newPasswordValidation.errors[0] });
@@ -519,9 +519,9 @@ const Auth = () => {
       toast({ variant: "destructive", title: "Reset Failed", description: result.error || "Failed to reset password. Please try again." });
     }
     setLoading(false);
-  };
+  }, [newPasswordValidation.isValid, newPasswordValidation.errors, newPassword, confirmPassword, resetEmail, otpCode, resetPasswordWithOTP, toast]);
 
-  const handleResendResetOTP = async () => {
+  const handleResendResetOTP = useCallback(async () => {
     if (otpResendCooldown > 0) return;
     setLoading(true);
     const result = await resetPassword(resetEmail);
@@ -534,25 +534,25 @@ const Auth = () => {
       toast({ title: "Code Resent!", description: "A new verification code has been sent to your email." });
     }
     setLoading(false);
-  };
+  }, [otpResendCooldown, resetEmail, resetPassword, toast]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = useCallback(async () => {
     setLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
       toast({ variant: "destructive", title: "Google Sign In Failed", description: error });
       setLoading(false);
     }
-  };
+  }, [signInWithGoogle, toast]);
 
-  const handleAppleSignIn = async () => {
+  const handleAppleSignIn = useCallback(async () => {
     setLoading(true);
     const { error } = await signInWithApple();
     if (error) {
       toast({ variant: "destructive", title: "Apple Sign In Failed", description: error });
       setLoading(false);
     }
-  };
+  }, [signInWithApple, toast]);
 
   // Password requirement rendering helper
   const renderPasswordRequirements = (pwd: string, idPrefix: string) => (

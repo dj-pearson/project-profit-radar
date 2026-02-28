@@ -127,15 +127,51 @@ export default defineConfig(({ mode }) => ({
     // Performance optimizations
     rollupOptions: {
       output: {
-        // DISABLE manual chunking to prevent React dependency issues
-        // Let Vite's automatic chunking handle everything
-        // This ensures React and components that depend on it stay together
-        manualChunks: undefined,
+        manualChunks(id) {
+          // Framework chunk: React + ReactDOM + React Router must stay together
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/react-router-dom/') ||
+            id.includes('node_modules/react-router/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'framework';
+          }
+          // UI library chunk: Radix UI + CVA
+          if (
+            id.includes('node_modules/@radix-ui/') ||
+            id.includes('node_modules/class-variance-authority')
+          ) {
+            return 'ui-library';
+          }
+          // Query chunk: TanStack Query
+          if (id.includes('node_modules/@tanstack/')) {
+            return 'query';
+          }
+          // Charts chunk: Recharts (heavy, only needed on analytics pages)
+          if (id.includes('node_modules/recharts/') || id.includes('node_modules/d3-')) {
+            return 'charts';
+          }
+          // XLSX chunk: Heavy spreadsheet library
+          if (id.includes('node_modules/xlsx/')) {
+            return 'xlsx';
+          }
+          // Three.js chunk: 3D rendering
+          if (id.includes('node_modules/three/') || id.includes('node_modules/@react-three/')) {
+            return 'three';
+          }
+        },
         
         // Optimized file naming for better caching
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? 
-            chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') : 
+          // Use manual chunk name when available (framework, ui-library, etc.)
+          const manualNames = ['framework', 'ui-library', 'query', 'charts', 'xlsx', 'three'];
+          if (manualNames.includes(chunkInfo.name)) {
+            return `assets/${chunkInfo.name}-[hash].js`;
+          }
+          const facadeModuleId = chunkInfo.facadeModuleId ?
+            chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') :
             'chunk';
           return `assets/${facadeModuleId}-[hash].js`;
         },

@@ -264,3 +264,92 @@
 - Large chunks (expected): xlsx.mjs (427KB), index (688KB), PremiumBlueprint3D (886KB)
 
 ---
+
+## 2026-02-28 - Ralph Loop: Phase 2 Performance Optimization (US-052 through US-062)
+
+### PRD Progress: 62/62 stories complete (100%). All Phase 2 stories passing.
+
+### US-052: Memoize SubscriptionContext (P1)
+- Added `useMemo` for context value object and `getCurrentLimits()` result
+- All callbacks were already wrapped in `useCallback`
+- Prevents cascading re-renders across all subscription consumers
+
+### US-053: Re-enable Manual Chunk Splitting (P1)
+- Re-enabled `manualChunks` in vite.config.ts with conservative strategy
+- Named chunks: framework (216KB), ui-library (155KB), query, charts (487KB), xlsx (427KB), three (869KB)
+- Updated `chunkFileNames` to preserve manual chunk names in output
+- React, ReactDOM, React Router grouped together to prevent context issues
+
+### US-054: useCallback for Form Handlers (P2)
+- Auth.tsx: Wrapped 12+ handlers (handleSignIn, handleSignUp, handleVerifySignupOTP, handleResendSignupOTP, handleForgotPassword, handleSetNewPassword, handleResendResetOTP, handleGoogleSignIn, handleAppleSignIn, validatePasswordInput, validateNewPassword, handleVerifyResetOTP)
+- PunchList.tsx: Wrapped 8 handlers (loadData, handleCreateItem, handleStatusUpdate, handleEditItem, handleAddComment, getStatusBadge, getPriorityBadge, getCategoryBadge)
+- BlogManager.tsx: Wrapped 7 handlers (loadData, handleCreatePost, handleEditPost, handleUpdatePost, handleDeletePost, generateWithAI)
+
+### US-055: Parallelize Analytics Queries (P2)
+- Refactored loadAnalyticsData to use Promise.all for parallel projects + job_costs fetching
+- Client-side Set-based filtering replaces sequential `.in()` query pattern
+- Wrapped in useCallback with proper dependencies
+
+### US-056: Extract Sub-Components (P3)
+- Created `src/components/auth/OAuthButtons.tsx` - Google/Apple sign-in buttons
+- Created `src/components/auth/PasswordRequirements.tsx` - password validation display
+- Created `src/components/blog/BlogPostCard.tsx` - blog post list card component
+- All components have proper TypeScript interfaces
+
+### US-057: Centralized Supabase Subscription Manager (P3)
+- Created `src/hooks/useSupabaseSubscription.ts`
+- Features: channel creation, auto cleanup on unmount, error handling, deduplication via global activeChannels Map
+- Migrated SubscriptionContext.tsx to use the new hook
+
+### US-058: Dynamic Imports for Heavy Viz Libraries (P3)
+- Hero3D.tsx now uses React.lazy + Suspense for BuildDeskHero3D (Three.js)
+- PremiumBlueprint3D was already dynamically imported
+- Manual chunk splitting ensures recharts and three.js are in separate chunks
+
+### US-059: Reduce Context Provider Nesting (P4)
+- Created `UIProviders` component (AccessibilityProvider + ContextMenuProvider + PlatformProvider + ThemeProvider)
+- Created `AppProviders` component encapsulating all provider composition
+- App.tsx nesting reduced from 9 deep to clean composed structure
+
+### US-060: Service Worker Cache Limits (P4)
+- Added CACHE_LIMITS config: static:50, dynamic:30, api:30, images:20, navigation:10
+- Added `enforceLimit()` LRU eviction function
+- Both cacheFirst and networkFirst strategies enforce limits after cache.put
+- Updated update-sw-version.js to use git commit hash + timestamp (e.g., `05c0e75-1772248673157`)
+
+### US-061: Enhanced LazyImage Component (P4)
+- Enhanced existing `src/components/ui/lazy-image.tsx`
+- Added: native loading='lazy' + decoding='async', WebP/AVIF support via `<picture>`, width/height for CLS prevention, Skeleton placeholder, error fallback state
+
+### US-062: Consolidate Animation Libraries (P5)
+- Created `src/lib/animation-utils.ts` with shared utilities
+- Documented animation strategy: Framer Motion for scroll/viewport, GSAP for Hero timeline only (lazily loaded)
+- Shared constants: EASE_OUT, DURATION_DEFAULT
+- Helper functions: createRevealVariants, createStaggerVariants, prefersReducedMotion
+
+### Build Verification
+- `npx vite build` passes successfully (1m 20s)
+- Named vendor chunks confirmed in output
+- Post-build scripts pass (copy-404, update-sw-version with git hash)
+- Image optimization: 86% savings
+
+### New Files Created
+- `src/hooks/useSupabaseSubscription.ts`
+- `src/components/auth/OAuthButtons.tsx`
+- `src/components/auth/PasswordRequirements.tsx`
+- `src/components/blog/BlogPostCard.tsx`
+- `src/lib/animation-utils.ts`
+
+### Files Modified
+- `src/contexts/SubscriptionContext.tsx` - useMemo, useSupabaseSubscription
+- `vite.config.ts` - manualChunks re-enabled
+- `src/pages/Auth.tsx` - useCallback wrapping
+- `src/pages/PunchList.tsx` - useCallback wrapping
+- `src/pages/BlogManager.tsx` - useCallback wrapping
+- `src/pages/Analytics.tsx` - parallel queries
+- `src/App.tsx` - UIProviders + AppProviders
+- `src/components/Hero3D.tsx` - lazy import
+- `src/components/ui/lazy-image.tsx` - enhanced with WebP/AVIF/CLS
+- `public/sw.js` - cache limits + LRU eviction
+- `scripts/update-sw-version.js` - git hash versioning
+- `prd.json` - all 11 Phase 2 stories marked as passes: true
