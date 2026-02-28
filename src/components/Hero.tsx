@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ComponentType } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Ruler } from "lucide-react";
+import { ArrowRight, Play, Ruler, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResponsiveContainer, ResponsiveGrid } from "@/components/layout/ResponsiveContainer";
 
@@ -206,6 +206,21 @@ const Hero = () => {
                   </>
                 )}
               </Button>
+            </div>
+
+            {/* Trust Signals */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-x-6 gap-y-2 justify-center lg:justify-start">
+              {[
+                "14-day free trial",
+                "No credit card required",
+                "Cancel anytime",
+                "Setup in 30 minutes",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-1.5">
+                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">{item}</span>
+                </div>
+              ))}
             </div>
 
             {/* Social Proof */}

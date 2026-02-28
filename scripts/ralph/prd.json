@@ -1,1075 +1,463 @@
 {
-  "project": "BuildDesk Enterprise Production Readiness",
-  "branchName": "enterprise-production-readiness",
-  "description": "Comprehensive initiative to bring BuildDesk construction management platform from its current ~95% feature-complete state to enterprise-grade, production-ready status. Phase 1 (US-001 through US-051) addressed TypeScript strict mode, security hardening, CI/CD, testing, accessibility, and new feature development - all 51 stories COMPLETE. Phase 2 (US-052 through US-062) addresses performance optimization findings from a comprehensive platform audit covering: bundle size & code splitting, React performance (context memoization, useCallback), data fetching patterns, image/asset optimization, service worker caching, and CSS performance. Priority fixes target 15-20% bundle reduction, 10-15% fewer re-renders, and 30-50% faster analytics load times.",
+  "project": "BuildDesk UI/UX Audit Improvements",
+  "branchName": "ralph/ui-ux-audit-improvements",
+  "description": "Comprehensive UI/UX improvements identified through a full platform audit covering the homepage, hero, social proof, pricing, testimonials, FAQ, case studies, implementation, footer, header, and sticky CTA components. Improvements target three key areas: (1) Conversion optimization through better CTAs, trust signals, and value propositions, (2) User engagement through better content hierarchy, missing CTAs in key sections, and mobile experience improvements, (3) SEO enhancement through structured data, internal linking, and content gaps. Expected impact: 25-40% improvement in conversion rates, reduced bounce rates, and improved organic search visibility.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Enable TypeScript strict mode in tsconfig",
-      "description": "As a developer, I want TypeScript strict mode enabled so that the compiler catches type errors at build time instead of runtime. Currently tsconfig.app.json has strict: false, noImplicitAny: false, noUnusedParameters: false. Enable strict: true, noImplicitAny: true, and strictNullChecks: true. This will produce many compile errors - do NOT fix them in this story. Instead, add ts-expect-error comments with TODO tags to suppress errors so the build passes. Create a script at scripts/count-ts-errors.sh that counts remaining ts-expect-error comments for tracking progress.",
+      "title": "Add trust signal bar beneath hero CTA with guarantee messaging",
+      "description": "As a visitor, I want to see trust signals immediately after the hero CTA so that I feel confident clicking 'Start Free Trial'. Currently the hero section (src/components/Hero.tsx) has a CTA button that says 'Start Free Trial' with no qualifying information. Add a trust signal strip below the CTA div (ref={ctaRef}) that includes: '14-day free trial', 'No credit card required', 'Cancel anytime', and 'Setup in 30 minutes'. Use small text with checkmark icons in a horizontal row. This is the single highest-impact conversion optimization since trust signals next to CTAs reduce friction by 15-25%.",
       "acceptanceCriteria": [
-        "tsconfig.app.json has strict: true, noImplicitAny: true, strictNullChecks: true",
-        "npm run build completes successfully with no TypeScript errors",
-        "All suppressed errors use @ts-expect-error with a TODO comment explaining the issue",
-        "scripts/count-ts-errors.sh exists and outputs count of remaining ts-expect-error comments",
-        "No functional changes to runtime behavior"
+        "A trust signal strip appears below the CTA buttons in src/components/Hero.tsx",
+        "Trust strip contains 4 items: '14-day free trial', 'No credit card required', 'Cancel anytime', 'Setup in 30 minutes'",
+        "Each item has a green CheckCircle icon from lucide-react",
+        "Items display horizontally on desktop and wrap to 2x2 grid on mobile",
+        "Text uses text-sm text-muted-foreground styling for subtlety",
+        "Trust strip is visible without scrolling on both desktop and mobile",
+        "npm run build passes",
+        "npm run lint passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "COMPLETED. strict: true, noImplicitAny: true, strictNullChecks: true enabled in tsconfig.app.json. Count script at scripts/count-strict-violations.sh."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-002",
-      "title": "Remove hardcoded fallback tokens from source code",
-      "description": "As a security engineer, I want no secrets or tokens hardcoded in source code so that credentials cannot be leaked through version control. File src/lib/envValidation.ts line 28 contains a hardcoded Supabase JWT token as a fallback value. Remove the hardcoded token from FALLBACK_VALUES. Instead, make the app show a clear setup error page when env vars are missing in development, and fail fast with a descriptive error in production. Update the validation logic to not silently fall back to hardcoded credentials.",
+      "title": "Add CTA button to TestimonialsSection after social proof stats",
+      "description": "As a visitor reading testimonials, I want a clear next action so that I can convert after being convinced by social proof. Currently the TestimonialsSection (src/components/TestimonialsSection.tsx) has zero CTA buttons - visitors read 6 compelling testimonials with metrics like '$47K overrun prevented' and '5 min month-end close' but have no button to act. Add a centered CTA section after the summary stats (4.9/5 rating, 500+ contractors) with a primary 'Start Free Trial' button and a secondary 'View Pricing' link. Include a brief trust reinforcer like 'Join 500+ contractors saving an average of $78K/year'.",
       "acceptanceCriteria": [
-        "No JWT tokens, API keys, or secrets exist as string literals in any .ts or .tsx file",
-        "src/lib/envValidation.ts FALLBACK_VALUES no longer contains any token strings",
-        "Development mode shows a clear error UI when VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY are missing",
-        "Production mode logs an error and fails fast when required env vars are missing",
-        "npm run build completes successfully",
-        "Running grep -r 'eyJ' src/ returns no results (no JWT tokens in source)"
+        "A CTA section is added after the summary stats in TestimonialsSection",
+        "Primary button says 'Start Free Trial' with ArrowRight icon, uses variant='hero', links to /auth",
+        "Secondary link says 'View Pricing' with outline variant, links to /#pricing",
+        "Reinforcement text reads 'Join 500+ contractors saving an average of $78K/year'",
+        "CTA section is centered with py-8 spacing",
+        "Buttons use the existing Button component from @/components/ui/button",
+        "npm run build passes",
+        "npm run lint passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "COMPLETED. Removed hardcoded JWT from envValidation.ts FALLBACK_VALUES and PRODUCTION_ANON_KEY from supabase/client.ts. Added fail-fast error handling."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Remove debug console statements and clean up development artifacts",
-      "description": "As a developer, I want production code free of debug statements so the console is clean and no sensitive information leaks. Remove all console.log DEBUG statements from src/pages/Setup.tsx (4 instances). Search the entire src/ directory for console.log and console.debug statements that are not wrapped in isDevelopment() checks. Either remove them or wrap them in development-only guards. The ESLint config already has no-console as warn - ensure all remaining console usage is intentional error logging only.",
+      "title": "Add CTA section to FAQ component after questions",
+      "description": "As a visitor who has read FAQ answers, I want a clear path to sign up so that I can take action after my objections are addressed. The FAQ component (src/components/FAQ.tsx) currently ends with no CTA - visitors have their questions answered but then hit a dead end. Add a CTA section below the accordion with heading 'Still Have Questions?', two action paths: (1) 'Start Free Trial' primary button and (2) 'Contact Sales' secondary button linking to mailto:support@build-desk.com, plus a small reassurance line: '14-day free trial. No credit card required.'",
       "acceptanceCriteria": [
-        "src/pages/Setup.tsx contains zero DEBUG console statements",
-        "No bare console.log or console.debug calls remain in src/ outside of the logger utility",
-        "All intentional logging uses the logger utility from src/lib/logger.ts",
-        "npm run lint produces no new console-related warnings",
-        "npm run build completes successfully"
+        "A CTA section appears below the FAQ accordion in src/components/FAQ.tsx",
+        "Section has heading 'Still Have Questions?' in text-2xl font-bold",
+        "Primary button 'Start Free Trial' with variant='hero' links to /auth",
+        "Secondary button 'Contact Sales' with variant='outline' links to mailto:support@build-desk.com",
+        "Reassurance text '14-day free trial. No credit card required.' appears below buttons",
+        "Section is centered with appropriate spacing (mt-12 pt-12 border-t)",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 2,
-      "passes": true,
-      "notes": "COMPLETED. Replaced 41 bare console.* calls across 10 files with logger utility."
+      "priority": 1,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-004",
-      "title": "Create GitHub Actions CI pipeline for main web application",
-      "description": "As a developer, I want an automated CI pipeline so that every pull request is validated before merge. Create .github/workflows/ci.yml that runs on push to main and on all pull requests. The pipeline should: 1) Install dependencies (npm ci), 2) Run TypeScript type checking (npx tsc --noEmit), 3) Run ESLint (npm run lint), 4) Run unit tests (npm run test:run), 5) Run production build (npm run build). Use Node.js 18. Cache node_modules using actions/cache. The pipeline should fail if any step fails. Add a separate job for E2E tests that starts the dev server and runs Playwright tests against Chromium only (to keep CI fast).",
+      "title": "Consolidate duplicate CTAs on Pricing cards to single primary action",
+      "description": "As a visitor on the pricing page, I want one clear action per pricing card so that I'm not confused by multiple buttons. Currently each pricing card in src/components/Pricing.tsx has TWO buttons: 'Start Free Trial' (hero variant) AND 'Get Started Now' (outline). These are functionally identical and create decision paralysis. Remove the 'Get Started Now' button from all pricing cards, keeping only 'Start Free Trial' as the primary CTA. For the Enterprise tier, change the CTA to 'Contact Sales' linking to mailto:support@build-desk.com since enterprise buyers prefer talking to sales.",
       "acceptanceCriteria": [
-        ".github/workflows/ci.yml exists and is valid YAML",
-        "Pipeline includes jobs: lint, typecheck, unit-test, build, e2e-test",
-        "Node.js 18 is used with npm ci for dependency installation",
-        "node_modules are cached between runs using actions/cache",
-        "E2E job installs Playwright browsers and runs against Chromium",
-        "Pipeline triggers on push to main and on pull_request events",
-        "Each job fails fast on error"
+        "Each pricing card in Pricing.tsx has exactly ONE CTA button",
+        "Starter and Professional cards have 'Start Free Trial' button with hero variant",
+        "Enterprise card has 'Contact Sales' button linking to mailto:support@build-desk.com",
+        "No 'Get Started Now' button exists anywhere in the Pricing component",
+        "Button styling and spacing remain visually balanced",
+        "npm run build passes",
+        "npm run lint passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "COMPLETED. Created .github/workflows/ci.yml with 5 jobs: lint, typecheck, unit-test, build, e2e-test. Node 18, npm caching, Chromium-only E2E."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Write unit tests for core utility functions in src/lib/",
-      "description": "As a developer, I want comprehensive unit tests for core utilities so that foundational functions are verified. Write Vitest tests for the most critical utility files in src/lib/. Focus on: utils.ts (cn function, formatCurrency, date formatting), envValidation.ts (validateEnvironment, getEnvConfig), and any security utilities in src/lib/security/. Each test file should be co-located as filename.test.ts. Aim for 90%+ coverage on these specific files. Use the existing vitest.config.ts and test setup.",
+      "title": "Add CTA section to Implementation component",
+      "description": "As a visitor who just read about the implementation process, I want a way to get started so that I can move forward after seeing how easy onboarding is. The Implementation section (src/components/Implementation.tsx) ends with success metrics but has no CTA. Add a CTA section after the success metrics with heading 'Ready to Get Started?', subtext 'Live in 30 days or your money back', a primary 'Start Free Trial' button, and a secondary 'Schedule a Demo' link to /demo.",
       "acceptanceCriteria": [
-        "src/lib/__tests__/utils.test.ts exists with tests for all exported utility functions",
-        "src/lib/__tests__/envValidation.test.ts exists with tests for validation logic",
-        "Tests for any files in src/lib/security/ directory exist",
-        "All tests pass when running npm run test:run",
-        "Coverage for src/lib/ files exceeds 80% (run npm run test:coverage to verify)",
-        "Tests cover edge cases: null inputs, empty strings, boundary values"
+        "A CTA section appears after the success metrics in Implementation.tsx",
+        "Heading reads 'Ready to Get Started?' in text-2xl font-bold centered",
+        "Subtext reads 'Live in 30 days or your money back' in text-muted-foreground",
+        "Primary button 'Start Free Trial' with hero variant links to /auth",
+        "Secondary button 'Schedule a Demo' with outline variant links to /demo",
+        "Section uses centered layout with mt-12 spacing",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Created src/lib/__tests__/sanitize.test.ts (30+ tests) and src/lib/__tests__/envValidation.test.ts (7 tests)."
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Write unit tests for AuthContext and authentication hooks",
-      "description": "As a developer, I want authentication logic thoroughly tested so that login, logout, role checking, and session management are reliable. Write Vitest tests for src/contexts/AuthContext.tsx covering: user state management, login/logout flows, role-based access helpers, and session persistence. Mock the Supabase client. Test all user roles (admin, project_manager, field_supervisor, office_staff, accounting, client_portal). Also test any auth-related hooks in src/hooks/.",
+      "title": "Improve hero headline and subheadline for specificity and conversion",
+      "description": "As a visitor, I want to immediately understand the specific value BuildDesk provides so that I know this product solves my problem. The current hero headline 'Build Smarter. Profit Faster.' is generic and could apply to any construction software. Change the headline to 'Know Your Real Profit Margins. Every Day.' which directly addresses the core value prop (real-time job costing). Update the subheadline from 'Stop guessing your margins. Track every dollar in real-time...' to 'Catch $40K+ cost overruns weeks before they happen. The only financial-first platform built for contractors who refuse to fly blind.' This is more specific and includes a quantified benefit.",
       "acceptanceCriteria": [
-        "src/contexts/__tests__/AuthContext.test.tsx exists with comprehensive tests",
-        "Tests cover: initial unauthenticated state, successful login, failed login, logout, session refresh",
-        "All 6 user roles are tested for role-based access control",
-        "Supabase client is properly mocked (no real API calls)",
-        "All tests pass with npm run test:run",
-        "At least 15 test cases covering authentication edge cases"
+        "Hero h1 in src/components/Hero.tsx reads 'Know Your Real' on line 1 and 'Profit Margins. Every Day.' on line 2 with gradient",
+        "The gradient span wraps 'Profit Margins. Every Day.' (replacing 'Profit Faster.')",
+        "Subheadline paragraph reads 'Catch $40K+ cost overruns weeks before they happen. The only financial-first platform built for contractors who refuse to fly blind.'",
+        "All text is properly responsive (text-4xl sm:text-5xl lg:text-6xl xl:text-7xl)",
+        "No change to CTA buttons or other hero elements",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Auth context tests created with Supabase mocking."
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Write unit tests for financial calculation utilities",
-      "description": "As a developer, I want financial calculations tested to prevent monetary errors in job costing and invoicing. Find and test all financial calculation functions across the codebase - look in src/components/financial/, src/utils/, and src/lib/ for functions that compute totals, margins, tax, markup, budget variance, and cash flow. Write thorough unit tests with exact decimal precision checks. Test currency rounding, zero values, negative values, and very large numbers.",
+      "title": "Add social proof count to pricing section header",
+      "description": "As a visitor evaluating pricing, I want to see that other contractors trust this product so that I feel comfortable with the investment. Currently the Pricing section header says 'Investment in Financial Intelligence, Not Just Software' but includes no social proof near the pricing cards. Add a social proof badge above the heading that says 'Trusted by 500+ Contractors' with a Users icon. Also add a line below the description: 'Average customer ROI payback in under 30 days' with a TrendingUp icon.",
       "acceptanceCriteria": [
-        "Test files exist for all financial calculation utilities found in the codebase",
-        "Tests verify exact decimal precision (no floating point errors in money calculations)",
-        "Edge cases tested: zero budget, negative values, very large numbers (>$1M), tax rounding",
-        "Budget vs actual variance calculations are tested with known inputs/outputs",
-        "Markup and margin percentage calculations are tested",
-        "All tests pass with npm run test:run"
+        "A badge reading 'Trusted by 500+ Contractors' with Users icon appears above the pricing section heading",
+        "Badge uses inline-flex styling with bg-secondary/50 border rounded-full",
+        "Text 'Average customer ROI payback in under 30 days' appears below the section description",
+        "ROI text uses TrendingUp icon and text-sm text-green-600 dark:text-green-400 styling",
+        "Both elements are centered and visually balanced",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Created src/utils/__tests__/financialCalculations.test.ts (49 tests) covering all exported financial calculation functions."
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Write E2E tests for authentication and dashboard flows",
-      "description": "As a QA engineer, I want E2E tests for the most critical user journeys so that regressions are caught before deployment. Using Playwright (already configured), write E2E tests for: 1) Landing page loads correctly, 2) Sign-in page renders with email/password fields, 3) Dashboard page renders after navigation, 4) Navigation menu works correctly, 5) Theme toggle works. Since we cannot test real auth without credentials, focus on page rendering, navigation, and UI interaction tests. Place tests in tests/e2e/.",
+      "title": "Update footer copyright year and add social media link placeholders",
+      "description": "As a visitor, I want to see current copyright and social media presence so that the company appears active and credible. The footer in src/components/Footer.tsx has a hardcoded '© 2025' which is now outdated (it's 2026). Update to use dynamic year via new Date().getFullYear(). Also add a social media links section in the bottom bar with icon links for LinkedIn, Twitter/X, and Facebook using lucide-react icons. These should link to '#' as placeholders until real URLs are configured.",
       "acceptanceCriteria": [
-        "tests/e2e/landing.spec.ts tests that the landing page loads and has key elements",
-        "tests/e2e/auth.spec.ts tests the sign-in page renders correctly",
-        "tests/e2e/navigation.spec.ts tests that navigation links work between pages",
-        "All tests pass with npx playwright test --project=chromium",
-        "Tests use proper Playwright patterns: page objects, locators, assertions",
-        "Tests have descriptive names and are organized by feature area"
+        "Copyright year in Footer.tsx uses {new Date().getFullYear()} instead of hardcoded '2025'",
+        "Social media icon links appear in the bottom bar next to trust badges",
+        "Icons include LinkedIn (Linkedin icon), Twitter (Twitter icon), Facebook (Facebook icon) from lucide-react",
+        "Icons link to '#' as placeholder URLs",
+        "Icons use text-white/60 hover:text-white transition-colors styling",
+        "Icons are 5x5 size with gap-4 spacing",
+        "npm run build passes",
+        "npm run lint passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Created tests/e2e/landing.spec.ts (6 tests) and tests/e2e/navigation.spec.ts (8 tests)."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Fix critical any types in core modules (contexts, hooks, lib)",
-      "description": "As a developer, I want proper TypeScript types in core modules so that the foundational code is type-safe. Focus on removing @ts-expect-error and any types from: 1) src/contexts/ - all context providers, 2) src/hooks/ - the 20 most-used hooks, 3) src/lib/ - all utility files. Replace 'any' with proper types using the existing Supabase generated types from src/integrations/supabase/types.ts. For complex objects, create proper interfaces in src/types/. This story targets the CORE modules only, not components or pages.",
+      "title": "Add newsletter signup form to footer",
+      "description": "As a visitor not ready to buy, I want to subscribe to updates so that I can stay informed and convert later. The footer currently has no lead capture mechanism. Add a newsletter signup section in the company info column (left column) below the address. Include a simple email input with 'Enter your email' placeholder and a 'Subscribe' button. On submit, show a toast success message 'Thanks for subscribing!' using the existing toast from sonner. This captures leads from visitors not ready for a trial.",
       "acceptanceCriteria": [
-        "src/contexts/ files have zero any types or @ts-expect-error comments",
-        "src/lib/ files have zero any types or @ts-expect-error comments",
-        "At least 20 hooks in src/hooks/ have proper types replacing any",
-        "New type interfaces are created in src/types/ where needed",
-        "npm run build completes successfully",
-        "No runtime behavior changes"
+        "Newsletter signup form appears in the footer company info section",
+        "Form has an email input with placeholder 'Enter your email' and type='email'",
+        "Submit button says 'Subscribe' with ArrowRight icon, uses variant='ghost' with white text",
+        "Form uses flex row layout with gap-2",
+        "On submit, a success toast shows 'Thanks for subscribing!'",
+        "Form prevents default submission and clears input after success",
+        "Input and button use text-sm sizing to fit the footer",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. Removed any types from core modules in contexts, hooks, and lib."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Add AccessiblePageWrapper to top 20 most-visited pages",
-      "description": "As a user with disabilities, I want proper semantic HTML landmarks on all pages so that screen readers can navigate effectively. Import AccessiblePageWrapper from src/components/accessibility/AccessiblePageWrapper.tsx and wrap the following high-traffic pages: Dashboard, Projects list, Project detail, Financial overview, Time tracking, Estimates, Invoices, Daily reports, Team/Crew management, Settings, Client portal, CRM dashboard, Documents, Calendar, Equipment, Safety, Analytics, Reports, Change orders, and Profile. Each page should have proper main landmark, page title, and breadcrumb structure.",
+      "title": "Improve mobile hero fallback from placeholder text to animated visual",
+      "description": "As a mobile visitor (60%+ of traffic), I want an engaging hero visual so that I don't see a generic 'Interactive 3D on desktop' placeholder. Currently the Hero3DFallback in src/components/Hero.tsx shows a static icon with text 'Interactive 3D on desktop' which is a poor mobile experience. Replace it with a more engaging fallback: a stylized dashboard mockup card showing a project with real-time metrics (Budget: $125K, Spent: $89K, Margin: 28.8%) with a pulsing 'LIVE' indicator. This gives mobile users a preview of the product's value without the 1.3MB 3D component.",
       "acceptanceCriteria": [
-        "20 specified pages import and use AccessiblePageWrapper as the outermost container",
-        "Each page passes the pageTitle prop to AccessiblePageWrapper",
-        "Each page has a proper <main> landmark via the wrapper",
-        "Screen reader users can identify the current page via the document title",
-        "npm run build completes successfully",
-        "[UI stories only] Verify in browser using dev-browser skill that pages render correctly with the wrapper"
+        "Hero3DFallback in Hero.tsx shows a dashboard-style card instead of just an icon",
+        "Card displays: project name 'Westside Complex', Budget '$125,000', Spent '$89,200', Margin '28.8%'",
+        "A green 'LIVE' badge with animate-pulse dot appears in the card header",
+        "Card uses rounded-2xl bg-card border shadow-xl styling",
+        "A simple progress bar shows budget utilization (71.4%) in green",
+        "Card is centered in the fallback container with proper padding",
+        "Overall visual fits within the existing h-[400px] sm:h-[500px] container",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. Added AccessiblePageWrapper to 20+ top pages."
+      "priority": 2,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-011",
-      "title": "Migrate forms to AccessibleForm components on key pages",
-      "description": "As a user with disabilities, I want forms with proper labels, error messages, and ARIA attributes so I can complete tasks with assistive technology. Identify the 15 most important forms in the application (sign-in, sign-up, create project, create estimate, create invoice, time entry, daily report, change order, contact form, settings profile, team invite, expense entry, document upload, task creation, and search/filter forms). Replace their form elements with AccessibleForm, AccessibleFormField, AccessibleSelect, and AccessibleTextarea from src/components/accessibility/AccessibleForm.tsx. Ensure each field has an associated label, aria-invalid on error, and aria-describedby for error messages.",
+      "title": "Replace text-only company logos with styled logo badges in SocialProof",
+      "description": "As a visitor, I want to see professional company logos so that the social proof feels authentic. Currently the SocialProof component (src/components/SocialProof.tsx) and the Hero component both use plain text spans for company names ('ACME Build', 'ConstructCo', etc.) which looks unprofessional. Replace the text-only company logos in both SocialProof.tsx and Hero.tsx with styled badge components that have a subtle background, border, and monospace font to look like real company logos without requiring actual image assets.",
       "acceptanceCriteria": [
-        "15 high-priority forms use AccessibleForm components",
-        "All form inputs have associated <label> elements",
-        "Error states set aria-invalid=true on the input",
-        "Error messages are linked via aria-describedby",
-        "Required fields have aria-required=true",
-        "npm run build completes successfully",
-        "[UI stories only] Verify in browser using dev-browser skill that forms still function correctly"
+        "Company names in SocialProof.tsx logo section render as styled badges not plain spans",
+        "Company names in Hero.tsx social proof section render as styled badges not plain spans",
+        "Each badge has bg-secondary/30 border border-border/50 rounded-lg px-4 py-2 styling",
+        "Company text uses font-bold tracking-wider uppercase text-sm",
+        "Badges have subtle hover effect (hover:bg-secondary/50 transition-colors)",
+        "Layout remains responsive: flex-wrap on mobile, single row on desktop",
+        "Both SocialProof.tsx and Hero.tsx use the same badge styling for consistency",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. Migrated 15+ forms to AccessibleForm components including CRM/scheduling forms."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Migrate data tables to AccessibleTable on key pages",
-      "description": "As a user with disabilities, I want data tables with proper headers, sorting announcements, and keyboard navigation so I can browse tabular data. Identify all pages with data tables (projects list, estimates list, invoices list, time entries, daily reports, team roster, equipment list, documents list, CRM contacts, expenses, change orders, payments, audit logs, and permissions). Replace their table implementations with AccessibleTable from src/components/accessibility/AccessibleTable.tsx. Ensure proper <th> scope attributes, sortable column announcements, and keyboard navigation between cells.",
+      "title": "Add mid-section CTA to ProblemSolution component between problem and solution",
+      "description": "As a visitor who just read about the pain points, I want to take action at peak emotional impact so that I can convert when most motivated. The ProblemSolution component (src/components/ProblemSolution.tsx) has a problem section and solution section but no CTA between them. The gap between problem articulation and solution presentation is the peak attention moment. Add a centered CTA bridge between the problem grid and solution grid with text 'See How BuildDesk Catches Overruns in Real-Time' and a primary CTA button 'Start Free Trial' linking to /auth.",
       "acceptanceCriteria": [
-        "At least 14 table pages use AccessibleTable component",
-        "All tables have proper <caption> or aria-label",
-        "Table headers use scope='col' or scope='row'",
-        "Sortable columns announce sort state changes to screen readers",
-        "Tables are keyboard navigable (arrow keys between cells)",
-        "npm run build completes successfully",
-        "[UI stories only] Verify in browser using dev-browser skill that tables render and sort correctly"
+        "A CTA bridge section appears between the problem grid and solution grid in ProblemSolution.tsx",
+        "Bridge has centered text 'See How BuildDesk Catches Overruns in Real-Time' in text-xl font-semibold",
+        "Primary button 'Start Free Trial' with variant='hero' links to /auth with ArrowRight icon",
+        "Bridge section uses py-8 spacing with a subtle border-t and border-b border-border/30",
+        "Section is visually distinct but not overwhelming (uses bg-construction-orange/5 rounded-2xl p-8)",
+        "Imports Link from react-router-dom and Button from ui/button",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 5,
-      "passes": true,
-      "notes": "COMPLETED. Migrated 14 pages to AccessibleTable: EstimatesTable, ExpenseTracker, InvoiceList, TeamManagement, ChangeOrders, DailyReports, Equipment, CRMContacts, ErrorLogs, Users, PermissionManagement, AuditLogs, DocumentManagement, TimeEntriesList."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-013",
-      "title": "Migrate dialogs and modals to AccessibleModal across the app",
-      "description": "As a user with disabilities, I want modals that trap focus, can be closed with Escape, and return focus to the trigger element. Search the codebase for all Dialog, AlertDialog, and Sheet components from shadcn/ui. For the 20 most critical modals (create/edit forms, confirmation dialogs, delete confirmations, settings panels), replace with AccessibleModal from src/components/accessibility/AccessibleModal.tsx. Ensure each modal has a title, description, focus trap, and Escape key handler.",
+      "title": "Add competitor names to comparison table in FinancialIntelligenceShowcase",
+      "description": "As a visitor comparing options, I want to see specific competitor names so that I know exactly how BuildDesk compares to alternatives I'm considering. The comparison table in FinancialIntelligenceShowcase.tsx (src/components/FinancialIntelligenceShowcase.tsx) uses the generic label 'Others' in the third column header. Replace 'Others' with 'Traditional PM Tools' and add a subtle note below the table: 'Compared to Procore, Buildertrend, and CoConstruct based on publicly available feature sets.' This is more credible and helps SEO for competitor comparison queries.",
       "acceptanceCriteria": [
-        "At least 20 critical modals use AccessibleModal",
-        "All modals have a visible title and aria-describedby description",
-        "Focus is trapped inside open modals (Tab cycles within modal)",
-        "Escape key closes the modal",
-        "Focus returns to the trigger element when modal closes",
-        "Background content has aria-hidden=true when modal is open",
-        "npm run build completes successfully",
-        "[UI stories only] Verify in browser using dev-browser skill that modals open, close, and trap focus correctly"
+        "Table header third column reads 'Traditional PM Tools' instead of 'Others'",
+        "A note appears below the table: 'Compared to Procore, Buildertrend, and CoConstruct based on publicly available feature sets.'",
+        "Note uses text-xs text-muted-foreground italic text-center mt-4 styling",
+        "No other changes to the table structure or content",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 5,
-      "passes": true,
-      "notes": "COMPLETED. Migrated 20 critical modals to AccessibleModal: CreateTaskDialog, EditTaskDialog, ConvertToProjectDialog, MFAVerificationModal, MFASetupDialog, Projects, CRMContacts, admin/Users, EstimatesTable, ExpenseTracker, EstimatesHub, FilterPresetsManager, EmailSyncSetup, BondForm, PermitForm, DocumentCard, BudgetManager, SSOManagement, PaymentMethodManager, ChangeOrderManagement."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-014",
-      "title": "Add ARIA labels to all interactive elements and icons",
-      "description": "As a user with disabilities, I want all buttons, links, and interactive elements to have accessible names so screen readers can announce them. Audit and fix: 1) Buttons with only icon content (add aria-label), 2) Decorative icons (add aria-hidden=true), 3) Interactive cards (add role=article and aria-labelledby), 4) Badge/status indicators (add aria-label for context), 5) Search inputs (add role=search and aria-label). Focus on the 30 most-used components in src/components/ui/ and the top 20 pages.",
+      "title": "Add structured data (Review schema) to TestimonialsSection for SEO",
+      "description": "As the platform, I want structured review data on the testimonials so that Google can display rich review snippets in search results. The TestimonialsSection (src/components/TestimonialsSection.tsx) displays 6 testimonials but has no Schema.org Review structured data. Add a JSON-LD script block that includes an AggregateRating and individual Review schemas for all 6 testimonials. Use the existing testimonial data (author, quote, rating) to populate the schema. This can significantly improve click-through rates from search results.",
       "acceptanceCriteria": [
-        "All icon-only buttons have aria-label describing their action",
-        "All decorative icons have aria-hidden=true",
-        "Status badges have aria-label with full context (e.g., 'Status: Active')",
-        "Search areas have role=search and aria-label",
-        "Interactive cards have role=article with aria-labelledby pointing to their heading",
-        "npm run lint produces no new jsx-a11y errors",
-        "npm run build completes successfully"
+        "A JSON-LD script tag is rendered in TestimonialsSection with @type: 'Product'",
+        "Schema includes aggregateRating with ratingValue 4.9, reviewCount 500, bestRating 5",
+        "Schema includes an array of 6 Review objects with author, reviewBody, and reviewRating",
+        "Each Review has @type 'Review', author as Person, reviewRating as Rating with ratingValue 5",
+        "Schema is valid JSON-LD (can be verified at schema.org)",
+        "Script tag uses type='application/ld+json' and dangerouslySetInnerHTML",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 5,
-      "passes": true,
-      "notes": "This covers the 'last mile' of a11y - individual element labeling across the app."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-015",
-      "title": "Write unit tests for React components (first batch of 20)",
-      "description": "As a developer, I want key UI components tested so that visual regressions and interaction bugs are caught. Write Vitest + Testing Library tests for 20 high-value components. Priority: 1) src/components/ui/button.tsx, 2) src/components/ui/card.tsx, 3) src/components/ui/input.tsx, 4) src/components/ui/select.tsx, 5) src/components/ui/dialog.tsx, and 15 domain components from src/components/financial/, src/components/dashboard/, src/components/projects/. Test rendering, props, user interactions (click, type, select), and conditional rendering. Include accessibility tests using the test utilities from src/test/accessibility-utils.ts.",
+      "title": "Improve FAQ answers with bullet points and internal links",
+      "description": "As a visitor reading FAQ answers, I want scannable answers with links to learn more so that I can quickly find relevant information. Currently FAQ answers in src/components/FAQ.tsx are long paragraphs that are hard to scan. Refactor the top 4 FAQ answers to use bullet points for key information and add internal links where relevant (e.g., link 'real-time job costing' to /features/job-costing, link 'pricing' mentions to /#pricing, link 'QuickBooks' mentions to /integrations). Keep the full answer content but restructure for scannability.",
       "acceptanceCriteria": [
-        "20 component test files exist (co-located as ComponentName.test.tsx)",
-        "Each test file has at least 3 test cases covering rendering, props, and interaction",
-        "At least 5 component tests include accessibility checks using expectNoA11yViolations",
-        "All tests pass with npm run test:run",
-        "Tests use @testing-library/react with userEvent for interactions",
-        "No component tests make real API calls (all Supabase calls mocked)"
+        "First 4 FAQ answers in FAQ.tsx use bullet points (ul/li elements) for key features/comparisons",
+        "FAQ about Procore links 'real-time job costing' to /features/job-costing",
+        "FAQ about pricing links 'pricing page' to /#pricing",
+        "FAQ about QuickBooks links 'integrations' to /integrations",
+        "FAQ about implementation links 'implementation process' to /#implementation",
+        "Links use Link component from react-router-dom or anchor tags for hash links",
+        "Links use text-construction-orange hover:underline styling",
+        "Bullet points maintain the same informational content, just restructured",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 5,
-      "passes": true,
-      "notes": "COMPLETED. Created 20 component test files with rendering, props, and interaction tests. Includes accessibility checks."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-016",
-      "title": "Complete error boundary coverage and production error logging",
-      "description": "As a developer, I want comprehensive error boundaries so that component failures are caught gracefully and logged to Sentry. Audit all route-level pages and ensure each is wrapped in an error boundary. The existing ErrorBoundary component in src/components/ui/ErrorBoundary.tsx has a TODO for proper error service logging - complete that integration with Sentry. Add error boundaries around the 5 critical feature sections: financial, projects, time-tracking, scheduling, and CRM. Each boundary should show a user-friendly fallback UI with a retry button.",
+      "title": "Add annual savings callout to pricing billing toggle",
+      "description": "As a visitor evaluating pricing, I want to see the exact dollar savings for annual billing so that I don't have to calculate it myself. The Pricing component has a monthly/annual toggle but doesn't prominently show the actual dollar amount saved. Add a visible callout next to or below the billing toggle that shows the savings when annual is selected, e.g., 'Save $840/year on Professional plan' in green text with a DollarSign icon. This should dynamically calculate based on the selected plan's monthly price.",
       "acceptanceCriteria": [
-        "All route-level components are wrapped in error boundaries",
-        "ErrorBoundary component logs errors to Sentry (not just console)",
-        "5 feature-section error boundaries exist with domain-specific fallback UIs",
-        "Fallback UI includes a descriptive error message, retry button, and contact support link",
-        "Error boundaries catch render errors, async errors in effects, and event handler errors",
-        "npm run build completes successfully"
+        "When annual billing is selected, a savings callout appears near the toggle",
+        "Callout shows specific dollar savings (e.g., 'Save $840/year' for the Professional plan at $350/mo)",
+        "Callout uses text-green-600 dark:text-green-400 text-sm font-medium styling",
+        "Callout includes a DollarSign or BadgePercent icon",
+        "Callout smoothly appears/disappears with transition when toggling billing period",
+        "When monthly is selected, the callout changes to 'Switch to annual to save 20%'",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 6,
-      "passes": true,
-      "notes": "COMPLETED. CriticalErrorBoundary with Sentry integration, error logging service, 5 feature-section error boundaries."
+      "priority": 3,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-017",
-      "title": "Add rate limiting configuration for Supabase Edge Functions",
-      "description": "As a security engineer, I want rate limiting on all public API endpoints so that the platform is protected from abuse and DDoS. Create a shared rate limiting utility in supabase/functions/_shared/rate-limiter.ts that uses Supabase's built-in capabilities or a simple in-memory/Redis-backed counter. Apply rate limiting to the 10 most sensitive edge functions: stripe-webhooks, auth endpoints, ai-content-generator, ai-estimating, analyze-images, analyze-support-ticket, api-auth, api-management, and any public-facing endpoints. Configure limits: auth endpoints (10 req/min), AI endpoints (20 req/min), general API (100 req/min).",
+      "title": "Add scroll progress indicator to homepage",
+      "description": "As a visitor scrolling the long homepage, I want to see how far I've scrolled so that I know how much content remains and feel oriented. The homepage (src/pages/Index.tsx) is a very long single page with 12+ sections but no visual progress indicator. Add a thin progress bar fixed at the top of the viewport (below the header) that fills from left to right as the user scrolls. Use construction-orange color and 2px height. This increases engagement metrics and reduces premature exits.",
       "acceptanceCriteria": [
-        "supabase/functions/_shared/rate-limiter.ts exists with reusable rate limiting logic",
-        "Rate limiter supports configurable limits per endpoint",
-        "At least 10 edge functions import and use the rate limiter",
-        "Auth endpoints limited to 10 requests per minute per IP",
-        "AI endpoints limited to 20 requests per minute per user",
-        "Rate-limited responses return HTTP 429 with Retry-After header",
-        "Rate limiter has unit tests"
+        "A fixed progress bar appears at the top of the page in Index.tsx, just below the sticky header (top-16 for h-16 header)",
+        "Progress bar is 2px height with bg-construction-orange fill",
+        "Bar width reflects scroll percentage (0% at top, 100% at bottom)",
+        "Bar uses fixed positioning with z-40 (below header z-50)",
+        "Background track is transparent or very subtle (bg-border/20)",
+        "Progress updates smoothly with CSS transition or requestAnimationFrame",
+        "Bar is only visible on the homepage, not on dashboard or other pages",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 6,
-      "passes": true,
-      "notes": "Edge functions are Deno runtime. Use Deno-compatible patterns."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-018",
-      "title": "Fix placeholder calculations and mock data in production components",
-      "description": "As a product owner, I want all dashboard widgets and summary cards to show real calculated data instead of hardcoded zeros and placeholders. Search for TODO comments related to calculations across the codebase. Key files: src/components/EnhancedProjectOverview.tsx (6 TODOs for invoiced_amount, payments_received, critical_path_delays, crew_count), src/pages/CRMDashboard.tsx (3 TODOs), src/components/ui/bulk-actions.tsx (5 TODOs). Replace hardcoded 0 values with actual Supabase queries or computed values from existing data. Where real data doesn't exist yet, show 'N/A' or a clear empty state instead of misleading zeros.",
+      "title": "Add back-to-top button on homepage",
+      "description": "As a visitor who has scrolled deep into the homepage, I want a quick way to return to the top so that I can navigate back to the hero or header navigation. The homepage has 12+ sections and no back-to-top button. Add a floating back-to-top button that appears after scrolling past 50% of the page. Place it fixed at bottom-20 right-4 (above the sticky CTA). Use a ChevronUp icon in a circular button with the construction-orange color scheme.",
       "acceptanceCriteria": [
-        "EnhancedProjectOverview.tsx has zero TODO comments - all calculations use real data or proper empty states",
-        "CRMDashboard.tsx has zero TODO comments - handlers are properly implemented",
-        "bulk-actions.tsx has zero TODO comments - bulk operations work or show 'coming soon' state",
-        "No component displays hardcoded 0 for calculated financial values",
-        "Empty states show 'No data available' or similar instead of fake numbers",
-        "npm run build completes successfully"
+        "A back-to-top button appears in Index.tsx after scrolling past 50% of page height",
+        "Button is fixed at bottom-20 right-4 positioning (above StickyDemoCTA)",
+        "Button uses a circular shape (rounded-full h-10 w-10)",
+        "Button contains ChevronUp icon from lucide-react",
+        "Button uses bg-construction-orange text-white hover:bg-construction-orange/90 styling",
+        "Clicking scrolls to top with smooth behavior (window.scrollTo with behavior: 'smooth')",
+        "Button has subtle shadow and transition animation on appear/disappear",
+        "Button has aria-label='Back to top' for accessibility",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 6,
-      "passes": true,
-      "notes": "COMPLETED. Fixed placeholder calculations in EnhancedProjectOverview, useDashboardData, CRMDashboard, and bulk-actions."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-019",
-      "title": "Add production monitoring dashboard and health check endpoint",
-      "description": "As a DevOps engineer, I want a health check endpoint and monitoring setup so that production issues are detected immediately. Create a Supabase Edge Function at supabase/functions/health-check/ that verifies: database connectivity, auth service status, storage availability, and returns response times. Create a simple admin-only monitoring page at src/pages/admin/SystemHealth.tsx that displays: system status, recent error counts from Sentry, API response times, active user sessions, and database connection pool status. Use the existing admin layout and auth guards.",
+      "title": "Add date timestamps to testimonials for recency proof",
+      "description": "As a visitor reading testimonials, I want to see when reviews were written so that I know they're recent and the platform is actively used. Currently the 6 testimonials in TestimonialsSection.tsx have no dates, which makes them feel potentially outdated. Add a date field to each testimonial object and display it in the card. Use dates within the last 6 months (e.g., 'January 2026', 'December 2025') to show recency. Display the date in text-xs text-muted-foreground below the author info.",
       "acceptanceCriteria": [
-        "supabase/functions/health-check/index.ts exists and returns JSON health status",
-        "Health check verifies database, auth, and storage connectivity",
-        "Health check returns response times for each service",
-        "src/pages/admin/SystemHealth.tsx exists with monitoring dashboard",
-        "Dashboard shows: system status, error trends, response times",
-        "Page is protected by admin role authentication",
-        "Health endpoint responds in <500ms",
-        "npm run build completes successfully"
+        "Each testimonial object in TestimonialsSection.tsx has a 'date' field (string format: 'Month YYYY')",
+        "Dates are distributed across recent months (October 2025 through February 2026)",
+        "Date is displayed below the author/company info in each testimonial card",
+        "Date text uses text-xs text-muted-foreground styling",
+        "Date format is consistent across all 6 testimonials",
+        "No other changes to testimonial card layout or content",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 7,
-      "passes": true,
-      "notes": "Essential for production operations. Sentry and PostHog are already integrated."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-020",
-      "title": "Write E2E tests for project management and financial flows",
-      "description": "As a QA engineer, I want E2E tests covering the core business workflows so that project management and financial features are regression-tested. Using Playwright, write tests for: 1) Projects page loads and displays project list, 2) Project detail page renders all tabs, 3) Financial overview page shows key metrics, 4) Estimates page loads correctly, 5) Invoices page renders, 6) Time tracking page loads, 7) Daily reports page renders, 8) Settings page sections are accessible. Focus on page rendering and navigation since we can't test mutations without a test database.",
+      "title": "Add Offer structured data schema to Pricing component for SEO",
+      "description": "As the platform, I want structured pricing data so that Google can display pricing information in search results. The Pricing component has no Schema.org structured data for its pricing tiers. Add a JSON-LD script block with Product schema containing multiple Offer entries for each pricing tier (Starter, Professional, Enterprise) including price, currency, availability, and billing cycle. This helps search engines understand the pricing model and can improve visibility for 'construction software pricing' queries.",
       "acceptanceCriteria": [
-        "tests/e2e/projects.spec.ts tests project listing and detail pages",
-        "tests/e2e/financial.spec.ts tests financial overview, estimates, and invoices pages",
-        "tests/e2e/time-tracking.spec.ts tests time tracking and daily reports pages",
-        "tests/e2e/settings.spec.ts tests settings page sections",
-        "All tests pass with npx playwright test --project=chromium",
-        "Tests use proper Playwright assertions (toBeVisible, toHaveURL, etc.)",
-        "At least 20 test cases across all spec files"
+        "A JSON-LD script tag is rendered in the Pricing component",
+        "Schema uses @type 'Product' with name 'BuildDesk Construction Management Software'",
+        "Schema includes offers array with one Offer per pricing tier",
+        "Each Offer has @type 'Offer', price, priceCurrency 'USD', availability 'InStock'",
+        "Offers include priceValidUntil set to end of current year",
+        "Each offer has description matching the tier name",
+        "Script tag uses type='application/ld+json'",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 7,
-      "passes": true,
-      "notes": "These complement US-008 auth/nav tests. Together they cover the critical user journeys."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-021",
-      "title": "Fix any types in component layer (first batch of 50 components)",
-      "description": "As a developer, I want proper TypeScript types in the most-used components so that props and state are type-safe. Target the 50 most-imported components across src/components/. For each component: replace any props with proper interfaces, type all useState and useEffect hooks, type all event handlers (React.ChangeEvent, React.FormEvent, etc.), and type all Supabase query results using types from src/integrations/supabase/types.ts. Prioritize: ui/ components, financial/, dashboard/, projects/, time-tracking/.",
+      "title": "Add loading text to lazy section fallbacks on homepage",
+      "description": "As a visitor on a slow connection, I want to see meaningful loading indicators so that I don't think the page is broken when sections are still loading. Currently the homepage uses SectionFallback components that are just animated pulse divs with no text. On slow connections, these appear as grey rectangles which can seem broken. Update the SectionFallback component in Index.tsx to include a subtle 'Loading...' text centered in the fallback area. Also update the PerformanceLazyWrapper fallbacks to match.",
       "acceptanceCriteria": [
-        "50 component files have any types replaced with proper TypeScript interfaces",
-        "All component props use named interfaces (not inline types)",
-        "Event handlers use proper React event types",
-        "Supabase query results use generated types from types.ts",
-        "No new @ts-expect-error comments added (net reduction in ts-expect-error count)",
-        "npm run build completes successfully",
-        "Run scripts/count-ts-errors.sh and show reduction from baseline"
+        "SectionFallback component in Index.tsx shows centered 'Loading...' text",
+        "Text uses text-sm text-muted-foreground/50 styling",
+        "Text is vertically and horizontally centered within the fallback div (flex items-center justify-center)",
+        "Fallback still has the animate-pulse background effect",
+        "PerformanceLazyWrapper fallbacks in Index.tsx are updated to use SectionFallback instead of plain divs",
+        "Loading text does not flash on fast connections (only visible during actual loading)",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 7,
-      "passes": true,
-      "notes": "Depends on US-001 and US-009. This is the second wave of type safety improvements."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-022",
-      "title": "Add comprehensive API documentation for public endpoints",
-      "description": "As a developer integrating with BuildDesk, I want complete API documentation so I can understand and use all public endpoints. Create docs/API_REFERENCE.md documenting all public-facing Supabase Edge Functions. For each endpoint document: HTTP method, URL path, request headers (auth), request body schema, response schema, error codes, rate limits, and a curl example. Group endpoints by domain: Authentication, Projects, Financial, Time Tracking, Documents, CRM, Webhooks, and AI Services. Also create a machine-readable docs/api-schema.json OpenAPI 3.0 specification.",
+      "title": "Add StickyDemoCTA mobile optimization",
+      "description": "As a mobile visitor, I want the sticky CTA to not obstruct my view so that I can read content without interruption. The StickyDemoCTA (src/components/StickyDemoCTA.tsx) appears as a floating card at bottom-4 right-4 on all screen sizes. On mobile, this takes up significant screen real estate and can be intrusive. Modify it to render as a slim bottom bar on mobile (screens below md breakpoint) instead of the floating card. The mobile version should be a full-width bar with just the CTA text and button in a single row.",
       "acceptanceCriteria": [
-        "docs/API_REFERENCE.md exists with documentation for all public edge functions",
-        "Each endpoint has: method, path, auth requirements, request/response schemas, examples",
-        "Endpoints are grouped by domain with a table of contents",
-        "docs/api-schema.json contains valid OpenAPI 3.0 specification",
-        "API schema validates with an OpenAPI validator",
-        "At least 30 endpoints are documented",
-        "curl examples are provided for the 10 most-used endpoints"
+        "On screens below md breakpoint, StickyDemoCTA renders as a full-width bottom bar",
+        "Mobile bar is fixed at bottom-0 with full width and h-12 height",
+        "Mobile bar shows 'Try BuildDesk Free' text and a compact 'Start Trial' button in a single row",
+        "Mobile bar has bg-construction-dark text-white styling for visibility",
+        "On md and above screens, the existing floating card design is preserved",
+        "Close/dismiss functionality works for both mobile bar and desktop card",
+        "Mobile bar has subtle shadow-lg for elevation",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 8,
-      "passes": true,
-      "notes": "Enterprise customers expect API documentation. This also supports the developer portal feature."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-023",
-      "title": "Add performance budget enforcement to CI pipeline",
-      "description": "As a performance engineer, I want automated performance checks so that bundle size regressions are caught in CI. Update the GitHub Actions CI pipeline (from US-004) to add a performance job that: 1) Runs npm run build, 2) Checks total bundle size is under 1.2MB gzipped, 3) Checks no individual chunk exceeds 400KB, 4) Reports bundle size in PR comments using a custom script. Create scripts/check-bundle-size.js that parses the Vite build output and enforces size budgets. Store the bundle size report as a CI artifact.",
+      "title": "Add industry-specific value props to hero badge rotation",
+      "description": "As a visitor from a specific construction niche, I want to see that BuildDesk understands my industry so that I know it's relevant to me. The hero badge currently shows a static 'New: AI-Powered Estimation' message. Add a rotating badge that cycles through 3-4 messages every 4 seconds: 'New: AI-Powered Estimation', 'Residential Contractors Save 23% on Margins', 'Commercial Builders: 5-Min Monthly Close', 'Trusted by 500+ Construction Pros'. Use a simple fade transition between messages.",
       "acceptanceCriteria": [
-        "scripts/check-bundle-size.js exists and parses Vite build output for bundle sizes",
-        "Script enforces: total <1.2MB gzipped, no chunk >400KB",
-        "Script exits with code 1 if budget is exceeded",
-        "GitHub Actions CI pipeline includes a performance check job",
-        "Bundle size report is uploaded as a CI artifact",
-        "npm run build && node scripts/check-bundle-size.js passes currently",
-        "Script outputs a clear table of chunk sizes"
+        "Hero badge in Hero.tsx rotates through 4 different messages",
+        "Messages cycle every 4 seconds using setInterval in useEffect",
+        "Transition uses opacity fade (transition-opacity duration-300)",
+        "Messages are: 'New: AI-Powered Estimation', 'Residential: Save 23% on Margins', 'Commercial: 5-Min Monthly Close', 'Trusted by 500+ Contractors'",
+        "Rotation pauses on hover for readability",
+        "Rotation uses functional state update to avoid stale closures",
+        "Interval is cleaned up in useEffect return function",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 8,
-      "passes": true,
-      "notes": "Vite already reports sizes. The script needs to parse and enforce limits. Depends on US-004."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-024",
-      "title": "Write unit tests for Supabase hooks and data fetching layer",
-      "description": "As a developer, I want data fetching hooks tested so that API integration errors are caught early. Write Vitest tests for hooks in src/hooks/ and src/integrations/supabase/ that use TanStack Query. Mock the Supabase client and test: successful data fetching, error handling, loading states, cache invalidation, and refetch behavior. Target hooks for: projects, estimates, invoices, time entries, financial records, user profiles, and CRM contacts. Use @tanstack/react-query testing utilities.",
+      "title": "Add comparison table rows to FinancialIntelligenceShowcase",
+      "description": "As a visitor evaluating BuildDesk, I want to see more feature comparisons so that I understand the full scope of BuildDesk's advantages. The comparison table in FinancialIntelligenceShowcase.tsx only has 4 rows, all showing BuildDesk as 'yes' and others as 'no'. This feels one-sided and lacks credibility. Add 4 more comparison rows including some where competitors also have checkmarks to add honesty: 'Gantt Chart Scheduling' (both yes), 'Photo Documentation' (both yes), 'GPS Time Tracking' (BuildDesk yes, others partial), 'QuickBooks 2-Way Sync' (BuildDesk yes, others partial). Add a partial/yellow indicator for 'partial' support.",
       "acceptanceCriteria": [
-        "Test files exist for at least 10 data fetching hooks",
-        "Tests cover: success state, error state, loading state for each hook",
-        "Supabase client is properly mocked with typed mock responses",
-        "TanStack Query wrapper is used for rendering hooks in tests",
-        "Cache invalidation behavior is tested for mutation hooks",
-        "All tests pass with npm run test:run",
-        "Tests use realistic mock data matching Supabase type definitions"
+        "Comparison table has 8 rows total (4 existing + 4 new)",
+        "New rows: 'Gantt Chart Scheduling' (both true), 'Photo Documentation' (both true), 'GPS Time Tracking' (us true, them 'partial'), 'QuickBooks 2-Way Sync' (us true, them 'partial')",
+        "Partial support shows an amber/yellow circle with a minus icon instead of check or X",
+        "Partial indicator uses bg-amber-500 text-white styling",
+        "Existing 4 rows remain unchanged",
+        "Table remains horizontally scrollable on mobile",
+        "npm run build passes",
+        "npm run lint passes"
       ],
-      "priority": 8,
-      "passes": true,
-      "notes": "These hooks are the data backbone. Testing them prevents API integration regressions."
+      "priority": 4,
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-025",
-      "title": "Implement keyboard navigation for all interactive components",
-      "description": "As a keyboard-only user, I want to navigate the entire application using only the keyboard so I can use BuildDesk without a mouse. Implement: 1) Skip links component (SkipLinks.tsx already exists - ensure it's in the root layout), 2) Focus visible styles for all interactive elements (add :focus-visible CSS), 3) Arrow key navigation in sidebar menu, 4) Enter/Space activation for custom buttons and cards, 5) Tab order follows logical reading order on all top 20 pages. Add the keyboard shortcuts defined in the accessibility docs (Alt+Shift+1 for main content, etc.).",
+      "title": "Add dark mode hover state fix for navigation links in header",
+      "description": "As a user in dark mode, I want navigation links to be clearly visible so that I can navigate the site easily. The Header.tsx navigation links use text-construction-dark for their default color which may have poor contrast in dark mode. Add dark:text-white to the navigation link classes in both desktop nav and mobile menu. Also ensure the hover state (hover:text-construction-orange) works correctly in dark mode.",
       "acceptanceCriteria": [
-        "SkipLinks component is rendered in the root App layout",
-        "All interactive elements have visible focus indicators (:focus-visible styling)",
-        "Sidebar navigation supports arrow key movement between items",
-        "Custom clickable cards respond to Enter and Space keys",
-        "Tab order is logical (no tabindex > 0 anywhere in the codebase)",
-        "Alt+Shift+1 skips to main content, Alt+Shift+2 to navigation",
-        "npm run build completes successfully",
-        "[UI stories only] Verify in browser using dev-browser skill that keyboard navigation works"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "Keyboard navigation is a WCAG 2.1 Level A requirement - the most basic accessibility level."
-    },
-    {
-      "id": "US-026",
-      "title": "Add accessibility unit tests for all accessible components",
-      "description": "As a developer, I want automated accessibility tests so that a11y regressions are caught in CI. Write Vitest tests using axe-core (via the existing src/test/accessibility-utils.ts) for: AccessiblePageWrapper, AccessibleTable, AccessibleForm, AccessibleFormField, AccessibleSelect, AccessibleTextarea, AccessibleModal, and SkipLinks. Also add a11y tests to the 20 page-level components from US-010. Each test should render the component and run expectNoA11yViolations(). Test with different props to cover all variants.",
-      "acceptanceCriteria": [
-        "All 8 accessible components have dedicated a11y test files",
-        "At least 20 page-level components have a11y tests",
-        "Tests use expectNoA11yViolations from src/test/accessibility-utils.ts",
-        "Tests cover different variants (e.g., form with errors, table with sorting, modal open/closed)",
-        "All tests pass with npm run test:run",
-        "Zero axe-core violations across all tested components",
-        "Test suite can be run standalone: npm run test:run -- --grep a11y"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "Depends on US-010 through US-014 being complete. This locks in the a11y improvements."
-    },
-    {
-      "id": "US-027",
-      "title": "Fix any types in page components (batch of 30 pages)",
-      "description": "As a developer, I want proper TypeScript types in page components so that the full application is type-safe. Target 30 page files in src/pages/ starting with the most critical: Dashboard, Projects, Financial, TimeTracking, Estimates, Invoices, CRM, Settings, Admin pages. For each page: type all local state, type all query results, type all event handlers, and type all props passed to child components. Remove @ts-expect-error comments and replace with proper types.",
-      "acceptanceCriteria": [
-        "30 page files have any types replaced with proper TypeScript types",
-        "All useState hooks have explicit type parameters",
-        "All useQuery results use types from Supabase generated types",
-        "No new @ts-expect-error comments (net reduction)",
-        "npm run build completes successfully",
-        "Run scripts/count-ts-errors.sh and show further reduction from US-021 baseline"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "COMPLETED. Fixed any types in 30 page files: SystemAdminSettings, Reports, BillPayments, PermissionManagement, UserSettings, RFIs, GeneralLedger, DocumentManagement, SEOManager, LeadManagement, WorkflowAutomation, SEOManagement, Projects, ComplianceAudit, DeveloperPortal, FiscalPeriods, ChartOfAccounts, AIEstimating, PunchList, EnvironmentalPermitting, CrewScheduling, BlogManager, RiskPrediction, TrialBalance, Submittals, IntegrationMarketplace, ChangeOrders, AccountsPayable, RetentionAnalytics, APIKeyManagement."
-    },
-    {
-      "id": "US-028",
-      "title": "Add Lighthouse CI to GitHub Actions with performance gates",
-      "description": "As a performance engineer, I want automated Lighthouse audits on every PR so that performance, accessibility, SEO, and best practices scores are enforced. Add a Lighthouse CI job to the GitHub Actions pipeline. Configure lighthouserc.js (already exists) with assertions: Performance >= 85, Accessibility >= 90, Best Practices >= 90, SEO >= 90. Run against 5 key pages: landing, dashboard, projects list, financial overview, and settings. Upload Lighthouse HTML reports as CI artifacts. Fail the pipeline if any score drops below thresholds.",
-      "acceptanceCriteria": [
-        "GitHub Actions CI includes a Lighthouse CI job",
-        "lighthouserc.js has score assertions: perf>=85, a11y>=90, bp>=90, seo>=90",
-        "Lighthouse runs against 5 specified pages",
-        "HTML reports are uploaded as CI artifacts",
-        "Pipeline fails if any score drops below threshold",
-        "Lighthouse job starts the dev server, runs audits, then shuts down",
-        "Job uses lhci/cli action or equivalent"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "Depends on US-004 CI pipeline and accessibility improvements (US-010 through US-014)."
-    },
-    {
-      "id": "US-029",
-      "title": "Create AGENTS.md files for key directories",
-      "description": "As an AI developer working on this codebase, I want AGENTS.md files in key directories documenting patterns, conventions, and gotchas so that future AI agents (and human developers) can work effectively. Create AGENTS.md files in: src/ (top-level patterns), src/components/ (component conventions), src/hooks/ (hook patterns), src/lib/ (utility patterns), src/pages/ (page patterns), supabase/functions/ (edge function patterns), and tests/ (testing patterns). Each file should document: directory purpose, naming conventions, import patterns, common pitfalls, and key dependencies.",
-      "acceptanceCriteria": [
-        "AGENTS.md exists in src/, src/components/, src/hooks/, src/lib/, src/pages/, supabase/functions/, tests/",
-        "Each file documents: purpose, conventions, patterns, pitfalls, dependencies",
-        "Files are concise (under 100 lines each) and actionable",
-        "Patterns described match actual codebase conventions (verified by reading existing code)",
-        "Files reference key types, utilities, and common imports",
-        "No outdated or incorrect information"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "COMPLETED. Created AGENTS.md in 7 directories: src/, src/components/, src/hooks/, src/lib/, src/pages/, supabase/functions/, tests/."
-    },
-    {
-      "id": "US-030",
-      "title": "Create progress.txt with initial codebase learnings",
-      "description": "As an AI agent running Ralph, I want a progress.txt file initialized with key codebase patterns and learnings so that each iteration starts with useful context. Create progress.txt in the project root with a Consolidated Patterns section documenting: 1) Supabase query patterns (select, insert, update with RLS), 2) Component architecture (shadcn/ui wrapping pattern), 3) Auth pattern (useAuth hook, role checking), 4) Testing patterns (Vitest setup, mock patterns, a11y testing), 5) Build and deploy patterns (Vite config, Cloudflare Pages), 6) Common pitfalls found during the codebase analysis.",
-      "acceptanceCriteria": [
-        "progress.txt exists in project root",
-        "Contains a 'Consolidated Patterns' section at the top",
-        "Documents Supabase query patterns with code examples",
-        "Documents component architecture patterns",
-        "Documents authentication and authorization patterns",
-        "Documents testing setup and mock patterns",
-        "Documents build/deploy workflow",
-        "Lists known pitfalls: TypeScript strict mode migration, any types, a11y gaps",
-        "File is under 200 lines and concise"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "COMPLETED. progress.txt created with Consolidated Patterns section covering Supabase, components, auth, testing, build/deploy, and known pitfalls."
-    },
-    {
-      "id": "US-031",
-      "title": "Add per-route ErrorBoundary + Suspense wrapper for all lazy-loaded routes",
-      "description": "As a user, I want to see a clear error message with recovery options when a page fails to load, so that I am not stranded on a blank white screen after a deployment or network issue. Created RouteErrorBoundary component with chunk-load error detection. Updated createLazyRoute to wrap every lazy component with Suspense + RouteErrorBoundary. Converted all 7 route files to use createLazyRoute instead of raw lazy().",
-      "acceptanceCriteria": [
-        "RouteErrorBoundary component created with chunk-load error detection",
-        "createLazyRoute wraps every lazy component with Suspense + RouteErrorBoundary",
-        "All 7 route files use createLazyRoute instead of raw lazy()",
-        "Chunk load failures show user-friendly UI with Reload App and Go to Dashboard buttons",
-        "Runtime errors show Try Again and Go to Dashboard buttons",
-        "Build succeeds with no new errors"
-      ],
-      "priority": 1,
-      "passes": true,
-      "notes": "COMPLETED. RouteErrorBoundary at src/components/RouteErrorBoundary.tsx. Updated createLazyRoute in src/utils/lazyRoutes.tsx. All route files (appRoutes, financialRoutes, projectRoutes, peopleRoutes, operationsRoutes, marketingRoutes) converted. LazyRouteConfig interface updated."
-    },
-    {
-      "id": "US-032",
-      "title": "Increase toast notification limit to prevent dropped error messages",
-      "description": "As a user performing multiple operations, I want to see all success and error notifications, so that I don't miss critical error messages when multiple operations complete simultaneously. Increased TOAST_LIMIT from 1 to 5 and added gap-2 to ToastViewport for proper stacking.",
-      "acceptanceCriteria": [
-        "TOAST_LIMIT increased from 1 to 5",
-        "Toast viewport supports stacked display with gap between toasts",
-        "Multiple toasts render correctly without overlapping",
-        "Build succeeds with no new errors"
-      ],
-      "priority": 2,
-      "passes": true,
-      "notes": "COMPLETED. Updated TOAST_LIMIT in src/hooks/use-toast.ts from 1 to 5. Added gap-2 to ToastViewport in src/components/ui/toast.tsx."
-    },
-    {
-      "id": "US-033",
-      "title": "Add loading state checks before rendering in financial pages",
-      "description": "As a user navigating to the Financial Dashboard or Invoices page, I want to see a loading skeleton instead of a partially-rendered page with empty data, so that the page doesn't visually jump when data arrives.",
-      "acceptanceCriteria": [
-        "FinancialDashboard.tsx renders a skeleton/loading state while child components load data",
-        "Invoices.tsx checks loading state before rendering page layout, filters, and stats",
-        "No visual jumpiness when navigating to financial pages",
-        "Build succeeds with no new errors"
-      ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Added FinancialDashboardSkeleton component and full-page TableSkeleton to Invoices.tsx."
-    },
-    {
-      "id": "US-034",
-      "title": "Surface data fetch errors in Dashboard instead of showing empty state",
-      "description": "As a user, I want to see an error message on the Dashboard when data fails to load, so that I know something went wrong instead of seeing an empty dashboard with no explanation.",
-      "acceptanceCriteria": [
-        "Dashboard.tsx checks the error state from useDashboardData hook",
-        "Error state renders a user-friendly error message with retry option",
-        "Error message does not block entire dashboard - shows partial data where available",
-        "Build succeeds with no new errors"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. Added Alert + Retry button in Dashboard.tsx when useDashboardData returns error."
-    },
-    {
-      "id": "US-035",
-      "title": "Improve Setup page with session auto-refresh and cleanup",
-      "description": "As a new user completing company setup, I want the system to auto-refresh my session before form submission and not leak debug info to console.",
-      "acceptanceCriteria": [
-        "Setup.tsx calls supabase.auth.refreshSession() before company creation",
-        "Remove excessive debug console.log statements",
-        "Add progress indicator showing setup steps",
-        "Build succeeds with no new errors"
+        "Desktop nav links in Header.tsx include dark:text-gray-200 class",
+        "Mobile menu links include dark:text-gray-200 class",
+        "Hover state text-construction-orange works in both light and dark mode",
+        "Sign In button includes dark mode text color",
+        "Mobile menu border color is visible in dark mode",
+        "No change to the overall header background or structure",
+        "npm run build passes",
+        "npm run lint passes"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": "COMPLETED. Added supabase.auth.refreshSession() before company creation. Removed DEBUG console.log statements."
-    },
-    {
-      "id": "US-036",
-      "title": "Simplify ProtectedRoute circuit breaker logic",
-      "description": "As a developer, I want the ProtectedRoute redirect-loop prevention to be simpler and more debuggable, so that auth issues are easier to diagnose.",
-      "acceptanceCriteria": [
-        "Replace dual counter mechanism (global + local) with single approach",
-        "Add structured logging for auth state transitions",
-        "Recovery mode UI includes link to re-authenticate",
-        "No redirect loops in normal usage",
-        "Build succeeds with no new errors"
-      ],
-      "priority": 6,
-      "passes": true,
-      "notes": "COMPLETED. Rewrote from 213 to ~130 lines. Replaced dual counter with time-windowed trackRedirect(). Added RecoveryUI."
-    },
-    {
-      "id": "US-037",
-      "title": "Implement virtual scrolling for large project and invoice lists",
-      "description": "As a user with 100+ projects, I want the project list to scroll smoothly without performance degradation.",
-      "acceptanceCriteria": [
-        "Projects page uses react-virtual for list rendering when >50 items",
-        "Invoices page uses react-virtual for list rendering when >50 items",
-        "Scroll performance maintains 60fps with 500+ items",
-        "Build succeeds with no new errors"
-      ],
-      "priority": 7,
-      "passes": true,
-      "notes": "Currently no virtualization. Large datasets cause UI sluggishness."
-    },
-    {
-      "id": "US-038",
-      "title": "Add visual takeoff measurement tools for construction drawings",
-      "description": "As an estimator, I want to measure linear distances, areas, and count symbols directly on uploaded construction drawings (PDFs/images) so that I can produce accurate quantity takeoffs without switching to a separate tool. All three major competitors (Buildertrend, Procore, Autodesk) offer visual takeoff. BuildDesk currently has NO takeoff capability \u2014 estimates exist (src/pages/EstimatesHub.tsx, src/components/estimates/) but lack drawing-based measurement. Create a new TakeoffViewer component that renders uploaded PDF/image drawings on a canvas, supports linear measurement (click two points for distance), area measurement (polygon tool), and count measurement (click to place markers). Measurements should be stored per-drawing and exportable to the existing estimate line items. Use an existing canvas library (e.g., fabric.js or konva) for rendering. Create a Supabase migration for a takeoff_measurements table (id, project_id, document_id, measurement_type, value, unit, coordinates_json, label, created_by, created_at). Add a Takeoff page accessible from the project detail view.",
-      "acceptanceCriteria": [
-        "src/components/takeoff/TakeoffViewer.tsx exists with PDF/image rendering on canvas",
-        "Linear measurement tool: click two points, display distance with configurable scale",
-        "Area measurement tool: draw polygon, display area in sq ft or sq m",
-        "Count measurement tool: click to place markers, display running count",
-        "Scale calibration: user can set a known distance to calibrate measurements",
-        "Measurements persist to Supabase takeoff_measurements table",
-        "Measurements exportable to estimate line items",
-        "src/pages/Takeoff.tsx page exists and is routed from project detail view",
-        "Supabase migration for takeoff_measurements table exists",
-        "npm run build completes successfully"
-      ],
-      "priority": 8,
-      "passes": true,
-      "notes": "Competitor gap: ALL three competitors (Buildertrend, Procore, Autodesk) have visual takeoff tools. This is the single most requested feature class that BuildDesk lacks. Autodesk has 2D+3D takeoff with AI symbol detection; Procore has plan viewer with measurement; Buildertrend has visual takeoff from blueprints. For SMB market, 2D PDF takeoff is the minimum viable feature."
-    },
-    {
-      "id": "US-039",
-      "title": "Add construction drawing viewer with markup and annotation tools",
-      "description": "As a project manager, I want to view construction drawings (plans, elevations, sections) in the browser and add markups (text, arrows, shapes, highlights) so that I can communicate issues and changes directly on the drawings without downloading them. Procore and Autodesk both have robust drawing viewers with annotation. BuildDesk has document management (src/components/documents/) and OCR (src/components/ocr/) but NO plan/drawing viewer with markup capability. Create a DrawingViewer component that renders PDF construction drawings with pan/zoom navigation, and a markup toolbar supporting: text annotations, arrows, rectangles, circles, freehand drawing, and cloud shapes (revision clouds). Markups should be stored as a separate layer (not baked into the PDF) so multiple users can annotate independently. Create a Supabase migration for drawing_markups table (id, document_id, project_id, markup_data_json, created_by, created_at, updated_at, is_resolved). Markups should support an 'issue' workflow where a markup can be assigned to a user for resolution.",
-      "acceptanceCriteria": [
-        "src/components/documents/DrawingViewer.tsx exists with PDF rendering, pan, zoom, and rotation",
-        "Markup toolbar with: text, arrow, rectangle, circle, freehand, revision cloud tools",
-        "Markups stored as JSON overlay layer per-user, not baked into PDF",
-        "Markups persist to Supabase drawing_markups table",
-        "Markups can be toggled visible/hidden by author",
-        "Markups can be converted to issues (assigned to user, status tracking)",
-        "Drawing viewer accessible from document detail view and project documents tab",
-        "Supabase migration for drawing_markups table exists",
-        "Version comparison: view two drawing versions side by side with differences highlighted",
-        "npm run build completes successfully"
-      ],
-      "priority": 8,
-      "passes": true,
-      "notes": "Competitor gap: Procore has robust drawing management with OCR, version comparison, and markup. Autodesk has DWG editing in browser, markup with text/callout auto-resize, and version stacking. BuildDesk has document storage and OCR but no interactive drawing viewer. This is table-stakes for construction project management."
-    },
-    {
-      "id": "US-040",
-      "title": "Add client selections management for finish and fixture choices",
-      "description": "As a residential builder, I want clients to browse and select finishes, fixtures, and material options through the client portal, with their choices automatically updating the project budget, so that the selections process doesn't require manual back-and-forth emails. Buildertrend's Selections feature is a key residential differentiator that BuildDesk lacks entirely. BuildDesk has a client portal (src/components/client-portal/) but it only shows project progress \u2014 there is NO selections workflow. Create a selections management system: 1) Builder defines selection categories per project (e.g., Kitchen Countertop, Master Bath Tile, Lighting Fixtures) with options that include photos, descriptions, and price impacts. 2) Client views and picks selections in the client portal. 3) Selections auto-update project budget as change orders. Create Supabase migrations for: selection_categories (id, project_id, name, description, due_date, status, sort_order), selection_options (id, category_id, name, description, photo_url, price_impact, is_default, supplier), client_selections (id, category_id, option_id, selected_by, selected_at, notes).",
-      "acceptanceCriteria": [
-        "src/components/selections/SelectionCategoryManager.tsx exists for builders to define categories and options",
-        "src/components/client-portal/ClientSelections.tsx exists for clients to browse and pick selections",
-        "Each selection option displays: name, description, photo, and price impact vs allowance",
-        "Client selections auto-generate change orders when price differs from allowance",
-        "Selection categories have due dates with overdue warnings",
-        "Builder can set a default/allowance option per category",
-        "Selection history is tracked (who selected what, when)",
-        "Supabase migrations for selection_categories, selection_options, client_selections tables exist",
-        "Selections page accessible from both builder project view and client portal",
-        "npm run build completes successfully"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "Competitor gap: Buildertrend's Selections feature is one of their most popular residential features \u2014 clients can choose finishes/fixtures directly in the portal, which auto-flows into change orders and budgets. Neither Procore nor Autodesk focus on this (they target commercial). This is a high-value differentiator for BuildDesk's SMB residential market. BuildDesk has a client portal but ZERO selections workflow."
-    },
-    {
-      "id": "US-041",
-      "title": "Add e-signature integration for estimates, contracts, and change orders",
-      "description": "As a contractor, I want clients and subcontractors to sign estimates, contracts, and change orders electronically so that I don't have to chase wet signatures or use a separate signing tool. Buildertrend has built-in e-signatures on proposals, and Autodesk integrates with DocuSign and Adobe Sign. BuildDesk has a canvas-based signature pad (src/components/common/SignatureCapture.tsx) for in-person signing but NO remote e-signature workflow. Implement an e-signature system that: 1) Generates a signable document from an estimate, contract, or change order, 2) Sends a signing request via email with a secure link, 3) Recipient views the document and signs using the existing SignatureCapture pad, 4) Signed document is stored with timestamp, IP address, and audit trail. This should be a self-contained system first (no external e-sign provider dependency), with DocuSign/Adobe Sign integration as a future enhancement. Create Supabase migrations for: signature_requests (id, document_type, document_id, project_id, signer_email, signer_name, status, token, sent_at, viewed_at, signed_at, ip_address), signature_audit_log (id, request_id, action, ip_address, user_agent, created_at).",
-      "acceptanceCriteria": [
-        "src/components/signatures/SignatureRequestManager.tsx exists for creating and tracking signature requests",
-        "Estimate, contract, and change order pages have a 'Send for Signature' button",
-        "Email sent to signer with secure, token-based link to view and sign document",
-        "Signing page renders document in read-only view with SignatureCapture pad at bottom",
-        "Signed documents stored with timestamp, IP address, and user agent for legal compliance",
-        "Signature request status tracking: sent, viewed, signed, expired, declined",
-        "Audit trail for all signature actions (sent, opened, signed) in signature_audit_log table",
-        "Supabase migrations for signature_requests and signature_audit_log tables exist",
-        "Signed PDF generated with signature image embedded and audit trail appended",
-        "npm run build completes successfully"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "Competitor gap: Buildertrend has built-in e-signatures for proposals and change orders. Autodesk integrates with DocuSign and Adobe Sign. Procore has DocuSign integration. BuildDesk has only an in-person canvas signature pad \u2014 no remote signing workflow. E-signatures are table stakes for any construction management tool in 2026."
-    },
-    {
-      "id": "US-042",
-      "title": "Add subcontractor prequalification and risk scoring system",
-      "description": "As a general contractor, I want to evaluate subcontractors' financial health, insurance compliance, safety record, and past performance before awarding work, so that I reduce risk of project delays and liability issues. Procore has a formal prequalification system, and Autodesk has TradeTapp with AI-powered financial data extraction. BuildDesk has basic subcontractor management (src/components/subcontractors/SubcontractorManagement.tsx) with contact info, ratings, and insurance tracking, but NO structured prequalification workflow or risk scoring. Extend the existing SubcontractorManagement to add: 1) Prequalification questionnaire that subs fill out (company info, financial references, insurance certificates, safety EMR, OSHA citations, project references), 2) Automated risk score calculated from insurance status, EMR rating, years in business, and project completion rate, 3) Insurance compliance tracking with expiration alerts. Create Supabase migrations for: sub_prequalifications (id, subcontractor_id, company_id, questionnaire_data_json, risk_score, status, submitted_at, reviewed_by, reviewed_at), sub_insurance_documents (id, subcontractor_id, insurance_type, carrier, policy_number, coverage_amount, expiration_date, document_url, is_verified).",
-      "acceptanceCriteria": [
-        "src/components/subcontractors/PrequalificationForm.tsx exists with structured questionnaire",
-        "Questionnaire collects: company info, financial references, insurance certs, safety EMR, OSHA record, references",
-        "Automated risk score (1-100) calculated from insurance, EMR, experience, and project history",
-        "Risk score displayed as color-coded badge (green/yellow/red) on subcontractor profile",
-        "Insurance expiration tracking with automated email alerts 30/14/7 days before expiry",
-        "Prequalification status workflow: invited, submitted, under-review, approved, rejected, expired",
-        "Sub can fill out prequalification form via shared link (no BuildDesk account needed)",
-        "Supabase migrations for sub_prequalifications and sub_insurance_documents tables exist",
-        "Prequalification data viewable from subcontractor detail page",
-        "npm run build completes successfully"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": "Competitor gap: Procore has formal prequalification workflows. Autodesk has TradeTapp (acquired company) with AI-powered financial statement extraction and risk scoring. Buildertrend has basic sub management. BuildDesk has the foundation (SubcontractorManagement with ratings and insurance fields) but no structured prequalification process or automated risk scoring."
-    },
-    {
-      "id": "US-043",
-      "title": "Add AI-powered project assistant with conversational interface",
-      "description": "As a project manager, I want to ask questions about my project in natural language (e.g., 'What's the budget status for the Smith renovation?' or 'Show me overdue RFIs') and get instant answers, so that I can find information quickly without navigating through multiple pages. All three competitors are investing heavily in AI assistants: Autodesk has 'Autodesk Assistant' (conversational AI for project data queries), Procore has 'Procore Copilot' (AI for RFI drafting, daily log summaries, risk identification), and Buildertrend has AI-powered scheduling and client updates. BuildDesk has AI components (src/components/ai/AIProjectInsights.tsx, AIProgressAnalyzer.tsx, CostPredictionDashboard.tsx) but NO conversational AI assistant. Create a chat-based AI assistant panel that can be opened from any page via a floating button. The assistant should query project data from Supabase (projects, financials, time entries, change orders, daily reports) and present answers in conversational format. Use a Supabase Edge Function for the AI backend that accepts a user query, fetches relevant project data, and generates a response using an LLM API.",
-      "acceptanceCriteria": [
-        "src/components/ai/ProjectAssistant.tsx exists as a slide-out chat panel",
-        "Floating AI assistant button visible on all dashboard pages",
-        "Assistant can answer questions about: project budget status, schedule progress, overdue items, team assignments",
-        "Assistant queries actual Supabase data (projects, financial_records, time_entries, change_orders)",
-        "supabase/functions/ai-assistant/index.ts edge function handles query processing",
-        "Chat history persists within session",
-        "Assistant provides source links (e.g., 'View this project' links back to project page)",
-        "Rate limiting: 20 queries per minute per user",
-        "Graceful fallback when AI service is unavailable",
-        "npm run build completes successfully"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "Competitor gap: All three competitors are investing heavily in AI assistants. Autodesk Assistant queries project data conversationally and is their fastest-growing feature. Procore Copilot drafts RFIs and summarizes daily logs. Buildertrend uses AI for scheduling and client updates. BuildDesk has static AI components but no interactive assistant. This is the most important strategic gap for 2026 competitiveness."
-    },
-    {
-      "id": "US-044",
-      "title": "Add schedule import from Microsoft Project and Primavera P6 files",
-      "description": "As a project manager, I want to import existing schedules from Microsoft Project (.mpp, .xml) and Primavera P6 (.xer, .xml) files so that I don't have to manually recreate schedules when switching to BuildDesk. Both Procore and Autodesk support importing schedules from industry-standard formats. BuildDesk has a Gantt chart (src/components/schedule/GanttChart.tsx) with dependencies and critical path support, and a ScheduleBuilder page (src/pages/tools/ScheduleBuilder.tsx), but NO schedule import capability \u2014 schedules must be created from scratch or from templates. Add an import wizard that: 1) Accepts .xml (MS Project XML), .mpp (via server-side conversion), and .xer (P6) files, 2) Parses tasks, durations, dependencies, resources, and milestones, 3) Maps imported data to BuildDesk's Task type (src/types/schedule.ts), 4) Previews imported schedule before saving. Start with MS Project XML and P6 XER as they are text-based and parseable without proprietary libraries.",
-      "acceptanceCriteria": [
-        "src/components/schedule/ScheduleImportWizard.tsx exists with file upload and format selection",
-        "MS Project XML (.xml) parser extracts: tasks, durations, start/end dates, dependencies, resources",
-        "Primavera P6 XER (.xer) parser extracts: activities, relationships, calendars, resources",
-        "Import preview shows parsed tasks in a table with validation warnings (missing dates, circular deps)",
-        "Imported tasks map to BuildDesk Task type including dependencies and critical path flags",
-        "Import preserves task hierarchy (WBS structure) as phases",
-        "Duplicate detection: warns if schedule with same name already exists for project",
-        "Import wizard accessible from ScheduleBuilder and ScheduleManagement pages",
-        "Error handling for malformed or unsupported file versions",
-        "npm run build completes successfully"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "Competitor gap: Procore imports from MS Project and Primavera P6. Autodesk imports from P6 (.xer, .xml), MS Project (.mpp, .xml), and Asta Powerproject (.pp). BuildDesk only creates schedules from templates or scratch. Schedule import is critical for winning customers switching from other tools. MS Project XML and P6 XER are text-based formats that can be parsed with JavaScript \u2014 .mpp requires server-side conversion."
-    },
-    {
-      "id": "US-045",
-      "title": "Add submittal tracking and approval workflow",
-      "description": "As a project manager, I want to track submittals (shop drawings, product data, samples) through a formal review and approval workflow so that I can ensure materials and equipment meet specification requirements before installation. Procore has a comprehensive submittal system, and Autodesk tracks submittals with AutoSpecs AI recommendations. BuildDesk has a basic Submittals page (mentioned in navigation) but lacks a structured submittal workflow. Create a submittal management system with: 1) Submittal log listing all submittals with spec section, status, and ball-in-court, 2) Submittal creation linking to specification sections and drawing references, 3) Multi-step review workflow (submit \u2192 review \u2192 approve/revise/reject), 4) Revision tracking with full history, 5) Ball-in-court tracking showing who needs to act next. Create Supabase migrations for: submittals (id, project_id, number, title, spec_section, description, status, ball_in_court_user_id, due_date, submitted_by, submitted_at, current_revision), submittal_revisions (id, submittal_id, revision_number, document_url, submitted_at, reviewed_by, reviewed_at, review_status, review_comments).",
-      "acceptanceCriteria": [
-        "src/pages/Submittals.tsx exists with submittal log table (number, title, spec section, status, ball-in-court, due date)",
-        "Submittal creation form links to spec section and drawing references",
-        "Review workflow with status transitions: draft \u2192 submitted \u2192 under-review \u2192 approved/revise/rejected",
-        "Ball-in-court tracking shows current responsible party with days pending",
-        "Revision tracking: each resubmission creates a new revision with full history preserved",
-        "Overdue submittal alerts when ball-in-court exceeds due date",
-        "Submittal summary dashboard: total, approved, pending, overdue counts",
-        "Supabase migrations for submittals and submittal_revisions tables exist",
-        "Submittals accessible from project detail view navigation",
-        "npm run build completes successfully"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "Competitor gap: Procore has a comprehensive submittal system with specification linking, multi-step review, and ball-in-court tracking. Autodesk has submittals with AutoSpecs AI that recommends potentially missing submittals. Buildertrend has basic submittal tracking. BuildDesk references submittals in navigation but has no structured workflow. Submittals are fundamental to construction project management \u2014 this gap is more noticeable as BuildDesk targets larger SMB projects."
-    },
-    {
-      "id": "US-046",
-      "title": "Add AI-powered photo classification and progress tracking from site photos",
-      "description": "As a field supervisor, I want site photos to be automatically classified by trade, work area, and project phase so that I can quickly find relevant photos and track visual progress over time without manually tagging every image. Procore has AI photo classification and Autodesk has Photo Autotags. BuildDesk has photo capabilities in daily reports and punch lists, and an image analysis edge function (supabase/functions/analyze-images/), but NO automated photo classification or visual progress tracking. Extend the existing image analysis infrastructure to: 1) Automatically tag uploaded photos with detected trade (framing, electrical, plumbing, drywall, etc.), work area, and project phase, 2) Create a photo timeline view showing visual progress over time for each area of the project, 3) Flag potential safety issues detected in photos (missing PPE, unsecured scaffolding). Use the existing analyze-images edge function as the foundation and extend it with construction-specific classification prompts.",
-      "acceptanceCriteria": [
-        "src/components/gallery/PhotoClassifier.tsx exists with auto-classification display",
-        "Photos uploaded to any module (daily reports, punch list, documents) are auto-classified",
-        "Classification tags include: detected trade, work area/location, project phase, safety observations",
-        "Photo timeline view shows chronological progress per area with before/after comparison",
-        "Safety issue detection flags photos with potential hazards (visual indicator + notification)",
-        "supabase/functions/analyze-images/ edge function updated with construction-specific classification",
-        "Classification results stored in photo metadata (tags field on documents table)",
-        "Photo search by classification tag",
-        "npm run build completes successfully"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": "Competitor gap: Procore classifies photos by trade and location automatically. Autodesk has Photo Autotags for ML-based automatic tagging. BuildDesk has an analyze-images edge function and photo upload in daily reports but no automated classification. Construction site photos are one of the highest-volume data types \u2014 automated classification saves significant time for field teams."
-    },
-    {
-      "id": "US-047",
-      "title": "Add meeting minutes management with action item tracking",
-      "description": "As a project manager, I want to record meeting minutes with attendees, discussion items, decisions, and action items so that meeting outcomes are tracked and follow-up items don't fall through the cracks. Procore has dedicated meeting minutes management with templates, action items, and distribution. BuildDesk has NO meeting minutes feature. Create a meeting minutes system with: 1) Meeting creation with date, type (OAC, progress, safety, pre-construction), attendees from project team, 2) Agenda and minutes editor with structured sections, 3) Action items extracted from minutes with assignee, due date, and status tracking, 4) Meeting distribution via email to attendees and stakeholders, 5) Meeting history per project. Create Supabase migrations for: meetings (id, project_id, title, meeting_type, date, location, attendees_json, agenda, minutes, status, created_by, distributed_at), meeting_action_items (id, meeting_id, description, assigned_to, due_date, status, completed_at).",
-      "acceptanceCriteria": [
-        "src/pages/MeetingMinutes.tsx exists with meeting list and creation form",
-        "Meeting creation includes: type, date, location, attendees (from project team), agenda",
-        "Minutes editor with structured sections: agenda items, discussion notes, decisions, action items",
-        "Action items have: description, assignee, due date, status (open, in-progress, complete)",
-        "Action items appear on assignee's task list / dashboard",
-        "Meeting distribution: send formatted minutes via email to attendees",
-        "Meeting history view per project with search and filter",
-        "Supabase migrations for meetings and meeting_action_items tables exist",
-        "Meetings accessible from project detail navigation",
-        "npm run build completes successfully"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": "Competitor gap: Procore has dedicated meeting management with templates, action items, and distribution. Autodesk's Autodesk Assistant can scan meeting minutes data. Buildertrend doesn't have formal meeting minutes. For BuildDesk's SMB market, OAC (Owner-Architect-Contractor) meetings are common and tracking minutes with action items prevents scope disputes. This is more relevant as BuildDesk targets larger commercial SMB projects."
-    },
-    {
-      "id": "US-048",
-      "title": "Add project closeout and handover documentation tools",
-      "description": "As a project manager completing a project, I want a structured closeout checklist and handover package builder so that I can ensure all closeout requirements are met and deliver a complete documentation package to the owner. Procore and Autodesk both have project closeout tools. BuildDesk has NO closeout workflow \u2014 projects are simply marked as 'completed' with no structured handover process. Create a closeout management system with: 1) Configurable closeout checklist (punch list completion, final inspections, as-built drawings, O&M manuals, warranties, lien waivers, certificate of occupancy), 2) Handover package builder that compiles selected documents from the project into a downloadable ZIP or shared link, 3) Closeout progress dashboard showing completion percentage per category. Create Supabase migrations for: closeout_checklists (id, project_id, template_id, items_json, progress_percentage, started_at, completed_at), closeout_packages (id, project_id, title, document_ids_json, shared_link_token, created_by, created_at, downloaded_at).",
-      "acceptanceCriteria": [
-        "src/pages/ProjectCloseout.tsx exists with closeout checklist and handover tools",
-        "Configurable closeout checklist with standard items: punch list, inspections, as-builts, O&M, warranties, lien waivers, CO",
-        "Each checklist item tracks: status (pending, in-progress, complete, N/A), responsible party, due date, notes",
-        "Closeout progress dashboard shows completion percentage per category",
-        "Handover package builder: select documents from project, compile into downloadable ZIP",
-        "Handover package shareable via secure link (for owner access without BuildDesk account)",
-        "Closeout checklist templates: residential, commercial, renovation (pre-built defaults)",
-        "Supabase migrations for closeout_checklists and closeout_packages tables exist",
-        "Closeout tab appears on project detail when project status is near completion",
-        "npm run build completes successfully"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": "Competitor gap: Procore has comprehensive closeout workflows with punch list integration and warranty tracking. Autodesk added Handover & Closeout tools (January 2025) for collecting, compiling, and exporting handover documentation including issues, forms, and project records. BuildDesk has no closeout process \u2014 projects just get marked 'completed'. Structured closeout reduces liability risk and improves client satisfaction."
-    },
-    {
-      "id": "US-049",
-      "title": "Add AI-powered automatic client progress updates",
-      "description": "As a contractor, I want the system to automatically generate weekly client progress summaries from project data (daily reports, schedule status, budget, photos) and send them to clients, so that I maintain professional client communication without spending time writing update emails. Buildertrend offers AI-powered automatic client updates as a key differentiator. BuildDesk has daily reports (src/components/daily-reports/) and a client portal (src/components/client-portal/) but NO automated progress update generation. Create an AI-powered progress report generator that: 1) Aggregates data from the past week: daily report entries, schedule progress, budget status, photos taken, change orders, 2) Generates a professional, client-friendly summary using an LLM, 3) Sends the summary to the client via email and posts it to the client portal, 4) Allows the project manager to review and edit before sending. Create a Supabase Edge Function at supabase/functions/generate-progress-update/ and a migration for progress_updates (id, project_id, period_start, period_end, generated_content, edited_content, sent_to_emails, sent_at, created_by).",
-      "acceptanceCriteria": [
-        "supabase/functions/generate-progress-update/index.ts generates AI summary from project data",
-        "Summary aggregates: daily report entries, schedule % complete, budget status, recent photos, change orders",
-        "Generated summary is client-friendly (no internal jargon, professional tone)",
-        "src/components/client-portal/ProgressUpdateComposer.tsx exists for PM review and editing",
-        "PM can review, edit, and approve generated summary before sending",
-        "Approved summary sent via email to client contacts and posted to client portal",
-        "Configurable schedule: weekly, bi-weekly, or manual generation",
-        "Supabase migration for progress_updates table exists",
-        "Progress update history viewable per project",
-        "npm run build completes successfully"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": "Competitor gap: Buildertrend offers AI-powered automatic client updates as a key feature for residential builders. Procore and Autodesk focus more on internal reporting. For BuildDesk's SMB market, automated client communication is a significant time saver. The data sources (daily reports, schedule, budget) already exist \u2014 the gap is aggregation and AI summarization. This leverages BuildDesk's existing AI infrastructure (edge functions for AI content generation)."
-    },
-    {
-      "id": "US-050",
-      "title": "Add workforce planning with skill tracking and crew scheduling",
-      "description": "As a general contractor managing multiple projects, I want to see all my workers' skills, certifications, and availability across projects in a single view so that I can assign the right crews to the right projects and avoid scheduling conflicts. Procore has workforce planning with centralized scheduling and skill-set tracking. BuildDesk has crew management (src/components/crew/) and time tracking (src/components/time-tracking/) but NO centralized workforce planning view that shows worker availability across all projects. Create a workforce planning dashboard that: 1) Shows all workers with their skills, certifications, and current project assignments, 2) Displays a resource calendar showing who is assigned where and when, 3) Highlights scheduling conflicts (worker double-booked across projects), 4) Tracks certification expirations (OSHA-10, first aid, equipment operator). Extend existing crew tables rather than creating new ones where possible.",
-      "acceptanceCriteria": [
-        "src/pages/WorkforcePlanning.tsx exists with resource calendar and worker skills matrix",
-        "Worker profiles show: skills, certifications (with expiry dates), current project assignments, availability",
-        "Resource calendar visualizes worker assignments across all projects (swimlane by worker)",
-        "Scheduling conflict detection: highlights when a worker is assigned to overlapping projects",
-        "Certification expiration tracking: alerts at 60/30/14 days before expiry",
-        "Skill-based search: find available workers by required skill/trade for upcoming project needs",
-        "Integration with existing crew management and time tracking data",
-        "Workforce planning accessible from main navigation under People/Team section",
-        "npm run build completes successfully"
-      ],
-      "priority": 12,
-      "passes": true,
-      "notes": "Competitor gap: Procore has centralized workforce planning with skill tracking, resource calendars, and conflict detection. Autodesk handles resources at the schedule level. Buildertrend has basic crew scheduling. BuildDesk has crew management and time tracking but these are project-centric \u2014 there's no cross-project resource planning view. For SMB contractors managing 3-10 concurrent projects, avoiding crew conflicts is a daily challenge."
-    },
-    {
-      "id": "US-051",
-      "title": "Add RFI (Request for Information) management with workflow tracking",
-      "description": "As a project manager, I want to create, track, and manage RFIs with a formal workflow so that design clarifications are documented, assigned to the right parties, and resolved before they impact the schedule. Procore has comprehensive RFI management with workflow tracking, and Autodesk has RFI management with AI-powered quick create. BuildDesk references RFIs in some components but has NO dedicated RFI management page or workflow. Create an RFI system with: 1) RFI log with sequential numbering, status, ball-in-court, and impact tracking, 2) RFI creation linking to drawings, specifications, and cost/schedule impact, 3) Assignment workflow (create \u2192 assign \u2192 respond \u2192 review \u2192 close), 4) Response tracking with attachments, 5) Impact analysis showing cost and schedule effect of each RFI. Create Supabase migrations for: rfis (id, project_id, number, subject, question, drawing_reference, spec_section, status, assigned_to, ball_in_court, cost_impact, schedule_impact_days, priority, due_date, created_by, created_at, closed_at), rfi_responses (id, rfi_id, response_text, attachments_json, responded_by, responded_at).",
-      "acceptanceCriteria": [
-        "src/pages/RFIs.tsx exists with RFI log table (number, subject, status, ball-in-court, due date, cost impact)",
-        "RFI creation form with: subject, question, drawing/spec references, priority, due date, assignee",
-        "Workflow statuses: draft \u2192 open \u2192 assigned \u2192 responded \u2192 closed",
-        "Ball-in-court tracking shows who needs to act next and days pending",
-        "RFI responses with text and file attachments, preserving full conversation history",
-        "Cost and schedule impact fields per RFI, summarized on RFI dashboard",
-        "Overdue RFI alerts and summary dashboard (total, open, overdue, avg days to close)",
-        "Supabase migrations for rfis and rfi_responses tables exist",
-        "RFIs accessible from project detail navigation",
-        "npm run build completes successfully"
-      ],
-      "priority": 12,
-      "passes": true,
-      "notes": "Competitor gap: Procore has comprehensive RFI management with ball-in-court tracking and schedule impact analysis. Autodesk has RFI management with AI-powered quick creation from natural language prompts. Buildertrend has basic RFI tracking. BuildDesk mentions RFIs in some places but has no dedicated RFI module. RFIs are one of the most fundamental construction project management workflows \u2014 their absence is a significant gap as BuildDesk targets larger projects."
-    },
-    {
-      "id": "US-052",
-      "title": "Memoize SubscriptionContext provider value to prevent cascading re-renders",
-      "description": "As a developer, I want the SubscriptionContext provider value memoized so that consumer components don't re-render unnecessarily. Currently in src/contexts/SubscriptionContext.tsx lines 368-381, the context value object is created fresh on every render without useMemo. This causes ALL components consuming SubscriptionContext to re-render whenever ANY state in the provider changes, even if the specific values they use haven't changed. Additionally, getCurrentLimits() is called on every render without memoization. Wrap the value object in useMemo with appropriate dependencies. Also wrap callback functions (checkLimit, getUpgradeRequirement, refreshSubscription, refreshUsage, isSubscribed, canUseFeature, hasUnlimitedAccess) in useCallback if they aren't already.",
-      "acceptanceCriteria": [
-        "SubscriptionContext value object is wrapped in useMemo with correct dependency array",
-        "getCurrentLimits() result is memoized and not called on every render",
-        "All callback functions in the context value are wrapped in useCallback",
-        "No functional changes to subscription behavior",
-        "npm run build completes successfully",
-        "npm run test:run passes"
-      ],
-      "priority": 1,
-      "passes": true,
-      "notes": "COMPLETED. SubscriptionContext provider value wrapped in useMemo, all callbacks use useCallback."
-    },
-    {
-      "id": "US-053",
-      "title": "Re-enable manual chunk splitting in Vite build configuration",
-      "description": "As a developer, I want optimized bundle chunking so that users download smaller initial bundles and benefit from better caching. Currently in vite.config.ts lines 130-133, manual chunking is disabled with the comment 'DISABLE manual chunking to prevent React dependency issues'. Re-enable manual chunking with a conservative strategy that avoids the previous React dependency issues. Create separate chunks for: 1) 'framework' chunk containing react, react-dom, react-router-dom (these must stay together), 2) 'ui-library' chunk containing @radix-ui packages and class-variance-authority, 3) 'query' chunk containing @tanstack/react-query, 4) 'charts' chunk containing recharts, 5) 'vendor' chunk for remaining node_modules. Test thoroughly that the build works and the app loads correctly with no React context errors.",
-      "acceptanceCriteria": [
-        "vite.config.ts manualChunks function is re-enabled with conservative strategy",
-        "React, ReactDOM, and React Router are in the same 'framework' chunk",
-        "Radix UI components are in a separate 'ui-library' chunk",
-        "Recharts is in a separate 'charts' chunk (loaded only when needed)",
-        "npm run build completes successfully with no errors",
-        "npm run build output shows at least 4 separate vendor chunks",
-        "Application loads and routes correctly after build (manual verification)",
-        "No React 'Invalid hook call' or context errors in browser console"
-      ],
-      "priority": 1,
-      "passes": true,
-      "notes": "COMPLETED. Vite config has manual chunking for framework, ui-library, query, charts, xlsx, three chunks."
-    },
-    {
-      "id": "US-054",
-      "title": "Add useCallback to form event handlers in Auth and large page components",
-      "description": "As a developer, I want form event handlers memoized so that controlled inputs don't trigger unnecessary re-renders. In src/pages/Auth.tsx (1,318 lines), multiple event handlers (handleSignIn, handleSignUp, handleVerifyResetOTP, handleResendResetOTP, etc.) are created fresh on every render and passed to controlled form inputs. Similarly, src/pages/PunchList.tsx and other large form pages create inline arrow functions in JSX (onChange, onClick). Wrap the top 10-15 most impactful handlers across Auth.tsx, PunchList.tsx, and BlogManager.tsx with useCallback. Extract inline arrow functions from JSX into named useCallback-wrapped handlers. Focus on handlers that are passed as props to child components or used in lists.",
-      "acceptanceCriteria": [
-        "Auth.tsx: handleSignIn, handleSignUp, handleVerifyResetOTP wrapped in useCallback",
-        "PunchList.tsx: onChange/onClick handlers extracted from JSX into useCallback",
-        "BlogManager.tsx: form submission and state update handlers wrapped in useCallback",
-        "No inline arrow functions creating new references in lists/maps",
-        "All forms still function correctly (login, signup, punch list creation)",
-        "npm run build completes successfully",
-        "npm run test:run passes"
-      ],
-      "priority": 2,
-      "passes": true,
-      "notes": "COMPLETED. Auth.tsx, PunchList.tsx, BlogManager.tsx all have useCallback on form handlers."
-    },
-    {
-      "id": "US-055",
-      "title": "Parallelize data queries in Analytics dashboard",
-      "description": "As a user, I want the Analytics dashboard to load faster by fetching all data in parallel instead of sequentially. In src/pages/Analytics.tsx, multiple useQuery/useEffect chains fetch data that could be loaded simultaneously. Identify all independent data fetching calls on the Analytics page and use useQueries from @tanstack/react-query to execute them in parallel. This includes executive summary data, project performance metrics, and resource utilization stats. Also audit src/pages/Reports.tsx and src/pages/Dashboard.tsx for similar waterfall patterns and fix those as well.",
-      "acceptanceCriteria": [
-        "Analytics.tsx uses useQueries or Promise.all for parallel data fetching",
-        "No sequential data fetching chains where queries are independent",
-        "Analytics page renders loading state once instead of incrementally",
-        "Dashboard.tsx independent queries are parallelized",
-        "Reports.tsx independent queries are parallelized",
-        "npm run build completes successfully",
-        "npm run test:run passes"
-      ],
-      "priority": 2,
-      "passes": true,
-      "notes": "COMPLETED. Analytics.tsx uses Promise.all for parallel data fetching."
-    },
-    {
-      "id": "US-056",
-      "title": "Extract sub-components from oversized page files",
-      "description": "As a developer, I want large page components broken into smaller, focused sub-components for better code splitting and maintainability. The following pages exceed 1,000 lines and should be refactored: 1) Auth.tsx (1,318 lines) - extract OTPVerificationForm, OAuthButtons, PasswordResetFlow, and SignUpForm into separate files in src/components/auth/, 2) BlogManager.tsx (1,227 lines) - extract BlogEditorForm, BlogPreview, BlogSettings into src/components/blog/, 3) CRMDashboard.tsx (1,209 lines) - extract ContactsList, LeadPipeline, CampaignOverview into src/components/crm/. Each extracted component should be lazy-loadable. The parent pages should import sub-components and compose them. No functional changes to user-facing behavior.",
-      "acceptanceCriteria": [
-        "Auth.tsx reduced to under 400 lines by extracting 3+ sub-components",
-        "BlogManager.tsx reduced to under 400 lines by extracting 3+ sub-components",
-        "CRMDashboard.tsx reduced to under 400 lines by extracting 3+ sub-components",
-        "Extracted components are in domain-specific directories under src/components/",
-        "All extracted components have proper TypeScript interfaces for props",
-        "All pages function identically to before refactoring",
-        "npm run build completes successfully",
-        "npm run test:run passes"
-      ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Auth.tsx: 373 lines (extracted SignInForm, SignUpForm, PasswordResetFlow, AuthBrandingPanel, OAuthButtons, PasswordRequirements + useRedirectLoopDetection hook). BlogManager.tsx: 353 lines (extracted BlogPostList, BlogPostFormDialog, BlogKeywordsTab). CRMDashboard.tsx: 341 lines (extracted LeadEditDialog, OpportunityEditDialog, CRMOverviewTab, CRMLeadsTab)."
-    },
-    {
-      "id": "US-057",
-      "title": "Create centralized Supabase real-time subscription manager",
-      "description": "As a developer, I want a centralized subscription management system so that WebSocket connections are properly tracked, deduplicated, and cleaned up. Currently 27 files across the codebase create independent Supabase channel subscriptions with .channel() and .subscribe(). There is no centralized management, risking memory leaks if components remount and duplicate connections. Create a useSupabaseSubscription hook in src/hooks/ that: 1) Creates a channel with a unique ID per component, 2) Automatically cleans up on unmount, 3) Includes error handling for channel errors, 4) Deduplicates subscriptions to the same table, 5) Provides a consistent API. Migrate the SubscriptionContext.tsx real-time subscription to use this new hook as a proof of concept.",
-      "acceptanceCriteria": [
-        "src/hooks/useSupabaseSubscription.ts exists with centralized subscription management",
-        "Hook handles: channel creation, cleanup on unmount, error handling, deduplication",
-        "SubscriptionContext.tsx uses the new hook instead of direct channel management",
-        "Hook includes TypeScript types for channel configuration",
-        "Error handler logs subscription failures without crashing the app",
-        "npm run build completes successfully",
-        "npm run test:run passes"
-      ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. useSupabaseSubscription hook at src/hooks/useSupabaseSubscription.ts with channel deduplication and cleanup."
-    },
-    {
-      "id": "US-058",
-      "title": "Add dynamic imports for heavy visualization libraries",
-      "description": "As a user, I want pages to load faster by only downloading heavy visualization libraries when I actually need them. Currently recharts (~300KB) is statically imported in Analytics.tsx, and Three.js (~158KB) is used in 20+ files with static imports. These libraries should be dynamically imported so they're only loaded when the user navigates to a page that uses them. Use React.lazy for component-level splitting and dynamic import() for utility-level splitting. The Reports.tsx page already correctly uses dynamic imports for xlsx and jspdf - follow this pattern. Add loading skeleton components that show while the heavy libraries are being loaded.",
-      "acceptanceCriteria": [
-        "Recharts components in Analytics.tsx are loaded via React.lazy with Suspense fallback",
-        "Three.js components are loaded via React.lazy with Suspense fallback",
-        "Loading skeletons display while chart/3D components are being fetched",
-        "No static imports of recharts or three.js remain in page-level components",
-        "Charts and 3D views still render correctly after dynamic loading",
-        "npm run build shows recharts and three.js in separate chunks (not main bundle)",
-        "npm run build completes successfully"
-      ],
-      "priority": 3,
-      "passes": true,
-      "notes": "COMPLETED. Analytics.tsx: PredictiveAnalytics, RiskAssessment, TimelineOptimization, PerformanceBenchmarking, ResourceOptimization, WorkflowAutomation all use React.lazy with Suspense. Reports.tsx: ExecutiveDashboard, CustomReportBuilder use React.lazy with Suspense. Three.js already lazy loaded in Hero3D.tsx."
-    },
-    {
-      "id": "US-059",
-      "title": "Reduce deep context provider nesting in App.tsx",
-      "description": "As a developer, I want fewer nested context providers in App.tsx so that the component tree is simpler and cascading re-renders are reduced. Currently App.tsx has 9 nested context providers (QueryClientProvider, TenantProvider, AuthProvider, SubscriptionProvider, AccessibilityProvider, ContextMenuProvider, PlatformProvider, ThemeProvider, HelmetProvider). Combine logically related contexts: 1) Merge AccessibilityProvider settings into ThemeProvider (both deal with visual presentation), 2) Merge ContextMenuProvider into a UIProvider, 3) Create a composed AppProviders component that nests the remaining providers, keeping auth providers (TenantProvider, AuthProvider, SubscriptionProvider) early in the tree. This reduces visual nesting and makes provider structure clearer.",
-      "acceptanceCriteria": [
-        "App.tsx provider nesting reduced from 9 levels to 6 or fewer",
-        "AccessibilityProvider merged into ThemeProvider or a combined UIProvider",
-        "ContextMenuProvider merged into a UIProvider",
-        "AppProviders component created to encapsulate provider composition",
-        "Auth-related providers remain early in the tree (before UI providers)",
-        "All context values still accessible from consumer components",
-        "npm run build completes successfully",
-        "npm run test:run passes"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. App.tsx uses UIProviders composition pattern, reducing nesting to 6 levels."
-    },
-    {
-      "id": "US-060",
-      "title": "Add cache size limits and version metadata to service worker",
-      "description": "As a developer, I want the service worker to have cache size limits and proper version metadata so that storage doesn't grow unbounded and cache invalidation is reliable. Currently public/sw.js has good caching strategies but: 1) No cache size limits (caches grow indefinitely), 2) Version doesn't auto-increment on every build. Add maximum cache entries per cache (e.g., 50 for static assets, 30 for API responses, 10 for navigation). Implement cache eviction using LRU (least recently used) when limits are reached. Update scripts/update-sw-version.js to use the git commit hash or build timestamp as the version identifier, ensuring every build produces a unique cache version.",
-      "acceptanceCriteria": [
-        "Service worker caches have maximum entry limits (static: 50, API: 30, navigation: 10)",
-        "LRU cache eviction removes oldest entries when limit is reached",
-        "Service worker version uses git commit hash or build timestamp",
-        "scripts/update-sw-version.js generates unique version per build",
-        "Old cache versions are properly cleaned up on service worker activation",
-        "npm run build completes successfully",
-        "Service worker updates correctly in browser after new deployment"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. public/sw.js has CACHE_LIMITS (static:50, dynamic:30, api:30, images:20, navigation:10) with BUILD_VERSION auto-injected."
-    },
-    {
-      "id": "US-061",
-      "title": "Create LazyImage component with native lazy loading",
-      "description": "As a user, I want images below the fold to load lazily so that initial page load is faster and data usage is reduced, especially on mobile. Currently there is no standardized image component with lazy loading across the 262+ pages. Create a LazyImage component in src/components/ui/lazy-image.tsx that: 1) Uses native loading='lazy' attribute, 2) Supports WebP/AVIF with fallback via picture element, 3) Includes width/height to prevent layout shifts (CLS), 4) Shows a low-res placeholder or skeleton while loading, 5) Supports responsive srcSet for different screen sizes. Update hero-dashboard.jpg usage to use this component as a proof of concept.",
-      "acceptanceCriteria": [
-        "src/components/ui/lazy-image.tsx exists with LazyImage component",
-        "Component uses native loading='lazy' attribute",
-        "Component supports WebP/AVIF via picture element with fallback",
-        "Component requires width and height props to prevent CLS",
-        "Placeholder/skeleton shown during image load",
-        "hero-dashboard.jpg usage migrated to LazyImage as reference implementation",
-        "npm run build completes successfully",
-        "Component is exported from the ui barrel export"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "COMPLETED. src/components/ui/lazy-image.tsx has LazyImage component with native loading=lazy, WebP/AVIF via picture element, width/height props, IntersectionObserver, skeleton placeholder."
-    },
-    {
-      "id": "US-062",
-      "title": "Audit and consolidate duplicate animation libraries",
-      "description": "As a developer, I want to consolidate animation libraries so that bundle size is reduced and animation patterns are consistent. The project currently includes both @gsap/react (2.1.2) and framer-motion (12.23.24) - two competing animation libraries adding ~100KB combined. Audit all files importing from gsap and framer-motion to determine actual usage patterns. If one library can handle all use cases, remove the other. If both are needed, ensure each is only loaded on pages that use it (dynamic imports). Also verify that lovable-tagger (1.1.8) is dev-only and move it to devDependencies if so.",
-      "acceptanceCriteria": [
-        "Audit document listing all files using gsap vs framer-motion and their specific features used",
-        "Either gsap or framer-motion removed from dependencies, OR both dynamically imported",
-        "If one library removed: all animations still work correctly with remaining library",
-        "If both kept: neither is in the main bundle (both dynamically imported)",
-        "lovable-tagger verified as dev-only and moved to devDependencies if appropriate",
-        "npm run build bundle size reduced by at least 30KB compared to before",
-        "npm run build completes successfully"
-      ],
-      "priority": 5,
-      "passes": true,
-      "notes": "COMPLETED. Only framer-motion in package.json, no duplicate animation libraries."
+      "passes": false,
+      "notes": ""
     }
   ]
 }
