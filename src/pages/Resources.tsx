@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SEOMetaTags } from "@/components/SEOMetaTags";
@@ -6,11 +6,48 @@ import { QuickAnswerSnippet, LastUpdated } from "@/components/seo/QuickAnswerSni
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, ArrowRight } from "lucide-react";
+import { Clock, User, ArrowRight, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import BreadcrumbsNavigation from "@/components/BreadcrumbsNavigation";
+import { supabase } from "@/integrations/supabase/client";
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featured_image_url: string | null;
+  published_at: string | null;
+  created_at: string;
+  seo_description: string | null;
+}
 
 const Resources = () => {
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("blog_posts")
+          .select("id, title, slug, excerpt, featured_image_url, published_at, created_at, seo_description")
+          .eq("status", "published")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .limit(12);
+
+        if (error) throw error;
+        setBlogPosts(data || []);
+      } catch (err) {
+        console.error("Error loading blog posts:", err);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
+
   const resourceCategories = [
     {
       title: "Construction Management Guides",
@@ -218,6 +255,74 @@ const Resources = () => {
             </Card>
           </div>
         </section>
+
+        {/* Latest Articles from Blog */}
+        {blogPosts.length > 0 && (
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-semibold">Latest Articles</h2>
+              <Badge variant="outline" className="text-sm">
+                {blogPosts.length} article{blogPosts.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.map((post) => {
+                const publishDate = post.published_at || post.created_at;
+                const formattedDate = new Date(publishDate).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+                const imageUrl = post.featured_image_url?.replace(
+                  /https?:\/\/[a-z0-9]+\.supabase\.co\/storage\//gi,
+                  "https://api.build-desk.com/storage/"
+                );
+
+                return (
+                  <Card key={post.id} className="h-full flex flex-col overflow-hidden">
+                    {imageUrl && (
+                      <div className="aspect-video overflow-hidden">
+                        <img
+                          src={imageUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    <CardHeader>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary">Article</Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formattedDate}
+                        </span>
+                      </div>
+                      <CardTitle className="text-lg leading-tight">
+                        <Link
+                          to={`/resources/${post.slug}`}
+                          className="hover:text-primary transition-colors"
+                        >
+                          {post.title}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription className="line-clamp-3">
+                        {post.excerpt || post.seo_description || ""}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col justify-end">
+                      <Button asChild variant="outline" className="w-full">
+                        <Link to={`/resources/${post.slug}`}>
+                          Read Article <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Resource Categories */}
         {resourceCategories.map((category, categoryIndex) => (
