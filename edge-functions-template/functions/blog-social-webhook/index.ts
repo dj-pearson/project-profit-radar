@@ -11,6 +11,23 @@ const logStep = (step: string, data?: any) => {
   console.log(`[BLOG Social Webhook] ${step}:`, data || "");
 };
 
+// Public URLs for the webhook payload
+const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://build-desk.com";
+const PUBLIC_API_URL = Deno.env.get("PUBLIC_API_URL") || "https://api.build-desk.com";
+
+/**
+ * Rewrite any old Supabase storage URLs (*.supabase.co/storage/...)
+ * to the public API domain (api.build-desk.com/storage/...)
+ */
+function rewriteStorageUrls(text: string | null | undefined): string | null {
+  if (!text) return null;
+  // Match any <project-ref>.supabase.co/storage/... pattern
+  return text.replace(
+    /https?:\/\/[a-z0-9]+\.supabase\.co\/storage\//gi,
+    `${PUBLIC_API_URL}/storage/`
+  );
+}
+
 export default async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -81,16 +98,19 @@ export default async (req: Request) => {
       try {
         logStep("Calling blog webhook", config.blog_webhook_url);
         
+        const blogUrl = `${PUBLIC_SITE_URL}/blog/${blogPost.slug}`;
+
         const webhookPayload = {
           event: "blog_published",
           blog_post: {
             id: blogPost.id,
             title: blogPost.title,
             slug: blogPost.slug,
+            blog_url: blogUrl,
             excerpt: blogPost.excerpt,
-            body: blogPost.body,
+            body: rewriteStorageUrls(blogPost.body),
             published_at: blogPost.published_at,
-            featured_image_url: blogPost.featured_image_url,
+            featured_image_url: rewriteStorageUrls(blogPost.featured_image_url),
             seo_title: blogPost.seo_title,
             seo_description: blogPost.seo_description
           },
