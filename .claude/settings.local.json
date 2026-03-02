@@ -43,7 +43,8 @@
       "Bash(npm install:*)",
       "Bash(npx vite:*)",
       "Bash(git push:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(cp:*)"
     ],
     "deny": [],
     "ask": []
