@@ -11,9 +11,9 @@ const logStep = (step: string, data?: any) => {
   console.log(`[BLOG Social Webhook] ${step}:`, data || "");
 };
 
-// Public URLs for the webhook payload
-const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://build-desk.com";
-const PUBLIC_API_URL = Deno.env.get("PUBLIC_API_URL") || "https://api.build-desk.com";
+// Use existing container env vars for URL rewriting
+const FRONTEND_URL = Deno.env.get("FRONTEND_URL") || "https://build-desk.com";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://api.build-desk.com";
 
 /**
  * Rewrite any old Supabase storage URLs (*.supabase.co/storage/...)
@@ -24,7 +24,7 @@ function rewriteStorageUrls(text: string | null | undefined): string | null {
   // Match any <project-ref>.supabase.co/storage/... pattern
   return text.replace(
     /https?:\/\/[a-z0-9]+\.supabase\.co\/storage\//gi,
-    `${PUBLIC_API_URL}/storage/`
+    `${SUPABASE_URL}/storage/`
   );
 }
 
@@ -98,7 +98,7 @@ export default async (req: Request) => {
       try {
         logStep("Calling blog webhook", config.blog_webhook_url);
         
-        const blogUrl = `${PUBLIC_SITE_URL}/blog/${blogPost.slug}`;
+        const blogUrl = `${FRONTEND_URL}/blog/${blogPost.slug}`;
 
         const webhookPayload = {
           event: "blog_published",
