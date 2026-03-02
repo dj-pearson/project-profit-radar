@@ -388,3 +388,5 @@ export const SocialMediaManager: React.FC = () => {
     </SidebarProvider>
   );
 };
+
+export default SocialMediaManager;
