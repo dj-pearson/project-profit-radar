@@ -180,7 +180,7 @@ export const useSocialMediaAutomation = () => {
     }
   };
 
-  // Simplified trigger automation function
+  // Trigger blog-to-social webhook (sends blog post data to Make.com / configured webhook)
   const triggerAutomation = async ({ blogPostId }: TriggerAutomationParams) => {
     if (!userProfile?.company_id) {
       throw new Error("Company ID not found");
@@ -190,11 +190,12 @@ export const useSocialMediaAutomation = () => {
       setLoading(true);
 
       const { data, error } = await supabase.functions.invoke(
-        "social-post-scheduler",
+        "blog-social-webhook",
         {
           body: {
-            manual_trigger: true,
+            blog_post_id: blogPostId,
             company_id: userProfile.company_id,
+            status: "published",
           },
         }
       );
@@ -203,16 +204,16 @@ export const useSocialMediaAutomation = () => {
 
       toast({
         title: "Success",
-        description: "Social media automation triggered successfully",
+        description: "Blog post sent to social media webhook",
       });
 
       return { success: true, data };
     } catch (error: any) {
-      console.error("Error triggering automation:", error);
+      console.error("Error triggering blog social webhook:", error);
       toast({
         title: "Error",
         description:
-          error?.message || "Failed to trigger social media automation",
+          error?.message || "Failed to send blog post to social media webhook",
         variant: "destructive",
       });
       throw error;
