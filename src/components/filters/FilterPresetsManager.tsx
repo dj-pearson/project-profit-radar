@@ -82,10 +82,13 @@ export function FilterPresetsManager({
         .order('is_default', { ascending: false })
         .order('use_count', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Table may not exist yet - fail silently
+        return;
+      }
       setPresets(data || []);
     } catch (error: unknown) {
-      console.error('Error loading presets:', error);
+      // Silently ignore - saved_filter_presets table may not exist yet
     } finally {
       setLoading(false);
     }

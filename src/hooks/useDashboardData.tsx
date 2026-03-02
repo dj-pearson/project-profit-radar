@@ -106,23 +106,29 @@ export const useDashboardData = () => {
 
       if (activityError) throw activityError;
 
-      // Fetch financial records for real revenue data
+      // Fetch financial records for real revenue data (soft failure - table may not exist yet)
+      let totalRevenue = 0;
+      let totalExpenses = 0;
+      let profitMargin = 0;
+
       const { data: financialRecords, error: financialError } = await supabase
         .from('financial_records')
         .select('amount, type')
         .eq('company_id', userProfile.company_id);
 
-      if (financialError) throw financialError;
-
-      const totalRevenue = financialRecords
-        ?.filter(r => r.type === 'income' || r.type === 'revenue')
-        .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
-      const totalExpenses = financialRecords
-        ?.filter(r => r.type === 'expense' || r.type === 'cost')
-        .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
-      const profitMargin = totalRevenue > 0
-        ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 100 * 10) / 10
-        : 0;
+      if (financialError) {
+        logger.warn('Financial records unavailable, using project budgets as fallback');
+      } else {
+        totalRevenue = financialRecords
+          ?.filter(r => r.type === 'income' || r.type === 'revenue')
+          .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+        totalExpenses = financialRecords
+          ?.filter(r => r.type === 'expense' || r.type === 'cost')
+          .reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+        profitMargin = totalRevenue > 0
+          ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 100 * 10) / 10
+          : 0;
+      }
 
       // Build dashboard data
       const dashboardData: DashboardData = {

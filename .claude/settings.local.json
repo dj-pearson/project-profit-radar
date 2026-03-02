@@ -40,7 +40,8 @@
       "Bash(tee:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx tsc:*)",
       "Bash(npm ls:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)"
     ],
     "deny": [],
     "ask": []

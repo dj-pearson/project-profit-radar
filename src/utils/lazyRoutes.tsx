@@ -280,13 +280,13 @@ export const lazyRouteConfigs: LazyRouteConfig[] = [
 ];
 
 /**
- * Preload high-priority routes for better perceived performance
- * This triggers the import() calls to start loading the chunks in the background
+ * Preload high-priority routes for better perceived performance.
+ * Deferred until after user interaction to avoid "preloaded but not used" warnings.
  */
 export const preloadHighPriorityRoutes = () => {
-  // Use requestIdleCallback to avoid blocking the main thread
+  if (typeof window === 'undefined') return;
+
   const preload = () => {
-    // Preload core pages that users are most likely to navigate to
     const preloadImports = [
       () => import('@/pages/Index'),
       () => import('@/pages/Auth'),
@@ -295,25 +295,25 @@ export const preloadHighPriorityRoutes = () => {
       () => import('@/pages/Projects'),
     ];
 
-    // Stagger preloads to avoid network congestion
     preloadImports.forEach((importFn, index) => {
       setTimeout(() => {
-        importFn().catch(() => {
-          // Silently ignore preload errors - they'll be handled when the route is actually visited
-        });
-      }, index * 100); // 100ms delay between each preload
+        importFn().catch(() => {});
+      }, index * 200);
     });
   };
 
-  // Defer preloading until browser is idle
-  if (typeof window !== 'undefined') {
+  // Wait for first user interaction before preloading to avoid
+  // "preloaded but not used" browser warnings
+  const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+  const onInteraction = () => {
+    events.forEach(e => window.removeEventListener(e, onInteraction));
     if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(preload, { timeout: 5000 });
+      (window as any).requestIdleCallback(preload, { timeout: 10000 });
     } else {
-      // Fallback for browsers without requestIdleCallback
-      setTimeout(preload, 1000);
+      setTimeout(preload, 2000);
     }
-  }
+  };
+  events.forEach(e => window.addEventListener(e, onInteraction, { once: true, passive: true }));
 };
 
 /**
