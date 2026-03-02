@@ -1,6 +1,4 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,7 +11,7 @@ const logStep = (step: string, data?: any) => {
   console.log(`[Social Post Scheduler] ${step}:`, data || "");
 };
 
-serve(async (req) => {
+export default async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -290,4 +288,4 @@ serve(async (req) => {
       }
     );
   }
-});
+};
