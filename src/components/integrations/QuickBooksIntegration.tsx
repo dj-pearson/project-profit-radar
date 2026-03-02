@@ -67,7 +67,7 @@ export const QuickBooksIntegration = () => {
         .from('quickbooks_integrations')
         .select('*')
         .eq('company_id', userProfile.company_id)
-        .single();
+        .maybeSingle();
 
       if (integrationError || !integrationData) {
         setStatus({

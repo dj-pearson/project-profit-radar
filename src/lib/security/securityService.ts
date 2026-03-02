@@ -89,26 +89,19 @@ export async function hasPermission(
       };
     }
 
-    // Check database for direct grants and custom role permissions
-    const { data: hasDbPermission, error } = await supabase.rpc('user_has_permission', {
-      p_user_id: userId,
-      p_permission_name: permission,
-      p_resource_type: options?.resourceType || null,
-      p_resource_id: options?.resourceId || null,
-    });
-
-    if (error) {
-      logger.error('[Security] Permission check error:', error);
-      // Fail closed - deny access on error
+    // Database RPC not yet available - fall back to role defaults only
+    // TODO: Re-enable when user_has_permission RPC is created in Supabase
+    {
       return {
         allowed: false,
-        reason: `Permission check failed: ${error.message}`,
+        reason: `Permission ${permission} not in role defaults for ${role}`,
         layer: 'authorization',
         permission,
       };
     }
 
-    if (hasDbPermission) {
+    // eslint-disable-next-line no-unreachable
+    if (false) {
       return {
         allowed: true,
         reason: 'Permission granted via database (direct grant or custom role)',
@@ -602,26 +595,11 @@ async function flushEventQueue(): Promise<void> {
 
   try {
     // Log denied events to permission_audit_log
+    // TODO: Re-enable when permission_audit_log table is created in Supabase
     const deniedEvents = eventsToFlush.filter((e) => !e.allowed);
 
     if (deniedEvents.length > 0) {
-      const auditLogs = deniedEvents.map((event) => ({
-        user_id: event.userId,
-        action: event.eventType,
-        permission_name: event.action,
-        resource_type: event.resource,
-        resource_id: event.resourceId,
-        granted: false,
-        reason: event.reason,
-        ip_address: event.metadata?.ipAddress as string | undefined,
-        user_agent: event.metadata?.userAgent as string | undefined,
-      }));
-
-      const { error } = await supabase.from('permission_audit_log').insert(auditLogs);
-
-      if (error) {
-        logger.error('[Security] Failed to flush audit logs:', error);
-      }
+      logger.debug(`[Security] ${deniedEvents.length} denied permission events (audit log table not yet available)`);
     }
   } catch (error) {
     logger.error('[Security] Flush audit queue exception:', error);
@@ -650,29 +628,9 @@ export async function getUserPermissions(
   userId: string,
   role: UserRole
 ): Promise<Permission[]> {
-  const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] || [];
-
-  try {
-    const { data, error } = await supabase.rpc('get_user_permissions', {
-      p_user_id: userId,
-    });
-
-    if (error) {
-      logger.error('[Security] Get user permissions error:', error);
-      return rolePermissions;
-    }
-
-    // Combine role defaults with database permissions
-    const dbPermissions = (data || []).map(
-      (p: { permission_name: string }) => p.permission_name as Permission
-    );
-
-    // Return unique permissions
-    return [...new Set([...rolePermissions, ...dbPermissions])];
-  } catch (error) {
-    logger.error('[Security] Get user permissions exception:', error);
-    return rolePermissions;
-  }
+  // Return role defaults directly - get_user_permissions RPC not yet available
+  // TODO: Re-enable database permission lookup when RPC is created in Supabase
+  return DEFAULT_ROLE_PERMISSIONS[role] || [];
 }
 
 /**
