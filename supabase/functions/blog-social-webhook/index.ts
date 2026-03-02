@@ -98,7 +98,7 @@ export default async (req: Request) => {
       try {
         logStep("Calling blog webhook", config.blog_webhook_url);
         
-        const blogUrl = `${FRONTEND_URL}/blog/${blogPost.slug}`;
+        const blogUrl = `${FRONTEND_URL}/resources/${blogPost.slug}`;
 
         const webhookPayload = {
           event: "blog_published",
