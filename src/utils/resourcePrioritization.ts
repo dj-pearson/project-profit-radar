@@ -20,17 +20,13 @@ export const resourcePriorities: Record<string, ResourcePriority[]> = {
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
     { type: 'font', url: '/fonts/inter-600.woff2', priority: 'critical' },
     { type: 'style', url: '/fonts/inter.css', priority: 'critical' },
-    
-    // High priority
-    { type: 'script', url: '/src/main.tsx', priority: 'high', defer: true },
-    
+
     // Medium priority
     { type: 'image', url: '/BuildDeskLogo.png', priority: 'medium' },
   ],
   dashboard: [
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
     { type: 'font', url: '/fonts/inter-600.woff2', priority: 'critical' },
-    { type: 'script', url: '/src/main.tsx', priority: 'high', defer: true },
   ],
 };
 
