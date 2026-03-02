@@ -249,3 +249,5 @@ export function AdvancedDashboards() {
     </div>
   );
 }
+
+export default AdvancedDashboards;

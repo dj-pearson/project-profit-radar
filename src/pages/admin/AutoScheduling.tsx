@@ -665,3 +665,5 @@ export function AutoScheduling() {
     </div>
   );
 }
+
+export default AutoScheduling;

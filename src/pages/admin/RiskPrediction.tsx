@@ -761,3 +761,5 @@ export function RiskPrediction() {
     </div>
   );
 }
+
+export default RiskPrediction;

@@ -743,3 +743,5 @@ export function SafetyAutomation() {
     </div>
   );
 }
+
+export default SafetyAutomation;

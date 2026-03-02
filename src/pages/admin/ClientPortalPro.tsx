@@ -307,3 +307,5 @@ export function ClientPortalPro() {
     </div>
   );
 }
+
+export default ClientPortalPro;

@@ -661,3 +661,5 @@ print(response.json())`}
     </DashboardLayout>
   );
 }
+
+export default DeveloperPortal;

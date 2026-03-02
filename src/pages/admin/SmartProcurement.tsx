@@ -393,3 +393,5 @@ export function SmartProcurement() {
     </div>
   );
 }
+
+export default SmartProcurement;

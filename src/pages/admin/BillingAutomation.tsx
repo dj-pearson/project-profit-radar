@@ -287,3 +287,5 @@ export function BillingAutomation() {
     </div>
   );
 }
+
+export default BillingAutomation;

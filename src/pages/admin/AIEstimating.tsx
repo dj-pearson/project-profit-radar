@@ -518,3 +518,5 @@ export function AIEstimating() {
     </DashboardLayout>
   );
 }
+
+export default AIEstimating;
