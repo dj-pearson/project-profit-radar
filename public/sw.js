@@ -184,10 +184,33 @@ async function networkFirst(request) {
 }
 
 // Network-first for navigation to prioritize fresh HTML on each deployment.
-// Falls back to cached app shell only when offline/unreachable.
+// For SPA routing: if the server returns 404 for a client-side route,
+// serve index.html so React Router can handle it.
 async function navigationNetworkFirst(request) {
   try {
-    return await fetch(request, { cache: 'no-store' });
+    const response = await fetch(request, { cache: 'no-store' });
+
+    // If the server returned HTML successfully, use it
+    if (response.ok) {
+      return response;
+    }
+
+    // Server returned 404 for a client route - serve the app shell instead
+    // so React Router can handle the routing client-side
+    if (response.status === 404) {
+      const cache = await caches.open(STATIC_CACHE);
+      const appShell = await cache.match('/index.html');
+      if (appShell) {
+        return appShell;
+      }
+      // If no cached app shell, fetch index.html from network
+      const freshShell = await fetch('/index.html', { cache: 'no-store' });
+      if (freshShell.ok) {
+        return freshShell;
+      }
+    }
+
+    return response;
   } catch (error) {
     console.warn('Service Worker: Navigation request failed, trying offline fallback:', request.url, error);
     const cache = await caches.open(STATIC_CACHE);

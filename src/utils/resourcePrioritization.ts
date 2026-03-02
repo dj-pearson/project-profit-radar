@@ -18,7 +18,7 @@ export const resourcePriorities: Record<string, ResourcePriority[]> = {
   homepage: [
     // Critical resources
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
-    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'critical' },
+    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'high' },
     { type: 'style', url: '/fonts/inter.css', priority: 'critical' },
 
     // Medium priority
@@ -26,7 +26,7 @@ export const resourcePriorities: Record<string, ResourcePriority[]> = {
   ],
   dashboard: [
     { type: 'font', url: '/fonts/inter-400.woff2', priority: 'critical' },
-    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'critical' },
+    { type: 'font', url: '/fonts/inter-600.woff2', priority: 'high' },
   ],
 };
 
